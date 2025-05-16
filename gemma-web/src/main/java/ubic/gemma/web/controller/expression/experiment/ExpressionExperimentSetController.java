@@ -27,6 +27,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
@@ -34,12 +35,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -173,7 +173,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new EntityNotFoundException( "No such set with id=" + id );
         }
         // FIXME this is a bit inefficient, for security filtering ... could have an ID-filtering interceptor.
-        return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
+        return IdentifiableUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
     }
 
     /**
@@ -343,22 +343,17 @@ public class ExpressionExperimentSetController extends BaseController {
     }
 
     @RequestMapping(value = "/showExpressionExperimentSet.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showExpressionExperimentSet( HttpServletRequest request ) {
-
-        ModelAndView mav = new ModelAndView( "expressionExperimentSet.detail" );
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        ExpressionExperimentSetValueObject eesvo = this.getExpressionExperimentSetFromRequest( request );
-
-        mav.addObject( "eeSetId", eesvo.getId() );
-        mav.addObject( "eeSetName", eesvo.getName() );
-
+    public ModelAndView showExpressionExperimentSet( @RequestParam("id") Long id ) {
+        StopWatch timer = StopWatch.createStarted();
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObjectById( id );
+        if ( eesvo == null ) {
+            throw new EntityNotFoundException( "No experiment set with ID " + id );
+        }
         if ( timer.getTime() > 200 ) {
             log.info( "Show experiment set was slow: id=" + eesvo.getId() + " " + timer.getTime() + "ms" );
         }
-
-        return mav;
+        return new ModelAndView( "expressionExperimentSet.detail" )
+                .addObject( "eeSet", eesvo );
     }
 
     /**
@@ -452,31 +447,6 @@ public class ExpressionExperimentSetController extends BaseController {
         }
 
         return expressionExperimentSetValueObjectHelper.create( obj );
-    }
-
-    /**
-     * @throws IllegalArgumentException if a matching EE can't be loaded
-     */
-    private ExpressionExperimentSetValueObject getExpressionExperimentSetFromRequest( HttpServletRequest request ) {
-
-        ExpressionExperimentSetValueObject set;
-        Long id;
-
-        if ( request.getParameter( "id" ) != null ) {
-            try {
-                id = Long.parseLong( request.getParameter( "id" ) );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-            }
-            set = expressionExperimentSetService.loadValueObjectById( id );
-
-            if ( set == null ) {
-                throw new EntityNotFoundException( "Unable to access experiment set with id=" + id );
-            }
-        } else {
-            throw new IllegalArgumentException( "You must provide an id" );
-        }
-        return set;
     }
 
     /**

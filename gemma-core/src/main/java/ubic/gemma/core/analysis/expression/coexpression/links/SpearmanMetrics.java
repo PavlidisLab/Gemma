@@ -352,7 +352,7 @@ public class SpearmanMetrics extends PearsonMetrics {
 
         for ( int i = 0; i < numRows; i++ ) {
 
-            Double[] row = this.dataMatrix.getRow( i );
+            double[] row = this.dataMatrix.getRowAsDoubles( i );
 
             // make a copy.
             double[] r = new double[row.length];
@@ -362,7 +362,7 @@ public class SpearmanMetrics extends PearsonMetrics {
 
             DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
             assert ranksIA != null;
-            double ri[] = new double[ranksIA.size()];
+            double[] ri = new double[ranksIA.size()];
             for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
                 ri[n] = ranksIA.get( n );
             }

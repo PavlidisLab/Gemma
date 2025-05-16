@@ -14,88 +14,91 @@
  */
 package ubic.gemma.core.job;
 
-import ubic.gemma.core.job.progress.ProgressUpdateAppender;
+import lombok.extern.apachecommons.CommonsLog;
+import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.Callable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Task Lifecycle Hooks ProgressUpdateAppender -
  *
  * @author anton
  */
+@CommonsLog
 class ExecutingTask implements Callable<TaskResult> {
 
-    private final Task<?> task;
     private final String taskId;
+    private final Task<?> task;
 
-    // Does not survive serialization.
-    private transient TaskLifecycleHandler lifecycleHandler;
+    @Nullable
+    private TaskLifecycleHandler lifecycleHandler;
 
-    public ExecutingTask( Task<?> task, String taskId ) {
-        this.task = task;
+    public ExecutingTask( String taskId, Task<?> task ) {
         this.taskId = taskId;
+        this.task = task;
     }
 
     @Override
     public final TaskResult call() {
         TaskResult result;
 
-        if ( lifecycleHandler == null ) {
-            throw new IllegalStateException( "No lifecycle handler has been configured for this executing task." );
-        }
+        runPhase( TaskPhase.START, null );
 
-        lifecycleHandler.onStart();
-
-        try ( ProgressUpdateAppender.ProgressUpdateContext ignored = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
+        try ( ProgressUpdateContext ignored = ProgressUpdateContext.createContext( this::progressUpdate ) ) {
             // From here we are running as user who submitted the task.
             result = this.task.call();
         } catch ( Exception e ) {
             // result is an exception
-            result = new TaskResult( taskId );
-            result.setException( e );
+            result = new TaskResult( e );
         }
 
         if ( result.getException() == null ) {
-            lifecycleHandler.onSuccess();
+            runPhase( TaskPhase.SUCCESS, null );
         } else {
-            lifecycleHandler.onFailure( result.getException() );
+            runPhase( TaskPhase.FAILURE, result.getException() );
         }
 
-        lifecycleHandler.onComplete();
+        runPhase( TaskPhase.COMPLETE, null );
 
         return result;
     }
 
-    public void setLifecycleHandler( TaskLifecycleHandler lifecycleHandler ) {
+    public void setLifecycleHandler( @Nullable TaskLifecycleHandler lifecycleHandler ) {
         this.lifecycleHandler = lifecycleHandler;
     }
 
-    // These hooks are used to update status of the running task.
-    public interface TaskLifecycleHandler {
+    private void progressUpdate( String message ) {
+        runPhase( TaskPhase.PROGRESS, message );
+    }
 
-        /**
-         * Whenever the task execution begins.
-         */
-        void onStart();
-
-        /**
-         * When progress is made on the task.
-         */
-        void onProgress( String message );
-
-        /**
-         * On failure.
-         */
-        void onFailure( Exception e );
-
-        /**
-         * On successful completion.
-         */
-        void onSuccess();
-
-        /**
-         * On completion, regardless of failure.
-         */
-        void onComplete();
+    private void runPhase( TaskPhase phase, @Nullable Object arg ) {
+        if ( lifecycleHandler == null ) {
+            return;
+        }
+        try {
+            switch ( phase ) {
+                case START:
+                    lifecycleHandler.onStart();
+                    break;
+                case PROGRESS:
+                    lifecycleHandler.onProgress( ( String ) requireNonNull( arg ) );
+                    break;
+                case SUCCESS:
+                    lifecycleHandler.onSuccess();
+                    break;
+                case FAILURE:
+                    lifecycleHandler.onFailure( ( Exception ) requireNonNull( arg ) );
+                    break;
+                case COMPLETE:
+                    lifecycleHandler.onComplete();
+                    break;
+            }
+        } catch ( Exception e ) {
+            log.error( String.format( "An error occurred while running lifecycle phase %s for task with ID %s.",
+                    phase, taskId ), e );
+        }
     }
 }

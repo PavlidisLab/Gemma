@@ -2,29 +2,42 @@ package ubic.gemma.rest.providers;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.monitoring.ApplicationEvent;
+import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
-import javax.ws.rs.core.Context;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.ext.Provider;
 
-/**
- * Log request exceptions.
- *
- * @author poirigui
- */
 @Provider
 @CommonsLog
-public class RequestExceptionLogger implements RequestEventListener {
-
-    @Context
-    private ContainerRequest request;
+public class RequestExceptionLogger implements ApplicationEventListener {
 
     @Override
-    public void onEvent( RequestEvent requestEvent ) {
-        ContainerRequest request1 = requestEvent.getContainerRequest();
-        log.error( String.format( "Unhandled exception while processing request :%s.",
-                        request1.getMethod() + ' ' + request1.getRequestUri() ),
-                requestEvent.getException() );
+    public void onEvent( ApplicationEvent event ) {
+
+    }
+
+    @Override
+    public RequestEventListener onRequest( RequestEvent requestEvent ) {
+        return event -> {
+            if ( event.getType() == RequestEvent.Type.ON_EXCEPTION ) {
+                ContainerRequest request = event.getContainerRequest();
+                String m;
+                if ( request != null ) {
+                    m = String.format( "Exception was raised for %s %s", request.getMethod(), request.getRequestUri() );
+                } else {
+                    m = "Exception was raised, but there is no current request.";
+                }
+                if ( event.getException() instanceof ClientErrorException
+                        || event.getException() instanceof ServiceUnavailableException ) {
+                    log.warn( m, event.getException() );
+                } else {
+                    log.error( m, event.getException() );
+                }
+            }
+        };
     }
 }

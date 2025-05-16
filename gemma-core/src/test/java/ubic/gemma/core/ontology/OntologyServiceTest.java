@@ -13,14 +13,17 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.ChebiOntologyService;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -40,7 +43,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
+public class OntologyServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -94,12 +97,6 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         @Deprecated
         @Bean
         public FMAOntologyService fmaOntologyService() {
-            return mock();
-        }
-
-        @Deprecated
-        @Bean
-        public NIFSTDOntologyService nifstdOntologyService() {
             return mock();
         }
 

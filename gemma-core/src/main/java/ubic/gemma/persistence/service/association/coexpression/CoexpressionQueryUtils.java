@@ -35,13 +35,13 @@ class CoexpressionQueryUtils {
     static String getExperimentLinkClassName( Taxon taxon ) {
         String g2gClassName;
         if ( TaxonUtils.isHuman( taxon ) )
-            g2gClassName = "HumanExperimentCoexpressionLinkImpl";
+            g2gClassName = "HumanExperimentCoexpressionLink";
         else if ( TaxonUtils.isMouse( taxon ) )
-            g2gClassName = "MouseExperimentCoexpressionLinkImpl";
+            g2gClassName = "MouseExperimentCoexpressionLink";
         else if ( TaxonUtils.isRat( taxon ) )
-            g2gClassName = "RatExperimentCoexpressionLinkImpl";
+            g2gClassName = "RatExperimentCoexpressionLink";
         else
-            g2gClassName = "OtherExperimentCoexpressionLinkImpl";
+            g2gClassName = "OtherExperimentCoexpressionLink";
         return g2gClassName;
     }
 
@@ -76,14 +76,14 @@ class CoexpressionQueryUtils {
     static String getGeneLinkClassName( Taxon taxon ) {
         String g2gClassName;
         if ( TaxonUtils.isHuman( taxon ) )
-            g2gClassName = "HumanGeneCoExpressionImpl";
+            g2gClassName = "HumanGeneCoExpression";
         else if ( TaxonUtils.isMouse( taxon ) )
-            g2gClassName = "MouseGeneCoExpressionImpl";
+            g2gClassName = "MouseGeneCoExpression";
         else if ( TaxonUtils.isRat( taxon ) )
-            g2gClassName = "RatGeneCoExpressionImpl";
+            g2gClassName = "RatGeneCoExpression";
         else
             // must be other
-            g2gClassName = "OtherGeneCoExpressionImpl";
+            g2gClassName = "OtherGeneCoExpression";
         return g2gClassName;
     }
 

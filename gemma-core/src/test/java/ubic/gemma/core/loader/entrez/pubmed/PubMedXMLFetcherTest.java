@@ -37,12 +37,12 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
 @Category({ PubMedTest.class, SlowTest.class })
 public class PubMedXMLFetcherTest {
 
-    private final PubMedXMLFetcher pmf = new PubMedXMLFetcher( Settings.getString( "entrez.efetch.apikey" ) );
+    private final PubMedSearch pmf = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
 
     @Test
     public final void testRetrieveByHTTP() {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
+            BibliographicReference br = pmf.retrieve( "15173114" );
 
             assertNotNull( br );
 
@@ -60,7 +60,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTP2() {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 24850731 );
+            BibliographicReference br = pmf.retrieve( "24850731" );
 
             assertNotNull( br );
 
@@ -81,7 +81,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTPBookshelf() {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 23865096 );
+            BibliographicReference br = pmf.retrieve( "23865096" );
 
             assertNotNull( br );
 
@@ -100,7 +100,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTPNotFound() {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
+            BibliographicReference br = pmf.retrieve( "1517311444" );
             assertNull( br );
         } catch ( Exception e ) {
             assumeThatExceptionIsDueToNetworkIssue( e );

@@ -5,12 +5,12 @@ import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.BatchEffectType;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -27,7 +27,6 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 public class ExpressionExperimentBatchInformationServiceImpl implements ExpressionExperimentBatchInformationService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
-    private static final double BATCH_EFFECT_THRESHOLD = 0.01;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -77,7 +76,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public boolean hasSignificantBatchConfound( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confound: " + ee );
@@ -106,7 +105,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confounds." );
@@ -135,7 +134,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.info( ee + " has no usable batch information, cannot check for confounds for subsets." );
@@ -144,7 +143,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> significantSubsetConfounds = new HashMap<>();
 
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( ee );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee );
         for ( ExpressionExperimentSubSet subset : subSets ) {
             try {
                 List<BatchConfound> subsetConfounds = new ArrayList<>( BatchConfoundUtils.test( subset ) );
@@ -199,7 +198,6 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffectDetails( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLiter( ee );
-
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.hasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
@@ -220,7 +218,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
                 .stream()
-                .filter( BatchInfoPopulationServiceImpl::isBatchFactor )
+                .filter( ExperimentalDesignUtils::isBatchFactor )
                 .findFirst()
                 .orElse( null );
 
@@ -229,7 +227,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        SVDResult svd = svdService.getSvdFactorAnalysis( ee.getId() );
+        SVDResult svd = svdService.getSvdFactorAnalysis( ee );
         if ( svd == null ) {
             log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
             return details;
@@ -264,49 +262,6 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         }
         return details;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BatchEffectType getBatchEffect( ExpressionExperiment ee ) {
-        BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
-        BatchEffectDetails.BatchEffectStatistics batchEffectStatistics = beDetails.getBatchEffectStatistics();
-
-        if ( beDetails.hasSingletonBatches() ) {
-            return BatchEffectType.SINGLETON_BATCHES_FAILURE;
-        } else if ( beDetails.hasUninformativeBatchInformation() ) {
-            return BatchEffectType.UNINFORMATIVE_HEADERS_FAILURE;
-        } else if ( !beDetails.hasBatchInformation() ) {
-            return BatchEffectType.NO_BATCH_INFO;
-        } else if ( beDetails.hasProblematicBatchInformation() ) {
-            return BatchEffectType.PROBLEMATIC_BATCH_INFO_FAILURE;
-        } else if ( beDetails.isSingleBatch() ) {
-            return BatchEffectType.SINGLE_BATCH_SUCCESS;
-        } else if ( beDetails.dataWasBatchCorrected() ) {
-            // Checked for in ExpressionExperimentDetails.js::renderStatus()
-            return BatchEffectType.BATCH_CORRECTED_SUCCESS;
-        } else {
-            if ( batchEffectStatistics == null ) {
-                return BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE;
-            } else if ( batchEffectStatistics.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
-                // this means there was a batch effect but we couldn't correct it
-                return BatchEffectType.BATCH_EFFECT_FAILURE;
-            } else {
-                return BatchEffectType.NO_BATCH_EFFECT_SUCCESS;
-            }
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public String getBatchEffectStatistics( ExpressionExperiment ee ) {
-        BatchEffectDetails beDetails = this.getBatchEffectDetails( ee );
-        if ( beDetails.getBatchEffectStatistics() != null ) {
-            return String.format( "This data set may have a batch artifact (PC %d), p=%.5g",
-                    beDetails.getBatchEffectStatistics().getComponent(),
-                    beDetails.getBatchEffectStatistics().getPvalue() );
-        }
-        return null;
     }
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
@@ -352,7 +307,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         ee = expressionExperimentService.thawLiter( ee );
         if ( ee.getExperimentalDesign() != null ) {
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                     return true;
                 }
             }

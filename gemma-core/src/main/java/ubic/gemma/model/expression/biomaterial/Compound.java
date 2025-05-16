@@ -18,28 +18,16 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.*;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.DocumentId;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
-
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Indexed
-public class Compound extends AbstractDescribable implements Serializable {
+public class Compound extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6782144197298874202L;
     private String registryNumber;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public Compound() {
-    }
 
     @Override
     @DocumentId
@@ -63,6 +51,20 @@ public class Compound extends AbstractDescribable implements Serializable {
 
     public void setRegistryNumber( String registryNumber ) {
         this.registryNumber = registryNumber;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Compound ) )
+            return false;
+        Compound that = ( Compound ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
     }
 
     public static final class Factory {

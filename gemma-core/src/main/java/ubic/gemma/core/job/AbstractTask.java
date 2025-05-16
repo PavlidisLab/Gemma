@@ -18,29 +18,43 @@
  */
 package ubic.gemma.core.job;
 
+import org.springframework.util.Assert;
+
+import javax.annotation.Nullable;
+import java.io.Serializable;
+
 /**
  * @author anton
  */
 public abstract class AbstractTask<C extends TaskCommand> implements Task<C> {
-    protected C taskCommand;
 
-    @SuppressWarnings("WeakerAccess") // Spring requirement
+    private C taskCommand;
+
     public AbstractTask() {
     }
 
     public AbstractTask( C taskCommand ) {
-        assert taskCommand != null;
+        Assert.notNull( taskCommand, "The task command cannot be null." );
         this.taskCommand = taskCommand;
     }
 
     @Override
     public C getTaskCommand() {
+        Assert.state( this.taskCommand != null, "No task command provided." );
         return this.taskCommand;
     }
 
     @Override
     public void setTaskCommand( C taskCommand ) {
-        assert taskCommand != null;
+        Assert.state( this.taskCommand == null, "The task command can only be set once." );
+        Assert.notNull( taskCommand, "The task command cannot be null." );
         this.taskCommand = taskCommand;
+    }
+
+    /**
+     * Create a new task result for this command with an answer.
+     */
+    protected TaskResult newTaskResult( @Nullable Serializable answer ) {
+        return new TaskResult( answer );
     }
 }

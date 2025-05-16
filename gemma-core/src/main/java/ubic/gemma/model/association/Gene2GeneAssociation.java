@@ -21,7 +21,7 @@ package ubic.gemma.model.association;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity representing a relationship between two genes. The designation of "first" and "second" gene is by default
@@ -32,9 +32,7 @@ import java.io.Serializable;
  *
  * @author paul
  */
-public abstract class Gene2GeneAssociation implements Identifiable, Serializable {
-
-    private static final long serialVersionUID = -322186137554528167L;
+public abstract class Gene2GeneAssociation implements Identifiable {
 
     final private Long id = null;
     final private Gene firstGene = null;
@@ -43,14 +41,7 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
     @SuppressWarnings("ConstantConditions") // Hibernate populates fields via reflection.
     @Override
     public int hashCode() {
-        if ( this.id != null )
-            return this.id.hashCode();
-
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( firstGene == null ) ? 0 : firstGene.hashCode() );
-        result = prime * result + ( ( secondGene == null ) ? 0 : secondGene.hashCode() );
-        return result;
+        return Objects.hash( firstGene, secondGene );
     }
 
     @SuppressWarnings("ConstantConditions") // Hibernate populates fields via reflection.
@@ -58,26 +49,13 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
-        if ( obj == null )
+        if ( !( obj instanceof Gene2GeneAssociation ) )
             return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-
         Gene2GeneAssociation other = ( Gene2GeneAssociation ) obj;
-
-        if ( this.id != null )
-            return this.id.equals( other.getId() );
-
-        if ( firstGene == null ) {
-            if ( other.firstGene != null )
-                return false;
-        } else if ( !firstGene.equals( other.firstGene ) )
-            return false;
-
-        if ( secondGene == null ) {
-            return other.secondGene == null;
-        }
-        return secondGene.equals( other.secondGene );
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getFirstGene(), other.getFirstGene() )
+                && Objects.equals( getSecondGene(), other.getSecondGene() );
     }
 
     @Override

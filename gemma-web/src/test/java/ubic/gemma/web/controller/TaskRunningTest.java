@@ -54,7 +54,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
     public final void testCancelledRun() throws Exception {
 
         // goes to the progress page...handleRequest
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         String taskId = mockLongJobController.runJob( taskCommand );
 
         // let it go a little while
@@ -72,7 +72,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
     public final void testFailedRun() throws Exception {
 
         // goes to the progress page...handleRequest
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         taskCommand.setPersistJobDetails( false ); // we use this for 'die' in this test.
 
         String taskId = mockLongJobController.runJob( taskCommand );
@@ -111,7 +111,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Category(SlowTest.class)
     public final void testSuccessfulRun() throws Exception {
 
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         String taskId = mockLongJobController.runJob( taskCommand );
 
         // wait for job to run
@@ -138,4 +138,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( !lastResult.isFailed() );
     }
 
+    private class TestTaskCommand extends TaskCommand {
+    }
 }

@@ -40,12 +40,12 @@ import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.job.AbstractTask;
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -64,10 +63,13 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -102,6 +104,10 @@ public class ArrayDesignController {
     private TaskRunningService taskRunningService;
     @Autowired
     private ArrayDesignAnnotationService annotationFileService;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private ServletContext servletContext;
 
     @Value("${gemma.support.email}")
     private String supportEmail;
@@ -148,12 +154,13 @@ public class ArrayDesignController {
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( !assays.isEmpty() ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
                             + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
-        String taskId = taskRunningService.submitTaskCommand( new TaskCommand( arrayDesign.getId() ) );
+        String taskId = taskRunningService.submitTaskCommand( new EntityTaskCommand<>( ArrayDesign.class, arrayDesign.getId() ) );
 
         return new ModelAndView().addObject( "taskId", taskId );
 
@@ -192,7 +199,7 @@ public class ArrayDesignController {
 
         try ( InputStream is = new FileInputStream( f ) ) {
             response.setContentType( MediaType.APPLICATION_OCTET_STREAM_VALUE );
-            response.setHeader( "Content-Disposition", "attachment; filename=" + fileName );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + fileName + "\"" );
             // response.setContentType( "application/x-gzip" ); // see Bug4206
             response.setContentLength( ( int ) f.length() );
             IOUtils.copy( is, response.getOutputStream() );
@@ -208,9 +215,11 @@ public class ArrayDesignController {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
+        String allArrayDesignUrl = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
+
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -219,37 +228,34 @@ public class ArrayDesignController {
             searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
                     .getByResultObjectType( ArrayDesign.class );
         } catch ( SearchException e ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "Invalid search settings: " + e.getMessage() );
         }
 
         if ( ( searchResults == null ) || ( searchResults.isEmpty() ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "No search criteria provided" );
 
         }
 
-        StringBuilder list = new StringBuilder();
-
-        if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( searchResults.iterator().next().getResultId() );
-            return new ModelAndView(
-                    new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                    .addObject( "message",
-                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
-        }
-
-        for ( SearchResult<ArrayDesign> ad : searchResults ) {
-            list.append( ad.getResultId() ).append( "," );
-        }
+        Collection<Long> ids = searchResults.stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
 
         overallWatch.stop();
         long overallElapsed = overallWatch.getTime();
-        log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
+        log.info( "Generating the AD list:  (" + ids + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list, true ) )
-                .addObject( "message", searchResults.size() + " Platforms matched your search." );
-
+        if ( ids.size() == 1 ) {
+            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( ids.iterator().next(), EntityNotFoundException::new );
+            String url = entityUrlBuilder.fromRoot().entity( arrayDesign ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+        } else {
+            String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, ids ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", searchResults.size() + " Platforms matched your search." );
+        }
     }
 
     @RequestMapping(value = "/generateArrayDesignSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -257,15 +263,17 @@ public class ArrayDesignController {
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         GenerateArraySummaryLocalTask job;
         if ( id == null ) {
-            job = new GenerateArraySummaryLocalTask( new TaskCommand() );
+            job = new GenerateArraySummaryLocalTask( new EntityTaskCommand<>( ArrayDesign.class, null ) );
             String taskId = taskRunningService.submitTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "taskId", taskId );
         }
 
-        job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
+        job = new GenerateArraySummaryLocalTask( new EntityTaskCommand<>( ArrayDesign.class, id ) );
         String taskId = taskRunningService.submitTask( job );
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
+        String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, Collections.singleton( id ) ).toUriString();
+        return new ModelAndView( new RedirectView( url, true ) )
                 .addObject( "taskId", taskId );
     }
 
@@ -460,7 +468,7 @@ public class ArrayDesignController {
             throw new IllegalArgumentException( "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );
         }
 
-        RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );
+        RemoveArrayLocalTask job = new RemoveArrayLocalTask( new EntityTaskCommand<>( ArrayDesign.class, arrayDesign.getId() ) );
 
         return taskRunningService.submitTask( job );
 
@@ -490,9 +498,7 @@ public class ArrayDesignController {
 
     private ModelAndView showArrayDesignInternal( ArrayDesign arrayDesign ) {
         return new ModelAndView( "arrayDesign.detail" )
-                .addObject( "arrayDesignId", arrayDesign.getId() )
-                .addObject( "arrayDesignShortName", arrayDesign.getShortName() )
-                .addObject( "arrayDesignName", arrayDesign.getName() );
+                .addObject( "arrayDesign", arrayDesign );
     }
 
     @RequestMapping(value = "/showCompositeSequenceSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -517,29 +523,22 @@ public class ArrayDesignController {
 
     @RequestMapping(value = "/showExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperiments( @RequestParam("id") Long id ) {
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-        if ( arrayDesign == null ) {
-            // FIXME: treat this as a 404 instead
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
-                    .addObject( "message", "Platform with id=" + id + " not found" );
-        }
+        ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id, EntityNotFoundException::new );
         // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
-
-        String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
-        return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids, true ) );
+        String url = entityUrlBuilder.fromRoot().some( ees ).toUriString();
+        return new ModelAndView( new RedirectView( url, true ) );
     }
 
     @SuppressWarnings("unused")
     public String updateReport( EntityDelegator<ArrayDesign> ed ) {
-        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( ed.getId() ) );
+        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new EntityTaskCommand<>( ArrayDesign.class, ed.getId() ) );
         return taskRunningService.submitTask( job );
     }
 
     @SuppressWarnings("unused")
     public String updateReportById( Long id ) {
-        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
+        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new EntityTaskCommand<>( ArrayDesign.class, id ) );
         return taskRunningService.submitTask( job );
     }
 
@@ -593,24 +592,23 @@ public class ArrayDesignController {
     /**
      * Inner class used for building array design summary
      */
-    class GenerateArraySummaryLocalTask extends AbstractTask<TaskCommand> {
+    class GenerateArraySummaryLocalTask extends AbstractTask<EntityTaskCommand> {
 
-        public GenerateArraySummaryLocalTask( TaskCommand command ) {
+        public GenerateArraySummaryLocalTask( EntityTaskCommand command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
 
-            if ( this.taskCommand.getEntityId() == null ) {
+            if ( this.getTaskCommand().getEntityId() == null ) {
                 log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
-                return new TaskResult( taskCommand,
-                        new ModelAndView( new RedirectView( "/arrays/showAllArrayDesignStatistics.html", true ) ) );
+                return newTaskResult( servletContext.getContextPath() + "/arrays/showAllArrayDesignStatistics.html" );
             }
             ArrayDesignValueObject report = arrayDesignReportService
-                    .generateArrayDesignReport( taskCommand.getEntityId() );
-            return new TaskResult( taskCommand, report );
+                    .generateArrayDesignReport( getTaskCommand().getEntityId() );
+            return newTaskResult( report );
 
         }
     }
@@ -618,23 +616,19 @@ public class ArrayDesignController {
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayLocalTask extends AbstractTask<TaskCommand> {
+    class RemoveArrayLocalTask extends AbstractTask<EntityTaskCommand<ArrayDesign>> {
 
-        public RemoveArrayLocalTask( TaskCommand command ) {
+        public RemoveArrayLocalTask( EntityTaskCommand<ArrayDesign> command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
-            ArrayDesign ad = arrayDesignService.loadOrFail( taskCommand.getEntityId(),
-                    EntityNotFoundException::new, "Could not load platform with id=" + taskCommand.getEntityId() );
+            ArrayDesign ad = arrayDesignService.loadOrFail( getTaskCommand().getEntityId(),
+                    EntityNotFoundException::new, "Could not load platform with id=" + getTaskCommand().getEntityId() );
             arrayDesignService.remove( ad );
-            return new TaskResult( taskCommand,
-                    new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
-                            .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
-
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
+            return newTaskResult( "Array " + ad.getShortName() + " removed from Database." );
         }
-
     }
-
 }

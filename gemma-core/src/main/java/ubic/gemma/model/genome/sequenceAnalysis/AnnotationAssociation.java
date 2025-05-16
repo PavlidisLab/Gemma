@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,9 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 /**
  * An association between BioSequence and GeneProduct that is provided through an external annotation source, rather
@@ -28,9 +30,8 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * information is available; annotations are unavailable (e.g., non-model organisms); or sequences are too short to
  * align using our usual methods (e.g., miRNAs).
  */
-public class AnnotationAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
+public class AnnotationAssociation extends BioSequence2GeneProduct {
 
-    private static final long serialVersionUID = 8648644792470060326L;
     private ExternalDatabase source;
 
     /**
@@ -44,12 +45,33 @@ public class AnnotationAssociation extends ubic.gemma.model.association.BioSeque
         this.source = source;
     }
 
+    @Override
+    public int hashCode() {
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct(), getSource() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof AnnotationAssociation ) ) {
+            return false;
+        }
+        AnnotationAssociation other = ( AnnotationAssociation ) object;
+        if ( getId() != null && other.getId() != null ) {
+            return getId().equals( other.getId() );
+        } else {
+            return IdentifiableUtils.equals( getBioSequence(), other.getBioSequence() )
+                    && IdentifiableUtils.equals( getGeneProduct(), other.getGeneProduct() )
+                    && IdentifiableUtils.equals( getSource(), other.getSource() );
+        }
+    }
+
     public static final class Factory {
 
         public static AnnotationAssociation newInstance() {
             return new AnnotationAssociation();
         }
-
     }
-
 }

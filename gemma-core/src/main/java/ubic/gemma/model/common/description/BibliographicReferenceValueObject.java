@@ -18,11 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 
 import java.util.*;
 
@@ -49,7 +48,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private String volume;
     private Collection<String> meshTerms;
     private Collection<String> chemicalsTerms;
-    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
     private boolean retracted = false;
 
     /**
@@ -84,10 +82,10 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.volume = ref.getVolume();
         this.citation = constructCitation( ref );
 
-        if ( Hibernate.isInitialized( ref.getMeshTerms() ) ) {
+        if ( ModelUtils.isInitialized( ref.getMeshTerms() ) ) {
             this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
         }
-        if ( Hibernate.isInitialized( ref.getChemicals() ) ) {
+        if ( ModelUtils.isInitialized( ref.getChemicals() ) ) {
             this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
         }
         this.retracted = ref.getRetracted();
@@ -166,13 +164,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.authorList = authorList;
     }
 
-    public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
-        return this.bibliographicPhenotypes;
-    }
-
-    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
-        this.bibliographicPhenotypes = bibliographicPhenotypes;
-    }
 
     /**
      * @return the chemicalsTerms

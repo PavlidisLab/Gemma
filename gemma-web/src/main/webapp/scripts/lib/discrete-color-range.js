@@ -18,8 +18,8 @@
  */
 
 // setup namespace if not already defined
-if ( !org )
-   var org = {};
+if ( typeof org === 'undefined' )
+   org = {};
 if ( !org.systemsbiology )
    org.systemsbiology = {};
 if ( !org.systemsbiology.visualization )

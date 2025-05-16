@@ -3,37 +3,14 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Home</title>
-
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
-<jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
+<%-- <Gemma:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
 </head>
-
-<script type="text/javascript">
-Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
-Ext.onReady( function() {
-
-   Ext.QuickTips.init();
-
-   Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
-   var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
-      height : 200,
-      flex : '0'
-   } );
-   summaryPanel.render( "summaryPanel-div" );
-
-   var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
-   generalSearchPanel.render( "generalSearchSimple-div" );
-
-
-} );
-</script>
 
 <input type="hidden" id="reloadOnLogout" value="false">
 
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText" class="container">
-    <h1 style="font-weight: bold; text-align: center;" class="gray">
+    <h1 style="font-weight: bold; text-align: center; padding-top: 1em;" class="gray">
         Database of curated and re-analyzed gene expression studies
     </h1>
 </div>
@@ -41,16 +18,21 @@ Ext.onReady( function() {
 <div id="frontPageSlideShow">
     <div class="container flex flex-wrap flex-lg-nowrap justify-space-between g-5 mt-10 mb-10">
         <div class="small w-100" style="max-width: 372px;">
-            Gemma provides data, experimental design annotations, and differential expression analysis results for
-            thousands
-            of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
-                href="https://www.ncbi.nlm.nih.gov/geo/">GEO</a>),
-            annotate experimental conditions, conduct quality control and compute differential expression using
-            standardized
-            procedures. We have especially good coverage of experiments relevant to the nervous system. See the <a
-                href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information.
-            Gemma was developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis
-            group at UBC</a>.
+            <p>
+                Gemma provides data, experimental design annotations, and differential expression analysis results for
+                thousands of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily
+                NCBI <a href="https://www.ncbi.nlm.nih.gov/geo/">GEO</a>), annotate experimental conditions, conduct
+                quality control and compute differential expression using standardized procedures. We have especially
+                good coverage of experiments relevant to the nervous system. See the <a
+                    href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information. Gemma was
+                developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis group at UBC</a>.
+            </p>
+            <p>
+                <b>May 2025:</b> We are happy to announce that Gemma now has support for single-cell/single-nucleus
+                data. While work is still in progress, you can <a href="${appConfig['gemma.gemBrow.url']}/#/scrnaseq">start using
+                data now</a>. We're providing some additional details <a
+                    href="https://pavlidislab.github.io/Gemma/scrnaseq.html">here</a>.
+            </p>
         </div>
 
         <%-- Width here needs to be enough to fit the labels at left and right edges --%>
@@ -60,20 +42,21 @@ Ext.onReady( function() {
                  width="340" height="240"
                  alt="A pie chart representing proportion of taxa among Gemma datasets." />--%>
         <div class="flex flex-grow flex-wrap flex-md-nowrap g-5 justify-space-around w-100">
-            <img class="w-100" style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); max-width: 348px;"
-                    src="${pageContext.request.contextPath}/images/showoff.png"
+            <Gemma:img cssClass="w-100" cssStyle="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); max-width: 348px;"
+                    src="/images/showoff.png"
                     alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
-            <%--  <img style="position: absolute; top: 180px; left: 435px;"
-                      src="${pageContext.request.contextPath}/images/slideShow/humanOutline_35_3.png"
-                      alt="An overlay of a human on top of its section of the pie chart."
-                      width="35" height="53" />
-              <img style="position: absolute; top: 300px; left: 420px;"
-                      src="${pageContext.request.contextPath}/images/slideShow/mouseOutline65_simplified.png"
-                      alt="An overlay of a mouse on top of its section of the pie chart."
-                      width="65" height="17" />--%>
-            <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
-            <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
-
+            <%--
+            <Gemma:img cssStyle="position: absolute; top: 180px; left: 435px;"
+                    src="/images/slideShow/humanOutline_35_3.png"
+                    alt="An overlay of a human on top of its section of the pie chart."
+                    width="35" height="53" />
+            <Gemma:img cssStyle="position: absolute; top: 300px; left: 420px;"
+                    src="/images/slideShow/mouseOutline65_simplified.png"
+                    alt="An overlay of a mouse on top of its section of the pie chart."
+                    width="65" height="17" />
+            <Gemma:img cssStyle="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png" />
+            <div id="featuredNumberOfDatasets" class="slideTextTD"></div>
+            --%>
             <div id="summaryPanel-div" class="w-100" style="max-width: 270px;"></div>
         </div>
     </div>
@@ -104,12 +87,12 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
             </p>
             <div class="flex flex-grow g-3 justify-space-around">
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
-                    <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
+                    <Gemma:img src="/images/slideShow/bioconductor-logo.png"
                             alt="Bioconductor Logo"
                             width="175" />
                 </a>
                 <a href="https://pypi.org/project/gemmapy/">
-                    <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
+                    <Gemma:img src="/images/slideShow/pypi-logo.svg"
                             alt="PyPi Logo"
                             width="75" />
                 </a>
@@ -122,8 +105,8 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
             <a href="${appConfig['gemma.gemBrow.url']}">
-                <img style="width: 100%; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
-                        src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
+                <Gemma:img cssStyle="width: 100%; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
+                        src="/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser." />
             </a>
         </div>
@@ -152,7 +135,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         </div>
         <div>Copyright &copy; 2007-2024</div>
         <div class="d-lg">
-             <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
+            <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
         </div>
         <!-- <div><jsp:include page="/common/social.jsp"/></div> -->
         <div class="flex-grow"></div>
@@ -162,3 +145,23 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         </a>
     </div>
 </div>
+
+<script type="text/javascript">
+Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
+Ext.onReady( function() {
+
+   Ext.QuickTips.init();
+
+   Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+   var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
+      height : 200,
+      flex : '0'
+   } );
+   summaryPanel.render( "summaryPanel-div" );
+
+   var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
+   generalSearchPanel.render( "generalSearchSimple-div" );
+
+
+} );
+</script>

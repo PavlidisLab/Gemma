@@ -25,11 +25,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -105,8 +104,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Integer numGoTerms = 0;
     private String officialName;
     private String officialSymbol;
-    @JsonIgnore
-    private Collection<CharacteristicValueObject> phenotypes;
+
     @JsonIgnore
     private Integer platformCount;
     @JsonIgnore
@@ -144,15 +142,15 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.ensemblId = gene.getEnsemblId();
-        if ( gene.getMultifunctionality() != null && Hibernate.isInitialized( gene.getMultifunctionality() ) ) {
+        if ( gene.getMultifunctionality() != null && ModelUtils.isInitialized( gene.getMultifunctionality() ) ) {
             this.multifunctionalityRank = gene.getMultifunctionality().getRank();
         } else {
             this.multifunctionalityRank = null;
         }
-        if ( gene.getAliases() != null && Hibernate.isInitialized( gene.getAliases() ) ) {
+        if ( gene.getAliases() != null && ModelUtils.isInitialized( gene.getAliases() ) ) {
             this.aliases = gene.getAliases().stream().map( GeneAlias::getAlias ).collect( Collectors.toCollection( TreeSet::new ) );
         }
-        if ( Hibernate.isInitialized( gene.getAccessions() ) ) {
+        if ( ModelUtils.isInitialized( gene.getAccessions() ) ) {
             this.accessions = gene.getAccessions().stream()
                     .map( DatabaseEntryValueObject::new )
                     .collect( Collectors.toSet() );

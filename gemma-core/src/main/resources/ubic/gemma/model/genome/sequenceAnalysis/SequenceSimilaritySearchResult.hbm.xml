@@ -30,6 +30,7 @@
                      lazy="false" fetch="join">
             <column name="TARGET_ALIGNED_REGION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
+        <!-- for historical reason, the discriminator uses the Impl suffix -->
         <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" discriminator-value="BlatResultImpl"
                   abstract="false">
             <property name="matches" type="java.lang.Integer">

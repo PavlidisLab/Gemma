@@ -1,6 +1,7 @@
 package ubic.gemma.core.config;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,12 +15,17 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.format.support.DefaultFormattingConversionService;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -123,7 +129,7 @@ public class SettingsConfig {
             if ( !r.exists() ) {
                 throw new RuntimeException( p + " could not be loaded." );
             }
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from -Dgemma.config)", r ) );
             userConfigLoaded = true;
         }
@@ -136,7 +142,7 @@ public class SettingsConfig {
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( r.exists() ) {
                 log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
-                warnIfReadableByGroupOrOthers( p );
+                warnIfReadableByOthers( p );
                 result.addLast( new ResourcePropertySource( r.getDescription() + " (from $CATALINA_BASE)", r ) );
                 userConfigLoaded = true;
             }
@@ -148,7 +154,7 @@ public class SettingsConfig {
         FileSystemResource r = new FileSystemResource( p.toFile() );
         if ( !userConfigLoaded && r.exists() ) {
             log.debug( "Loading user configuration from " + p.toAbsolutePath() + "." );
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from $HOME)", r ) );
             userConfigLoaded = true;
         }
@@ -179,6 +185,52 @@ public class SettingsConfig {
         return result;
     }
 
+    private static Map<String, String> cachedSettingsDescriptions = null;
+
+    @Bean
+    public static synchronized Map<String, String> settingsDescriptions() throws IOException {
+        if ( cachedSettingsDescriptions != null ) {
+            return cachedSettingsDescriptions;
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for ( String configFile : DEFAULT_CONFIGURATIONS ) {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( new ClassPathResource( configFile ).getInputStream(), StandardCharsets.UTF_8 ) ) ) {
+                String description = null;
+                String line;
+                while ( ( line = br.readLine() ) != null ) {
+                    if ( line.startsWith( "#" ) ) {
+                        if ( line.contains( "suppress inspection" ) ) {
+                            continue;
+                        }
+                        description = StringUtils.stripStart( line, "#" );
+                    } else if ( line.contains( "=" ) ) {
+                        String[] pieces = line.split( "=", 2 );
+                        String prop = StringUtils.strip( pieces[0] );
+                        String defaultValue = pieces[1];
+                        String desc = "";
+                        if ( description != null ) {
+                            desc = StringUtils.capitalize( StringUtils.strip( description ) );
+                        }
+                        if ( StringUtils.isNotBlank( defaultValue ) ) {
+                            if ( !desc.isEmpty() ) {
+                                desc = StringUtils.appendIfMissing( desc, "." ) + " ";
+                            }
+                            // TODO: use the placeholder resolver
+                            desc += "Default value is '" + defaultValue + "'.";
+                        }
+                        result.put( prop, desc );
+                        description = null;
+                    }
+                }
+            }
+        }
+
+        cachedSettingsDescriptions = result;
+
+        return result;
+    }
+
     /**
      * Filter system properties that are declared in the default locations.
      */
@@ -195,12 +247,11 @@ public class SettingsConfig {
                     if ( allProperties.containsKey( SYSTEM_PROPERTY_PREFIX + key ) ) {
                         props.setProperty( key, allProperties.getProperty( SYSTEM_PROPERTY_PREFIX + key ) );
                     } else if ( allProperties.containsKey( key ) ) {
-                        if ( !key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
-                            // allow un-prefixed keys for backward-compatibility
-                            // TODO: remove this as per https://github.com/PavlidisLab/Gemma/issues/1110
-                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
+                        if ( key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
+                            props.setProperty( key, allProperties.getProperty( key ) );
+                        } else {
+                            log.warn( String.format( "System property %s matches a Gemma property, but it is not prefixed with with '%s'. It will be ignored.", key, SYSTEM_PROPERTY_PREFIX ) );
                         }
-                        props.setProperty( key, allProperties.getProperty( key ) );
                     }
                 }
             }
@@ -208,16 +259,15 @@ public class SettingsConfig {
         return props;
     }
 
-    private static void warnIfReadableByGroupOrOthers( Path path ) throws IOException {
+    private static void warnIfReadableByOthers( Path path ) throws IOException {
         Set<PosixFilePermission> permissions;
         try {
             permissions = Files.getPosixFilePermissions( path );
         } catch ( UnsupportedOperationException e ) {
             return;
         }
-        if ( permissions.contains( PosixFilePermission.GROUP_READ ) || permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
-            log.warn( String.format( "%s may contain credentials and is not exclusively readable by its owner. Adjust the permissions by running 'chmod go-r %s' to remove this warning.",
-                    path.getFileName(), path.toAbsolutePath() ) );
+        if ( permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
+            log.warn( String.format( "%s may contain credentials and is readable by others. Adjust the permissions by running 'chmod o-r %s' to remove this warning.", path.getFileName(), path.toAbsolutePath() ) );
         }
     }
 }

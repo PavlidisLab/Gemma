@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -39,7 +40,7 @@ public class DifferentialExpressionValueObject implements Serializable {
     private Double corrP;
     private Direction direction;
     private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
-    private ExpressionExperimentValueObject expressionExperiment;
+    private BioAssaySetValueObject expressionExperiment;
     private Boolean fisherContribution = false;
     private GeneValueObject gene;
     private Long id;
@@ -117,11 +118,11 @@ public class DifferentialExpressionValueObject implements Serializable {
         this.experimentalFactors = experimentalFactors;
     }
 
-    public ExpressionExperimentValueObject getExpressionExperiment() {
+    public BioAssaySetValueObject getExpressionExperiment() {
         return expressionExperiment;
     }
 
-    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
+    public void setExpressionExperiment( BioAssaySetValueObject expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 
@@ -235,8 +236,8 @@ public class DifferentialExpressionValueObject implements Serializable {
         }
         buf.append( "\t" );
 
-        if ( StringUtils.isNotBlank( expressionExperiment.getShortName() ) ) {
-            buf.append( expressionExperiment.getShortName() ).append( "\t" );
+        if ( expressionExperiment instanceof ExpressionExperimentValueObject ) {
+            buf.append( ( ( ExpressionExperimentValueObject ) expressionExperiment ).getShortName() ).append( "\t" );
         }
 
         buf.append( probe ).append( "\t" );

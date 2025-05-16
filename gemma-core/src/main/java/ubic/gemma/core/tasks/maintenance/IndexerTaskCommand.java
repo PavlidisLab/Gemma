@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.tasks.maintenance;
 
+import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 
 /**
@@ -42,11 +43,11 @@ public class IndexerTaskCommand extends TaskCommand {
 
     public IndexerTaskCommand() {
         super();
-        this.setMaxRuntime( IndexerTaskCommand.INDEXER_MAX_RUNTIME );
+        this.setMaxRuntimeMillis( IndexerTaskCommand.INDEXER_MAX_RUNTIME );
     }
 
     @Override
-    public Class<?> getTaskClass() {
+    public Class<? extends Task<?>> getTaskClass() {
         return IndexerTask.class;
     }
 

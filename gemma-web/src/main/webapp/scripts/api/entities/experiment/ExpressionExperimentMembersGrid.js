@@ -147,7 +147,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                         }
                         this.fireEvent('experimentsLoaded');
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
             },
 
@@ -180,7 +180,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                                 this.hideLoadMask();
                             }.createDelegate(this),
                             errorHandler: function (err, exception) {
-                                Gemma.genericErrorHandler(err, exception);
+                                Gemma.Error.genericErrorHandler(err, exception);
                                 this.hideLoadMask();
                             }.createDelegate(this)
                         });
@@ -199,7 +199,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                                 this.hideLoadMask();
                             }.createDelegate(this),
                             errorHandler: function (err, exception) {
-                                Gemma.genericErrorHandler(err, exception);
+                                Gemma.Error.genericErrorHandler(err, exception);
                                 this.hideLoadMask();
                             }.createDelegate(this)
                         });
@@ -235,10 +235,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                 if (this.allowRemovals) {
                     var removeSelectedBtn = new Ext.Button({
                         text: 'Remove Selected',
-                        icon: ctxBasePath + "/images/icons/cross.png",
+                        icon: Gemma.CONTEXT_PATH + "/images/icons/cross.png",
                         hidden: true,
                         handler: function (button) {
-                            debugger;
+                            // debugger;
                             var records = this.getSelectionModel().getSelections();
                             this.getStore().remove(records);
                             button.setVisible(false);
@@ -274,7 +274,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                             renderer: function (value, metadata, record, row, col, ds) {
                                 return String
                                     .format(
-                                        "<a  style='cursor:pointer;' target='_blank' href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
+                                        "<a  style='cursor:pointer;' target='_blank' href='" + Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
                                         record.data.id, record.data.shortName);
                             },
                             sortable: true,
@@ -321,7 +321,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                             renderer: function (value, metadata, record, row, col, ds) {
                                 return String
                                     .format(
-                                        "<a style='cursor:pointer;' target='_blank' href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
+                                        "<a style='cursor:pointer;' target='_blank' href='" + Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
                                         + "&nbsp;<span style='color:grey'>{3}&nbsp;{4}</span>" + "<br>{2}", record.data.id,
                                         record.data.shortName, record.data.name, record.data.hasCoexpressionAnalysis ? 'C' : '',
                                         record.data.hasDifferentialExpressionAnalysis ? 'D' : '');
@@ -410,7 +410,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                     disabled: (this.allowSaveToSession || this.hideOkCancel)
                 });
                 this.exportButton = new Ext.Button({
-                    icon: ctxBasePath + "/images/download.gif",
+                    icon: Gemma.CONTEXT_PATH + "/images/download.gif",
                     tooltip: "Export to text",
                     handler: this.exportToTxt,
                     scope: this
@@ -613,7 +613,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             },
 
             login: function () {
-                window.open(ctxBasePath + "/login.jsp");
+                window.open(Gemma.CONTEXT_PATH + "/login.jsp");
             },
             okHandler: function () {
                 // if user has made changes, save to session
@@ -648,7 +648,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             exportToTxt: function () {
                 // make download link
                 var downloadLink = String.format(
-                    ctxBasePath + "/expressionExperiment/downloadExpressionExperimentList.html?e={0}", this.getEEIds());
+                    Gemma.CONTEXT_PATH + "/expressionExperiment/downloadExpressionExperimentList.html?e={0}", this.getEEIds());
                 window.open(downloadLink);
             },
 
@@ -1029,7 +1029,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar, {
         });
 
         this.addBtn = new Ext.Toolbar.Button({
-            icon: ctxBasePath + "/images/icons/add.png",
+            icon: Gemma.CONTEXT_PATH + "/images/icons/add.png",
             cls: "x-btn-text-icon",
             tooltip: "Add selected experiment(s) to the list",
             text: 'Add',

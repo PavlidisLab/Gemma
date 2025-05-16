@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import ubic.gemma.model.common.description.Characteristic;
@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 /**
  * A special kind of characteristic that act as a statement.
@@ -36,6 +38,19 @@ public class Statement extends Characteristic {
     public static class Factory {
         public static Statement newInstance() {
             return new Statement();
+        }
+
+        public static Statement newInstance( String category, @Nullable String categoryUri, String subject, @Nullable String subjectUri ) {
+            final Statement entity = new Statement();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setSubject( subject );
+            entity.setSubjectUri( stripToNull( subjectUri ) );
+            return entity;
+        }
+
+        public static Statement newInstance( Characteristic subject ) {
+            return newInstance( subject.getCategory(), subject.getCategoryUri(), subject.getValue(), subject.getValueUri() );
         }
     }
 
@@ -305,8 +320,6 @@ public class Statement extends Characteristic {
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
         // don't both hashing labels unless the URI is null
         return super.hashCode() + 31 * Objects.hash(
                 StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),

@@ -86,11 +86,11 @@ Ext.onReady( function() {
                        var emailAlert = record.get( "emailAlert" );
                        if ( !completed ) {
                           actions += '<span class="link" onClick="Ext.getCmp(\'submittedTaskGrid\').cancelTask(\''
-                             + value + '\')"><img src="' + ctxBasePath + '/images/icons/cross.png" /></span>';
+                             + value + '\')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/cross.png" /></span>';
                        }
                        if ( !emailAlert && !completed ) {
                           actions += '<span class="link" onClick="Ext.getCmp(\'submittedTaskGrid\').addEmailAlert(\''
-                             + value + '\')"><img src="' + ctxBasePath + '/images/icons/email.png" /></span>';
+                             + value + '\')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/email.png" /></span>';
                        }
 
                        return actions;

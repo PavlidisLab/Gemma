@@ -140,16 +140,6 @@ public class GenePickerController {
     /**
      * AJAX
      *
-     * @return Taxon that are on Phenocarta evidence
-     */
-    public Collection<TaxonValueObject> getTaxaWithEvidence() {
-
-        return this.taxonService.getTaxaWithEvidence();
-    }
-
-    /**
-     * AJAX
-     *
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {

@@ -27,9 +27,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class SingletonBatchInvalidEvent extends FailedBatchInformationFetchingEvent {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 7917557159624872204L;
-
 }

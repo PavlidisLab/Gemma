@@ -42,6 +42,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.util.concurrent.Executors;
 
 import java.awt.*;
 import java.io.File;
@@ -51,7 +52,6 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -847,8 +847,16 @@ class ComBat<R, C> {
 
     private DoubleMatrix1D rowNonMissingCounts( DoubleMatrix2D matrix ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( matrix.rows() );
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            result.set( i, DescriptiveWithMissing.sizeWithoutMissingValues( new DoubleArrayList( matrix.viewRow( i ).toArray() ) ) );
+        int rows = matrix.rows();
+        int cols = matrix.columns();
+        for ( int i = 0; i < rows; i++ ) {
+            int rowSize = 0;
+            for ( int j = 0; j < cols; j++ ) {
+                if ( !Double.isNaN( matrix.get( i, j ) ) ) {
+                    rowSize++;
+                }
+            }
+            result.set( i, rowSize );
         }
         return result;
     }

@@ -19,10 +19,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class OpenApiTest extends AbstractJUnit4SpringContextTests {
+public class OpenApiTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -151,25 +151,46 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testEnsureThatAllEndpointHaveASuccessOrRedirection() {
-        assertThat( spec.getPaths() )
-                .describedAs( "all paths" )
-                .allSatisfy( ( path, operations ) -> {
-                    assertThat( operations.getGet().getResponses() )
-                            .describedAs( "GET %s", path )
-                            .hasEntrySatisfying( new Condition<>( entry -> {
-                                if ( entry.getKey().startsWith( "3" ) ) {
-                                    // a redirection, no need for a default response
-                                } else {
-                                    assertThat( entry.getKey() ).startsWith( "2" );
-                                    assertThat( entry.getValue().getContent() )
-                                            .describedAs( "GET %s -> 200", path )
-                                            .isNotEmpty()
-                                            .doesNotContainKey( "*/*" );
-                                }
-                                return true;
-                            }, "" ) );
-                } );
+    public void testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection() {
+        SoftAssertions assertions = new SoftAssertions();
+        for ( String path : spec.getPaths().keySet() ) {
+            if ( path.equals( "/genes/probes/refresh" ) ) {
+                // FIXME: this is broken, see https://github.com/swagger-api/swagger-core/issues/4693
+                continue;
+            }
+            PathItem operations = spec.getPaths().get( path );
+            assertions.assertThat( operations.getGet().getResponses() )
+                    .describedAs( "GET %s (%s)", path, operations.getGet().getOperationId() )
+                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )
+                            || entry.equals( "201" )
+                            || entry.equals( "204" )
+                            || entry.startsWith( "3" ),
+                            "has at least a default GET response or is a redirection" ) )
+                    .allSatisfy( ( responseCode, content ) -> {
+                        if ( responseCode.startsWith( "3" ) ) {
+                            // a redirection, no need for a default responses
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
+                        } else if ( responseCode.equals( "201" ) ) {
+                            // created
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .doesNotContainKey( "*/*" );
+                        } else if ( responseCode.equals( "204" ) ) {
+                            // no content
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNull();
+                        } else {
+                            assertThat( content.getContent() )
+                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
+                                    .isNotEmpty()
+                                    .doesNotContainKey( "*/*" );
+                        }
+                    } );
+        }
+        assertions.assertAll();
     }
 
     @Test
@@ -265,7 +286,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
         assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
                 .get( "200" )
                 .getContent()
-                .get( "text/tab-separated-values; charset=UTF-8" )
+                .get( "text/tab-separated-values; charset=UTF-8; q=0.9" )
                 .getExample() )
                 .isEqualTo( IOUtils.resourceToString( "/restapidocs/examples/result-set.tsv", StandardCharsets.UTF_8 ) );
     }

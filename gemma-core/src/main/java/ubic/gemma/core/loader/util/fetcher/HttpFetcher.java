@@ -21,14 +21,10 @@ package ubic.gemma.core.loader.util.fetcher;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
@@ -41,11 +37,11 @@ import java.util.concurrent.*;
 public class HttpFetcher extends AbstractFetcher {
 
     @Override
-    public Collection<LocalFile> fetch( String url ) {
+    public Collection<File> fetch( String url ) {
         return this.fetch( url, null );
     }
 
-    public Collection<LocalFile> fetch( String url, String outputFileName ) {
+    public Collection<File> fetch( String url, String outputFileName ) {
         AbstractFetcher.log.info( "Seeking " + url );
 
         this.localBasePath = Settings.getDownloadPath();
@@ -117,16 +113,11 @@ public class HttpFetcher extends AbstractFetcher {
     protected void initConfig() {
     }
 
-    protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
-        Collection<LocalFile> result = new HashSet<>();
+    protected Collection<File> listFiles( String seekFile, String outputFileName ) throws IOException {
+        Collection<File> result = new HashSet<>();
         File file = new File( outputFileName );
         AbstractFetcher.log.info( "Downloaded: " + file );
-        LocalFile newFile = LocalFile.Factory.newInstance();
-        newFile.setLocalURL( file.toURI() );
-        newFile.setRemoteURL( URI.create( seekFile ) );
-        newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
-        result.add( newFile );
+        result.add( file );
         return result;
     }
-
 }

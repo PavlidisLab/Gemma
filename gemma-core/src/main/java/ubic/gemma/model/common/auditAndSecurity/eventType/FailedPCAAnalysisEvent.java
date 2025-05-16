@@ -20,9 +20,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 public class FailedPCAAnalysisEvent extends NeedsAttentionEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7055117029646665872L;
-
 }

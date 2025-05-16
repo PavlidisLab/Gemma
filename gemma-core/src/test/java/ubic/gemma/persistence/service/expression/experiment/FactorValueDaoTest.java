@@ -45,7 +45,7 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         ExperimentalDesign ed = new ExperimentalDesign();
         sessionFactory.getCurrentSession().persist( ed );
 
-        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( FactorType.CONTINUOUS, "test" );
+        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( "test", FactorType.CONTINUOUS );
         factor.setExperimentalDesign( ed );
         sessionFactory.getCurrentSession().persist( factor );
 

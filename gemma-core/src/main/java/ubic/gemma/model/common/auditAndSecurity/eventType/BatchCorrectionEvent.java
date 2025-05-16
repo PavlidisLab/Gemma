@@ -24,6 +24,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class BatchCorrectionEvent extends ExpressionExperimentAnalysisEvent {
 
-    private static final long serialVersionUID = -3061045506228031201L;
-
 }

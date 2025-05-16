@@ -7,21 +7,21 @@
             http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-    <!-- Local tasks executor -->
-    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+    <bean id="entityUrlBuilder" class="ubic.gemma.persistence.util.EntityUrlBuilder" primary="true">
+        <constructor-arg name="hostUrl" value="${gemma.hosturl}"/>
+    </bean>
+
+    <!-- Local tasks executor for short-lived tasks -->
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" primary="true">
         <property name="threadNamePrefix" value="gemma-local-tasks-thread-"/>
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
     </bean>
 
-    <!-- Message source for this context, loaded from localized "messages_xx" files -->
-    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-        <property name="basenames">
-            <list>
-                <value>classpath:messages</value>
-                <value>classpath:ubic/gemma/core/messages</value>
-            </list>
-        </property>
-        <property name="fallbackToSystemLocale" value="false"/>
+    <!-- Task executor used for generating data files -->
+    <bean id="expressionDataFileTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="threadNamePrefix" value="gemma-expression-data-file-tasks-thread-"/>
+        <property name="corePoolSize" value="${gemma.expressionDataFileTasks.corePoolSize}"/>
+        <property name="queueCapacity" value="${gemma.expressionDataFileTasks.queueCapacity}"/>
     </bean>
 
     <!-- Configure Velocity for sending e-mail -->
@@ -71,7 +71,7 @@
                     <bean class="ubic.gemma.core.metrics.binder.database.HikariCPMetrics">
                         <constructor-arg ref="dataSource"/>
                     </bean>
-                    <bean class="ubic.gemma.core.metrics.binder.ThreadPoolTaskExecutorMetrics">
+                    <bean class="ubic.gemma.core.metrics.binder.GenericTaskExecutorMetrics">
                         <constructor-arg ref="taskExecutor"/>
                         <property name="poolName" value="gemmaLocalTasks"/>
                     </bean>

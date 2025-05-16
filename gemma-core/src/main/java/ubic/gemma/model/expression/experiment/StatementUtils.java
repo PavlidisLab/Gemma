@@ -1,6 +1,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -11,6 +13,13 @@ import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
  * @author poirigui
  */
 public class StatementUtils {
+
+    /**
+     * Test if the given statement has the given subject.
+     */
+    public static boolean hasSubject( Statement statement, Characteristic subject ) {
+        return CharacteristicUtils.equals( statement.getSubject(), statement.getSubjectUri(), subject.getValue(), subject.getValueUri() );
+    }
 
     /**
      * List of predicates whose object should appear before the subject.

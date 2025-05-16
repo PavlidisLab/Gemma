@@ -76,7 +76,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
             scope : this,
             cls : 'x-toolbar-standardbutton'
          } ), new Ext.Button( {
-            icon : ctxBasePath + '/images/icons/information.png',
+            icon : Gemma.CONTEXT_PATH + '/images/icons/information.png',
             // text : 'help',
             tootltip : "Get help",
             handler : function() {
@@ -124,11 +124,11 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
       var downloadLink = '';
       if ( geneList.length > 0 ) {
          title = "Data for selected genes";
-         downloadLink = String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join( ',' ) );
+         downloadLink = String.format( Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join( ',' ) );
       } else {
          geneList = [];
          title = "Data for a 'random' sampling of probes";
-         downloadLink = String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}", eeId );
+         downloadLink = String.format( Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}", eeId );
       }
       this.visWindow = new Gemma.VisualizationWithThumbsWindow( {
          title : title,
@@ -246,7 +246,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       // this.refreshButton = {
       // xtype : "button",
       // text: "Refresh",
-      // icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
+      // icon: Gemma.CONTEXT_PATH + '/images/icons/arrow_refresh_small.png',
       // tooltip: "Refresh the caches for this experiment",
       // handler:function(){
       // if(this.eeId && this.eeId > 0){
@@ -417,11 +417,11 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       var downloadLink = '';
       if ( geneList.length > 0 ) {
          title = "Data for selected genes";
-         downloadLink = String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join( ',' ) );
+         downloadLink = String.format( Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join( ',' ) );
       } else {
          geneList = [];
          title = "Data for a 'random' sampling of probes";
-         downloadLink = String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}", eeId );
+         downloadLink = String.format( Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}", eeId );
          this.editBtn.disable();
       }
       Ext.apply( this.visPanel, {

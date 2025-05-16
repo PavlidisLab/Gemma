@@ -111,7 +111,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
                     }
                     ExpressionExperiment ee1 = expressionExperimentService.thaw( ee );
                     assertEquals( "Biochem Med", ee1.getPrimaryPublication().getPublication() );
-                } ) );
+                } ) )
+                .andReturn();
 
 
         perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "2" ) )

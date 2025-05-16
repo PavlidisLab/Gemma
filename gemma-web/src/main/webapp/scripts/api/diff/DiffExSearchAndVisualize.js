@@ -62,7 +62,7 @@ Gemma.DiffExSearchAndVisualize = Ext
                             .overwrite(
                                 this.applyToParam,
                                 {
-                                    html: '<img src="' + ctxBasePath + '/images/icons/warning.png"/> Sorry, there was an error performing your search, data was null.'
+                                    html: '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/warning.png"/> Sorry, there was an error performing your search, data was null.'
                                 });
                     }
                 }
@@ -71,7 +71,7 @@ Gemma.DiffExSearchAndVisualize = Ext
                 else if (data.conditions.length === 0) {
                     if (this.applyToParam) {
                         Ext.DomHelper.overwrite(this.applyToParam, {
-                            html: '<img src="' + ctxBasePath + '/images/icons/warning.png"/>No data returned for your search.'
+                            html: '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/warning.png"/>No data returned for your search.'
                         });
                     }
 
@@ -104,7 +104,7 @@ Gemma.DiffExSearchAndVisualize = Ext
             _handleFail: function (error) {
                 this.fireEvent("visualizationLoaded");
                 Ext.DomHelper.overwrite(this.applyToParam, {
-                    html: '<img src="' + ctxBasePath + '/images/icons/warning.png"/> Sorry, there was an error performing your search: '
+                    html: '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/warning.png"/> Sorry, there was an error performing your search: '
                     + error
                 });
             },
@@ -131,7 +131,7 @@ Gemma.DiffExSearchAndVisualize = Ext
                 DifferentialExpressionSearchController.scheduleDiffExpSearchTask(this.taxonId,
                     this.experimentGroupValueObject, this.geneGroupValueObject, {
                         callback: this._initBackgroundTaskProgress.createDelegate(this),
-                        errorHandler: Gemma.genericErrorHandler
+                        errorHandler: Gemma.Error.genericErrorHandler
                     });
             },
 

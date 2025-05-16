@@ -19,15 +19,15 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -38,12 +38,7 @@ import java.util.Set;
  * @author Paul
  */
 @Indexed
-public class ExperimentalFactor extends AbstractDescribable implements SecuredChild, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 4615731059510436891L;
+public class ExperimentalFactor extends AbstractDescribable implements SecuredChild {
 
     private FactorType type;
     @Nullable
@@ -52,7 +47,6 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated
     private Set<Characteristic> annotations = new HashSet<>();
-
     private ExpressionExperiment securityOwner;
 
     /**
@@ -77,6 +71,16 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
+    }
+
+    @Transient
+    @Override
+    public Securable getSecurityOwner() {
+        return this.securityOwner;
+    }
+
+    public void setSecurityOwner( ExpressionExperiment securityOwner ) {
+        this.securityOwner = securityOwner;
     }
 
     /**
@@ -127,7 +131,6 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         this.factorValues = factorValues;
     }
 
-
     @Deprecated
     public Set<Characteristic> getAnnotations() {
         return this.annotations;
@@ -138,65 +141,23 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         this.annotations = annotations;
     }
 
-    @Transient
-    @Override
-    public Securable getSecurityOwner() {
-        return this.securityOwner;
-    }
-
-    /**
-     * @param securityOwner Used to hint the security system about who 'owns' this,
-     */
-    public void setSecurityOwner( ExpressionExperiment securityOwner ) {
-        this.securityOwner = securityOwner;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( getType(), getName() );
-    }
-
     @Override
     public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
         if ( this == obj )
             return true;
-
         if ( !( obj instanceof ExperimentalFactor ) )
             return false;
-
         ExperimentalFactor other = ( ExperimentalFactor ) obj;
-
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) )
-            return false;
-
-        if ( this.getCategory() == null ) {
-            if ( other.getCategory() != null )
-                return false;
-        } else if ( !this.getCategory().equals( other.getCategory() ) )
-            return false;
-
-        if ( this.getName() == null ) {
-            if ( other.getName() != null )
-                return false;
-        } else if ( !this.getName().equals( other.getName() ) )
-            return false;
-
-        if ( this.getDescription() == null ) {
-            return other.getDescription() == null;
-        }
-        return this.getDescription().equals( other.getDescription() );
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getCategory(), other.getCategory() )
+                && Objects.equals( getName(), other.getName() )
+                && Objects.equals( getDescription(), other.getDescription() );
     }
 
     @Override
     public String toString() {
-        return super.toString()
-                + ( type != null ? " Type=" + type.toString().toUpperCase() : "" )
-                + ( category != null ? " Category=" + category : "" );
+        return super.toString() + ( type != null ? " Type=" + type : "" );
     }
 
     public static final class Factory {
@@ -205,11 +166,17 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
             return new ExperimentalFactor();
         }
 
-        public static ExperimentalFactor newInstance( FactorType type, String name ) {
-            ExperimentalFactor ef = new ExperimentalFactor();
-            ef.setType( type );
-            ef.setName( name );
-            return ef;
+        public static ExperimentalFactor newInstance( String name, FactorType factorType ) {
+            ExperimentalFactor experimentalFactor = newInstance();
+            experimentalFactor.setName( name );
+            experimentalFactor.setType( factorType );
+            return experimentalFactor;
+        }
+
+        public static ExperimentalFactor newInstance( String name, FactorType factorType, Category category ) {
+            ExperimentalFactor experimentalFactor = newInstance( name, factorType );
+            experimentalFactor.setCategory( Characteristic.Factory.newInstance( category ) );
+            return experimentalFactor;
         }
     }
 }

@@ -15,21 +15,20 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
-import org.apache.commons.lang3.time.DateUtils;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.core.search.ParseSearchException;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -37,8 +36,8 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
@@ -56,19 +55,14 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Path("/genes")
 public class GeneWebService {
 
-    private final GeneService geneService;
-    private final GeneCoexpressionSearchService geneCoexpressionSearchService;
-    private final GeneArgService geneArgService;
-
-    /**
-     * Constructor for service autowiring
-     */
     @Autowired
-    public GeneWebService( GeneService geneService, GeneCoexpressionSearchService geneCoexpressionSearchService, GeneArgService geneArgService ) {
-        this.geneService = geneService;
-        this.geneCoexpressionSearchService = geneCoexpressionSearchService;
-        this.geneArgService = geneArgService;
-    }
+    private GeneService geneService;
+    @Autowired
+    private GeneCoexpressionSearchService geneCoexpressionSearchService;
+    @Autowired
+    private GeneArgService geneArgService;
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -94,38 +88,13 @@ public class GeneWebService {
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve genes matching gene identifiers")
-    public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
+    public ResponseDataObject<List<GeneValueObject>> getGenesByIds( // Params:
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
         return respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
-    }
-
-    /**
-     * Retrieves gene evidence for the given gene.
-     *
-     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     */
-    @GET
-    @Path("/{gene}/evidence")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
-    @Deprecated
-    public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
-    ) {
-        try {
-            return respond( geneArgService.getGeneEvidence( geneArg, null ) );
-        } catch ( ParseSearchException e ) {
-            throw new BadRequestException( "Invalid search query: " + e.getQuery() );
-        } catch ( SearchTimeoutException e ) {
-            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
-        } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
-        }
     }
 
     /**
@@ -160,6 +129,26 @@ public class GeneWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
+    }
+
+    /**
+     * Refresh gene-to-probe associations.
+     */
+    @GET
+    @Path("/probes/refresh")
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Refresh gene-to-probe associations.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    // FIXME: this is broken, see https://github.com/swagger-api/swagger-core/issues/4693
+                    @ApiResponse(responseCode = "204")
+            })
+    public Response refreshGenesProbes() {
+        tableMaintenanceUtil.evictGene2CsQueryCache();
+        return Response.noContent().build();
     }
 
     /**

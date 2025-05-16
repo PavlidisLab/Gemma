@@ -1,10 +1,19 @@
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 
 public class CharacteristicUtils {
+
+    /**
+     * Check if a given characteristics has a specific category.
+     * <p>
+     * Comparisons are performed as per {@link #equals(String, String, String, String)}.
+     */
+    public static boolean hasCategory( Characteristic c, Category category ) {
+        return equals( c.getCategory(), c.getCategoryUri(), category.getCategory(), category.getCategoryUri() );
+    }
 
     /**
      * Create a new characteristic that represents the category of a given characteristic.

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,64 +18,37 @@
  */
 package ubic.gemma.core.job;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
  * This class describes the result of long-running task. Like a Future, constructed at the time of task completion.
- * 
+ *
  * @author keshav
  *
  */
 public final class TaskResult implements Serializable {
-    private static final long serialVersionUID = 1L;
 
     /**
      * The actual result object
      */
-    private Object answer;
+    @Nullable
+    private final Serializable answer;
 
-    /**
-     * Set if failed.
-     */
-    private Exception exception;
-
-    /**
-     * The task id
-     */
-    private final String taskID;
-
-    public TaskResult( String taskId ) {
-        assert taskId != null;
-        this.taskID = taskId;
-    }
-
-    public TaskResult( TaskCommand command, Object answer ) {
-        assert command != null;
-        assert command.getTaskId() != null;
-        this.taskID = command.getTaskId();
+    public TaskResult( @Nullable Serializable answer ) {
         this.answer = answer;
     }
 
-    public Object getAnswer() {
+    /**
+     * The answer of this task, may be an {@link Exception} or {@code null}.
+     */
+    @Nullable
+    public Serializable getAnswer() {
         return answer;
     }
 
-    /**
-     * @return the exception
-     */
+    @Nullable
     public Exception getException() {
-        return exception;
+        return answer instanceof Exception ? ( Exception ) answer : null;
     }
-
-    public String getTaskId() {
-        return taskID;
-    }
-
-    /**
-     * @param exception the exception to set
-     */
-    public void setException( Exception exception ) {
-        this.exception = exception;
-    }
-
 }

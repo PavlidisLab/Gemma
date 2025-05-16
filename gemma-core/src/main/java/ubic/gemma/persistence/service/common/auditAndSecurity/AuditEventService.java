@@ -19,9 +19,8 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
@@ -35,19 +34,26 @@ import java.util.Map;
  */
 public interface AuditEventService {
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<AuditEvent> getEvents( Auditable auditable );
 
-    @Transactional(readOnly = true)
-    Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditable );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditable );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    AuditEvent getLastEvent( Auditable auditable );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
 
     /**
      * Fast method to retrieve auditEventTypes of multiple classes.
@@ -57,16 +63,14 @@ public interface AuditEventService {
      * @return map of AuditEventType to a Map of Auditable to the AuditEvent matching that type.
      * Note: cannot secure this very easily since map key is a Class.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    <T extends Auditable> Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> getLastEvents(
+            Collection<T> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
-     * @param date date
-     * @return a collection of Auditables created since the date given.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Auditable> getNewSinceDate( Date date );
+    <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date );
 
     /**
      * @param date date
@@ -76,12 +80,12 @@ public interface AuditEventService {
      * applicationContext-security.xml
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Auditable> getUpdatedSinceDate( Date date );
+    <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 
     void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
 }

@@ -7,4 +7,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @see CellTypeAssignmentRemovedEvent
  */
 public abstract class CellTypeAssignmentEvent extends ExpressionExperimentAnalysisEvent {
+
 }

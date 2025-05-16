@@ -21,33 +21,21 @@ package ubic.gemma.model.genome.gene;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 @Indexed
-public class GeneSetMember implements Identifiable, Serializable {
+public class GeneSetMember extends AbstractIdentifiable {
 
-    @Override
-    public String toString() {
-        return "GeneSetMember [id=" + id + ", gene=" + gene + ", score=" + score + "]";
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -926690781193097196L;
     private Double score;
-    private Long id;
     private Gene gene;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public GeneSetMember() {
+    @Override
+    @DocumentId
+    public Long getId() {
+        return super.getId();
     }
 
     @IndexedEmbedded
@@ -57,16 +45,6 @@ public class GeneSetMember implements Identifiable, Serializable {
 
     public void setGene( Gene gene ) {
         this.gene = gene;
-    }
-
-    @Override
-    @DocumentId
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**
@@ -83,10 +61,8 @@ public class GeneSetMember implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        // we cannot simply hash gene because it is lazily loaded, the id is fine to use though
+        return getGene() != null ? Objects.hash( getGene().getId() ) : 0;
     }
 
     @Override
@@ -98,7 +74,20 @@ public class GeneSetMember implements Identifiable, Serializable {
             return false;
         }
         final GeneSetMember that = ( GeneSetMember ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        if ( getGene() != null && getGene().getId() != null && that.getGene() != null && that.getGene().getId() != null ) {
+            // compare gene by ID because they are lazy-loaded
+            return Objects.equals( getGene().getId(), that.getGene().getId() );
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        // here again, the gene is lazy-loaded
+        return super.toString() + " Gene=" + ( gene != null ? gene.getId() : "null" ) + " Score=" + score;
     }
 
     public static final class Factory {
@@ -115,5 +104,4 @@ public class GeneSetMember implements Identifiable, Serializable {
             return entity;
         }
     }
-
 }

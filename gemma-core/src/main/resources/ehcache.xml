@@ -181,13 +181,7 @@
     <cache name="ubic.gemma.model.common.auditAndSecurity.User.jobs" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.auditAndSecurity.User.savedQueries" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.UserQuery" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" maxElementsInMemory="10000"
+    <cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthority" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.auditAndSecurity.JobInfo" maxElementsInMemory="10000"
@@ -212,12 +206,6 @@
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.quantitationtype.QuantitationType" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.DescribableImpl" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.blacklist.BlacklistedEntity" maxElementsInMemory="1000"
@@ -309,6 +297,15 @@
     <cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension.bioAssays" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
+    <cache name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+
+    <cache name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension.bioAssays" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+
+    <cache name="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics" maxElementsInMemory="10000"
+           eternal="true" overflowToDisk="false"/>
+
     <cache name="ubic.gemma.model.expression.biomaterial.BioMaterial" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
@@ -336,25 +333,22 @@
     <cache name="ubic.gemma.model.association.BioSequence2GeneProduct" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.Gene2OntologyEntryAssociationImpl" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.association.Gene2GeneAssociation" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.association.ReferenceAssociation" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.MouseExperimentCoexpressionLinkImpl"
+    <cache name="ubic.gemma.model.association.coexpression.MouseExperimentCoexpressionLink"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.HumanExperimentCoexpressionLinkImpl"
+    <cache name="ubic.gemma.model.association.coexpression.HumanExperimentCoexpressionLink"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.RatExperimentCoexpressionLinkImpl"
+    <cache name="ubic.gemma.model.association.coexpression.RatExperimentCoexpressionLink"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.OtherExperimentCoexpressionLinkImpl"
+    <cache name="ubic.gemma.model.association.coexpression.OtherExperimentCoexpressionLink"
            maxElementsInMemory="10000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressedGenes"
@@ -366,16 +360,16 @@
     <cache name="ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" maxElementsInMemory="2000000"
+    <cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpression" maxElementsInMemory="2000000"
            eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" maxElementsInMemory="2000000"
+    <cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpression" maxElementsInMemory="2000000"
            eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpressionImpl" maxElementsInMemory="2000000"
+    <cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpression" maxElementsInMemory="2000000"
            eternal="true" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" maxElementsInMemory="2000000"
+    <cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpression" maxElementsInMemory="2000000"
            eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.Analysis" maxElementsInMemory="10000"
@@ -456,6 +450,8 @@
            overflowToDisk="false"/>
 
     <cache name="ProcessedExpressionDataVectorCache" maxElementsInMemory="100000" overflowToDisk="true" eternal="true"/>
+    <cache name="ProcessedExpressionDataVectorByGeneCache" maxElementsInMemory="100000" overflowToDisk="true"
+           eternal="true"/>
 
     <cache name="OntologyService.search" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>
     <cache name="OntologyService.parents" maxElementsInMemory="10000" eternal="true" overflowToDisk="false"/>

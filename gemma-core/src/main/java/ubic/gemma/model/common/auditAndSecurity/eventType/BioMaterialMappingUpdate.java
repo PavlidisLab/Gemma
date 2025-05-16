@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
- * To indicate that the biomaterial to bioassay mapping of the expression experiment was modified.
- * </p>
+ * Indicates that the biomaterial to bioassay mapping of the expression experiment was modified.
  */
-public class BioMaterialMappingUpdate
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4390321148453980797L;
+public class BioMaterialMappingUpdate extends ExpressionExperimentAnalysisEvent {
 
 }

@@ -42,7 +42,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCu
 import ubic.gemma.persistence.util.Pointcuts;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
 /**
  * Manage audit trails on objects.
@@ -320,7 +323,7 @@ public class AuditAdvice {
                     AuditAction.CREATE, auditable ) );
             return;
         }
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, true, StandardCharsets.UTF_8 ), null, user, null );
         auditable.getAuditTrail().getEvents().add( auditEvent );
         if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );

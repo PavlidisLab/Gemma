@@ -119,7 +119,7 @@ public class AclAdvice extends BaseAclAdvice {
 
     @Override
     protected GrantedAuthority getUserGroupGrantedAuthority( Securable object ) {
-        Collection<GroupAuthority> authorities = ( ( UserGroup ) object ).getAuthorities();
+        Collection<? extends GroupAuthority> authorities = ( ( UserGroup ) object ).getAuthorities();
         assert authorities.size() == 1;
         return new SimpleGrantedAuthority( authorities.iterator().next().getAuthority() );
     }

@@ -18,60 +18,209 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.common.Identifiable;
+import lombok.Getter;
+import lombok.Setter;
+import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.Serializable;
+import javax.persistence.Transient;
+import java.nio.*;
+import java.util.Arrays;
+import java.util.Objects;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
- * An abstract class representing a one-dimensional vector of data about some aspect of an experiment.
+ * An abstract class representing a one-dimensional vector of data about some aspect of an {@link ExpressionExperiment}.
+ * @see DesignElementDataVector
  */
-public abstract class DataVector implements Identifiable, Serializable {
+@Getter
+@Setter
+public abstract class DataVector extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -5823802521832643417L;
-
-    private Long id;
     private ExpressionExperiment expressionExperiment;
     private QuantitationType quantitationType;
     private byte[] data;
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
+    /**
+     * Obtain the data as a generic {@link Buffer}.
+     */
+    @Transient
+    public Buffer getDataAsBuffer() {
+        switch ( quantitationType.getRepresentation() ) {
+            case FLOAT:
+                return getDataAsFloatBuffer();
+            case DOUBLE:
+                return getDataAsDoubleBuffer();
+            case INT:
+                return getDataAsIntBuffer();
+            case LONG:
+                return getDataAsLongBuffer();
+            default:
+                throw new UnsupportedOperationException( "Cannot create a buffer for data stored in "
+                        + quantitationType.getRepresentation() + "." );
+        }
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
+    @Transient
+    public float[] getDataAsFloats() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return byteArrayToFloats( data );
     }
 
-    public byte[] getData() {
-        return this.data;
+    public void setDataAsFloats( float[] data ) {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        setData( floatArrayToBytes( data ) );
     }
 
-    public void setData( byte[] data ) {
-        this.data = data;
+    public FloatBuffer getDataAsFloatBuffer() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return ByteBuffer.wrap( data ).asFloatBuffer();
     }
 
+    @Transient
+    public double[] getDataAsDoubles() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return byteArrayToDoubles( data );
+    }
+
+    /**
+     * Obtain the data as a {@link DoubleBuffer}.
+     * <p>
+     * The underlying data is not copied, so this is the most efficient way to perform arbitrary access or slice parts
+     * of the vector.
+     */
+    public DoubleBuffer getDataAsDoubleBuffer() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return ByteBuffer.wrap( data ).asDoubleBuffer();
+    }
+
+    public void setDataAsDoubles( double[] data ) {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        setData( doubleArrayToBytes( data ) );
+    }
+
+    @Transient
+    public boolean[] getDataAsBooleans() {
+        ensureRepresentation( PrimitiveType.BOOLEAN );
+        return byteArrayToBooleans( data );
+    }
+
+    public void setDataAsBooleans( boolean[] data ) {
+        ensureRepresentation( PrimitiveType.BOOLEAN );
+        setData( booleanArrayToBytes( data ) );
+    }
+
+    @Transient
+    public char[] getDataAsChars() {
+        ensureRepresentation( PrimitiveType.CHAR );
+        return byteArrayToChars( data );
+    }
+
+    public void setDataAsChars( char[] data ) {
+        ensureRepresentation( PrimitiveType.CHAR );
+        setData( charArrayToBytes( data ) );
+    }
+
+    @Transient
+    public int[] getDataAsInts() {
+        ensureRepresentation( PrimitiveType.INT );
+        return byteArrayToInts( data );
+    }
+
+    @Transient
+    public IntBuffer getDataAsIntBuffer() {
+        ensureRepresentation( PrimitiveType.INT );
+        return ByteBuffer.wrap( data ).asIntBuffer();
+    }
+
+    public void setDataAsInts( int[] data ) {
+        ensureRepresentation( PrimitiveType.INT );
+        setData( intArrayToBytes( data ) );
+    }
+
+    @Transient
+    public long[] getDataAsLongs() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return byteArrayToLongs( data );
+    }
+
+    @Transient
+    public LongBuffer getDataAsLongBuffer() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return ByteBuffer.wrap( data ).asLongBuffer();
+    }
+
+    public void setDataAsLongs( long[] data ) {
+        ensureRepresentation( PrimitiveType.LONG );
+        setData( longArrayToBytes( data ) );
+    }
+
+    @Transient
+    public String[] getDataAsStrings() {
+        ensureRepresentation( PrimitiveType.STRING );
+        return byteArrayToStrings( data );
+    }
+
+    public void setDataAsStrings( String[] data ) {
+        ensureRepresentation( PrimitiveType.STRING );
+        setData( stringsToByteArray( data ) );
+    }
+
+    @Transient
+    public String[] getDataAsTabbedStrings() {
+        ensureRepresentation( PrimitiveType.STRING );
+        return byteArrayToTabbedStrings( data );
+    }
+
+    public void setDataAsTabbedStrings( String[] data ) {
+        ensureRepresentation( PrimitiveType.STRING );
+        setData( stringsToTabbedBytes( data ) );
+    }
+
+    @Transient
+    public Object[] getDataAsObjects() {
+        return byteArrayToObjects( data, quantitationType.getRepresentation().getJavaClass() );
+    }
+
+    public void setDataAsObjects( Object[] data ) {
+        if ( data.length > 0 ) {
+            ensureRepresentation( data[0].getClass() );
+            setData( objectArrayToBytes( data ) );
+        } else {
+            setData( new byte[0] );
+        }
+    }
+
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
     @Override
-    public Long getId() {
-        return this.id;
+    public int hashCode() {
+        // also, we cannot hash the ID because it is assigned on creation
+        // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
+        return Objects.hash( expressionExperiment, quantitationType );
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    private void ensureRepresentation( PrimitiveType primitiveType ) {
+        if ( quantitationType.getRepresentation() != primitiveType ) {
+            throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
+                    quantitationType.getRepresentation(), primitiveType ) );
+        }
     }
 
-    public QuantitationType getQuantitationType() {
-        return this.quantitationType;
+    private void ensureRepresentation( Class<?> clazz ) {
+        if ( !clazz.equals( quantitationType.getRepresentation().getJavaClass() ) ) {
+            // try to find a primitive type that matches the requested class
+            String requestedType = Arrays.stream( PrimitiveType.values() )
+                    .filter( p -> clazz.equals( p.getJavaClass() ) )
+                    .map( PrimitiveType::toString )
+                    .findFirst()
+                    .orElse( clazz.getName() );
+            throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
+                    quantitationType.getRepresentation(), requestedType ) );
+        }
     }
-
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
-    }
-
-    @Override
-    public abstract boolean equals( Object obj );
-
-    @Override
-    public abstract int hashCode();
 }

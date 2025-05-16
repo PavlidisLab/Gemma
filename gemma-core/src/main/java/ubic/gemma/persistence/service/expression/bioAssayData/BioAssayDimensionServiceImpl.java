@@ -18,12 +18,17 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.util.Thaws;
+
+import java.util.Collection;
 
 /**
  * <p>
@@ -48,9 +53,16 @@ public class BioAssayDimensionServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays ) {
+        return bioAssayDimensionDao.findByBioAssaysContainingAll( bioAssays );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
         bioAssayDimension = loadOrFail( bioAssayDimension.getId() );
-        this.bioAssayDimensionDao.thawLite( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension );
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
         return bioAssayDimension;
     }
 
@@ -58,7 +70,7 @@ public class BioAssayDimensionServiceImpl
     @Transactional(readOnly = true)
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         bioAssayDimension = loadOrFail( bioAssayDimension.getId() );
-        this.bioAssayDimensionDao.thaw( bioAssayDimension );
+        Thaws.thawBioAssayDimension( bioAssayDimension );
         return bioAssayDimension;
     }
 

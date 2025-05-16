@@ -20,26 +20,22 @@
 package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.common.AbstractDescribable;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * @author Paul
  */
-public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned, Serializable {
+public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6807023718405086508L;
     private String localInstallDbName;
     private String webUri;
     private String ftpUri;
@@ -56,29 +52,6 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
     private URL releaseUrl;
     @Nullable
     private Date lastUpdated;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public ExternalDatabase() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( !( object instanceof ExternalDatabase ) ) return false;
-
-        ExternalDatabase that = ( ExternalDatabase ) object;
-        if ( this.getId() != null && that.getId() != null ) return super.equals( object );
-
-        return this.getName().equals( that.getName() );
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null ) return super.hashCode();
-
-        return this.getName().hashCode();
-    }
 
     public Contact getDatabaseSupplier() {
         return this.databaseSupplier;
@@ -169,6 +142,18 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
 
     public void setLastUpdated( @Nullable Date lastUpdated ) {
         this.lastUpdated = lastUpdated;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExternalDatabase ) )
+            return false;
+        ExternalDatabase that = ( ExternalDatabase ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
+        return Objects.equals( this.getName(), that.getName() );
     }
 
     public static final class Factory {

@@ -41,10 +41,9 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -344,7 +343,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Find probes: " + timer.getTime() + " ms" );
+            log.info( "Find probes: " + timer.getTime() + " ms" );
         }
         timer.reset();
         timer.start();
@@ -360,7 +359,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         Taxon taxon = gene.getTaxon();
 
         Set<Long> ids = new HashSet<>();
-        for ( Collection<Long> batch : batchParameterList( EntityUtils.getIds( probes ), 1024 ) ) {
+        for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( probes ), 1024 ) ) {
             //noinspection unchecked
             ids.addAll( this.getSessionFactory().getCurrentSession()
                     .createSQLQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
@@ -384,7 +383,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Find experiments: " + timer.getTime() + " ms" );
+            log.info( "Find experiments: " + timer.getTime() + " ms" );
         }
 
         return result;
@@ -419,7 +418,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
             count++;
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
+            log
                     .info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime()
                             + "ms; Query was:\n" + query );
         }
@@ -459,10 +458,9 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log
-                        .info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: "
-                                + timer.getTime() + "ms" );
-                AbstractDao.log.debug( "Query for subsets was: " + q2 );
+                log.info( String.format( "Fetch %d subset analyses for %d experiment subsets: %d ms",
+                        count, result.size(), timer.getTime() ) );
+                log.debug( "Query for subsets was: " + q2 );
             }
         }
 
@@ -617,7 +615,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
         log.info( "Removing " + analysis + "..." );
-        List<Long> resultSetIds = EntityUtils.getIds( analysis.getResultSets() );
+        List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
         if ( !resultSetIds.isEmpty() ) {
             int removedContrasts = getSessionFactory().getCurrentSession()
                     .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )

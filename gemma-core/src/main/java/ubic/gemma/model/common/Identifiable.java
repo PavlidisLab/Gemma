@@ -1,9 +1,13 @@
 package ubic.gemma.model.common;
 
 /**
- * Created by tesarst on 31/05/17.
- * Absolutely basic interface for any object that can be stored in the database.
- * This is used in the value objects, services, and dao structures.
+ * Interface for objects that have a numerical id.
+ * <p>
+ * This is generally used by persistent entities, but it is not limited to them. Other main usage is for identifiable
+ * VOs.
+ * @see AbstractIdentifiable
+ * @see IdentifiableValueObject
+ * @author tesart
  */
 public interface Identifiable {
 

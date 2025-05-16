@@ -20,10 +20,8 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.persistence.Transient;
-import java.util.Collection;
 
 /**
  * A subset of samples from an ExpressionExperiment
@@ -34,6 +32,10 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1880425342951467283L;
+
+    public static final int MAX_NAME_LENGTH = 255;
+
+
     private ExpressionExperiment sourceExperiment;
 
     /**
@@ -42,11 +44,6 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
      * @author Paul
      */
     public ExpressionExperimentSubSet() {
-    }
-
-    @Override
-    public ExpressionExperimentValueObject createValueObject() {
-        return new ExpressionExperimentSubsetValueObject( this );
     }
 
     @Transient
@@ -63,10 +60,27 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
         this.sourceExperiment = sourceExperiment;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExpressionExperimentSubSet ) )
+            return false;
+        ExpressionExperimentSubSet that = ( ExpressionExperimentSubSet ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
 
-        public static ExpressionExperimentSubSet newInstance() {
-            return new ExpressionExperimentSubSet();
+        public static ExpressionExperimentSubSet newInstance( String name, ExpressionExperiment sourceExperiment ) {
+            ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+            subset.setName( name );
+            subset.setSourceExperiment( sourceExperiment );
+            return subset;
         }
 
     }

@@ -35,7 +35,7 @@
 // create namespaces
 /*global net */
 if ( "undefined" == typeof net ) {
-   var net = {};
+   net = {};
 }
 if ( !net.brehaut ) {
    net.brehaut = {};

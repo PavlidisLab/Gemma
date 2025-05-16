@@ -1,5 +1,5 @@
 Ext.namespace('Gemma');
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 /**
  *
@@ -37,7 +37,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 var result = '';
                 for (var i = 0; i < arrayDesigns.length; i++) {
                     var ad = arrayDesigns[i];
-                    result = result + '<a href="' + ctxBasePath + '/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
+                    result = result + '<a href="' + Gemma.CONTEXT_PATH + '/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
                         + '</a> - ' + ad.name;
 
                     if (arrayDesigns[i].troubled) {
@@ -61,7 +61,7 @@ Gemma.ExpressionExperimentDetails = Ext
 	                     result = result + "<br/>As originally submitted: ";
 	                     for (var j = 0; j < ee.originalPlatforms.length; j++) {
 	                         var op = ee.originalPlatforms[j];
-		                     result = result + '<a href="' + ctxBasePath + '/arrays/showArrayDesign.html?id=' + op.id + '"?">' + op.shortName + '</a> - ' + op.name;
+		                     result = result + '<a href="' + Gemma.CONTEXT_PATH + '/arrays/showArrayDesign.html?id=' + op.id + '"?">' + op.shortName + '</a> - ' + op.name;
 		                     if (j < ee.originalPlatforms.length - 1) {
 		                         result = result + ', '
                              }
@@ -84,7 +84,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
                 var downloadCoExpressionDataLink = String.format(
                     "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
-                    + "onClick='fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
+                    + "onClick='Gemma.ExpressionExperimentDataFetch.fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
                     ee.id);
                 var count;
 
@@ -99,12 +99,12 @@ Gemma.ExpressionExperimentDetails = Ext
                 if (ee.externalDatabase == 'GEO') {
                     var acc = ee.accession;
                     acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
-                    logo = ctxBasePath + '/images/logo/geoTiny.png';
+                    logo = Gemma.CONTEXT_PATH + '/images/logo/geoTiny.png';
                     result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
                         + '"><img src="' + logo + '"/></a>';
 
                 } else if (ee.externalDatabase == 'ArrayExpress') {
-                    logo = ctxBasePath + '/images/logo/arrayExpressTiny.png';
+                    logo = Gemma.CONTEXT_PATH + '/images/logo/arrayExpressTiny.png';
                     result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
                         + ee.accession + '"><img src="' + logo + '"/></a>';
                 } else {
@@ -123,9 +123,9 @@ Gemma.ExpressionExperimentDetails = Ext
                 var result = ee.bioAssayCount;
                 if (this.editable) {
                     result = result
-                        + '&nbsp;&nbsp<a href="' + ctxBasePath + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
+                        + '&nbsp;&nbsp<a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
                         + ee.id
-                        + '"><img ext:qtip="View the details of the samples" src="' + ctxBasePath + '/images/icons/magnifier.png"/></a>';
+                        + '"><img ext:qtip="View the details of the samples" src="' + Gemma.CONTEXT_PATH + '/images/icons/magnifier.png"/></a>';
                 }
                 return '' + result; // hack for possible problem with extjs 3.1 - bare
                 // number not displayed, coerce to string.
@@ -145,34 +145,34 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.needsAttention === true) {
-                    result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores may change significantly.')
+                    result = result + Gemma.GEEQ.getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores may change significantly.')
                 }
                 if (ee.geeq !== null) {
-                    result = result + getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
+                    result = result + Gemma.GEEQ.getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
                 }
 
                 if (ee.troubled) {
-                    result = result + getStatusBadge('exclamation-triangle', 'red', 'unusable',
+                    result = result + Gemma.GEEQ.getStatusBadge('exclamation-triangle', 'red', 'unusable',
                         ee.troubleDetails)
                 }
 
                 if (ee.hasMultiplePreferredQuantitationTypes) {
-                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
+                    result = result + Gemma.GEEQ.getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes)
                 }
 
                 if (ee.hasMultipleTechnologyTypes) {
-                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
+                    result = result + Gemma.GEEQ.getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes)
                 }
 
-                result = result + getBatchInfoBadges(ee);
+                result = result + Gemma.GEEQ.getBatchInfoBadges(ee);
 
                 if (ee.reprocessedFromRawData) {
-                    result = result + getStatusBadge('cog', 'gray-blue', 'reprocessed',
+                    result = result + Gemma.GEEQ.getStatusBadge('cog', 'gray-blue', 'reprocessed',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed)
                 } else {
-                    result = result + getStatusBadge('cloud-download', 'gray-blue', 'external',
+                    result = result + Gemma.GEEQ.getStatusBadge('cloud-download', 'gray-blue', 'external',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal)
                 }
 
@@ -188,7 +188,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     + id
                     + '-eemanager\').doLinks('
                     + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
+                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
                 if (ee.dateLinkAnalysis) {
                     var type = ee.linkAnalysisEventType;
                     var color = "#000";
@@ -217,7 +217,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     + id
                     + '-eemanager\').doMissingValues('
                     + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
+                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
                 /*
                  * Offer missing value analysis if it's possible (this might need tweaking).
@@ -252,7 +252,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     + id
                     + '-eemanager\').doProcessedVectors('
                     + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="preprocess" title="preprocess"/></span>';
+                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="preprocess" title="preprocess"/></span>';
 
                 if (ee.dateProcessedDataVectorComputation) {
                     var type = ee.processedDataVectorComputationEventType;
@@ -278,7 +278,7 @@ Gemma.ExpressionExperimentDetails = Ext
                    + id
                    + '-eemanager\').doDiagnostics('
                    + id
-                   + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="diagnostics" title="diagnostics"/></span>';
+                   + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="diagnostics" title="diagnostics"/></span>';
 // we don't have an appropriate date/event for this.
 //               if (ee.dateProcessedDataVectorComputation) {
 //                   var type = ee.processedDataVectorComputationEventType;
@@ -316,7 +316,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 for (i = 0; i < eeSets.length; i++) {
                     if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
                         eeSetLinks
-                            .push(' <a target="_blank" href="' + ctxBasePath + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
+                            .push(' <a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
                                 + eeSets[i].id + '">' + eeSets[i].name + '</a>');
                     }
                 }
@@ -336,7 +336,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 if (e.otherParts && e.otherParts.length > 0) {
                     for(var i = 0; i < e.otherParts.length; i++) {
                         var s = e.otherParts[i];
-                        h = h + ' <a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
+                        h = h + ' <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id='
                             + s.id + '">' + s.shortName +'</a>'
                     }
                 } else {
@@ -348,7 +348,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     html: h,
                     listeners: {
                         'afterrender': function (c) {
-                            jQuery('#otherPartsHelp').qtip({
+                            window.jQuery('#otherPartsHelp').qtip({
                                 content: "If this experiment was originally part of a larger study, other parts that are retained in the system are listed here.",
                                 style: {
                                     name: 'cream'
@@ -424,7 +424,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 var pubMedDelete = {
                     xtype: 'button',
                     text: 'Clear',
-                    icon: ctxBasePath + '/images/icons/cross.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                     tooltip: 'Remove this experiment\'s association with this publication',
                     bubbleEvents: ['changeMade'],
                     handler: function () {
@@ -694,18 +694,18 @@ Gemma.ExpressionExperimentDetails = Ext
                 });
                 var editEEButton = new Ext.Button({
                     text: 'More edit options',
-                    icon: ctxBasePath + '/images/icons/wrench.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/wrench.png',
                     toolTip: 'Go to editor page for this experiment',
                     disabled: !this.editable,
                     handler: function () {
-                        window.open(ctxBasePath + '/expressionExperiment/editExpressionExperiment.html?id='
+                        window.open(Gemma.CONTEXT_PATH + '/expressionExperiment/editExpressionExperiment.html?id='
                             + this.experimentDetails.id);
                     },
                     scope: this
                 });
                 var deleteEEButton = new Ext.Button({
                     text: 'Delete Experiment',
-                    icon: ctxBasePath + '/images/icons/cross.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                     toolTip: 'Delete the experiment from the system',
                     disabled: !this.editable,
                     handler: function () {
@@ -794,10 +794,10 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: '<div id="downloads"> '
                                         + this.renderProcessedExpressionVectorCount(e)
                                         + '&nbsp;&nbsp;'
-                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
+                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
                                         + e.id
                                         + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
+                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
                                         + e.id
                                         + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
                                         + '<i class="qtp fa fa-question-circle fa-fw"></i>'
@@ -805,7 +805,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         width: 400,
                                         listeners: {
                                             'afterrender': function (c) {
-                                                jQuery('#downloads').find('i')
+                                                window.jQuery('#downloads').find('i')
                                                     .qtip(
                                                         {
                                                             content: Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT,
@@ -827,7 +827,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         width: 80
                                     }*/
                                     , {
-                                        fieldLabel: 'Differential Expr. Analyses',
+                                        fieldLabel: 'Differential Expr. Analyses (<a href="https://academic.oup.com/database/article/doi/10.1093/database/baab006/6143045#228516893">ANOVA</a>)',
                                         items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
                                             experimentDetails: e,
                                             editable: this.editable,

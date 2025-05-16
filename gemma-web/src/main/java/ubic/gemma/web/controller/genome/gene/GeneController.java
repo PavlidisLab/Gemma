@@ -25,31 +25,29 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.core.image.aba.AllenBrainAtlasService;
-import ubic.gemma.core.image.aba.Image;
-import ubic.gemma.core.image.aba.ImageSeries;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+
+import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
+import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * @author daq2101
@@ -61,15 +59,13 @@ import java.util.*;
 public class GeneController extends BaseController {
 
     @Autowired
-    private AllenBrainAtlasService allenBrainAtlasService;
-    @Autowired
     private GeneService geneService;
     @Autowired
     private TaxonService taxonService;
     @Autowired
     private GeneSetService geneSetService;
     @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private BuildInfo buildInfo;
 
     @SuppressWarnings("WeakerAccess") // Frontend ajax access
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
@@ -83,72 +79,12 @@ public class GeneController extends BaseController {
         return geneService.getProducts( geneId );
     }
 
-    /**
-     * AJAX NOTE: this method updates the value object passed in
-     */
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public Collection<Image> loadAllenBrainImages( Long geneId ) {
-        Collection<Image> images = new ArrayList<>();
-        Gene gene = geneService.load( geneId );
-
-        if ( gene != null ) {
-
-            try {
-                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getSagittalImageSeries( gene );
-                return allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-            } catch ( IOException e ) {
-                log.warn( "Could not get ABA data: " + e );
-            }
-        }
-        return images;
-    }
 
     @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
-        try {
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
-                    .findEvidenceByGeneId( geneId, new HashSet<>(),
-                            new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-            Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
-            Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
-            while ( iterator.hasNext() ) {
-                EvidenceValueObject<? extends PhenotypeAssociation> evo = iterator.next();
-                if ( !evo.isHomologueEvidence() )
-                    collFilteredDVO.addAll( evo.getPhenotypes() );
-            }
-            gvo.setPhenotypes( collFilteredDVO );
-        } catch ( RuntimeException e ) {
-            if ( "Ontologies are not fully loaded yet, try again soon".equals( e.getMessage() ) ) {
-                log.warn( "Phenocarta ontologies are not loaded, will ignore phenotypes for " + gvo + "." );
-            } else {
-                throw e;
-            }
-        }
         gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
         return gvo;
-    }
-
-    @SuppressWarnings("unused") // Frontend ajax use, gene page
-    public String getGeneABALink( Long geneId ) {
-        return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
-    }
-
-    /**
-     * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
-     */
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId,
-            boolean showOnlyEditable, Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
-                        new HashSet<>() :
-                        new HashSet<>( Arrays.asList( phenotypeValueUris ) ),
-                new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
-    }
-
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public GeneValueObject loadGenePhenotypes( Long geneId ) {
-        return geneService.loadGenePhenotypes( geneId );
     }
 
     @SuppressWarnings("unused") // Required
@@ -170,7 +106,7 @@ public class GeneController extends BaseController {
                 geneVO = geneService.loadValueObjectById( id );
 
                 if ( geneVO == null ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                    messageUtil.saveMessage( "object.notfound", new Object[] { "Gene " + id }, "??" + "object.notfound" + "??" );
                     return new ModelAndView( "index" );
                 }
             } else if ( StringUtils.isNotBlank( ncbiId ) ) {
@@ -197,27 +133,20 @@ public class GeneController extends BaseController {
             }
 
         } catch ( NumberFormatException e ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
             return new ModelAndView( "index" );
         }
 
         if ( geneVO == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
             return new ModelAndView( "index" );
         }
 
         Long id = geneVO.getId();
 
         assert id != null;
-        ModelAndView mav = new ModelAndView( "gene.detail" );
-        mav.addObject( "geneId", id );
-        mav.addObject( "geneOfficialSymbol", geneVO.getOfficialSymbol() );
-        mav.addObject( "geneOfficialName", geneVO.getOfficialName() );
-        mav.addObject( "geneNcbiId", geneVO.getNcbiId() );
-        mav.addObject( "geneTaxonCommonName", geneVO.getTaxonCommonName() );
-        mav.addObject( "geneTaxonId", geneVO.getTaxonId() );
-
-        return mav;
+        return new ModelAndView( "gene.detail" )
+                .addObject( "gene", geneVO );
     }
 
     @RequestMapping(value = "/downloadGeneList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -260,8 +189,14 @@ public class GeneController extends BaseController {
 
     private String format4File( Collection<GeneValueObject> genes, String geneSetName ) {
         StringBuilder strBuff = new StringBuilder();
-        strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
-        strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+        strBuff.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
+        strBuff.append( "#\n" );
+        for ( String line : GEMMA_CITATION_NOTICE ) {
+            strBuff.append( "# " ).append( line ).append( "\n" );
+        }
+        strBuff.append( "#\n" );
+        strBuff.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
+        strBuff.append( "#\n" );
 
         if ( geneSetName != null && !geneSetName.isEmpty() )
             strBuff.append( "# Gene Set: " ).append( geneSetName ).append( "\n" );

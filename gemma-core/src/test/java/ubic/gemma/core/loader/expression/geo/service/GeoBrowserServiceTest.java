@@ -48,11 +48,8 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             String details = gbs.getDetails( "GSE15904", "" );
             assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
 
-            Thread.sleep( 400 );
-
             details = gbs.getDetails( "GSE1295", "" );
             assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
-            Thread.sleep( 400 );
 
             // log.info( details );
             details = gbs.getDetails( "GSE2565", "" );

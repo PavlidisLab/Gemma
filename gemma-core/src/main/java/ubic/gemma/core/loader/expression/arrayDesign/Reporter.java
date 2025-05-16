@@ -18,6 +18,7 @@ import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
@@ -101,6 +102,19 @@ public class Reporter extends AbstractDescribable implements Serializable {
     public void setImmobilizedCharacteristic(
             ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic ) {
         this.immobilizedCharacteristic = immobilizedCharacteristic;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Reporter ) )
+            return false;
+        Reporter that = ( Reporter ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() );
     }
 
     public static final class Factory {

@@ -44,7 +44,6 @@ import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -181,11 +180,11 @@ public class CompositeSequenceController extends BaseController {
     }
 
     @RequestMapping(value = "/show", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView show( @RequestParam("id") Long id, HttpServletRequest request ) {
+    public ModelAndView show( @RequestParam("id") Long id ) {
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
         CompositeSequence cs = compositeSequenceService.load( id );
         if ( cs == null ) {
-            addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
+            messageUtil.saveMessage( "object.notfound", new Object[] { "composite sequence " + id }, "??" + "object.notfound" + "??" );
             return mav;
         }
         cs = compositeSequenceService.thaw( cs );

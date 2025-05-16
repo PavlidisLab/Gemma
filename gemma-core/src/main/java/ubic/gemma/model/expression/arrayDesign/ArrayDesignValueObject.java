@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -193,7 +193,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.isMergee = ad.getMergedInto() != null;
         this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
 
-        if ( Hibernate.isInitialized( ad.getExternalReferences() ) ) {
+        if ( ModelUtils.isInitialized( ad.getExternalReferences() ) ) {
             this.externalReferences = ad.getExternalReferences().stream()
                     .map( DatabaseEntryValueObject::new )
                     .collect( Collectors.toSet() );

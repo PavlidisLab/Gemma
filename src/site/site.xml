@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/DECORATION/1.8.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.1 http://maven.apache.org/xsd/decoration-1.8.1.xsd">
-    <bannerLeft>
-        <name>Gemma</name>
-        <src>/images/gemma-headerlogo.png</src>
-        <href>https://gemma.msl.ubc.ca</href>
+<site xmlns="http://maven.apache.org/SITE/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd">
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>2.1.0</version>
+    </skin>
+    <bannerLeft href="https://gemma.msl.ubc.ca">
+        <image src="/images/gemma-headerlogo.png"/>
     </bannerLeft>
-    <bannerRight>
-        <name>UBC</name>
-        <src>/images/ubc-logo-2018-crest-blue-rgb72.jpg</src>
-        <href>https://www.ubc.ca/</href>
+    <bannerRight href="https://www.ubc.ca/">
+        <image src="/images/ubc-logo-2018-crest-blue-rgb72.jpg"/>
     </bannerRight>
     <body>
         <menu name="Overview" inherit="top">
+            <item name="Pavlidis Lab Website" href="https://pavlab.msl.ubc.ca/"/>
             <item name="REST API Documentation" href="https://gemma.msl.ubc.ca/resources/restapidocs/"/>
             <item name="R Package" href="https://www.bioconductor.org/packages/release/bioc/html/gemma.R.html"/>
             <item name="Python Package" href="https://pypi.org/project/gemmapy/"/>
             <item name="Help and Documentation" href="https://pavlidislab.github.io/Gemma/"/>
         </menu>
-        <menu ref="parent" inherit="top"/>
+        <!-- FIXME: the parent site is not properly resolved when hosted on the dev website <menu ref="parent" inherit="top"/> -->
         <menu ref="modules" inherit="top"/>
         <menu ref="reports" inherit="top"/>
     </body>
-</project>
+</site>

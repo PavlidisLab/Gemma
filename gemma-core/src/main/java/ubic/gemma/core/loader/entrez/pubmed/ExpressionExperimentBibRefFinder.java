@@ -78,8 +78,8 @@ public class ExpressionExperimentBibRefFinder {
         if ( pubMedId < 0 )
             return null;
 
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
-        return fetcher.retrieveByHTTP( pubMedId );
+        PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
+        return fetcher.retrieve( String.valueOf( pubMedId ) );
     }
 
     private int locatePubMedId( String geoSeries ) throws IOException {

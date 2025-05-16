@@ -61,6 +61,22 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+        return arrayDesignDao.loadAllGenericGenePlatforms();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign loadAndThaw( Long id ) {
+        ArrayDesign ad = load( id );
+        if ( ad != null ) {
+            arrayDesignDao.thaw( ad );
+        }
+        return ad;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ArrayDesign ad = loadOrFail( id, exceptionSupplier, message );
         arrayDesignDao.thawLite( ad );
@@ -93,6 +109,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public ArrayDesign findOneByAlternateName( String name ) {
+        return arrayDesignDao.findOneByAlternateName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
         return this.arrayDesignDao.findByManufacturer( searchString );
     }
@@ -104,6 +126,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByName( String name ) {
         return this.arrayDesignDao.findByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign findOneByName( String name ) {
+        return arrayDesignDao.findOneByName( name );
     }
 
     @Override
@@ -139,6 +167,24 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getGenes( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign ) {
+        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numCompositeSequences( arrayDesign );
     }
@@ -153,12 +199,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
         return this.arrayDesignDao.loadCompositeSequences( arrayDesign, limit, offset );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getGenes( arrayDesign );
     }
 
     @Override
@@ -436,6 +476,22 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign ) {
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thawCompositeSequences( arrayDesign );
+        return arrayDesign;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> thawCompositeSequences( Collection<ArrayDesign> ads ) {
+        ads = ensureInSession( ads );
+        ads.forEach( arrayDesignDao::thawCompositeSequences );
+        return ads;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         arrayDesign = ensureInSession( arrayDesign );
         arrayDesignDao.thawLite( arrayDesign );
@@ -452,7 +508,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional
-    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 

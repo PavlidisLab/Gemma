@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.hibernate.ObjectNotFoundException;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
@@ -25,6 +26,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
  * Interface that supports basic CRUD operations.
@@ -134,19 +136,48 @@ public interface BaseDao<T> {
     T loadReference( Long id );
 
     /**
-     * Counts all instances of specific class in the persitent storage.
+     * Reload an entity from the persistent storage.
+     * <p>
+     * This does nothing if the entity is already in the session.
+     * @throws org.hibernate.ObjectNotFoundException if the entity does not exist.
+     */
+    @Nonnull
+    T reload( T entity ) throws ObjectNotFoundException;
+
+    /**
+     * Reload an entity from the persistent storage.
+     * <p>
+     * This does nothing for entities already in the session.
+     */
+    @Nonnull
+    Collection<T> reload( Collection<T> entities ) throws ObjectNotFoundException;
+
+    /**
+     * Counts all instances of specific class in the persistent storage.
      *
      * @return number that is the amount of instances currently accessible.
      */
     long countAll();
 
+    /**
+     * Stream all instance of {@link T} from the persistent storage.
+     */
+    Stream<T> streamAll();
+
+    /**
+     * Stream all instances of {@link T} from the persistent storage.
+     * @param createNewSession whether to create a new session for the stream, it will be closed when the stream is
+     *                         closed
+     */
+    Stream<T> streamAll( boolean createNewSession );
+
     void remove( Collection<T> entities );
 
     /**
      * Remove a persistent instance based on its ID.
-     *
+     * <p>
      * The implementer is trusted to know what type of object to remove.
-     *
+     * <p>
      * Note that this method is to be avoided for {@link gemma.gsec.model.Securable}, because it will leave cruft in the
      * ACL tables. We may fix this by having this method return the removed object.
      *

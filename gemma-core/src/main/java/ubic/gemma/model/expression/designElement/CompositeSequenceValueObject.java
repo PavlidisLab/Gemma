@@ -51,11 +51,18 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
+        // eagerly fetched in entity definition
+        this( cs, new ArrayDesignValueObject( cs.getArrayDesign() ) );
+    }
+
+    /**
+     * Constructor that reuses an existing {@link ArrayDesignValueObject}.
+     */
+    public CompositeSequenceValueObject( CompositeSequence cs, ArrayDesignValueObject arrayDesign ) {
         super( cs );
         this.name = cs.getName();
         this.description = cs.getDescription();
-        // eagerly fetched in entity definition
-        this.arrayDesign = new ArrayDesignValueObject( cs.getArrayDesign() );
+        this.arrayDesign = arrayDesign;
     }
 
     @Override

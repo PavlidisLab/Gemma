@@ -18,17 +18,15 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
+import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -69,6 +67,8 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private SecurityService securityService;
+    @Autowired
+    private ManualAuthenticationService manualAuthenticationService;
 
     @Value("${gemma.appdata.home}")
     private String homeDir;
@@ -203,8 +203,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private WhatsNew getReportAsAnonymousUser( Date date ) {
         // generate the report from an anonymous user perspective
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication( new AnonymousAuthenticationToken( "1234", AuthorityConstants.ANONYMOUS_USER_NAME,
-                Collections.singleton( new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) ) ) );
+        context.setAuthentication( manualAuthenticationService.authenticateAnonymously() );
         try {
             return new DelegatingSecurityContextCallable<>( () -> getReport( date ), context ).call();
         } catch ( Exception e ) {
@@ -215,11 +214,15 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
 
-        Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
+        Collection<Auditable> updatedObjects = new HashSet<>();
+        updatedObjects.addAll( auditEventService.getUpdatedSinceDate( ArrayDesign.class, date ) );
+        updatedObjects.addAll( auditEventService.getUpdatedSinceDate( ExpressionExperiment.class, date ) );
         wn.setUpdatedObjects( updatedObjects );
         WhatsNewServiceImpl.log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
 
-        Collection<Auditable> newObjects = auditEventService.getNewSinceDate( date );
+        Collection<Auditable> newObjects = new HashSet<>();
+        newObjects.addAll( auditEventService.getNewSinceDate( ArrayDesign.class, date ) );
+        newObjects.addAll( auditEventService.getNewSinceDate( ExpressionExperiment.class, date ) );
         wn.setNewObjects( newObjects );
         WhatsNewServiceImpl.log.info( wn.getNewObjects().size() + " new objects since " + date );
 

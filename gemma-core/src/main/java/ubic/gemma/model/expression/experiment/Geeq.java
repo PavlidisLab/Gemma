@@ -19,12 +19,9 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
 import javax.persistence.Transient;
-import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
@@ -34,10 +31,7 @@ import java.util.Objects;
  *
  * @author paul, tesarst
  */
-public class Geeq implements Identifiable, Serializable {
-
-    private static final long serialVersionUID = 4783171234360698630L;
-    private Long id;
+public class Geeq extends AbstractIdentifiable {
 
     private double detectedQualityScore;
     private double manualQualityScore;
@@ -90,36 +84,6 @@ public class Geeq implements Identifiable, Serializable {
     private boolean manualBatchConfoundActive;
 
     private String otherIssues;
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( this.getId() );
-    }
-
-    @Override
-    public boolean equals( Object o ) {
-        if ( this == o )
-            return true;
-        if ( !( o instanceof Geeq ) )
-            return false;
-        Geeq geeq = ( Geeq ) o;
-        return Objects.equals( this.getId(), geeq.getId() );
-    }
-
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * Required by hibernate
-     *
-     * @param id the unique ID of the instance this object represents
-     */
-    @SuppressWarnings("unused")
-    private void setId( Long id ) {
-        this.id = id;
-    }
 
     @Transient
     public double[] getSuitabilityScoreArray() {
@@ -533,4 +497,21 @@ public class Geeq implements Identifiable, Serializable {
         this.otherIssues += issue + "\n";
     }
 
+    @Override
+    public boolean equals( Object o ) {
+        if ( this == o )
+            return true;
+        if ( !( o instanceof Geeq ) )
+            return false;
+        Geeq geeq = ( Geeq ) o;
+        if ( getId() != null && geeq.getId() != null ) {
+            return getId().equals( geeq.getId() );
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
 }

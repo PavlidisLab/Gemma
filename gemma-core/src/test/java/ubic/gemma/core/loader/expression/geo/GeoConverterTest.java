@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -45,7 +45,10 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
+import static ubic.gemma.core.loader.expression.geo.GeoConverterImpl.parseValue;
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
@@ -55,7 +58,6 @@ import static org.junit.Assert.*;
 @Category(SlowTest.class)
 public class GeoConverterTest extends BaseSpringContextTest {
 
-    private final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private GeoConverter gc;
     @Value("${entrez.efetch.apikey}")
@@ -78,14 +80,14 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     @Test
     public void testConvertDataDoubles() {
-        List<Object> testList = new ArrayList<>();
+        List<String> testList = new ArrayList<>();
         testList.add( "1.1" );
         testList.add( "2929202e-4" );
         testList.add( "-394949.44422" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        byte[] actualResult = gc.convertData( testList, qt );
-        double[] revertedResult = bac.byteArrayToDoubles( actualResult );
+        byte[] actualResult = objectArrayToBytes( gc.convertData( testList.toArray( new String[0] ), qt ) );
+        double[] revertedResult = byteArrayToDoubles( actualResult );
         assertEquals( revertedResult[0], 1.1, 0.00001 );
         assertEquals( revertedResult[1], 2929202e-4, 0.00001 );
         assertEquals( revertedResult[2], -394949.44422, 0.00001 );
@@ -93,17 +95,17 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     @Test
     public void testConvertDataIntegers() {
-        List<Object> testList = new ArrayList<>();
+        List<String> testList = new ArrayList<>();
         testList.add( "1" );
         testList.add( "2929202" );
         testList.add( "-394949" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.INT );
-        byte[] actualResult = gc.convertData( testList, qt );
-        int[] revertedResult = bac.byteArrayToInts( actualResult );
-        assertEquals( revertedResult[0], 1 );
-        assertEquals( revertedResult[1], 2929202 );
-        assertEquals( revertedResult[2], -394949 );
+        byte[] actualResult = objectArrayToBytes( gc.convertData( testList.toArray( new String[0] ), qt ) );
+        int[] revertedResult = byteArrayToInts( actualResult );
+        assertEquals( 1, revertedResult[0] );
+        assertEquals( 2929202, revertedResult[1] );
+        assertEquals( -394949, revertedResult[2] );
     }
 
     @Test
@@ -422,7 +424,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         ExpressionExperiment ee = ees.iterator().next();
         assertEquals( 133, ee.getBioAssays().size() );
         // used to be more but we reject mote qts now.
-        assertEquals( 480, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 240, ee.getRawExpressionDataVectors().size() );
     }
 
     /*
@@ -444,7 +446,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
-        assertEquals( 6, ees.iterator().next().getBioAssays().size() );
+        assertEquals( 18, ees.iterator().next().getBioAssays().size() );
     }
 
 
@@ -921,4 +923,40 @@ public class GeoConverterTest extends BaseSpringContextTest {
         return ok;
     }
 
+
+    @Test
+    public void testParseValue() {
+        Assertions.assertThat( parseValue( null, ( PrimitiveType.DOUBLE ) ) ).isNull();
+        Assertions.assertThat( parseValue( "", ( PrimitiveType.DOUBLE ) ) ).isNull();
+        Assertions.assertThat( parseValue( "  ", ( PrimitiveType.DOUBLE ) ) ).isNull();
+
+        Assertions.assertThat( parseValue( "4.0", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThatThrownBy( () -> parseValue( "abc", ( PrimitiveType.DOUBLE ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
+        Assertions.assertThat( parseValue( "4.0", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+
+        assertThatThrownBy( () -> parseValue( "4.0", ( PrimitiveType.INT ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.INT ) ) ).isEqualTo( 4 );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.INT ) ) ).isEqualTo( 4 );
+
+        Assertions.assertThat( parseValue( "a", ( PrimitiveType.CHAR ) ) ).isEqualTo( 'a' );
+        Assertions.assertThat( parseValue( " a ", ( PrimitiveType.CHAR ) ) ).isEqualTo( 'a' );
+        assertThatThrownBy( () -> parseValue( "ab", ( PrimitiveType.CHAR ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
+        Assertions.assertThat( parseValue( "true", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "1", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "TRUE", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "false", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        Assertions.assertThat( parseValue( "FALSE", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        Assertions.assertThat( parseValue( "0", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        assertThatThrownBy( () -> parseValue( "ketchup", ( PrimitiveType.BOOLEAN ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
 }

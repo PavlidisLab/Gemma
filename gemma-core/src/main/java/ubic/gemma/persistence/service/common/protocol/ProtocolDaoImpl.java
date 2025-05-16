@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.List;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Protocol</code>.
@@ -50,4 +52,15 @@ public class ProtocolDaoImpl extends AbstractDao<Protocol> implements ProtocolDa
         return ( Protocol ) queryObject.uniqueResult();
     }
 
+    @Override
+    public Protocol findByName( String protocolName ) {
+        return findOneByProperty( "name", protocolName );
+    }
+
+    @Override
+    public List<Protocol> loadAllUniqueByName() {
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select p as description from Protocol p group by p.name having count(*) = 1" )
+                .list();
+    }
 }

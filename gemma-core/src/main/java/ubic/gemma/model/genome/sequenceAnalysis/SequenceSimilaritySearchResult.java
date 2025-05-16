@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,60 +18,20 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import java.io.Serializable;
+public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiable {
 
-public abstract class SequenceSimilaritySearchResult implements Identifiable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7196820023599562042L;
-
-    private Long id;
     private BioSequence querySequence;
     private BioSequence targetSequence;
     private Chromosome targetChromosome;
     private ExternalDatabase searchedDatabase;
     private PhysicalLocation targetAlignedRegion;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public SequenceSimilaritySearchResult() {
-    }
-
-    /**
-     * @return <code>true</code> if the argument is an SequenceSimilaritySearchResult instance and all identifiers for
-     * this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof SequenceSimilaritySearchResult ) ) {
-            return false;
-        }
-        final SequenceSimilaritySearchResult that = ( SequenceSimilaritySearchResult ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     public BioSequence getQuerySequence() {
         return this.querySequence;
@@ -115,6 +75,7 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
         return this.targetSequence;
     }
 
+    @SuppressWarnings("unused")
     public void setTargetSequence( BioSequence targetSequence ) {
         this.targetSequence = targetSequence;
     }
@@ -124,15 +85,31 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
      */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        // use IDs for hashing since it's proxy-safe, but also those are guaranteed to be set so it's safe to use
+        return IdentifiableUtils.hash( querySequence, targetSequence, targetChromosome, searchedDatabase, targetChromosome );
     }
 
+    /**
+     * @return <code>true</code> if the argument is an SequenceSimilaritySearchResult instance and all identifiers for
+     * this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
     @Override
-    public String toString() {
-        return this.getId().toString();
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof SequenceSimilaritySearchResult ) ) {
+            return false;
+        }
+        final SequenceSimilaritySearchResult that = ( SequenceSimilaritySearchResult ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return IdentifiableUtils.equals( this.querySequence, that.querySequence )
+                    && IdentifiableUtils.equals( this.targetSequence, that.targetSequence )
+                    && IdentifiableUtils.equals( this.targetChromosome, that.targetChromosome )
+                    && IdentifiableUtils.equals( this.searchedDatabase, that.searchedDatabase )
+                    && IdentifiableUtils.equals( this.targetAlignedRegion, that.targetAlignedRegion );
+        }
     }
-
 }

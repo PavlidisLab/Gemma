@@ -1,7 +1,11 @@
 package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.stream.Streams;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
@@ -9,6 +13,7 @@ import ubic.gemma.model.common.Identifiable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,6 +30,27 @@ public class QueryUtils {
      * no padding will be performed and a warning will be emitted.
      */
     public static final int MAX_PARAMETER_LIST_SIZE = 2048;
+
+    /**
+     * Default fetch size to use when streaming results with {@link #stream(Query, int)}
+     */
+    public static final int DEFAULT_FETCH_SIZE = 30;
+
+    /**
+     * @see Query#list()
+     */
+    public static <T> List<T> list( Query query ) {
+        //noinspection unchecked
+        return ( List<T> ) query.list();
+    }
+
+    /**
+     * @see Query#uniqueResult()
+     */
+    public static <T> T uniqueResult( Query query ) {
+        //noinspection unchecked
+        return ( T ) query.uniqueResult();
+    }
 
     /**
      * Optimize a given parameter list by sorting, removing duplicates and padding to the next power of two.
@@ -182,6 +208,106 @@ public class QueryUtils {
     }
 
     /**
+     * Stream the result of a query with the given fetch size.
+     * <p>
+     * This uses offset/limit under the hood because MySQL JDBC does not support scrolling with {@link Query#scroll()}.
+     */
+    public static <T> Stream<T> stream( Query query, int fetchSize ) {
+        return Streams.of( new QueryOrCriteriaIterator<>( query, fetchSize ) );
+    }
+
+    public static <T> Stream<T> stream( Query query ) {
+        return stream( query, DEFAULT_FETCH_SIZE );
+    }
+
+    public static <T> Stream<T> stream( Criteria criteria, int fetchSize ) {
+        return Streams.of( new QueryOrCriteriaIterator<>( criteria, fetchSize ) );
+    }
+
+    public static <T> Stream<T> stream( Criteria criteria ) {
+        return stream( criteria, DEFAULT_FETCH_SIZE );
+    }
+
+    private static class QueryOrCriteriaIterator<T> implements Iterator<T> {
+
+        private final Object queryOrCriteria;
+        private final int fetchSize;
+
+        private int offset;
+        private List<T> results;
+
+        public QueryOrCriteriaIterator( Object queryOrCriteria, int fetchSize ) {
+            Assert.isTrue( queryOrCriteria instanceof Query || queryOrCriteria instanceof Criteria );
+            Assert.isTrue( fetchSize >= 1 );
+            this.queryOrCriteria = queryOrCriteria;
+            this.fetchSize = fetchSize;
+        }
+
+        @Override
+        public boolean hasNext() {
+            fetchResultsIfNecessary();
+            return ( offset % fetchSize ) < results.size();
+        }
+
+        @Override
+        public T next() {
+            fetchResultsIfNecessary();
+            try {
+                return results.get( offset % fetchSize );
+            } catch ( IndexOutOfBoundsException e ) {
+                throw new NoSuchElementException();
+            } finally {
+                offset++;
+            }
+        }
+
+        private void fetchResultsIfNecessary() {
+            // either at the first record, or at the end of the current batch
+            if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
+                if ( queryOrCriteria instanceof Query ) {
+                    //noinspection unchecked
+                    results = ( ( Query ) queryOrCriteria )
+                            .setFirstResult( offset )
+                            .setMaxResults( fetchSize )
+                            .list();
+                } else {
+                    //noinspection unchecked
+                    results = ( ( Criteria ) queryOrCriteria )
+                            .setFirstResult( offset )
+                            .setMaxResults( fetchSize )
+                            .list();
+                }
+            }
+        }
+    }
+
+    /**
+     * Safely create a {@link Stream} from either the current or a new {@link Session}.
+     * @param streamFactory a function that produces the stream from a given {@link Session}. It may return null, in
+     *                      which case the session will be closed immediately
+     */
+    public static <T> Stream<T> createStream( SessionFactory sessionFactory, Function<Session, Stream<T>> streamFactory, boolean createNewSession ) {
+        Session session;
+        if ( createNewSession ) {
+            session = sessionFactory.openSession();
+            try {
+                Stream<T> stream = streamFactory.apply( session );
+                if ( stream != null ) {
+                    return stream.onClose( session::close );
+                } else {
+                    session.close();
+                    return null;
+                }
+            } catch ( Exception e ) {
+                session.close();
+                throw e;
+            }
+        } else {
+            return streamFactory.apply( sessionFactory.getCurrentSession() );
+        }
+    }
+
+    /**
      * Execute an update query by a fixed batch size.
      * @see Query#executeUpdate()
      * @return the sum of all performed update executions
@@ -192,11 +318,6 @@ public class QueryUtils {
             updated += query.setParameterList( batchParam, batch ).executeUpdate();
         }
         return updated;
-    }
-
-    public static <T> Stream<T> stream( Query query, Class<T> clazz ) {
-        //noinspection unchecked
-        return query.list().stream();
     }
 
     public static String escapeLike( String s ) {

@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
@@ -51,7 +50,6 @@ public class OntologyController {
 
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
-
 
     @Autowired
     private ServletContext servletContext;
@@ -188,8 +186,8 @@ public class OntologyController {
         } else {
             return String.format( "<a href=\"%s\">%s</a>",
                     escapeHtml4( oi.getUri()
-                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), "/ont/TGFVO/" )
-                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), "/ont/" ) ),
+                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), servletContext.getContextPath() + "/ont/TGFVO/" )
+                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
                     escapeHtml4( oi.getLabel() ) );
         }
     }

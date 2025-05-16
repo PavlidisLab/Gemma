@@ -18,6 +18,8 @@ import java.util.Set;
 public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 
     private final Class<T> ontologyServiceClass;
+    @Nullable
+    private final T ontologyService;
     private boolean autoLoad = false;
     private boolean forceLoad = false;
     private boolean forceIndexing = false;
@@ -33,12 +35,23 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     @Nullable
     private Set<String> additionalPropertyUris = null;
 
-
     /**
-     * @param ontologyServiceClass Class for the ontology service.
+     * Create a factory for an ontology service class.
+     * <p>
+     * The class must have a no-arg constructor.
      */
     public OntologyServiceFactory( Class<T> ontologyServiceClass ) {
         this.ontologyServiceClass = ontologyServiceClass;
+        this.ontologyService = null;
+    }
+
+    /**
+     * Create a factory for a pre-existing ontology service.
+     */
+    public OntologyServiceFactory( T ontologyService ) {
+        //noinspection unchecked
+        this.ontologyServiceClass = ( Class<T> ) ontologyService.getClass();
+        this.ontologyService = ontologyService;
     }
 
     /**
@@ -146,7 +159,12 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
 
     @Override
     protected T createInstance() throws Exception {
-        T service = BeanUtils.instantiate( ontologyServiceClass );
+        T service;
+        if ( ontologyService != null ) {
+            service = ontologyService;
+        } else {
+            service = BeanUtils.instantiate( ontologyServiceClass );
+        }
         service.setLanguageLevel( languageLevel );
         service.setInferenceMode( inferenceMode );
         service.setSearchEnabled( enableSearch );
@@ -161,7 +179,11 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {
                     ontologyTaskExecutor.execute( () -> {
-                        service.initialize( forceLoad, forceIndexing );
+                        try {
+                            service.initialize( forceLoad, forceIndexing );
+                        } catch ( Exception e ) {
+                            log.error( "Failed to initialize " + service + ".", e );
+                        }
                     } );
                 } else {
                     service.startInitializationThread( forceLoad, forceIndexing );
@@ -174,10 +196,14 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     @Override
-    protected void destroyInstance( T instance ) {
-        if ( instance.isInitializationThreadAlive() ) {
-            log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
-            instance.cancelInitializationThread();
+    protected void destroyInstance( T instance ) throws Exception {
+        try {
+            if ( instance.isInitializationThreadAlive() ) {
+                log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
+                instance.cancelInitializationThread();
+            }
+        } finally {
+            instance.close();
         }
     }
 }

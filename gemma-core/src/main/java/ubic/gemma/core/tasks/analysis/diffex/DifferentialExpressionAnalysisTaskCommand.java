@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -82,10 +82,9 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.toRedo = toRedo;
     }
 
-    public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
+    public DifferentialExpressionAnalysisTaskCommand( boolean forceAnalysis,
             ExpressionExperiment expressionExperiment ) {
         super();
-        this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.expressionExperiment = expressionExperiment;
     }

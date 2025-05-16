@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,24 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * An event involving an ExpressionExperiment
- * </p>
  */
-public abstract class ExpressionExperimentAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6359338763821876809L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public ExpressionExperimentAnalysisEvent() {
-    }
+public abstract class ExpressionExperimentAnalysisEvent extends AuditEventType {
 
 }

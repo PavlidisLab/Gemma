@@ -36,9 +36,11 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 
 /**
  * @author paul
@@ -142,9 +144,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
         for ( BioAssay bm : differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() ) {
-            for ( FactorValue fv : bm.getSampleUsed().getFactorValues() ) {
-                Hibernate.initialize( fv.getExperimentalFactor() );
-            }
+            visitBioMaterials( bm.getSampleUsed(), b -> {
+                for ( FactorValue fv : b.getFactorValues() ) {
+                    Hibernate.initialize( fv.getExperimentalFactor() );
+                }
+            } );
         }
 
         Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
@@ -197,7 +201,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
                 .getAnalysesByExperimentIds( ids, offset, limit );
 
-        Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
+        Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();

@@ -16,13 +16,13 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function( geneName, geneId ) 
             closeAction : 'hide',
             bodyStyle : 'padding: 7px; font-size: 12px; line-height: 18px; ',
             title : "Details for gene: " + geneName,
-            html : '<br><h4><a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id=' + gene.id + '">'
+            html : '<br><h4><a target="_blank" href="' + Gemma.CONTEXT_PATH + '/gene/showGene.html?id=' + gene.id + '">'
                + gene.officialSymbol + '</a> ' + gene.officialName + '</h4>' + '<b>Taxon:</b> ' + gene.taxonCommonName
                + '<br>' + '<b>Aliases:</b> ' + gene.aliases + ' <a target="_blank" title="NCBI Gene link"'
                + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
-               + gene.ncbiId + '">' + '<img alt="NCBI Gene Link" src="' + ctxBasePath + '/images/logo/ncbi.gif"/> </a>' + '<br>'
+               + gene.ncbiId + '">' + '<img alt="NCBI Gene Link" src="' + Gemma.CONTEXT_PATH + '/images/logo/ncbi.gif"/> </a>' + '<br>'
                + '<b>Description:</b> ' + gene.description + '<br>'
-               + '<br><a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id=' + gene.id + '">More about this gene</a>'
+               + '<br><a target="_blank" href="' + Gemma.CONTEXT_PATH + '/gene/showGene.html?id=' + gene.id + '">More about this gene</a>'
          } );
       }
       popup.show();
@@ -48,9 +48,9 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function( datasetName, dat
          frame : true, // gives blue background
          tpl : new Ext.XTemplate(
             '<br><h4>',
-            '<a target="_blank" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
+            '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
             ' ext:qtip="{datasetName}">{datasetShortName}</a>: {datasetName}</h4><br><b> Description: </b>{description}<br><br>',
-            '<a target="_blank" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
+            '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
             ' ext:qtip="{datasetName}">More about this experiment</a>' ),
          tplWriteMode : 'overwrite'
       } );

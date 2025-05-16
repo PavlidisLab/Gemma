@@ -41,7 +41,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext
                } );
 
                var experimentTitle = '<b>'
-                  + '<a ext:qtip="Click for details on experiment (opens in new window)" target="_blank"  href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
+                  + '<a ext:qtip="Click for details on experiment (opens in new window)" target="_blank"  href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id='
                   + experimentDetails.id + '">' + experimentDetails.shortName + '</a> ' + experimentDetails.name
                   + '</b>';
 
@@ -112,7 +112,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext
                      if ( this.metaAnalysis ) {
                         resultSetComponent = {
                            xtype : 'displayfield',
-                           value : (shouldResultSetSelected ? '<img src="' + ctxBasePath + '/images/icons/ok16.png" width="16" height="16" />'
+                           value : (shouldResultSetSelected ? '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/ok16.png" width="16" height="16" />'
                               : '<span style="margin-left: 16px;" />')
                               + '&nbsp;'
                               + text

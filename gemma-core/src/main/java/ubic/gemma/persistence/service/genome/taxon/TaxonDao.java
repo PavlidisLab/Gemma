@@ -41,7 +41,5 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
      */
     Taxon findByScientificName( String scientificName );
 
-    Collection<Taxon> findTaxonUsedInEvidence();
-
     Taxon findByNcbiId( Integer ncbiId );
 }

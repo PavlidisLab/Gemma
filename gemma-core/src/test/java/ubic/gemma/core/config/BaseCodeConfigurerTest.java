@@ -34,6 +34,7 @@ public class BaseCodeConfigurerTest {
         ps.addLast( new MapPropertySource( "test", map( "url.chebiOntology", "foo" ) ) );
         bcc.setPropertySources( ps );
         bcc.postProcessBeanFactory( mock() );
-        assertEquals( "foo", Configuration.getString( "url.chebiOntology" ) );
+        // as of 1.32, this no-longer works
+        assertEquals( "http://purl.obolibrary.org/obo/chebi.owl", Configuration.getString( "url.chebiOntology" ) );
     }
 }

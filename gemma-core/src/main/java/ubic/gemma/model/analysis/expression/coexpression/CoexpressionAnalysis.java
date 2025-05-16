@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,6 @@ import ubic.gemma.model.analysis.SingleExperimentAnalysis;
  */
 public class CoexpressionAnalysis extends SingleExperimentAnalysis {
 
-    private static final long serialVersionUID = -2036918876881877628L;
     private CoexpCorrelationDistribution coexpCorrelationDistribution;
     /**
      * At gene level.
@@ -56,6 +55,18 @@ public class CoexpressionAnalysis extends SingleExperimentAnalysis {
      */
     public void setNumberOfLinks( Integer numberOfLinks ) {
         this.numberOfLinks = numberOfLinks;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof CoexpressionAnalysis ) )
+            return false;
+        CoexpressionAnalysis that = ( CoexpressionAnalysis ) object;
+        if ( getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
+        return false;
     }
 
     public static final class Factory {

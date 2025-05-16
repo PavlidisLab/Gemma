@@ -1,0 +1,2 @@
+short_name	name	data_file	species	qt_name	qt_description	qt_type	qt_scale	array_design_name	technology_type
+GSE1234	test	data.tsv	human	test	test	COUNT	COUNT	GPL1029	SEQUENCING

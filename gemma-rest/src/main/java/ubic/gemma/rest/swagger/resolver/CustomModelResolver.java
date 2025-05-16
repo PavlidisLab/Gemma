@@ -263,7 +263,7 @@ public class CustomModelResolver extends ModelResolver {
         if ( prop.allowedValues != null ) {
             if ( desc.length() > 0 )
                 desc.append( ", " );
-            desc.append( "available values: " )
+            desc.append( "possible values: " )
                     .append( prop.allowedValues.stream().map( FilterablePropMetaAllowedValue::getValue ).collect( Collectors.joining( ", " ) ) );
         }
         // don't bother with cookie-based authentication

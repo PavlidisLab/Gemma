@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
@@ -333,7 +332,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     .list() );
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
@@ -354,7 +353,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     .list() );
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
@@ -369,7 +368,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                                 + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                                 + " left join fetch g.taxon t left join fetch t.externalDatabase "
-                                + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
                                 + " where g.id=:gid" )
                 .setParameter( "gid", gene.getId() )
                 .uniqueResult();
@@ -393,7 +391,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( genes.isEmpty() )
             return new HashSet<>();
         Collection<Gene> result = new HashSet<>();
-        for ( Collection<Long> batch : batchParameterList( EntityUtils.getIds( genes ), getBatchSize() ) ) {
+        for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( genes ), getBatchSize() ) ) {
             result.addAll( this.loadThawed( batch ) );
         }
         return result;
@@ -443,10 +441,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .list();
         int removedGeneProductsAccessions;
         if ( !gpIds.isEmpty() ) {
-            removedGeneProductsAccessions = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" )
-                    .setParameterList( "gpIds", optimizeParameterList( gpIds ) )
-                    .executeUpdate();
+            removedGeneProductsAccessions = executeUpdateByBatch( getSessionFactory().getCurrentSession()
+                            .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
+                    "gpIds", gpIds, 2048 );
         } else {
             removedGeneProductsAccessions = 0;
         }
@@ -459,10 +456,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .list();
         int removedAliases;
         if ( !gaIds.isEmpty() ) {
-            removedAliases = getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" )
-                    .setParameterList( "gaIds", optimizeParameterList( gaIds ) )
-                    .executeUpdate();
+            removedAliases = executeUpdateByBatch( getSessionFactory().getCurrentSession()
+                            .createQuery( "delete from GeneAlias ga where ga.id in :gaIds" ),
+                    "gaIds", gaIds, 2048 );
         } else {
             removedAliases = 0;
         }
@@ -555,7 +551,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
             if ( !toDelete.isEmpty() ) {
                 assert toDelete.size() < results.size(); // it shouldn't be everything!
-                AbstractDao.log.warn(
+                log.warn(
                         "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
                 this.remove( toDelete ); // WARNING this might fail due to constraints.
             }
@@ -572,11 +568,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
              * This should be quite a rare situation if the database is kept tidy.
              */
             if ( results.size() > 1 ) {
-                AbstractDao.log.error( "Multiple genes found for " + gene + ":" );
+                log.error( "Multiple genes found for " + gene + ":" );
                 this.debug( results );
                 results.sort( Comparator.comparing( Describable::getId ) );
                 result = results.iterator().next();
-                AbstractDao.log.error( "Returning arbitrary gene: " + result );
+                log.error( "Returning arbitrary gene: " + result );
             } else {
                 result = results.get( 0 );
             }
@@ -688,7 +684,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         for ( Gene g : results ) {
             buf.append( g ).append( "\n" );
         }
-        AbstractDao.log.error( buf );
+        log.error( buf );
 
     }
 
@@ -698,7 +694,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
                         .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" ),
-                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
+                "ids", IdentifiableUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<String>> aliasByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],
@@ -719,7 +715,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
                         .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" ),
-                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
+                "ids", IdentifiableUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],

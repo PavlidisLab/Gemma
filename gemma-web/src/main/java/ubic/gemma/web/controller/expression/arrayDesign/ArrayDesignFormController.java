@@ -69,8 +69,7 @@ public class ArrayDesignFormController extends BaseFormController {
 
         arrayDesignService.update( existing );
 
-        saveMessage( request, "object.updated",
-                new Object[] { ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
+        this.messageUtil.saveMessage( "object.updated", new Object[] { ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
 
         // go back to the aray we just edited.
         return new ModelAndView( new RedirectView( "/arrays/showArrayDesign.html?id=" + ad.getId(), true ) );

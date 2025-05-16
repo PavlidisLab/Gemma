@@ -25,8 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -47,7 +48,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
+import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 /**
  *
@@ -61,8 +66,6 @@ import java.util.*;
 public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private static final Log log = LogFactory.getLog( SplitExperimentServiceImpl.class );
-
-    private static final int MAX_SPLIT_NAME_LENGTH = 255;
 
     @Autowired
     private PreprocessorService preprocessor;
@@ -96,9 +99,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      */
     @Override
     public ExpressionExperimentSet split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
-
-        toSplit = eeService.thawLite( toSplit );
-
         if ( !toSplit.getOtherParts().isEmpty() ) {
             throw new IllegalArgumentException( "You cannot split an experiment that was already created by a split" );
         }
@@ -107,7 +107,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             throw new IllegalArgumentException( "Cannot split experiments that are on more than one platform" );
         }
 
-        if ( BatchInfoPopulationServiceImpl.isBatchFactor( splitOn ) ) {
+        if ( ExperimentalDesignUtils.isBatchFactor( splitOn ) ) {
             throw new IllegalArgumentException( "Do not split experiments on 'batch'" );
         }
 
@@ -139,7 +139,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
                 log.info( vectors.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
-                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vectors ) );
+                qt2mat.put( qt, BulkExpressionDataMatrix.getMatrix( vectors ) );
             }
 
             if ( !foundPreferred ) {
@@ -183,6 +183,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 BioMaterial bm = ba.getSampleUsed();
 
                 // identify samples we want to include
+                // TODO: support sub-biomaterials and use getAllFactorValues() instead, we also need to implement
+                //       cloneBioMaterial() accordingly
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.equals( splitValue ) ) {
                         assert !bms.contains( bm );
@@ -211,7 +213,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
 
             // here we're using the original bms; we'll replace them
-            BioAssayDimension newBAD = makeBioAssayDimension( bms, toSplit );
+            BioAssayDimension newBAD = makeBioAssayDimension( bms );
             // now replace the bms in the newBAD with the clones
             List<BioAssay> badBAs = newBAD.getBioAssays();
             List<BioAssay> replaceBAs = new ArrayList<>();
@@ -296,17 +298,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split = ( ExpressionExperiment ) persister.persist( split );
 
-            split = eeService.thawLiter( split );
-
             // securityService.makePublic( split ); // temporary 
             result.add( split );
         }
 
         enforceOtherParts( result );
+        eeService.update( result );
 
         for ( ExpressionExperiment split : result ) {
-            eeService.update( split );
-
             // postprocess
             if ( foundPreferred && postProcess ) {
                 try {
@@ -343,28 +342,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
-        String template = "Split part %d of: %s [%s = %s]";
-        String originalName = StringUtils.strip( toSplit.getName() );
+        String categoryString = StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
+                splitValue.getExperimentalFactor().getCategory().getValue() :
+                splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
-        String newFullName = String.format( template, splitNumber, originalName,
-                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
-                        splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName() ),
-                factorValueString );
-        if ( newFullName.length() <= MAX_SPLIT_NAME_LENGTH )
-            return newFullName;
-        // truncate the original name
-        int lengthOfEverythingElse = newFullName.length() - String.format( "%s", originalName ).length();
-        //  we want at least 100 characters of the original name
-        if ( lengthOfEverythingElse > MAX_SPLIT_NAME_LENGTH - 100 ) {
-            throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
-        }
-        return String.format( template, splitNumber, StringUtils.abbreviate( originalName, "…", 255 - lengthOfEverythingElse )
-                        .replace( "\\s+…$", "…" ),
-                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
-                        splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName() ),
-                factorValueString );
+        String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
+        return abbreviateWithSuffix(
+                String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
+                "…", ExpressionExperiment.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 );
     }
 
     private void enforceOtherParts( Collection<ExpressionExperiment> result ) {
@@ -535,13 +520,15 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setSequenceReadCount( ba.getSequenceReadCount() );
         clone.setSequenceReadLength( ba.getSequenceReadLength() );
 
-        clone.setSampleUsed( this.cloneBioMaterial( ba.getSampleUsed(), clone ) );
+        BioMaterial sampleClone = this.cloneBioMaterial( ba.getSampleUsed() );
+        clone.setSampleUsed( sampleClone );
+        sampleClone.getBioAssaysUsedIn().add( clone );
         clone.setAccession( this.cloneAccession( ba.getAccession() ) );
 
         return clone;
     }
 
-    private DatabaseEntry cloneAccession( DatabaseEntry de ) {
+    private DatabaseEntry cloneAccession( @Nullable DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
         clone.setAccession( de.getAccession() );
@@ -549,20 +536,18 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         //noinspection deprecation
         clone.setUri( de.getUri() );
         clone.setExternalDatabase( de.getExternalDatabase() );
-        ;
         return clone;
     }
 
-    private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
-        assert ba.getId() == null; // should be a clone
+    private BioMaterial cloneBioMaterial( BioMaterial bm ) {
+        Assert.isNull( bm.getSourceBioMaterial(), "Cannot split an experiment with biomaterials that have a source biomaterial." );
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
+        clone.setName( abbreviateWithSuffix( bm.getName(), " (Split)", "…", BioMaterial.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );
         clone.setSourceTaxon( bm.getSourceTaxon() );
         clone.setTreatments( this.cloneTreatments( bm.getTreatments() ) );
-        clone.getBioAssaysUsedIn().add( ba );
         // Factor values are done separately
         return clone;
     }
@@ -580,7 +565,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
-    private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse, ExpressionExperiment ee ) {
+    private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse ) {
 
         List<BioAssay> bioAssays = new ArrayList<>();
         for ( BioMaterial bm : samplesToUse ) {
@@ -588,10 +573,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             bioAssays.add( ba );
         }
 
-        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-        result.getBioAssays().addAll( bioAssays );
-        result.setName( "For  " + bioAssays.size() + " bioAssays " );
-        result.setDescription( bioAssays.size() + " bioAssays extracted via split from source experiment " + ee.getShortName() );
+        BioAssayDimension result = BioAssayDimension.Factory.newInstance( bioAssays );
 
         assert result.getBioAssays().size() == samplesToUse.size();
         return result;

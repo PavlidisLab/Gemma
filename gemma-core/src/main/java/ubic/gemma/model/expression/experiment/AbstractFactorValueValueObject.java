@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
@@ -85,10 +85,10 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
 
     protected AbstractFactorValueValueObject( FactorValue fv, boolean includeExperimentalFactor ) {
         super( fv );
-        
+
         if ( includeExperimentalFactor ) {
             this.experimentalFactorId = fv.getExperimentalFactor().getId();
-            if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+            if ( ModelUtils.isInitialized( fv.getExperimentalFactor() ) ) {
                 if ( fv.getExperimentalFactor().getCategory() != null ) {
                     this.experimentalFactorType = fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
                     this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );

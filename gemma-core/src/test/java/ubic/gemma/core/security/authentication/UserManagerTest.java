@@ -7,14 +7,16 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDaoImpl;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDaoImpl;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collections;
 
@@ -54,6 +56,11 @@ public class UserManagerTest extends BaseDatabaseTest {
         public UserManager userManager() {
             return new UserManagerImpl();
         }
+
+        @Bean
+        public AuthenticationTrustResolver authenticationTrustResolver() {
+            return new AuthenticationTrustResolverImpl();
+        }
     }
 
     @Autowired
@@ -62,14 +69,14 @@ public class UserManagerTest extends BaseDatabaseTest {
     @Test
     public void testUpdateUser() {
         User user = createUser();
-        assertTrue( user.getEnabled() );
+        assertTrue( user.isEnabled() );
         UserDetailsImpl ud = new UserDetailsImpl( user );
         ud.setEnabled( false );
         userManager.updateUser( ud );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( user );
         User reloadedUser = ( User ) sessionFactory.getCurrentSession().get( User.class, user.getId() );
-        assertFalse( reloadedUser.getEnabled() );
+        assertFalse( reloadedUser.isEnabled() );
     }
 
     @Test
@@ -86,8 +93,7 @@ public class UserManagerTest extends BaseDatabaseTest {
     }
 
     private User createUser() {
-        User user = new User();
-        user.setUserName( "foo" );
+        User user = User.Factory.newInstance( "foo" );
         user.setEnabled( true );
         sessionFactory.getCurrentSession().persist( user );
         return user;

@@ -1,6 +1,5 @@
 package ubic.gemma.rest.util.args;
 
-import lombok.Builder;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,27 +9,30 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -176,8 +178,86 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @return a collection of BioAssays that represent the experiments samples.
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
-        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
-        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
+        ExpressionExperiment ee = service.thawLite( this.getEntity( arg ) );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), null, true, true );
+        populateOutliers( ee, bioAssayValueObjects );
+        return bioAssayValueObjects;
+    }
+
+    /**
+     * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
+     */
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
+        ExpressionExperiment ee = service.thawLite( getEntity( datasetArg ) );
+        BioAssayDimension bad = service.getBioAssayDimensionWithAssays( ee, qt );
+        if ( bad == null ) {
+            throw new NotFoundException( "There are no assays associated to " + qt + "." );
+        }
+        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad.getBioAssays() );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad.getBioAssays(), assay2sourceAssayMap, true, true );
+        populateOutliers( ee, bioAssayValueObjects );
+        return bioAssayValueObjects;
+    }
+
+    /**
+     * @return a collection of Annotations value objects that represent the experiments annotations.
+     */
+    public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.getAnnotations( ee );
+    }
+
+    public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {
+        return service.getSubSetsWithCharacteristics( getEntity( datasetArg ) ).stream()
+                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                .collect( Collectors.toList() );
+    }
+
+    public ExpressionExperimentSubSet getSubSet( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristics( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        return subset;
+    }
+
+    public List<Long> getSubSetGroupIds( DatasetArg<?> datasetArg, ExpressionExperimentSubSet subset ) {
+        // TODO: only retrieve the subset groups for the given subset
+        return getSubSetsGroupIds( datasetArg ).getOrDefault( subset, Collections.emptyList() );
+    }
+
+    public Map<ExpressionExperimentSubSet, List<Long>> getSubSetsGroupIds( DatasetArg<?> datasetArg ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = service.getSubSetsByDimension( getEntity( datasetArg ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
+        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
+            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
+                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
+                        .add( entry.getKey().getId() );
+            }
+        }
+        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        return subSetGroups;
+    }
+
+    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( subset.getBioAssays(), assay2sourceAssayMap, true, true );
+        populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        return bioAssayValueObjects;
+    }
+
+    public QuantitationType getPreferredQuantitationType( DatasetArg<?> datasetArg ) {
+        return service.getPreferredQuantitationType( getEntity( datasetArg ) )
+                .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );
+    }
+
+    public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
         Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
         if ( outliers != null ) {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
@@ -188,14 +268,5 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                 vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
             }
         }
-        return bioAssayValueObjects;
-    }
-
-    /**
-     * @return a collection of Annotations value objects that represent the experiments annotations.
-     */
-    public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
-        ExpressionExperiment ee = this.getEntity( arg );
-        return service.getAnnotationsById( ee.getId() );
     }
 }

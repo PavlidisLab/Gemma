@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.rest.util.LocationType;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 

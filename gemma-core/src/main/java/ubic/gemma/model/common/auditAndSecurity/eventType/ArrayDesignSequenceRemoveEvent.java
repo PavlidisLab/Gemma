@@ -29,9 +29,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 public class ArrayDesignSequenceRemoveEvent
         extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3044700012305059422L;
 
 }

@@ -28,10 +28,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Given a set of BlatAssociations that might be redundant, clean them up and score them.
@@ -72,18 +69,18 @@ public class BlatAssociationScorer {
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = BlatAssociationScorer
+        Map<GeneProduct, List<BlatAssociation>> geneProducts2Associations = BlatAssociationScorer
                 .organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
 
         BlatAssociation globalBest = BlatAssociationScorer
                 .removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
-        assert blatAssociations.size() > 0;
+        assert !blatAssociations.isEmpty();
 
-        Map<Gene, Collection<BlatAssociation>> genes2Associations = BlatAssociationScorer
+        Map<Gene, List<BlatAssociation>> genes2Associations = BlatAssociationScorer
                 .organizeBlatAssociationsByGene( blatAssociations );
 
-        assert genes2Associations.size() > 0;
+        assert !genes2Associations.isEmpty();
 
         /*
          * At this point there should be just one blatAssociation per gene product. However, all of these really might
@@ -171,18 +168,18 @@ public class BlatAssociationScorer {
      * @return map of physical locations for the alignments, and which genes are found there.
      */
     private static Map<PhysicalLocation, Collection<Gene>> clusterGenes(
-            Map<Gene, Collection<BlatAssociation>> associations ) {
+            Map<Gene, List<BlatAssociation>> associations ) {
 
         Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<>();
 
         for ( Gene gene : associations.keySet() ) {
 
-            Collection<BlatAssociation> geneAssoc = associations.get( gene );
+            List<BlatAssociation> geneAssoc = associations.get( gene );
 
             for ( BlatAssociation ba : geneAssoc ) {
                 PhysicalLocation pl = ba.getBlatResult().getTargetAlignedRegion();
                 if ( !clusters.containsKey( pl ) ) {
-                    clusters.put( pl, new HashSet<Gene>() );
+                    clusters.put( pl, new HashSet<>() );
                 }
                 clusters.get( pl ).add( gene );
             }
@@ -207,20 +204,20 @@ public class BlatAssociationScorer {
 
         assert br.getQuerySequence().getLength() > 0;
 
-        double blatScore = br.score();
+        double blatScore = score( br );
         double overlap = BlatAssociationScorer.computeOverlapFraction( blatAssociation );
         double score = BlatAssociationScorer.computeScore( blatScore, overlap );
 
         blatAssociation.setScore( score );
     }
 
-    private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
+    private static Map<Gene, List<BlatAssociation>> organizeBlatAssociationsByGene(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<Gene, Collection<BlatAssociation>> genes = new HashMap<>();
+        Map<Gene, List<BlatAssociation>> genes = new HashMap<>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             Gene gene = blatAssociation.getGeneProduct().getGene();
             if ( !genes.containsKey( gene ) ) {
-                genes.put( gene, new HashSet<BlatAssociation>() );
+                genes.put( gene, new ArrayList<>() );
             }
             genes.get( gene ).add( blatAssociation );
         }
@@ -234,9 +231,9 @@ public class BlatAssociationScorer {
      * @param blatAssociations blat assocs
      * @return map
      */
-    private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
+    private static Map<GeneProduct, List<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<>();
+        Map<GeneProduct, List<BlatAssociation>> geneProducts = new HashMap<>();
         Collection<BioSequence> sequences = new HashSet<>();
 
         for ( BlatAssociation blatAssociation : blatAssociations ) {
@@ -252,7 +249,7 @@ public class BlatAssociationScorer {
             assert blatAssociation.getGeneProduct() != null;
             GeneProduct geneProduct = blatAssociation.getGeneProduct();
             if ( !geneProducts.containsKey( geneProduct ) ) {
-                geneProducts.put( geneProduct, new HashSet<BlatAssociation>() );
+                geneProducts.put( geneProduct, new ArrayList<>() );
             }
             geneProducts.get( geneProduct ).add( blatAssociation );
 
@@ -271,14 +268,14 @@ public class BlatAssociationScorer {
      * @return blat accoc
      */
     private static BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
-            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
+            Map<GeneProduct, List<BlatAssociation>> geneProduct2BlatAssociations ) {
 
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
-        Collection<BlatAssociation> keepers = new HashSet<>();
+        List<BlatAssociation> keepers = new ArrayList<>();
 
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
-            Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
+            List<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
             if ( geneProductBlatAssociations.isEmpty() )
                 continue;
@@ -297,7 +294,7 @@ public class BlatAssociationScorer {
             }
 
             // Remove the lower-scoring ones for this gene product
-            Collection<BlatAssociation> toKeep = new HashSet<>();
+            List<BlatAssociation> toKeep = new ArrayList<>();
             toKeep.add( best );
             keepers.add( best );
             geneProduct2BlatAssociations.put( geneProduct, toKeep );
@@ -310,5 +307,102 @@ public class BlatAssociationScorer {
         }
         blatAssociations.retainAll( keepers );
         return globalBest;
+    }
+
+    /**
+     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also consider repeat matches
+     * to be the same as regular matches.
+     *
+     * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
+     * @param blatResult
+     */
+    public static Double score( BlatResult blatResult ) {
+
+        long length;
+        if ( blatResult.getQuerySequence() == null ) {
+            throw new IllegalArgumentException( "Sequence cannot be null" );
+        }
+
+        if ( blatResult.getQuerySequence().getLength() != null && blatResult.getQuerySequence().getLength() != 0 ) {
+            length = blatResult.getQuerySequence().getLength();
+        } else {
+            if ( StringUtils.isNotBlank( blatResult.getQuerySequence().getSequence() ) ) {
+                length = blatResult.getQuerySequence().getSequence().length();
+            } else {
+                throw new IllegalArgumentException(
+                        "Sequence is missing; cannot compute score for " + blatResult.getQuerySequence() );
+            }
+        }
+
+        assert length > 0;
+
+        // Note: we count repeat matches just like regular matches.
+        long matches = blatResult.getMatches() + blatResult.getRepMatches();
+
+        /*
+         * This might happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there
+         * could be remnants. When blat results come back from goldenpath (rather than computed by us) the lengths can
+         * disagree. Other reasons for this unclear.
+         */
+        if ( matches > length ) {
+            BlatAssociationScorer.log.warn( "Blat result for " + blatResult.getQuerySequence() + " More matches than sequence length: " + blatResult
+                    .getMatches() + " match + " + blatResult.getRepMatches() + " repMatch = " + matches + " > " + length );
+            matches = length;
+        }
+
+        /*
+         * return sizeMul (psl->match + ( psl->repMatch>>1)) - sizeMul psl->misMatch - psl->qNumInsert -
+         * psl->tNumInsert; Note that: "Currently the program does not distinguish between matches and repMatches.
+         * repMatches is always zero." (http://genome.ucsc.edu/goldenPath/help/blatSpec.html)
+         */
+        double score = ( double ) ( matches - blatResult.getQueryGapCount() - blatResult.getTargetGapCount() ) / ( double ) length;
+
+        // because of repeat matches, score _can_ be negative in some situations (typically, lots of gaps).
+        if ( score < 0.0 && blatResult.getRepMatches() == 0 ) {
+            throw new IllegalStateException(
+                    "Score was " + score + "; matches=" + matches + " repMatches=" + blatResult.getRepMatches()
+                            + " queryGaps=" + blatResult.getQueryGapCount() + " targetGaps=" + blatResult.getTargetGapCount()
+                            + " length=" + length + " sequence=" + blatResult.getQuerySequence() + " id=" + blatResult.getId() );
+        }
+
+        assert score >= 0.0 && score <= 1.0 :
+                "Score was " + score + "; matches=" + matches + " queryGaps=" + blatResult.getQueryGapCount() + " targetGaps="
+                        + blatResult.getTargetGapCount() + " length=" + length + " sequence=" + blatResult.getQuerySequence()
+                        + " id=" + blatResult.getId();
+
+        return score;
+    }
+
+    /**
+     * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
+     * See <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
+     *
+     * @return Value between 0 and 1.
+     * @param blatResult
+     */
+    public static Double identity( BlatResult blatResult ) {
+        int sizeMul = 1; // assuming DNA; use 3 for protein.
+        long qAliSize = sizeMul * ( blatResult.getQueryEnd() - blatResult.getQueryStart() );
+        long tAliSize = blatResult.getTargetEnd() - blatResult.getTargetStart();
+        long aliSize = Math.min( qAliSize, tAliSize );
+
+        if ( aliSize <= 0 )
+            return 0.0;
+
+        long sizeDif = qAliSize - tAliSize;
+        if ( sizeDif < 0 ) {
+            sizeDif = 0; // here assuming "isMRna" is true. ("The parameter isMRna should be set to TRUE, regardless
+            // of whether the input sequence is mRNA or protein")
+        }
+        int insertFactor = blatResult.getQueryGapCount(); // assumes isMRna is true.
+        int total = ( sizeMul * ( blatResult.getMatches() + blatResult.getRepMatches() + blatResult.getMismatches() ) );
+        int milliBad = 0;
+        if ( total != 0 ) {
+            milliBad = ( 1000 * ( blatResult.getMismatches() * sizeMul + insertFactor + ( int ) Math
+                    .round( 3.0 * Math.log( 1.0 + sizeDif ) ) ) ) / total;
+        }
+        assert milliBad >= 0 && milliBad <= 1000 :
+                "MilliBad was outside of range 0-1000: " + milliBad + " for result " + blatResult;
+        return ( 100.0 - milliBad * 0.1 ) / 100.0;
     }
 }

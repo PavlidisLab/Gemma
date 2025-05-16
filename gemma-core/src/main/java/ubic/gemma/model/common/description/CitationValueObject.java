@@ -19,7 +19,6 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Hibernate;
 
 import java.io.Serializable;
 import java.util.*;

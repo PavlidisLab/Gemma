@@ -9,33 +9,33 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.util.ServiceBasedValueObjectConverter;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +58,7 @@ import static org.mockito.Mockito.*;
  */
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTests {
+public class SearchServiceVoConversionTest extends BaseTest {
 
     @Configuration
     @TestComponent

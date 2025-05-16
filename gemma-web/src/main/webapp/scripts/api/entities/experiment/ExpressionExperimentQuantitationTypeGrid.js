@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 /**
  * 
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
@@ -81,9 +81,11 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
             var downloadQuantitationUrl;
             if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector' ) {
-               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed';
+               downloadQuantitationUrl = Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed?download=true';
             } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector' ) {
-               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id;
+               downloadQuantitationUrl = Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id + '&download=true';
+            } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector' ) {
+               downloadQuantitationUrl = Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/singleCell?quantitationType=' + record.data.id + '&download=true';
             }
             if ( downloadQuantitationUrl ) {
                return '<a href="' + downloadQuantitationUrl + '">' + value + "</a>";

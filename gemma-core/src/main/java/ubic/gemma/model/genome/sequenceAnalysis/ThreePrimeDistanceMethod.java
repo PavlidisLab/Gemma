@@ -1,7 +1,5 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import java.util.*;
-
 public enum ThreePrimeDistanceMethod {
     LEFT,
     MIDDLE,

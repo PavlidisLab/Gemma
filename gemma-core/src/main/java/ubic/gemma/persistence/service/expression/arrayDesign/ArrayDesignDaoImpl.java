@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,10 +41,9 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -52,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -82,6 +83,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad where ad.name like 'Generic%' and ad.technologyType = :tt" )
+                .setParameter( "tt", TechnologyType.GENELIST )
+                .list();
+    }
+
+    @Override
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
         for ( CompositeSequence compositeSequence : newProbes ) {
             compositeSequence.setArrayDesign( arrayDesign );
@@ -104,7 +114,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         List<BlatResult> toDelete = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign ).list();
 
-        AbstractDao.log.info( "Deleting " + toDelete.size() + " alignments for sequences on " + arrayDesign
+        log.info( "Deleting " + toDelete.size() + " alignments for sequences on " + arrayDesign
                 + " (will affect other designs that use any of the same sequences)" );
 
         for ( BlatResult r : toDelete ) {
@@ -132,7 +142,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
 
         }
-        AbstractDao.log.info(
+        log.info(
                 "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
 
     }
@@ -158,7 +168,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
 
         }
-        AbstractDao.log.info(
+        log.info(
                 "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
     }
 
@@ -206,7 +216,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             for ( BlatAssociation r : blatAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
-            AbstractDao.log.info(
+            log.info(
                     "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
@@ -225,7 +235,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             for ( AnnotationAssociation r : annotAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
-            AbstractDao.log.info(
+            log.info(
                     "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
 
         }
@@ -242,6 +252,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public ArrayDesign findOneByName( String name ) {
+        return findOneByProperty( "name", name );
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
@@ -254,8 +269,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public Collection<ArrayDesign> findByAlternateName( String queryString ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesign ad inner join ad.alternateNames n where n.name = :q" )
+                .createQuery( "select ad from ArrayDesign ad join ad.alternateNames n where n.name = :q" )
                 .setParameter( "q", queryString ).list();
+    }
+
+    @Nullable
+    @Override
+    public ArrayDesign findOneByAlternateName( String name ) {
+        return ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad join ad.alternateNames n where n.name = :q" )
+                .setParameter( "q", name ).uniqueResult();
     }
 
     @Override
@@ -342,7 +365,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Fetch sequences: " + timer.getTime() + "ms" );
+            log.info( "Fetch sequences: " + timer.getTime() + "ms" );
         }
 
         return bioSequences;
@@ -364,6 +387,37 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setParameter( "ad", arrayDesign.getId() )
                 .setCacheable( true )
                 .list();
+    }
+
+    @Override
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+        Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
+                .addScalar( "CS", StandardBasicTypes.LONG )
+                .addEntity( "G", Gene.class )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "arrayDesignId", arrayDesign.getId() )
+                .setCacheable( true )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
+                        Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+    }
+
+    @Override
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign ) {
+        return arrayDesign.stream()
+                .map( this::getGenesByCompositeSequence )
+                .reduce( new HashMap<>(), ( m1, m2 ) -> {
+                    m1.putAll( m2 );
+                    return m1;
+                } );
     }
 
     @Override
@@ -561,10 +615,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-        Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId,
-                this.getSessionFactory().getCurrentSession() );
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ad.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                        + "where ee.id = :eeId" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
         return this.loadValueObjectsByIds( ids );
     }
 
@@ -782,7 +842,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             cs.setBiologicalCharacteristic( null );
             if ( ++count % ArrayDesignDaoImpl.LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                AbstractDao.log.info( "Cleared sequence association for " + count + " composite sequences" );
+                log.info( "Cleared sequence association for " + count + " composite sequences" );
             }
         }
     }
@@ -802,32 +862,45 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void thaw( final ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
-        }
-
-        /*
-         * Thaw basic stuff
-         */
         StopWatch timer = StopWatch.createStarted();
-        this.thawLite( arrayDesign );
 
-        // Thaw the composite sequences
-        StopWatch probeTimer = StopWatch.createStarted();
+        // Thaw basic stuff
+        long metadataTime = timer.getTime();
+        thawLite( arrayDesign );
+        metadataTime = timer.getTime() - metadataTime;
+
+        // Thaw the composite sequences & biological characteristics
+        long probeTime = timer.getTime();
         Hibernate.initialize( arrayDesign.getCompositeSequences() );
-        probeTimer.stop();
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
+        }
+        probeTime = timer.getTime() - probeTime;
 
-        String message = String.format( "Thaw array design took %d ms (metadata: %d ms, probes: %d ms)",
-                timer.getTime(), timer.getTime() - probeTimer.getTime(), probeTimer.getTime() );
+        String message = String.format( "Thaw array design with %d elements took %d ms (metadata: %d ms, probes: %d ms)",
+                arrayDesign.getCompositeSequences().size(), timer.getTime(), metadataTime, probeTime );
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( message );
+            log.warn( message );
         } else {
-            AbstractDao.log.debug( message );
+            log.debug( message );
         }
     }
 
     @Override
-    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public void thawCompositeSequences( ArrayDesign arrayDesign ) {
+        StopWatch timer = StopWatch.createStarted();
+        Hibernate.initialize( arrayDesign.getCompositeSequences() );
+        String message = String.format( "Thaw array design with %d elements took %d ms",
+                arrayDesign.getCompositeSequences().size(), timer.getTime() );
+        if ( timer.getTime() > 1000 ) {
+            log.warn( message );
+        } else {
+            log.debug( message );
+        }
+    }
+
+    @Override
+    public boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
         if ( candidateSubsumee.equals( candidateSubsumer ) ) {
             log.warn( "Attempt to check a platform against itself for subsuming!" );
@@ -837,7 +910,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // Size does not automatically disqualify, because we only consider BioSequences that actually have
         // sequences in them.
         if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
-            AbstractDao.log.info(
+            log.info(
                     "Subsumee has more sequences than subsumer so probably cannot be subsumed ... checking anyway" );
         }
 
@@ -859,7 +932,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         if ( subsumeeSeqs.size() > subsumerSeqs.size() ) {
-            AbstractDao.log.info(
+            log.info(
                     "Subsumee has more sequences than subsumer so probably cannot be subsumed, checking overlap" );
         }
 
@@ -873,7 +946,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
         }
 
-        AbstractDao.log.info( "Subsumer " + candidateSubsumer + " contains " + overlap + "/" + subsumeeSeqs.size()
+        log.info( "Subsumer " + candidateSubsumer + " contains " + overlap + "/" + subsumeeSeqs.size()
                 + " biosequences from the subsumee " + candidateSubsumee );
 
         if ( overlap != subsumeeSeqs.size() ) {
@@ -887,10 +960,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         // if we got this far, then we definitely have a subsuming situation.
         if ( candidateSubsumee.getCompositeSequences().size() == candidateSubsumer.getCompositeSequences().size() ) {
-            AbstractDao.log.info(
-                    candidateSubsumee + " and " + candidateSubsumer + " are apparently exactly equivalent" );
+            log.info( candidateSubsumee + " and " + candidateSubsumer + " are apparently exactly equivalent" );
         } else {
-            AbstractDao.log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
+            log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
         }
         candidateSubsumer.getSubsumedArrayDesigns().add( candidateSubsumee );
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );
@@ -1020,7 +1092,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( results ) ) )
+                .setParameterList( "ids", optimizeParameterList( IdentifiableUtils.getIds( results ) ) )
                 .setCacheable( true )
                 .list();
         Map<Long, Set<DatabaseEntry>> dbi = r.stream()
@@ -1033,7 +1105,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
-        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
+        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( IdentifiableUtils.getIds( results ) );
         for ( ArrayDesignValueObject advo : results ) {
             advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
         }
@@ -1069,7 +1141,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1097,7 +1169,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

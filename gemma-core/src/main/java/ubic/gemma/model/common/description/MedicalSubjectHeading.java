@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,15 +19,12 @@
 package ubic.gemma.model.common.description;
 
 import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Indexed
 public class MedicalSubjectHeading extends BibRefAnnotation {
-
-    private static final long serialVersionUID = 7820807342851172028L;
 
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();
 

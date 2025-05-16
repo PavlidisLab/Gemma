@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -31,7 +34,8 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     private final ObjectMapper objectMapper;
 
-    private String username, password;
+    @Nullable
+    private Authentication authentication;
 
     public GemmaRestApiClientImpl( String hostUrl ) {
         this( hostUrl, new ObjectMapper().setDateFormat( new StdDateFormat() ) );
@@ -44,21 +48,22 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Set the authentication credentials used by this client.
-     */
     @Override
-    public void setAuthentication( String username, String password ) {
-        Assert.isTrue( StringUtils.isNotBlank( username ), "A non-blank username must be supplied." );
-        Assert.isTrue( StringUtils.isNotBlank( password ), "A non-blank password must be supplied." );
-        this.username = username;
-        this.password = password;
+    public String getHostUrl() {
+        return hostUrl;
+    }
+
+    @Override
+    public void setAuthentication( Authentication authentication ) {
+        Assert.isTrue( authentication instanceof UsernamePasswordAuthenticationToken
+                        || authentication instanceof AnonymousAuthenticationToken,
+                "Only username/password and anonymous authentications are supported." );
+        this.authentication = authentication;
     }
 
     @Override
     public void clearAuthentication() {
-        this.username = null;
-        this.password = null;
+        this.authentication = null;
     }
 
     @Override
@@ -93,8 +98,8 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             connection = url.openConnection();
             connection.setRequestProperty( "Accept", "application/json" );
             connection.setRequestProperty( "Accept-Encoding", "gzip" );
-            if ( username != null ) {
-                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( username + ":" + password ).getBytes() ) );
+            if ( authentication instanceof UsernamePasswordAuthenticationToken ) {
+                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( authentication.getPrincipal() + ":" + authentication.getCredentials() ).getBytes() ) );
             }
             if ( connection instanceof HttpURLConnection ) {
                 HttpURLConnection httpConnection = ( HttpURLConnection ) connection;

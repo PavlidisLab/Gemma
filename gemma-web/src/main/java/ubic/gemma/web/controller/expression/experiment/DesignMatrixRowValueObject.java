@@ -19,11 +19,9 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.dataStructure.CountingMap;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.persistence.util.FactorValueVector;
 
 import java.io.Serializable;
@@ -139,45 +137,4 @@ public class DesignMatrixRowValueObject implements Serializable {
         }
         return buf.toString();
     }
-
-    public static final class Factory {
-
-        /**
-         * @param expressionExperiment ee
-         * @param removeBatchFactor    if true, any factor(s) that look like "batch information" will be ignored.
-         * @param removeContinuous if true, any factor(s) that are continuous will be ignored. If you don't set this to true, you will get a row for each assay.
-         * @return collection
-         */
-        public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment,
-                boolean removeBatchFactor, boolean removeContinuous ) {
-
-            Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
-                    .getExperimentalFactors();
-
-            for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
-                ExperimentalFactor experimentalFactor = iterator.next();
-                if ( removeBatchFactor && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
-                    iterator.remove();
-                } else if ( removeContinuous && experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
-                    iterator.remove();
-                }
-            }
-
-            CountingMap<FactorValueVector> assayCount = new CountingMap<>();
-            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-                BioMaterial sample = assay.getSampleUsed();
-                assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
-            }
-
-            Collection<DesignMatrixRowValueObject> matrix = new ArrayList<>();
-            List<FactorValueVector> keys = assayCount.sortedKeyList( true );
-            for ( FactorValueVector key : keys ) {
-                matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
-            }
-            return matrix;
-
-        }
-
-    }
-
 }

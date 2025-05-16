@@ -21,12 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * The mapping of probes to genes for an ArrayDesign
  */
-public class ArrayDesignGeneMappingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7566135203525054499L;
+public class ArrayDesignGeneMappingEvent extends ArrayDesignAnalysisEvent {
 
 }

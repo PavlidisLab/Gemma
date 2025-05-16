@@ -21,6 +21,7 @@ package ubic.gemma.core.ontology.providers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -35,7 +36,9 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -51,8 +54,9 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
 /**
  * @author Paul
  */
+@Category(SlowTest.class)
 @ContextConfiguration
-public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
+public class GeneOntologyServiceTest extends BaseTest implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     @Configuration
@@ -61,12 +65,12 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "load.geneOntology=true", "url.geneOntology=dummy" );
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false" );
         }
 
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            return new GeneOntologyServiceImpl();
+            return new GeneOntologyServiceImpl( "dummy", true );
         }
 
         @Bean

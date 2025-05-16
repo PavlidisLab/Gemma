@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.model.common.search.SearchSettings.geneSearch;
 
 @ContextConfiguration
-public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
+public class DatabaseSearchSourceTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -60,11 +60,6 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public GeneProductService geneProductService() {
             return mock( GeneProductService.class );
-        }
-
-        @Bean
-        public PhenotypeAssociationManagerService phenotypeAssociationManagerService() {
-            return mock( PhenotypeAssociationManagerService.class );
         }
 
         @Bean

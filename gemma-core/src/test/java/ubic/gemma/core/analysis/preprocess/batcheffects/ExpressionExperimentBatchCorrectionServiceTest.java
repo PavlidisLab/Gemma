@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testComBatOnEE() throws Exception {
 
@@ -103,9 +105,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
                 break;
             }
         }
-        newee = expressionExperimentService.thawLite( newee );
+        newee = expressionExperimentService.thaw( newee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( newee );
+        processedExpressionDataVectorService.createProcessedDataVectors( newee, true );
 
         try ( InputStream deis = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" ) ) {

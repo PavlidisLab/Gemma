@@ -18,7 +18,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
-import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.security.access.hierarchicalroles.NullRoleHierarchy;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
@@ -26,10 +25,13 @@ import org.springframework.security.acls.domain.DefaultPermissionGrantingStrateg
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.persistence.hibernate.H2Dialect;
+import ubic.gemma.persistence.hibernate.HibernateTransactionManager;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
 import ubic.gemma.persistence.initialization.InitialDataPopulator;
@@ -42,6 +44,7 @@ import java.util.Properties;
  *
  * @author poirigui
  */
+@ActiveProfiles(EnvironmentProfiles.TEST)
 public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     protected abstract static class BaseDatabaseTestContextConfiguration {

@@ -5,7 +5,7 @@ body {
     margin: 0;
     padding: 0;
     background: white top left repeat-x;
-/ / text-align: left;
+    /* text-align: left; */
 }
 
 div#page {
@@ -16,14 +16,6 @@ div#page {
 }
 
 /* HEADER */
-div#headerclearnopadding {
-    margin: 0 0 2em 0;
-    padding: 0;
-    text-align: left;
-    height: 50px; /* needed by IE 7 */
-    background-position: right;
-}
-
 div#switchLocale {
     position: absolute;
     right: 10px;
@@ -60,8 +52,7 @@ div#main {
 }
 
 div.padded {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 20px;
     text-align: left;
 }
 

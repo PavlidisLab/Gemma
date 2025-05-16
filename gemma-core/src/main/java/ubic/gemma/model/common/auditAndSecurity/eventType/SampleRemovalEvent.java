@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Event used when a sample is removed from an experiment (typically due to QC concerns or when marked as an outlier).
- * </p>
  */
-public class SampleRemovalEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6508357999103110838L;
+public class SampleRemovalEvent extends ExpressionExperimentAnalysisEvent {
 
 }

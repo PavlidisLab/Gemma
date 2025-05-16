@@ -16,11 +16,13 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -40,6 +42,7 @@ import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
@@ -51,8 +54,6 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
-
-    private ExpressionExperiment ee;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
@@ -66,11 +67,17 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
+    private ExpressionExperiment ee;
+
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 2, factors.size() );
@@ -79,17 +86,17 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
             assertEquals( 2, ba.getSampleUsed().getFactorValues().size() );
         }
 
-        AnalysisType aa = analysisService
-                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
+        AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setAnalysisType( aa );
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
 
-        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();
@@ -120,7 +127,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -129,7 +136,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 

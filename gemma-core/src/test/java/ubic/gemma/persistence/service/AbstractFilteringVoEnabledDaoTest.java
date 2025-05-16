@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
@@ -27,7 +28,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
-public class AbstractFilteringVoEnabledDaoTest extends AbstractJUnit4SpringContextTests {
+public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
 
     @TestComponent
     @Configuration

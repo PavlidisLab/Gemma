@@ -1,0 +1,22 @@
+.eeqc table {
+    background-color: #DDDDDD;
+    border: 0;
+}
+
+.eeqc table th {
+    margin: 4px;
+    padding: 4px;
+    text-align: center;
+}
+
+.eeqc table td {
+    margin: 4px;
+    padding: 4px;
+    background-color: #EEEEEE;
+}
+
+.eeqc table td.eeqc-na {
+    vertical-align: middle;
+    text-align: center;
+    font-style: italic;
+}

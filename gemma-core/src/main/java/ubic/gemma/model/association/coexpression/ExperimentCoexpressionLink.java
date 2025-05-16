@@ -21,8 +21,6 @@ package ubic.gemma.model.association.coexpression;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
-import java.io.Serializable;
-
 /**
  * Represents coexpression at the level of experiment, referinng to links stored as Gene2GeneCoexpression.
  *
@@ -30,9 +28,7 @@ import java.io.Serializable;
  *         FIXME the overrides are uselsess, no specific functionality, they can be represented an enumeration field.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class ExperimentCoexpressionLink implements Serializable {
-
-    private static final long serialVersionUID = -3850440587168527052L;
+public abstract class ExperimentCoexpressionLink {
 
     private BioAssaySet experiment;
 

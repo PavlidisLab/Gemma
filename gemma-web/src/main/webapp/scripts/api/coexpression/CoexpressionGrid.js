@@ -148,7 +148,7 @@ Gemma.CoexpressionGrid = Ext
                                 xtype: 'label',
                                 html: '&nbsp&nbsp<img ext:qtip="'
                                 + Gemma.HelpText.WidgetDefaults.CoexpressionGrid.stringencySpinnerTT
-                                + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>',
+                                + '" src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>',
                                 height: 15
                             }, {
                                 xtype: 'tbspacer'
@@ -203,7 +203,7 @@ Gemma.CoexpressionGrid = Ext
                         itemId: 'bbarStatus'
                     }, '->', {
                         xtype: 'button',
-                        icon: ctxBasePath + "/images/icons/cross.png",
+                        icon: Gemma.CONTEXT_PATH + "/images/icons/cross.png",
                         itemId: 'bbarClearButton',
                         handler: function () {
                             this.hideBottomToolbar();
@@ -393,7 +393,7 @@ Gemma.CoexpressionGrid = Ext
                     Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
                     Ext.DomHelper.overwrite("coexpression-msg", [{
                         tag: 'img',
-                        src: ctxBasePath + '/images/icons/information.png'
+                        src: Gemma.CONTEXT_PATH + '/images/icons/information.png'
                     }, {
                         tag: 'span',
                         html: "&nbsp;&nbsp;" + errorMessage
@@ -561,7 +561,7 @@ Gemma.CoexpressionGrid = Ext
              *
              */
             geneTemplate: new Ext.Template(
-                "<a style='cursor:pointer;font-weight:{fontWeight};' target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+                "<a style='cursor:pointer;font-weight:{fontWeight};' target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
             /**
              *
@@ -584,7 +584,7 @@ Gemma.CoexpressionGrid = Ext
             },
 
             visStyler: function (value, metadata, record, row, col, ds) {
-                return "<img style='cursor:pointer' src='" + ctxBasePath + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+                return "<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
             },
 
             /**
@@ -617,7 +617,7 @@ Gemma.CoexpressionGrid = Ext
                             experiments: activeExperiments,
                             queryGene: queryGene,
                             foundGene: foundGene,
-                            downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
+                            downloadLink: String.format(Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
                                 .join(','), queryGene.id, foundGene.id),
                             title: "Coexpression for:  " + queryGene.name + " + " + foundGene.name
                         });

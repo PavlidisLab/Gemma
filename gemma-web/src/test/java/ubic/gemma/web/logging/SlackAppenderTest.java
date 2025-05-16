@@ -4,10 +4,17 @@ import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.ErrorHandler;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.spi.ThrowableInformation;
+import com.slack.api.model.block.SectionBlock;
+import com.slack.api.model.block.composition.TextObject;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.ErrorHandler;
+import org.apache.logging.log4j.core.impl.JdkMapAdapterStringMap;
+import org.apache.logging.log4j.core.impl.MutableLogEvent;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.message.SimpleMessage;
+import org.apache.logging.log4j.spi.DefaultThreadContextStack;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,8 +22,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import ubic.gemma.core.logging.log4j.SlackAppender;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -36,49 +46,49 @@ public class SlackAppenderTest {
     private ErrorHandler errorHandler;
 
     private SlackAppender appender;
-    private String slackToken = "1234";
-    private String slackChannel = "#gemma";
 
     @Before
     public void setUp() {
         when( mockedSlack.methods( any( String.class ) ) ).thenReturn( mockedMethodClient );
-        appender = new SlackAppender( mockedSlack );
-        appender.setErrorHandler( errorHandler );
-        appender.setToken( slackToken );
-        appender.setChannel( slackChannel );
-        appender.setThreshold( Level.ERROR );
-        appender.setLayout( new org.apache.log4j.PatternLayout( "%m" ) );
+        appender = new SlackAppender.Builder()
+                .setName( "slack" )
+                .setToken( "1234" )
+                .setChannel( "#gemma" )
+                .setLayout( PatternLayout.newBuilder().withPattern( "%m%throwable{none}" ).build() )
+                .build();
+        appender.setSlackInstance( mockedSlack );
+        appender.setHandler( errorHandler );
     }
 
     @Test
     public void test() throws Exception {
-        LoggingEvent event = mock();
-        when( event.getRenderedMessage() ).thenReturn( "test" );
-        when( event.getLevel() ).thenReturn( Level.ERROR );
-        appender.doAppend( event );
-        appender.close();
+        MutableLogEvent event = new MutableLogEvent();
+        Message message = new SimpleMessage( "test" );
+        event.setMessage( message );
+        event.setLevel( Level.ERROR );
+        appender.append( event );
+        appender.stop();
         verify( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
         ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
         verify( mockedMethodClient ).chatPostMessage( captor.capture() );
         assertThat( captor.getValue() ).satisfies( m -> {
-            assertThat( m.getText() ).isEqualTo( "test" );
+            assertThat( ( ( SectionBlock ) m.getBlocks().get( 0 ) ).getText().getText() ).isEqualTo( "test" );
         } );
         verify( mockedSlack ).close();
     }
 
     @Test
     public void testWithStacktrace() throws SlackApiException, IOException {
-        LoggingEvent event = mock();
-        when( event.getRenderedMessage() ).thenReturn( "test" );
-        when( event.getLevel() ).thenReturn( Level.ERROR );
-        ThrowableInformation ti = mock();
-        when( ti.getThrowable() ).thenReturn( new RuntimeException( "foo", new RuntimeException( "bar" ) ) );
-        when( event.getThrowableInformation() ).thenReturn( ti );
-        appender.doAppend( event );
+        MutableLogEvent event = new MutableLogEvent();
+        Message message = new SimpleMessage( "test" );
+        event.setMessage( message );
+        event.setLevel( Level.ERROR );
+        event.setThrown( new RuntimeException( "foo", new RuntimeException( "bar" ) ) );
+        appender.append( event );
         ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
         verify( mockedMethodClient ).chatPostMessage( captor.capture() );
         assertThat( captor.getValue() ).satisfies( m -> {
-            assertThat( m.getText() ).isEqualTo( "test" );
+            assertThat( ( ( SectionBlock ) m.getBlocks().get( 0 ) ).getText().getText() ).isEqualTo( "test" );
             assertThat( m.getAttachments() )
                     .hasSize( 1 )
                     .first()
@@ -92,29 +102,71 @@ public class SlackAppenderTest {
     }
 
     @Test
-    public void testWarnLogsShouldNotBeAppended() {
-        LoggingEvent event = mock();
-        when( event.getLevel() ).thenReturn( Level.WARN );
-        appender.doAppend( event );
-        verifyNoInteractions( mockedSlack );
-    }
-
-    @Test
     public void testWhenSlackApiRaisesException() throws SlackApiException, IOException {
         SlackApiException e = new SlackApiException( mock(), "test" );
         doThrow( e ).when( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
-        LoggingEvent event = mock();
-        when( event.getLevel() ).thenReturn( Level.ERROR );
-        appender.doAppend( event );
+        MutableLogEvent event = new MutableLogEvent();
+        event.setLevel( Level.ERROR );
+        Message message = new SimpleMessage( "test" );
+        event.setMessage( message );
+        appender.append( event );
         verify( mockedMethodClient ).chatPostMessage( any( ChatPostMessageRequest.class ) );
-        verify( errorHandler ).error( "Failed to send logging event to Slack channel #gemma.", e, 1000, event );
+        verify( errorHandler ).error( "Failed to send logging event to Slack channel #gemma.", event, e );
     }
 
     @Test
     public void testWhenSlackFailsToClose() throws Exception {
         SlackApiException e = new SlackApiException( mock(), "test" );
         doThrow( e ).when( mockedSlack ).close();
-        appender.close();
-        verify( errorHandler ).error( "Failed to close the Slack instance.", e, 1001 );
+        appender.stop();
+        verify( errorHandler ).error( "Failed to close the Slack instance.", null, e );
     }
+
+    @Test
+    public void testWithContextData() throws SlackApiException, IOException {
+        MutableLogEvent event = new MutableLogEvent();
+        event.setLoggerName( "Foo" );
+        event.setLevel( Level.INFO );
+        Map<String, String> map = new HashMap<>();
+        map.put( "k", "v" );
+        event.setContextData( new JdkMapAdapterStringMap( map, false ) );
+        appender.append( event );
+        ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
+        verify( mockedMethodClient ).chatPostMessage( captor.capture() );
+        assertThat( captor.getValue() ).satisfies( m -> {
+            assertThat( m.getBlocks() ).hasSize( 2 );
+            assertThat( m.getBlocks().get( 1 ) )
+                    .asInstanceOf( InstanceOfAssertFactories.type( SectionBlock.class ) )
+                    .satisfies( section -> {
+                        assertThat( section.getFields() )
+                                .extracting( TextObject::getText )
+                                .contains( "*Logger Name*", "Foo", "*k*", "v" );
+                    } );
+        } );
+    }
+
+    @Test
+    public void testWithContextStack() throws SlackApiException, IOException {
+        MutableLogEvent event = new MutableLogEvent();
+        event.setLoggerName( "Foo" );
+        event.setLevel( Level.INFO );
+        DefaultThreadContextStack cs = new DefaultThreadContextStack();
+        cs.push( "foo" );
+        cs.push( "bar" );
+        event.setContextStack( cs );
+        appender.append( event );
+        ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
+        verify( mockedMethodClient ).chatPostMessage( captor.capture() );
+        assertThat( captor.getValue() ).satisfies( m -> {
+            assertThat( m.getBlocks() ).hasSize( 2 );
+            assertThat( m.getBlocks().get( 1 ) )
+                    .asInstanceOf( InstanceOfAssertFactories.type( SectionBlock.class ) )
+                    .satisfies( section -> {
+                        assertThat( section.getFields() )
+                                .extracting( TextObject::getText )
+                                .contains( "*Logger Name*", "Foo", "*Stack*", "foo → bar" );
+                    } );
+        } );
+    }
+
 }

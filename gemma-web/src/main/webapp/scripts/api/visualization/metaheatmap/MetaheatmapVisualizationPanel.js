@@ -825,7 +825,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
                      title : 'Gene Expression',
                      thumbnails : false,
                      closableAction : 'hide',
-                     downloadLink : String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1}",
+                     downloadLink : String.format( Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&g={1}",
                         cell.condition.datasetId, cell.gene.id )
                   } );
                   expressionDetailsWindow.show( {

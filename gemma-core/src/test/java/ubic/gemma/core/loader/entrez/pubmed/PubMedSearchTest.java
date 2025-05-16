@@ -18,10 +18,12 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -42,21 +44,17 @@ public class PubMedSearchTest {
 
     @Before
     public void setUp() throws Exception {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
-     */
     @Test
-    @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieve( StringUtils.join( " ", searchTerms ), 100 );
         assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
         /*
          * at least, this was the result on 4/2008.
@@ -66,9 +64,6 @@ public class PubMedSearchTest {
         assertNotNull( r.getPublicationDate() );
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
-     */
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
@@ -76,7 +71,7 @@ public class PubMedSearchTest {
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieve( StringUtils.join( " ", searchTerms ), 100 );
         /*
          * at least, this was the result on 4/2008.
          */
@@ -84,11 +79,10 @@ public class PubMedSearchTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "23865096" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.retrieve( searchTerms );
         assertEquals( 1, actualResult.size() );
     }
 
@@ -99,7 +93,7 @@ public class PubMedSearchTest {
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
-        Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
+        Collection<String> actualResult = pms.search( searchTerms, 100 );
         assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
     }
 }

@@ -11,8 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject.*;
-
 @SuppressWarnings("unused") // Used in rest api
 public class ExperimentExpressionLevelsValueObject implements Serializable {
     public static final String OPT_PICK_MAX = "pickmax";

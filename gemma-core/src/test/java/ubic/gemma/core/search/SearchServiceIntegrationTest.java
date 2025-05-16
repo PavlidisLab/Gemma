@@ -30,7 +30,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
@@ -150,6 +150,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      */
     @Test
     @DirtiesContext
+    @Category(SlowTest.class) // because it triggers database re-initialization
     public void testGeneralSearch4Brain() throws SearchException, IOException {
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
@@ -208,8 +209,8 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() throws SearchException, IOException {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
-        BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
+        PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
+        BibliographicReference bibref = fetcher.retrieve( "9600966" );
         assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
@@ -244,8 +245,8 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
-        BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
+        PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
+        BibliographicReference bibref = fetcher.retrieve( "22780917" );
         assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
@@ -319,6 +320,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      */
     @Test
     @DirtiesContext
+    @Category(SlowTest.class) // because it triggers database re-initialization
     public void testURIChildSearch() throws SearchException, IOException {
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;

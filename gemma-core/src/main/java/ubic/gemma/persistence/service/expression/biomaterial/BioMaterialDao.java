@@ -18,12 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @see BioMaterial
@@ -32,18 +36,29 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
 
     BioMaterial copy( BioMaterial bioMaterial );
 
+    /**
+     * Find all the sub-biomaterials for a given biomaterial related by {@link BioMaterial#getSourceBioMaterial()}.
+     * @param direct if true, only direct sub-biomaterials are retained, otherwise the entire hierarchy is visited
+     *               recursively.
+     */
+    List<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct );
+
+    /**
+     * Find all the sub-biomaterials for a given biomaterial related by {@link BioMaterial#getSourceBioMaterial()}.
+     * @param bioMaterials a collection of biomaterials to visit
+     * @param direct       if true, only direct sub-biomaterials are retained, otherwise the entire hierarchy is visited
+     *                     recursively.
+     */
+    List<BioMaterial> findSubBioMaterials( Collection<BioMaterial> bioMaterials, boolean direct );
+
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
-    /**
-     * @param bioMaterialId biomaterial id
-     * @return the experiment the biomaterial appears in
-     */
-    ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
+    Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor );
 
     /**
-     * Thaw the given BioMaterial.
+     * Obtain all the experiments a biomaterial is used in from its hierarchy.
      * <p>
-     * The following fields are initialized: sourceTaxon, treatments and factorValues.experimentalFactor.
+     * This also includes experiments that are using this via one of their parent?
      */
-    void thaw( BioMaterial bioMaterial );
+    Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm );
 }

@@ -18,10 +18,35 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import java.util.*;
-
 public enum GeneralType {
+    /**
+     * For quantitative data.
+     * <p>
+     * The following types are allowed:
+     * <ul>
+     * <li>{@link StandardQuantitationType#COUNT}</li>
+     * <li>{@link StandardQuantitationType#AMOUNT}</li>
+     * <li>{@link StandardQuantitationType#CONFIDENCEINDICATOR}</li>
+     * <li>{@link StandardQuantitationType#ZSCORE}</li>
+     * <li>{@link StandardQuantitationType#CORRELATION}</li>
+     * <li>{@link StandardQuantitationType#OTHER}</li>
+     * </ul>
+     */
     QUANTITATIVE,
+    /**
+     * For categorical data.
+     * <p>
+     * The following types are allowed:
+     * <ul>
+     * <li>{@link StandardQuantitationType#PRESENTABSENT}</li>
+     * <li>{@link StandardQuantitationType#FAILED}</li>
+     * <li>{@link StandardQuantitationType#COORDINATE}</li>
+     * <li>{@link StandardQuantitationType#OTHER}</li>
+     * </ul>
+     */
     CATEGORICAL,
+    /**
+     * Indicate an unknown type.
+     */
     UNKNOWN;
 }

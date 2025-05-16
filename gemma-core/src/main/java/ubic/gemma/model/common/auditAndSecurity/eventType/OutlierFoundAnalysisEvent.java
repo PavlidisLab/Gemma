@@ -18,11 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public class OutlierFoundAnalysisEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3797610069227351691L;
+public class OutlierFoundAnalysisEvent extends OutlierAnalysisEvent {
 
 }

@@ -23,18 +23,18 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collection;
 import java.util.List;
@@ -107,7 +107,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( "QT is null", qt );
 
-        Collection<DesignElementDataVector> preferredVectors = rawAndProcessedService.find( qt );
+        Collection<BulkExpressionDataVector> preferredVectors = rawAndProcessedService.find( qt );
 
         assertNotNull( preferredVectors );
         assertEquals( 40, preferredVectors.size() );

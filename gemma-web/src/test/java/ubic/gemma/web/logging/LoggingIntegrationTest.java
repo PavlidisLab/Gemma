@@ -17,8 +17,8 @@ public class LoggingIntegrationTest {
     public static void setUp() {
         assumeTrue( "The -Dgemma.log.dir must be set.",
                 System.getProperty( "gemma.log.dir" ) != null );
-        assumeTrue( "The -Dlog4j.configuration must be set.",
-                System.getProperty( "log4j.configuration" ) != null );
+        assumeTrue( "The -Dlog4j2.configurationFile must be set.",
+                System.getProperty( "log4j2.configurationFile" ) != null );
     }
 
     @Test

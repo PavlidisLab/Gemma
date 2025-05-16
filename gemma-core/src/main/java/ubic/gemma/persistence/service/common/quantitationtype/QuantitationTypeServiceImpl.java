@@ -24,12 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author keshav
@@ -48,9 +50,43 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     }
 
     @Override
+    // does not need to a transaction
+    public Collection<Class<? extends DataVector>> getVectorTypes() {
+        return this.quantitationTypeDao.getVectorTypes();
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public List<QuantitationType> loadByDescription( String description ) {
-        return this.quantitationTypeDao.loadByDescription( description );
+    public Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee ) {
+        return quantitationTypeDao.findByExpressionExperiment( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends T> dataVectorType ) {
+        return quantitationTypeDao.findByExpressionExperiment( ee, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends T>> vectorTypes ) {
+        Collection<QuantitationType> results = new HashSet<>();
+        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
+            results.addAll( findByExpressionExperiment( ee, vectorType ) );
+        }
+        return results;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes ) {
+        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension, vectorTypes );
     }
 
     @Override
@@ -61,14 +97,60 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
+        return quantitationTypeDao.getDataVectorType( qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<QuantitationType, Class<? extends DataVector>> getDataVectorTypes( Collection<QuantitationType> qts ) {
+        Map<QuantitationType, Class<? extends DataVector>> vectorTypes = new HashMap<>();
+        for ( QuantitationType qt : qts ) {
+            if ( !vectorTypes.containsKey( qt ) ) {
+                vectorTypes.put( qt, getDataVectorType( qt ) );
+            }
+        }
+        return vectorTypes;
+    }
+
+    @Override
+    // no need for a transaction
+    public <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorType( Class<T> vectorType ) {
+        return quantitationTypeDao.getMappedDataVectorTypes( vectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuantitationType loadById( Long id, ExpressionExperiment ee ) {
+        return quantitationTypeDao.loadById( id, ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
         return quantitationTypeDao.loadByIdAndVectorType( id, ee, dataVectorType );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return this.quantitationTypeDao.find( ee, quantitationType );
+    public QuantitationType reload( QuantitationType quantitationType ) {
+        return quantitationTypeDao.reload( quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes ) {
+        return this.quantitationTypeDao.find( ee, quantitationType, Collections.singleton( dataVectorTypes ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuantitationType findByName( ExpressionExperiment ee, String name ) throws NonUniqueQuantitationTypeByNameException {
+        try {
+            return quantitationTypeDao.findByNameAndVectorType( ee, name, RawExpressionDataVector.class );
+        } catch ( NonUniqueResultException e ) {
+            throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name.", name ), e );
+        }
     }
 
     @Override
@@ -79,5 +161,23 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
         } catch ( NonUniqueResultException e ) {
             throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name in %s for vectors of type %s.", name, ee, dataVectorType ), e );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType ) {
+        return quantitationTypeDao.findAllByNameAndVectorType( ee, name, vectorType );
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return quantitationTypeDao.findOrCreate( quantitationType, dataVectorType );
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return this.quantitationTypeDao.create( quantitationType, dataVectorType );
     }
 }

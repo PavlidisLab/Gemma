@@ -22,10 +22,10 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * <p>
@@ -33,12 +33,7 @@ import java.util.Comparator;
  * </p>
  */
 @Indexed
-public class DatabaseEntry implements Identifiable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5418961655066735636L;
+public class DatabaseEntry extends AbstractIdentifiable {
 
     /**
      * Compares {@link DatabaseEntry} by version.
@@ -46,7 +41,13 @@ public class DatabaseEntry implements Identifiable, Serializable {
     public static Comparator<DatabaseEntry> getComparator() {
         return Comparator
                 // we always prefer integer versions, so we put them last
-                .comparing( DatabaseEntry::getAccessionVersionAsInteger, Comparator.nullsFirst( Comparator.naturalOrder() ) )
+                .comparing( ( DatabaseEntry databaseEntry ) -> {
+                    try {
+                        return databaseEntry.accessionVersion != null ? Integer.valueOf( databaseEntry.accessionVersion ) : null;
+                    } catch ( NumberFormatException e ) {
+                        return null;
+                    }
+                }, Comparator.nullsFirst( Comparator.naturalOrder() ) )
                 // sort the remaining accessions lexicographically
                 .thenComparing( DatabaseEntry::getAccessionVersion )
                 // for ties, simply use the latest ID
@@ -57,53 +58,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
     private String accessionVersion;
     @Deprecated
     private String Uri;
-    private Long id;
     private ExternalDatabase externalDatabase;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public DatabaseEntry() {
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
-
-        int hashCode = 0;
-        if ( this.getAccession() != null )
-            hashCode = 29 * this.getAccession().hashCode();
-
-        if ( this.getAccessionVersion() != null )
-            hashCode += this.getAccessionVersion().hashCode();
-
-        if ( this.getExternalDatabase() != null )
-            hashCode += this.getExternalDatabase().hashCode();
-
-        return hashCode;
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof DatabaseEntry ) ) {
-            return false;
-        }
-        final DatabaseEntry that = ( DatabaseEntry ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    @Override
-    public String toString() {
-        return ( this.getAccession() + " " ) + ( this.getExternalDatabase() == null ?
-                "[no external database]" :
-                this.getExternalDatabase().getName() ) + ( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
-    }
 
     @Field(analyze = Analyze.NO)
     public String getAccession() {
@@ -122,14 +77,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
         this.accessionVersion = accessionVersion;
     }
 
-    private Integer getAccessionVersionAsInteger() {
-        try {
-            return accessionVersion != null ? Integer.valueOf( accessionVersion ) : null;
-        } catch ( NumberFormatException e ) {
-            return null;
-        }
-    }
-
     public ExternalDatabase getExternalDatabase() {
         return this.externalDatabase;
     }
@@ -141,11 +88,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
     @Override
     @DocumentId
     public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
+        return super.getId();
     }
 
     @Deprecated
@@ -156,6 +99,36 @@ public class DatabaseEntry implements Identifiable, Serializable {
     @Deprecated
     public void setUri( String Uri ) {
         this.Uri = Uri;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getAccession(), getAccessionVersion(), getExternalDatabase() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof DatabaseEntry ) ) {
+            return false;
+        }
+        final DatabaseEntry that = ( DatabaseEntry ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( getAccession(), that.getAccession() )
+                    && Objects.equals( getAccessionVersion(), that.getAccessionVersion() )
+                    && Objects.equals( getExternalDatabase(), that.getExternalDatabase() );
+        }
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( this.getAccession() + " " )
+                + ( this.getExternalDatabase() == null ? "[no external database]" : this.getExternalDatabase().getName() );
     }
 
     public static final class Factory {

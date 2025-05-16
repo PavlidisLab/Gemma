@@ -18,31 +18,31 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.job.AbstractTask;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,127 +61,222 @@ import java.util.List;
 public class ExpressionDataFileUploadController {
 
     private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
+
     @Autowired
     private TaskRunningService taskRunningService;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private PreprocessorService preprocessorService;
-    @Autowired
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-    @Autowired
-    private TaxonService taxonService;
-
-    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
-        loadEECommand.setValidateOnly( false );
-        return taskRunningService.submitTask( new SimpleEELoadLocalTask( loadEECommand ) );
-    }
 
     @RequestMapping(value = "/expressionExperiment/upload.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show() {
         return new ModelAndView( "dataUpload" );
     }
 
+    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
+        loadEECommand.setValidateOnly( false );
+        return taskRunningService.submitTask( new SimpleEELoadLocalTask( loadEECommand ) );
+    }
+
+    private class SimpleEELoadLocalTask extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
+
+        public SimpleEELoadLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
+            super( commandObj );
+        }
+
+        @Override
+        public TaskResult call() {
+            try {
+                SimpleExpressionExperimentMetadata metadata = getMetadata( getTaskCommand() );
+
+                File file = getFile( getTaskCommand() );
+                DoubleMatrix<String, String> matrix = getData( getTaskCommand() );
+
+                /*
+                 * Main action here!
+                 */
+                ExpressionExperiment result = simpleExpressionDataLoaderService.create( metadata, matrix );
+
+                // In theory we could do the link analysis right away. However, when a data set has new array designs,
+                // we won't be ready yet.
+
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
+                eeUploadResponse.setTaskId( result.getId() );
+                eeUploadResponse.setError( false );
+
+                return newTaskResult( eeUploadResponse );
+            } catch ( IOException e ) {
+                // log.info( "There was an error opening an uploaded file:" + e.getMessage() );
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
+                eeUploadResponse.setError( true );
+                eeUploadResponse
+                        .setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
+                return newTaskResult( eeUploadResponse );
+            } catch ( Exception e ) {
+                // log.warn( "There was an error submitting your dataset, exception:" + e.toString() );
+                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
+                eeUploadResponse.setError( true );
+                eeUploadResponse.setErrorMessage( e.getMessage() );
+                return newTaskResult( eeUploadResponse );
+            }
+        }
+    }
+
     public String validate( SimpleExpressionExperimentLoadTaskCommand command ) {
         assert command != null;
         command.setValidateOnly( true );
+        // TODO: retrieve the locale from DWR
         return taskRunningService.submitTask( new SimpleEEValidateLocalTask( command ) );
     }
 
-    private SimpleExpressionExperimentCommandValidation doValidate(
-            SimpleExpressionExperimentLoadTaskCommand command ) {
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
-        this.scrub( command );
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( command.getShortName() );
-        SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
+    private class SimpleEEValidateLocalTask
+            extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
 
-        ExpressionDataFileUploadController.log.info( "Checking for valid name and files" );
-
-        result.setShortNameIsUnique( existing == null );
-
-        String localPath = command.getServerFilePath();
-        if ( StringUtils.isBlank( localPath ) ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is missing" );
-            return result;
+        public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        File file = new File( localPath );
+        @Override
+        public TaskResult call() {
+            SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
 
-        if ( !file.canRead() ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "Cannot read from file" );
-            return result;
-        }
+            ExpressionDataFileUploadController.log.info( "Checking for valid name and files" );
+            SimpleExpressionExperimentMetadata metadata = getMetadata( getTaskCommand() );
 
-        Collection<Long> arrayDesignIds = command.getArrayDesignIds();
-
-        if ( arrayDesignIds.isEmpty() ) {
-            result.setArrayDesignMatchesDataFile( false );
-            result.setArrayDesignMismatchProblemMessage( "Platform must be provided" );
-            return result;
-        }
-
-        DoubleMatrix<String, String> parse = null;
-        try {
-            parse = simpleExpressionDataLoaderService
-                    .parse( FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) );
-        } catch ( FileNotFoundException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is missing" );
-        } catch ( IOException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch ( IllegalArgumentException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch ( Exception e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "Error Validating: " + e.getMessage() );
-        }
-
-        if ( parse != null ) {
-
-            ExpressionDataFileUploadController.log.info( "Checking if probe labels match design" );
-
-            result.setNumRows( parse.rows() );
-            result.setNumColumns( parse.columns() );
-
-            Long arrayDesignId = arrayDesignIds.iterator().next();
-
-            ArrayDesign design = arrayDesignService.loadOrFail( arrayDesignId );
-            design = arrayDesignService.thaw( design );
-
-            // check that the probes can be matched up...
-            int numRowsMatchingArrayDesign = 0;
-            int numRowsNotMatchingArrayDesign = 0;
-            int i = 0;
-            List<String> mismatches = new ArrayList<>();
-            for ( CompositeSequence cs : design.getCompositeSequences() ) {
-                if ( parse.containsRowName( cs.getName() ) ) {
-                    numRowsMatchingArrayDesign++;
-                } else {
-                    numRowsNotMatchingArrayDesign++;
-                    mismatches.add( cs.getName() );
-                }
-                if ( ++i % 2000 == 0 ) {
-                    ExpressionDataFileUploadController.log
-                            .info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
-                }
+            if ( StringUtils.isBlank( metadata.getShortName() ) ) {
+                result.setValid( false );
+                result.setOtherProblemsMessage( "Short name cannot be blank." );
+            } else if ( expressionExperimentService.findByShortName( metadata.getShortName() ) != null ) {
+                result.setValid( false );
+                result.setShortNameIsUnique( false );
             }
 
-            result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
-            result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
-            if ( !mismatches.isEmpty() ) {
-                result.setNonMatchingProbeNameExamples(
-                        mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
+            if ( StringUtils.isBlank( metadata.getName() ) ) {
+                result.setValid( false );
+                result.setOtherProblemsMessage( "Name cannot be blank." );
             }
 
+            if ( metadata.getQuantitationType() == null ) {
+                result.setValid( false );
+                result.setQuantitationTypeIsValid( false );
+                result.setQuantitationTypeProblemMessage( "Quantitation type is missing." );
+            } else {
+                checkQuantitationType( metadata.getQuantitationType(), result );
+            }
+
+            checkDataFile( metadata, result );
+
+            return newTaskResult( result );
         }
 
-        return result;
+        private void checkQuantitationType( SimpleQuantitationTypeMetadata quantitationType, SimpleExpressionExperimentCommandValidation result ) {
+            if ( StringUtils.isBlank( quantitationType.getName() ) ) {
+                result.setValid( false );
+                result.setQuantitationTypeIsValid( false );
+                result.setQuantitationTypeProblemMessage( "Quantitation type name cannot be blank." );
+            }
+        }
+
+        private void checkDataFile( SimpleExpressionExperimentMetadata metadata, SimpleExpressionExperimentCommandValidation result ) {
+            if ( StringUtils.isBlank( getTaskCommand().getServerFilePath() ) ) {
+                result.setValid( false );
+                result.setDataFileIsValidFormat( false );
+                result.setDataFileFormatProblemMessage( "No data file provided." );
+                return;
+            }
+
+            try {
+                DoubleMatrix<String, String> data = getData( getTaskCommand() );
+
+                ExpressionDataFileUploadController.log.info( "Checking if probe labels match design" );
+                result.setNumRows( data.rows() );
+                result.setNumColumns( data.columns() );
+                Long arrayDesignId = metadata.getArrayDesigns().iterator().next().getId();
+                ArrayDesign design = arrayDesignService.loadOrFail( arrayDesignId );
+                design = arrayDesignService.thaw( design );
+                // check that the probes can be matched up...
+                int numRowsMatchingArrayDesign = 0;
+                int numRowsNotMatchingArrayDesign = 0;
+                int i = 0;
+                List<String> mismatches = new ArrayList<>();
+                for ( CompositeSequence cs : design.getCompositeSequences() ) {
+                    if ( data.containsRowName( cs.getName() ) ) {
+                        numRowsMatchingArrayDesign++;
+                    } else {
+                        numRowsNotMatchingArrayDesign++;
+                        mismatches.add( cs.getName() );
+                    }
+                    if ( ++i % 2000 == 0 ) {
+                        ExpressionDataFileUploadController.log
+                                .info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
+                    }
+                }
+                result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
+                result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
+                if ( !mismatches.isEmpty() ) {
+                    result.setArrayDesignMatchesDataFile( false );
+                    result.setArrayDesignMismatchProblemMessage( "Some of the probes from " + design.getShortName() + " were not matched in the supplied data file." );
+                    result.setNonMatchingProbeNameExamples(
+                            mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
+                }
+
+            } catch ( FileNotFoundException e ) {
+                result.setValid( false );
+                result.setDataFileIsValidFormat( false );
+                result.setDataFileFormatProblemMessage( "File is missing" );
+            } catch ( Exception e ) {
+                result.setValid( false );
+                result.setDataFileIsValidFormat( false );
+                result.setDataFileFormatProblemMessage( e.getMessage() );
+            }
+        }
+    }
+
+    private SimpleExpressionExperimentMetadata getMetadata( SimpleExpressionExperimentLoadTaskCommand commandObject ) {
+        SimpleExpressionExperimentMetadata metadata = new SimpleExpressionExperimentMetadata();
+
+        metadata.setShortName( scrub( commandObject.getShortName() ) );
+        metadata.setName( scrub( commandObject.getName() ) );
+        metadata.setDescription( scrub( commandObject.getDescription() ) );
+
+        // might have used instead of actual ADs.
+        Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
+
+        Long taxonId = commandObject.getTaxonId();
+        if ( taxonId != null ) {
+            metadata.setTaxon( SimpleTaxonMetadata.forId( taxonId ) );
+        }
+
+        Collection<SimplePlatformMetadata> arrayDesigns = metadata.getArrayDesigns();
+        if ( arrayDesignIds != null && !arrayDesignIds.isEmpty() ) {
+            for ( Long adid : arrayDesignIds ) {
+                arrayDesigns.add( SimplePlatformMetadata.forId( adid ) );
+            }
+        }
+
+        SimpleQuantitationTypeMetadata qtm = new SimpleQuantitationTypeMetadata();
+        qtm.setName( commandObject.getQuantitationTypeName() );
+        qtm.setDescription( commandObject.getQuantitationTypeDescription() );
+        qtm.setScale( commandObject.getScale() );
+        qtm.setIsRatio( commandObject.getIsRatio() );
+        qtm.setIsPreferred( true );
+        metadata.setQuantitationType( qtm );
+
+        return metadata;
+    }
+
+    private DoubleMatrix<String, String> getData( SimpleExpressionExperimentLoadTaskCommand taskCommand ) throws IOException {
+        File file = getFile( taskCommand );
+        try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) ) {
+            if ( stream == null ) {
+                throw new IllegalStateException( "Could not read from file " + file );
+            }
+            return new DoubleMatrixReader().read( stream );
+        }
     }
 
     private File getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
@@ -200,115 +295,7 @@ public class ExpressionDataFileUploadController {
         return file;
     }
 
-    private void scrub( SimpleExpressionExperimentLoadTaskCommand o ) {
-        o.setName( this.scrub( o.getName() ) );
-        o.setDescription( this.scrub( o.getDescription() ) );
-        o.setShortName( this.scrub( o.getShortName() ) );
-    }
-
     private String scrub( String s ) {
         return StringEscapeUtils.escapeHtml4( s );
     }
-
-    private class SimpleEELoadLocalTask extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
-
-        public SimpleEELoadLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult call() {
-            File file = ExpressionDataFileUploadController.this.getFile( taskCommand );
-
-            try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) ) {
-
-                this.populateCommandObject( taskCommand );
-
-                if ( stream == null ) {
-                    throw new IllegalStateException( "Could not read from file " + file );
-                }
-
-                /*
-                 * Main action here!
-                 */
-                ExpressionDataFileUploadController.this.scrub( taskCommand );
-                ExpressionExperiment result = simpleExpressionDataLoaderService.create( taskCommand, stream );
-                stream.close();
-
-                ExpressionDataFileUploadController.log.info( "Preprocessing the data for analysis" );
-                try {
-                    preprocessorService.process( result );
-                } catch ( PreprocessingException e ) {
-                    ExpressionDataFileUploadController.log.error( "Error during postprocessing", e );
-                }
-                // In theory we could do the link analysis right away. However, when a data set has new array designs,
-                // we won't be ready yet.
-
-                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
-                eeUploadResponse.setTaskId( result.getId() );
-                eeUploadResponse.setError( false );
-
-                return new TaskResult( taskCommand, eeUploadResponse );
-            } catch ( IOException e ) {
-                // log.info( "There was an error opening an uploaded file:" + e.getMessage() );
-                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
-                eeUploadResponse.setError( true );
-                eeUploadResponse
-                        .setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
-                return new TaskResult( taskCommand, eeUploadResponse );
-            } catch ( Exception e ) {
-                // log.warn( "There was an error submitting your dataset, exception:" + e.toString() );
-                ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
-                eeUploadResponse.setError( true );
-                eeUploadResponse.setErrorMessage( e.getMessage() );
-                return new TaskResult( taskCommand, eeUploadResponse );
-            }
-        }
-
-        private void populateCommandObject( SimpleExpressionExperimentLoadTaskCommand commandObject ) {
-            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-
-            // might have used instead of actual ADs.
-            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
-
-            Long taxonId = commandObject.getTaxonId();
-
-            if ( taxonId != null ) {
-                commandObject.setTaxon( taxonService.load( taxonId ) );
-            }
-
-            if ( arrayDesignIds != null && !arrayDesignIds.isEmpty() ) {
-                for ( Long adid : arrayDesignIds ) {
-                    arrayDesigns.add( arrayDesignService.load( adid ) );
-                }
-            } else if ( arrayDesigns == null || arrayDesigns.isEmpty() ) {
-                ExpressionDataFileUploadController.log
-                        .info( "Platform " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-                arrayDesign.setName( commandObject.getArrayDesignName() );
-                arrayDesign.setPrimaryTaxon( commandObject.getTaxon() );
-                commandObject.getArrayDesigns().add( arrayDesign );
-            }
-
-            commandObject.setType( StandardQuantitationType.AMOUNT ); // FIXME might need to be COUNT for some data.
-            commandObject.setGeneralType( GeneralType.QUANTITATIVE );
-            commandObject.setIsMaskedPreferred( true );
-        }
-    }
-
-    private class SimpleEEValidateLocalTask
-            extends AbstractTask<SimpleExpressionExperimentLoadTaskCommand> {
-
-        public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult call() {
-            SimpleExpressionExperimentCommandValidation result = ExpressionDataFileUploadController.this
-                    .doValidate( taskCommand );
-            return new TaskResult( taskCommand, result );
-        }
-    }
-
 }

@@ -32,17 +32,13 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -128,7 +124,7 @@ public class ShellDelegatingBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
+    public List<BlatResult> blatQuery( BioSequence b ) throws IOException {
         Taxon t = b.getTaxon();
         if ( t == null ) {
             throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
@@ -138,7 +134,7 @@ public class ShellDelegatingBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException {
+    public List<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
         String seqName = b.getName().replaceAll( " ", "_" );
@@ -152,7 +148,7 @@ public class ShellDelegatingBlat implements Blat {
         }
         String outputPath = this.getTmpPslFilePath( seqName );
 
-        Collection<BlatResult> results = this
+        List<BlatResult> results = this
                 .gfClient( querySequenceFile, outputPath, this.choosePortForQuery( taxon, sensitive ) );
 
         ExternalDatabase searchedDatabase = ShellDelegatingBlat.getSearchedGenome( taxon );
@@ -166,14 +162,16 @@ public class ShellDelegatingBlat implements Blat {
     }
 
     @Override
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
+    public Map<BioSequence, List<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
             Taxon taxon ) throws IOException {
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
+        Map<BioSequence, List<BlatResult>> results = new HashMap<>();
 
         File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
         int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
         if ( count == 0 ) {
-            EntityUtils.deleteFile( querySequenceFile );
+            if ( !querySequenceFile.delete() ) {
+                throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
+            }
             throw new IllegalArgumentException( "No sequences!" );
         }
 
@@ -199,17 +197,19 @@ public class ShellDelegatingBlat implements Blat {
             BioSequence query = blatResult.getQuerySequence();
 
             if ( !results.containsKey( query ) ) {
-                results.put( query, new HashSet<BlatResult>() );
+                results.put( query, new ArrayList<>() );
             }
 
             results.get( query ).add( blatResult );
         }
-        EntityUtils.deleteFile( querySequenceFile );
+        if ( !querySequenceFile.delete() ) {
+            throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
+        }
         return results;
     }
 
     @Override
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+    public Map<BioSequence, List<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
             throws IOException {
         return this.blatQuery( sequences, false, taxon );
     }
@@ -275,7 +275,7 @@ public class ShellDelegatingBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
+    public List<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
 
         if ( inputStream.available() == 0 ) {
             throw new IOException( "No data from the blat output file. Make sure the gfServer is running" );
@@ -369,7 +369,7 @@ public class ShellDelegatingBlat implements Blat {
      * @param outputPath        output path
      * @return collection of blat results
      */
-    private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
+    private List<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         final String cmd =
                 gfClientExe + " -nohead -minScore=" + ShellDelegatingBlat.MIN_SCORE + " " + host + " " + portToUse + " "
@@ -438,7 +438,7 @@ public class ShellDelegatingBlat implements Blat {
      * @return processed results.
      * @throws IOException if there is an IO problem while accessing the file
      */
-    private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
+    private List<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         // if ( hasNativeLibrary ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
 
@@ -457,9 +457,6 @@ public class ShellDelegatingBlat implements Blat {
         this.humanSensitiveServerPort = Settings.getInt( "gfClient.sensitive.humanServerPort" );
         this.mouseSensitiveServerPort = Settings.getInt( "gfClient.sensitive.mouseServerPort" );
         this.ratSensitiveServerPort = Settings.getInt( "gfClient.sensitive.ratServerPort" );
-        // this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
-        // this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
-        // this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
         this.host = Settings.getString( "gfClient.host" );
         this.seqDir = Settings.getString( "gfClient.seqDir" );
         this.mouseSeqFiles = Settings.getString( "gfClient.mouse.seqFiles" );
@@ -547,7 +544,7 @@ public class ShellDelegatingBlat implements Blat {
      * @param taxon    taxon (optional, can be null)
      * @return processed results.
      */
-    private Collection<BlatResult> processPsl( String filePath, Taxon taxon ) throws IOException {
+    private List<BlatResult> processPsl( String filePath, Taxon taxon ) throws IOException {
         ShellDelegatingBlat.log.debug( "Processing " + filePath );
         BlatResultParser brp = new BlatResultParser();
         brp.setTaxon( taxon );

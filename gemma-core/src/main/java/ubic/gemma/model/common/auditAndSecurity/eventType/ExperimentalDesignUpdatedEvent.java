@@ -24,9 +24,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class ExperimentalDesignUpdatedEvent extends AuditEventType {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6359338763821876809L;
-
 }

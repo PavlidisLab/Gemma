@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 /**
  * @author keshav
@@ -132,7 +132,7 @@ Ext
                   tbar : {
                      items : [
                               {
-                                 icon : ctxBasePath + "/images/icons/group_add.png",
+                                 icon : Gemma.CONTEXT_PATH + "/images/icons/group_add.png",
                                  tooltip : "Add a group",
                                  handler : function() {
 
@@ -173,7 +173,7 @@ Ext
                                  }
                               },
                               {
-                                 icon : ctxBasePath + "/images/icons/group_delete.png",
+                                 icon : Gemma.CONTEXT_PATH + "/images/icons/group_delete.png",
                                  tooltip : "Delete a group",
                                  // disabled : true,
                                  // hidden : true,
@@ -308,7 +308,7 @@ Ext
                      disabled : true,
                      items : [
                               {
-                                 icon : ctxBasePath + "/images/icons/user_add.png",
+                                 icon : Gemma.CONTEXT_PATH + "/images/icons/user_add.png",
                                  tooltip : "Invite new member",
                                  handler : function() {
 
@@ -330,7 +330,7 @@ Ext
                                  }
                               }, {
                                  tooltip : "Save changes",
-                                 icon : ctxBasePath + "/images/icons/database_save.png",
+                                 icon : Gemma.CONTEXT_PATH + "/images/icons/database_save.png",
                                  id : 'manager-group-members-panel-save-btn',
                                  handler : function( b, e ) {
                                     /*
@@ -369,7 +369,7 @@ Ext
                                  }
                               }, {
                                  tooltip : "Refresh from the database",
-                                 icon : ctxBasePath + "/images/icons/arrow_refresh_small.png",
+                                 icon : Gemma.CONTEXT_PATH + "/images/icons/arrow_refresh_small.png",
                                  handler : function() {
                                     refreshGroupMembers( currentGroup );
                                  }
@@ -435,7 +435,7 @@ Ext
                      disabled : true,
                      items : [ {
                         tooltip : "Save changes",
-                        icon : ctxBasePath + "/images/icons/database_save.png",
+                        icon : Gemma.CONTEXT_PATH + "/images/icons/database_save.png",
                         id : 'manager-data-panel-save-btn',
                         handler : function( b, e ) {
                            /*
@@ -484,7 +484,7 @@ Ext
                         }
                      }, {
                         tooltip : "Refresh from the database",
-                        icon : ctxBasePath + "/images/icons/arrow_refresh_small.png",
+                        icon : Gemma.CONTEXT_PATH + "/images/icons/arrow_refresh_small.png",
                         handler : function() {
                            refreshData( currentGroup );
                         }

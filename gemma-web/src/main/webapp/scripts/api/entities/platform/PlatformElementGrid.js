@@ -1,7 +1,7 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * 
+ *
  * @class Gemma.PlatformElementGrid
  * @extends Ext.grid.GridPanel
  */
@@ -26,7 +26,7 @@ Gemma.PlatformElementGrid = Ext
 
          /**
           * Show first batch of data.
-          * 
+          *
           * @param {Object}
           *           isArrayDesign
           * @param {Object}
@@ -52,7 +52,7 @@ Gemma.PlatformElementGrid = Ext
 
          arraylink : function( data, metadata, record, row, column, store ) {
             return "<a ext:qtip='" + record.get( "arrayDesignShortName" )
-               + " Click to view platform details' href='" + ctxBasePath + "/arrays/showArrayDesign.html?id="
+               + " Click to view platform details' href='" + Gemma.CONTEXT_PATH + "/arrays/showArrayDesign.html?id="
                + record.get( "arrayDesignId" ) + "'>" + record.get( "arrayDesignName" ) + "</a>";
          },
 
@@ -73,7 +73,7 @@ Gemma.PlatformElementGrid = Ext
             for ( var g in d) {
                if ( d[g].id ) {
                   r = r
-                     + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id="
+                     + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id="
                      + d[g].id + "'>" + d[g].officialSymbol + "</a>,";
                   ++count;
                }
@@ -168,6 +168,9 @@ Gemma.PlatformElementGrid = Ext
                                    header : "Element Name",
                                    width : 130,
                                    dataIndex : "compositeSequenceName",
+                                   renderer : ( data, metadata, record ) => {
+                                      return '<a href="' + Gemma.CONTEXT_PATH + '/compositeSequence/show.html?id=' + record.data.compositeSequenceId + '">' + data + '</a>';
+                                   },
                                    tooltip : "Element or probe name"
                                 },
                                 {
@@ -269,7 +272,7 @@ Gemma.PlatformElementGrid = Ext
 
          /**
           * Event handler for searches. Update the lower grid.
-          * 
+          *
           * @param {Object}
           *           event
           */
@@ -335,7 +338,7 @@ Gemma.PlatformElementGrid = Ext
          handleLoadError : function( scope, b, message, exception ) {
             Ext.DomHelper.overwrite( "messages", {
                tag : 'img',
-               src : ctxBasePath + '/images/iconWarning.gif'
+               src : Gemma.CONTEXT_PATH + '/images/iconWarning.gif'
             } );
             Ext.DomHelper.overwrite( "messages", {
                tag : 'span',

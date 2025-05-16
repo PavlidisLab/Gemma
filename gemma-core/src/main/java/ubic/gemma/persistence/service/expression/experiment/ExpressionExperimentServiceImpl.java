@@ -34,7 +34,6 @@ import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -43,20 +42,14 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -74,6 +67,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +85,7 @@ import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
  * @author keshav
  * @see ExpressionExperimentService
  */
-@Service
+@Service("expressionExperimentService")
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -125,8 +119,6 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private SecurityService securityService;
     @Autowired
-    private SVDService svdService;
-    @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
@@ -142,6 +134,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Nonnull
     @Transactional(readOnly = true)
     public ExpressionExperiment loadReference( Long id ) {
         return expressionExperimentDao.loadReference( id );
@@ -160,6 +153,52 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithAuditTrail( Long id ) {
+        ExpressionExperiment ee = expressionExperimentDao.load( id );
+        if ( ee != null ) {
+            Hibernate.initialize( ee.getAuditTrail() );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadTroubledIds() {
+        return expressionExperimentDao.loadTroubledIds();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedMap<Long, String> loadAllIdAndName() {
+        return expressionExperimentDao.loadAllIdAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedMap<String, String> loadAllShortNameAndName() {
+        return expressionExperimentDao.loadAllShortNameAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedSet<String> loadAllName() {
+        return expressionExperimentDao.loadAllName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedMap<String, String> loadAllAccessionAndName() {
+        return expressionExperimentDao.loadAllAccessionAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment reload( ExpressionExperiment ee ) {
+        return expressionExperimentDao.reload( ee );
+    }
+
+    @Override
     @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
@@ -169,6 +208,10 @@ public class ExpressionExperimentServiceImpl
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
         factor = experimentalFactorService.create( factor ); // to make sure we get acls.
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -180,6 +223,10 @@ public class ExpressionExperimentServiceImpl
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         fv = this.factorValueService.create( fv );
         for ( ExperimentalFactor ef : efs ) {
@@ -197,6 +244,10 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         int count = 0;
         for ( BioMaterial bm : fvs.keySet() ) {
@@ -222,34 +273,37 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getRawDataVectors( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt ) {
+        return expressionExperimentDao.getRawDataVectors( ee, samples, qt );
+    }
+
+    @Override
     @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
-        Collection<BioAssayDimension> BADs = new HashSet<>();
-        for ( RawExpressionDataVector vec : newVectors ) {
-            BADs.add( vec.getBioAssayDimension() );
-        }
-
-        if ( BADs.size() > 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
-        }
-
-        BioAssayDimension bad = BADs.iterator().next();
-        if ( bad.getId() == null ) {
-            log.info( "Creating " + bad + "..." );
-            bad = this.bioAssayDimensionService.findOrCreate( bad );
+        createDimensionIfNecessary( newVectors );
+        if ( quantitationType.getId() == null ) {
+            log.info( "Creating " + quantitationType + "..." );
+            quantitationType = quantitationTypeService.create( quantitationType, RawExpressionDataVector.class );
             for ( RawExpressionDataVector vector : newVectors ) {
-                vector.setBioAssayDimension( bad );
+                vector.setQuantitationType( quantitationType );
             }
         }
-
         return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
     @Override
     @Transactional
     public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
         return expressionExperimentDao.replaceRawDataVectors( ee, qt, vectors );
     }
 
@@ -261,29 +315,41 @@ public class ExpressionExperimentServiceImpl
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
+        Set<QuantitationType> existingQts = ee.getRawExpressionDataVectors().stream()
+                .map( DataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+
         Set<QuantitationType> newQts = newVectors.stream()
                 .map( RawExpressionDataVector::getQuantitationType )
                 .collect( Collectors.toSet() );
 
-        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
-        if ( preferredQts.size() != 1 ) {
-            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
-                    ee ) );
+        Set<QuantitationType> preferredQts = newQts.stream()
+                .filter( QuantitationType::getIsPreferred )
+                .collect( Collectors.toSet() );
+        if ( preferredQts.size() > 1 ) {
+            throw new IllegalArgumentException( "There must be exactly one preferred quantitation type." );
         }
-
-        // remove the vectors
-        removeAllRawDataVectors( ee );
 
         // group the vectors up by QT
-        Map<QuantitationType, Set<RawExpressionDataVector>> BADs = newVectors.stream()
+        Map<QuantitationType, Set<RawExpressionDataVector>> vectorsByQt = newVectors.stream()
                 .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
 
-        int added = 0;
-        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : BADs.entrySet() ) {
-            added += this.addRawDataVectors( ee, e.getKey(), e.getValue() );
+        int replaced = 0;
+        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : vectorsByQt.entrySet() ) {
+            if ( existingQts.contains( e.getKey() ) ) {
+                replaced += replaceRawDataVectors( ee, e.getKey(), e.getValue() );
+            } else {
+                replaced += addRawDataVectors( ee, e.getKey(), e.getValue() );
+            }
         }
 
-        return added;
+        for ( QuantitationType qt : existingQts ) {
+            if ( !newQts.contains( qt ) ) {
+                removeRawDataVectors( ee, qt );
+            }
+        }
+
+        return replaced;
     }
 
     @Override
@@ -295,13 +361,32 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.removeRawDataVectors( ee, qt );
+        return removeRawDataVectors( ee, qt, false );
     }
 
     @Override
     @Transactional
-    public void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
-        expressionExperimentDao.createProcessedDataVectors( ee, vectors );
+    public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
+        return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee ) {
+        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays ) {
+        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee, assays ) );
+    }
+
+    @Override
+    @Transactional
+    public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
+        return expressionExperimentDao.createProcessedDataVectors( ee, vectors );
     }
 
     @Override
@@ -313,7 +398,25 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
         return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
+    }
+
+    private void createDimensionIfNecessary( Collection<? extends BulkExpressionDataVector> vectors ) {
+        Collection<BioAssayDimension> dimension = vectors.stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
+        if ( dimension.size() != 1 ) {
+            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
+        }
+        BioAssayDimension bad = dimension.iterator().next();
+        if ( bad.getId() == null ) {
+            log.info( "Creating " + bad + "..." );
+            bad = this.bioAssayDimensionService.findOrCreate( bad );
+            for ( BulkExpressionDataVector vector : vectors ) {
+                vector.setBioAssayDimension( bad );
+            }
+        }
     }
 
     @Override
@@ -393,13 +496,19 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findOneByAccession( String accession ) {
+        return this.expressionExperimentDao.findOneByAccession( accession );
+    }
+
     /**
      * @see ExpressionExperimentService#findByBibliographicReference(BibliographicReference)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
-        return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
+        return this.expressionExperimentDao.findByBibliographicReference( bibRef );
     }
 
     /**
@@ -416,17 +525,8 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByBioMaterial( final BioMaterial bm ) {
+    public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
-    }
-
-    /**
-     * @see ExpressionExperimentService#findByBioMaterials(Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperiment, BioMaterial> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
-        return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
     }
 
     /**
@@ -500,6 +600,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment findOneByName( String name ) {
+        return expressionExperimentDao.findOneByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.expressionExperimentDao.findByQuantitationType( type );
     }
@@ -542,14 +648,18 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
-        ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
         Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
         Set<String> seenTerms = new HashSet<>();
 
         expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( this::filterExperimentAnnotations )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+
+        expressionExperimentDao.getExperimentSubSetAnnotations( expressionExperiment ).stream()
+                .filter( this::filterSubSetAnnotations )
+                .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         String[] ignoredPredicates = new String[] {
@@ -570,6 +680,42 @@ public class ExpressionExperimentServiceImpl
         return annotations;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
+        Set<AnnotationValueObject> annotations = new HashSet<>();
+        Set<String> seenTerms = new HashSet<>();
+
+        // inherited from the EE
+        expressionExperimentDao.getExperimentAnnotations( ee.getSourceExperiment(), false ).stream()
+                .filter( this::filterExperimentAnnotations )
+                .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+
+        // specifically for the subset
+        ee.getCharacteristics().stream()
+                .filter( this::filterSubSetAnnotations )
+                .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+
+        String[] ignoredPredicates = new String[] {
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
+        };
+        expressionExperimentDao.getFactorValueAnnotations( ee ).stream()
+                .filter( this::filterFactorValueAnnotation )
+                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+
+        expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
+                .filter( this::filterBioMaterialAnnotation )
+                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+
+        return annotations;
+    }
+
     /**
      * Check if a term is novel and add it to the set of seen terms.
      */
@@ -577,6 +723,14 @@ public class ExpressionExperimentServiceImpl
         if ( seenTerms.add( StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) ) ) {
             annotations.add( term );
         }
+    }
+
+    private boolean filterExperimentAnnotations( Characteristic c ) {
+        return filterAnnotation( c );
+    }
+
+    private boolean filterSubSetAnnotations( Characteristic c ) {
+        return filterAnnotation( c );
     }
 
     /**
@@ -588,14 +742,15 @@ public class ExpressionExperimentServiceImpl
     private boolean filterFactorValueAnnotation( Statement c ) {
         return filterAnnotation( c )
                 // ignore baseline conditions
-                && !BaselineSelection.isBaselineCondition( c )
-                // ignore batch factors
-                && !ExperimentalDesignUtils.isBatch( c )
+                && !BaselineSelection.isBaselineCondition( c ) && !CharacteristicUtils.hasCategory( c, Categories.BLOCK )
                 // ignore timepoints
                 && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
                 // DE_include/exclude
                 && !"http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() )
-                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() );
+                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() );// ignore baseline conditions
+// ignore batch factors
+// ignore timepoints
+// DE_include/exclude
     }
 
     /**
@@ -746,6 +901,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getNumberOfDesignElementsPerSample( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithCharacteristics( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id );
         if ( ee != null ) {
@@ -764,7 +925,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
-        this.expressionExperimentDao.thawWithoutVectors( ee );
+        this.expressionExperimentDao.thawLite( ee );
         return ee;
     }
 
@@ -781,20 +942,10 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thaw( ee );
-        }
-        return ee;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
-            this.expressionExperimentDao.thawWithoutVectors( ee );
+            this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
     }
@@ -835,8 +986,10 @@ public class ExpressionExperimentServiceImpl
      */
     @Value(staticConstructor = "from")
     private static class SubClauseKey {
+        @Nullable
         String objectAlias;
         String propertyName;
+        @Nullable
         String originalProperty;
     }
 
@@ -956,6 +1109,7 @@ public class ExpressionExperimentServiceImpl
         private final OntologyTerm categoryTerm;
 
         public OntologyTermSimpleWithCategory( @Nullable String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+            //noinspection DataFlowIssue
             super( uri, term );
             this.categoryTerm = categoryTerm;
         }
@@ -984,6 +1138,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt ) {
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, quantitationTypeService.getDataVectorType( qt ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType ) {
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, vectorType );
     }
 
     @Override
@@ -1066,17 +1232,61 @@ public class ExpressionExperimentServiceImpl
         }
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
-        for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
-            thawedBioAssayDimensions.add( this.bioAssayDimensionService.thaw( bioAssayDimension ) );
+        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
+        return bioAssayDimensions;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
+        Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
+                .getBioAssayDimensionsFromSubSets( expressionExperiment );
+        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
+        return bioAssayDimensions;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return expressionExperimentDao.getBioAssayDimension( ee, qt, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt ) {
+        BioAssayDimension bad = expressionExperimentDao.getBioAssayDimension( ee, qt );
+        if ( bad != null ) {
+            Thaws.thawBioAssayDimension( bad );
         }
-        return thawedBioAssayDimensions;
+        return bad;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return expressionExperimentDao.getBioAssayDimensionById( ee, dimensionId, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId ) {
+        for ( Class<? extends BulkExpressionDataVector> vectorType : quantitationTypeService.getMappedDataVectorType( BulkExpressionDataVector.class ) ) {
+            BioAssayDimension bad = expressionExperimentDao.getBioAssayDimensionById( ee, dimensionId, vectorType );
+            if ( bad != null ) {
+                return bad;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -1087,8 +1297,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public long getDesignElementDataVectorCount( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getDesignElementDataVectorCount( ee );
+    public long getRawDataVectorCount( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getRawDataVectorCount( ee );
     }
 
     @Override
@@ -1147,8 +1357,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getPreferredQuantitationType( ee );
+    public Optional<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        return Optional.ofNullable( this.expressionExperimentDao.getPreferredQuantitationType( ee ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<QuantitationType> getProcessedQuantitationType( final ExpressionExperiment ee ) {
+        return Optional.ofNullable( this.expressionExperimentDao.getProcessedQuantitationType( ee ) );
     }
 
     @Override
@@ -1166,7 +1382,28 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
+        return this.quantitationTypeService.findByExpressionExperiment( expressionExperiment ).values().stream()
+                .flatMap( Collection::stream )
+                .collect( Collectors.toSet() );
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Class<? extends DataVector>, Set<QuantitationType>> getQuantitationTypesByVectorType( ExpressionExperiment ee ) {
+        return this.quantitationTypeService.findByExpressionExperiment( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return this.quantitationTypeService.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return quantitationTypeService.findByExpressionExperimentAndDimension( expressionExperiment, dimension, Collections.singleton( dataVectorType ) );
     }
 
     @Override
@@ -1185,8 +1422,131 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
+    public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getSubSets( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee ) {
+        Collection<ExpressionExperimentSubSet> result = this.expressionExperimentDao.getSubSets( ee );
+        for ( ExpressionExperimentSubSet subSet : result ) {
+            Hibernate.initialize( subSet.getCharacteristics() );
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimensionWithBioAssays( ExpressionExperiment expressionExperiment ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> result = expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+        for ( Set<ExpressionExperimentSubSet> subSets : result.values() ) {
+            for ( ExpressionExperimentSubSet s : subSets ) {
+                for ( BioAssay ba : s.getBioAssays() ) {
+                    Hibernate.initialize( ba.getSampleUsed() );
+                    Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return expressionExperimentDao.getSubSets( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentDao.getSubSets( expressionExperiment, dimension );
+        for ( ExpressionExperimentSubSet s : subSets ) {
+            for ( BioAssay ba : s.getSourceExperiment().getBioAssays() ) {
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+            }
+            for ( BioAssay ba : s.getBioAssays() ) {
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+            }
+        }
+        return subSets;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
+        // TODO: could this be made more efficient for a single factor?
+        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) )
+                .get( experimentalFactor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
+        Map<FactorValue, ExpressionExperimentSubSet> result;
+        result = getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
+        if ( result != null ) {
+            for ( ExpressionExperimentSubSet subSet : result.values() ) {
+                Hibernate.initialize( subSet.getCharacteristics() );
+                for ( BioAssay ba : subSet.getBioAssays() ) {
+                    Thaws.thawBioAssay( ba );
+                }
+            }
+        }
+        return result;
+    }
+
+    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( Collection<ExpressionExperimentSubSet> subSets ) {
+        Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
+        for ( ExpressionExperimentSubSet subSet : subSets ) {
+            for ( BioAssay ba : subSet.getBioAssays() ) {
+                for ( FactorValue fv : ba.getSampleUsed().getAllFactorValues() ) {
+                    result.computeIfAbsent( fv.getExperimentalFactor(), k -> new HashMap<>() )
+                            .computeIfAbsent( fv, k -> new HashSet<>() )
+                            .add( subSet );
+                }
+            }
+        }
+        return result.entrySet().stream()
+                // only retain FVs that fully separates subsets
+                // if there are as many FVs than subsets, we know there is exactly one subset per FV
+                .filter( e -> e.getValue().size() == subSets.size() )
+                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ) ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet getSubSetByIdWithCharacteristics( ExpressionExperiment ee, Long subSetId ) {
+        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
+        if ( result != null ) {
+            Hibernate.initialize( result.getCharacteristics() );
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId ) {
+        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
+        if ( result != null ) {
+            result.getSourceExperiment().getBioAssays().forEach( Thaws::thawBioAssay );
+            result.getBioAssays().forEach( Thaws::thawBioAssay );
+        }
+        return result;
     }
 
     @Override
@@ -1347,17 +1707,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawBioAssays( result );
-        return result;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawWithoutVectors( result );
+        this.expressionExperimentDao.thawLite( result );
         return result;
     }
 
@@ -1365,7 +1717,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawForFrontEnd( result );
+        this.expressionExperimentDao.thawLiter( result );
         return result;
     }
 
@@ -1390,7 +1742,7 @@ public class ExpressionExperimentServiceImpl
     public void remove( ExpressionExperiment ee ) {
         ee = ensureInSession( ee );
 
-        if ( !securityService.isEditable( ee ) ) {
+        if ( !securityService.isEditableByCurrentUser( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
@@ -1402,7 +1754,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
+        Collection<ExpressionExperimentSubSet> subsets = this.getSubSetsWithBioAssays( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {
             expressionExperimentSubSetService.remove( subset );
         }
@@ -1476,6 +1828,48 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
+    @Override
+    @Transactional
+    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt ) {
+        Assert.notNull( ee.getId(), "The experiment must be persistent." );
+        Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
+        // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
+        //        cannot use contains
+        Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
+                "The quantitation type does not belong to " + ee + "." );
+        if ( qt.getIsSingleCellPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsSingleCellPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for single-cell data." );
+                    otherQt.setIsSingleCellPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
+        if ( qt.getIsPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for raw data." );
+                    otherQt.setIsPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
+        if ( qt.getIsMaskedPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsMaskedPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for processed data." );
+                    otherQt.setIsMaskedPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
+        quantitationTypeService.update( qt );
     }
 
     @Override

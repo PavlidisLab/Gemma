@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.util.parser;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +38,22 @@ public interface Parser<T> {
      * @return the results of the parse.
      */
     Collection<T> getResults();
+
+    /**
+     * Obtain a unique result from the parser.
+     * @throws IllegalStateException if there is more than one parse result
+     */
+    @Nullable
+    default T getUniqueResult() throws IllegalStateException {
+        Collection<T> results = getResults();
+        if ( results.isEmpty() ) {
+            return null;
+        } else if ( results.size() > 1 ) {
+            throw new IllegalStateException( "There is more than one parse result." );
+        } else {
+            return results.iterator().next();
+        }
+    }
 
     /**
      * Parse a {@link File}

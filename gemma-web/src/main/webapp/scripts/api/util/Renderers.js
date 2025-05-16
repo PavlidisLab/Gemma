@@ -54,14 +54,14 @@ Gemma.Renderers = {
     qualityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         if (record.get('geeq')) {
             var geeq = record.get('geeq');
-            return getGeeqIconColored(geeq.publicQualityScore);
+            return Gemma.GEEQ.getGeeqIconColored(geeq.publicQualityScore);
         }
     },
 
     suitabilityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         if (record.get('geeq')) {
             var geeq = record.get('geeq');
-            return getGeeqIconColored(geeq.publicSuitabilityScore);
+            return Gemma.GEEQ.getGeeqIconColored(geeq.publicSuitabilityScore);
         }
     },
 

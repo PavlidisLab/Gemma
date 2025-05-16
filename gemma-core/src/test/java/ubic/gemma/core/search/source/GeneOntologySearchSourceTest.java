@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -23,7 +23,7 @@ import java.util.Collections;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class GeneOntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
+public class GeneOntologySearchSourceTest extends BaseTest {
 
     @Configuration
     @TestComponent

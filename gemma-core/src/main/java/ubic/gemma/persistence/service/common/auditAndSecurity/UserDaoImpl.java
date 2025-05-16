@@ -14,10 +14,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import gemma.gsec.AuthorityConstants;
-import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
@@ -27,7 +24,6 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
-import java.util.Objects;
 
 /**
  * DAO Class: is able to create, update, remove, load, and find objects of type
@@ -37,6 +33,8 @@ import java.util.Objects;
  */
 @Repository
 public class UserDaoImpl extends AbstractDao<User> implements UserDao {
+
+    private static final String ADMINISTRATOR_USER_NAME = "administrator";
 
     @Autowired
     public UserDaoImpl( SessionFactory sessionFactory ) {
@@ -72,9 +70,8 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     @Override
     public void remove( User user ) {
-        if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
-            throw new IllegalArgumentException(
-                    "Cannot remove user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+        if ( ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
+            throw new IllegalArgumentException( "Cannot remove user " + ADMINISTRATOR_USER_NAME );
         }
         super.remove( user );
     }
@@ -82,18 +79,6 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public void update( final Collection<User> entities ) {
         throw new UnsupportedOperationException( "Cannot update users in bulk" );
-    }
-
-    @Override
-    public void update( User user ) {
-        // check the original isn't 'administrator'. See init-acls.sql
-        if ( Objects.equals( user.getId(), AuthorityConstants.REQUIRED_ADMINISTRATOR_ID )
-                && !AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
-            throw new IllegalArgumentException(
-                    "Cannot modify name of user ID=" + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
-        }
-
-        super.update( user );
     }
 
     @Override

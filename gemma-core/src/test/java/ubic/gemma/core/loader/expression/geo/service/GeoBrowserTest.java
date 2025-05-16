@@ -25,8 +25,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXParseException;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
@@ -54,7 +55,7 @@ public class GeoBrowserTest {
 
     @BeforeClass
     public static void checkThatGeoIsAvailable() {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESUMMARY );
     }
 
     @Test
@@ -95,10 +96,11 @@ public class GeoBrowserTest {
                 } );
         assertThat( b.retrieveGeoRecords( query, 0, 10 ) )
                 .hasSize( 10 );
-        assertThat( b.retrieveGeoRecords( query, 1000000000, 10 ) )
-                .isEmpty();
+        assertThat( b.retrieveGeoRecords( query, query.getTotalRecords() - 1, 10 ) )
+                .hasSize( 1 );
+        assertThatThrownBy( () -> b.retrieveGeoRecords( query, query.getTotalRecords(), 10 ) )
+                .isInstanceOf( IndexOutOfBoundsException.class );
     }
-
 
     /**
      * Exercises getting details
@@ -205,11 +207,23 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testFetchDetailedGeoSeries() throws IOException, SAXParseException {
+    public void testFetchDetailedGeoSeries() throws IOException {
         GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
-        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93825" );
+        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93826" );
         assertThat( rec1 ).isNotNull();
         Document rec2 = b.fetchDetailedGeoSeriesFamilyFromGeoQuery( "GSE93825" );
+        assertThat( rec2 ).isNotNull();
+        // FIXME: there are slight differences
+        // assertThat( getTextValue( rec1 ) ).isEqualTo( getTextValue( rec2 ) );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testFetchDetailedGeoSeriesWithInvalidUtf8Characters() throws IOException {
+        GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
+        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE730" );
+        assertThat( rec1 ).isNotNull();
+        Document rec2 = b.fetchDetailedGeoSeriesFamilyFromGeoQuery( "GSE730" );
         assertThat( rec2 ).isNotNull();
         // FIXME: there are slight differences
         // assertThat( getTextValue( rec1 ) ).isEqualTo( getTextValue( rec2 ) );

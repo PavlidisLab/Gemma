@@ -30,7 +30,6 @@ public class InsufficientDataException extends FilteringException {
     private static final long serialVersionUID = 1L;
 
     protected InsufficientDataException( ExpressionExperiment ee, String message ) {
-        super( ee, message );
+        super( message );
     }
-
 }

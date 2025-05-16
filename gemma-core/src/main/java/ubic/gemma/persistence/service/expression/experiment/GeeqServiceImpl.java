@@ -33,7 +33,6 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -47,7 +46,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -406,9 +405,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         String problems = "";
 
         if ( !hasRawData ) {
-            ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-            hasProcessedVectors = dmatrix != null;
-            hasMissingValues = dmatrix != null && dmatrix.hasMissingValues();
+            hasProcessedVectors = expressionExperimentService.hasProcessedExpressionData( ee );
+            hasMissingValues = hasProcessedVectors && expressionDataMatrixService.getProcessedExpressionDataMatrix( ee ).hasMissingValues();
         }
 
         score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
@@ -587,13 +585,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         for ( BioAssay ba : bas ) {
             // we need a copy here, otherwise the model will be mutated
-            Collection<FactorValue> fvs = new HashSet<>( ba.getSampleUsed().getFactorValues() );
+            Collection<FactorValue> fvs = new HashSet<>( ba.getSampleUsed().getAllFactorValues() );
 
             //only keep up to MAX_EFS_REPLICATE_CHECK categorical factors, ignoring batch factor and DE_EXCLUDE
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatch( ef )
+                if ( ExperimentalDesignUtils.isBatchFactor( ef )
                         || fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( DE_EXCLUDE::equalsIgnoreCase )
                         || ef.getType().equals( FactorType.CONTINUOUS ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
@@ -608,7 +606,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             fvs.removeAll( removeFvs );
 
             // sort so the keys in the hash map are consistent
-            Collection<Long> ids = EntityUtils.getIds( fvs );
+            Collection<Long> ids = IdentifiableUtils.getIds( fvs );
             Long[] arr = ids.toArray( new Long[0] );
             Arrays.sort( arr );
             String key = Arrays.toString( arr );

@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
@@ -68,7 +69,7 @@ public interface GeoBrowser {
      * @see #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)
      * @see #retrieveGeoRecords(GeoQuery, int, int, GeoRetrieveConfig)
      */
-    default Slice<GeoRecord> searchAndRetrieveGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
+    default Slice<GeoRecord> searchAndRetrieveGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
         return retrieveGeoRecords( searchGeoRecords( recordType, searchTerms, field, allowedTaxa, limitPlatforms, seriesTypes ), start, pageSize, detailed ? GeoRetrieveConfig.DETAILED : GeoRetrieveConfig.DEFAULT );
     }
 
@@ -89,7 +90,7 @@ public interface GeoBrowser {
      * @return a GEO query that can be retrieved with {@link #retrieveGeoRecords(GeoQuery, int, int, GeoRetrieveConfig)}
      * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
-    GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes ) throws IOException;
+    GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes ) throws IOException;
 
     /**
      * Search GEO records.

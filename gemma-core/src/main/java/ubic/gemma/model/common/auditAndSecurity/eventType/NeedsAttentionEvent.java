@@ -22,29 +22,14 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
- * <p>
  * Indicates that previous validation is being invalidated
- * </p>
- *
  * @author Paul
  */
-public class NeedsAttentionEvent extends CurationDetailsEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1180281595664872508L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public NeedsAttentionEvent() {
-    }
+public class NeedsAttentionEvent extends NeedsAttentionAlteringEvent {
 
     @Override
     public void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
         curatable.setNeedsAttention( true );
         curatable.setLastNeedsAttentionEvent( auditEvent );
     }
-
 }

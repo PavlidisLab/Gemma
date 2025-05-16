@@ -19,7 +19,7 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;

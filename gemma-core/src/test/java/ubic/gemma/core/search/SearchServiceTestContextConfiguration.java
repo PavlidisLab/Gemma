@@ -5,23 +5,22 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.core.search.source.HibernateSearchSource;
 import ubic.gemma.core.search.source.OntologySearchSource;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ValueObjectConfig;
 
@@ -105,11 +104,6 @@ class SearchServiceTestContextConfiguration {
     @Bean
     public OntologyService ontologyService() {
         return mock( OntologyService.class );
-    }
-
-    @Bean
-    public PhenotypeAssociationManagerService phenotypeAssociationManagerService() {
-        return mock( PhenotypeAssociationManagerService.class );
     }
 
     @Bean

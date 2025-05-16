@@ -14,126 +14,144 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisUtil;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
+import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author paul
  */
+@CommonsLog
+@ParametersAreNonnullByDefault
 public class ExperimentalDesignUtils {
 
-    public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
-    public static final String BATCH_FACTOR_CATEGORY_URI = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_URI;
-    public static final String BATCH_FACTOR_NAME = ExperimentalFactorService.BATCH_FACTOR_NAME;
-    public static final String BATCH_FACTOR_NAME_PREFIX = ExperimentalFactorService.BATCH_FACTOR_NAME_PREFIX;
-    public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
+    /**
+     * A list of all categories considered to be batch.
+     */
+    public static final List<Category> BATCH_FACTOR_CATEGORIES = Collections.singletonList( Categories.BLOCK );
+    /**
+     * Name used by a batch factor.
+     * <p>
+     * This is used only if the factor lacks a category.
+     */
+    public static final String BATCH_FACTOR_NAME = "batch";
+
+    public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
+    public static final String FACTOR_RNAME_PREFIX = "fact.";
+    public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
+    public static final String FACTOR_VALUE_BASELINE_SUFFIX = "_base";
 
     /**
      * Check if a factor has missing values (samples that lack an assigned value)
-     *
-     * @param baselines   not really important for this
      * @param samplesUsed the samples used
      * @param factor      the factor
      * @return false if there are any missing values.
      */
-    public static boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed,
-            Map<ExperimentalFactor, FactorValue> baselines ) {
+    public static boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed ) {
+        Assert.isTrue( samplesUsed.size() > 1, "At least one sample must be supplied." );
         for ( BioMaterial samp : samplesUsed ) {
-            Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
-            if ( value == null )
+            if ( samp.getAllFactorValues().stream()
+                    .noneMatch( fv -> fv.getExperimentalFactor().equals( factor ) ) ) {
                 return false;
+            }
         }
-
         return true;
     }
 
     /**
-     * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
-     * (defined by samplesUsed).
-     *
-     * @param factors     in the order they will be used
-     * @param samplesUsed the samples used
-     * @param baselines   the baselines
-     * @return a design matrix
+     * Create a sample to factor value mapping.
+     * <p>
+     * Under normal circumstances, there should be only one factor value per sample.
      */
-    public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
-            List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
+    public static Map<BioMaterial, Set<FactorValue>> getSampleToFactorValuesMap( ExperimentalFactor factor, Collection<BioMaterial> samplesUsed ) {
+        return samplesUsed.stream()
+                .collect( Collectors.toMap( bm -> bm, bm -> bm.getAllFactorValues().stream()
+                        .filter( fv -> fv.getExperimentalFactor().equals( factor ) )
+                        .collect( Collectors.toSet() ) ) );
+    }
 
-        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(),
-                factors.size() );
-
-        Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<>();
-        for ( ExperimentalFactor factor : factors ) {
-            factorNamesInR.put( factor, ExperimentalDesignUtils.nameForR( factor ) );
-        }
-        designMatrix.setColumnNames( new ArrayList<>( factorNamesInR.values() ) );
-
-        List<String> rowNames = new ArrayList<>();
-
-        int row = 0;
-        for ( BioMaterial samp : samplesUsed ) {
-
-            rowNames.add( "biomat_" + samp.getId() );
-
-            int col = 0;
-            for ( ExperimentalFactor factor : factors ) {
-                Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
-
-                designMatrix.set( row, col, value );
-
-                // if the value is null, we have to skip this factor, actually, but we do it later.
-                if ( value == null ) {
-                    /*
-                     * This error could be worked around when we are doing SampleCoexpression.
-                     * A legitimate reason is when we have a DEExclude factor and some samples lack any value for one of the other Factors.
-                     * We could detect this but it's kind of complicated, rare, and would only apply for that case.
-                     */
-                    throw new IllegalStateException( "Missing values not tolerated in design matrix" );
-                }
-
-                col++;
-
-            }
-            row++;
-
-        }
-
-        designMatrix.setRowNames( rowNames );
+    /**
+     * Build a design matrix for the given factors and samples.
+     * @param factors            factors
+     * @param samplesUsed        the samples used
+     * @param allowMissingValues whether to allow missing values, if set to true, the returned matrix may contain nulls
+     * @return the experimental design matrix
+     * @throws IllegalStateException if missing values are found and allowMissingValues is false
+     */
+    public static ObjectMatrix<BioMaterial, ExperimentalFactor, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, boolean allowMissingValues ) {
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
+        designMatrix.setColumnNames( factors );
+        designMatrix.setRowNames( samplesUsed );
+        populateDesignMatrix( designMatrix, factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), allowMissingValues );
         return designMatrix;
     }
 
     /**
-     * @param factors factors
-     * @return a new collection (same order as the input)
+     * Build an R-friendly design matrix.
+     * <p>
+     * Rows and columns use names derived from {@link #nameForR(BioMaterial)}, {@link #nameForR(ExperimentalFactor)} and
+     * {@link #nameForR(FactorValue, boolean)} such that the resulting matrix can be passed to R for analysis. It is
+     * otherwise identical to {@link #buildDesignMatrix(List, List, boolean)}.
      */
-    public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
-        Collection<ExperimentalFactor> result = new ArrayList<>();
-        for ( ExperimentalFactor f : factors ) {
-            if ( !ExperimentalDesignUtils.isBatch( f ) ) {
-                result.add( f );
+    public static ObjectMatrix<String, String, Object> buildRDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, boolean allowMissingValues ) {
+        return buildRDesignMatrix( factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), allowMissingValues );
+    }
+
+    /**
+     * A variant of {@link #buildRDesignMatrix(List, List, boolean)} that allows for reusing baselines for repeated
+     * calls. This is used for subset analysis.
+     */
+    public static ObjectMatrix<String, String, Object> buildRDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines, boolean allowMissingValues ) {
+        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
+        designMatrix.setColumnNames( factors.stream().map( ExperimentalDesignUtils::nameForR ).collect( Collectors.toList() ) );
+        designMatrix.setRowNames( samplesUsed.stream().map( ExperimentalDesignUtils::nameForR ).collect( Collectors.toList() ) );
+        populateDesignMatrix( designMatrix, factors, samplesUsed, baselines, allowMissingValues );
+        return designMatrix;
+    }
+
+    private static void populateDesignMatrix( ObjectMatrix<?, ?, Object> designMatrix, List<ExperimentalFactor> factors, List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines, boolean allowMissingValues ) {
+        for ( int i = 0; i < samplesUsed.size(); i++ ) {
+            BioMaterial samp = samplesUsed.get( i );
+            for ( int j = 0; j < factors.size(); j++ ) {
+                ExperimentalFactor factor = factors.get( j );
+                Object value = extractFactorValueForSample( samp, factor, baselines.get( factor ) );
+                // if the value is null, we have to skip this factor, actually, but we do it later.
+                if ( !allowMissingValues && value == null ) {
+                    // FIXME: This error could be worked around when we are doing SampleCoexpression. A legitimate
+                    //        reason is when we have a DEExclude factor and some samples lack any value for one of the
+                    //        other factors. We could detect this but it's kind of complicated, rare, and would only
+                    //        apply for that case.
+                    throw new IllegalStateException( samp + " does not have a value for " + factor + "." );
+                }
+                designMatrix.set( i, j, value );
             }
         }
-        return result;
     }
 
     public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( List<BioMaterial> samplesUsed,
             List<ExperimentalFactor> factors ) {
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
-                .getBaselineLevels( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = getBaselineLevels( factors, samplesUsed );
 
         /*
          * For factors that don't have an obvious baseline, use the first factorvalue.
          */
-        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
+        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getAllFactorValues();
         for ( ExperimentalFactor factor : factors ) {
             if ( !baselineConditions.containsKey( factor ) ) {
 
@@ -157,186 +175,293 @@ public class ExperimentalDesignUtils {
     }
 
     /**
-     * This puts the control samples up front if possible.
+     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
+     * heuristically, and if all else fails we choose arbitrarily.
      *
      * @param factors factors
-     * @param dmatrix data matrix
-     * @return ordered samples
+     * @return map
      */
-    public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
-            List<ExperimentalFactor> factors ) {
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisUtil.getBioMaterialsForBioAssays( dmatrix );
-        samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
-        return samplesUsed;
+    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
+        return getBaselineLevels( factors, null );
     }
 
     /**
-     * @param ef experimental factor
-     * @return true if this factor appears to be a "batch" factor.
+     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
+     * heuristically, and if all else fails we choose arbitrarily. For continuous factors, the minimum value is treated
+     * as baseline.
+     *
+     * @param factors     factors
+     * @param samplesUsed These are used to make sure we don't bother using factor values as baselines if they are not
+     *                    used by any of the samples. This is important for subsets. If null, this is ignored.
+     * @return map of factors to the baseline factorvalue for that factor.
      */
-    public static boolean isBatch( ExperimentalFactor ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) {
-            return false;
+    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors, @Nullable List<BioMaterial> samplesUsed ) {
+
+        Map<ExperimentalFactor, FactorValue> result = new HashMap<>();
+
+        for ( ExperimentalFactor factor : factors ) {
+
+            if ( factor.getFactorValues().isEmpty() ) {
+                throw new IllegalStateException( "Factor has no factor values: " + factor );
+            }
+
+            if ( factor.getType().equals( FactorType.CONTINUOUS ) ) {
+                // then there is no baseline, but we'll take the minimum value.
+                TreeMap<Double, FactorValue> sortedVals = new TreeMap<>();
+                for ( FactorValue fv : factor.getFactorValues() ) {
+
+                    /*
+                     * Check that this factor value is used by at least one of the given samples. Only matters if this
+                     * is a subset of the full data set.
+                     */
+                    if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                        // this factorValue cannot be a candidate baseline for this subset.
+                        continue;
+                    }
+
+                    if ( fv.getMeasurement() == null || fv.getMeasurement().getValue() == null ) {
+                        // throw new IllegalStateException( "Continuous factors should have Measurements as values" );
+                        // This can happen if a value is missing, as nothing would be added to the BioMaterial.
+                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
+                        sortedVals.put( Double.NaN, fv );
+                        continue;
+                    }
+
+                    if ( fv.getMeasurement().getValue().isEmpty() ) {
+                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
+                        sortedVals.put( Double.NaN, fv );
+                        continue;
+                    }
+
+                    double v = measurement2double( fv.getMeasurement() );
+                    sortedVals.put( v, fv );
+                }
+
+                if ( sortedVals.isEmpty() ) {
+                    log.warn( "No values for continuous factor " + factor );
+                    continue;
+                }
+                result.put( factor, sortedVals.firstEntry().getValue() );
+
+            } else {
+
+                for ( FactorValue fv : factor.getFactorValues() ) {
+
+                    /*
+                     * Check that this factor value is used by at least one of the given samples. Only matters if this
+                     * is a subset of the full data set.
+                     */
+                    if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                        // this factorValue cannot be a candidate baseline for this subset.
+                        continue;
+                    }
+
+                    if ( BaselineSelection.isForcedBaseline( fv ) ) {
+                        log.debug( "Baseline chosen: " + fv );
+                        result.put( factor, fv );
+                        break;
+                    }
+
+                    if ( BaselineSelection.isBaselineCondition( fv ) ) {
+                        if ( result.containsKey( factor ) ) {
+                            log.warn( "A second potential baseline was found for " + factor + ": " + fv );
+                            continue;
+                        }
+                        log.debug( "Baseline chosen: " + fv );
+                        result.put( factor, fv );
+                    }
+                }
+
+                if ( !result.containsKey( factor ) ) { // fallback
+                    FactorValue arbitraryBaselineFV = null;
+
+                    if ( samplesUsed != null ) {
+                        // make sure we choose a fv that is actually used (see above for non-arbitrary case)
+                        for ( FactorValue fv : factor.getFactorValues() ) {
+                            for ( BioMaterial bm : samplesUsed ) {
+                                for ( FactorValue bfv : bm.getAllFactorValues() ) {
+                                    if ( fv.equals( bfv ) ) {
+                                        arbitraryBaselineFV = fv;
+                                        break;
+                                    }
+                                }
+                                if ( arbitraryBaselineFV != null )
+                                    break;
+                            }
+                            if ( arbitraryBaselineFV != null )
+                                break;
+                        }
+
+                        if ( arbitraryBaselineFV == null ) {
+                            // If we get here, we had passed in the samples in consideration but none had a value assigned.
+                            throw new IllegalStateException(
+                                    "None of the samplesUsed have a value for factor:  " + factor + " (" + factor
+                                            .getFactorValues().size() + " factor values) - ensure samples are assigned this factor" );
+                        }
+
+                    } else {
+                        // I'm not sure the use case of this line but it would only be used if we didn't pass in any samples to consider.
+                        arbitraryBaselineFV = factor.getFactorValues().iterator().next();
+                    }
+
+                    // There's no need to log this for batch factors, they are inherently arbitrary and only used
+                    // during batch correction.
+                    if ( !ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+                        log.info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
+                    }
+                    result.put( factor, arbitraryBaselineFV );
+                }
+            }
         }
-        Characteristic category = ef.getCategory();
-        return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) &&
-                category != null && isBatch( category );
-    }
 
-    public static boolean isBatch( Characteristic category ) {
-        // FIXME: this should be an &&
-        return ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equalsIgnoreCase( category.getCategory() )
-                || ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI.equalsIgnoreCase( category.getCategoryUri() );
+        return result;
     }
 
     /**
-     * @param ef experimental factor
-     * @return true if this factor appears to be a "batch" factor.
+     * Convert a measurement to a double. Missing values are treated as NaNs.
+     * @throws UnsupportedOperationException if the measurement representation is not supported
      */
-    public static boolean isBatch( ExperimentalFactorValueObject ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS.name() ) )
-            return false;
-
-        String category = ef.getCategory();
-        return category != null && ef.getName() != null && category
-                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) && ef.getName()
-                .contains( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) && ef.getName()
-                .contains( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX );
-
-    }
-
-    /**
-     * @param ef experimental factor
-     * @return true if the factor is continuous; false if it looks to be categorical.
-     */
-    public static boolean isContinuous( ExperimentalFactor ef ) {
-        if ( ef.getType() != null ) {
-            return ef.getType().equals( FactorType.CONTINUOUS );
+    public static double measurement2double( Measurement measurement ) {
+        if ( measurement.getValue() == null ) {
+            return Double.NaN;
         }
-        for ( FactorValue fv : ef.getFactorValues() ) {
-            if ( fv.getMeasurement() != null ) {
-                try {
-                    //noinspection ResultOfMethodCallIgnored // Checking if parseable
-                    Double.parseDouble( fv.getMeasurement().getValue() );
+        switch ( measurement.getRepresentation() ) {
+            case FLOAT:
+                return measurement.getValueAsFloat();
+            case DOUBLE:
+                return measurement.getValueAsDouble();
+            case INT:
+                return measurement.getValueAsInt();
+            case LONG:
+                return measurement.getValueAsLong();
+            default:
+                throw new UnsupportedOperationException( "Unsupported measurement type: " + measurement.getRepresentation() );
+        }
+    }
+
+    /**
+     * @return true if the factorvalue is used by at least one of the samples.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
+        for ( BioMaterial bm : samplesUsed ) {
+            for ( FactorValue bfv : bm.getAllFactorValues() ) {
+                if ( fv.equals( bfv ) ) {
                     return true;
-                } catch ( NumberFormatException e ) {
-                    return false;
                 }
             }
         }
         return false;
     }
 
-    public static String nameForR( ExperimentalFactor experimentalFactor ) {
-        return "fact." + experimentalFactor.getId();
-    }
-
-    public static String nameForR( FactorValue fv, boolean isBaseline ) {
-        return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
+    /**
+     * Check if a factor is a batch factor.
+     */
+    public static boolean isBatchFactor( ExperimentalFactor ef ) {
+        if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+            return false;
+        }
+        Characteristic category = ef.getCategory();
+        if ( category != null ) {
+            return BATCH_FACTOR_CATEGORIES.stream()
+                    .anyMatch( c -> CharacteristicUtils.hasCategory( category, c ) );
+        }
+        return ExperimentalDesignUtils.BATCH_FACTOR_NAME.equalsIgnoreCase( ef.getName() );
     }
 
     /**
-     * @param factors     factors
-     * @param baselines   baselines
-     * @param samplesUsed the samples used
-     * @return Experimental design matrix
+     * Check if a given factor VO is a batch factor.
      */
-    public static ObjectMatrix<BioMaterial, ExperimentalFactor, Object> sampleInfoMatrix(
-            List<ExperimentalFactor> factors, List<BioMaterial> samplesUsed,
-            Map<ExperimentalFactor, FactorValue> baselines ) {
-
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(),
-                factors.size() );
-
-        designMatrix.setColumnNames( factors );
-
-        int row = 0;
-        for ( BioMaterial samp : samplesUsed ) {
-
-            int col = 0;
-            for ( ExperimentalFactor factor : factors ) {
-
-                Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
-
-                designMatrix.set( row, col, value );
-
-                col++;
-
-            }
-            row++;
-
+    public static boolean isBatchFactor( ExperimentalFactorValueObject ef ) {
+        if ( ef.getType().equals( FactorType.CONTINUOUS.name() ) ) {
+            return false;
         }
+        String category = ef.getCategory();
+        String categoryUri = ef.getCategoryUri();
+        if ( category != null ) {
+            return BATCH_FACTOR_CATEGORIES.stream()
+                    .anyMatch( c -> CharacteristicUtils.equals( category, categoryUri, c.getCategory(), c.getCategoryUri() ) );
+        }
+        return ExperimentalDesignUtils.BATCH_FACTOR_NAME.equalsIgnoreCase( ef.getName() );
+    }
 
-        designMatrix.setRowNames( samplesUsed );
-        return designMatrix;
+    /**
+     * Create a name for a sample suitable for R.
+     */
+    public static String nameForR( BioMaterial sample ) {
+        Assert.notNull( sample.getId(), "Sample must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.BIO_MATERIAL_RNAME_PREFIX + sample.getId();
+    }
 
+    /**
+     * Create a name for the factor that is suitable for R.
+     */
+    public static String nameForR( ExperimentalFactor experimentalFactor ) {
+        Assert.notNull( experimentalFactor.getId(), "Factor must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.FACTOR_RNAME_PREFIX + experimentalFactor.getId();
+    }
+
+    /**
+     * Create a name for the factor value that is suitable for R.
+     */
+    public static String nameForR( FactorValue fv, boolean isBaseline ) {
+        Assert.isTrue( fv.getExperimentalFactor().getType() == FactorType.CATEGORICAL || !isBaseline,
+                "Continuous factors cannot have a baseline." );
+        Assert.notNull( fv.getId(), "Factor value must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? FACTOR_VALUE_BASELINE_SUFFIX : "" );
     }
 
     /**
      * Sort factors in a consistent way.
-     *
-     * @param factors factors
-     * @return sorted factors
+     * <p>
+     * For this to work, the factors must be persistent as the order will be based on the numerical ID.
      */
-    public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
-        List<ExperimentalFactor> facs = new ArrayList<>( factors );
-        Collections.sort( facs, new Comparator<ExperimentalFactor>() {
-            @Override
-            public int compare( ExperimentalFactor o1, ExperimentalFactor o2 ) {
-                return o1.getId().compareTo( o2.getId() );
-            }
-        } );
-        return facs;
+    public static List<ExperimentalFactor> getOrderedFactors( Collection<ExperimentalFactor> factors ) {
+        return factors.stream()
+                .sorted( Comparator.comparing( ExperimentalFactor::getId ) )
+                .collect( Collectors.toList() );
     }
 
-    private static Object extractFactorValueForSample( Map<ExperimentalFactor, FactorValue> baselines, BioMaterial samp,
-            ExperimentalFactor factor ) {
-        FactorValue baseLineFV = baselines.get( factor );
-
-        /*
-         * Find this biomaterial's value for the current factor.
-         */
-        Object value = null;
-        boolean found = false;
-        for ( FactorValue fv : samp.getFactorValues() ) {
-
-            if ( fv.getExperimentalFactor().equals( factor ) ) {
-
-                if ( found ) {
-                    // not unique
-                    throw new IllegalStateException( "Biomaterial had more than one value for factor: " + factor );
-                }
-
-                boolean isBaseline = fv.equals( baseLineFV );
-
-                if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
-                    Measurement measurement = fv.getMeasurement();
-
-                    if ( measurement == null ) {
-                        value = Double.NaN;
-                        continue;
-                    } else {
-                        try {
-                            value = Double.parseDouble( measurement.getValue() );
-                        } catch ( NumberFormatException e ) {
-                            value = Double.NaN;
-                        }
-                    }
-                } else {
-                    /*
-                     * We always use a dummy value. It's not as human-readable but at least we're sure it is unique and
-                     * R-compliant. (assuming the fv is persistent!)
-                     */
-                    value = ExperimentalDesignUtils.nameForR( fv, isBaseline );
-                }
-                found = true;
-                // could break here but nice to check for uniqueness.
-            }
-        }
-        if ( !found ) {
+    /**
+     * Extract the "value" of a factor for a sample.
+     *
+     * @param sample   sample
+     * @param factor   factor to extract a value for
+     * @param baseline the baseline to use (iff the factor is categorical)
+     * @return a double for a continuous factor (or null if the measurement is not set), a string for continuous factor
+     * or null if the factor is not set for the given sample
+     * @throws IllegalStateException if there is more than one factor value assigned to a given sample
+     */
+    @Nullable
+    private static Object extractFactorValueForSample( BioMaterial sample, ExperimentalFactor factor, @Nullable FactorValue baseline ) {
+        Assert.isTrue( factor.getType().equals( FactorType.CONTINUOUS ) || baseline != null,
+                "There is no baseline defined for " + factor + "." );
+        Set<FactorValue> factorValues = sample.getAllFactorValues().stream()
+                .filter( fv -> fv.getExperimentalFactor().equals( factor ) )
+                .collect( Collectors.toSet() );
+        if ( factorValues.isEmpty() ) {
             return null;
-
+        } else if ( factorValues.size() > 1 ) {
+            // not unique
+            throw new IllegalStateException( sample + " had more than one value for " + factor + ": " + factorValues + "." );
+        } else {
+            FactorValue factorValue = factorValues.iterator().next();
+            return extractFactorValue( factorValue, factor.getType().equals( FactorType.CONTINUOUS ), baseline != null && baseline.equals( factorValue ) );
         }
-        return value;
+    }
+
+    private static Object extractFactorValue( FactorValue factorValue, boolean isContinuous, boolean isBaseline ) {
+        if ( isContinuous ) {
+            if ( factorValue.getMeasurement() == null ) {
+                throw new IllegalStateException( "Measurement is null for continuous factor value " + factorValue + "." );
+            }
+            return measurement2double( factorValue.getMeasurement() );
+        } else {
+            /*
+             * We always use a dummy value. It's not as human-readable but at least we're sure it is unique and
+             * R-compliant. (assuming the fv is persistent!)
+             */
+            return nameForR( factorValue, isBaseline );
+        }
     }
 }

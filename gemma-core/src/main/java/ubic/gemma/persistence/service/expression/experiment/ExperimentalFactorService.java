@@ -32,16 +32,6 @@ import java.util.Collection;
 public interface ExperimentalFactorService
         extends BaseService<ExperimentalFactor>, BaseVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject> {
 
-    String BATCH_FACTOR_NAME_PREFIX = "Batch_";
-
-    String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch; confirmed Aug 2024.
-
-    String BATCH_FACTOR_CATEGORY_NAME = "block";
-
-    String BATCH_FACTOR_NAME = "batch";
-    String FACTOR_VALUE_RNAME_PREFIX = "fv_";
-
-
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
      *

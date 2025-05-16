@@ -20,15 +20,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * <p>
- * The event that this expressionexperiment has had its array design switched (typically to a 'merged' one.
+ * The event that this experiment has had its array design switched (typically to a 'merged' one.
  * </p>
  */
-public class ExpressionExperimentPlatformSwitchEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2918272498309052073L;
+public class ExpressionExperimentPlatformSwitchEvent extends ExpressionExperimentAnalysisEvent {
 
 }

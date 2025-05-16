@@ -20,7 +20,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoParser;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -52,12 +51,12 @@ public class AffyChipTypeExtractor {
      * Extract a string like "Rat230_2" from CEL files. This is to help match BioAssays to platforms when reanalyzing
      * from CEL, especially if the original platform information has been lost (e.g., by switching to a merged platform,
      * or from a custom CDF-based version)
-     * 
+     *
      * @param ee experiment
      * @param files CEL files
      * @return map of bioassays to cel identifiers
      */
-    public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<File> files ) {
 
         Map<String, BioAssay> assayAccessions = BatchInfoParser.getAccessionToBioAssayMap( ee );
 
@@ -74,11 +73,15 @@ public class AffyChipTypeExtractor {
          */
         if ( bioAssays2Files.size() < assayAccessions.size() ) {
 
-            if ( bioAssays2Files.size() > 0 ) {
+            if ( !bioAssays2Files.isEmpty() ) {
                 /*
                  * Missing a few for some reason.
                  */
                 for ( BioAssay ba : bioAssays2Files.keySet() ) {
+                    if ( ba.getAccession() == null ) {
+                        log.warn( ba + " does not have an accession, skipping." );
+                        continue;
+                    }
                     if ( !assayAccessions.containsKey( ba.getAccession().getAccession() ) ) {
                         log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
                     }
@@ -105,7 +108,7 @@ public class AffyChipTypeExtractor {
         Map<BioAssay, String> result = new HashMap<>();
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
-            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
+            try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
 
                 String chiptype = extract( is );
 
@@ -127,17 +130,17 @@ public class AffyChipTypeExtractor {
      * @param assayAccessions accessions
      * @return mapt od BAs to files
      */
-    private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
+    private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<File> files, Map<String, BioAssay> assayAccessions ) {
 
         Map<BioAssay, File> result = new HashMap<>();
-        for ( LocalFile lf : files ) {
+        for ( File lf : files ) {
 
-            BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.asFile().getName() );
+            BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.getName() );
             if ( bioAssay == null ) {
                 continue;
             }
-            log.info( "BioAssay found for " + lf.asFile().getName() + " (" + bioAssay + ")" );
-            result.put( bioAssay, lf.asFile() );
+            log.info( "BioAssay found for " + lf.getName() + " (" + bioAssay + ")" );
+            result.put( bioAssay, lf );
         }
         return result;
 
@@ -150,7 +153,7 @@ public class AffyChipTypeExtractor {
     public static String extract( InputStream is ) {
 
         String chipType = null;
-        try (DataInputStream str = new DataInputStream( is )) {
+        try ( DataInputStream str = new DataInputStream( is ) ) {
 
             BufferedReader reader;
 

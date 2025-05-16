@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.expression.arrayExpress;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import ubic.gemma.core.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.core.config.Settings;
 
 import java.io.File;
@@ -51,8 +50,8 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     }
 
     @Override
-    public Collection<LocalFile> fetch( String identifier ) {
-        Collection<LocalFile> results;
+    public Collection<File> fetch( String identifier ) {
+        Collection<File> results;
         try {
             results = super.fetch( identifier );
         } catch ( Exception e ) {
@@ -76,9 +75,9 @@ public class DataFileFetcher extends FtpArchiveFetcher {
         return formRemoteFilePath( identifier, MAGE_ML_SUFFIX_B );
     }
 
-    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
-        for ( LocalFile file : files ) {
-            if ( file.getLocalURL().toString().contains( ".xml" ) ) {
+    public File getMageMlFile( Collection<File> files ) {
+        for ( File file : files ) {
+            if ( file.toString().contains( ".xml" ) ) {
                 return file;
             }
         }

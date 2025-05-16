@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
+import ubic.gemma.core.job.TaskCommand;
 
 /**
  * @author paul
@@ -28,6 +28,8 @@ import ubic.gemma.core.job.Task;
 public class UpdatePubMedCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
+
+    private Long entityId;
     private String pubmedId;
 
     @Override
@@ -40,7 +42,15 @@ public class UpdatePubMedCommand extends TaskCommand {
     }
 
     public UpdatePubMedCommand( Long entityId ) {
-        super( entityId );
+        this.entityId = entityId;
+    }
+
+    public Long getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId( Long entityId ) {
+        this.entityId = entityId;
     }
 
     public String getPubmedId() {
@@ -50,5 +60,4 @@ public class UpdatePubMedCommand extends TaskCommand {
     public void setPubmedId( String pubmedId ) {
         this.pubmedId = pubmedId;
     }
-
 }

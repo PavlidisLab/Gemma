@@ -21,12 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * To signify the array design was mapped from an external source, not by our own sequence analysis.
  */
-public class AnnotationBasedGeneMappingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6216699496744292404L;
+public class AnnotationBasedGeneMappingEvent extends ArrayDesignGeneMappingEvent {
 
 }

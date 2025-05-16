@@ -24,7 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import ubic.basecode.util.RegressionTesting;
-import ubic.gemma.model.analysis.expression.coexpression.MouseCoexpressionSupportDetailsImpl;
+import ubic.gemma.model.analysis.expression.coexpression.MouseCoexpressionSupportDetails;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.genome.Gene;
 
@@ -161,8 +161,8 @@ public class SupportDetailsTest {
         Gene g2 = Gene.Factory.newInstance();
         g2.setId( 4L );
 
-        SupportDetails sd1 = new MouseCoexpressionSupportDetailsImpl( g1, g2, true );
-        SupportDetails sd2 = new MouseCoexpressionSupportDetailsImpl( g1, g2, true );
+        SupportDetails sd1 = new MouseCoexpressionSupportDetails( g1, g2, true );
+        SupportDetails sd2 = new MouseCoexpressionSupportDetails( g1, g2, true );
 
         sd1.addEntity( 1L );
         sd2.addEntity( 2L );

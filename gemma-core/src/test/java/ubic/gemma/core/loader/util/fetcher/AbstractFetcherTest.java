@@ -20,10 +20,9 @@ package ubic.gemma.core.loader.util.fetcher;
 
 import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -67,14 +66,16 @@ public class AbstractFetcherTest extends TestCase {
 
         super.tearDown();
         if ( f != null && f.canRead() ) {
-            EntityUtils.deleteFile( f );
+            if ( !f.delete() ) {
+                throw new IOException( "Could not delete file " + f.getPath() );
+            }
         }
     }
 
     static class TestFetcher extends AbstractFetcher {
 
         @Override
-        public Collection<LocalFile> fetch( String identifier ) {
+        public Collection<File> fetch( String identifier ) {
             return null;
         }
 

@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.arrayDesign;
 
-import java.util.*;
+import java.util.EnumSet;
 
 public enum TechnologyType {
     /**

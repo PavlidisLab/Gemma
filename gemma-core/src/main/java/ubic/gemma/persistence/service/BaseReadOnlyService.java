@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Interface for read-only services.
@@ -92,4 +93,8 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     Collection<O> loadAll();
 
     long countAll();
+
+    Stream<O> streamAll();
+
+    Stream<O> streamAll( boolean createNewSession );
 }

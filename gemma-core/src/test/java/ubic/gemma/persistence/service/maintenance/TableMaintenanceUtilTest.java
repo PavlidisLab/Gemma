@@ -13,14 +13,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.util.MailEngine;
-import ubic.gemma.core.context.TestComponent;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
+public class TableMaintenanceUtilTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -131,7 +131,7 @@ public class TableMaintenanceUtilTest extends AbstractJUnit4SpringContextTests {
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
-        verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "" ), any() );
+        verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "No Gene2Cs status exists on disk." ), any() );
         verify( mailEngine ).sendAdminMessage( any(), any() );
     }
 

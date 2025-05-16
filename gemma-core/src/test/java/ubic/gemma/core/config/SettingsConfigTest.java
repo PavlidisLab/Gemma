@@ -14,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -24,7 +25,7 @@ import static ubic.gemma.core.config.SettingsConfig.filterSystemProperties;
 
 @ActiveProfiles(EnvironmentProfiles.TEST)
 @ContextConfiguration
-public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
+public class SettingsConfigTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -70,6 +71,12 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
     @Value("${gemma.hosturl}")
     private String hostUrl;
 
+    @Value("${gemma.project.dir}")
+    private String projectDir;
+
+    @Value("${gemma.log.dir}")
+    private String logDir;
+
     @Test
     public void test() {
         assertNotNull( version );
@@ -81,6 +88,8 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertEquals( appDataHome + "/download", downloadPath );
         assertEquals( appDataHome + "/searchIndices", searchDir );
         assertEquals( searchDir, compassDir );
+        assertEquals( ".", projectDir );
+        assertEquals( ".", logDir );
     }
 
     @Test
@@ -92,16 +101,22 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertThat( filterSystemProperties( props ) )
                 .containsEntry( "fastaCmd.exe", "foo" );
 
-        // this is deprecated and will be removed in the future
+        // support for these has been dropped in 1.32, a warning is still emitted.
         props = new Properties();
         props.setProperty( "fastaCmd.exe", "foo" );
         assertThat( filterSystemProperties( props ) )
-                .containsEntry( "fastaCmd.exe", "foo" );
+                .doesNotContainKey( "fastaCmd.exe" );
 
         props = new Properties();
         props.setProperty( "gemma.fastaCmd.exe", "foo" );
         props.setProperty( "fastaCmd.exe", "bar" );
         assertThat( filterSystemProperties( props ) )
                 .containsEntry( "fastaCmd.exe", "foo" );
+    }
+
+    @Test
+    public void testSettingsDescriptions() throws IOException {
+        assertThat( SettingsConfig.settingsDescriptions() )
+                .containsEntry( "ga.tracker", "Google Analytics 4" );
     }
 }

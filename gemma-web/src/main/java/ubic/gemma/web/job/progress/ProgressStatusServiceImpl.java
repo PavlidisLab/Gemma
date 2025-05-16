@@ -19,15 +19,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
 import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
@@ -78,15 +76,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         if ( result == null )
             return null;
 
-        Object answer = result.getAnswer();
-
-        if ( answer instanceof ModelAndView ) {
-            View view = ( ( ModelAndView ) answer ).getView();
-            if ( view instanceof RedirectView ) {
-                return ( ( RedirectView ) view ).getUrl();
-            }
-            return null;
-        }
+        Serializable answer = result.getAnswer();
 
         if ( answer instanceof Exception ) {
             throw ( Exception ) answer;

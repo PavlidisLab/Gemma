@@ -21,30 +21,31 @@ package ubic.gemma.web.controller.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.maintenance.CharacteristicUpdateCommand;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
-import ubic.gemma.web.util.AnchorTagUtil;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
 import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
@@ -70,7 +71,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     @Autowired
-    private ServletContext servletContext;
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
         long count = characteristicService.countAll();
@@ -256,27 +257,48 @@ public class CharacteristicBrowserController {
                     "[Parent hidden or not available, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
         } else if ( annotatedItem instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) annotatedItem;
-            avo.setParentLink( AnchorTagUtil.getExpressionExperimentLink( ee, String.format( "Experiment: %s", ee.getName() ), servletContext ) );
+            avo.setParentLink( getExpressionExperimentLink( ee, String.format( "Experiment: %s", ee.getName() ) ) );
         } else if ( annotatedItem instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) annotatedItem;
-            avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm, String.format( "Sample: %s", bm.getName() ), servletContext ) );
+            avo.setParentLink( getBioMaterialLink( bm, String.format( "Sample: %s", bm.getName() ) ) );
         } else if ( annotatedItem instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) annotatedItem;
             avo.setParentDescription( String.format( "FactorValue: %s", FactorValueUtils.getSummaryString( fv ) ) );
             ExperimentalFactor ef = fv.getExperimentalFactor();
-            avo.setParentOfParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign(),
-                    "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")", servletContext ) );
+            avo.setParentOfParentLink( getExperimentalDesignLink( ef.getExperimentalDesign(),
+                    "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" ) );
         } else if ( annotatedItem instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) annotatedItem;
-            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign(),
-                    "Exp Fac: " + ef.getName() + ( StringUtils.isNotBlank( ef.getDescription() ) ? " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" : "" ), servletContext ) );
-        } else if ( annotatedItem instanceof PhenotypeAssociation ) {
-            PhenotypeAssociation pa = ( PhenotypeAssociation ) annotatedItem;
-            avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );
-            avo.setParentDescription( pa.getId().toString() );
+            avo.setParentLink( getExperimentalDesignLink( ef.getExperimentalDesign(),
+                    "Exp Fac: " + ef.getName() + ( StringUtils.isNotBlank( ef.getDescription() ) ? " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" : "" ) ) );
         } else {
             avo.setParentDescription( String.format( "%s: %d", annotatedItem.getClass().getSimpleName(), annotatedItem.getId() ) );
         }
     }
 
+    private String getBioMaterialLink( BioMaterial bm, String text ) {
+        Assert.notNull( bm.getId() );
+        String link = entityUrlBuilder.fromContextPath().entity( bm ).toUriString();
+        return getLink( link, linkForDescribable( bm, text, "Sample" ) );
+    }
+
+    private String getExperimentalDesignLink( ExperimentalDesign ed, String text ) {
+        Assert.notNull( ed.getId() );
+        String link = entityUrlBuilder.fromContextPath().entity( ed ).toUriString();
+        return getLink( link, linkForDescribable( ed, text, "Experimental Design" ) );
+    }
+
+    private String getExpressionExperimentLink( ExpressionExperiment ee, String text ) {
+        Assert.notNull( ee.getId() );
+        String link = entityUrlBuilder.fromContextPath().entity( ee ).toUriString();
+        return getLink( link, linkForDescribable( ee, defaultIfBlank( text, Hibernate.isInitialized( ee ) ? ee.getShortName() : null ), "Dataset" ) );
+    }
+
+    private String linkForDescribable( Describable d, String link, String entityName ) {
+        return defaultIfBlank( link, defaultIfBlank( Hibernate.isInitialized( d ) ? d.getName() : null, entityName + " #" + d.getId() ) );
+    }
+
+    private String getLink( String url, String text ) {
+        return String.format( "<a href=\"%s\">%s</a>", url, escapeHtml4( text ) );
+    }
 }

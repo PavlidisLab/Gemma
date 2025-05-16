@@ -36,7 +36,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
                 // this.updateTitle(); // this is extra.
                 this.fireEvent('previewLoaded', genes);
             }.createDelegate(this),
-            errorHandler: Gemma.genericErrorHandler
+            errorHandler: Gemma.Error.genericErrorHandler
         });
     },
 
@@ -68,7 +68,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
                     // this.updateTitle(); // this is extra.
                     this.fireEvent('previewLoaded', genes);
                 }.createDelegate(this),
-                errorHandler: Gemma.genericErrorHandler
+                errorHandler: Gemma.Error.genericErrorHandler
             }]);
         } else {
             alert("Could not load");
@@ -201,7 +201,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
                     this.fireEvent('doneModification');
 
                 }.createDelegate(this),
-                errorHandler: Gemma.genericErrorHandler
+                errorHandler: Gemma.Error.genericErrorHandler
             });
 
         } else /* the previous selection was another type of set - dbbound */{
@@ -237,7 +237,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
                     this.fireEvent('doneModification');
 
                 }.createDelegate(this),
-                errorHandler: Gemma.genericErrorHandler
+                errorHandler: Gemma.Error.genericErrorHandler
             });
         }
     },
@@ -273,7 +273,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
                 frame: false
             }),
             defaultTpl: new Ext.Template('<div style="padding-bottom:7px;">'
-                + '<a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '
+                + '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '
                 + '<span style="color:grey">({taxonCommonName})</span></div>'),
 
             defaultPreviewTitle: "Gene Selection Preview",

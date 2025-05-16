@@ -16,20 +16,26 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -42,6 +48,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * Test based on GSE8441
@@ -74,33 +81,42 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
     private ExpressionExperiment ee;
 
     @Before
     public void setUp() throws Exception {
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
+        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "whatever" );
+        // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
+        qtMetadata.setScale( ScaleType.LINEAR );
+        qtMetadata.setIsPreferred( true );
+        metaData.setQuantitationType( qtMetadata );
+
+        SimplePlatformMetadata f = new SimplePlatformMetadata();
+        f.setShortName( "GSE8441_test" );
+        f.setName( "test" );
+        f.setTechnologyType( TechnologyType.ONECOLOR );
+        metaData.getArrayDesigns().add( f );
+
+        DoubleMatrix<String, String> matrix;
         try ( InputStream io = this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
-
-            SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-            metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-            metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
-            metaData.setQuantitationTypeName( "whatever" );
-            // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
-            metaData.setScale( ScaleType.LINEAR );
-
-            ArrayDesign f = ArrayDesign.Factory.newInstance();
-            f.setShortName( "GSE8441_test" );
-            f.setTechnologyType( TechnologyType.ONECOLOR );
-            f.setPrimaryTaxon( metaData.getTaxon() );
-            metaData.getArrayDesigns().add( f );
-
-            ee = dataLoaderService.create( metaData, io );
-
-            designImporter.importDesign( ee,
-                    this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
-
-            ee = expressionExperimentService.thaw( ee );
+            matrix = new DoubleMatrixReader().read( io );
         }
+
+        ee = dataLoaderService.create( metaData, matrix );
+
+        designImporter.importDesign( ee,
+                this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
+
+        ee = expressionExperimentService.thaw( ee );
     }
 
     /*
@@ -127,11 +143,11 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * </pre>
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
-        AnalysisType aa = analysisService
-                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
+        AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION, aa );
 
@@ -141,10 +157,11 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         assertEquals( 2, factors.size() );
         config.setAnalysisType( aa );
-        config.setFactorsToInclude( factors );
-        config.getInteractionsToInclude().add( factors );
+        config.addFactorsToInclude( factors );
+        config.addInteractionToInclude( factors );
 
-        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();

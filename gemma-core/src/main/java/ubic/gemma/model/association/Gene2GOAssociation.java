@@ -18,31 +18,19 @@
  */
 package ubic.gemma.model.association;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
+import java.util.Objects;
 
-@SuppressWarnings("unused") // fields are assigned by Hibernate
-public class Gene2GOAssociation implements Identifiable, Serializable {
+public class Gene2GOAssociation extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -710930089869830248L;
-
-    private Long id;
     private Gene gene;
     private Characteristic ontologyEntry;
     @Nullable
     private GOEvidenceCode evidenceCode;
-
-    @Override
-    public Long getId() {
-        return id;
-    }
 
     public Gene getGene() {
         return this.gene;
@@ -55,6 +43,29 @@ public class Gene2GOAssociation implements Identifiable, Serializable {
     @Nullable
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( gene, ontologyEntry, evidenceCode );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Gene2GOAssociation ) ) {
+            return false;
+        }
+        Gene2GOAssociation that = ( Gene2GOAssociation ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( gene, that.gene )
+                    && Objects.equals( ontologyEntry, that.ontologyEntry )
+                    && Objects.equals( evidenceCode, that.evidenceCode );
+        }
     }
 
     @Override

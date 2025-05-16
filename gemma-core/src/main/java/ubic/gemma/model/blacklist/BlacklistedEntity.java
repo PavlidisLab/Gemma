@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,48 +22,56 @@ package ubic.gemma.model.blacklist;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
 
 /**
- * 
+ * Represents a blacklisted entity that should not be loaded into Gemma.
  * @author paul
+ * @see BlacklistedPlatform
+ * @see BlacklistedExperiment
  */
-public abstract class BlacklistedEntity extends AbstractDescribable implements Serializable {
+public abstract class BlacklistedEntity extends AbstractDescribable {
 
     /**
-     * The external accession
+     * A short name if this was previously a Gemma platform or dataset.
      */
+    @Nullable
+    private String shortName;
+
+    /**
+     * An external accession.
+     */
+    @Nullable
     private DatabaseEntry externalAccession;
-    
+
     /**
      * The reason the entity was blacklisted.
      */
     private String reason;
 
-    private String shortName;
+    @Nullable
+    public String getShortName() {
+        return shortName;
+    }
 
+    public void setShortName( @Nullable String shortName ) {
+        this.shortName = shortName;
+    }
+
+    @Nullable
     public DatabaseEntry getExternalAccession() {
         return externalAccession;
+    }
+
+    public void setExternalAccession( @Nullable DatabaseEntry externalAccession ) {
+        this.externalAccession = externalAccession;
     }
 
     public String getReason() {
         return reason;
     }
 
-    public String getShortName() {
-        return shortName;
-    }
-
-    public void setExternalAccession( DatabaseEntry externalAccession ) {
-        this.externalAccession = externalAccession;
-    }
-
     public void setReason( String reason ) {
         this.reason = reason;
     }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
 }

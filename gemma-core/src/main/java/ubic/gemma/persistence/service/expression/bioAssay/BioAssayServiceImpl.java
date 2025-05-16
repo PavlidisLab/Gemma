@@ -23,15 +23,20 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.Thaws.thawBioAssay;
 
 /**
  * @author pavlidis
@@ -72,13 +77,41 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
     @Transactional(readOnly = true)
     public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
         return this.handleFindBioAssayDimensions( bioAssay );
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssay findByShortName( String shortName ) {
+        return bioAssayDao.findByShortName( shortName );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> findByAccession( String accession ) {
         return this.bioAssayDao.findByAccession( accession );
+    }
+
+    @Autowired
+    private BioMaterialService bioMaterialService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct ) {
+        Collection<BioMaterial> bms = bioMaterialService.findSubBioMaterials( bioAssay.getSampleUsed(), direct );
+        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssay> findSiblings( BioAssay bioAssay ) {
+        Collection<BioMaterial> bms = bioMaterialService.findSiblings( bioAssay.getSampleUsed() );
+        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
+        return bioAssayDao.getBioAssaySets( bioAssay );
     }
 
     /**
@@ -92,32 +125,36 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssay thaw( BioAssay bioAssay ) {
-        bioAssay = ensureInSession( bioAssay );
-        this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
-        return bioAssay;
+    public BioAssay thaw( BioAssay ba ) {
+        ba = ensureInSession( ba );
+        thawBioAssay( ba );
+        return ba;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         bioAssays = ensureInSession( bioAssays );
-        for ( BioAssay bioAssay : bioAssays ) {
-            this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
+        for ( BioAssay ba : bioAssays ) {
+            thawBioAssay( ba );
         }
         return bioAssays;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
-        Set<ArrayDesign> arrayDesigns = new HashSet<>();
-        arrayDesigns.addAll( entities.stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() ) );
-        arrayDesigns.addAll( entities.stream().map( BioAssay::getOriginalPlatform ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
-        Map<Long, ArrayDesignValueObject> arrayDesignVosById = arrayDesignDao.loadValueObjects( arrayDesigns )
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues ) {
+        Map<Long, ArrayDesign> arrayDesigns = new HashMap<>();
+        for ( BioAssay ba : entities ) {
+            arrayDesigns.put( ba.getArrayDesignUsed().getId(), ba.getArrayDesignUsed() );
+            if ( ba.getOriginalPlatform() != null ) {
+                arrayDesigns.put( ba.getOriginalPlatform().getId(), ba.getOriginalPlatform() );
+            }
+        }
+        Map<ArrayDesign, ArrayDesignValueObject> ba2vo = arrayDesignDao.loadValueObjects( arrayDesigns.values() )
                 .stream()
-                .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
-        return bioAssayDao.loadValueObjects( entities, arrayDesignVosById, basic );
+                .collect( Collectors.toMap( vo -> arrayDesigns.get( vo.getId() ), Function.identity() ) );
+        return bioAssayDao.loadValueObjects( entities, ba2vo, assay2sourceAssayMap, basic, allFactorValues );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {

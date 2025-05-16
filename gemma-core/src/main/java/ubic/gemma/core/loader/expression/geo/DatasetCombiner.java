@@ -21,24 +21,18 @@ package ubic.gemma.core.loader.expression.geo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import ubic.basecode.math.StringDistance;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.util.XMLUtils;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
@@ -85,6 +79,8 @@ public class DatasetCombiner {
      * Used to help ignore identifiers of microarrays in sample titles.
      */
     private static final Map<String, Collection<String>> microarrayNameStrings = new HashMap<>();
+
+    private static final XPathExpression xgds = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"Accession\"]" );
 
     static {
         // note : all lower case!
@@ -159,44 +155,17 @@ public class DatasetCombiner {
 
         Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
-            String details = new EutilFetch( ncbiApiKey ).fetch( "gds", seriesAccession, 100 );
+            Document details = EutilFetch.summary( "gds", seriesAccession + "[accession] gds[filter]", 100, ncbiApiKey );
             if ( details == null ) {
                 return associatedDatasetAccessions;
             }
-            XPathFactory xf = XPathFactory.newInstance();
-            XPath xpath = xf.newXPath();
-
-            /*
-             * Get all Items of type GDS that are from a DocSum with an Item entryType of GDS.
-             */
-            XPathExpression xgds = xpath.compile(
-                    "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
-
-            DocumentBuilder builder = createDocumentBuilder();
-
-            /*
-             * Bug 2690. There must be a better way.
-             */
-            details = details.replaceAll( "encoding=\"UTF-8\"", "" );
-            try ( StringInputStream sis = new StringInputStream( StringUtils.strip( details ) ) ) {
-
-                Document document = builder.parse( sis );
-
-                NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
-                for ( int i = 0; i < result.getLength(); i++ ) {
-                    String nodeValue = result.item( i ).getNodeValue();
-                    // if ( nodeValue.contains( ";" ) ) continue; //
-                    associatedDatasetAccessions.add( "GDS" + nodeValue );
-                }
-
-                return associatedDatasetAccessions;
-
+            NodeList result = XMLUtils.evaluate( xgds, details );
+            for ( int i = 0; i < result.getLength(); i++ ) {
+                associatedDatasetAccessions.add( XMLUtils.getTextValue( result.item( i ) ) );
             }
-
+            return associatedDatasetAccessions;
         } catch ( IOException e ) {
             throw new RuntimeException( "Could not parse XML data from remote server", e );
-        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
-            throw new RuntimeException( "XML parsing error of remote data", e );
         }
     }
 
@@ -207,33 +176,20 @@ public class DatasetCombiner {
      * @return Collection of series this data set is derived from (this is almost always just a single item).
      */
     public static Collection<String> findGSEforGDS( String datasetAccession, String ncbiApiKey ) {
-        /*
-         * go from GDS to GSE, using screen scraping.
-         */
-        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-        // grep on "GDS[[digits]] record"
-        Pattern pat = Pattern.compile( DatasetCombiner.GSE_RECORD_REGEXP );
-
         Collection<String> associatedSeriesAccession = new HashSet<>();
         try {
-            Collection<String> lines = new EutilFetch( ncbiApiKey ).query( "gds", datasetAccession + "[Accession]" );
-            for ( String line : lines ) {
-                Matcher mat = pat.matcher( line );
-                if ( mat.find() ) {
-                    String capturedAccession = mat.group( 1 );
-                    associatedSeriesAccession.add( capturedAccession );
-                }
+            Document doc = EutilFetch.summary( "gds", datasetAccession + "[accession] gse[filter]", 100, ncbiApiKey );
+            NodeList result = XMLUtils.evaluate( xgds, doc );
+            for ( int i = 0; i < result.getLength(); i++ ) {
+                associatedSeriesAccession.add( XMLUtils.getTextValue( result.item( i ) ) );
             }
+            if ( associatedSeriesAccession.isEmpty() ) {
+                throw new IllegalStateException( "No GSE found for " + datasetAccession );
+            }
+            return associatedSeriesAccession;
         } catch ( IOException e ) {
-            throw new RuntimeException( "Could not get data from remote server", e );
+            throw new RuntimeException( e );
         }
-
-        if ( associatedSeriesAccession.isEmpty() ) {
-            throw new IllegalStateException( "No GSE found for " + datasetAccession );
-        }
-
-        return associatedSeriesAccession;
-
     }
 
     public static Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {

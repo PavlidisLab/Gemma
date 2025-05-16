@@ -2,7 +2,7 @@
  * This window asks users to provide phenotypes and threshold for the meta-analysis which they want to save as evidence.
  * 
  * @author frances
- *
+ * @deprecated
  */
 Ext.namespace( 'Gemma' );
 
@@ -79,7 +79,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext
                                  Ext.Msg
                                     .alert(
                                        Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.saveMetaAnalysisAsEvidence,
-                                       Gemma.convertToEvidenceError( validateEvidenceValueObject ).errorMessage,
+                                       Gemma.Evidence.convertToEvidenceError( validateEvidenceValueObject ).errorMessage,
                                        function() {
                                           if ( validateEvidenceValueObject.userNotLoggedIn ) {
                                              Gemma.AjaxLogin.showLoginWindowFn();
@@ -91,35 +91,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext
                }
             }.createDelegate( this );
 
-            var removeEvidence = function() {
-               var numGenes = resultPanel.getTotalNumberOfResults();
 
-               Ext.MessageBox.confirm( 'Confirm', 'Are you sure you want to remove Phenocarta evidence for '
-                  + (numGenes === 1 ? 'this 1 gene?' : 'these ' + numGenes + ' genes?'), function( button ) {
-                  if ( button === 'yes' ) {
-                     showLoadMask( 'Removing Phenocarta evidence ...' );
-
-                     PhenotypeController.removeAllEvidenceFromMetaAnalysis( this.metaAnalysisId, function(
-                        validateEvidenceValueObject ) {
-                        hideLoadMask();
-
-                        if ( validateEvidenceValueObject == null ) {
-                           this.fireEvent( 'evidenceRemoved' );
-                           this.close();
-                        } else {
-                           Ext.Msg.alert(
-                              Gemma.HelpText.WidgetDefaults.MetaAnalysisEvidenceWindow.ErrorTitle.removeEvidence, Gemma
-                                 .convertToEvidenceError( validateEvidenceValueObject ).errorMessage, function() {
-                                 if ( validateEvidenceValueObject.userNotLoggedIn ) {
-                                    Gemma.AjaxLogin.showLoginWindowFn();
-                                 }
-                              } );
-                        }
-
-                     }.createDelegate( this ) );
-                  }
-               }, this );
-            }.createDelegate( this );
 
             var showLoadMask = function( msg ) {
                if ( !this.loadMask ) {

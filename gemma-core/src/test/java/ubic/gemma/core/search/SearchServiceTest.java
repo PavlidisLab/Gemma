@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class SearchServiceTest extends AbstractJUnit4SpringContextTests {
+public class SearchServiceTest extends BaseTest {
 
     private static final Taxon rat = Taxon.Factory.newInstance( "Rattus norvegicus", "rat", 192, false );
 

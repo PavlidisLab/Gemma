@@ -22,7 +22,6 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.util.NetDatasourceUtil;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,10 +50,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
     }
 
     @Override
-    public Collection<LocalFile> fetch( String identifier ) {
-
+    public Collection<File> fetch( String identifier ) {
         String seekFile = formRemoteFilePath( identifier );
-
         return fetch( identifier, seekFile );
     }
 
@@ -94,7 +91,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
         };
     }
 
-    protected Collection<LocalFile> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
+    protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
             String outputFileName ) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -113,8 +110,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
             } else if ( future.get() ) {
                 if ( log.isInfoEnabled() )
                     log.info( "Done: local file is " + outputFile );
-                LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
-                Collection<LocalFile> result = new HashSet<>();
+                File file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
+                Collection<File> result = new HashSet<>();
                 result.add( file );
                 return result;
             }
@@ -130,7 +127,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
         throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
     }
 
-    protected Collection<LocalFile> fetch( String identifier, String seekFile ) {
+    protected Collection<File> fetch( String identifier, String seekFile ) {
         File existingFile = null;
         try {
             File newDir = mkdir( identifier );

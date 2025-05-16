@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
+import ubic.gemma.core.job.TaskCommand;
 
 /**
  * @author paul
@@ -29,11 +29,20 @@ public class UpdateEEDetailsCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
+    private Long entityId;
     private String shortName;
     private String name;
     private String description;
     private String pubMedId;
     private boolean removePrimaryPublication;
+
+    public Long getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId( Long entityId ) {
+        this.entityId = entityId;
+    }
 
     /**
      * @return the description

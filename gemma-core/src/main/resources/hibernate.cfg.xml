@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE hibernate-configuration PUBLIC
-        "-//Hibernate/Hibernate Configuration DTD//EN"
-        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
         <mapping resource="gemma/gsec/model/AclEntry.hbm.xml"/>
@@ -39,8 +39,6 @@
         <mapping resource="ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml"/>
         <mapping resource="ubic/gemma/model/association/coexpression/RatExperimentCoexpressionLink.hbm.xml"/>
         <mapping resource="ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/association/phenotype/PhenotypeAssociationPublication.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
@@ -62,9 +60,12 @@
         <mapping resource="ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimension.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/biomaterial/Compound.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml"/>

@@ -3,7 +3,6 @@ package ubic.gemma.web.util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -11,8 +10,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.util.test.BaseTest;
+
+import javax.servlet.ServletContext;
 
 import static org.mockito.Mockito.mock;
 
@@ -22,9 +23,9 @@ import static org.mockito.Mockito.mock;
  * For a full integration test base class, use {@link ubic.gemma.web.util.BaseWebIntegrationTest}.
  * @author poirigui
  */
-@ActiveProfiles({ "web", EnvironmentProfiles.TEST })
+@ActiveProfiles("web")
 @WebAppConfiguration
-public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests {
+public abstract class BaseWebTest extends BaseTest {
 
     public abstract static class BaseWebTestContextConfiguration {
 
@@ -33,15 +34,19 @@ public abstract class BaseWebTest extends AbstractJUnit4SpringContextTests {
             return new DefaultHandlerExceptionResolver();
         }
 
-
         @Bean
         public MessageUtil messageUtil() {
-            return mock( MessageUtil.class );
+            return new MessageUtilImpl();
         }
 
         @Bean
         public MailEngine mailEngine() {
             return mock( MailEngine.class );
+        }
+
+        @Bean
+        public WebEntityUrlBuilder webEntityUrlBuilder( ServletContext servletContext ) {
+            return new WebEntityUrlBuilder( "http://localhost:8080", servletContext );
         }
     }
 

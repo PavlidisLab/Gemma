@@ -1,5 +1,5 @@
 Ext.namespace('Gemma');
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 /**
  * This provides a summary of the differential analyses done for a particular dataset/expression experiment. It is
@@ -120,7 +120,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     // make node for analysis
                     parentNode = new Ext.tree.TreeNode({
                         id: 'node' + this.ee.id + '-' + (nodeId++),
-                        expanded: true /* PP changed */,
+                        expanded: analyses.length<2,
                         singleClickExpand: true,
                         text: downloadDiffDataLink,
                         subsetIdent: subsetIdent,
@@ -250,12 +250,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         }
                     }
 
-                    var analysisDesc = this.getANOVAtypeText(numberOfFactors);
-                    if (numberOfFactors === 1 || interaction <= 0) {
-                        analysisDesc += ' on ';
-                    } else {
-                        analysisDesc += ' with interactions on ';
-                    }
 
                     var deleteText = '';
                     var redoText = '';
@@ -266,7 +260,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text + deleteText
+                    // debugger
+
+                    parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);
 
                     // if this parent node has an interaction child,
@@ -278,6 +274,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     });
                     sorter.doSort(parentNode);
                 }
+                var sorter = new Ext.tree.TreeSorter(this, {
+                    dir: 'ASC',
+                    property: 'text'
+                });
+                sorter.doSort(root)
+                root.firstChild.expanded = true
             },
 
             getSubsetText: function (analysis) {
@@ -288,8 +290,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
                         + subsetFactor.category + " (" + subsetFactor.description
                         + ") and selecting samples where the value was \'" + subsetFactorValue.factorValue + '\'">'
-                        + " using a subset of the data (" + subsetFactor.category + " = " + analysis.subsetFactorValue.factorValue
-                        + ')</span>';
+                        + "[Subset: <b>" + analysis.subsetFactorValue.factorValue
+                        + '</b>]</span>';
                 }
                 return subsetText;
             },
@@ -298,37 +300,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 return String
                     .format(
                         "<span class='link'"
-                        + " onClick='fetchDiffExpressionData({0})' > " +
+                        + " onClick='Gemma.ExpressionExperimentDataFetch.fetchDiffExpressionData({0})' > " +
                         "<i class='gray-blue fa fa-cloud-download fa-lg' ext:qtip='Download all differential expression data for this analysis in a tab-delimited format'></i></span>",
                         analysis.id);
-            },
-            getANOVAtypeText: function (numberOfFactors) {
-
-                var analysisDesc = '';
-                // just being overly safe here
-                switch (numberOfFactors) {
-                    case 1:
-                        analysisDesc = 'One-way ANOVA';
-                        break;
-                    case 2:
-                        analysisDesc = 'Two-way ANOVA';
-                        break;
-                    case 3:
-                        analysisDesc = 'Three-way ANOVA';
-                        break;
-                    case 4:
-                        analysisDesc = 'Four-way ANOVA';
-                        break;
-                    case 5:
-                        analysisDesc = 'Five-way ANOVA';
-                        break;
-                    case 6:
-                        analysisDesc = 'Six-way ANOVA';
-                        break;
-                    default:
-                        analysisDesc = 'n-way ANOVA';
-                }
-                return analysisDesc;
             },
             /**
              * get the number of probes that are differentially expressed and the number of 'up' and 'down' probes
@@ -472,13 +446,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 linkText += '</span>';
                 /* provide link for visualization. */
                 var tipText = "View top differentially expressed genes for &quot;" + factorString + "&quot;";
-                linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
+                linkText += '<span class="link" onClick="Gemma.DifferentialExpressionAnalysesSummaryTree.visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                    + resultSet.resultSetId + '\',\'' + factorString
                    + '\', \'' + primaryFactorID + '\')">&nbsp;'
                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
                 var pValueDistImageSize = 16;
-                var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
+                var imageUrl = Gemma.CONTEXT_PATH + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
                 var placeholderImageUrl = imageUrl + '&size=' + pValueDistImageSize;
                 // -8px -6px is used as background-position property because the image has gray border.
@@ -514,13 +488,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         var ef = resultSet.experimentalFactors[k];
 
                         if (ef.type === 'continuous') {
-                            factorText = factorText + ef.name + ': ' + ef.description;
+                            factorText = factorText + '<b>' + ef.name  + "</b>" + ': ' + ef.description;
                         } else {
                             if ( k > 0 && k < resultSet.experimentalFactors.length ) {
                                 factorText = factorText + "&nbsp;X&nbsp;";
                                 interaction = interaction + 1;
                             }
-                            factorText = factorText + ef.name;
+                            factorText = factorText + '<b>' + ef.name + "</b>";
                         }
                     }
                 }
@@ -741,7 +715,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 var eeInfoTitle = "P-value distribution for "
                     + factorName
                     + " in: "
-                    + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
+                    + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id="
                     + this.ee.id + "'>" + this.ee.shortName + "</a> (" + Ext.util.Format.ellipsis(this.ee.name, 35) + ")";
 
                 new Ext.Window({
@@ -765,14 +739,14 @@ Ext.reg('differentialExpressionAnalysesSummaryTree', Gemma.DifferentialExpressio
  * fix for now, should replace visualize 'button' with ext button that calls this function, and move function inside
  * Gemma.DifferentialExpressionAnalysesSummaryTree
  */
-function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails, factorId) {
+Gemma.DifferentialExpressionAnalysesSummaryTree.visualizeDiffExpressionHandler = function(eeid, diffResultId, factorDetails, factorId) {
 
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
         readMethod: DEDVController.getDEDVForDiffExVisualizationByThreshold,
         title: "Top diff. ex. elements for &quot;" + factorDetails + "&quot;",
         showLegend: false,
-        downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
+        downloadLink: String.format(Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
             diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
     });
 

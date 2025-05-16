@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * @author keshav
  * @author pavlidis
  */
-public class GeoFamilyParser implements Parser<Object> {
+public class GeoFamilyParser implements Parser<GeoParseResult> {
     private static final char FIELD_DELIM = '\t';
 
     private static final int MAX_WARNINGS = 100;
@@ -90,10 +90,8 @@ public class GeoFamilyParser implements Parser<Object> {
     private int numWarnings = 0;
 
     @Override
-    public Collection<Object> getResults() {
-        Collection<Object> r = new HashSet<>();
-        r.add( this.results );
-        return r;
+    public Collection<GeoParseResult> getResults() {
+        return Collections.singleton( this.results );
     }
 
     @Override
@@ -150,24 +148,24 @@ public class GeoFamilyParser implements Parser<Object> {
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void sampleTypeSet( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
-        if ( string.equalsIgnoreCase( "cDNA" ) ) {
-            sample.setType( "RNA" );
-        } else if ( string.equalsIgnoreCase( "RNA" ) || string.equalsIgnoreCase( "transcriptomic" ) ) {
-            sample.setType( "RNA" );
+        if ( string.equalsIgnoreCase( "cDNA" ) || string.equalsIgnoreCase( "RNA" ) || string.equalsIgnoreCase( "transcriptomic" ) ) {
+            sample.setType( GeoSampleType.RNA );
         } else if ( string.equalsIgnoreCase( "genomic" ) ) {
-            sample.setType( "genomic" );
+            sample.setType( GeoSampleType.GENOMIC );
         } else if ( string.equalsIgnoreCase( "protein" ) ) {
-            sample.setType( "protein" );
+            sample.setType( GeoSampleType.PROTEIN );
         } else if ( string.equalsIgnoreCase( "mixed" ) ) {
-            sample.setType( "mixed" );
+            sample.setType( GeoSampleType.MIXED );
         } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
-            sample.setType( "SAGE" );
-        } else if ( string.equalsIgnoreCase( "MPSS" ) || string.equalsIgnoreCase( "SRA" ) ) {
-            sample.setType( "MPSS" );
+            sample.setType( GeoSampleType.SAGE );
+        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
+            sample.setType( GeoSampleType.MPSS );
+        } else if ( string.equalsIgnoreCase( "SRA" ) ) {
+            sample.setType( GeoSampleType.SRA );
         } else if ( string.equalsIgnoreCase( "SARST" ) ) {
-            sample.setType( "protein" );
+            sample.setType( GeoSampleType.PROTEIN );
         } else if ( string.equalsIgnoreCase( "other" ) ) {
-            sample.setType( "other" );
+            sample.setType( GeoSampleType.OTHER );
         } else {
             throw new IllegalArgumentException( "Unknown sample type " + string );
         }
@@ -191,7 +189,7 @@ public class GeoFamilyParser implements Parser<Object> {
          * Skip if we're not going to use the data.
          */
         if ( !currentSample.hasUsableData() ) {
-            GeoFamilyParser.log.info( "Sample is not expected to have any data" );
+            GeoFamilyParser.log.debug( "Sample is not expected to have any data" );
             return;
         }
 
@@ -886,7 +884,7 @@ public class GeoFamilyParser implements Parser<Object> {
                 GeoPlatform platform = new GeoPlatform();
                 platform.setGeoAccession( value );
                 results.getPlatformMap().put( value, platform );
-                GeoFamilyParser.log.info( "Starting platform " + platform );
+                GeoFamilyParser.log.debug( "Starting platform " + platform );
             } else if ( this.startsWithIgnoreCase( line, "^SERIES" ) ) {
                 inSeries = true;
                 inSubset = false;
@@ -1275,7 +1273,6 @@ public class GeoFamilyParser implements Parser<Object> {
             for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
                 results.getSampleMap().get( currentSampleAccession ).addChannel();
             }
-            this.sampleSet( currentSampleAccession, GeoSample::setChannelCount, Integer.parseInt( value ) );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
             int channel = this.extractChannelNumber( line );
             this.sampleChannelSet( currentSampleAccession, GeoChannel::setSourceName, channel, value );
@@ -1355,7 +1352,11 @@ public class GeoFamilyParser implements Parser<Object> {
             results.getSampleMap().get( currentSampleAccession ).addSeriesAppearsIn( value );
 
         } else if ( this.startsWithIgnoreCase( line, "!Sample_supplementary_file" ) ) {
-            sampleSet( currentSampleAccession, GeoSample::setSupplementaryFile, value );
+            if ( !value.equals( "NONE" ) ) {
+                this.sampleAddTo( currentSampleAccession, GeoSample::addToSupplementaryFiles, value );
+            } else {
+                GeoFamilyParser.log.debug( "Found NONE value for supplementary file in sample " + currentSampleAccession + ": " + line );
+            }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
@@ -1363,7 +1364,7 @@ public class GeoFamilyParser implements Parser<Object> {
                 /*
                  * Empty sample, we won't get any data and this messes things up later.
                  */
-                GeoFamilyParser.log.warn( "No data for sample " + currentSampleAccession );
+                GeoFamilyParser.log.debug( "No data for sample " + currentSampleAccession );
                 this.initializeQuantitationTypes();
                 this.checkDataCompleteness(); // because we don't get the table_end.
             }
@@ -1408,15 +1409,18 @@ public class GeoFamilyParser implements Parser<Object> {
     private void sampleSetLibSource( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( string.equalsIgnoreCase( "transcriptomic" ) ) {
-            sample.setLibSource( "transcriptomic" );
+            sample.setLibSource( GeoLibrarySource.TRANSCRIPTOMIC );
         } else if ( string.equalsIgnoreCase( "genomic" ) ) {
-            sample.setLibSource( "genomic" );
+            sample.setLibSource( GeoLibrarySource.GENOMIC );
         } else if ( string.equalsIgnoreCase( "transcriptomic single cell" ) ) {
-            sample.setLibSource( "transcriptomic single cell" );
+            sample.setLibSource( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC );
+        } else if ( string.equalsIgnoreCase( "genomic single cell" ) ) {
+            sample.setLibSource( GeoLibrarySource.SINGLE_CELL_GENOMIC );
+        } else if ( string.equalsIgnoreCase( "other" ) ) {
+            sample.setLibSource( GeoLibrarySource.OTHER );
         } else {
             throw new IllegalArgumentException( "Unknown library source: " + string );
         }
-
     }
 
     /**
@@ -1424,41 +1428,45 @@ public class GeoFamilyParser implements Parser<Object> {
     private void sampleSetLibStrategy( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( string.equalsIgnoreCase( "RNA-Seq" ) ) {
-            sample.setLibStrategy( "RNA-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.RNA_SEQ );
+        } else if ( string.equalsIgnoreCase( "scRNA-Seq" ) ) {
+            sample.setLibStrategy( GeoLibraryStrategy.SCRNA_SEQ );
+        } else if ( string.equalsIgnoreCase( "snRNA-Seq" ) ) {
+            sample.setLibStrategy( GeoLibraryStrategy.SNRNA_SEQ );
         } else if ( string.equalsIgnoreCase( "Bisulfite-Seq" ) ) {
-            sample.setLibStrategy( "Bisulfite-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.BISULFITE_SEQ );
         } else if ( string.equalsIgnoreCase( "DNase-Hypersensitivity" ) ) {
-            sample.setLibStrategy( "DNase-Hypersensitivity" );
+            sample.setLibStrategy( GeoLibraryStrategy.DNASE_HYPERSENSITIVITY );
         } else if ( string.equalsIgnoreCase( "ATAC-seq" ) ) {
-            sample.setLibStrategy( "ATAC-seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.ATAC_SEQ );
         } else if ( string.equalsIgnoreCase( "ChIP-Seq" ) ) {
-            sample.setLibStrategy( "ChIP-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.CHIP_SEQ );
         } else if ( string.equalsIgnoreCase( "OTHER" ) ) {
-            sample.setLibStrategy( "OTHER" );
+            sample.setLibStrategy( GeoLibraryStrategy.OTHER );
         } else if ( string.equalsIgnoreCase( "MRE-Seq" ) ) {
-            sample.setLibStrategy( "MRE-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.MRE_SEQ );
         } else if ( string.equalsIgnoreCase( "miRNA-Seq" ) ) {
-            sample.setLibStrategy( "miRNA-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.MIRNA_SEQ );
         } else if ( string.equalsIgnoreCase( "RIP-Seq" ) ) {
-            sample.setLibStrategy( "RIP-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.RIP_SEQ );
         } else if ( string.equalsIgnoreCase( "Hi-C" ) ) {
-            sample.setLibStrategy( "Hi-C" );
+            sample.setLibStrategy( GeoLibraryStrategy.HI_C );
         } else if ( string.equalsIgnoreCase( "ssRNA-seq" ) ) {
-            sample.setLibStrategy( "ssRNA-seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.SSRNA_SEQ );
         } else if ( string.equalsIgnoreCase( "MBD-Seq" ) ) {
-            sample.setLibStrategy( "MBD-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.MDB_SEQ );
         } else if ( string.equalsIgnoreCase( "FAIRE-seq" ) ) {
-            sample.setLibStrategy( "FAIRE-seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.FAIRE_SEQ );
         } else if ( string.equalsIgnoreCase( "MeDIP-Seq" ) ) {
-            sample.setLibStrategy( "MeDIP-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.MEDIP_SEQ );
         } else if ( string.equalsIgnoreCase( "MNase-Seq" ) ) {
-            sample.setLibStrategy( "MNase-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.MNASE_SEQ );
         } else if ( string.equalsIgnoreCase( "ChIA-PET" ) ) {
-            sample.setLibSource( "ChIA-PET" );
+            sample.setLibStrategy( GeoLibraryStrategy.CHIA_PET );
         } else if ( string.equalsIgnoreCase( "ncRNA-Seq" ) ) {
-            sample.setLibStrategy( "ncRNA-Seq" );
+            sample.setLibStrategy( GeoLibraryStrategy.NCRNA_SEQ );
         } else {
-            throw new IllegalArgumentException( "Unknown library source: " + string );
+            throw new IllegalArgumentException( "Unknown library strategy: " + string );
         }
 
     }
@@ -1492,17 +1500,17 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( this.startsWithIgnoreCase( line, "!Series_relation" ) ) {
 
             if ( value.toLowerCase().startsWith( "superseries" ) ) {
-                GeoFamilyParser.log.info( " ** SuperSeries detected **" );
+                GeoFamilyParser.log.debug( " ** SuperSeries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSuperSeries, true );
             } else if ( value.toLowerCase().startsWith( "subseries" ) ) {
-                GeoFamilyParser.log.info( " ** Subseries detected **" );
+                GeoFamilyParser.log.debug( " ** Subseries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSubSeries, true );
             }
 
         } else if ( this.startsWithIgnoreCase( line, "!Series_summary" ) ) {
 
             if ( value.toLowerCase().startsWith( "this superseries" ) ) {
-                GeoFamilyParser.log.info( " ** SuperSeries detected **" );
+                GeoFamilyParser.log.debug( " ** SuperSeries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSuperSeries, true );
             } else if ( value.toLowerCase().startsWith( "gse" ) && results.getSeriesMap().get( currentSeriesAccession )
                     .isSuperSeries() ) {
@@ -1522,7 +1530,7 @@ public class GeoFamilyParser implements Parser<Object> {
             /*
              * Series can have multiple types if it has mixtures of samples.
              */
-            this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSeriesTypes, GeoSeries.convertStringToSeriesType( value ) );
+            this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSeriesTypes, convertStringToSeriesType( value ) );
 
         } else if ( this.startsWithIgnoreCase( line, "!Series_contributor" ) ) {
             GeoContact contributer = new GeoContact();
@@ -1583,7 +1591,11 @@ public class GeoFamilyParser implements Parser<Object> {
             v.setType( GeoVariable.convertStringToType( value ) );
             results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
         } else if ( this.startsWithIgnoreCase( line, "!Series_supplementary_file" ) ) {
-            seriesSet( currentSeriesAccession, GeoSeries::setSupplementaryFile, value );
+            if ( !value.equals( "NONE" ) ) {
+                seriesAddTo( currentSeriesAccession, GeoSeries::addToSupplementaryFiles, value );
+            } else {
+                GeoFamilyParser.log.debug( "Found NONE value for supplementary file in series " + currentSeriesAccession + ": " + line );
+            }
         } else if ( this.startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             seriesSet( currentSeriesAccession, GeoSeries::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Series_citation" ) ) {
@@ -1595,6 +1607,41 @@ public class GeoFamilyParser implements Parser<Object> {
         } else {
             GeoFamilyParser.log.error( "Unknown flag in series: " + line );
         }
+    }
+
+    /**
+     * See also GeoDataset.convertStringToExperimentType
+     *
+     * @param  string series type string
+     * @return series type object
+     */
+    public static GeoSeriesType convertStringToSeriesType( String string ) {
+        // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
+        // different than 'Other' (note capitalization). The old meaning is still expression arrays.
+        if ( string.equals( "other" ) ) {
+            return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+        }
+
+        for ( GeoSeriesType seriesType : GeoSeriesType.values() ) {
+            if ( string.equalsIgnoreCase( seriesType.getIdentifier() ) ) {
+                return seriesType;
+            }
+        }
+
+        if ( string.equalsIgnoreCase( "different tissues" ) || string.equalsIgnoreCase( "cell_type_comparison_design" ) ) {
+            return GeoSeriesType.OTHER;
+        }
+
+        if ( StringUtils.equalsAnyIgnoreCase( string,
+                "cell_type_comparison_design; disease state; cell line; tissue type", "time-course",
+                "Dual-label cDNA microarray", "SuperSeries", "Logical set", "DNA Oligonucleotide Array",
+                "expression profiling; time course analysis; infection response" ) ) {
+            return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+        }
+
+        // there are too many hanging around, it's actually not so bad to guess.
+        GeoFamilyParser.log.warn( "Unknown series type '" + string + "', assuming is expression arrays" );
+        return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
     }
 
     private void parseSeriesVariableRepeatsSampleListLine( String line, String value ) {

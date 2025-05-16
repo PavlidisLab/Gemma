@@ -46,7 +46,7 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Component
-public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService
+public class OutlierFlaggingServiceImpl
         implements OutlierFlaggingService {
 
     private static final Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );
@@ -90,10 +90,14 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        if ( expExp == null ) {
+            throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
+        }
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
                 bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 
         try {
+            expExp = expressionExperimentService.thaw( expExp );
             preprocessorService.process( expExp );
         } catch ( PreprocessingException e ) {
             OutlierFlaggingServiceImpl.log
@@ -125,13 +129,15 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
 
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        if ( expExp == null ) {
+            throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
+        }
         auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.class,
                 "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
 
-        assert expExp != null;
-
         // several transactions
         try {
+            expExp = expressionExperimentService.thaw( expExp );
             preprocessorService.process( expExp );
         } catch ( PreprocessingException e ) {
             OutlierFlaggingServiceImpl.log

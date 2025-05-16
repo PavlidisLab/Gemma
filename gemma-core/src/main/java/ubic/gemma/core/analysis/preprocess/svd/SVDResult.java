@@ -46,7 +46,16 @@ public class SVDResult implements Serializable {
     BioAssaySet experimentAnalyzed;
 
     /**
-     * In order like the rows of the v matrix.
+     * Assays used in the SVD analysis.
+     * <p>
+     * In order like the rows of the V matrix.
+     */
+    List<BioAssay> bioAssays;
+
+    /**
+     * Biomaterials used in the SVD analysis.
+     * <p>
+     * In order like the rows of the V matrix.
      */
     List<BioMaterial> bioMaterials;
 
@@ -82,7 +91,7 @@ public class SVDResult implements Serializable {
     /**
      * Map of factors to the double-ized representations of them.
      */
-    Map<ExperimentalFactor, List<Double>> factors = new HashMap<>();
+    Map<ExperimentalFactor, List<Number>> factors = new HashMap<>();
 
     /**
      * Map of component to a map of ExperimentalFactor IDs to correlations of that factor with the component.
@@ -100,9 +109,14 @@ public class SVDResult implements Serializable {
 
     public SVDResult( PrincipalComponentAnalysis pca ) {
         this.experimentAnalyzed = pca.getExperimentAnalyzed();
+        this.bioAssays = assaysFromPca( pca );
         this.bioMaterials = samplesFromPca( pca );
         this.variances = pca.getVarianceFractions();
         this.vMatrix = matrixFromPca( pca, this.bioMaterials );
+    }
+
+    private List<BioAssay> assaysFromPca( PrincipalComponentAnalysis pca ) {
+        return new ArrayList<>( pca.getBioAssayDimension().getBioAssays() );
     }
 
     private List<BioMaterial> samplesFromPca( PrincipalComponentAnalysis pca ) {

@@ -124,18 +124,18 @@ public class Filter implements PropertyMapping {
      * @param originalProperty the original property name, or null if not applicable
      * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
      */
-    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue, String originalProperty ) {
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValue, originalProperty );
     }
 
     /**
      * Create a new filter with a collection right hand side.
      */
-    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues, String originalProperty ) {
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
-    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, String originalProperty ) {
+    public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 

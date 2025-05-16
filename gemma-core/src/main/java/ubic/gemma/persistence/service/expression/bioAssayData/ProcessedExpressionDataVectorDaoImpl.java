@@ -19,35 +19,39 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author Paul
@@ -62,13 +66,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      */
     private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
 
-    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
     @Autowired
-    private ProcessedDataVectorByGeneCache processedDataVectorByGeneCache;
+    private QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
     public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
@@ -76,11 +77,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     @Override
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        AbstractDao.log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentDao.removeProcessedDataVectors( expressionExperiment );
 
-        AbstractDao.log.info( "Computing processed expression vectors for " + expressionExperiment );
+        log.info( "Computing processed expression vectors for " + expressionExperiment );
 
         boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
 
@@ -118,15 +119,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             /*
              * Backfill target
              */
-            AbstractDao.log.warn( "Preferred data are counts; please convert to log2cpm" );
+            log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
         if ( !preferredMaskedDataQuantitationType.getIsRatio()
                 && maskedVectorObjects.size() > ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
-            AbstractDao.log.info( "Normalizing the data" );
+            log.info( "Normalizing the data" );
             this.renormalize( maskedVectorObjects );
         } else {
-            AbstractDao.log.info( "Normalization skipped for this data set (not suitable)" );
+            log.info( "Normalization skipped for this data set (not suitable)" );
         }
 
         /*
@@ -154,26 +155,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             vec.setBioAssayDimension( preferredMaskedDataDimension );
             vec.setDesignElement( cs );
             // assert this.getBioAssays().size() > 0;
-            vec.setData( byteArrayConverter.doubleArrayToBytes( dvvo.getData() ) );
+            vec.setDataAsDoubles( dvvo.getData() );
             vec.setRankByMax( dvvo.getRankByMax() );
             vec.setRankByMean( dvvo.getRankByMean() );
 
             newVectors.add( vec );
             seenDes.add( cs );
             if ( ++i % 5000 == 0 ) {
-                AbstractDao.log.info( i + " vectors built" );
+                log.info( i + " vectors built" );
             }
         }
 
-        AbstractDao.log.info( String.format( "Persisting %d processed data vectors...",
+        log.info( String.format( "Persisting %d processed data vectors...",
                 newVectors.size() ) );
 
         int created = expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
 
-        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
         assert expressionExperiment.getNumberOfDataVectors() != null;
-
-        this.processedDataVectorByGeneCache.evict( expressionExperiment );
 
         return created;
     }
@@ -187,25 +185,141 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
-        log.info( String.format( "Loading %d %s took %d ms", result.size(), elementClass.getSimpleName(), timer.getTime() ) );
+        log.info( String.format( "Loading %d %s took %d ms", result.size(), getElementClass().getSimpleName(), timer.getTime() ) );
         return result;
+    }
+
+    @Override
+    public List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "dimension", dimension )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .list();
+    }
+
+    @Override
+    public Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectorsAndGenes( @Nullable Collection<ExpressionExperiment> ees, Map<Long, Collection<Long>> cs2gene ) {
+        if ( ( ees != null && ees.isEmpty() ) || cs2gene.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+
+        StopWatch timer = StopWatch.createStarted();
+
+        // Do not do in clause for experiments, as it can't use the indices
+        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "where dedv.designElement.id in ( :cs )"
+                                + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
+                .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
+        List<ProcessedExpressionDataVector> results;
+        if ( ees != null ) {
+            results = listByIdentifiableBatch( queryObject, "ees", ees, 2048 );
+        } else {
+            //noinspection unchecked
+            results = queryObject.list();
+        }
+        Map<ProcessedExpressionDataVector, Collection<Long>> dedv2genes = new HashMap<>();
+        for ( ProcessedExpressionDataVector dedv : results ) {
+            Collection<Long> associatedGenes = cs2gene.get( dedv.getDesignElement().getId() );
+            if ( !dedv2genes.containsKey( dedv ) ) {
+                dedv2genes.put( dedv, associatedGenes );
+            } else {
+                Collection<Long> mappedGenes = dedv2genes.get( dedv );
+                mappedGenes.addAll( associatedGenes );
+            }
+        }
+
+        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
+            log.warn( String.format( "Fetched %d vectors for %d probes in %dms",
+                    dedv2genes.size(), cs2gene.size(), timer.getTime() ) );
+
+        }
+
+        return dedv2genes;
+    }
+
+    /**
+     * Obtain a random sample of processed vectors for the given experiment.
+     * @param  ee    ee
+     * @param  limit if {@code >0}, you will get a "random" set of vectors for the experiment
+     * @return processed data vectors
+     */
+    @Override
+    public Collection<ProcessedExpressionDataVector> getRandomProcessedVectors( ExpressionExperiment ee, int limit ) {
+        if ( limit <= 0 ) {
+            return getProcessedVectors( ee );
+        }
+
+        StopWatch timer = StopWatch.createStarted();
+
+        Integer availableVectorCount = ee.getNumberOfDataVectors();
+        if ( availableVectorCount == null || availableVectorCount == 0 ) {
+            log.info( "Experiment does not have vector count populated." );
+            // cannot fix this here, because we're read-only.
+        }
+
+        //noinspection unchecked
+        List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession()
+                .createQuery( " from ProcessedExpressionDataVector dedv "
+                        + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ) // order by rand() works?
+                .setParameter( "ee", ee )
+                .setMaxResults( limit )
+                .list();
+
+        // maybe ranks are not set for some reason; can happen e.g. GeneSpring mangled data.
+        if ( result.isEmpty() ) {
+            //noinspection unchecked
+            result = this.getSessionFactory().getCurrentSession()
+                    .createQuery( " from ProcessedExpressionDataVector dedv "
+                            + "where dedv.expressionExperiment = :ee order by RAND()" )
+                    .setParameter( "ee", ee )
+                    .setMaxResults( limit )
+                    .list();
+        }
+
+        thaw( result ); // needed?
+
+        if ( result.isEmpty() ) {
+            log.warn( "Experiment does not have any processed data vectors to display? " + ee );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Fetch %d random vectors from %s took %d ms.", result.size(), ee.getShortName(), timer.getTime() ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv.designElement from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "dimension", dimension )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .list();
     }
 
     @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
 
-        Collection<ArrayDesign> arrayDesigns = CommonQueries
-                .getArrayDesignsUsed( EntityUtils.getIds( expressionExperiments ),
-                        this.getSessionFactory().getCurrentSession() )
-                .keySet();
+        Collection<ArrayDesign> arrayDesigns = CommonQueries.getArrayDesignsUsed( expressionExperiments, this.getSessionFactory().getCurrentSession() );
 
         // this could be further improved by getting probes specific to experiments in batches.
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
                 .getCs2GeneMap( genes, arrayDesigns, this.getSessionFactory().getCurrentSession() );
 
         if ( cs2gene.isEmpty() ) {
-            AbstractDao.log.warn( "No composite sequences found for genes" );
+            log.warn( "No composite sequences found for genes" );
             return new HashMap<>();
         }
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<>();
@@ -248,7 +362,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
                 .getCs2GeneMap( genes, this.getSessionFactory().getCurrentSession() );
         if ( cs2gene.isEmpty() ) {
-            AbstractDao.log.warn( "No composite sequences found for genes" );
+            log.warn( "No composite sequences found for genes" );
             return new HashMap<>();
         }
 
@@ -304,9 +418,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     private Collection<RawExpressionDataVector> consolidateRawVectors(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
-            boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
+            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         return new HashSet<>( matrix.toRawDataVectors() );
@@ -406,22 +519,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         present.setIsRatio( preferredQt.getIsRatio() );
         present.setType( preferredQt.getType() );
 
-        // use existing QT if possible 
-        for ( QuantitationType oldqt : ee.getQuantitationTypes() ) {
-            if ( oldqt.getName() != null && oldqt.getName().equals( present.getName() ) ) { // FIXME make this a more stringent check for a match
-                present = oldqt;
-                break;
-            }
-        }
-
-        if ( present.getId() == null ) {
-            Long id = ( Long ) this.getSessionFactory().getCurrentSession().save( present );
-            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
-        }
-        return present;
-
+        return quantitationTypeDao.create( present, ProcessedExpressionDataVector.class );
     }
-
 
     /**
      * @param  expressionExperiment ee
@@ -430,8 +529,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
 
         boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries
-                .getArrayDesignsUsed( expressionExperiment, this.getSessionFactory().getCurrentSession() );
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSessionFactory().getCurrentSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             TechnologyType technologyType = ad.getTechnologyType();
 
@@ -457,7 +555,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<CompositeSequence, DoubleVectorValueObject> unpackedData = this.unpack( preferredData );
 
         if ( missingValueData.isEmpty() ) {
-            AbstractDao.log.debug( "There is no separate missing data information, simply using the data as is" );
+            log.debug( "There is no separate missing data information, simply using the data as is" );
             for ( DoubleVectorValueObject rv : unpackedData.values() ) {
                 rv.setMasked( true );
             }
@@ -476,8 +574,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             CompositeSequenceValueObject de = rv.getDesignElement();
             BooleanVectorValueObject mv = missingValueMap.get( de );
             if ( mv == null ) {
-                if ( !warned && AbstractDao.log.isWarnEnabled() )
-                    AbstractDao.log.warn( "No mask vector for " + de
+                if ( !warned && log.isWarnEnabled() )
+                    log.warn( "No mask vector for " + de
                             + ", additional warnings for missing masks for this job will be skipped" );
                 // we're missing a mask vector for it for some reason, but still flag it as effectively masked.
                 rv.setMasked( true );
@@ -572,29 +670,44 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     private Map<CompositeSequence, DoubleVectorValueObject> unpack(
-            Collection<? extends DesignElementDataVector> data ) {
+            Collection<? extends BulkExpressionDataVector> data ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-        for ( DesignElementDataVector v : data ) {
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
+        for ( BulkExpressionDataVector v : data ) {
             result.put( v.getDesignElement(),
-                    new DoubleVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
+                    new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                            qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                            adVos.get( v.getDesignElement().getArrayDesign() ), null ) );
         }
         return result;
     }
 
-    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
+    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends BulkExpressionDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<>();
-
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = this.getBioAssayDimensionValueObjects( data );
-
-        for ( DesignElementDataVector v : data ) {
-            result.add( new BooleanVectorValueObject( v, badVos.get( v.getBioAssayDimension() ) ) );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                v -> v.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
+        for ( BulkExpressionDataVector v : data ) {
+            result.add( new BooleanVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ) ) );
         }
         return result;
     }
 
     /**
-     * @param  data data
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
      *              just
      *              have one
@@ -602,15 +715,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      *              for
      *              details.
      */
-    private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
-            Collection<? extends DesignElementDataVector> data ) {
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = new HashMap<>();
-        for ( DesignElementDataVector v : data ) {
-            BioAssayDimension bioAssayDimension = v.getBioAssayDimension();
-            if ( !badVos.containsKey( bioAssayDimension ) ) {
-                badVos.put( bioAssayDimension, new BioAssayDimensionValueObject( bioAssayDimension ) );
-            }
+    private <S, T> Map<S, T> createValueObjectCache( Collection<? extends BulkExpressionDataVector> vectors,
+            Function<BulkExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
+        Map<S, T> result = new HashMap<>();
+        for ( BulkExpressionDataVector v : vectors ) {
+            result.computeIfAbsent( keyExtractor.apply( v ), valueExtractor );
         }
-        return badVos;
+        return result;
     }
 }

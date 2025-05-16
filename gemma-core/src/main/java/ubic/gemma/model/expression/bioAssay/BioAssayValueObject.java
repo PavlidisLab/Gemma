@@ -19,6 +19,7 @@ import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
 import javax.annotation.Nullable;
@@ -43,6 +44,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         return result;
     }
 
+    @Nullable
+    private String shortName;
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";
@@ -67,6 +70,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
+    private Long sourceBioAssayId;
+
     /**
      * Required when using the class as a spring bean.
      */
@@ -74,28 +79,49 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         super();
     }
 
+    public BioAssayValueObject( BioAssay bioAssay ) {
+        this( bioAssay, null, null, false, false );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
+        this( bioAssay, null, null, basic, false );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
+        this( bioAssay, null, null, basic, false );
+        this.predictedOutlier = predictedOutlier;
+    }
+
     /**
-     * @param arrayDesignValueObjectsById pre-populated array design VOs by ID, or null to ignore and the VOs will be
-     *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     * @param ad2vo           pre-populated array design VOs by array design, or null to ignore and the VOs will be
+     *                        initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     * @param sourceBioAssay  the source {@link BioAssay} if known, this corresponds to the assay of the source sample,
+     *                        but since there might be more than one, it must be picked explicitly based on the context
+     * @param basic           if true, produce basic factor values in the corresponding biomaterial, see
+     *                        {@link BioMaterialValueObject#BioMaterialValueObject(BioMaterial, boolean, boolean)}
+     *                        for more details
+     * @param allFactorValues include all FVs, including those inherited from the source biomaterial in the
+     *                        corresponding biomaterial
      */
-    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, boolean basic ) {
+    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo, @Nullable BioAssay sourceBioAssay, boolean basic, boolean allFactorValues ) {
         super( bioAssay );
+        this.shortName = bioAssay.getShortName();
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
-        // the platform and original platform are eagerly fetched, so no need for a Hibernate.isInitialized() test:w
+        // the platform and original platform are eagerly fetched, so no need for a Utils.isInitialized() test:w
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
-            this.arrayDesign = arrayDesignValueObjectsById.get( ad.getId() );
+        if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
+            this.arrayDesign = ad2vo.get( ad );
         } else {
             this.arrayDesign = new ArrayDesignValueObject( ad );
         }
 
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
-                this.originalPlatform = arrayDesignValueObjectsById.get( ad.getId() );
+            if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
+                this.originalPlatform = ad2vo.get( ad );
             } else {
                 this.originalPlatform = new ArrayDesignValueObject( op );
             }
@@ -112,7 +138,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         }
 
         if ( bioAssay.getSampleUsed() != null ) {
-            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic );
+            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic, allFactorValues );
             sample.getBioAssayIds().add( this.getId() );
         }
 
@@ -121,40 +147,23 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         }
 
         this.userFlaggedOutlier = this.outlier;
-    }
 
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
-        this( bioAssay, null, basic );
-    }
-
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
-        this( bioAssay, null, basic );
-        this.predictedOutlier = predictedOutlier;
+        if ( sourceBioAssay != null ) {
+            this.sourceBioAssayId = sourceBioAssay.getId();
+        }
     }
 
     public BioAssayValueObject( Long id ) {
         super( id );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioAssayValueObject other = ( BioAssayValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
+    @Nullable
+    public String getShortName() {
+        return shortName;
+    }
 
-        if ( name == null ) {
-            return other.name == null;
-        }
-        return name.equals( other.name );
+    public Long getSourceBioAssayId() {
+        return sourceBioAssayId;
     }
 
     public DatabaseEntryValueObject getAccession() {
@@ -209,19 +218,16 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         return userFlaggedOutlier;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        if ( id == null ) {
-            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        }
-        return result;
-    }
-
     public boolean isOutlier() {
         return outlier;
+    }
+
+    public void setShortName( @Nullable String shortName ) {
+        this.shortName = shortName;
+    }
+
+    public void setSourceBioAssayId( Long sourceBioAssayId ) {
+        this.sourceBioAssayId = sourceBioAssayId;
     }
 
     public void setAccession( DatabaseEntryValueObject accession ) {
@@ -278,6 +284,38 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
 
     public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
         this.userFlaggedOutlier = userFlaggedOutlier;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        BioAssayValueObject other = ( BioAssayValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
+
+        if ( name == null ) {
+            return other.name == null;
+        }
+        return name.equals( other.name );
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        if ( id == null ) {
+            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        }
+        return result;
     }
 
     @Override

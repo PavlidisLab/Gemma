@@ -29,7 +29,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -73,18 +72,18 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
 
         if ( results.size() > 1 ) {
             this.debug( null, results );
-            AbstractDao.log.warn( "More than one instance of '" + BioSequence.class.getName()
+            log.warn( "More than one instance of '" + BioSequence.class.getName()
                     + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
             // favor the one with name matching the accession.
-            for ( Object object : results ) {
-                BioSequence bs = ( BioSequence ) object;
+            for ( BioSequence object : results ) {
+                BioSequence bs = object;
                 if ( bs.getName().equals( databaseEntry.getAccession() ) ) {
                     return bs;
                 }
             }
 
-            AbstractDao.log.error( "No biosequence really matches " + databaseEntry.getAccession() );
+            log.error( "No biosequence really matches " + databaseEntry.getAccession() );
             return null;
 
         } else if ( results.size() == 1 ) {
@@ -213,7 +212,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 for ( BioSequence res : ( Collection<BioSequence> ) results ) {
                     if ( res.equals( bioSequence ) ) {
                         if ( match != null ) {
-                            AbstractDao.log.warn( "More than one sequence in the database matches " + bioSequence
+                            log.warn( "More than one sequence in the database matches " + bioSequence
                                     + ", returning arbitrary match: " + match );
                             break;
                         }
@@ -252,7 +251,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 sb.append( " acc=" ).append( entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( sb.toString() );
+        if ( log.isDebugEnabled() )
+            log.debug( sb.toString() );
     }
 }

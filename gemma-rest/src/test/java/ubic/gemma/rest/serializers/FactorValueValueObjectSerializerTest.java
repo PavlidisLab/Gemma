@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -19,7 +20,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import java.text.ParseException;
 
 @ContextConfiguration
-public class FactorValueValueObjectSerializerTest extends AbstractJUnit4SpringContextTests {
+public class FactorValueValueObjectSerializerTest extends BaseTest {
 
     @Configuration
     @TestComponent

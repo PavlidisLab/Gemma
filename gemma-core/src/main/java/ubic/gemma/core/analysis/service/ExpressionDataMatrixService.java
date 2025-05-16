@@ -19,13 +19,15 @@ import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -39,9 +41,9 @@ public interface ExpressionDataMatrixService {
      *
      * @param ee           the expression experiment.
      * @param filterConfig the configuration.
-     * @return data matrix or null if the EE has no processed EVs
+     * @return data matrix
+     * @throws IllegalStateException if there are no processed vectors
      */
-    @Nullable
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException;
 
     /**
@@ -59,16 +61,26 @@ public interface ExpressionDataMatrixService {
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
     /**
-     * @param ee the expression experiment.
-     * @return matrix of preferred data, with all missing values masked or null if there are no processed EVs
+     * Obtain the processed expression data matrix for a given experiment.
      */
-    @Nullable
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
     /**
+     * @param ee the expression experiment.
+     * @return matrix of preferred data, with all missing values masked
+     * @param thawAssays whether to thaw the assays or not using {@link ubic.gemma.persistence.util.Thaws#thawBioAssayDimension(BioAssayDimension)}
+     */
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, boolean thawAssays );
+
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples );
+
+    /**
      * Obtain a raw expression data matrix for a given quantitation type
+     * @throws IllegalStateException if there are no raw vectors for the given quantitation type
      */
     ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType );
 
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );

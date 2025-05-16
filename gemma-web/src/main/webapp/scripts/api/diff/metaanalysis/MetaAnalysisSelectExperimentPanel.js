@@ -49,7 +49,7 @@ Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPa
 
       var resetButton = new Ext.Button( {
          disabled : true,
-         icon : ctxBasePath + '/images/icons/arrow_refresh_small.png',
+         icon : Gemma.CONTEXT_PATH + '/images/icons/arrow_refresh_small.png',
          margins : '0 0 0 10',
          text : 'Reset',
          handler : function( button, eventObject ) {

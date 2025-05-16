@@ -34,13 +34,13 @@ public class ExpressionExperimentReportTaskCommand extends TaskCommand {
 
     public ExpressionExperimentReportTaskCommand( Boolean all ) {
         super();
-        this.setMaxRuntime( 300 ); /* 5 hours */
+        this.setMaxRuntimeMillis( 300 ); /* 5 hours */
         this.all = all;
     }
 
     public ExpressionExperimentReportTaskCommand( ExpressionExperiment expressionExperiment ) {
         super();
-        this.setMaxRuntime( 5 );
+        this.setMaxRuntimeMillis( 5 );
         this.expressionExperiment = expressionExperiment;
     }
 

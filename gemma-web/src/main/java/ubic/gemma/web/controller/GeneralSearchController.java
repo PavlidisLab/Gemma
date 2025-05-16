@@ -39,7 +39,6 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
@@ -92,7 +91,6 @@ public class GeneralSearchController {
     private static final Scope[] scopes = {
             new Scope( 'G', Gene.class ),
             new Scope( 'E', ExpressionExperiment.class ),
-            new Scope( 'H', PhenotypeAssociation.class ),
             new Scope( 'P', CompositeSequence.class ),
             new Scope( 'A', ArrayDesign.class ),
             new Scope( 'M', GeneSet.class ),
@@ -278,9 +276,6 @@ public class GeneralSearchController {
         }
         if ( valueObject.getSearchExperimentSets() ) {
             ret.add( ExpressionExperimentSet.class );
-        }
-        if ( valueObject.getSearchPhenotypes() ) {
-            ret.add( PhenotypeAssociation.class );
         }
         if ( valueObject.getSearchProbes() ) {
             ret.add( CompositeSequence.class );

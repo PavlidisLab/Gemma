@@ -18,8 +18,7 @@
  */
 package ubic.gemma.web.controller.common.rss;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,8 +28,6 @@ import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +36,8 @@ import java.util.Map;
  * @author sshao
  */
 @Controller
+@CommonsLog
 public class RssFeedController {
-    private static Log log = LogFactory.getLog( RssFeedController.class.getName() );
 
     @Autowired
     private WhatsNewService whatsNewService;
@@ -52,7 +49,7 @@ public class RssFeedController {
      * Show all experiments
      */
     @RequestMapping(value = { "/rssfeed" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView getLatestExperiments() {
 
         WhatsNew wn = whatsNewService.getLatestWeeklyReport();
         if ( wn == null ) {

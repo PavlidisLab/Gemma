@@ -24,11 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -38,7 +38,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.MissingResult;
 import ubic.gemma.persistence.service.analysis.expression.diff.NonRetainedResult;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -63,27 +63,18 @@ public class DifferentialExpressionSearchTaskImpl
      */
     private static final double TINY_PVALUE = 1e-16;
     private static final double TINY_QVALUE = 1e-10;
+
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
-
-    private String experimentGroupName;
-
-    private Collection<ExpressionExperimentDetailsValueObject> experimentGroup;
-
     @Autowired
     private ExpressionExperimentSubSetService experimentSubSetService;
-
-    private String geneGroupName;
-
-    private Collection<GeneValueObject> geneGroup;
 
     @Override
     public TaskResult call() {
 
-        DifferentialExpressionSearchTaskImpl.log.info( "==== Starting diff ex search ==== " + this.taskCommand );
+        DifferentialExpressionSearchTaskImpl.log.info( "==== Starting diff ex search ==== " + getTaskCommand() );
         DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();
 
         this.addGenesToSearchResultValueObject( searchResult );
@@ -96,17 +87,7 @@ public class DifferentialExpressionSearchTaskImpl
         DifferentialExpressionSearchTaskImpl.log
                 .info( "=== Finished DiffExpSearchTask: " + searchResult.getCellData().size() + " 'conditions' ..." );
 
-        return new TaskResult( this.taskCommand, searchResult );
-    }
-
-    @Override
-    public void setTaskCommand( DifferentialExpressionSearchTaskCommand taskCommand ) {
-        super.setTaskCommand( taskCommand );
-
-        this.geneGroup = taskCommand.getGeneGroup();
-        this.experimentGroup = taskCommand.getExperimentGroup();
-        this.geneGroupName = taskCommand.getGeneGroupName();
-        this.experimentGroupName = taskCommand.getExperimentGroupName();
+        return newTaskResult( searchResult );
     }
 
     /**
@@ -127,11 +108,11 @@ public class DifferentialExpressionSearchTaskImpl
 
         int i = 0;
 
-        DifferentialExpressionSearchTaskImpl.log.info( "Loading " + experimentGroupName + " experiments..." );
+        DifferentialExpressionSearchTaskImpl.log.info( "Loading " + getTaskCommand().getExperimentGroupName() + " experiments..." );
 
         // database hit: important that this be fast.
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( EntityUtils.getIds( experimentGroup ) );
+                .getAnalysesByExperiment( IdentifiableUtils.getIds( getTaskCommand().getExperimentGroup() ) );
 
         experiment:
         for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {
@@ -180,7 +161,7 @@ public class DifferentialExpressionSearchTaskImpl
 
                         Condition condition = searchResult.new Condition( bas, analysis, resultSet, factorValue );
 
-                        condition.setExperimentGroupName( experimentGroupName );
+                        condition.setExperimentGroupName( getTaskCommand().getExperimentGroupName() );
 
                         /*
                          * SANITY CHECKS these fields should be filled in. If not, we are going to skip the results.
@@ -229,11 +210,11 @@ public class DifferentialExpressionSearchTaskImpl
      */
     private void addGenesToSearchResultValueObject( DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
-        DifferentialExpressionSearchTaskImpl.log.info( "Loading genes for " + geneGroupName + " ..." );
-        for ( GeneValueObject gene : geneGroup ) {
+        DifferentialExpressionSearchTaskImpl.log.info( "Loading genes for " + getTaskCommand().getGeneGroupName() + " ..." );
+        for ( GeneValueObject gene : getTaskCommand().getGeneGroup() ) {
             DifferentialExpressionGenesConditionsValueObject.DiffExGene g = searchResult.new DiffExGene( gene.getId(),
                     gene.getOfficialSymbol(), gene.getOfficialName() );
-            g.setGroupName( geneGroupName );
+            g.setGroupName( getTaskCommand().getGeneGroupName() );
             searchResult.addGene( g );
         }
 
@@ -333,7 +314,7 @@ public class DifferentialExpressionSearchTaskImpl
                         continue;
                     Collection<ExperimentalFactorValueObject> facts = rs.getExperimentalFactors();
                     for ( ExperimentalFactorValueObject f : facts ) {
-                        if ( ExperimentalDesignUtils.isBatch( f ) )
+                        if ( ExperimentalDesignUtils.isBatchFactor( f ) )
                             continue;
                         factorsUsed.add( f );
                     }
@@ -513,7 +494,7 @@ public class DifferentialExpressionSearchTaskImpl
 
     private boolean isBatch( DiffExResultSetSummaryValueObject resultSet ) {
         for ( ExperimentalFactorValueObject factor : resultSet.getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
                 return true;
             }
         }

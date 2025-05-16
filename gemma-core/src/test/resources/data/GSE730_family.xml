@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<MINiML
+   xmlns="http://www.ncbi.nlm.nih.gov/geo/info/MINiML"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.ncbi.nlm.nih.gov/geo/info/MINiML http://www.ncbi.nlm.nih.gov/geo/info/MINiML.xsd"
+   version="0.5.0" >
+
+  <Contributor iid="contrib1">
+    <Person><First>Valerie</First><Last>Reinke</Last></Person>
+    <Email>valerie.reinke@yale.edu</Email>
+    <Phone>203-785-5228</Phone>
+    <Laboratory>Reinke lab</Laboratory>
+    <Department>Genetics</Department>
+    <Organization>Yale University School of Medicine</Organization>
+    <Address>
+      <Line>333 Cedar St</Line>
+      <City>New Haven</City>
+      <State>CT</State>
+      <Zip-Code>06520</Zip-Code>
+      <Country>USA</Country>
+    </Address>
+  </Contributor>
+
+  <Database iid="GEO">
+    <Name>Gene Expression Omnibus (GEO)</Name>
+    <Public-ID>GEO</Public-ID>
+    <Organization>NCBI NLM NIH</Organization>
+    <Web-Link>http://www.ncbi.nlm.nih.gov/geo</Web-Link>
+    <Email>geo@ncbi.nlm.nih.gov</Email>
+  </Database>
+
+  <Platform iid="GPL539">
+    <Status database="GEO">
+      <Submission-Date>2003-10-09</Submission-Date>
+      <Release-Date>2003-12-31</Release-Date>
+      <Last-Update-Date>2009-03-24</Last-Update-Date>
+    </Status>
+    <Title>C_elegans_Aprint_YMD</Title>
+    <Accession database="GEO">GPL539</Accession>
+    <Technology>spotted DNA/cDNA</Technology>
+    <Distribution>non-commercial</Distribution>
+    <Organism taxid="6239">Caenorhabditis elegans</Organism>
+    <Manufacturer></Manufacturer>
+    <Manufacture-Protocol>
+    </Manufacture-Protocol>
+    <Description>
+A print at Yale University, made 7/01
+    </Description>
+    <Contributor-Ref ref="contrib1" position="1" />
+    <Contact-Ref ref="contrib1" />
+    <Data-Table>
+      <Column position="1">
+        <Name>ID</Name>
+      </Column>
+      <Column position="2">
+        <Name>ORF</Name>
+        <Description>ID in the database WormBase </Description>
+        <Link-Prefix>http://www.wormbase.org/db/gene/gene?name=</Link-Prefix>
+      </Column>
+      <Column position="3">
+        <Name>Block</Name>
+        <Description>Geometry: Block</Description>
+      </Column>
+      <Column position="4">
+        <Name>Row</Name>
+        <Description>Geometry: Row</Description>
+      </Column>
+      <Column position="5">
+        <Name>Column</Name>
+        <Description>Geometry: Colum</Description>
+      </Column>
+      <Column position="6">
+        <Name>SPOT_ID</Name>
+      </Column>
+    <External-Data rows="20000">
+GPL539-tbl-1.txt
+    </External-Data>
+    </Data-Table>
+  </Platform>
+
+  <Sample iid="GSM11095">
+    <Status database="GEO">
+      <Submission-Date>2003-10-10</Submission-Date>
+      <Release-Date>2003-12-31</Release-Date>
+      <Last-Update-Date>2005-05-28</Last-Update-Date>
+    </Status>
+    <Title>VREI_A006_7-24-01</Title>
+    <Accession database="GEO">GSM11095</Accession>
+    <Type>RNA</Type>
+    <Channel-Count>2</Channel-Count>
+    <Channel position="1">
+      <Source>wt mixed reference mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Channel position="2">
+      <Source>TP05 late L4 prep 1 mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Description>
+TP05 late L4 prep 1 hermaphrodites vs mixed reference
+    </Description>
+    <Data-Processing>
+    </Data-Processing>
+    <Platform-Ref ref="GPL539" />
+    <Contact-Ref ref="contrib1" />
+    <Supplementary-Data type="unknown">
+NONE
+    </Supplementary-Data>
+    <Data-Table>
+      <Column position="1">
+        <Name>ID_REF</Name>
+      </Column>
+      <Column position="2">
+        <Name>CH1_median</Name>
+        <Description>Channel 1 (635 nm, Cy5, Reference) median pixel intensity</Description>
+      </Column>
+      <Column position="3">
+        <Name>CH2_median</Name>
+        <Description>Channel 2 (532 nm, Cy3, Experiment) median pixel intensity</Description>
+      </Column>
+      <Column position="4">
+        <Name>CH1_back</Name>
+        <Description>Channel 1 Background</Description>
+      </Column>
+      <Column position="5">
+        <Name>CH2_back</Name>
+        <Description>Channel 2 Background</Description>
+      </Column>
+      <Column position="6">
+        <Name>CH1_MEAN</Name>
+        <Description>Channel 1 Mean</Description>
+      </Column>
+      <Column position="7">
+        <Name>CH2_MEAN</Name>
+      </Column>
+      <Column position="8">
+        <Name>CH1_SD</Name>
+        <Description>Channel 1 Standard Deviation</Description>
+      </Column>
+      <Column position="9">
+        <Name>CH2_SD</Name>
+        <Description>Channel 2 Standard Deviation</Description>
+      </Column>
+      <Column position="10">
+        <Name>pixels</Name>
+        <Description>Number of pixels used to determine signal.</Description>
+      </Column>
+      <Column position="11">
+        <Name>bpixels</Name>
+        <Description>Number of pixels used to determine background.</Description>
+      </Column>
+      <Column position="12">
+        <Name>x</Name>
+        <Description>X-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="13">
+        <Name>y</Name>
+        <Description>Y-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="14">
+        <Name>diameter</Name>
+        <Description>diameter in µm of the feature-indicator</Description>
+      </Column>
+      <Column position="15">
+        <Name>%&gt;CH1_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="16">
+        <Name>%&gt;CH1_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="17">
+        <Name>%&gt;CH2_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="18">
+        <Name>%&gt;CH2_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="19">
+        <Name>CH1_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 1</Description>
+      </Column>
+      <Column position="20">
+        <Name>CH2_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 2</Description>
+      </Column>
+      <Column position="21">
+        <Name>QUALITY</Name>
+      </Column>
+      <Column position="22">
+        <Name>flag</Name>
+        <Description>An extension of GenePix 3.0 flags described at http://twiki.med.yale.edu/twiki/bin/view/YMD/YMDFlagFields</Description>
+      </Column>
+      <Column position="23">
+        <Name>ratio_calc</Name>
+        <Description>(CH1_median-CH1_back)/(CH2_median-CH2_back)</Description>
+      </Column>
+      <Column position="24">
+        <Name>VALUE</Name>
+        <Description>log ratio (log2 of PRE_VALUE)</Description>
+      </Column>
+      <Column position="25">
+        <Name>norm_factor</Name>
+        <Description>Normalization factor calculated as described at http://twiki.med.yale.edu/twiki/bin/view/YMD/NormalizationAndFilterMethods</Description>
+      </Column>
+      <Column position="26">
+        <Name>PRE_VALUE</Name>
+        <Description>[(Experiment channel median intensity - background)/(Reference channel median intensity - background)]*(norm_factor)</Description>
+      </Column>
+    <External-Data rows="20000">
+GSM11095-tbl-1.txt
+    </External-Data>
+    </Data-Table>
+  </Sample>
+
+  <Sample iid="GSM11096">
+    <Status database="GEO">
+      <Submission-Date>2003-10-10</Submission-Date>
+      <Release-Date>2003-12-31</Release-Date>
+      <Last-Update-Date>2005-05-28</Last-Update-Date>
+    </Status>
+    <Title>VREI_A019_7-25-01</Title>
+    <Accession database="GEO">GSM11096</Accession>
+    <Type>RNA</Type>
+    <Channel-Count>2</Channel-Count>
+    <Channel position="1">
+      <Source>wt mixed reference mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Channel position="2">
+      <Source>TP05 late L4 prep 2 mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Description>
+TP05 late L4 prep 2 hermaphrodites vs mixed reference
+    </Description>
+    <Data-Processing>
+    </Data-Processing>
+    <Platform-Ref ref="GPL539" />
+    <Contact-Ref ref="contrib1" />
+    <Supplementary-Data type="unknown">
+NONE
+    </Supplementary-Data>
+    <Data-Table>
+      <Column position="1">
+        <Name>ID_REF</Name>
+      </Column>
+      <Column position="2">
+        <Name>CH1_median</Name>
+        <Description>Channel 1 (635 nm, Cy5, Reference) median pixel intensity</Description>
+      </Column>
+      <Column position="3">
+        <Name>CH2_median</Name>
+        <Description>Channel 2 (532 nm, Cy3, Experiment) median pixel intensity</Description>
+      </Column>
+      <Column position="4">
+        <Name>CH1_back</Name>
+        <Description>Channel 1 Background</Description>
+      </Column>
+      <Column position="5">
+        <Name>CH2_back</Name>
+        <Description>Channel 2 Background</Description>
+      </Column>
+      <Column position="6">
+        <Name>CH1_MEAN</Name>
+        <Description>Channel 1 Mean</Description>
+      </Column>
+      <Column position="7">
+        <Name>CH2_MEAN</Name>
+      </Column>
+      <Column position="8">
+        <Name>CH1_SD</Name>
+        <Description>Channel 1 Standard Deviation</Description>
+      </Column>
+      <Column position="9">
+        <Name>CH2_SD</Name>
+        <Description>Channel 2 Standard Deviation</Description>
+      </Column>
+      <Column position="10">
+        <Name>pixels</Name>
+        <Description>Number of pixels used to determine signal.</Description>
+      </Column>
+      <Column position="11">
+        <Name>bpixels</Name>
+        <Description>Number of pixels used to determine background.</Description>
+      </Column>
+      <Column position="12">
+        <Name>x</Name>
+        <Description>X-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="13">
+        <Name>y</Name>
+        <Description>Y-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="14">
+        <Name>diameter</Name>
+        <Description>diameter in µm of the feature-indicator</Description>
+      </Column>
+      <Column position="15">
+        <Name>%&gt;CH1_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="16">
+        <Name>%&gt;CH1_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="17">
+        <Name>%&gt;CH2_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="18">
+        <Name>%&gt;CH2_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="19">
+        <Name>CH1_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 1</Description>
+      </Column>
+      <Column position="20">
+        <Name>CH2_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 2</Description>
+      </Column>
+      <Column position="21">
+        <Name>QUALITY</Name>
+      </Column>
+      <Column position="22">
+        <Name>flag</Name>
+        <Description>An extension of GenePix 3.0 flags described at http://twiki.med.yale.edu/twiki/bin/view/YMD/YMDFlagFields</Description>
+      </Column>
+      <Column position="23">
+        <Name>ratio_calc</Name>
+        <Description>(CH1_median-CH1_back)/(CH2_median-CH2_back)</Description>
+      </Column>
+      <Column position="24">
+        <Name>VALUE</Name>
+        <Description>log ratio (log2 of PRE_VALUE)</Description>
+      </Column>
+      <Column position="25">
+        <Name>norm_factor</Name>
+        <Description>Normalization factor calculated as described at http://twiki.med.yale.edu/twiki/bin/view/YMD/NormalizationAndFilterMethods</Description>
+      </Column>
+      <Column position="26">
+        <Name>PRE_VALUE</Name>
+        <Description>[(Experiment channel median intensity - background)/(Reference channel median intensity - background)]*(norm_factor)</Description>
+      </Column>
+    <External-Data rows="20000">
+GSM11096-tbl-1.txt
+    </External-Data>
+    </Data-Table>
+  </Sample>
+
+  <Sample iid="GSM11097">
+    <Status database="GEO">
+      <Submission-Date>2003-10-10</Submission-Date>
+      <Release-Date>2003-12-31</Release-Date>
+      <Last-Update-Date>2005-05-28</Last-Update-Date>
+    </Status>
+    <Title>VREI_A032_7-29-01</Title>
+    <Accession database="GEO">GSM11097</Accession>
+    <Type>RNA</Type>
+    <Channel-Count>2</Channel-Count>
+    <Channel position="1">
+      <Source>wt mixed reference mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Channel position="2">
+      <Source>TP05 late L4 prep 3 mRNA</Source>
+      <Organism taxid="6239">Caenorhabditis elegans</Organism>
+      <Characteristics>
+none      </Characteristics>
+      <Molecule>total RNA</Molecule>
+    </Channel>
+    <Description>
+TP05 late L4 prep 3 hermaphrodites vs mixed reference
+    </Description>
+    <Data-Processing>
+    </Data-Processing>
+    <Platform-Ref ref="GPL539" />
+    <Contact-Ref ref="contrib1" />
+    <Supplementary-Data type="unknown">
+NONE
+    </Supplementary-Data>
+    <Data-Table>
+      <Column position="1">
+        <Name>ID_REF</Name>
+      </Column>
+      <Column position="2">
+        <Name>CH1_median</Name>
+        <Description>Channel 1 (635 nm, Cy5, Reference) median pixel intensity</Description>
+      </Column>
+      <Column position="3">
+        <Name>CH2_median</Name>
+        <Description>Channel 2 (532 nm, Cy3, Experiment) median pixel intensity</Description>
+      </Column>
+      <Column position="4">
+        <Name>CH1_back</Name>
+        <Description>Channel 1 Background</Description>
+      </Column>
+      <Column position="5">
+        <Name>CH2_back</Name>
+        <Description>Channel 2 Background</Description>
+      </Column>
+      <Column position="6">
+        <Name>CH1_MEAN</Name>
+        <Description>Channel 1 Mean</Description>
+      </Column>
+      <Column position="7">
+        <Name>CH2_MEAN</Name>
+      </Column>
+      <Column position="8">
+        <Name>CH1_SD</Name>
+        <Description>Channel 1 Standard Deviation</Description>
+      </Column>
+      <Column position="9">
+        <Name>CH2_SD</Name>
+        <Description>Channel 2 Standard Deviation</Description>
+      </Column>
+      <Column position="10">
+        <Name>pixels</Name>
+        <Description>Number of pixels used to determine signal.</Description>
+      </Column>
+      <Column position="11">
+        <Name>bpixels</Name>
+        <Description>Number of pixels used to determine background.</Description>
+      </Column>
+      <Column position="12">
+        <Name>x</Name>
+        <Description>X-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="13">
+        <Name>y</Name>
+        <Description>Y-coordinate of the center of the feature-indicator associated with the feature, where (0,0) is the top left of the image</Description>
+      </Column>
+      <Column position="14">
+        <Name>diameter</Name>
+        <Description>diameter in µm of the feature-indicator</Description>
+      </Column>
+      <Column position="15">
+        <Name>%&gt;CH1_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="16">
+        <Name>%&gt;CH1_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 1</Description>
+      </Column>
+      <Column position="17">
+        <Name>%&gt;CH2_back+1SD</Name>
+        <Description>percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="18">
+        <Name>%&gt;CH2_back+2SD</Name>
+        <Description>percentage of feature pixels with intensities more than two standard deviations above the background pixel intensity, for Channel 2</Description>
+      </Column>
+      <Column position="19">
+        <Name>CH1_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 1</Description>
+      </Column>
+      <Column position="20">
+        <Name>CH2_%Sat</Name>
+        <Description>percentage of pixel saturation within feature for Channel 2</Description>
+      </Column>
+      <Column position="21">
+        <Name>QUALITY</Name>
+      </Column>
+      <Column position="22">
+        <Name>flag</Name>
+        <Description>An extension of GenePix 3.0 flags described at http://twiki.med.yale.edu/twiki/bin/view/YMD/YMDFlagFields</Description>
+      </Column>
+      <Column position="23">
+        <Name>ratio_calc</Name>
+        <Description>(CH1_median-CH1_back)/(CH2_median-CH2_back)</Description>
+      </Column>
+      <Column position="24">
+        <Name>VALUE</Name>
+        <Description>log ratio (log2 of PRE_VALUE)</Description>
+      </Column>
+      <Column position="25">
+        <Name>norm_factor</Name>
+        <Description>Normalization factor calculated as described at http://twiki.med.yale.edu/twiki/bin/view/YMD/NormalizationAndFilterMethods</Description>
+      </Column>
+      <Column position="26">
+        <Name>PRE_VALUE</Name>
+        <Description>[(Experiment channel median intensity - background)/(Reference channel median intensity - background)]*(norm_factor)</Description>
+      </Column>
+    <External-Data rows="20000">
+GSM11097-tbl-1.txt
+    </External-Data>
+    </Data-Table>
+  </Sample>
+
+  <Series iid="GSE730">
+    <Status database="GEO">
+      <Submission-Date>2003-10-10</Submission-Date>
+      <Release-Date>2003-12-31</Release-Date>
+      <Last-Update-Date>2013-08-08</Last-Update-Date>
+    </Status>
+    <Title>TP05 late L4</Title>
+    <Accession database="GEO">GSE730</Accession>
+    <Pubmed-ID>14668411</Pubmed-ID>
+    <Summary>
+Timepoint 05 wild type late-L4 larvae vs mixed stage reference
+Keywords: other
+    </Summary>
+    <Overall-Design>
+    </Overall-Design>
+    <Type>Expression profiling by array</Type>
+    <Contributor-Ref ref="contrib1" position="1" />
+    <Contact-Ref ref="contrib1" />
+    <Sample-Ref ref="GSM11095" />
+    <Sample-Ref ref="GSM11096" />
+    <Sample-Ref ref="GSM11097" />
+    <Relation type="SubSeries of" target="GSE696" />
+    <Relation type="BioProject" target="https://www.ncbi.nlm.nih.gov/bioproject/PRJNA89787" />
+  </Series>
+
+</MINiML>

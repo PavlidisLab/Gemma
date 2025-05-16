@@ -11,7 +11,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternUtils;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -22,6 +21,8 @@ import java.util.Properties;
  * schemas in the classpath.
  * <p>
  * It's been slimmed down to what we actually use in Gemma.
+ *
+ * @author poirigui
  * @see XSDEntityResolver
  * @see org.springframework.orm.hibernate4.LocalSessionFactoryBean
  */

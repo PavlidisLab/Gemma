@@ -14,21 +14,14 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author paul
@@ -36,57 +29,29 @@ import java.util.Set;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface DiffExAnalyzer {
 
-    ExperimentalFactor determineInterceptFactor( Collection<ExperimentalFactor> factors,
-            QuantitationType quantitationType );
-
     /**
-     * @param expressionExperiment the experiment
+     * Analyze a dataset.
+     * @param expressionExperiment experiment to analyze
+     * @param dmatrix              D matrix
      * @param config               config
      * @return analyses. There will be more than one if a subset factor is defined.
      */
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysisConfig config );
+            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 
-    /***
-     * Allows entry of modified data matrices into the workflow.
-     * @param config config
-     * @param expressionExperiment the experiment
-     * @param dmatrix D matrix
-     * @return analyses
+    /**
+     * Analyze a dataset with a pre-existing subset structure.
+     * <p>
+     * A subset must be defined in the configuration.
      */
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
+            Map<FactorValue, ExpressionExperimentSubSet> subsets,
+            ExpressionDataDoubleMatrix dmatrix,
+            DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 
     /**
-     * Generate HitListSize entities that will be stored to count the number of diff. ex probes at various preset
-     * thresholds, to avoid wasting time generating these counts on the fly later. This is done automatically during
-     * analysis, so is just here to allow 'backfilling'.
-     *
-     * @param probeToGeneMap map
-     * @param results        results
-     * @return hit list sizes
-     */
-    Set<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
-            Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
-
-    /**
-     * Utility method
-     *
-     * @param probeToGeneMap map
-     * @param resultList     result list
-     * @return number of genes tested
-     */
-    int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
-            Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
-
-    /**
-     * this is needed so we can alter this in tests
-     *
-     * @param expressionDataMatrixService EE data matrix service
-     */
-    void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService );
-
-    /**
+     * Analyze a subset.
+     * <p>
      * Note that normally when we run a subset analysis, the subsetting is done internally, so we pass in the expression
      * experiment, not the subset. This method is used for exceptions to that.
      *
@@ -94,7 +59,6 @@ public interface DiffExAnalyzer {
      * @param config config
      * @return analysis
      */
-    DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
-            DifferentialExpressionAnalysisConfig config );
-
+    DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix,
+            DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 }

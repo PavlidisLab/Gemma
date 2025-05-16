@@ -45,7 +45,6 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
      */
     public ArrayDesignProbeMapTaskCommand( String taskId, boolean forceAnalysis, ArrayDesign arrayDesign ) {
         super();
-        this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.arrayDesign = arrayDesign;
     }

@@ -2,7 +2,7 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.rest.util.MalformedArgException;
 
 @Schema(type = "string", description = "Filter results matching the given full-text query.",

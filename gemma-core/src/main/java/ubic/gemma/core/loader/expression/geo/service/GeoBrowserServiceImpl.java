@@ -29,10 +29,10 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.XMLUtils;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -43,20 +43,17 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
@@ -69,25 +66,11 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
-    // private static final XPathExpression xgds;
-    private static final XPathExpression xgse;
-    private static final XPathExpression xtitle;
-    private static final XPathExpression xgpls;
-    private static final XPathExpression xsummary;
-
-    static {
-        XPathFactory xf = XPathFactory.newInstance();
-        XPath xpath = xf.newXPath();
-        try {
-            // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
-            xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
-            xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
-            xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
-            xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+    // private static final XPathExpression xgds = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+    private static final XPathExpression xgse = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
+    private static final XPathExpression xtitle = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
+    private static final XPathExpression xgpls = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
+    private static final XPathExpression xsummary = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
 
     @Autowired
     protected ExpressionExperimentService expressionExperimentService;
@@ -100,6 +83,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -138,7 +124,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = new EutilFetch( ncbiApiKey ).fetch( "gds", accession, 25 );
+        Document details = EutilFetch.summary( "gds", accession, 25, ncbiApiKey );
 
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
@@ -181,49 +167,32 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
      * @param  details XML from eSummary
      * @return HTML-formatted
      */
-    String formatDetails( String details, String contextPath ) throws IOException {
+    String formatDetails( Document details, String contextPath ) throws IOException {
+        String gse = "GSE" + XMLUtils.evaluateToString( xgse, details );
+        String title = XMLUtils.evaluateToString( xtitle, details );
+        NodeList gpls = XMLUtils.evaluate( xgpls, details );
+        String summary = XMLUtils.evaluateToString( xsummary, details );
 
-        /*
-         * Bug 2690. There must be a better way.
-         */
-        details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "<div class=\"small\">" );
 
-        try {
-            DocumentBuilder builder = createDocumentBuilder();
-            Document document = builder.parse( new InputSource( new StringReader( details ) ) );
+        ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
-            String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
-            String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
-            NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET );
-            String summary = ( String ) xsummary.evaluate( document, XPathConstants.STRING );
-
-            StringBuilder buf = new StringBuilder();
-            buf.append( "<div class=\"small\">" );
-
-            ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
-
-            if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( contextPath )
-                        .append( "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
-                        .append( "\">" ).append( gse ).append( "</a></strong>" );
-            } else {
-                buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
-            }
-
-            buf.append( "<p>" ).append( title ).append( "</p>\n" );
-            buf.append( "<p>" ).append( summary ).append( "</p>\n" );
-
-            this.formatArrayDetails( gpls, buf, contextPath );
-
-            buf.append( "</div>" );
-            details = buf.toString();
-
-            // }
-        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
-            throw new RuntimeException( e );
+        if ( ee != null ) {
+            buf.append( "\n<p><strong><a target=\"_blank\" href=\"" )
+                    .append( entityUrlBuilder.fromBaseUrl( contextPath ).entity( ee ).web().toUriString() )
+                    .append( "\">" ).append( escapeHtml4( gse ) ).append( "</a></strong>" );
+        } else {
+            buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
         }
 
-        return details;
+        buf.append( "<p>" ).append( title ).append( "</p>\n" );
+        buf.append( "<p>" ).append( summary ).append( "</p>\n" );
+
+        this.formatArrayDetails( gpls, buf, contextPath );
+
+        buf.append( "</div>" );
+        return buf.toString();
     }
 
     private List<GeoRecord> filterGeoRecords( Slice<GeoRecord> records ) {
@@ -297,8 +266,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
-                        .append( contextPath ).append( "/arrays/showArrayDesign.html?id=" )
-                        .append( arrayDesign.getId() ).append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
+                        .append( entityUrlBuilder.fromBaseUrl( contextPath ).entity( arrayDesign ).web().toUriString() )
+                        .append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
                         .append( trouble );
             } else {
                 buf.append( "<p><strong>" ).append( escapeHtml4( gpl ) ).append( " [New to Gemma]</strong>" );

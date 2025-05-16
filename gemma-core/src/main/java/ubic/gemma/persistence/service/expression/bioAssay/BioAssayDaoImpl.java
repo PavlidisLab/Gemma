@@ -22,13 +22,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -47,6 +50,12 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         return ( BioAssay ) BusinessKey
                 .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
                 .uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public BioAssay findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
     }
 
     @Override
@@ -68,25 +77,33 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
                 .setParameter( "accession", accession ).list();
     }
 
-    /**
-     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
-     *
-     * @param entities the bio assays to convert into a VO
-     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
-     * @return a collection of bioAssay value objects
-     */
     @Override
-    //TODO remove when FactorValueValueObject usage is phased out
-    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic ) {
+    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
+        Collection<BioAssaySet> results = new HashSet<>();
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bas from ExpressionExperiment bas join bas.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", bioAssay )
+                .list() );
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bas from ExpressionExperimentSubSet bas join bas.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", bioAssay )
+                .list() );
+        return results;
+    }
+
+    @Override
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues ) {
         List<BioAssayValueObject> vos = new LinkedList<>();
         for ( BioAssay e : entities ) {
-            vos.add( new BioAssayValueObject( e, arrayDesignValueObjects, basic ) );
+            vos.add( new BioAssayValueObject( e, ad2vo, assay2sourceAssayMap != null ? assay2sourceAssayMap.get( e ) : null, basic, allFactorValues ) );
         }
         return vos;
     }
 
     @Override
     protected BioAssayValueObject doLoadValueObject( BioAssay entity ) {
-        return new BioAssayValueObject( entity, null, false );
+        return new BioAssayValueObject( entity, null, null, false, false );
     }
 }

@@ -1,7 +1,23 @@
 /* Override for Ext.js */
 
+.x-btn button {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-form-textarea {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-tab-strip span.x-tab-strip-text {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-window-mc {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
 .x-form-field-wrap .x-go-trigger {
-    background-image: url('../../images/icons/search-trigger.gif');
+    background-image: url('../images/icons/search-trigger.gif');
     cursor: pointer;
 }
 
@@ -10,7 +26,7 @@
 }
 
 .x-loading {
-    background: url('../../images/default/tree/loading.gif') no-repeat center;
+    background: url('../images/default/tree/loading.gif') no-repeat center;
 }
 
 /* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
@@ -113,7 +129,7 @@
 
 .x-statusbar .x-status-busy {
     padding-left: 25px;
-    background: transparent url(../../images/default/grid/loading.gif) no-repeat 3px 3px;
+    background: transparent url(../images/default/grid/loading.gif) no-repeat 3px 3px;
 }
 
 .x-statusbar .x-status-text-panel {
@@ -153,28 +169,28 @@
 }
 
 .x-tool-delete {
-    background-image: url('../../images/icons/cross.png');
+    background-image: url('../images/icons/cross.png');
     margin-left: 10px;
 }
 
 .x-tool-delete-over {
-    background-image: url('../../images/icons/cross.png');
+    background-image: url('../images/icons/cross.png');
     margin-left: 10px;
 }
 
 .x-tool-saveEdit {
-    background-image: url('../../images/icons/diskEdit2.png');
+    background-image: url('../images/icons/diskEdit2.png');
     margin-left: 10px;
 }
 
 .x-tool-saveEdit-over {
-    background-image: url('../../images/icons/diskEdit2.png');
+    background-image: url('../images/icons/diskEdit2.png');
     margin-left: 10px;
 }
 
 /* end of hover thumbnails*/
 .x-form-trigger-paste-genes {
-    background-image: url("../../images/icons/page_upload.png")
+    background-image: url("../images/icons/page_upload.png")
 }
 
 .x-form-item {
@@ -189,7 +205,7 @@
     background: #f4f4f4;
 }
 
-.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link):not(.pp_comm *) {
+.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link):not(.pp_comm *):not(.x-tree-ec-icon) {
     background: #f4f4f4;
 }
 

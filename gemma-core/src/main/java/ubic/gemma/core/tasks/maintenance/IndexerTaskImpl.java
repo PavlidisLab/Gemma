@@ -29,33 +29,33 @@ public class IndexerTaskImpl extends AbstractTask<IndexerTaskCommand> implements
     @Override
     public TaskResult call() throws Exception {
         Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
-        if ( taskCommand.isIndexGene() ) {
+        if ( getTaskCommand().isIndexGene() ) {
             classesToIndex.add( Gene.class );
         }
-        if ( taskCommand.isIndexEE() ) {
+        if ( getTaskCommand().isIndexEE() ) {
             classesToIndex.add( ExpressionExperiment.class );
         }
-        if ( taskCommand.isIndexAD() ) {
+        if ( getTaskCommand().isIndexAD() ) {
             classesToIndex.add( ArrayDesign.class );
         }
-        if ( taskCommand.isIndexBibRef() ) {
+        if ( getTaskCommand().isIndexBibRef() ) {
             classesToIndex.add( BibliographicReference.class );
         }
-        if ( taskCommand.isIndexProbe() ) {
+        if ( getTaskCommand().isIndexProbe() ) {
             classesToIndex.add( CompositeSequence.class );
         }
-        if ( taskCommand.isIndexBioSequence() ) {
+        if ( getTaskCommand().isIndexBioSequence() ) {
             classesToIndex.add( BioSequence.class );
         }
-        if ( taskCommand.isIndexExperimentSet() ) {
+        if ( getTaskCommand().isIndexExperimentSet() ) {
             classesToIndex.add( ExpressionExperimentSet.class );
         }
-        if ( taskCommand.isIndexGeneSet() ) {
+        if ( getTaskCommand().isIndexGeneSet() ) {
             classesToIndex.add( GeneSet.class );
         }
         for ( Class<? extends Identifiable> clazz : classesToIndex ) {
             indexerService.index( clazz );
         }
-        return new TaskResult( taskCommand, null );
+        return newTaskResult( null );
     }
 }

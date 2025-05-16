@@ -18,27 +18,22 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-public class PvalueDistribution implements java.io.Serializable {
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-    private static final long serialVersionUID = -4783507721422402289L;
+import java.util.Arrays;
+import java.util.Objects;
+
+public class PvalueDistribution extends AbstractIdentifiable {
+
     private Integer numBins;
-    private byte[] binCounts;
-    private Long id;
+    private double[] binCounts;
 
-    public byte[] getBinCounts() {
+    public double[] getBinCounts() {
         return this.binCounts;
     }
 
-    public void setBinCounts( byte[] binCounts ) {
+    public void setBinCounts( double[] binCounts ) {
         this.binCounts = binCounts;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Integer getNumBins() {
@@ -49,15 +44,9 @@ public class PvalueDistribution implements java.io.Serializable {
         this.numBins = numBins;
     }
 
-    /**
-     * @return a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( numBins );
     }
 
     @Override
@@ -69,7 +58,12 @@ public class PvalueDistribution implements java.io.Serializable {
             return false;
         }
         final PvalueDistribution that = ( PvalueDistribution ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( numBins, that.numBins )
+                    && Arrays.equals( binCounts, that.binCounts );
+        }
     }
 
     public static final class Factory {

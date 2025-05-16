@@ -64,7 +64,14 @@ public interface TableMaintenanceUtil {
      * If necessary, update the GENE2CS table.
      */
     @Secured({ "GROUP_AGENT" })
-    void updateGene2CsEntries();
+    int updateGene2CsEntries();
+
+    /**
+     * Update the GENE2CS table.
+     * @param force update the table even if no platforms has been modified since the last update
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateGene2CsEntries( boolean force );
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
@@ -88,6 +95,15 @@ public interface TableMaintenanceUtil {
      */
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate );
+
+    @Secured({ "GROUP_ADMIN" })
+    void evictGene2CsQueryCache();
+
+    @Secured({ "GROUP_ADMIN" })
+    void evictEe2CQueryCache();
+
+    @Secured({ "GROUP_ADMIN" })
+    void evictEe2AdQueryCache();
 
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })

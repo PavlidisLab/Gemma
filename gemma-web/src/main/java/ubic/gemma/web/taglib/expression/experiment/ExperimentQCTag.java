@@ -18,67 +18,169 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import gemma.gsec.util.SecurityUtil;
+import lombok.Setter;
+import org.springframework.util.Assert;
+import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
+import org.springframework.web.servlet.tags.form.TagWriter;
+import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
+import ubic.gemma.web.taglib.TagWriterUtils;
+import ubic.gemma.web.util.StaticAssetResolver;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import javax.servlet.jsp.tagext.DynamicAttributes;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 
 /**
  * @author paul
  */
-public class ExperimentQCTag extends TagSupport {
+@Setter
+public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttributes {
 
-    private static final int NUM_PCS_TO_DISPLAY = 3;
-    private static final long serialVersionUID = -466958848014180520L;
-    private Long eeid;
+    private transient StaticAssetResolver staticAssetResolver;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
+
+    /**
+     * Expression experiment to display the QC info for.
+     */
+    private ExpressionExperiment expressionExperiment;
+    /**
+     * DOM ID of the manager for the experiment.
+     */
+    @Nullable
+    private String eeManagerId = null;
+
+    /**
+     * Indicate if there is a correlation matrix.
+     */
     private boolean hasCorrMat = false;
-    private boolean hasCorrDist = false;
-    private boolean hasPCA = false;
-    private boolean hasMeanVariance = false;
-    private String eeManagerId = "";
-    @SuppressWarnings("unused")
-    private boolean hasNodeDegreeDist = false;
-    private int numFactors = 2;
+    /**
+     * Number of outliers removed.
+     */
     private int numOutliersRemoved = 0;
+    /**
+     * Number of possible outliers.
+     */
     private int numPossibleOutliers = 0;
 
-    @Override
-    public int doEndTag() {
-        return EVAL_PAGE;
+    /**
+     * Indicate if there is a PCA.
+     */
+    private boolean hasPCA = false;
+    /**
+     * How many factors (including batch etc) are available for PCA display?
+     */
+    private int numFactors = 2;
+    /**
+     * Number of principal components to display.
+     */
+    private int numPcsToDisplay = 3;
+
+    /**
+     * Indicate if there is a mean-variance relation.
+     */
+    private boolean hasMeanVariance = false;
+
+    /**
+     * Indicate if the experiment has single-cell data.
+     */
+    private boolean hasSingleCellData = false;
+    /**
+     * Heatmap for single-cell data.
+     * <p>
+     * This heatmap might not be present if the experiment has not been aggregated.
+     */
+    @Nullable
+    private SingleCellSparsityHeatmap singleCellSparsityHeatmap;
+
+    private Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
+
+    private final Boolean htmlEscape;
+
+    @SuppressWarnings("unused")
+    public ExperimentQCTag() {
+        htmlEscape = null;
+    }
+
+    public ExperimentQCTag( boolean htmlEscape ) {
+        this.htmlEscape = htmlEscape;
     }
 
     @Override
-    public int doStartTag() throws JspException {
-        try {
-            pageContext.getOut().print( getQChtml() );
-        } catch ( Exception ex ) {
-            throw new JspException( "experiment QC tag: " + ex.getMessage() );
+    protected boolean isHtmlEscape() {
+        if ( htmlEscape != null ) {
+            return htmlEscape;
+        } else {
+            return super.isHtmlEscape();
         }
+    }
+
+    @Override
+    public void setDynamicAttribute( String uri, String localName, Object value ) {
+        dynamicAttributes.put( localName, value );
+    }
+
+    @Override
+    public int doStartTagInternal() throws JspException {
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
+        }
+        if ( entityUrlBuilder == null ) {
+            entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
+        }
+        writeQc( new TagWriter( pageContext ), pageContext.getServletContext().getContextPath() );
         return SKIP_BODY;
     }
 
-    public String getQChtml() {
-        StringBuilder buf = new StringBuilder();
-
-        String contextPath = pageContext.getServletContext().getContextPath();
+    public void writeQc( TagWriter writer, String contextPath ) throws JspException {
+        Assert.notNull( staticAssetResolver );
 
         /*
          * check if the files are available...if not, show something intelligent.
          */
 
-        buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
-        buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" class=\"smaller\" >" );
+        writer.startTag( "div" );
+        writer.writeAttribute( "class", "eeqc" );
+        writer.writeAttribute( "id", "eeqc" );
 
-        buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
-                // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
-               // + "<th valign=\"top\" align=\"center\"><strong>Gene correlation</strong</th>"
-                + "<th valign=\"top\" align=\"center\"><strong>Mean-Variance</strong</th>" + "</tr>" );
+        TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), writer );
 
-        buf.append( "<tr>" );
+        writer.startTag( "table" );
+        writer.writeAttribute( "class", "smaller" );
 
-        String placeHolder = "<td  style=\"margin:3px;padding:8px;background-color:#EEEEEE\" valign='top'>Not available</td>";
+        writer.startTag( "tr" );
+
+        for ( String header : new String[] {
+                "Sample correlation",
+                "PCA Scree",
+                "PCA+Factors",
+                "Mean-Variance"
+        } ) {
+            writer.startTag( "th" );
+            writer.startTag( "strong" );
+            writer.appendValue( header );
+            writer.endTag(); // </strong>
+            writer.endTag(); // </th>
+        }
+
+        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
+            writer.startTag( "th" );
+            writer.startTag( "strong" );
+            writer.appendValue( "Single-cell" );
+            writer.endTag(); // </strong>
+            writer.endTag(); // </th>
+        }
+
+        writer.endTag();
+
+        writer.startTag( "tr" );
 
         if ( hasCorrMat ) {
 
@@ -87,93 +189,135 @@ public class ExperimentQCTag extends TagSupport {
              */
             int width = 400;
             int height = 400;
-            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&forceShowLabels=1";
-            buf.append(
-                    "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
-                            + "onClick=\"popupImage('" ).append( bigImageUrl ).append( "'," ).append( width )
-                    .append( "," ).append( height ).append( ")" ).append( ";return 1\"; " )
-                    .append( "title=\"Assay correlations (bright=higher); click for larger version\" >" )
-                    .append( "<img src=\"" + contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" ).append( this.eeid )
-                    .append( "&size=1\" alt='Image unavailable' width='" )
-                    .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' height='" )
-                    .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' /></a>" );
+            String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=4&forceShowLabels=1";
+            writer.startTag( "td" );
 
-            buf.append(
-                    "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" )
-                    .append( this.eeid ).append( "&text=1\">Get data</a></li>" );
+            writer.startTag( "a" );
+            writer.writeAttribute( "style", "cursor:pointer" );
+            writer.writeAttribute( "onclick", "Gemma.ExpressionExperimentPage.popupImage('" + javaScriptEscape( bigImageUrl ) + "'," + width + "," + height + ");return 1;" );
+            writer.writeAttribute( "title", "Assay correlations (bright=higher); click for larger version." );
+
+            writer.startTag( "img" );
+            writer.writeAttribute( "style", "image-rendering: pixelated;" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=1" );
+            writer.writeAttribute( "alt", "Correlation matrix displayed as a heatmap." );
+            writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.endTag(); // </img>
+            writer.endTag(); // </a>
+
+            writer.startTag( "ul" );
 
             if ( this.numOutliersRemoved > 0 ) {
-                buf.append(
-                        "<li><a title=\"Download a file containing the list of outlier samples that were removed\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/outliersRemoved.html?id=" )
-                        .append( this.eeid ).append( "&text=1\">" ).append( this.numOutliersRemoved )
-                        .append( " outliers removed</a></li>" );
-            } else {
-                buf.append( "<li>No outliers removed</li>" );
+                writer.startTag( "li" );
+                writer.startTag( "a" );
+                writer.writeAttribute( "title", "Download a file containing the list of outlier samples that were removed" );
+                writer.writeAttribute( "class", "newpage" );
+                writer.writeAttribute( "href", contextPath + "/expressionExperiment/outliersRemoved.html?id=" + this.expressionExperiment.getId() + "&text=1" );
+                writer.appendValue( this.numOutliersRemoved + " outliers removed" );
+                writer.endTag(); // </a>
+                writer.endTag(); // </li>
             }
 
             if ( this.numPossibleOutliers > 0 ) {
-                buf.append(
-                        "<li><a title=\"Download a file containing the list of possible outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/possibleOutliers.html?id=" )
-                        .append( this.eeid ).append( "&text=1\">" ).append( this.numPossibleOutliers )
-                        .append( " possible outliers</a></li>" );
-            } else {
-                buf.append( "<li>No outliers detected</li>" );
+                writer.startTag( "li" );
+                writer.startTag( "a" );
+                writer.writeAttribute( "title", "Download a file containing the list of possible outlier samples" );
+                writer.writeAttribute( "class", "newpage" );
+                writer.writeAttribute( "href", contextPath + "/expressionExperiment/possibleOutliers.html?id=" + this.expressionExperiment.getId() + "&text=1" );
+                writer.appendValue( this.numPossibleOutliers + " possible outliers" );
+                writer.endTag(); // </a>
+                writer.endTag(); // </li>
             }
 
-            buf.append( "</ul></td>" );
+            if ( numOutliersRemoved == 0 && numPossibleOutliers == 0 ) {
+                writer.appendValue( "<li><i>No outliers removed nor detected.</i></li>" );
+            } else if ( numOutliersRemoved == 0 ) {
+                writer.appendValue( "<li><i>No outliers removed.</i></li>" );
+            } else if ( numPossibleOutliers == 0 ) {
+                writer.appendValue( "<li><i>No outliers detected.</i></li>" );
+            }
+
+            writer.startTag( "li" );
+            writer.startTag( "a" );
+            writer.writeAttribute( "title", "Download a file containing the raw correlation matrix data" );
+            writer.writeAttribute( "class", "newpage" );
+            writer.writeAttribute( "href", contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&text=1" );
+            writer.appendValue( "Download correlation matrix" );
+            writer.endTag(); // </a>
+            writer.endTag(); // </li>
+
+            writer.endTag(); // </ul>
+            writer.endTag(); // </td>
         } else {
-            buf.append( placeHolder );
+            writePlaceholder( writer );
         }
 
         if ( hasPCA ) {
-            buf.append(
-                    "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"" + contextPath + "/expressionExperiment/pcaScree.html?id=" )
-                    .append( this.eeid ).append( "\" />" );
-            buf.append( "<br/>" );
-            for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
-                // id : 'ee-details-panel - declared in ExpressionExperimentPage.js
-                String linkText =
-                        "<span style='cursor:pointer' onClick=\"Ext.getCmp('" + eeManagerId + "').visualizePcaHandler("
-                                + this.eeid + "," + ( i + 1 ) + "," + 100
-                                + ")\" title=\"Click to visualize top loaded probes for component " + ( i + 1 )
-                                + "\"><img src=\"" + contextPath + "/images/icons/chart_curve.png\"></span>";
-                buf.append( linkText ).append( "&nbsp;" );
+            writer.startTag( "td" );
+            writer.startTag( "img" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaScree.html?id=" + this.expressionExperiment.getId() );
+            writer.writeAttribute( "alt", "Bar plot of the top 10 PCA components." );
+            writer.endTag(); // </img>
+
+            if ( eeManagerId != null ) {
+                writer.startTag( "br" );
+                writer.endTag(); // </br>
+                for ( int i = 0; i < numPcsToDisplay; i++ ) {
+                    if ( i > 0 ) {
+                        writer.appendValue( "&nbsp;" );
+                    }
+                    // id : 'ee-details-panel - declared in ExpressionExperimentPage.js
+                    int component = ( i + 1 );
+                    writer.startTag( "span" );
+                    writer.writeAttribute( "style", "cursor:pointer" );
+                    writer.writeAttribute( "onclick", "Ext.getCmp('" + eeManagerId + "').visualizePcaHandler(" + this.expressionExperiment.getId() + "," + component + "," + 100 + ")" );
+                    writer.writeAttribute( "title", "Visualize top loaded probes for component #" + component );
+                    writer.startTag( "img" );
+                    writer.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/icons/chart_curve.png" ) );
+                    writer.endTag(); // </img>
+                    writer.endTag(); // </span>
+                }
             }
 
-            buf.append(
-                    "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"" + contextPath + "/expressionExperiment/eigenGenes.html?eeid=" )
-                    .append( this.eeid ).append( "\">Get data</a></span>" );
+            writer.startTag( "br" );
+            writer.endTag();
 
-            buf.append( "</td>" );
+            writer.startTag( "a" );
+            writer.writeAttribute( "title", "Download a file containing the raw eigengenes" );
+            writer.writeAttribute( "class", "newpage" );
+            writer.writeAttribute( "href", contextPath + "/expressionExperiment/eigenGenes.html?eeid=" + this.expressionExperiment.getId() );
+            writer.appendValue( "Download eigengenes" );
+            writer.endTag(); // </a>
+
+            writer.endTag(); // </td>
+
             /*
-             * popupImage is defined in ExpressinExperimentPage.js
+             * popupImage is defined in ExpressionExperimentPage.js
              */
-            String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid;
+            String detailsUrl = contextPath + "/expressionExperiment/detailedFactorAnalysis.html?id=" + this.expressionExperiment.getId();
 
             int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors;
-            int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * NUM_PCS_TO_DISPLAY;
+            int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay;
 
-            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
-                    + "<a style='cursor:pointer' onClick=\"popupImage('" ).append( detailsUrl ).append( "'," )
-                    .append( width ).append( "," ).append( height ).append( ");return 1\" >" ).append(
-                    "<img title='Correlations of PCs with experimental factors, click for details' src=\"" + contextPath + "/expressionExperiment/pcaFactors.html?id=" )
-                    .append( this.eeid ).append( "\" /></a></td>" );
-
+            writer.startTag( "td" );
+            writer.startTag( "a" );
+            writer.writeAttribute( "style", "cursor:pointer" );
+            writer.writeAttribute( "onclick", "Gemma.ExpressionExperimentPage.popupImage('" + javaScriptEscape( detailsUrl ) + "'," + width + "," + height + ");return 1" );
+            writer.writeAttribute( "title", "Correlations of PCs with experimental factors; click for details." );
+            writer.startTag( "img" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaFactors.html?id=" + this.expressionExperiment.getId() );
+            writer.writeAttribute( "alt", "Bar plot of the association between the factors and the top 3 PCA components." );
+            writer.endTag(); // </img>
+            writer.endTag(); // </a>
+            writer.endTag(); // </td>
         } else {
             /*
              * Two panels for PCA, so two placeholders.
              */
-            buf.append( placeHolder );
-            buf.append( placeHolder );
+            writePlaceholder( writer );
+            writePlaceholder( writer );
         }
-
-      /*  if ( hasCorrDist ) {
-            buf.append(
-                    " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + contextPath + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
-                    .append( this.eeid ).append( "\" /></td>" );
-        } else {
-            buf.append( placeHolder );
-        }*/
 
         if ( hasMeanVariance ) {
             /*
@@ -182,70 +326,52 @@ public class ExperimentQCTag extends TagSupport {
             int scaleLarge = 2;
             int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
             int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
-            String bigImageUrl = "visualizeMeanVariance.html?id=" + this.eeid + "&size=" + scaleLarge;
-            buf.append(
-                    "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
-                            + "onClick=\"popupImage('" ).append( bigImageUrl ).append( "'," ).append( width )
-                    .append( "," ).append( height ).append( ")" ).append( ";return 1\"; " )
-                    .append( "title=\"Mean-variance relationship; click for larger version\" >" )
-                    .append( "<img src=\"" + contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" )
-                    .append( this.eeid ).append( "&size=1\" alt='Image unavailable' width='" )
-                    .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' height='" )
-                    .append( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ).append( "' /></a>" );
-
-            buf.append( "</ul></td>" );
+            String bigImageUrl = contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=" + scaleLarge;
+            writer.startTag( "td" );
+            writer.startTag( "a" );
+            writer.writeAttribute( "style", "cursor:pointer" );
+            writer.writeAttribute( "onclick", "Gemma.ExpressionExperimentPage.popupImage('" + javaScriptEscape( bigImageUrl ) + "'," + width + "," + height + ");return 1" );
+            writer.writeAttribute( "title", "Mean-variance relationship; click for larger version." );
+            writer.startTag( "img" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=1" );
+            writer.writeAttribute( "alt", "Plot of the mean-variance relation." );
+            writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.endTag(); // </img>
+            writer.endTag(); // </a>
+            writer.endTag(); // </td>
         } else {
-            buf.append( placeHolder );
+            writePlaceholder( writer );
         }
 
-        buf.append( "</tr></table></div>" );
-        return buf.toString();
+        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
+            if ( singleCellSparsityHeatmap != null ) {
+                writer.startTag( "td" );
+                SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );
+                heatmapTag.setHeatmap( singleCellSparsityHeatmap );
+                heatmapTag.setEntityUrlBuilder( entityUrlBuilder );
+                heatmapTag.setParent( this );
+                heatmapTag.setPageContext( pageContext );
+                heatmapTag.setAlt( "Heatmap of the number of cells with at least one expressed gene. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.CELL );
+                heatmapTag.setAlt( "Heatmap of the number of genes with at least one cell expressing it. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.GENE );
+                heatmapTag.setMaxHeight( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+                heatmapTag.writeHeatmap( writer );
+                writer.endTag(); // </td>
+            } else {
+                writePlaceholder( writer );
+            }
+        }
+
+        writer.endTag(); // </tr>
+        writer.endTag(); // </table>
+
+        writer.endTag(); // </div>
     }
 
-    /**
-     * The id of the EE to display QC info
-     */
-    public void setEe( Long id ) {
-        this.eeid = id;
+    private void writePlaceholder( TagWriter writer ) throws JspException {
+        writer.startTag( "td" );
+        writer.writeAttribute( "class", "eeqc-na" );
+        writer.appendValue( "Not available" );
+        writer.endTag(); // </td>
     }
-
-    public void setEeManagerId( String eeManagerId ) {
-        this.eeManagerId = eeManagerId;
-    }
-
-    public void setHasCorrDist( boolean value ) {
-        this.hasCorrDist = value;
-    }
-
-    public void setHasCorrMat( boolean value ) {
-        this.hasCorrMat = value;
-    }
-
-    public void setHasMeanVariance( boolean value ) {
-        this.hasMeanVariance = value;
-    }
-
-    public void setHasNodeDegreeDist( boolean value ) {
-        this.hasNodeDegreeDist = value;
-    }
-
-    public void setHasPCA( boolean value ) {
-        this.hasPCA = value;
-    }
-
-    /**
-     * How many factors (including batch etc) are available for PCA display?
-     */
-    public void setNumFactors( int value ) {
-        this.numFactors = value;
-    }
-
-    public void setNumPossibleOutliers( int value ) {
-        this.numPossibleOutliers = value;
-    }
-
-    public void setNumOutliersRemoved( int value ) {
-        this.numOutliersRemoved = value;
-    }
-
 }

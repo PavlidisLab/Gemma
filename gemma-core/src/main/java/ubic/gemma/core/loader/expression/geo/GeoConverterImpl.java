@@ -22,19 +22,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -58,34 +56,40 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
+import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
 /**
- * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
- * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
- * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
- * than one dataset. GEO also supports the concept of a superseries. See
- * http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * Convert GEO domain objects into Gemma objects.
+ * <p>
+ * Usually we trigger this by passing in {@link GeoSeries} objects.
+ * <p>
+ * GEO has four basic kinds of objects: Platforms ({@link ArrayDesign}), Samples ({@link BioMaterial}), Series ({@link ExpressionExperiment})
+ * and DataSets (which are curated {@link ExpressionExperiment}). Note that a sample can belong to more than one series.
+ * A series can include more than one dataset. GEO also supports the concept of a super-series. See <a href="https://www.ncbi.nlm.nih.gov/geo/info/soft.html">SOFT submission instructions</a>.
+ * <p>
  * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
- * arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * arrays were both run on the same samples. Thus, we actually normally go by GSE.
+ * <p>
  * This service can be used in database-aware or unaware states. However, it has prototype scope as it has some 'global'
  * data structures used during processing.
  *
- * @author keshav
+ * @author kesv
  * @author pavlidis
  */
 @Component
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeoConverterImpl implements GeoConverter {
-
-    private static final int DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS = 100000;
 
     /**
      * This string is inserted into the descriptions of constructed biomaterials.
@@ -117,35 +121,43 @@ public class GeoConverterImpl implements GeoConverter {
         GeoConverterImpl.organismDatabases.put( "Schizosaccharomyces pombe", "GeneDB" );
     }
 
-    private final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
-    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
-    /**
-     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
-     */
-    private int tooManyElements = Settings.getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
     private TaxonService taxonService;
-    private ExternalDatabase geoDatabase;
-    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
-    private Collection<Object> results = new HashSet<>();
-    private Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
-    private ExternalDatabase genbank;
+
+    private final GeoSingleCellDetector singleCellDetector = new GeoSingleCellDetector();
+
+    /**
+     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
+     */
+    @Value("${geo.platform.import.maxelements}")
+    private int tooManyElements;
+
+    // configuration
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
     private boolean skipDataVectors = false;
 
+    // commonly used external databases
+    private ExternalDatabase geoDatabase;
+    private ExternalDatabase genbank;
+
+    // internal state of the converter, can be cleared with clear()
+    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
+    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
+    private final Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
+    private final Collection<Object> results = new HashSet<>();
+    private final Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
+
     @Override
     public void clear() {
-        results = new HashSet<>();
-        seenPlatforms = new HashMap<>();
-        platformDesignElementMap = new HashMap<>();
+        results.clear();
+        seenPlatforms.clear();
+        platformDesignElementMap.clear();
         taxonCommonNameMap.clear();
         taxonScientificNameMap.clear();
     }
-
 
     @Override
     public Collection<Object> convert( Collection<? extends GeoData> geoObjects ) {
@@ -328,9 +340,9 @@ public class GeoConverterImpl implements GeoConverter {
      * @param qt     The quantitation type for the values to be converted.
      */
     @Override
-    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
+    public Object[] convertData( String[] vector, QuantitationType qt ) {
 
-        if ( vector == null || vector.size() == 0 ) return null;
+        if ( vector == null || vector.length == 0 ) return null;
 
         boolean containsAtLeastOneNonNull = false;
         for ( Object string : vector ) {
@@ -342,78 +354,119 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( !containsAtLeastOneNonNull ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                GeoConverterImpl.log.debug( "No data for " + qt + " in vector of length " + vector.size() );
+                GeoConverterImpl.log.debug( "No data for " + qt + " in vector of length " + vector.length );
             }
             return null;
         }
 
-        List<Object> toConvert = new ArrayList<>();
-        PrimitiveType pt = qt.getRepresentation();
+        Object[] toConvert = new Object[vector.length];
+        Object defaultValue = getDefaultValue( qt );
         int numMissing = 0;
-        for ( Object rawValue : vector ) {
-            if ( rawValue == null ) {
-                numMissing++;
-                this.handleMissing( toConvert, pt );
-            } else if ( rawValue instanceof String ) { // needs to be coverted.
-                String valueString = ( String ) rawValue;
-                if ( StringUtils.isBlank( valueString ) ) {
-                    numMissing++;
-                    this.handleMissing( toConvert, pt );
-                    continue;
-                }
+        for ( int i = 0; i < vector.length; i++ ) {
+            if ( vector[i] != null ) {
                 try {
-                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                        toConvert.add( Double.parseDouble( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( rawValue );
-                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        if ( valueString.length() != 1 ) {
-                            throw new IllegalStateException( "Attempt to cast a string of length " + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
-                        }
-                        toConvert.add( valueString.toCharArray()[0] );
-                    } else if ( pt.equals( PrimitiveType.INT ) ) {
-                        toConvert.add( Integer.parseInt( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                        toConvert.add( Boolean.parseBoolean( valueString ) );
+                    Object parsedVal = parseValue( vector[i], qt.getRepresentation() );
+                    if ( parsedVal != null ) {
+                        toConvert[i] = parsedVal;
                     } else {
-                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+                        toConvert[i] = defaultValue;
+                        numMissing++;
                     }
-                } catch ( NumberFormatException e ) {
+                } catch ( IllegalArgumentException e ) {
+                    log.warn( "Invalid value for " + qt + ", it will be stored as missing.", e );
+                    toConvert[i] = defaultValue;
                     numMissing++;
-                    this.handleMissing( toConvert, pt );
                 }
-            } else { // use as is.
-                toConvert.add( rawValue );
+            } else {
+                toConvert[i] = defaultValue;
+                numMissing++;
             }
         }
 
-        if ( numMissing == vector.size() ) {
+        if ( numMissing == vector.length ) {
             return null;
         }
 
-        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+        return toConvert;
+    }
 
-        /*
-         * Debugging - absolutely make sure we can convert the data back.
-         */
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
-            if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length + " doubles" );
-            }
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
-            if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length + " ints" );
-            }
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
-            if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length + " booleans" );
-            }
+    /**
+     * Parse a raw string value as per a given quantitation type.
+     * @throws IllegalArgumentException on an invalid input
+     */
+    @Nullable
+    static Object parseValue( String rawValue, PrimitiveType representation ) throws IllegalArgumentException {
+        if ( StringUtils.isBlank( rawValue ) ) {
+            return null;
         }
 
-        return bytes;
+        // keep strings untouched as much as possible
+        if ( representation == PrimitiveType.STRING ) {
+            return rawValue;
+        }
+
+        rawValue = StringUtils.strip( rawValue );
+
+        // these are various missing value indicators, not exhaustive
+        if ( rawValue.equalsIgnoreCase( "null" )
+                || rawValue.equalsIgnoreCase( "Undef" )
+                || rawValue.equalsIgnoreCase( "bad" ) ) {
+            return null;
+        }
+
+        if ( representation == PrimitiveType.CHAR ) {
+            if ( rawValue.length() != 1 ) {
+                throw new IllegalArgumentException( "Invalid char value: " + rawValue );
+            }
+            return rawValue.charAt( 0 );
+        }
+
+        switch ( representation ) {
+            case DOUBLE:
+                return Double.valueOf( rawValue );
+            case FLOAT:
+                return Float.valueOf( rawValue );
+            case INT:
+                return Integer.valueOf( rawValue );
+            case LONG:
+                return Long.valueOf( rawValue );
+            case BOOLEAN:
+                if ( rawValue.equalsIgnoreCase( "true" ) || rawValue.equals( "1" ) || rawValue.equals( "P" ) ) {
+                    return Boolean.TRUE;
+                } else if ( rawValue.equalsIgnoreCase( "false" ) || rawValue.equals( "0" ) || rawValue.equals( "A" ) ) {
+                    return Boolean.FALSE;
+                } else {
+                    throw new IllegalArgumentException( "Invalid boolean value: " + rawValue );
+                }
+            default:
+                throw new UnsupportedOperationException( "Parsing " + representation + " data is not supported." );
+        }
+    }
+
+    /**
+     * Obtain the default to use for a given quantitation type if no value was provided.
+     */
+    @Nonnull
+    public static Object getDefaultValue( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                return Double.NaN;
+            case FLOAT:
+                return Float.NaN;
+            case STRING:
+                return "";
+            case CHAR:
+                return ( char ) 0;
+            case INT:
+                return 0;
+            case LONG:
+                return 0L;
+            case BOOLEAN:
+                return false;
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+        }
     }
 
     @Override
@@ -477,15 +530,12 @@ public class GeoConverterImpl implements GeoConverter {
     private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
-
             // find the matching biomaterial(s) in the expression experiment.
             for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-                if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
+                if ( requireNonNull( bioAssay.getAccession() ).getAccession().equals( sample.getGeoAccession() ) ) {
                     addFactorValueToBioMaterial( bioAssay.getSampleUsed(), factorValue );
                 }
-
             }
-
         }
     }
 
@@ -530,33 +580,42 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
 
+        // compute it once to save time
+        boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
+
         for ( GeoSample sample : series.getSamples() ) {
             String reason;
-            if ( sample.getType().equals( "RNA" ) ) {
-                // this is apparently what we get for microarrays
+            // this is apparently what we get for microarrays
+            if ( sample.getType().equals( GeoSampleType.RNA ) ) {
                 continue;
             }
 
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
-            if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
-                    // have to drill down.
-                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( "RNA-Seq" )
-                            || sample.getLibStrategy().equals( "ssRNA-seq" )
-                            || sample.getLibStrategy().equalsIgnoreCase( "OTHER" ) ) ) {
+            // bulk RNA-Seq
+            if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
+                // have to drill down.
+                if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
+                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SSRNA_SEQ )
+                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
+                    // check if there is data in SRA or MPSS
+                    // FIXME: are we really seeing MPSS out there?
+                    // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
+                    if ( sample.getType().equals( GeoSampleType.MPSS ) || sample.getType().equals( GeoSampleType.SRA ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
+                    } else {
+                        reason = "Unsupported sample type.";
                     }
-                    reason = "Unsupported library strategy for transcriptomic data.";
-                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
-                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
-                    // no-op, just making explicit.
-                    reason = "Single-cell library source is not supported yet.";
                 } else {
-                    reason = "Unsupported library source.";
+                    reason = "Unsupported transcriptomic library strategy.";
                 }
             } else {
-                reason = "Unsupported sample type.";
+                reason = "Unsupported library source.";
+            }
+
+            // single-cell RNA-Seq
+            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA/MPSS
+            if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                continue;
             }
 
             GeoConverterImpl.log.info( String.format( "Skipping ineligible sample: %s: Type=%s LibSource=%s LibStrategy=%s Reason=%s",
@@ -798,7 +857,7 @@ public class GeoConverterImpl implements GeoConverter {
                 assert !vartype.equals( VariableType.other );
                 this.convertVariableType( gemmaChar, vartype );
 
-                CharacteristicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
+                Characteristic mappedValueTerm = lookup( value, gemmaChar.getCategory() );
 
                 try {
                     if ( mappedValueTerm != null ) {
@@ -822,75 +881,6 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
     }
-
-    /**
-     * Attempt to identify a preset value (ontology term) for certain strings found in GEO data sets. The presets are
-     * stored in valueStringToOntologyTermMappings.txt.
-     *
-     */
-    private CharacteristicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
-        if ( term2OntologyMappings.isEmpty() ) {
-            initializeTerm2OntologyMappings();
-        }
-
-        if ( category == null || !term2OntologyMappings.containsKey( category ) ) {
-            return null;
-        }
-
-        return term2OntologyMappings.get( category ).get( value.toLowerCase() );
-    }
-
-    /**
-     * See also GeoChannel, in which we have canned values for some sample characteristics.
-     * See also convertVariableType where we map some to some categories.
-     */
-    private void initializeTerm2OntologyMappings() {
-        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ).getInputStream() ) ) ) {
-            while ( in.ready() ) {
-                String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) {
-                    continue;
-                }
-                if ( line.isEmpty() ) continue;
-
-                String[] split = StringUtils.split( line, "\t" );
-
-                if ( split.length < 5 ) {
-                    log.warn( "Did not get expected fields for line: " + line );
-                    continue;
-                }
-
-                String inputValue = split[0].toLowerCase();
-
-                String value = split[1];
-                String valueUri = split[2];
-                String category = split[3];
-                String categoryUri = split[4];
-
-                if ( StringUtils.isBlank( value ) || StringUtils.isBlank( valueUri ) || StringUtils.isBlank( category ) || StringUtils.isBlank( categoryUri ) ) {
-                    throw new IllegalArgumentException( "Invalid line had blank field(s): " + line );
-                }
-
-                if ( !term2OntologyMappings.containsKey( category ) ) {
-                    term2OntologyMappings.put( category, new HashMap<String, CharacteristicValueObject>() );
-                }
-
-                if ( term2OntologyMappings.get( category ).containsKey( inputValue ) ) {
-                    log.warn( "Duplicate value: " + inputValue + ", ignoring" );
-                    continue;
-                }
-
-                // NOTE: extensions via modifiers is not to be supported here, as GEO only has key-value pairs.
-                CharacteristicValueObject c = new CharacteristicValueObject( value, valueUri, category, categoryUri );
-                term2OntologyMappings.get( category ).put( inputValue, c );
-            }
-        } catch ( IOException e ) {
-            log.error( "Ontology terms mapped from strings failed to initialize from file" );
-        }
-
-    }
-
-    private static Map<String, Map<String, CharacteristicValueObject>> term2OntologyMappings = new ConcurrentHashMap<>();
 
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
@@ -1006,22 +996,22 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform, ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName, List<Object> dataVector, QuantitationType qt ) {
+    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform, ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName, String[] dataVector, QuantitationType qt ) {
 
-        if ( dataVector == null || dataVector.size() == 0 ) return null;
+        if ( dataVector == null || dataVector.length == 0 ) return null;
 
         int numValuesExpected = bioAssayDimension.getBioAssays().size();
-        if ( dataVector.size() != numValuesExpected ) {
-            throw new IllegalArgumentException( "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.size() );
+        if ( dataVector.length != numValuesExpected ) {
+            throw new IllegalArgumentException( "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.length );
         }
-        byte[] blob = this.convertData( dataVector, qt );
+        Object[] blob = this.convertData( dataVector, qt );
         if ( blob == null ) { // all missing etc.
             if ( GeoConverterImpl.log.isDebugEnabled() )
                 GeoConverterImpl.log.debug( "All missing values for DE=" + designElementName + " QT=" + qt );
             return null;
         }
         if ( GeoConverterImpl.log.isDebugEnabled() ) {
-            GeoConverterImpl.log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
+            GeoConverterImpl.log.debug( blob.length + " objects for " + dataVector.length + " raw elements" );
         }
 
         ArrayDesign p = this.convertPlatform( geoPlatform );
@@ -1075,7 +1065,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         vector.setBioAssayDimension( bioAssayDimension );
         vector.setQuantitationType( qt );
-        vector.setData( blob );
+        vector.setDataAsObjects( blob );
         return vector;
     }
 
@@ -1085,26 +1075,23 @@ public class GeoConverterImpl implements GeoConverter {
      * @return BioAssayDimension representing the samples.
      */
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
-        BioAssayDimension resultBioAssayDimension = BioAssayDimension.Factory.newInstance();
-
-        StringBuilder bioAssayDimName = new StringBuilder();
+        StringBuilder dimName = new StringBuilder();
+        List<BioAssay> bioAssays = new ArrayList<>();
         Collections.sort( datasetSamples );
-        bioAssayDimName.append( expExp.getShortName() ).append( ": " );
+        dimName.append( expExp.getShortName() ).append( ": " );
         for ( GeoSample sample : datasetSamples ) {
             boolean found;
             String sampleAcc = sample.getGeoAccession();
-            bioAssayDimName.append( sampleAcc ).append( "," );
-            found = this.matchSampleToBioAssay( expExp, resultBioAssayDimension, sampleAcc );
+            dimName.append( sampleAcc ).append( "," );
+            found = this.matchSampleToBioAssay( expExp, bioAssays, sampleAcc );
             if ( !found ) {
                 // this is normal because not all headings are
                 // sample ids, and we may have skipped samples
                 GeoConverterImpl.log.warn( "No bioassay match for " + sampleAcc );
             }
         }
-        GeoConverterImpl.log.debug( resultBioAssayDimension.getBioAssays().size() + " Bioassays in biodimension" );
-        resultBioAssayDimension.setName( this.formatName( bioAssayDimName ) );
-        resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
-        return resultBioAssayDimension;
+        GeoConverterImpl.log.debug( "Matched " + bioAssays.size() + " assays in dimension for " + expExp );
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     /**
@@ -1815,6 +1802,9 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
+
+        this.convertSeriesTypes( series, expExp );
+
         expExp.setDescription( "" );
 
         expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
@@ -1974,6 +1964,111 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return expExp;
+    }
+
+    /**
+     * Convert all the GEO Series Types into assay characteristics.
+     */
+    private void convertSeriesTypes( GeoSeries series, ExpressionExperiment expExp ) {
+        Set<Characteristic> assayTypes = series.getSeriesTypes().stream()
+                .filter( this::isSeriesTypeSupported )
+                .map( st -> convertSeriesType( series, st ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( !assayTypes.isEmpty() ) {
+            log.info( String.format( "%s will be tagged with the following assay types: %s.", expExp,
+                    assayTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) ) );
+            expExp.getCharacteristics().addAll( assayTypes );
+        } else {
+            log.warn( "Could not detect an assay type for " + expExp + "." );
+        }
+    }
+
+    /**
+     * Indicate if we support loading data for the given GEO series type.
+     */
+    private boolean isSeriesTypeSupported( GeoSeriesType geoSeriesType ) {
+        return geoSeriesType == EXPRESSION_PROFILING_BY_ARRAY
+                || geoSeriesType == EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
+    }
+
+    /**
+     * Detect the most specific assay type that we can.
+     */
+    @Nullable
+    private Characteristic convertSeriesType( GeoSeries series, GeoSeriesType seriesType ) {
+        switch ( seriesType ) {
+            case EXPRESSION_PROFILING_BY_RT_PRC:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://www.ebi.ac.uk/efo/EFO_0002943" );
+            case EXPRESSION_PROFILING_BY_MPSS:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://www.ebi.ac.uk/efo/EFO_0002942" );
+            case EXPRESSION_PROFILING_BY_TILING_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://www.ebi.ac.uk/efo/EFO_0002769" );
+            case EXPRESSION_PROFILING_BY_ARRAY:
+            case EXPRESSION_PROFILING_BY_SNP_ARRAY:
+            case NON_CODING_RNA_PROFILING_BY_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002768" );
+            case METHYLATION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002761" );
+            case METHYLATION_PROFILING_BY_GENOME_TILING_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002759" );
+            case EXPRESSION_PROFILING_BY_SAGE:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://www.ebi.ac.uk/efo/EFO_0002941" );
+            case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
+            case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
+                for ( GeoSample sample : series.getSamples() ) {
+                    if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0009809" );
+                    } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                        // check for evidence of conding RNA
+                        if ( isCodingRNA( series ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
+                        } else if ( isNonCodingRNA( series ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
+                        } else {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "single-cell RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0008913" );
+                        }
+                    }
+                }
+                if ( isTotalRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of total RNA", "http://www.ebi.ac.uk/efo/EFO_0009653" );
+                } else if ( isCodingRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
+                } else if ( isNonCodingRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
+                } else {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002770" );
+                }
+            default:
+                log.warn( "Cannot convert " + seriesType + " to an assay type." );
+                return null;
+        }
+    }
+
+    /**
+     * Check if a series is focused on total RNAs.
+     */
+    private boolean isTotalRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
+    }
+
+    /**
+     * Check if a series is focused on coding RNAs.
+     */
+    private boolean isCodingRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
+    }
+
+    /**
+     * Check if a series is focused on non coding RNAs.
+     */
+    private boolean isNonCodingRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
@@ -2308,7 +2403,7 @@ public class GeoConverterImpl implements GeoConverter {
             int quantitationTypeIndex = values.getQuantitationTypeIndex( geoPlatform, quantitationType );
             GeoConverterImpl.log.debug( "Processing " + quantitationType + " (column=" + quantitationTypeIndex + " - according to sample, it's " + columnAccordingToSample + ")" );
 
-            Map<String, List<Object>> dataVectors = this.makeDataVectors( values, datasetSamples, quantitationTypeIndex );
+            Map<String, String[]> dataVectors = this.makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null || dataVectors.size() == 0 ) {
                 GeoConverterImpl.log.debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
@@ -2316,7 +2411,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
             GeoConverterImpl.log.info( dataVectors.size() + " data vectors for " + quantitationType );
 
-            Object exampleValue = dataVectors.values().iterator().next().iterator().next();
+            Object exampleValue = dataVectors.values().iterator().next()[0];
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
@@ -2327,8 +2422,8 @@ public class GeoConverterImpl implements GeoConverter {
             int count = 0;
             int skipped = 0;
             for ( String designElementName : dataVectors.keySet() ) {
-                List<Object> dataVector = dataVectors.get( designElementName );
-                if ( dataVector == null || dataVector.size() == 0 ) continue;
+                String[] dataVector = dataVectors.get( designElementName );
+                if ( dataVector == null || dataVector.length == 0 ) continue;
 
                 RawExpressionDataVector vector = this.convertDesignElementDataVector( geoPlatform, expExp, bioAssayDimension, designElementName, dataVector, qt );
 
@@ -2340,7 +2435,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
                 if ( GeoConverterImpl.log.isTraceEnabled() ) {
-                    GeoConverterImpl.log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " " + dataVector.size() + " elements in vector" );
+                    GeoConverterImpl.log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " " + dataVector.length + " elements in vector" );
                 }
 
                 expExp.getRawExpressionDataVectors().add( vector );
@@ -2569,13 +2664,6 @@ public class GeoConverterImpl implements GeoConverter {
         return matchingFactorValue;
     }
 
-    /**
-     * Turn a rough-cut dimension name into something of reasonable length.
-     */
-    private String formatName( StringBuilder dimensionName ) {
-        return StringUtils.abbreviate( dimensionName.toString(), 100 );
-    }
-
     private String getBiomaterialPrefix( GeoSeries series, int i ) {
         return series.getGeoAccession() + GeoConverterImpl.BIOMATERIAL_NAME_TAG + i;
     }
@@ -2748,22 +2836,6 @@ public class GeoConverterImpl implements GeoConverter {
         return seriesSamples;
     }
 
-    /**
-     * Deal with missing values, identified by nulls or number format exceptions.
-     */
-    private void handleMissing( List<Object> toConvert, PrimitiveType pt ) {
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            toConvert.add( Double.NaN );
-        } else if ( pt.equals( PrimitiveType.STRING ) ) {
-            toConvert.add( "" );
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            toConvert.add( 0 );
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            toConvert.add( false );
-        } else {
-            throw new UnsupportedOperationException( "Missing values in data vectors of type " + pt + " not supported" );
-        }
-    }
 
     private void initGeoExternalDatabase() {
         if ( geoDatabase == null ) {
@@ -2788,9 +2860,9 @@ public class GeoConverterImpl implements GeoConverter {
      * Check to see if we got any data. If not, we should return null. This can happen if the quantitation type was
      * filtered during parsing.
      */
-    private boolean isPopulated( Map<String, List<Object>> dataVectors ) {
+    private boolean isPopulated( Map<String, String[]> dataVectors ) {
         boolean filledIn = false;
-        for ( List<Object> vector : dataVectors.values() ) {
+        for ( String[] vector : dataVectors.values() ) {
             for ( Object object : vector ) {
                 if ( object != null ) {
                     filledIn = true;
@@ -2813,7 +2885,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private boolean isUsable( GeoSeries series ) {
 
-        return series.getSeriesTypes().contains( SeriesType.geneExpressionByArray ) || series.getSeriesTypes().contains( SeriesType.geneExpressionBySequencing );
+        return series.getSeriesTypes().contains( EXPRESSION_PROFILING_BY_ARRAY ) || series.getSeriesTypes().contains( GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING );
 
     }
 
@@ -2826,8 +2898,8 @@ public class GeoConverterImpl implements GeoConverter {
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
-    private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
-        Map<String, List<Object>> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
+    private Map<String, String[]> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
+        Map<String, String[]> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = this.getPlatformForSamples( datasetSamples );
 
@@ -2850,9 +2922,9 @@ public class GeoConverterImpl implements GeoConverter {
              * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
              * quantitation type that was filtered out during parsing, or absent from some samples.
              */
-            List<Object> ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
-            if ( ob == null || ob.size() == 0 ) continue;
-            assert ob.size() == datasetSamples.size();
+            String[] ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
+            if ( ob == null || ob.length == 0 ) continue;
+            assert ob.length == datasetSamples.size();
             dataVectors.put( designElementName, ob );
         }
 
@@ -2877,17 +2949,15 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param expExp            ExpressionExperiment to be searched for matching BioAssays
-     * @param bioAssayDimension BioAssayDimension to be added to
-     * @param sampleAcc         The GEO accession id for the sample. This is compared to the external accession recorded
-     *                          for the
-     *                          BioAssay
+     * @param expExp     ExpressionExperiment to be searched for matching BioAssays
+     * @param bioAssays  assays to be added to
+     * @param sampleAcc  The GEO accession id for the sample. This is compared to the external accession recorded for
+     *                   the BioAssay
      */
-    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String sampleAcc ) {
-
+    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, List<BioAssay> bioAssays, String sampleAcc ) {
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-            if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                bioAssayDimension.getBioAssays().add( bioAssay );
+            if ( sampleAcc.equals( requireNonNull( bioAssay.getAccession() ).getAccession() ) ) {
+                bioAssays.add( bioAssay );
                 GeoConverterImpl.log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
                 return true;
             }

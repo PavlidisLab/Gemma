@@ -21,16 +21,15 @@ package ubic.gemma.model.association.coexpression;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Represents the coexpression node degree for a gene summarized across experiments, at each level of support.
  *
  * @author paul
  */
-public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
+public class GeneCoexpressionNodeDegree implements Identifiable {
 
-    private static final long serialVersionUID = -1456064687251594963L;
     // our primary key
     private Long geneId = null;
     /**
@@ -71,10 +70,7 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
-        return result;
+        return Objects.hash( geneId );
     }
 
     @Override
@@ -83,13 +79,10 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
             return true;
         if ( obj == null )
             return false;
-        if ( this.getClass() != obj.getClass() )
+        if ( !( obj instanceof GeneCoexpressionNodeDegree ) )
             return false;
         GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
-        if ( geneId == null ) {
-            return other.geneId == null;
-        }
-        return geneId.equals( other.geneId );
+        return Objects.equals( geneId, other.geneId );
     }
 
     public Long getGeneId() {

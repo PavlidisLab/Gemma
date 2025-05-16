@@ -17,7 +17,7 @@ To search for a paper or experiment and see more details, visit the
 	</td>
 		<td style="padding-right: 10px">
 		<a target="_blank" href="${citationToEE.key.pubmedURL}" rel="noopener noreferrer">
-			<img src="${pageContext.request.contextPath}/images/pubmed.gif" alt="PubMed link"/>
+			<Gemma:img src="/images/pubmed.gif" alt="PubMed link"/>
 		</a>
 		</td>
 		<td>

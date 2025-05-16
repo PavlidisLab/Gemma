@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <!-- Logging to the standard error because the standard output is used for the output of the command line tool. -->
+        <Console name="console" target="SYSTEM_ERR">
+            <PatternLayout
+                pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="console"/>
+        </Root>
+        <Logger name="com" level="WARN"/>
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+        <Logger name="org.apache.jena.tdb.loader" level="INFO"/>
+        <Logger name="com.opensymphony.oscache" level="WARN"/>
+        <Logger name="net" level="WARN"/>
+        <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy" level="ERROR"/>
+        <Logger name="org" level="WARN"/>
+        <Logger name="org.apache.commons" level="WARN"/>
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
+        <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                level="ERROR"/>
+        <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
+        <Logger name="org.hibernate.search.impl.SimpleIndexingProgressMonitor" level="INFO"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
+        <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
+        <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
+        <Logger name="ubic.basecode" level="INFO"/>
+        <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+        <Logger name="ubic.gemma" level="INFO"/>
+        <Logger name="ubic.gemma.contrib" level="INFO"/>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+    </Loggers>
+</Configuration>

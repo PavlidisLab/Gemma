@@ -20,16 +20,18 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,41 +47,7 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 
     private static final long serialVersionUID = 1L;
 
-    public ExpressionDataTestMatrix() throws IOException {
+    public ExpressionDataTestMatrix() {
         super();
-        Collection<ArrayDesign> ads = new HashSet<>();
-        SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
-
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
-        taxon.setIsGenesUsable( true );
-
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        ad.setPrimaryTaxon( taxon );
-        ads.add( ad );
-        metaData.setArrayDesigns( ads );
-
-        metaData.setTaxon( taxon );
-        metaData.setName( "ee" );
-
-        metaData.setQuantitationTypeName( "testing" );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
-        metaData.setIsRatio( true );
-
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
-            DoubleMatrix<String, String> matrix = service.parse( data );
-            ExpressionExperiment ee = service.convert( metaData, matrix );
-            super.init();
-            Collection<DesignElementDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
-            this.vectorsToMatrix( selectedVectors );
-        }
-
     }
-
 }

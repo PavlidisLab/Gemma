@@ -15,7 +15,7 @@ public class BatchInfoFetchTaskCommand extends ExpressionExperimentReportTaskCom
 
     public BatchInfoFetchTaskCommand( ExpressionExperiment expressionExperiment ) {
         super( expressionExperiment );
-        this.setMaxRuntime( 15 );
+        this.setMaxRuntimeMillis( 15 );
     }
 
     @Override

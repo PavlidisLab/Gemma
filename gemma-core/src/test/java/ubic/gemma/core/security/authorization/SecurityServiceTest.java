@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.security.authorization;
 
+import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclPrincipalSid;
@@ -126,7 +127,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         MutableAcl aclAfterReadableAdded = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
 
-        this.securityService.makeWriteableByGroup( ee, groupName );
+        this.securityService.makeEditableByGroup( ee, groupName );
         MutableAcl aclAfterWritableAdded = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 2, aclAfterWritableAdded.getEntries().size() );
 
@@ -136,7 +137,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         assertEquals( numberOfAces + 2, aclAfterReadableAddedAgain.getEntries().size() );
 
         // check writable too
-        this.securityService.makeWriteableByGroup( ee, groupName );
+        this.securityService.makeEditableByGroup( ee, groupName );
         MutableAcl aclAfterWritableAddedAgain = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 2, aclAfterWritableAddedAgain.getEntries().size() );
 
@@ -164,7 +165,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          */
         String groupName = this.randomName();
         this.securityService.createGroup( groupName );
-        this.securityService.makeWriteableByGroup( entity, groupName );
+        this.securityService.makeEditableByGroup( entity, groupName );
 
         /*
          * Add another user to the group, which is owned by username
@@ -287,7 +288,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         List<GrantedAuthority> groupAuthorities = this.userManager.findGroupAuthorities( groupName );
         GrantedAuthority ga = groupAuthorities.get( 0 );
         aclAfterReadableAdded.insertAce( aclAfterReadableAdded.getEntries().size(), BasePermission.READ,
-                new AclGrantedAuthoritySid( this.userManager.getRolePrefix() + ga ), true );
+                new AclGrantedAuthoritySid( AuthorityConstants.ROLE_PREFIX + ga ), true );
         this.aclTestUtils.update( aclAfterReadableAdded );
         MutableAcl aclAfterReadableAddedDuplicate = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAddedDuplicate.getEntries().size() );
@@ -374,8 +375,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         assertTrue( us.contains( "administrator" ) );
         assertTrue( us.contains( "gemmaAgent" ) );
 
-        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "administrator" ) );
-        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "gemmaAgent" ) );
+        assertTrue( this.securityService.isReadableByUser( this.arrayDesign, "administrator" ) );
+        assertTrue( this.securityService.isReadableByUser( this.arrayDesign, "gemmaAgent" ) );
     }
 
     private void makeUser( String username ) {

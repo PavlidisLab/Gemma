@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * The sequence alignment analysis of an ArrayDesign
- * </p>
  */
-public class ArrayDesignSequenceAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8487897002282121437L;
+public class ArrayDesignSequenceAnalysisEvent extends ArrayDesignAnalysisEvent {
 
 }

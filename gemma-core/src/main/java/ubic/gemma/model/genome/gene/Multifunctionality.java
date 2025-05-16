@@ -18,30 +18,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
-public class Multifunctionality implements java.io.Serializable {
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-    private static final long serialVersionUID = 1842256912459855071L;
+import java.util.Objects;
+
+public class Multifunctionality extends AbstractIdentifiable {
+
     private Double score;
     private Double rank;
     private Integer numGoTerms;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    @SuppressWarnings("WeakerAccess") // Required by spring
-    public Multifunctionality() {
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     /**
      * @return The number of GO terms the gene has, after propagation, but excluding the roots
@@ -82,10 +67,7 @@ public class Multifunctionality implements java.io.Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( score, rank, numGoTerms );
     }
 
     @Override
@@ -97,7 +79,13 @@ public class Multifunctionality implements java.io.Serializable {
             return false;
         }
         final Multifunctionality that = ( Multifunctionality ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return Objects.equals( score, that.score )
+                    && Objects.equals( rank, that.rank )
+                    && Objects.equals( numGoTerms, that.numGoTerms );
+        }
     }
 
     @Override

@@ -24,7 +24,7 @@ if ( Ext.isIE ) {
                '<div class="x-form-item {itemCls}" tabIndex="-1">',
                '<label for="{id}" style="{labelStyle}" title="{labelTip}" class="x-form-item-label">{label}{labelSeparator}</label>',
                '<div class="x-form-element" id="x-form-el-{id}" style="{elementStyle}">',
-               '<img src="' + ctxBasePath + '/images/icons/question_blue.png" style="float:right;display:{displayHelp}" title="{labelTip}"/>',
+               '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png" style="float:right;display:{displayHelp}" title="{labelTip}"/>',
                '</div><div class="{clearCls}"></div>', '</div>', {
                   disableFormats : true
                } ),
@@ -60,7 +60,7 @@ if ( Ext.isIE ) {
                '<div class="x-form-item {itemCls}" tabIndex="-1">',
                '<label for="{id}" style="{labelStyle}" ext:qtip="{labelTip}" ext:qtitle="{labelTipTitle}" ext:qclass="{labelTipCls}" class="x-form-item-label">{label}{labelSeparator}</label>',
                '<div class="x-form-element" id="x-form-el-{id}" style="{elementStyle}" >',
-               '<img src="' + ctxBasePath + '/images/icons/question_blue.png" style="float:right;display:{displayHelp}" ext:qtip="{labelTip}" ext:qtitle="{labelTipTitle}" ext:qclass="{labelTipCls}" "/>',
+               '<img src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png" style="float:right;display:{displayHelp}" ext:qtip="{labelTip}" ext:qtitle="{labelTipTitle}" ext:qclass="{labelTipCls}" "/>',
                '</div><div class="{clearCls}"></div>', '</div>', {
                   disableFormats : true
                } ),

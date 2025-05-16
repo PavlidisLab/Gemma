@@ -129,6 +129,13 @@
 					<!-- cannot be non-null because subsets and generic experiments don't have curation details -->
 					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
+				<set name="singleCellExpressionDataVectors" lazy="true" fetch="select" inverse="true"
+					 cascade="all">
+					<key foreign-key="SINGLE_CELL_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
+						<column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
+					</key>
+					<one-to-many class="ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector"/>
+				</set>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
 					 cascade="all">
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
@@ -182,9 +189,6 @@
 					</many-to-many>
 				</set>
 			</subclass>
-		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericExperiment"
-				  discriminator-value="GenericExperiment" abstract="false">
 		</subclass>
 	</class>
 </hibernate-mapping>

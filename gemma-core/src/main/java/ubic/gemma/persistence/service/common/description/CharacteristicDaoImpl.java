@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.EE2CAclQueryUtils;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -76,7 +76,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+        return this.getSessionFactory().getCurrentSession().createCriteria( Characteristic.class )
                 .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
                 .setFirstResult( start )
                 .setMaxResults( limit )
@@ -86,7 +86,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+        return this.getSessionFactory().getCurrentSession().createCriteria( Characteristic.class )
                 .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
                 .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
                 .setFirstResult( start )
@@ -137,7 +137,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .createCriteria( ExpressionExperiment.class )
                 .add( Restrictions.in( "id", ids ) )
                 .list();
-        Map<Long, ExpressionExperiment> eeById = EntityUtils.getIdMap( ees );
+        Map<Long, ExpressionExperiment> eeById = IdentifiableUtils.getIdMap( ees );
         //noinspection unchecked
         return result.stream()
                 .filter( row -> eeById.containsKey( ( Long ) row[2] ) )
@@ -383,7 +383,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .setMaxResults( maxResults )
                 .list();
         Set<Characteristic> characteristicsNotFound = new HashSet<>();
-        Map<Long, Characteristic> charById = EntityUtils.getIdMap( characteristics );
+        Map<Long, Characteristic> charById = IdentifiableUtils.getIdMap( characteristics );
         Map<Characteristic, Identifiable> charToParent = new HashMap<>();
         for ( Object[] row : result ) {
             Characteristic c = charById.get( ( ( BigInteger ) row[0] ).longValue() );

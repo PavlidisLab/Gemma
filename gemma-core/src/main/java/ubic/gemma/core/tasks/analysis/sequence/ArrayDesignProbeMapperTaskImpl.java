@@ -23,10 +23,10 @@ public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<ArrayDesignProb
 
     @Override
     public TaskResult call() {
-        ArrayDesign ad = taskCommand.getArrayDesign();
+        ArrayDesign ad = getTaskCommand().getArrayDesign();
 
         arrayDesignProbeMapperService.processArrayDesign( ad );
 
-        return new TaskResult( taskCommand, null );
+        return newTaskResult( null );
     }
 }

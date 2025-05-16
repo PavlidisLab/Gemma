@@ -8,7 +8,10 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -66,12 +69,12 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      *                                        and {@code secondFactorValueId} fields are populated. The latter approach
      *                                        is more compact and the full factors can be retrieved via {@link #experimentalFactors}.
      */
-    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, List<Gene>> result2Genes, boolean includeTaxonInGenes ) {
+    public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet, boolean includeFactorValuesInContrasts, Map<Long, Set<Gene>> result2Genes, boolean includeTaxonInGenes ) {
         this( analysisResultSet );
         if ( !includeTaxonInGenes ) {
             // when taxon are not rendered in genes, they need to be enumerated somewhere in the payload
             this.taxa = result2Genes.values().stream()
-                    .flatMap( List::stream )
+                    .flatMap( Set::stream )
                     .map( Gene::getTaxon )
                     .distinct()
                     .map( TaxonValueObject::new )
@@ -79,7 +82,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
         }
         this.results = analysisResultSet.getResults()
                 .stream()
-                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptyList() ), includeTaxonInGenes ) )
+                .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptySet() ), includeTaxonInGenes ) )
                 .collect( Collectors.toList() );
     }
 

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DirtiesContext
 @ContextConfiguration
-public class AsyncBeanAutowiringTest extends AbstractJUnit4SpringContextTests {
+public class AsyncBeanAutowiringTest extends BaseTest {
 
     public static class MyService {
     }

@@ -26,15 +26,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,13 +43,14 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
@@ -85,18 +85,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
-    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
-    @Autowired
-    private BeanFactory beanFactory;
-
-    /**
-     * Needed for self-referencing so that we can call public method annotated with {@link Transactional}.
-     */
-    private ExpressionExperimentReportService self;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -105,14 +96,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     public void afterPropertiesSet() {
-        this.self = beanFactory.getBean( ExpressionExperimentReportService.class );
         this.statsCache = requireNonNull( cacheManager.getCache( ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME ) );
     }
 
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-        experimentalDesignVisualizationService.clearCaches( id );
     }
 
     @Override
@@ -131,10 +120,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    @Secured({ "GROUP_AGENT" })
     @Transactional(propagation = Propagation.NEVER)
     public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects() {
-        Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
+        Collection<Long> ids = IdentifiableUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjectsByIds( ids );
         this.getStats( vos );
@@ -185,7 +173,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<Long> ids = EntityUtils.getIds( vos );
+        Collection<Long> ids = IdentifiableUtils.getIds( vos );
 
         // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
@@ -194,19 +182,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             return;
         }
 
-        Map<Long, ExpressionExperiment> eeMap = EntityUtils.getIdMap( ees );
+        Map<Long, ExpressionExperiment> eeMap = IdentifiableUtils.getIdMap( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = this.getEvents( ees );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> events = auditEventService.getLastEvents( ees, eventTypes );
 
-        Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
-        Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
-        Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
+        Map<ExpressionExperiment, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
 
-        Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
-        Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
-        Map<Auditable, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
-        Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
+        Map<ExpressionExperiment, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
+        Map<ExpressionExperiment, AuditEvent> batchMissingEvents = events.get( BatchInformationMissingEvent.class );
+        Map<ExpressionExperiment, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = this.getSampleRemovalEvents( ees );
 
@@ -320,7 +308,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         Collection<ExpressionExperimentDetailsValueObject> cachedVos = this.retrieveSummaryObjects( ids );
-        Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
+        Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = IdentifiableUtils.getIdMap( cachedVos );
 
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             ExpressionExperimentDetailsValueObject cacheVo = id2cachedVo.get( eeVo.getId() );
@@ -370,59 +358,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    @Secured({ "GROUP_AGENT" })
-    @Transactional(propagation = Propagation.NEVER)
-    public void recalculateBatchInfo() {
-        log.info( "Started batch info recalculation task." );
-        Exception lastException = null;
-        Set<ExpressionExperiment> failed = new HashSet<>();
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
-
-        Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
-        log.info( "Will be checking " + ees.size() + " experiments" );
-        for ( ExpressionExperiment ee : ees ) {
-            try {
-                List<AuditEvent> events = auditEventService.getEvents( ee );
-                // Don't update if the only recent event was another BatchProblemsUpdateEvent
-                if ( events != null && !events.isEmpty() ) {
-                    AuditEvent ae = events.get( events.size() - 1 );
-                    if ( ae.getEventType() instanceof BatchProblemsUpdateEvent ) {
-                        continue;
-                    }
-                }
-                self.recalculateExperimentBatchInfo( ee );
-            } catch ( Exception e ) {
-                log.warn( "Batch effect recalculation failed for " + ee, e );
-                failed.add( ee );
-                lastException = e;
-            }
-        }
-        if ( !failed.isEmpty() ) {
-            String eeIds = failed.stream()
-                    .map( ExpressionExperiment::getId ).sorted()
-                    .map( String::valueOf )
-                    .collect( Collectors.joining( ", " ) );
-            String message = String.format( "There were %d failures out of %d during the batch info recalculation: %s. Only the last exception stacktrace is appended.",
-                    failed.size(), ees.size(), eeIds );
-            // report as an error of at least 5% fails
-            if ( ( double ) failed.size() / ( double ) ees.size() > 0.05 ) {
-                log.error( message, lastException );
-            } else {
-                log.warn( message, lastException );
-            }
-        }
-        log.info( "Finished batch info recalculation task." );
-    }
-
-    @Override
-    @Secured({ "GROUP_AGENT" })
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        BatchEffectType effect = expressionExperimentBatchInformationService.getBatchEffect( ee );
-        String effectStatistics = expressionExperimentBatchInformationService.getBatchEffectStatistics( ee );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        BatchEffectType effect = getBatchEffectType( details );
+        String effectStatistics = getBatchEffectStatistics( details );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
         String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
         String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
@@ -441,11 +382,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
             log.info( "New batch effect for " + ee + ": " + effectSummary );
         }
-    }
-
-    private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
-            Collection<ExpressionExperiment> ees ) {
-        return auditEventService.getLastEvents( ees, ExpressionExperimentReportServiceImpl.eventTypes );
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {

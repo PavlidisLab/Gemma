@@ -20,7 +20,6 @@
 package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,22 +27,25 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.genome.gene.*;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
@@ -65,8 +67,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     private GeneSetService geneSetService;
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+
     @Autowired
     private TaxonService taxonService;
 
@@ -214,67 +215,6 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return foundGeneSets;
     }
 
-    @Override
-    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws SearchException {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<CharacteristicValueObject> phenotypes = phenotypeAssociationManagerService
-                .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
-
-        Collection<GeneSetValueObject> results = new HashSet<>();
-
-        if ( phenotypes.isEmpty() ) {
-            return results;
-        }
-
-        if ( timer.getTime() > 200 ) {
-            GeneSetSearchImpl.log.info( "Find phenotypes: " + timer.getTime() + "ms" );
-        }
-
-        GeneSetSearchImpl.log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
-                + ") into GeneSets for  phenotype query " + phenotypeQuery );
-        Map<String, CharacteristicValueObject> uris = new HashMap<>();
-        for ( CharacteristicValueObject cvo : phenotypes ) {
-            uris.put( cvo.getValueUri(), cvo );
-        }
-
-        Map<String, Collection<? extends GeneValueObject>> genes = phenotypeAssociationManagerService
-                .findCandidateGenesForEach( uris.keySet(), taxon );
-
-        if ( timer.getTime() > 500 ) {
-            GeneSetSearchImpl.log.info( "Find phenotype genes done at " + timer.getTime() + "ms" );
-        }
-
-        for ( String uri : genes.keySet() ) {
-
-            Collection<? extends GeneValueObject> gvos = genes.get( uri );
-
-            if ( gvos.isEmpty() )
-                continue;
-
-            Collection<Long> geneIds = EntityUtils.getIds( gvos );
-
-            GeneSetValueObject transientGeneSet = new GeneSetValueObject();
-
-            transientGeneSet.setName( this.uri2phenoID( uris.get( uri ) ) );
-            transientGeneSet.setDescription( uris.get( uri ).getValue() );
-            transientGeneSet.setGeneIds( geneIds );
-
-            transientGeneSet.setTaxon( gvos.iterator().next().getTaxon() );
-
-            results.add( transientGeneSet );
-
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            GeneSetSearchImpl.log
-                    .info( "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in "
-                            + timer.getTime() + "ms" );
-        }
-        return results;
-
-    }
 
     private Collection<GeneSet> findByGoId( String query ) {
         OntologyTerm goTerm = geneOntologyService.getTerm( StringUtils.strip( query ) );

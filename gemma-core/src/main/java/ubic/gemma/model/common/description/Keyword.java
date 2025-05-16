@@ -23,13 +23,10 @@ import org.hibernate.search.annotations.Indexed;
 @Indexed
 public class Keyword extends BibRefAnnotation {
 
-    private static final long serialVersionUID = 2663428244994277220L;
-
     public static final class Factory {
 
         public static Keyword newInstance() {
             return new Keyword();
         }
     }
-
 }

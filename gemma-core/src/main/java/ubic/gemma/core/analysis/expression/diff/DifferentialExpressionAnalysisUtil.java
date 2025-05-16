@@ -21,7 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -46,9 +46,9 @@ public class DifferentialExpressionAnalysisUtil {
      * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
      * equivalent to one of the input experimental factors.
      *
-     * @param  factors              to consider completeness for.
-     * @param  expressionExperiment the experiment
-     * @return                      true if block complete
+     * @param factors              to consider completeness for.
+     * @param expressionExperiment the experiment
+     * @return true if block complete
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public static boolean blockComplete( BioAssaySet expressionExperiment, Collection<ExperimentalFactor> factors ) {
@@ -74,9 +74,9 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * See if there are at least two samples for each factor value combination.
      *
-     * @param  expressionExperiment the experiment
-     * @param  factors              factors
-     * @return                      true if there are replicates
+     * @param expressionExperiment the experiment
+     * @param factors              factors
+     * @return true if there are replicates
      */
     static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
@@ -121,9 +121,9 @@ public class DifferentialExpressionAnalysisUtil {
      * Check that the factorValues are measurements, or that there are at least two assays for at least one factor
      * value. Otherwise the model fit will be perfect and pvalues will not be returned.
      *
-     * @param  experimentalFactor   exp. factor
-     * @param  expressionExperiment the experiment
-     * @return                      true if it's okay, false otherwise.
+     * @param experimentalFactor   exp. factor
+     * @param expressionExperiment the experiment
+     * @return true if it's okay, false otherwise.
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
 
@@ -143,7 +143,7 @@ public class DifferentialExpressionAnalysisUtil {
         Map<FactorValue, Integer> counts = new HashMap<>();
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
 
                     if ( !counts.containsKey( fv ) ) {
@@ -169,35 +169,6 @@ public class DifferentialExpressionAnalysisUtil {
         return replicatesok;
     }
 
-    /**
-     * Returns a List of all the different types of biomaterials across all bioassays in the experiment.
-     *
-     * @param  matrix matrix
-     * @return        list of biomaterials
-     */
-    public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix<?> matrix ) {
-
-        List<BioMaterial> biomaterials = new ArrayList<>();
-
-        Collection<BioAssay> assays = new ArrayList<>();
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
-            /*
-             * Note: we could use addAll here. The mapping of bioassays to biomaterials is many-to-one (e.g., when the
-             * HGU133A and B arrays were both used on the same set of samples).
-             */
-            assays.add( bioassays.iterator().next() );
-        }
-
-        for ( BioAssay assay : assays ) {
-            BioMaterial material = assay.getSampleUsed();
-
-            biomaterials.add( material );
-
-        }
-
-        return biomaterials;
-    }
 
     /**
      * Returns true if all of the following conditions hold true: each biomaterial has more than 2 factor values, each
@@ -205,9 +176,9 @@ public class DifferentialExpressionAnalysisUtil {
      * factors, and all factor values from 1 factor have been paired with all factor values from the other factors,
      * across all biomaterials.
      *
-     * @param  biomaterials        biomaterials
-     * @param  experimentalFactors exp. factors
-     * @return                     false if not a complete block design.
+     * @param biomaterials        biomaterials
+     * @param experimentalFactors exp. factors
+     * @return false if not a complete block design.
      */
     private static boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
             Collection<ExperimentalFactor> experimentalFactors ) {
@@ -219,7 +190,7 @@ public class DifferentialExpressionAnalysisUtil {
         Map<Collection<FactorValue>, BioMaterial> seenPairings = new HashMap<>();
         for ( BioMaterial m : biomaterials ) {
 
-            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
+            Collection<FactorValue> factorValuesFromBioMaterial = m.getAllFactorValues();
 
             if ( factorValuesFromBioMaterial.size() < experimentalFactors.size() ) {
                 DifferentialExpressionAnalysisUtil.log
@@ -264,8 +235,8 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Generates all possible factor value pairings for the given experimental factors.
      *
-     * @param  experimentalFactors exp. factors
-     * @return                     A collection of hashSets, where each hashSet is a pairing.
+     * @param experimentalFactors exp. factors
+     * @return A collection of hashSets, where each hashSet is a pairing.
      */
     private static Collection<Set<FactorValue>> generateFactorValuePairings(
             Collection<ExperimentalFactor> experimentalFactors ) {
@@ -312,7 +283,7 @@ public class DifferentialExpressionAnalysisUtil {
         Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<>();
         int numHaveAny = 0;
         for ( BioMaterial b : biomaterials ) {
-            Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
+            Collection<FactorValue> biomaterialFactorValues = b.getAllFactorValues();
             Set<FactorValue> factorValuesToConsider = new HashSet<>( biomaterialFactorValues );
             for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
                 numHaveAny++;
@@ -354,7 +325,7 @@ public class DifferentialExpressionAnalysisUtil {
      */
     private static Collection<FactorValue> getRelevantFactorValues( Collection<ExperimentalFactor> factors,
             BioMaterial biomaterial ) {
-        Collection<FactorValue> factorValues = biomaterial.getFactorValues();
+        Collection<FactorValue> factorValues = biomaterial.getAllFactorValues();
 
         Collection<FactorValue> factorValuesToCheck = new HashSet<>();
         for ( FactorValue factorValue : factorValues ) {

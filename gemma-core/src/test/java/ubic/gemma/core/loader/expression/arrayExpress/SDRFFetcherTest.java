@@ -22,8 +22,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.description.LocalFile;
 
+import java.io.File;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +41,7 @@ public class SDRFFetcherTest {
     public final void testFetch() throws Exception {
         assumeThatResourceIsAvailable( "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt" );
         SDRFFetcher f = new SDRFFetcher();
-        Collection<LocalFile> fetch = f.fetch( "E-SMDB-1853" );
+        Collection<File> fetch = f.fetch( "E-SMDB-1853" );
         assertEquals( 1, fetch.size() );
     }
 

@@ -17,12 +17,12 @@ package ubic.gemma.core.tasks.analysis.expression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author Paul
@@ -34,22 +34,24 @@ public class PreprocessTaskImpl
         implements PreprocessExperimentTask {
 
     @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     private PreprocessorService preprocessorService;
 
     @Override
     public TaskResult call() {
-        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
-        if ( taskCommand.diagnosticsOnly() ) {
+        ExpressionExperiment ee = getTaskCommand().getExpressionExperiment();
+        ee = expressionExperimentService.thaw( ee );
+        if ( getTaskCommand().diagnosticsOnly() ) {
             preprocessorService.processDiagnostics( ee );
-            return new TaskResult( taskCommand, "Diagnostics updated" );
+            return newTaskResult( "Diagnostics updated" );
         }
-
         try {
             preprocessorService.process( ee );
-            return new TaskResult( taskCommand, "Preprocessing completed" );
+            return newTaskResult( "Preprocessing completed" );
         } catch ( PreprocessingException e ) {
-            return new TaskResult( taskCommand, "Failed: " + e.getMessage() );
+            return newTaskResult( "Failed: " + e.getMessage() );
         }
-
     }
 }

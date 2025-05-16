@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -33,26 +34,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.servlet.view.RedirectView;
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.job.AbstractTask;
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.visualization.ExpressionDataHeatmap;
+import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -60,8 +67,11 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
@@ -69,12 +79,17 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.FactorValueVector;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -82,18 +97,28 @@ import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
-import ubic.gemma.web.taglib.SimplePageContext;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.StaticAssetResolver;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
+import javax.servlet.jsp.JspException;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
+import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
+import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * @author keshav
@@ -107,6 +132,7 @@ public class ExpressionExperimentController {
     private static final Boolean AJAX = true;
     private static final int TRIM_SIZE = 800;
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
+
     @Autowired
     private TaskRunningService taskRunningService;
     @Autowired
@@ -159,6 +185,22 @@ public class ExpressionExperimentController {
     private GeeqService geeqService;
     @Autowired
     private ServletContext servletContext;
+    @Autowired
+    private BuildInfo buildInfo;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private StaticAssetResolver staticAssetResolver;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -218,7 +260,7 @@ public class ExpressionExperimentController {
         ExpressionExperiment ee = getExperimentById( eeId, false );
         boolean userCanEditGroup;
         try {
-            userCanEditGroup = securityService.isEditable( ee );
+            userCanEditGroup = securityService.isEditableByCurrentUser( ee );
         } catch ( org.springframework.security.access.AccessDeniedException ade ) {
             return false;
         }
@@ -239,7 +281,7 @@ public class ExpressionExperimentController {
     @Secured("GROUP_USER")
     public String deleteById( Long id ) {
         if ( id == null ) return null;
-        RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
+        RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new EntityTaskCommand<>( ExpressionExperiment.class, id ) );
         return taskRunningService.submitTask( task );
     }
 
@@ -261,7 +303,9 @@ public class ExpressionExperimentController {
     public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "No search criteria provided" );
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids;
@@ -272,21 +316,20 @@ public class ExpressionExperimentController {
         }
 
         if ( ids.isEmpty() ) {
-
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Your search yielded no results." );
-
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Your search yielded no results." );
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(), true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            String url = entityUrlBuilder.fromRoot().entity( ExpressionExperiment.class, ids.iterator().next() ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
-        StringBuilder list = new StringBuilder();
-        for ( Long id : ids ) {
-            list.append( id ).append( "," );
-        }
-
-        return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+        String url = entityUrlBuilder.fromRoot().some( ExpressionExperiment.class, ids ).toUriString();
+        return new ModelAndView( new RedirectView( url, true ) )
+                .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
@@ -319,7 +362,7 @@ public class ExpressionExperimentController {
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null )
             return null;
-        return expressionExperimentService.getAnnotationsById( e.getId() );
+        return expressionExperimentService.getAnnotations( expressionExperimentService.loadOrFail( e.getId(), EntityNotFoundException::new ) );
     }
 
     /**
@@ -365,7 +408,7 @@ public class ExpressionExperimentController {
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( !ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 descriptive.append( ef.getName() ).append( " (" ).append( ef.getDescription() ).append( "), " );
             }
         }
@@ -383,7 +426,35 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
         ExpressionExperiment ee = getExperimentById( e.getId(), true );
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true, true ); // ignore "batch" and continuous.
+
+        if ( ee.getExperimentalDesign() == null ) {
+            return Collections.emptyList();
+        }
+
+        // filter which factors we want to display
+        // ignore "batch", continuous and cell type factors
+        Collection<ExperimentalFactor> factors = ee
+                .getExperimentalDesign()
+                .getExperimentalFactors()
+                .stream()
+                .filter( factor -> !ExperimentalDesignUtils.isBatchFactor( factor )
+                        && factor.getType() != FactorType.CONTINUOUS
+                        // cell type factors apply to sub-biomaterials, so they don't make sense to display
+                        && ( factor.getCategory() == null || !CharacteristicUtils.hasCategory( factor.getCategory(), Categories.CELL_TYPE ) ) )
+                .collect( Collectors.toSet() );
+
+        CountingMap<FactorValueVector> assayCount = new CountingMap<>();
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            BioMaterial sample = assay.getSampleUsed();
+            assayCount.increment( new FactorValueVector( factors, sample.getAllFactorValues() ) );
+        }
+
+        List<FactorValueVector> keys = assayCount.sortedKeyList( true );
+        Collection<DesignMatrixRowValueObject> matrix = new ArrayList<>( keys.size() );
+        for ( FactorValueVector key : keys ) {
+            matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
+        }
+        return matrix;
     }
 
     /**
@@ -436,25 +507,39 @@ public class ExpressionExperimentController {
      * Used to include the html for the qc table in an ext panel (without using a tag) (This method should probably be
      * in a service?)
      */
-    public String getQCTagHTML( ExpressionExperiment ee ) {
-        ExperimentQCTag qc = new ExperimentQCTag();
-        // FIXME: replace this by some utility class reused by the tag
-        qc.setPageContext( new SimplePageContext( servletContext ) );
-        qc.setEe( ee.getId() );
-        qc.setEeManagerId( ee.getId() + "-eemanager" );
-        qc.setHasCorrMat( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
-        qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
-        qc.setHasPCA( svdService.hasPca( ee.getId() ) );
-        qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
-        qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
-        qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
-        try {
-            qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
-        } catch ( ArrayIndexOutOfBoundsException | IllegalStateException e ) {
-            ExpressionExperimentController.log.error( "Error while setting the number of possible outliers for " + ee + ".", e );
+    private String getQCTagHTML( ExpressionExperiment ee ) {
+        try ( StringWriter sw = new StringWriter() ) {
+            ExperimentQCTag qc = new ExperimentQCTag( true );
+            qc.setStaticAssetResolver( staticAssetResolver );
+            qc.setEntityUrlBuilder( entityUrlBuilder );
+            qc.setExpressionExperiment( ee );
+            qc.setEeManagerId( ee.getId() + "-eemanager" );
+            if ( sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
+                qc.setHasCorrMat( true );
+                qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
+                try {
+                    qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
+                } catch ( ArrayIndexOutOfBoundsException | IllegalStateException e ) {
+                    ExpressionExperimentController.log.error( "Error while setting the number of possible outliers for " + ee + ".", e );
+                }
+            } else {
+                qc.setHasCorrMat( false );
+            }
+            if ( svdService.hasPca( ee ) ) {
+                qc.setHasPCA( svdService.hasPca( ee ) );
+                qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
+            } else {
+                qc.setHasPCA( false );
+            }
+            qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
+            Optional<SingleCellDimension> scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee );
+            qc.setHasSingleCellData( scd.isPresent() );
+            scd.ifPresent( singleCellDimension -> qc.setSingleCellSparsityHeatmap( getSingleCellSparsityHeatmap( ee, singleCellDimension, false ) ) );
+            qc.writeQc( new TagWriter( sw ), servletContext.getContextPath() );
+            return sw.toString();
+        } catch ( IOException | JspException e ) {
+            throw new RuntimeException( e );
         }
-        return qc.getQChtml();
     }
 
     /**
@@ -491,9 +576,9 @@ public class ExpressionExperimentController {
         long newBioMaterialCount = wn.getNewBioMaterialCount();
 
         Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
+        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? IdentifiableUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
         Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ? EntityUtils.getIds( updatedExpressionExperiments ) : new ArrayList<>();
+        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ? IdentifiableUtils.getIds( updatedExpressionExperiments ) : new ArrayList<>();
 
         int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
         int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
@@ -574,7 +659,7 @@ public class ExpressionExperimentController {
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee = expressionExperimentService.thawLiter( ee );
+        ee = expressionExperimentService.thawLite( ee );
         if ( ee == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
@@ -619,8 +704,9 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ) );
-        ee.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        ee.setBatchEffect( getBatchEffectType( details ) );
+        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
         expressionExperimentService.update( ee );
     }
 
@@ -652,13 +738,13 @@ public class ExpressionExperimentController {
         ArrayDesign ad = arrayDesignService.loadOrFail( id, EntityNotFoundException::new, "No platform with ID " + id + "." );
 
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
+                IdentifiableUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
+                IdentifiableUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
                 0, true );
 
         // combine original and switched EES
@@ -794,7 +880,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     @Secured("GROUP_USER")
     public String removePrimaryPublication( Long eeId ) {
-        RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
+        RemovePubMed task = new RemovePubMed( new EntityTaskCommand<>( ExpressionExperiment.class, eeId ) );
         return taskRunningService.submitTask( task );
     }
 
@@ -867,39 +953,63 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showBioAssays( @RequestParam("id") Long id ) {
+    public ModelAndView showBioAssays( @RequestParam("id") Long id, @RequestParam(value = "platform", required = false) Long platformId ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
-        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
-        this.addQCInfo( expressionExperiment, mv );
-        mv.addObject( "expressionExperiment", expressionExperiment );
-        return mv;
+        ArrayDesign platform;
+        if ( platformId != null ) {
+            platform = arrayDesignService.loadOrFail( platformId, EntityNotFoundException::new );
+        } else {
+            platform = null;
+        }
+        List<BioAssay> bioAssays = expressionExperiment.getBioAssays().stream().sorted( Comparator.comparing( BioAssay::getName ) )
+                .filter( ba -> platform == null || ba.getArrayDesignUsed().equals( platform ) )
+                .collect( Collectors.toList() );
+        return new ModelAndView( "expressionExperiment.bioAssays" )
+                .addObject( "expressionExperiment", expressionExperiment )
+                .addObject( "bioAssays", bioAssays )
+                .addObject( "platform", platform )
+                .addObject( "keywords", getKeywords( expressionExperiment ) )
+                // QC is only displayed when the platform is null
+                // TODO: per-platform QC
+                .addAllObjects( platform == null ? addQCInfo( expressionExperiment ) : Collections.emptyMap() );
+    }
+
+    private Map<String, Object> addQCInfo( ExpressionExperiment expressionExperiment ) {
+        Map<String, Object> result = new HashMap<>();
+        if ( sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) ) {
+            result.put( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
+            result.put( "numPossibleOutliers", this.numPossibleOutliers( expressionExperiment ) );
+            result.put( "numOutliersRemoved", this.numOutliersRemoved( expressionExperiment ) );
+        } else {
+            result.put( "hasCorrMat", false );
+        }
+        if ( svdService.hasPca( expressionExperiment ) ) {
+            result.put( "hasPCA", true );
+            result.put( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
+        } else {
+            result.put( "hasPCA", false );
+        }
+        result.put( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
+        Optional<SingleCellDimension> scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( expressionExperiment );
+        result.put( "hasSingleCellData", scd.isPresent() );
+        scd.ifPresent( singleCellDimension -> result.put( "singleCellSparsityHeatmap", getSingleCellSparsityHeatmap( expressionExperiment, singleCellDimension, false ) ) );
+        return result;
     }
 
     @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showBioMaterials( @RequestParam("id") Long id ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
+        return new ModelAndView( "expressionExperiment.bioMaterials" )
+                .addObject( "expressionExperiment", expressionExperiment )
+                .addObject( "keywords", getKeywords( expressionExperiment ) )
+                .addObject( "bioMaterials", getBioMaterials( expressionExperiment ) );
+    }
 
-        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterial> bioMaterials = new ArrayList<>();
-        for ( BioAssay assay : bioAssays ) {
-            BioMaterial material = assay.getSampleUsed();
-            if ( material != null ) {
-                bioMaterials.add( material );
-            }
-        }
-
-        ModelAndView mav = new ModelAndView( "bioMaterials" );
-        if ( ExpressionExperimentController.AJAX ) {
-            mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
-        }
-
-        Integer numBioMaterials = bioMaterials.size();
-        mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
-
-        this.addQCInfo( expressionExperiment, mav );
-
-        return mav;
+    private Collection<BioMaterial> getBioMaterials( ExpressionExperiment ee ) {
+        return bioMaterialService.thaw( ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() ) );
     }
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -924,21 +1034,201 @@ public class ExpressionExperimentController {
     private ModelAndView showExpressionExperiment( ExpressionExperiment ee ) {
         return new ModelAndView( "expressionExperiment.detail" )
                 .addObject( "expressionExperiment", ee )
-                .addObject( "eeId", ee.getId() )
-                .addObject( "eeClass", ee.getClass() );
+                .addObject( "keywords", getKeywords( ee ) );
+    }
+
+    private String getKeywords( ExpressionExperiment ee ) {
+        return expressionExperimentService.getAnnotations( ee ).stream()
+                .map( AnnotationValueObject::getTermName )
+                .collect( Collectors.joining( "," ) );
+    }
+
+    @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
+    public ModelAndView showAllSubSets( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+        return showAllSubSets( getExperimentById( id, true ), dimensionId );
+    }
+
+    @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "shortName" })
+    public ModelAndView showAllSubSets( @RequestParam("shortName") String shortName, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+        return showAllSubSets( getExperimentByShortName( shortName, true ), dimensionId );
+    }
+
+    private ModelAndView showAllSubSets( ExpressionExperiment ee, @Nullable Long dimensionId ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> subsetsByDimension;
+        BioAssayDimension dim;
+        if ( dimensionId != null ) {
+            dim = expressionExperimentService.getBioAssayDimensionById( ee, dimensionId );
+            if ( dim == null ) {
+                throw new EntityNotFoundException( ee.getShortName() + " does not have a dimension with ID " + dimensionId + "." );
+            }
+            subsetsByDimension = Collections.singletonMap( dim, new HashSet<>( expressionExperimentService.getSubSetsWithBioAssays( ee, dim ) ) );
+        } else {
+            dim = null;
+            subsetsByDimension = expressionExperimentService.getSubSetsByDimensionWithBioAssays( ee );
+        }
+        Map<BioAssayDimension, List<QuantitationType>> quantitationTypesByDimension = new LinkedHashMap<>();
+        for ( BioAssayDimension bad : subsetsByDimension.keySet() ) {
+            List<QuantitationType> qts = quantitationTypeService.findByExpressionExperimentAndDimension( ee, bad ).stream()
+                    .sorted( Comparator.comparing( QuantitationType::getName ) )
+                    .collect( Collectors.toList() );
+            quantitationTypesByDimension.put( bad, qts );
+        }
+        Set<QuantitationType> qts = quantitationTypesByDimension.values().stream()
+                .flatMap( List::stream )
+                .collect( Collectors.toSet() );
+        boolean isAdmin = SecurityUtil.isUserAdmin();
+        Map<QuantitationType, Class<? extends DataVector>> vectorTypes = quantitationTypeService.getDataVectorTypes( qts );
+        Map<BioAssayDimension, List<ExpressionExperimentSubSet>> subsetsByDimensionSorted = subsetsByDimension.entrySet().stream()
+                // only retain dimensions with preferred vectors for non-admin users
+                .filter( e -> isAdmin || quantitationTypesByDimension.get( e.getKey() ).stream().anyMatch( QuantitationType::getIsPreferred ) )
+                .sorted( Map.Entry.comparingByKey( Comparator
+                        // show dimensions with preferred vectors first
+                        .comparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).stream().anyMatch( QuantitationType::getIsPreferred ), Comparator.reverseOrder() )
+                        // show dimension with vectors first
+                        .thenComparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
+                        .thenComparing( BioAssayDimension::getId ) ) )
+                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) ).collect( Collectors.toList() ), ( a, b ) -> b, LinkedHashMap::new ) );
+        QuantitationType singleCellQt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ).orElse( null );
+        int offset = 0, limit = 20;
+        Map<BioAssayDimension, ExpressionDataHeatmap> heatmapsByDimension = new HashMap<>();
+        Map<BioAssayDimension, Map<ExpressionExperimentSubSet, Map<ExperimentalFactor, FactorValue>>> subSetFactorsByDimension = new HashMap<>();
+        for ( BioAssayDimension dimension : subsetsByDimension.keySet() ) {
+            Set<BioAssay> bas = subsetsByDimension.get( dimension ).stream()
+                    .map( BioAssaySet::getBioAssays )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toSet() );
+            Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( ee, dimension, offset, limit );
+            if ( !designElements.isEmpty() ) {
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                List<Gene> genes = designElements.stream()
+                        .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
+                        .collect( Collectors.toList() );
+                ExpressionDataHeatmap heatmap = ExpressionDataHeatmap.fromDesignElements( ee, dimension, designElements, genes );
+                if ( singleCellQt != null ) {
+                    heatmap.setSingleCellQuantitationType( singleCellQt );
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, singleCellQt )
+                            .ifPresent( cta -> {
+                                heatmap.setCellLevelCharacteristics( cta );
+                                heatmap.setFocusedCellLevelCharacteristic( null );
+                            } );
+                }
+                heatmapsByDimension.put( dimension, heatmap );
+            }
+            // reorganize the mapping to be easier to display
+            expressionExperimentService.getSubSetsByFactorValue( ee, dimension ).entrySet()
+                    .stream()
+                    .sorted( Map.Entry.comparingByKey( Comparator.comparing( ExperimentalFactor::getName ) ) )
+                    .forEach( entry -> {
+                        ExperimentalFactor key = entry.getKey();
+                        Map<FactorValue, ExpressionExperimentSubSet> value = entry.getValue();
+                        for ( Map.Entry<FactorValue, ExpressionExperimentSubSet> f : value.entrySet() ) {
+                            subSetFactorsByDimension
+                                    .computeIfAbsent( dimension, k -> new HashMap<>() )
+                                    // keep factor in the same order
+                                    .computeIfAbsent( f.getValue(), k -> new LinkedHashMap<>() )
+                                    .put( key, f.getKey() );
+                        }
+                    } );
+        }
+        subsetsByDimensionSorted.values().forEach( this::removeCommonNamePrefix );
+        return new ModelAndView( "expressionExperiment.subSets" )
+                .addObject( "dimension", dim )
+                .addObject( "expressionExperiment", ee )
+                .addObject( "subSetsByDimension", subsetsByDimensionSorted )
+                .addObject( "quantitationTypesByDimension", quantitationTypesByDimension )
+                .addObject( "heatmapsByDimension", heatmapsByDimension )
+                .addObject( "subSetFactorsByDimension", subSetFactorsByDimension )
+                .addObject( "vectorTypes", vectorTypes )
+                .addObject( "keywords", getKeywords( ee ) );
+    }
+
+    private void removeCommonNamePrefix( Collection<ExpressionExperimentSubSet> subSets ) {
+        String commonPrefix = StringUtils.getCommonPrefix( subSets.stream().map( ExpressionExperimentSubSet::getName ).toArray( String[]::new ) );
+        for ( ExpressionExperimentSubSet subSet : subSets ) {
+            subSet.setName( subSet.getName().substring( commonPrefix.length() ) );
+        }
     }
 
     /**
      * Shows a list of BioAssays for an expression experiment subset.
      */
     @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showSubSet( @RequestParam("id") Long id ) {
-        ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
+    public ModelAndView showSubSet( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+        ExpressionExperimentSubSet subset = expressionExperimentSubSetService.loadWithBioAssays( id );
         if ( subset == null ) {
             throw new EntityNotFoundException( "No experiment subset with ID " + id + "." );
         }
-        // request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
+        BioAssayDimension dimension;
+        Collection<BioAssayDimension> possibleDimensions = bioAssayDimensionService.findByBioAssaysContainingAll( subset.getBioAssays() );
+        if ( dimensionId != null ) {
+            dimension = bioAssayDimensionService.loadOrFail( dimensionId, EntityNotFoundException::new );
+            if ( !CollectionUtils.containsAll( dimension.getBioAssays(), subset.getBioAssays() ) ) {
+                throw new IllegalArgumentException( dimension + " is not applicable to the requested subset." );
+            }
+            possibleDimensions = Collections.singleton( dimension );
+        } else if ( possibleDimensions.size() == 1 ) {
+            dimension = possibleDimensions.iterator().next();
+        } else {
+            // either no dimension or multiple dimensions, one must be picked
+            dimension = null;
+        }
+        Collection<ExpressionExperimentSubSet> otherSubSets;
+        List<BioAssay> bioAssays;
+        ExpressionDataHeatmap heatmap;
+        if ( dimension != null ) {
+            otherSubSets = expressionExperimentSubSetService.findByBioAssayIn( dimension.getBioAssays() ).stream()
+                    .filter( ss -> !ss.equals( subset ) )
+                    .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                    .collect( Collectors.toList() );
+            bioAssays = subset.getBioAssays().stream().sorted( Comparator.comparing( BioAssay::getName ) )
+                    .filter( ba -> dimension.getBioAssays().contains( ba ) )
+                    .collect( Collectors.toList() );
+            int offset = 0, limit = 20;
+            Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( subset.getSourceExperiment(), dimension, offset, limit );
+            if ( !designElements.isEmpty() ) {
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                List<Gene> genes = designElements.stream()
+                        .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
+                        .collect( Collectors.toList() );
+                heatmap = ExpressionDataHeatmap.fromDesignElements( subset, dimension, designElements, genes );
+                singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( subset.getSourceExperiment() ).ifPresent( scQt -> {
+                    heatmap.setSingleCellQuantitationType( scQt );
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( subset.getSourceExperiment(), scQt ).ifPresent( cta -> {
+                        heatmap.setCellLevelCharacteristics( cta );
+                        // TODO: use the subset factor if available to determine the cell type we want to focus on
+                        cta.getCellTypes().stream()
+                                .filter( c -> subset.getCharacteristics().stream()
+                                        .filter( c2 -> CharacteristicUtils.hasCategory( c2, Categories.CELL_TYPE ) )
+                                        .anyMatch( c2 -> CharacteristicUtils.equals( c.getValue(), c.getValueUri(), c2.getValue(), c2.getValueUri() ) ) )
+                                .findAny()
+                                .ifPresent( heatmap::setFocusedCellLevelCharacteristic );
+                    } );
+                } );
+                heatmap.setTranspose( true );
+            } else {
+                heatmap = null;
+            }
+        } else {
+            otherSubSets = Collections.emptySet();
+            bioAssays = Collections.emptyList();
+            heatmap = null;
+        }
+        List<ExpressionExperimentSubSet> subSets = new ArrayList<>( 1 + otherSubSets.size() );
+        subSets.add( subset );
+        subSets.addAll( otherSubSets );
+        removeCommonNamePrefix( subSets );
+        Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( subset );
+        return new ModelAndView( "expressionExperimentSubSet.detail" )
+                .addObject( "subSet", subset )
+                .addObject( "dimension", dimension )
+                .addObject( "possibleDimensions", possibleDimensions )
+                .addObject( "otherSubSets", otherSubSets )
+                .addObject( "bioAssays", bioAssays )
+                .addObject( "annotations", annotations )
+                .addObject( "heatmap", heatmap )
+                .addObject( "keywords", annotations.stream()
+                        .map( AnnotationValueObject::getTermName )
+                        .collect( Collectors.joining( "," ) ) );
     }
 
     /**
@@ -1163,8 +1453,9 @@ public class ExpressionExperimentController {
         if ( hasUsableBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
         }
-        finalResult.setBatchEffect( expressionExperimentBatchInformationService.getBatchEffect( ee ).name() );
-        finalResult.setBatchEffectStatistics( expressionExperimentBatchInformationService.getBatchEffectStatistics( ee ) );
+        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        finalResult.setBatchEffect( getBatchEffectType( details ).name() );
+        finalResult.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
     }
 
     /**
@@ -1247,20 +1538,26 @@ public class ExpressionExperimentController {
         finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
     }
 
-    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
-        mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
-
-        // FIXME don't store in a file.
-        mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
-
-        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
-        mav.addObject( "hasCorrDist", true ); // FIXME
-
-        mav.addObject( "numPossibleOutliers", this.numPossibleOutliers( expressionExperiment ) );
-        mav.addObject( "numOutliersRemoved", this.numOutliersRemoved( expressionExperiment ) );
+    private SingleCellSparsityHeatmap getSingleCellSparsityHeatmap( ExpressionExperiment expressionExperiment, SingleCellDimension singleCellDimension, boolean transpose ) {
+        QuantitationType qt;
+        BioAssayDimension dimension;
+        if ( ( qt = expressionExperimentService.getProcessedQuantitationType( expressionExperiment ).orElse( null ) ) != null ) {
+            dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, ProcessedExpressionDataVector.class );
+        } else if ( ( qt = expressionExperimentService.getPreferredQuantitationType( expressionExperiment ).orElse( null ) ) != null ) {
+            // try using the preferred raw vectors (i.e. if post-processing failed for instance)
+            dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, RawExpressionDataVector.class );
+        } else {
+            log.warn( "No processed quantitation type nor preferred raw quantitation type found for " + expressionExperiment.getShortName() + ", will not generate single-cell sparsity heatmaps." );
+            return null;
+        }
+        if ( dimension == null ) {
+            throw new EntityNotFoundException( "No dimension found for " + qt + "." );
+        }
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( expressionExperiment, dimension );
+        Map<BioAssay, Long> designElementsPerSample = expressionExperimentService.getNumberOfDesignElementsPerSample( expressionExperiment );
+        SingleCellSparsityHeatmap singleCellSparsityHeatmap = new SingleCellSparsityHeatmap( expressionExperiment, singleCellDimension, dimension, subSets, designElementsPerSample, null );
+        singleCellSparsityHeatmap.setTranspose( transpose );
+        return singleCellSparsityHeatmap;
     }
 
     /**
@@ -1277,20 +1574,20 @@ public class ExpressionExperimentController {
 
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
             case 2: // need coexp
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 3:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 break;
             case 4:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
@@ -1304,20 +1601,20 @@ public class ExpressionExperimentController {
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
             case 8: // needs batch info
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 auditEventService.retainLackingEvent( eesToKeep, FailedBatchInformationMissingEvent.class );
                 break;
             case 9:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 break;
             case 10:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 11:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 12:
@@ -1341,7 +1638,7 @@ public class ExpressionExperimentController {
                 return filtered;
             }
             // Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
-            Collection<Long> ids = EntityUtils.getIds( eesToKeep );
+            Collection<Long> ids = IdentifiableUtils.getIds( eesToKeep );
             for ( ExpressionExperimentDetailsValueObject eevo : eeValObjectCol ) {
                 if ( ids.contains( eevo.getId() ) ) {
                     filtered.add( eevo );
@@ -1359,8 +1656,14 @@ public class ExpressionExperimentController {
 
     private String format4File( Collection<ExpressionExperimentValueObject> ees, @Nullable String eeSetName ) {
         StringBuilder strBuff = new StringBuilder();
-        strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
-        strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+        strBuff.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
+        strBuff.append( "#\n" );
+        for ( String line : GEMMA_CITATION_NOTICE ) {
+            strBuff.append( "# " ).append( line ).append( "\n" );
+        }
+        strBuff.append( "#\n" );
+        strBuff.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
+        strBuff.append( "#\n" );
 
         if ( eeSetName != null && !eeSetName.isEmpty() )
             strBuff.append( "# Experiment Set: " ).append( eeSetName ).append( "\n" );
@@ -1526,7 +1829,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) {
+    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
         ExpressionExperiment ee = getExperimentById( id, true );
         try {
             sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
@@ -1551,33 +1854,32 @@ public class ExpressionExperimentController {
      *
      * @author pavlidis
      */
-    private class RemoveExpressionExperimentTask extends AbstractTask<TaskCommand> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<EntityTaskCommand<ExpressionExperiment>> {
 
-        public RemoveExpressionExperimentTask( TaskCommand command ) {
+        public RemoveExpressionExperimentTask( EntityTaskCommand<ExpressionExperiment> command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
-            expressionExperimentService.remove( taskCommand.getEntityId() );
-
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
-
+            expressionExperimentService.remove( getTaskCommand().getEntityId() );
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
+            return newTaskResult( servletContext.getContextPath() + "/expressionExperiment/showAllExpressionExperiments.html" );
         }
     }
 
-    private class RemovePubMed extends AbstractTask<TaskCommand> {
+    private class RemovePubMed extends AbstractTask<EntityTaskCommand<ExpressionExperiment>> {
 
-        public RemovePubMed( TaskCommand command ) {
+        public RemovePubMed( EntityTaskCommand<ExpressionExperiment> command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
-            ExpressionExperiment ee = getExperimentById( taskCommand.getEntityId(), true );
+            ExpressionExperiment ee = getExperimentById( getTaskCommand().getEntityId(), true );
 
             if ( ee.getPrimaryPublication() == null ) {
-                return new TaskResult( taskCommand, false );
+                return newTaskResult( false );
             }
 
             ExpressionExperimentController.log.info( "Removing reference" );
@@ -1585,7 +1887,7 @@ public class ExpressionExperimentController {
 
             expressionExperimentService.update( ee );
 
-            return new TaskResult( taskCommand, true );
+            return newTaskResult( true );
         }
 
     }
@@ -1598,12 +1900,12 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult call() {
-            Long eeId = taskCommand.getEntityId();
+            Long eeId = getTaskCommand().getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( eeId );
             if ( expressionExperiment == null )
                 throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
 
-            String pubmedId = taskCommand.getPubmedId();
+            String pubmedId = getTaskCommand().getPubmedId();
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
@@ -1622,12 +1924,12 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ));
+                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;
                 try {
-                    publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                    publications = pms.retrieve( searchTerms );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
@@ -1665,7 +1967,7 @@ public class ExpressionExperimentController {
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );
-            return new TaskResult( taskCommand, result );
+            return newTaskResult( result );
         }
 
     }
@@ -1681,5 +1983,17 @@ public class ExpressionExperimentController {
             return this.expressionExperimentService.loadOrFail( id,
                     EntityNotFoundException::new, "No experiment with ID " + id + "." );
         }
+    }
+
+
+    /**
+     * Load an {@link ExpressionExperiment} by short name, optionally thawing it with {@link ExpressionExperimentService#thawLite}.
+     */
+    private ExpressionExperiment getExperimentByShortName( String shortName, boolean thawLite ) throws EntityNotFoundException {
+        ExpressionExperiment ee = this.expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
+        }
+        return thawLite ? expressionExperimentService.thawLite( ee ) : ee;
     }
 }

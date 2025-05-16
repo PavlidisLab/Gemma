@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,9 @@
 package ubic.gemma.core.loader.genome.taxon;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.gene.ncbi.NCBIUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.util.Collection;
@@ -62,7 +61,7 @@ public class TaxonFetcher extends FtpArchiveFetcher {
      *
      * @return local files
      */
-    public Collection<LocalFile> fetch() {
+    public Collection<File> fetch() {
         return this.fetch( "taxon" );
     }
 

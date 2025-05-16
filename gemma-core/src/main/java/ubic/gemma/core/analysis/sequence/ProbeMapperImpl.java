@@ -32,10 +32,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
@@ -128,7 +125,7 @@ public class ProbeMapperImpl implements ProbeMapper {
                         + " blat associations (after trimming non-canonical chromosome hits)" );
             }
 
-            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<>();
+            List<BlatAssociation> blatAssociationsForSequence = new ArrayList<>();
             int skipped = 0;
             // map each blat result.
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
@@ -139,15 +136,15 @@ public class ProbeMapperImpl implements ProbeMapper {
                     continue;
                 }
 
-                assert blatResult.score() >= 0 && blatResult.score() <= 1.0 : "Score was " + blatResult.score();
-                assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 :
-                        "Identity was " + blatResult.identity();
+                assert BlatAssociationScorer.score( blatResult ) >= 0 && BlatAssociationScorer.score( blatResult ) <= 1.0 : "Score was " + BlatAssociationScorer.score( blatResult );
+                assert BlatAssociationScorer.identity( blatResult ) >= 0 && BlatAssociationScorer.identity( blatResult ) <= 1.0 :
+                        "Identity was " + BlatAssociationScorer.identity( blatResult );
 
-                if ( blatResult.score() < config.getBlatScoreThreshold() || blatResult.identity() < config
+                if ( BlatAssociationScorer.score( blatResult ) < config.getBlatScoreThreshold() || BlatAssociationScorer.identity( blatResult ) < config
                         .getIdentityThreshold() ) {
                     if ( log.isDebugEnabled() )
-                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score() + " identity="
-                                + blatResult.identity() );
+                        log.debug( "Result for " + sequence + " skipped with score=" + BlatAssociationScorer.score( blatResult ) + " identity="
+                                + BlatAssociationScorer.identity( blatResult ) );
                     skipped++;
                     continue;
                 }
@@ -209,10 +206,8 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             String queryName = sequence.getName();
             assert StringUtils.isNotBlank( queryName );
-            if ( !allRes.containsKey( queryName ) ) {
-                allRes.put( queryName, blatAssociationsForSequence );
-            }
-            allRes.get( queryName ).addAll( blatAssociationsForSequence );
+            allRes.computeIfAbsent( queryName, k -> new ArrayList<>() )
+                    .addAll( blatAssociationsForSequence );
 
             // if ( log.isDebugEnabled() ) {
             // log.info( blatAssociationsForSequence.size() + " associations for " + sequence
@@ -292,9 +287,9 @@ public class ProbeMapperImpl implements ProbeMapper {
         b.setBlatScoreThreshold( config.getBlatScoreThreshold() );
 
         try {
-            Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
-            Collection<BlatResult> blatRes = new HashSet<>();
-            for ( Collection<BlatResult> coll : results.values() ) {
+            Map<BioSequence, List<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
+            List<BlatResult> blatRes = new ArrayList<>();
+            for ( List<BlatResult> coll : results.values() ) {
                 blatRes.addAll( coll );
             }
             return this.processBlatResults( goldenpath, blatRes );
@@ -336,14 +331,14 @@ public class ProbeMapperImpl implements ProbeMapper {
      * @param blatAssociationsForSequence associations for one sequence.
      * @return filtered collection
      */
-    private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
+    private List<BlatAssociation> filterOnScores( List<BlatAssociation> blatAssociationsForSequence,
             ProbeMapperConfig config ) {
 
         double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
         if ( minimumExonOverlapFraction == 0 )
             return blatAssociationsForSequence;
 
-        Collection<BlatAssociation> result = new HashSet<>();
+        List<BlatAssociation> result = new ArrayList<>();
 
         for ( BlatAssociation ba : blatAssociationsForSequence ) {
             if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {

@@ -29,14 +29,14 @@ public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<DiffExMetaAnalyzerT
 
     @Override
     public TaskResult call() {
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( taskCommand
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( getTaskCommand()
                 .getAnalysisResultSetIds() );
 
         if ( metaAnalysis != null ) {
-            metaAnalysis.setName( taskCommand.getName() );
-            metaAnalysis.setDescription( taskCommand.getDescription() );
+            metaAnalysis.setName( getTaskCommand().getName() );
+            metaAnalysis.setDescription( getTaskCommand().getDescription() );
 
-            if ( taskCommand.isPersist() ) {
+            if ( getTaskCommand().isPersist() ) {
                 metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
             }
         }
@@ -44,6 +44,6 @@ public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<DiffExMetaAnalyzerT
         GeneDifferentialExpressionMetaAnalysisDetailValueObject metaAnalysisVO = ( metaAnalysis == null ? null
                 : this.geneDiffExMetaAnalysisHelperService.convertToValueObject( metaAnalysis ) );
 
-        return new TaskResult( taskCommand, metaAnalysisVO );
+        return newTaskResult( metaAnalysisVO );
     }
 }

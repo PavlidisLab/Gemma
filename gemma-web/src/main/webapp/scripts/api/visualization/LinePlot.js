@@ -20,7 +20,7 @@
  * 
  * @author Paul
  */
-var LinePlot = (function() {
+Gemma.LinePlot = (function() {
 
    var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
    var TRIM = 5;

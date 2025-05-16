@@ -23,6 +23,7 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.doublealgo.Formatter;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Descriptive;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
@@ -55,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,33 +65,49 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.visualization.ExpressionDataHeatmap;
+import ubic.gemma.core.visualization.SingleCellDataBoxplot;
+import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -98,11 +116,13 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
-//
+import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 
 /**
  * @author paul
@@ -113,7 +133,7 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Default size for an image, in pixel.
      */
-    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 300;
+    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 400;
 
     /**
      * Maximum size for an image, in pixels.
@@ -144,6 +164,20 @@ public class ExpressionExperimentQCController extends BaseController {
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BuildInfo buildInfo;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
@@ -168,17 +202,15 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        StringBuffer buf = writer.getBuffer();
+        appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", buf );
-
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
-        ModelAndView mav = new ModelAndView( new TextView() );
-        mav.addObject( TextView.TEXT_PARAM, buf.toString() );
-        return mav;
+        TextView tv = new TextView( "tab-separated-values" );
+        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
+        return new ModelAndView( tv ).addObject( TextView.TEXT_PARAM, writer.toString() );
     }
 
     @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -191,13 +223,8 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = null;
-        try {
-            sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                    .loadRegressedMatrix( ee );
-        } catch ( FilteringException e ) {
-            log.warn( "Error when filtering the expression data matrix for " + ee + ", nothing will be displayed.", e );
-        }
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
+                .loadRegressedMatrix( ee );
         if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
             return null;
         }
@@ -214,16 +241,16 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        StringBuffer buf = writer.getBuffer();
+        appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", buf );
-
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
-        return new ModelAndView( new TextView( "tab-separated-values" ) )
-                .addObject( TextView.TEXT_PARAM, buf.toString() );
+        TextView tv = new TextView( "tab-separated-values" );
+        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
+        return new ModelAndView( tv )
+                .addObject( TextView.TEXT_PARAM, writer.toString() );
     }
 
     @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -232,10 +259,10 @@ public class ExpressionExperimentQCController extends BaseController {
 
         SVDResult svdo = null;
         try {
-            svdo = svdService.getSvdFactorAnalysis( ee.getId() );
+            svdo = svdService.getSvdFactorAnalysis( ee );
         } catch ( Exception e ) {
             // if there is no pca
-            // log.error( e, e );
+            log.error( e, e );
         }
 
         if ( svdo != null ) {
@@ -248,7 +275,7 @@ public class ExpressionExperimentQCController extends BaseController {
     @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        SVDResult svdo = svdService.getSvd( ee.getId() );
+        SVDResult svdo = svdService.getSvd( ee );
         if ( svdo != null ) {
             this.writePCAScree( svdo, response );
         } else {
@@ -357,10 +384,8 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         if ( text != null && text ) {
-            final ByteArrayConverter bac = new ByteArrayConverter();
-
-            double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-            double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+            double[] means = mvr.getMeans();
+            double[] variances = mvr.getVariances();
 
             DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
             matrix.viewColumn( 0 ).assign( means );
@@ -368,7 +393,9 @@ public class ExpressionExperimentQCController extends BaseController {
 
             String matrixString = new Formatter( "%1.2G" )
                     .toTitleString( matrix, null, new String[] { "mean", "variance" }, null, null, null, null );
-            return new ModelAndView( new TextView( "tab-separated-values" ) )
+            TextView tv = new TextView( "tab-separated-values" );
+            tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
+            return new ModelAndView( tv )
                     .addObject( TextView.TEXT_PARAM, matrixString );
         }
 
@@ -439,7 +466,11 @@ public class ExpressionExperimentQCController extends BaseController {
     public ModelAndView writeEigenGenes( @RequestParam("eeid") Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
                 EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
-        SVDResult svdo = svdService.getSvd( ee.getId() );
+        SVDResult svdo = svdService.getSvd( ee );
+
+        if ( svdo == null ) {
+            throw new EntityNotFoundException( ee.getShortName() + " does not have a SVD." );
+        }
 
         DoubleMatrix<BioMaterial, Integer> vMatrix = svdo.getVMatrix();
 
@@ -453,8 +484,198 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter s = new StringWriter();
         MatrixWriter<BioMaterial, Integer> mw = new MatrixWriter<>( s, new DecimalFormat( "#.######" ) );
         mw.writeMatrix( vMatrix, true );
-        return new ModelAndView( new TextView( "tab-separated-values" ) )
+        TextView tv = new TextView( "tab-separated-values" );
+        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getEigenGenesFilename( ee ) ) + "\"" );
+        return new ModelAndView( tv )
                 .addObject( TextView.TEXT_PARAM, s.toString() );
+    }
+
+    @RequestMapping(value = "/expressionExperiment/visualizeSingleCellSparsityHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public void visualizeSingleCellSparsityHeatmap( @RequestParam("id") Long id, @RequestParam("type") String type,
+            @RequestParam(value = "cellSize", required = false) Integer cellSize,
+            @RequestParam(value = "transpose", required = false) Boolean transpose,
+            HttpServletResponse response ) throws IOException {
+        Assert.isTrue( cellSize == null || cellSize > 0 );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No dataset with ID " + id + "." );
+        SingleCellDimension singleCellDimension = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a preferred single-cell dimension." ) );
+        QuantitationType qt = expressionExperimentService.getProcessedQuantitationType( ee )
+                .orElseThrow( () -> new EntityNotFoundException( "No processed quantitation type found for " + ee.getShortName() + "." ) );
+        BioAssayDimension dimension = expressionExperimentService.getBioAssayDimension( ee, qt, ProcessedExpressionDataVector.class );
+        if ( dimension == null ) {
+            throw new EntityNotFoundException( "No dimension found for " + qt + "." );
+        }
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee, dimension );
+        Map<BioAssay, Long> designElementsPerSample = expressionExperimentService.getNumberOfDesignElementsPerSample( ee );
+        SingleCellSparsityHeatmap heatmap = new SingleCellSparsityHeatmap( ee, singleCellDimension, dimension, subSets, designElementsPerSample, SingleCellSparsityHeatmap.SingleCellHeatmapType.valueOf( type.toUpperCase() ) );
+        if ( cellSize != null ) {
+            heatmap.setCellSize( cellSize );
+        }
+        if ( transpose != null ) {
+            heatmap.setTranspose( transpose );
+        }
+        BufferedImage image = heatmap.createImage();
+        response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+    }
+
+    @RequestMapping(value = "/expressionExperiment/visualizeHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public void visualizeHeatmap( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId,
+            @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "cellSize", required = false) Integer cellSize,
+            @RequestParam(value = "transpose", required = false) Boolean transpose,
+            HttpServletResponse response ) throws IOException {
+        Assert.isTrue( cellSize == null || cellSize > 0 );
+        Assert.isTrue( limit == null || ( limit > 0 && limit <= 100 ) );
+        if ( offset == null ) {
+            offset = 0;
+        }
+        if ( limit == null ) {
+            limit = 10;
+        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "" );
+        BioAssayDimension dimension;
+        if ( dimensionId != null ) {
+            dimension = expressionExperimentService.getBioAssayDimensionById( ee, dimensionId, ProcessedExpressionDataVector.class );
+            if ( dimension == null ) {
+                throw new EntityNotFoundException( ee.getShortName() + " does not have a dimension with ID " + dimensionId + "." );
+            }
+        } else {
+            QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee )
+                    .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." ) );
+            dimension = expressionExperimentService.getBioAssayDimension( ee, preferredQt, ProcessedExpressionDataVector.class );
+            if ( dimension == null ) {
+                throw new EntityNotFoundException( preferredQt + " does not have any associated dimension." );
+            }
+        }
+        Slice<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService.getProcessedDataVectors( ee, dimension, offset, limit );
+        ExpressionDataHeatmap heatmap = ExpressionDataHeatmap.fromVectors( ee, dimension, vectors, null );
+        if ( cellSize != null ) {
+            heatmap.setCellSize( cellSize );
+        }
+        if ( transpose != null ) {
+            heatmap.setTranspose( transpose );
+        }
+        BufferedImage image = heatmap.createImage();
+        response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+    }
+
+    @RequestMapping(value = "/expressionExperiment/visualizeSubSetHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public void visualizeSubSetHeatmap( @RequestParam("id") Long id,
+            @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "cellSize", required = false) Integer cellSize,
+            @RequestParam(value = "transpose", required = false) Boolean transpose,
+            HttpServletResponse response ) throws IOException {
+        Assert.isTrue( cellSize == null || cellSize > 0 );
+        Assert.isTrue( limit == null || ( limit > 0 && limit <= 100 ) );
+        if ( offset == null ) {
+            offset = 0;
+        }
+        if ( limit == null ) {
+            limit = 10;
+        }
+        ExpressionExperimentSubSet subSet = expressionExperimentSubSetService.loadWithBioAssays( id );
+        if ( subSet == null ) {
+            throw new EntityNotFoundException( "No subset with ID " + id );
+        }
+        ExpressionExperiment ee = subSet.getSourceExperiment();
+        QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." ) );
+        BioAssayDimension dimension = expressionExperimentService.getBioAssayDimension( ee, preferredQt, ProcessedExpressionDataVector.class );
+        if ( dimension == null ) {
+            throw new EntityNotFoundException( preferredQt + " does not have any associated dimension." );
+        }
+        Slice<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService.getProcessedDataVectors( ee, dimension, offset, limit );
+        ExpressionDataHeatmap heatmap = ExpressionDataHeatmap.fromVectors( subSet, dimension, vectors, null );
+        if ( cellSize != null ) {
+            heatmap.setCellSize( cellSize );
+        }
+        if ( transpose != null ) {
+            heatmap.setTranspose( transpose );
+        }
+        BufferedImage image = heatmap.createImage();
+        response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+    }
+
+    @RequestMapping(value = "/expressionExperiment/visualizeSingleCellDataBoxplot.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public void visualizeSingleCellDataBoxplot( @RequestParam("id") Long id,
+            @RequestParam(value = "quantitationType", required = false)
+            @Nullable Long quantitationTypeId,
+            @RequestParam("designElement") Long designElementId,
+            @RequestParam(value = "assays", required = false) Long[] assayIds,
+            @RequestParam(value = "cellTypeAssignment", required = false) String ctaName,
+            @RequestParam(value = "cellLevelCharacteristics", required = false) Long clcId,
+            @RequestParam(value = "focusedCharacteristic", required = false) Long focusedCharacteristicId,
+            HttpServletResponse response ) throws IOException {
+        if ( clcId != null && ctaName != null ) {
+            throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
+        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        QuantitationType qt;
+        if ( quantitationTypeId != null ) {
+            qt = quantitationTypeService.loadByIdAndVectorType( quantitationTypeId, ee, SingleCellExpressionDataVector.class );
+            if ( qt == null ) {
+                throw new EntityNotFoundException( ee + " does not have a quantitation type with ID " + quantitationTypeId + "." );
+            }
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new EntityNotFoundException( ee + " does not have a preferred single-cell quantitation type." ) );
+        }
+        CompositeSequence designElement = compositeSequenceService.loadOrFail( designElementId, EntityNotFoundException::new );
+        Collection<Gene> genes;
+        genes = compositeSequenceService.getGenes( designElement );
+        Gene gene;
+        if ( genes.isEmpty() ) {
+            log.warn( "No gene mapped by " + designElement );
+            gene = null;
+        } else if ( genes.size() > 1 ) {
+            log.warn( "More than one gene mapped by " + designElement + "." );
+            gene = null;
+        } else {
+            gene = genes.iterator().next();
+        }
+        SingleCellExpressionDataVector vector = singleCellExpressionExperimentService.getSingleCellDataVectorWithoutCellIds( ee, qt, designElement );
+        if ( vector == null ) {
+            throw new EntityNotFoundException( "No vector for design element with ID " + designElementId + "." );
+        }
+        // TODO: cpm normalization
+        vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        SingleCellDataBoxplot dataset = new SingleCellDataBoxplot( vector );
+        dataset.setShowMean( false );
+        if ( assayIds != null ) {
+            Map<Long, BioAssay> baMap = IdentifiableUtils.getIdMap( vector.getSingleCellDimension().getBioAssays() );
+            List<BioAssay> assays = Arrays.stream( assayIds )
+                    .map( baId -> requireNonNull( baMap.get( baId ), "BioAssay with ID " + baId + " does not belong to " + ee.getShortName() + "." ) )
+                    .collect( Collectors.toList() );
+            dataset.setBioAssays( assays );
+        }
+        if ( ctaName != null ) {
+            CellTypeAssignment cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName ) );
+            dataset.setCellLevelCharacteristics( cta );
+            if ( focusedCharacteristicId != null ) {
+                dataset.setFocusedCharacteristic( cta.getCellTypes().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+            }
+        }
+        if ( clcId != null ) {
+            CellLevelCharacteristics clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcId ) );
+            dataset.setCellLevelCharacteristics( clc );
+            if ( focusedCharacteristicId != null ) {
+                dataset.setFocusedCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+            }
+        }
+        JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
+                "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
+                "Assay", "Expression data (log10)", dataset.createDataset(), ctaName != null || clcId != null );
+        if ( ( ctaName == null && clcId == null ) || focusedCharacteristicId != null ) {
+            // TODO: add per-row annotation, this does not appear to be supported by JFreeChart
+            dataset.createAnnotations().forEach( chart.getCategoryPlot()::addAnnotation );
+        }
+        response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
+                Math.min( Math.max( 50 * dataset.getNumberOfBoxplots(), DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ),
+                DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
@@ -479,8 +700,8 @@ public class ExpressionExperimentQCController extends BaseController {
                 value = fv + "--??";
             }
 
-            if ( value.startsWith( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX ) ) {
-                value = value.replaceFirst( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX, "" );
+            if ( value.startsWith( BatchInfoPopulationHelperServiceImpl.BATCH_FACTOR_NAME_PREFIX ) ) {
+                value = value.replaceFirst( BatchInfoPopulationHelperServiceImpl.BATCH_FACTOR_NAME_PREFIX, "" );
             } else {
                 value = StringUtils.abbreviate( value, maxCategoryLabelLength );
             }
@@ -512,9 +733,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         XYSeries series = new XYSeries( ee.getId(), true, true );
 
-        byte[] binCountsBytes = coexpCorrelationDistribution.getBinCounts();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] binCounts = bac.byteArrayToDoubles( binCountsBytes );
+        double[] binCounts = coexpCorrelationDistribution.getBinCounts();
         Integer numBins = coexpCorrelationDistribution.getNumBins();
 
         double step = 2.0 / numBins;
@@ -617,16 +836,14 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private XYSeriesCollection getMeanVariance( MeanVarianceRelation mvr ) {
 
-        final ByteArrayConverter bac = new ByteArrayConverter();
-
         XYSeriesCollection dataset = new XYSeriesCollection();
 
         if ( mvr == null ) {
             return dataset;
         }
 
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
 
         if ( means == null || variances == null ) {
             return dataset;
@@ -670,12 +887,10 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private void corrDistFileToPersistent( File file, ExpressionExperiment ee, DoubleArrayList counts ) {
         log.info( "Converting from pvalue distribution file to persistent stored version" );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        byte[] bytes = bac.doubleArrayToBytes( counts );
 
         CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
         coexpd.setNumBins( counts.size() );
-        coexpd.setBinCounts( bytes );
+        coexpd.setBinCounts( Arrays.copyOf( counts.elements(), counts.size() ) );
 
         try {
             coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
@@ -691,7 +906,7 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
-        SVDResult svdo = svdService.getSvdFactorAnalysis( ee.getId() );
+        SVDResult svdo = svdService.getSvdFactorAnalysis( ee );
         if ( svdo == null ) {
             writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
@@ -712,7 +927,7 @@ public class ExpressionExperimentQCController extends BaseController {
         Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
         Collection<ExperimentalFactor> continuousFactors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
+            boolean isContinous = ef.getType().equals( FactorType.CONTINUOUS );
             if ( isContinous ) {
                 continuousFactors.add( ef );
             }
@@ -767,7 +982,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                 if ( a != null && !Double.isNaN( a ) ) {
                     String title = plotname + " " + String.format( "%.2f", a );
-                    List<Double> values = svdo.getFactors().get( efId );
+                    List<Number> values = svdo.getFactors().get( efId );
                     Double[] eigenGene = this.getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
 
@@ -1050,10 +1265,9 @@ public class ExpressionExperimentQCController extends BaseController {
     @SuppressWarnings("unused")
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
         MeanVarianceRelation ret = MeanVarianceRelation.Factory.newInstance();
-        ByteArrayConverter bac = new ByteArrayConverter();
 
-        DoubleArrayList vars = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getVariances() ) );
-        DoubleArrayList means = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getMeans() ) );
+        DoubleArrayList vars = new DoubleArrayList( mvr.getVariances() );
+        DoubleArrayList means = new DoubleArrayList( mvr.getMeans() );
 
         DoubleArrayList filteredMeans = new DoubleArrayList();
         DoubleArrayList filteredVars = new DoubleArrayList();
@@ -1077,8 +1291,10 @@ public class ExpressionExperimentQCController extends BaseController {
                 .max( filteredVars )
                 + ")." );
 
-        ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
-        ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
+        filteredVars.trimToSize();
+        ret.setVariances( filteredVars.elements() );
+        filteredMeans.trimToSize();
+        ret.setMeans( filteredMeans.elements() );
 
         return ret;
     }
@@ -1196,7 +1412,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int MAX_COMPONENTS_FOR_SCREE = 10;
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory
-                .createBarChart( "", "Component (up to" + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
+                .createBarChart( "", "Component (up to " + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
                         PlotOrientation.VERTICAL, false, false, false );
 
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();

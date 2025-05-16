@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,19 +22,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -63,30 +66,32 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
     @Before
     public void setUp() throws Exception {
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        Taxon human = taxonService.findByCommonName( "human" );
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
         metaData.setShortName( randomName() );
+        metaData.setName( randomName() );
         metaData.setDescription( "bar" );
-        metaData.setIsRatio( false );
-        metaData.setTaxon( human );
-        metaData.setQuantitationTypeName( "rma" );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "human" ) );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "rma" );
+        qtMetadata.setScale( ScaleType.LOG2 );
+        qtMetadata.setType( StandardQuantitationType.AMOUNT );
+        qtMetadata.setIsRatio( false );
+        metaData.setQuantitationType( qtMetadata );
 
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        SimplePlatformMetadata ad = new SimplePlatformMetadata();
         ad.setShortName( "gfoobly_" + randomName() );
         ad.setName( "foobly doo loo" );
-        ad.setPrimaryTaxon( human );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( ad );
 
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.data.txt" )) {
-
-            ee = s.create( metaData, data );
+        DoubleMatrix<String, String> matrix;
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.data.txt" ) ) {
+            matrix = new DoubleMatrixReader().read( data );
         }
+
+        ee = s.create( metaData, matrix );
 
         ee = this.eeService.thawLite( ee );
     }
@@ -98,8 +103,8 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Category(SlowTest.class)
     public final void testParse() throws Exception {
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" ) ) {
             experimentalDesignImporter.importDesign( ee, is );
         }
 

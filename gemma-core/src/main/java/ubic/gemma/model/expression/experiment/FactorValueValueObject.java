@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -103,7 +103,7 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
             this.factorId = value.getExperimentalFactor().getId();
 
             // make sure we fill in the category for this if no characteristic is being *focused* on
-            if ( Hibernate.isInitialized( value.getExperimentalFactor() ) ) {
+            if ( ModelUtils.isInitialized( value.getExperimentalFactor() ) ) {
                 Characteristic factorCategory = value.getExperimentalFactor().getCategory();
                 if ( factorCategory != null ) {
                     this.category = factorCategory.getCategory();

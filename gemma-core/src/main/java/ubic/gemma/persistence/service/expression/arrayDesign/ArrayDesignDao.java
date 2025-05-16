@@ -12,7 +12,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -22,6 +21,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -33,17 +33,26 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     String OBJECT_ALIAS = "ad";
 
+    Collection<ArrayDesign> loadAllGenericGenePlatforms();
+
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     void deleteAlignmentData( ArrayDesign arrayDesign );
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
+    @Nullable
     ArrayDesign findByShortName( String shortName );
 
     Collection<ArrayDesign> findByName( String name );
 
+    @Nullable
+    ArrayDesign findOneByName( String name );
+
     Collection<ArrayDesign> findByAlternateName( String queryString );
+
+    @Nullable
+    ArrayDesign findOneByAlternateName( String name );
 
     Collection<ArrayDesign> findByManufacturer( String queryString );
 
@@ -55,7 +64,17 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    /**
+     * Obtain all the genes associated to the platform.
+     */
     Collection<Gene> getGenes( ArrayDesign arrayDesign );
+
+    /**
+     * Obtain all the genes associated to the platform organized by corresponding design elements.
+     */
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
@@ -133,6 +152,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     /**
      * Lightly thaw the given platform.
+     * <p>
+     * This includes all the to-one relations, but not the design elements.
      */
     void thawLite( ArrayDesign arrayDesign );
 
@@ -141,7 +162,12 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      */
     void thaw( ArrayDesign arrayDesign );
 
-    Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
+    /**
+     * Only thaw the design elements of a given platform.
+     */
+    void thawCompositeSequences( ArrayDesign arrayDesign );
+
+    boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 

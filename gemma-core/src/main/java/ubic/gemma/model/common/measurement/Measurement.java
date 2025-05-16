@@ -18,114 +18,27 @@
  */
 package ubic.gemma.model.common.measurement;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
+import javax.persistence.Transient;
+import java.util.Objects;
 
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class Measurement implements Identifiable, Serializable {
+public class Measurement extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1833568047451431226L;
     private MeasurementType type;
+    /**
+     * The measurement value.
+     * <p>
+     * Null indicates a missing value.
+     */
+    @Nullable
     private String value;
     private MeasurementKind kindCV;
     private String otherKind;
     private PrimitiveType representation;
-    private Long id;
     private Unit unit;
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-
-        Measurement other = ( Measurement ) obj;
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) )
-            return false;
-
-        if ( this.getValue() == null ) {
-            if ( other.getValue() != null )
-                return false;
-        } else if ( !this.getValue().equals( other.getValue() ) )
-            return false;
-
-        if ( this.getUnit() == null ) {
-            if ( other.getUnit() != null )
-                return false;
-        } else if ( !this.getUnit().equals( other.getUnit() ) )
-            return false;
-
-        if ( this.getType() == null ) {
-            if ( other.getType() != null )
-                return false;
-        } else if ( !this.getType().equals( other.getType() ) )
-            return false;
-
-        if ( this.getKindCV() == null ) {
-            if ( other.getKindCV() != null )
-                return false;
-        } else if ( !this.getKindCV().equals( other.getKindCV() ) )
-            return false;
-
-        if ( this.getOtherKind() == null ) {
-            if ( other.getOtherKind() != null )
-                return false;
-        } else if ( !this.getOtherKind().equals( other.getOtherKind() ) )
-            return false;
-        if ( this.getRepresentation() == null ) {
-            return other.getRepresentation() == null;
-        } else
-            return this.getRepresentation().equals( other.getRepresentation() );
-
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
-
-        if ( this.getId() == null ) {
-            result = prime * result + ( ( this.getValue() == null ) ? 0 : this.getValue().hashCode() );
-
-            result =
-                    prime * result + ( ( this.getRepresentation() == null ) ? 0 : this.getRepresentation().hashCode() );
-            result = prime * result + ( ( this.getUnit() == null ) ? 0 : this.getUnit().hashCode() );
-
-            result = prime * result + ( ( this.getType() == null ) ? 0 : this.getType().hashCode() );
-
-            result = prime * result + ( ( this.getKindCV() == null ) ? 0 : this.getKindCV().hashCode() );
-            result = prime * result + ( ( this.getOtherKind() == null ) ? 0 : this.getOtherKind().hashCode() );
-
-        }
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return this.getValue();
-    }
-
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     public MeasurementKind getKindCV() {
         return this.kindCV;
@@ -167,15 +80,83 @@ public class Measurement implements Identifiable, Serializable {
         this.unit = unit;
     }
 
+    @Nullable
     public String getValue() {
         return this.value;
     }
 
-    public void setValue( String value ) {
+    public void setValue( @Nullable String value ) {
         this.value = value;
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @Transient
+    public int getValueAsInt() {
+        ensureRepresentation( PrimitiveType.INT );
+        return value != null ? Integer.parseInt( value ) : 0;
+    }
+
+    @Transient
+    public long getValueAsLong() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return value != null ? Long.parseLong( value ) : 0L;
+    }
+
+    @Transient
+    public float getValueAsFloat() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return value != null ? Float.parseFloat( value ) : Float.NaN;
+    }
+
+    /**
+     * Retrieve the value of this measurement as a double.
+     * <p>
+     * Any missing value (i.e. null) will be returned as a {@link Double#NaN}.
+     */
+    @Transient
+    public double getValueAsDouble() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return value != null ? Double.parseDouble( value ) : Double.NaN;
+    }
+
+    public void setValueAsDouble( double value ) {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        this.value = String.valueOf( value );
+    }
+
+    private void ensureRepresentation( PrimitiveType representation ) {
+        if ( this.representation != representation ) {
+            throw new IllegalStateException( "THis measurement stores values of type " + this.representation + ", but " + representation + " was requested." );
+        }
+    }
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getValue(), getRepresentation(), getUnit(), getType(), getKindCV(), getOtherKind() );
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( !( obj instanceof Measurement ) )
+            return false;
+        Measurement other = ( Measurement ) obj;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getValue(), other.getValue() )
+                && Objects.equals( getUnit(), other.getUnit() )
+                && Objects.equals( getType(), other.getType() )
+                && Objects.equals( getRepresentation(), other.getRepresentation() )
+                && Objects.equals( getKindCV(), other.getKindCV() )
+                && Objects.equals( getOtherKind(), other.getOtherKind() );
+    }
+
+    @Override
+    public String toString() {
+        return this.getValue();
+    }
+
     public static final class Factory {
 
         public static Measurement newInstance() {

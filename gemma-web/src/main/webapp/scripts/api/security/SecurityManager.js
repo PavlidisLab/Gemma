@@ -41,7 +41,7 @@ Gemma.SecurityManager.managePermissions = function( elid, clazz, id, securityFor
 
    Ext.DomHelper.overwrite( elid, {
       tag : 'img',
-      src : ctxBasePath + "/images/loading.gif"
+      src : Gemma.CONTEXT_PATH + "/images/loading.gif"
    } );
 
    /*

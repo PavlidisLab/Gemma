@@ -82,7 +82,7 @@ Gemma.AnalysisResultsSearchForm = Ext
 
                     Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
                         tag: 'img',
-                        src: ctxBasePath + '/images/icons/warning.png'
+                        src: Gemma.CONTEXT_PATH + '/images/icons/warning.png'
                     });
 
                     Ext.DomHelper.append("analysis-results-search-form-messages", {
@@ -497,7 +497,7 @@ Gemma.AnalysisResultsSearchForm = Ext
                                 }, {
                                     xtype: 'button',
                                     width: 55,
-                                    icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
+                                    icon: Gemma.CONTEXT_PATH + '/images/icons/arrow_refresh_small.png',
                                     style: 'margin-top: 8px',
                                     text: 'Reset',
                                     tooltip: 'Clear all selections and reset the taxon mode ',
@@ -693,7 +693,7 @@ Gemma.AnalysisResultsSearchForm = Ext
                 this.geneSearchAndPreviewPanel.add(this.geneSearchAndPreview);
                 if (typeof Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button') !== 'undefined') {
                     Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button').show().setIcon(
-                        ctxBasePath + '/images/icons/delete.png').setTooltip('Remove this gene or group from your search')
+                        Gemma.CONTEXT_PATH + '/images/icons/delete.png').setTooltip('Remove this gene or group from your search')
                         .setHandler(
                             this.removeGeneChooser.createDelegate(this, ['geneChooserPanel' + (this.geneChooserIndex - 1)],
                                 false));

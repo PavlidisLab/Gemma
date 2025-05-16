@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.*;
 import java.util.*;
@@ -285,16 +285,16 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         Collection<ArrayDesign> arrayDesigns = arrayDesignService.load( ids );
 
-        Map<Long, ArrayDesign> idMap = EntityUtils.getIdMap( arrayDesigns );
+        Map<Long, ArrayDesign> idMap = IdentifiableUtils.getIdMap( arrayDesigns );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService
+        Map<Class<? extends AuditEventType>, Map<ArrayDesign, AuditEvent>> events = auditEventService
                 .getLastEvents( arrayDesigns, eventTypes );
 
-        Map<Auditable, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
-        Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
-        Map<Auditable, AuditEvent> sequenceAnalysisEvents = events.get( ArrayDesignSequenceAnalysisEvent.class );
-        Map<Auditable, AuditEvent> repeatAnalysisEvents = events.get( ArrayDesignRepeatAnalysisEvent.class );
-        Map<Auditable, AuditEvent> creationEvents = auditEventService.getCreateEvents( arrayDesigns );
+        Map<ArrayDesign, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
+        Map<ArrayDesign, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
+        Map<ArrayDesign, AuditEvent> sequenceAnalysisEvents = events.get( ArrayDesignSequenceAnalysisEvent.class );
+        Map<ArrayDesign, AuditEvent> repeatAnalysisEvents = events.get( ArrayDesignRepeatAnalysisEvent.class );
+        Map<ArrayDesign, AuditEvent> creationEvents = auditEventService.getCreateEvents( arrayDesigns );
 
         for ( ArrayDesignValueObject adVo : adVos ) {
 

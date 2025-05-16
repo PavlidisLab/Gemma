@@ -186,9 +186,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
         var goGroupTpl = new Ext.XTemplate(
             '<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" '
             + 'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
-        var phenotypeGroupTpl = new Ext.XTemplate(
-            '<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" '
-            + 'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
         var freeTxtTpl = new Ext.XTemplate(
             '<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" '
             + 'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
@@ -220,8 +217,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
                         }
                     } else if (values.resultValueObject instanceof GOGroupValueObject) {
                         return goGroupTpl.apply(values);
-                    } else if (values.resultValueObject instanceof PhenotypeGroupValueObject) {
-                        return phenotypeGroupTpl.apply(values);
                     } else if (values.resultValueObject instanceof FreeTextGeneResultsValueObject) {
                         return freeTxtTpl.apply(values);
                     } else if (values.resultValueObject instanceof SessionBoundGeneSetValueObject) {
@@ -239,7 +234,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
             store: {
                 reader: new Ext.data.ListRangeReader({}, Gemma.GeneAndGeneGroupComboRecord),
                 proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups,
-                    Gemma.genericErrorHandler),
+                    Gemma.Error.genericErrorHandler),
                 autoLoad: false
             }
         });

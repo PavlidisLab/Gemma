@@ -26,12 +26,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  *
  * @author Paul
  */
-public class TroubledStatusFlagEvent extends CurationDetailsEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7335601529423635731L;
+public class TroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
     @Override
     public final void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {
@@ -41,5 +36,4 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
         curatable.setTroubled( true );
         curatable.setLastTroubledEvent( auditEvent );
     }
-
 }

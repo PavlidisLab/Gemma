@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,24 @@
  */
 package ubic.gemma.model.common.protocol;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 
-import java.io.Serializable;
+public class Protocol extends AbstractDescribable implements Securable {
 
-public class Protocol extends AbstractDescribable implements Securable, Serializable {
-
-    private static final long serialVersionUID = -1902891452989019766L;
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Protocol ) )
+            return false;
+        Protocol that = ( Protocol ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
 
     public static final class Factory {
 

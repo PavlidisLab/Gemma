@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,12 +30,16 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
@@ -47,10 +52,14 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.core.util.locking.LockedPath;
+import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -60,9 +69,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -71,9 +81,12 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -86,18 +99,23 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
+import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
+import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -110,13 +128,23 @@ import static ubic.gemma.rest.util.Responders.respond;
 @CommonsLog
 public class DatasetsWebService {
 
-    private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
-    private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+    public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
+    public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
+
+    /**
+     * <a href="https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices">Cell Ranger Feature Barcode Matrices (MEX Format)</a>
+     */
+    public static final String APPLICATION_10X_MEX = "application/vnd.10xgenomics.mex";
+    public static final MediaType APPLICATION_10X_MEX_TYPE = new MediaType( "application", "vnd.10xgenomics.mex" );
 
     private static final String SEARCH_TIMEOUT_DESCRIPTION = "The search has timed out. This can only occur if the `search` parameter is provided. It can generally be resolved by reattempting the search 30 seconds later. Lookup the `Retry-After` header for the recommended delay.";
 
     private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
+
+    // fields allowed to be excluded
+    private static final Set<String> SCD_ALLOWED_EXCLUDE_FIELDS = new HashSet<>( Arrays.asList( "cellIds", "bioAssayIds", "cellTypeAssignments.cellTypeIds", "cellLevelCharacteristics.characteristicIds" ) );
+    private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -139,17 +167,25 @@ public class DatasetsWebService {
     @Autowired
     private DatasetArgService datasetArgService;
     @Autowired
-    private GeneArgService geneArgService;
-    @Autowired
     private TaxonArgService taxonArgService;
     @Autowired
+    private GeneArgService geneArgService;
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
     @Autowired
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private AccessDecisionManager accessDecisionManager;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Context
     private UriInfo uriInfo;
@@ -209,7 +245,7 @@ public class DatasetsWebService {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         Slice<ExpressionExperimentWithSearchResultValueObject> payload;
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( query != null ) {
             List<Long> ids;
             Sort sort;
@@ -282,7 +318,7 @@ public class DatasetsWebService {
     ) {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
         } else {
@@ -314,7 +350,7 @@ public class DatasetsWebService {
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -333,6 +369,28 @@ public class DatasetsWebService {
                         .collect( Collectors.toList() );
         return top( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ), l, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
+    }
+
+    @GET
+    @Path("/platforms/refresh")
+    @Secured("GROUP_ADMIN")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Retrieve refreshed experiment-to-platform associations.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = { @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
+    public Response refreshDatasetsPlatforms(
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+    ) {
+        tableMaintenanceUtil.evictEe2AdQueryCache();
+        return Response.created( URI.create( "/datasets/platforms" ) )
+                .entity( getDatasetsPlatformsUsageStatistics( query, filter, limit ) )
+                .build();
     }
 
     @Value
@@ -368,7 +426,7 @@ public class DatasetsWebService {
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -406,8 +464,6 @@ public class DatasetsWebService {
         }
     }
 
-    private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "parentTerms" );
-
     @GET
     @GZIP
     @CacheControl(maxAge = 1200)
@@ -432,8 +488,9 @@ public class DatasetsWebService {
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
             @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
-            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms ) {
-        boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+    ) {
+        boolean excludeParentTerms = exclude != null && exclude.getValue( ANNOTATION_ALLOWED_EXCLUDE_FIELDS ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
         if ( minFrequency != null && minFrequency < 0 ) {
@@ -499,17 +556,6 @@ public class DatasetsWebService {
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 limit, inferredTerms )
                 .addWarnings( queryWarnings, "query", LocationType.QUERY );
-    }
-
-    private Set<String> getExcludedFields( @Nullable ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude ) {
-        if ( exclude == null ) {
-            return Collections.emptySet();
-        }
-        if ( !ALLOWED_FIELDS.containsAll( exclude.getValue() ) ) {
-            throw new BadRequestException( String.format( "Only the following fields can be excluded: %s.",
-                    String.join( ", ", ALLOWED_FIELDS ) ) );
-        }
-        return new HashSet<>( exclude.getValue() );
     }
 
     private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs ) throws TimeoutException {
@@ -581,6 +627,34 @@ public class DatasetsWebService {
     }
 
     @GET
+    @Path("/annotations/refresh")
+    @Secured("GROUP_ADMIN")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve refreshed dataset annotations.",
+            responses = {
+                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
+            })
+    public Response refreshDatasetsAnnotations(
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
+            @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
+            @Parameter(description = "A category URI to restrict reported annotations. If unspecified, annotations from all categories are reported. If empty, uncategorized terms are reported.") @QueryParam("category") String category,
+            @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
+            @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
+            @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
+            @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
+            @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+    ) {
+        tableMaintenanceUtil.evictEe2CQueryCache();
+        return Response.created( URI.create( "/datasets/annotations" ) )
+                .entity( getDatasetsAnnotationsUsageStatistics( query, filter, exclude, limitArg, minFrequency, category, excludedCategoryUris, excludeFreeTextCategories, excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms, retainMentionedTerms ) )
+                .build();
+    }
+
+    @GET
     @Path("/taxa")
     @CacheControl(maxAge = 1200)
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
@@ -595,7 +669,7 @@ public class DatasetsWebService {
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -707,8 +781,19 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType
     ) {
+        if ( quantitationTypeArg != null ) {
+            ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+            QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
+        if ( useProcessedQuantitationType ) {
+            QuantitationType qt = datasetArgService.getPreferredQuantitationType( datasetArg );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
         return respond( datasetArgService.getSamples( datasetArg ) );
     }
 
@@ -780,14 +865,14 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/genes/{gene}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9" })
     @Operation(
             summary = "Retrieve the differential expression results for a given gene among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
@@ -800,7 +885,7 @@ public class DatasetsWebService {
             @Context HttpHeaders headers
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
-        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        MediaType accepted = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
         if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
             return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
         } else {
@@ -817,14 +902,14 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Operation(
             summary = "Retrieve the differential expression results for a given gene and taxa among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
@@ -839,7 +924,7 @@ public class DatasetsWebService {
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         Gene gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
-        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        MediaType accepted = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
             return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
         } else {
@@ -855,7 +940,7 @@ public class DatasetsWebService {
         int limit = limitArg != null ? limitArg.getValue() : GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
@@ -1008,6 +1093,166 @@ public class DatasetsWebService {
         return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
+    /**
+     * Retrieve the single-cell dimension for a given quantitation type.
+     */
+    @GZIP
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/singleCellDimension")
+    @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
+            })
+    })
+    public Object getDatasetSingleCellDimension(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
+            SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            SingleCellDimension dimension;
+            Set<String> excludedFields;
+            if ( excludeArg == null ) {
+                excludedFields = Collections.emptySet();
+            } else {
+                excludedFields = excludeArg.getValue( SCD_ALLOWED_EXCLUDE_FIELDS );
+            }
+            if ( excludedFields.contains( "cellIds" ) ) {
+                boolean includeBioAssays = !excludedFields.contains( "bioAssayIds" );
+                // we can go extra-fast if both are excluded
+                boolean includeIndices = !( excludedFields.contains( "cellTypeAssignments.cellTypeIds" ) && excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) );
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, true, true, true, includeIndices );
+            } else {
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            }
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return respond( new SingleCellDimensionValueObject( dimension, excludedFields.contains( "bioAssayIds" ), excludedFields.contains( "cellTypeAssignments.cellTypeIds" ), excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) ) );
+        }
+    }
+
+    @GZIP
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellTypeAssignment")
+    @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
+            }),
+            @ApiResponse(responseCode = "404",
+                    description = "If the dataset, quantitation type or cell type assignment does not exist, or if a preferred cell type assignment is requested but none is available.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
+    public Object getDatasetCellTypeAssignment(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            // TODO: implement CellTypeAssignmentArg
+            @Parameter(description = "The name of of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        CellTypeAssignment cta;
+        if ( ctaName != null ) {
+            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
+            if ( cta == null ) {
+                throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+        } else {
+            cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
+                    .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( new CellTypeAssignmentValueObject( cta, false ) );
+        }
+    }
+
+    @GZIP
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellLevelCharacteristics")
+    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
+            })
+    })
+    public Object getDatasetCellLevelCharacteristics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( dimension.getCellLevelCharacteristics().stream()
+                    .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
+                    .collect( Collectors.toList() ) );
+        }
+    }
+
     private static final String DATA_TSV_OUTPUT_DESCRIPTION = "The following columns are available: Probe, Sequence, GeneSymbol, GeneName, GemmaId, NCBIid followed by one column per sample. GeneSymbol, GeneName, GemmaId and NCBIid are optional.";
 
     /**
@@ -1033,13 +1278,14 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      * @param filterData return filtered the expression data.
      */
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
@@ -1048,23 +1294,11 @@ public class DatasetsWebService {
             deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
+            @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData ).orElse( null );
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() ) );
-            }
-            return this.outputFile( file );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            return Response.noContent().build();
-        } catch ( FilteringException e ) {
-            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
-        } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
-        }
+        return getDatasetProcessedExpression( datasetArg, filterData, download, force );
     }
 
     /**
@@ -1073,27 +1307,62 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
-                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public Response getDatasetProcessedExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("filter") @DefaultValue("false") Boolean filtered,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
+            throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
-                .build();
+        try ( LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
+                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) ) ) {
+            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+            return Response.ok( p.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Processed data for " + ee.getShortName() + " is still being generated.", 30L, e );
+        } catch ( IOException e ) {
+            log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
+            String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
+            return Response.ok( ( StreamingOutput ) output -> {
+                        try {
+                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true );
+                        } catch ( FilteringException ex ) {
+                            // this is a bit unfortunate, because it's too late for producing a 204 error
+                            throw new RuntimeException( ex );
+                        }
+                    } )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            return Response.noContent().build();
+        } catch ( FilteringException e ) {
+            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        }
     }
 
     /**
@@ -1102,33 +1371,140 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve raw expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+    public Response getDatasetRawExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
         } else {
-            qt = expressionExperimentService.getPreferredQuantitationType( ee );
-            if ( qt == null ) {
-                throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
+            qt = expressionExperimentService.getPreferredQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) ) );
+        }
+        try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
+            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+            return Response.ok( p.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            // file is being written, recommend to the user to wait a lils.copy( is, entityStittle bit
+            throw new ServiceUnavailableException( "Raw data for " + qt + " is still being generated.", 30L, e );
+        } catch ( IOException e ) {
+            log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
+            String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
+        }
+    }
+
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
+    @GET
+    @Path("/{dataset}/data/singleCell")
+    @Produces({ APPLICATION_10X_MEX, TEXT_TAB_SEPARATED_VALUES_UTF8 + ";q=0.9" })
+    @Operation(summary = "Retrieve single-cell expression data of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = {
+                                    @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")),
+                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.mex") }),
+                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"),
+                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
+                            }),
+                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetSingleCellExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Context HttpHeaders headers
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
+        MediaType mediaType = negotiate( headers, APPLICATION_10X_MEX_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, SingleCellExpressionDataVector.class );
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
+        }
+        if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, false, 5, TimeUnit.SECONDS ) ) {
+                if ( Files.exists( p.getPath() ) ) {
+                    return Response.ok( p.steal() )
+                            .type( APPLICATION_10X_MEX_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
+                            .build();
+                } else {
+                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, 30, false );
+                    throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
+                }
+            } catch ( TimeoutException e ) {
+                throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L, e );
+            } catch ( RejectedExecutionException e ) {
+                throw new ServiceUnavailableException( "Too many file generation tasks are being processed at this time.", 30L, e );
+            } catch ( IOException | InterruptedException e ) {
+                throw new InternalServerErrorException( e );
+            }
+        } else {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, false, 5, TimeUnit.SECONDS ) ) {
+                if ( !force && Files.exists( p.getPath() ) ) {
+                    return Response.ok( p.steal() )
+                            .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() ) ) + "\"" )
+                            .build();
+                } else {
+                    // generate the file in the background and stream it
+                    // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
+                    log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, force );
+                    return streamTabularDatasetSingleCellExpression( ee, qt, download );
+                }
+            } catch ( TimeoutException e ) {
+                // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
+                log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( RejectedExecutionException e ) {
+                log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( IOException | InterruptedException e ) {
+                throw new InternalServerErrorException( e );
             }
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+    }
+
+    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
+        String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
     }
 
@@ -1138,27 +1514,42 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                    schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
+                    examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
-            }
-            return this.outputFile( file );
+        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
+                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
+            String filename = file.getPath().getFileName().toString();
+            return Response.ok( file.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
-            throw new InternalServerErrorException( e.getMessage(), e );
+            log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
+            String filename = getDesignFileName( ee );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -1189,8 +1580,8 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        BatchEffectType be = expressionExperimentBatchInformationService.getBatchEffect( ee );
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
+        BatchEffectType be = getBatchEffectType( details );
         List<BatchConfound> confounds;
         Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfounds;
         if ( expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee ) ) {
@@ -1291,9 +1682,12 @@ public class DatasetsWebService {
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        SVDResult svd = svdService.getSvd( datasetArgService.getEntity( datasetArg ).getId() );
-        List<Long> bmIds = svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() );
-        return respond( svd == null ? null : new SimpleSVDValueObject( bmIds, svd.getVariances(), svd.getVMatrix().getRawMatrix() ) );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        SVDResult svd = svdService.getSvd( ee );
+        if ( svd == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an SVD." );
+        }
+        return respond( new SimpleSVDValueObject( svd ) );
     }
 
     /**
@@ -1342,7 +1736,7 @@ public class DatasetsWebService {
         Filters filter = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Sort sort = datasetArgService.getSort( SortArg.valueOf( "+id" ) );
         List<Long> datasetIds = expressionExperimentService.loadIdsWithCache( filter, sort );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( queryArg != null ) {
             datasetIds.retainAll( datasetArgService.getIdsForSearchQuery( queryArg, warnings ) );
         }
@@ -1416,8 +1810,10 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return respond( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
@@ -1457,8 +1853,10 @@ public class DatasetsWebService {
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+                    keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") ExpLevelConsolidationArg
+                    consolidate // Optional, default everything is returned
     ) {
         return respond( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
@@ -1498,10 +1896,10 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsDifferentialExpression( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
-            @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
+            @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION) @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @Parameter(description = "Keep results from non-specific probes.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @Parameter(description = "Strategy for consolidating expression of multiple probes for a given gene.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
     ) {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
@@ -1526,43 +1924,237 @@ public class DatasetsWebService {
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
             })
-    public Response getDataset(
+    public Response refreshDataset(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
+            @Parameter(description = "Refresh processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
             @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
     ) {
         Long id = datasetArgService.getEntityId( datasetArg );
         if ( id == null ) {
             throw new NotFoundException( "No dataset matches " + datasetArg );
         }
-        ExpressionExperiment ee;
-        if ( refreshVectors ) {
-            ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
-        } else {
-            ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
         if ( ee == null ) {
             throw new NotFoundException( "No dataset with ID " + id );
+        }
+        if ( refreshVectors ) {
+            processedExpressionDataVectorService.evictFromCache( ee );
         }
         if ( refreshReports ) {
             expressionExperimentReportService.evictFromCache( id );
         }
         return Response.created( URI.create( "/datasets/" + ee.getId() ) )
-                .entity( expressionExperimentService.loadValueObject( ee ) )
+                .entity( new ResponseDataObjectExpressionExperimentValueObject( expressionExperimentService.loadValueObject( ee ) ) )
                 .build();
     }
 
-    private Response outputFile( File file ) throws IOException {
-        // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( new GZIPInputStream( Files.newInputStream( file.toPath() ) ) )
-                .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
-                .build();
+    /**
+     * Retrieve all the "groups" of subsets of a dataset.
+     * <p>
+     * Each group of subsets is logically organized by a {@link BioAssayDimension} that holds its assays. We don't
+     * expose that aspect however, and simply use the ID of the BAD as ID of the group.
+     */
+    @GET
+    @Path("/{dataset}/subSetGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain all the subset groups of a dataset")
+    public ResponseDataObject<List<ExpressionExperimentSubSetGroupValueObject>> getDatasetSubSetGroups(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( expressionExperimentService.getSubSetsByDimension( ee )
+                .entrySet()
+                .stream()
+                .map( e -> {
+                    Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs = expressionExperimentService.getSubSetsByFactorValue( ee, e.getKey() );
+                    List<QuantitationTypeValueObject> qts = expressionExperimentService.getQuantitationTypes( ee, e.getKey() ).stream()
+                            .sorted( Comparator.comparing( QuantitationType::getName ) )
+                            .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
+                            .collect( Collectors.toList() );
+                    return createSubSetGroup( e.getKey(), e.getValue(), ssvs, qts, false );
+                } )
+                .collect( Collectors.toList() ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSetGroups/{subSetGroup}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain a specific subset group of a dataset")
+    public ResponseDataObject<ExpressionExperimentSubSetGroupValueObject> getDatasetSubSetGroup(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSetGroup") Long bioAssayDimensionId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        // this is preferred, because it does not require any data to be present
+        BioAssayDimension bad = expressionExperimentService.getBioAssayDimensionById( ee, bioAssayDimensionId );
+        if ( bad == null ) {
+            throw new NotFoundException( "No subset group with ID " + bioAssayDimensionId );
+        }
+        Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs = expressionExperimentService.getSubSetsByFactorValue( ee, bad );
+        List<QuantitationTypeValueObject> qts = expressionExperimentService.getQuantitationTypes( ee, bad ).stream()
+                .sorted( Comparator.comparing( QuantitationType::getName ) )
+                .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
+                .collect( Collectors.toList() );
+        return respond( createSubSetGroup( bad, expressionExperimentService.getSubSetsWithBioAssays( ee, bad ), ssvs, qts, true ) );
+    }
+
+    private ExpressionExperimentSubSetGroupValueObject createSubSetGroup( BioAssayDimension bad,
+            Collection<ExpressionExperimentSubSet> subsets,
+            Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs,
+            List<QuantitationTypeValueObject> qts,
+            boolean includeAssays ) {
+        Map<ExpressionExperimentSubSet, Set<FactorValue>> fvs = new HashMap<>();
+        ssvs.forEach( ( ef, s2fv ) -> {
+            s2fv.forEach( ( fv, s ) -> {
+                fvs.computeIfAbsent( s, k -> new HashSet<>() ).add( fv );
+            } );
+        } );
+        List<ExperimentalFactorValueObject> factors = ssvs.keySet().stream()
+                .sorted( Comparator.comparing( ExperimentalFactor::getName ) )
+                // don't include values, those are already included in the subsets
+                .map( ef -> new ExperimentalFactorValueObject( ef, false ) )
+                .collect( Collectors.toList() );
+        List<ExpressionExperimentSubsetWithFactorValuesObject> ssvos = subsets.stream()
+                // TODO order the subsets by how they appear in the BioAssayDimension
+                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                .map( subset -> {
+                    Map<ArrayDesign, ArrayDesignValueObject> id2advo;
+                    Map<BioAssay, BioAssay> assay2sourceAssayMap;
+                    if ( includeAssays ) {
+                        id2advo = new HashMap<>();
+                        for ( BioAssay ba : subset.getBioAssays() ) {
+                            id2advo.computeIfAbsent( ba.getArrayDesignUsed(), ArrayDesignValueObject::new );
+                            if ( ba.getOriginalPlatform() != null ) {
+                                id2advo.computeIfAbsent( ba.getOriginalPlatform(), ArrayDesignValueObject::new );
+                            }
+                        }
+                        assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
+                    } else {
+                        id2advo = null;
+                        assay2sourceAssayMap = null;
+                    }
+                    ExpressionExperimentSubsetWithFactorValuesObject vo = new ExpressionExperimentSubsetWithFactorValuesObject( subset, fvs.get( subset ), id2advo, includeAssays, assay2sourceAssayMap );
+                    if ( includeAssays ) {
+                        datasetArgService.populateOutliers( subset.getSourceExperiment(), vo.getBioAssays() );
+                    }
+                    return vo;
+                } )
+                .collect( Collectors.toList() );
+        return new ExpressionExperimentSubSetGroupValueObject( bad, ssvos, factors, qts );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain all subsets of a dataset")
+    public ResponseDataObject<List<ExpressionExperimentSubSetWithGroupsValueObject>> getDatasetSubSets(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = datasetArgService.getSubSetsGroupIds( datasetArg );
+        return respond( datasetArgService.getSubSets( datasetArg ).stream()
+                .map( subset -> new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups.getOrDefault( subset, Collections.emptyList() ) ) )
+                .collect( Collectors.toList() ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets/{subSet}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain a specific subset of a dataset")
+    public ResponseDataObject<ExpressionExperimentSubSetWithGroupsValueObject> getDatasetSubSetById(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSet") Long subSetId
+    ) {
+        ExpressionExperimentSubSet subset = datasetArgService.getSubSet( datasetArg, subSetId );
+        List<Long> subSetGroups = datasetArgService.getSubSetGroupIds( datasetArg, subset );
+        return respond( new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets/{subSet}/samples")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain the samples of a specific subset of a dataset")
+    public ResponseDataObject<List<BioAssayValueObject>> getDatasetSubSetSamples(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSet") Long subSetId
+    ) {
+        return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId ) );
+    }
+
+    /**
+     * A group of subsets, logically organized by a {@link BioAssayDimension}.
+     * @author poirigui
+     */
+    @Getter
+    public static class ExpressionExperimentSubSetGroupValueObject {
+
+        private final Long id;
+
+        private final String name;
+
+        /**
+         * List of factors that are associated with the subsets in this group.
+         */
+        private final List<ExperimentalFactorValueObject> factors;
+
+        private final List<QuantitationTypeValueObject> quantitationTypes;
+
+        private final List<ExpressionExperimentSubsetWithFactorValuesObject> subSets;
+
+        public ExpressionExperimentSubSetGroupValueObject( BioAssayDimension bioAssayDimension, List<ExpressionExperimentSubsetWithFactorValuesObject> subSets, List<ExperimentalFactorValueObject> factors, List<QuantitationTypeValueObject> quantitationTypes ) {
+            this.id = bioAssayDimension.getId();
+            // FIXME: make the name generation more robust, it's only tailored to how we name single-cell subsets
+            this.name = StringUtils.removeEnd( StringUtils.getCommonPrefix( subSets.stream().map( ExpressionExperimentSubsetValueObject::getName ).toArray( String[]::new ) ), " - " );
+            this.subSets = subSets;
+            this.factors = factors;
+            this.quantitationTypes = quantitationTypes;
+        }
+    }
+
+    @Getter
+    public static class ExpressionExperimentSubsetWithFactorValuesObject extends ExpressionExperimentSubsetValueObject {
+
+        private final List<FactorValueBasicValueObject> factorValues;
+
+        public ExpressionExperimentSubsetWithFactorValuesObject( ExpressionExperimentSubSet subset,
+                Set<FactorValue> factorValues,
+                @Nullable Map<ArrayDesign, ArrayDesignValueObject> id2advo,
+                boolean includeAssays, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap ) {
+            super( subset, id2advo, assay2sourceAssayMap, includeAssays, true, true );
+            this.factorValues = factorValues.stream()
+                    .map( FactorValueBasicValueObject::new )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    @Getter
+    public static class ExpressionExperimentSubSetWithGroupsValueObject extends ExpressionExperimentSubsetValueObject {
+
+        private final List<Long> subSetGroupIds;
+
+        public ExpressionExperimentSubSetWithGroupsValueObject( ExpressionExperimentSubSet subset, List<Long> subSetGroupIds ) {
+            super( subset, null, null, false, true, false );
+            this.subSetGroupIds = subSetGroupIds;
+        }
+    }
+
+    public static class ResponseDataObjectExpressionExperimentValueObject extends ResponseDataObject<ExpressionExperimentValueObject> {
+
+        public ResponseDataObjectExpressionExperimentValueObject( ExpressionExperimentValueObject payload ) {
+            super( payload );
+        }
     }
 
     @Value
     public static class SimpleSVDValueObject {
+        /**
+         * BioAssay IDs
+         * Order same as rows of the v matrix.
+         */
+        List<Long> bioAssayIds;
         /**
          * Order same as the rows of the v matrix.
          */
@@ -1573,6 +2165,13 @@ public class DatasetsWebService {
          */
         double[] variances;
         double[][] vMatrix;
+
+        public SimpleSVDValueObject( SVDResult svd ) {
+            bioAssayIds = svd.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
+            bioMaterialIds = svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() );
+            variances = svd.getVariances();
+            vMatrix = svd.getVMatrix().getRawMatrix();
+        }
     }
 
     private <T> QueriedAndFilteredAndInferredResponseDataObject<T> all( List<T> results, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort by, Collection<OntologyTerm> inferredTerms ) {
@@ -1647,11 +2246,36 @@ public class DatasetsWebService {
         }
     }
 
+    private void checkIsAdmin() {
+        accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
+    }
+
     private List<Long> sliceIds( List<Long> ids, int offset, int limit ) {
         if ( offset < ids.size() ) {
             return ids.subList( offset, Math.min( offset + limit, ids.size() ) );
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    public static class ResponseDataObjectCellTypeAssignmentValueObject extends ResponseDataObject<CellTypeAssignmentValueObject> {
+
+        public ResponseDataObjectCellTypeAssignmentValueObject( CellTypeAssignmentValueObject payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectListCellLevelCharacteristicsValueObject extends ResponseDataObject<List<CellLevelCharacteristicsValueObject>> {
+
+        public ResponseDataObjectListCellLevelCharacteristicsValueObject( List<CellLevelCharacteristicsValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectSingleCellDimensionValueObject extends ResponseDataObject<SingleCellDimensionValueObject> {
+
+        public ResponseDataObjectSingleCellDimensionValueObject( SingleCellDimensionValueObject payload ) {
+            super( payload );
         }
     }
 }

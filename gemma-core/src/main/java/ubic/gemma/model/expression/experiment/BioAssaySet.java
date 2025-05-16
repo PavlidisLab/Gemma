@@ -20,35 +20,23 @@
 package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a set of BioAssays. This is not associated with any actual data, and soley represents a logical grouping
- * of "samples" that can be used for any purpose. These could be a published grouping, or a subset of samples from a
- * published study.
+ * Represents a set of {@link BioAssay}s.
+ * <p>
+ * This is not associated with any actual data, and soley represents a logical grouping of "samples" that can be used
+ * for any purpose. These could be a published grouping, or a subset of samples from a published study.
+ * @see ExpressionExperiment
+ * @see ExpressionExperimentSubSet
  */
 public abstract class BioAssaySet extends Investigation {
 
-    private static final long serialVersionUID = 2368063046639481521L;
-    @Nullable
-    private DatabaseEntry accession;
     private Set<BioAssay> bioAssays = new HashSet<>();
 
-    @Nullable
-    public DatabaseEntry getAccession() {
-        return this.accession;
-    }
-
-    public void setAccession( @Nullable DatabaseEntry accession ) {
-        this.accession = accession;
-    }
-
-    @SuppressWarnings("JpaAttributeTypeInspection") // Inspector is not handling this correctly
     public Set<BioAssay> getBioAssays() {
         return bioAssays;
     }
@@ -56,10 +44,4 @@ public abstract class BioAssaySet extends Investigation {
     public void setBioAssays( Set<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
-
-    /**
-     * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
-     * @return an expression experiment value object.
-     */
-    public abstract ExpressionExperimentValueObject createValueObject();
 }

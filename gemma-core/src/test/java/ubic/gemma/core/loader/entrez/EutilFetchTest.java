@@ -19,22 +19,27 @@
 package ubic.gemma.core.loader.entrez;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.w3c.dom.Document;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.test.category.GeoTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
  */
+@Category(GeoTest.class)
 public class EutilFetchTest {
+
+    private static final String ncbiApiKey = Settings.getString( "ncbi.efetch.apikey" );
 
     @Test
     public void testFetch() throws Exception {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
-        String result = new EutilFetch( Settings.getString( "ncbi.efetch.apikey" ) ).fetch( "gds", "GSE4595", 2 );
+        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+        Document result = EutilFetch.summary( "gds", "GSE4595", 2, ncbiApiKey );
         assertNotNull( result );
-        assertTrue( "Got " + result, result.startsWith( "<?xml" ) );
     }
 }

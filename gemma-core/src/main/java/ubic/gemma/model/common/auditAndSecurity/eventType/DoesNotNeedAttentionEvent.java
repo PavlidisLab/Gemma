@@ -27,18 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  *
  * @author Paul
  */
-public class DoesNotNeedAttentionEvent extends CurationDetailsEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6425018808816856629L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public DoesNotNeedAttentionEvent() {
-    }
+public class DoesNotNeedAttentionEvent extends NeedsAttentionAlteringEvent {
 
     @Override
     public void updateCurationDetails( CurationDetails curatable, AuditEvent auditEvent ) {

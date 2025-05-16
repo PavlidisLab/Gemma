@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
  * @author poirigui
  */
 @ContextConfiguration
-public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContextTests {
+public class ExpressionExperimentServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -216,7 +216,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     public void testRemoveDatasetWithCoexpressionLinks() {
         ExpressionExperiment ee = new ExpressionExperiment();
         when( coexpressionService.hasLinks( ee ) ).thenReturn( true );
-        when( securityService.isEditable( ee ) ).thenReturn( true );
+        when( securityService.isEditableByCurrentUser( ee ) ).thenReturn( true );
         assertThatThrownBy( () -> expressionExperimentService.remove( ee ) )
                 .isInstanceOf( IllegalStateException.class );
     }

@@ -19,9 +19,8 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.model.SecureValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
  * @author frances
@@ -34,7 +33,6 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     private static final long serialVersionUID = -1856182824742323129L;
 
     private String description;
-    private DiffExpressionEvidenceValueObject diffExpressionEvidence;
     private Long id;
     private boolean isEditable;
     private boolean isOwnedByCurrentUser;
@@ -55,17 +53,6 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
         this.description = description;
     }
 
-    public DiffExpressionEvidenceValueObject getDiffExpressionEvidence() {
-        return this.diffExpressionEvidence;
-    }
-
-    public void setDiffExpressionEvidence( DiffExpressionEvidenceValueObject diffExpressionEvidence ) {
-        this.diffExpressionEvidence = diffExpressionEvidence;
-        if ( diffExpressionEvidence != null ) {
-            this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
-        }
-
-    }
 
     @Override
     public Long getId() {

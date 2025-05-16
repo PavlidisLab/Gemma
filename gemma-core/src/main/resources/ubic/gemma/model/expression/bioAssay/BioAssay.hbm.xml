@@ -9,15 +9,26 @@
          <generator class="native">
          </generator>
       </id>
-      <property name="name" type="java.lang.String">
+      <property name="shortName" type="java.lang.String" index="BIO_ASSAY_SHORT_NAME">
+         <!-- TODO: mark this as non-null -->
+         <column name="SHORT_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
+      </property>
+      <property name="name" type="java.lang.String" index="BIO_ASSAY_NAME">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
+      <property name="isOutlier" type="java.lang.Boolean">
+         <column name="IS_OUTLIER" not-null="false" unique="false" sql-type="TINYINT"/>
+      </property>
+      <property name="metadata" type="org.hibernate.type.MaterializedClobType">
+         <column name="METADATA" not-null="false" unique="false" sql-type="text"/>
+      </property>
       <property name="processingDate" type="java.util.Date">
          <column name="PROCESSING_DATE" not-null="false" unique="false" sql-type="DATETIME(3)"/>
       </property>
+      <!-- only for RNA-Seq data -->
       <property name="sequenceReadCount" type="java.lang.Long">
          <column name="SEQUENCE_READ_COUNT" not-null="false" unique="false" sql-type="BIGINT"/>
       </property>
@@ -27,14 +38,18 @@
       <property name="sequencePairedReads" type="java.lang.Boolean">
          <column name="SEQUENCE_PAIRED_READS" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
-      <property name="isOutlier" type="java.lang.Boolean">
-         <column name="IS_OUTLIER" not-null="false" unique="false" sql-type="TINYINT"/>
-      </property>
-      <property name="metadata" type="org.hibernate.type.MaterializedClobType">
-         <column name="METADATA" not-null="false" unique="false" sql-type="text"/>
-      </property>
       <property name="fastqHeaders" type="org.hibernate.type.MaterializedClobType">
          <column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
+      </property>
+      <!-- only for single-cell data -->
+      <property name="numberOfCells" type="java.lang.Integer">
+         <column name="NUMBER_OF_CELLS" not-null="false" sql-type="INTEGER"/>
+      </property>
+      <property name="numberOfDesignElements">
+         <column name="NUMBER_OF_DESIGN_ELEMENTS" not-null="false" sql-type="INTEGER"/>
+      </property>
+      <property name="numberOfCellsByDesignElements">
+         <column name="NUMBER_OF_CELLS_BY_DESIGN_ELEMENTS" not-null="false" sql-type="INTEGER"/>
       </property>
       <!-- the four entities below are assumed readily available in BioAssayValueObject -->
       <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"

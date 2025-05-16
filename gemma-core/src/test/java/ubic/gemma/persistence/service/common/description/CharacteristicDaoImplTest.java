@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.common.description;
 
-import gemma.gsec.AuthorityConstants;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
@@ -15,11 +14,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -200,7 +199,7 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         // add ACLs and read permission to everyone
         MutableAcl acl = aclService.createAcl( new AclObjectIdentity( ee ) );
         acl.insertAce( 0, BasePermission.READ, new AclGrantedAuthoritySid(
-                new SimpleGrantedAuthority( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), false );
+                new SimpleGrantedAuthority( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) ), false );
         aclService.updateAcl( acl );
         sessionFactory.getCurrentSession().flush();
 
@@ -210,9 +209,8 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
 
         // run as anonymous
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
+        AnonymousAuthenticationToken token = new AnonymousAuthenticationToken( "test", "anonymousUser",
+                Collections.singletonList( new SimpleGrantedAuthority( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) ) );
         context.setAuthentication( token );
         SecurityContextHolder.setContext( context );
         assertThat( SecurityUtil.isUserAdmin() ).isFalse();

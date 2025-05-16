@@ -24,8 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.description.LocalFile;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -42,7 +42,7 @@ public class RawDataFetcherTest extends TestCase {
     public void testFetch() {
         RawDataFetcher rdf = new RawDataFetcher();
         try {
-            Collection<LocalFile> result = rdf.fetch( "GSE1105" );
+            Collection<File> result = rdf.fetch( "GSE1105" );
             TestCase.assertNotNull( result );
             TestCase.assertEquals( 8, result.size() );
         } catch ( Exception e ) {
@@ -56,7 +56,7 @@ public class RawDataFetcherTest extends TestCase {
         RawDataFetcher rdf = new RawDataFetcher();
 
         try {
-            Collection<LocalFile> result = rdf.fetch( "GSE1001" );
+            Collection<File> result = rdf.fetch( "GSE1001" );
             assert ( result == null );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof java.net.UnknownHostException ) {

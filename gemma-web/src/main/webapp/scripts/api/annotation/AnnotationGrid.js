@@ -87,7 +87,7 @@ Gemma.AnnotationDataView = Ext
                 '<tpl if="objectClass == \'ExperimentTag\'">',
                 '<span class="fromExperimentTag">',
                 '</tpl>',
-                '<a ext:qtip="{className} : {termUri} via {objectClass}" href="' + gemBrowUrl + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
+                '<a ext:qtip="{className} : {termUri} via {objectClass}" href="' + Gemma.GEMBROW_URL + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
                 '{termName}',
                 '</a>',
                 '</span>',

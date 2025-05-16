@@ -18,12 +18,18 @@
  */
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
+import lombok.Setter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.SecurityConfig;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.servlet.tags.RequestContextAwareTag;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import javax.servlet.jsp.tagext.Tag;
-import javax.servlet.jsp.tagext.TagSupport;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
@@ -31,32 +37,51 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 /**
  * @author pavlidis
  */
-@SuppressWarnings("unused") // Frontend use
-public class ExceptionTag extends TagSupport {
+@Setter
+public class ExceptionTag extends RequestContextAwareTag {
 
     private static final long serialVersionUID = 4323477499674966726L;
     private static final Log log = LogFactory.getLog( ExceptionTag.class.getName() );
 
+    /**
+     * Exception to display.
+     */
     private Exception exception;
-    private Boolean showStackTrace = true;
+
+    /**
+     * Display the stacktrace.
+     * <p>
+     * Note: the stack trace is never display to non-administrators.
+     */
+    private boolean showStackTrace = true;
 
     @Override
-    public int doStartTag() {
+    public int doStartTagInternal() {
         try {
             final StringBuilder buf = new StringBuilder();
+            buf.append( "<div class=\"exception\">" );
             if ( this.exception == null ) {
                 buf.append( "Error was not recovered" );
             } else {
-                if ( showStackTrace ) {
-                    buf.append( "<div id=\"stacktrace\" class=\"stacktrace\" >" );
-                    if ( exception.getStackTrace() != null ) {
-                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ) );
-                    } else {
-                        buf.append( "There was no stack trace!" );
-                    }
+                buf.append( "<p class=\"message\">" ).append( escapeHtml4( exception.getMessage() ) ).append( "</p>" );
+                if ( showStackTrace && ( isDev() || isAdmin() ) ) {
+                    buf.append( "<div class=\"stacktrace mb-3\">" );
+                    buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ) );
                     buf.append( "</div>" );
+                    if ( exception.getCause() != null ) {
+                        Throwable rootCause = ExceptionUtils.getRootCause( exception );
+                        buf.append( "<h2>Root cause</h2>" );
+                        buf.append( "<p class=\"message\">" ).append( escapeHtml4( rootCause.getMessage() ) ).append( "</p>" );
+                        buf.append( "<div class=\"stacktrace mb-3\">" );
+                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( rootCause ) ) );
+                        buf.append( "</div>" );
+                    }
+                    if ( isDev() && !isAdmin() ) {
+                        buf.append( "<p><b>Note:</b> You are in development mode, so you can see the stack trace. Otherwise only administrators can see this.</p>" );
+                    }
                 }
             }
+            buf.append( "</div>" );
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             /*
@@ -75,15 +100,27 @@ public class ExceptionTag extends TagSupport {
         return Tag.EVAL_PAGE;
     }
 
-    public void setException( Exception exception ) {
-        this.exception = exception;
+    /**
+     * Check if the development profile is active.
+     */
+    private boolean isDev() {
+        return getRequestContext().getWebApplicationContext().getEnvironment()
+                .acceptsProfiles( EnvironmentProfiles.DEV );
     }
 
     /**
-     * @param showStackTrace the showStackTrace to set
+     * Check if the current user is an administrator.
      */
-    public void setShowStackTrace( Boolean showStackTrace ) {
-        this.showStackTrace = showStackTrace;
+    private boolean isAdmin() {
+        // this bean is declared twice: once for method security in gemma-core and a second time for Web security
+        AccessDecisionManager accessDecisionManager = getRequestContext().getWebApplicationContext()
+                .getBean( "httpAccessDecisionManager", AccessDecisionManager.class );
+        try {
+            accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null,
+                    SecurityConfig.createList( "GROUP_ADMIN" ) );
+            return true;
+        } catch ( AccessDeniedException e ) {
+            return false;
+        }
     }
-
 }

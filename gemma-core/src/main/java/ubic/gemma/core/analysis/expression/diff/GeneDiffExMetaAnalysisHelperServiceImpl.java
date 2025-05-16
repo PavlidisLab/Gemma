@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
@@ -37,9 +36,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
 
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @Override
     public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
@@ -114,8 +110,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> vos = this.geneDiffExMetaAnalysisService
                 .findMetaAnalyses( metaAnalysisIds );
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : vos ) {
-            vo.setDiffExpressionEvidence( this.phenotypeAssociationManagerService
-                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( vo.getId() ) );
 
             // Find meta-analysis so that its security settings can be copied to value object.
             // for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {

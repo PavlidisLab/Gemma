@@ -27,12 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  * @author pavlidis
  */
 @ContextConfiguration
-public class UserServiceImplTest extends AbstractJUnit4SpringContextTests {
+public class UserServiceImplTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -81,7 +81,7 @@ public class UserServiceImplTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private UserDao userDaoMock;
 
-    private final User testUser = User.Factory.newInstance();
+    private final User testUser = User.Factory.newInstance( "foobar" );
 
     private Collection<UserGroup> userGroups;
 
@@ -91,7 +91,6 @@ public class UserServiceImplTest extends AbstractJUnit4SpringContextTests {
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
-        testUser.setUserName( "foobar" );
         testUser.setPassword( "aija" );
         testUser.setPasswordHint( "I am an idiot" );
 

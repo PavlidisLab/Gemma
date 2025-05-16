@@ -1,6 +1,6 @@
 package ubic.gemma.model.analysis.expression.diff;
 
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
@@ -33,7 +33,7 @@ public class Contrast {
      * Create a contrast for a categorical factor.
      */
     public static Contrast categorical( FactorValue fv ) {
-        if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
+        if ( ModelUtils.isInitialized( fv.getExperimentalFactor() ) ) {
             Assert.isTrue( fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }
@@ -47,11 +47,11 @@ public class Contrast {
         // IDs can be safely retrieved for proxies
         Assert.isTrue( !Objects.equals( fv1.getExperimentalFactor().getId(), fv2.getExperimentalFactor().getId() ),
                 "An interaction must be of two different experimental factors." );
-        if ( Hibernate.isInitialized( fv1.getExperimentalFactor() ) ) {
+        if ( ModelUtils.isInitialized( fv1.getExperimentalFactor() ) ) {
             Assert.isTrue( fv1.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }
-        if ( Hibernate.isInitialized( fv2.getExperimentalFactor() ) ) {
+        if ( ModelUtils.isInitialized( fv2.getExperimentalFactor() ) ) {
             Assert.isTrue( fv2.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ),
                     "A categorical baseline must belong to a categorical factor." );
         }

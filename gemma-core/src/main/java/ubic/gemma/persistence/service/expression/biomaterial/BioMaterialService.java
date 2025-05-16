@@ -20,14 +20,17 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -46,8 +49,23 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    /**
+     * @see BioMaterialDao#findSubBioMaterials(BioMaterial, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct );
+
+    /**
+     * Find the siblings of a given biomaterial.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<BioMaterial> findSiblings( BioMaterial bioMaterial );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
@@ -77,8 +95,9 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioMaterial bioMaterial );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment getExpressionExperiment( Long id );
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })

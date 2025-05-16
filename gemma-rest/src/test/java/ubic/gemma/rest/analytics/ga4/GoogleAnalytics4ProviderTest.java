@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.web.client.RestTemplate;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
@@ -16,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 

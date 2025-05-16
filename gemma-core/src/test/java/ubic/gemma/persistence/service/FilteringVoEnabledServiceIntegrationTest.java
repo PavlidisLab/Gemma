@@ -80,7 +80,9 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     private static String getStubForPropType( FilteringService<?> filteringService, String prop ) {
         List<Object> allowedValues = filteringService.getFilterablePropertyAllowedValues( prop );
         if ( allowedValues != null ) {
-            return allowedValues.stream().findAny().map( String::valueOf ).orElse( null );
+            return allowedValues.stream().findAny()
+                    .map( e -> e instanceof Enum ? ( ( Enum<?> ) e ).name() : String.valueOf( e ) )
+                    .orElse( null );
         }
         Class<?> clazz = filteringService.getFilterablePropertyType( prop );
         if ( Byte.class.isAssignableFrom( clazz ) ) {

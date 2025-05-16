@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n"/>
+        </Console>
+        <ProgressUpdate name="progressUpdate">
+            <PatternLayout pattern="%m"/>
+        </ProgressUpdate>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="console"/>
+        </Root>
+
+        <Logger name="com" level="WARN"/>
+
+        <Logger name="com.slack.api" additivity="false">
+            <AppenderRef ref="console"/>
+        </Logger>
+
+        <!-- Jena -->
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+
+        <Logger name="com.opensymphony.oscache" level="WARN"/>
+
+        <Logger name="net" level="WARN"/>
+
+        <Logger name="org" level="WARN"/>
+
+        <!-- Apache Commons -->
+        <Logger name="org.apache.commons" level="WARN"/>
+
+        <!-- Jena -->
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
+
+        <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
+        <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
+
+        <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+
+        <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
+        <Logger name="org.glassfish.jersey.server.ServerRuntime$Responder" level="INFO"/>
+
+        <Logger name="org.directwebremoting" level="WARN"/>
+
+        <Logger name="org.hibernate" level="WARN"/>
+
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
+        <Logger name="org.springframework.scheduling.quartz" level="INFO"/>
+        <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
+        <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
+        <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
+
+        <Logger name="ubic.basecode" level="INFO"/>
+
+        <Logger name="ubic.gemma" level="INFO">
+            <AppenderRef ref="progressUpdate"/>
+        </Logger>
+
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+
+    </Loggers>
+</Configuration>

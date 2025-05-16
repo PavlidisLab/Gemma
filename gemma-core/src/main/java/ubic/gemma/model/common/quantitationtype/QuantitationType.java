@@ -18,17 +18,12 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-public class QuantitationType extends AbstractDescribable implements Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9139594736279728431L;
+public class QuantitationType extends AbstractDescribable {
 
     /**
      * This will be false except for some Qts on two-colour platforms.
@@ -47,14 +42,6 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private boolean isBatchCorrected;
 
     /**
-     * Indicate if this quantitation is the preferred for processed data.
-     * <p>
-     * @deprecated this is useless as there can only be one QT for processed data per dataset.
-     */
-    @Deprecated
-    private boolean isMaskedPreferred;
-
-    /**
      * This is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
      * It might be wise to separate out "quantile normalized", but since we always quantile normalize ProcessedData, this
      * isn't very useful.
@@ -62,9 +49,22 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private boolean isNormalized;
 
     /**
-     * This is only useful for RawExpressionDataVectors; for the ProcessedData it is just confusing
+     * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector} is
+     * preferred.
+     */
+    private boolean isSingleCellPreferred;
+
+    /**
+     * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector} is preferred.
      */
     private boolean isPreferred;
+
+    /**
+     * Indicate if this quantitation is the preferred for processed data.
+     * @deprecated this is useless as there can only be one QT for processed data per dataset.
+     */
+    @Deprecated
+    private boolean isMaskedPreferred;
 
     /**
      * This is also confusing: it is an attempt to capture whether we just used the data from GEO (or whatever) or went
@@ -77,14 +77,6 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private PrimitiveType representation;
     private ScaleType scale;
     private StandardQuantitationType type;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public QuantitationType() {
-    }
 
     public GeneralType getGeneralType() {
         return this.generalType;
@@ -125,9 +117,6 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
         this.isBatchCorrected = isBatchCorrected;
     }
 
-    /**
-     * @return If the data represented is a missing-value masked version of the preferred data.
-     */
     @Deprecated
     public boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
@@ -144,6 +133,14 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
 
     public void setIsNormalized( boolean isNormalized ) {
         this.isNormalized = isNormalized;
+    }
+
+    public boolean getIsSingleCellPreferred() {
+        return this.isSingleCellPreferred;
+    }
+
+    public void setIsSingleCellPreferred( boolean singleCellPreferred ) {
+        this.isSingleCellPreferred = singleCellPreferred;
     }
 
     public boolean getIsPreferred() {
@@ -214,26 +211,26 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             return false;
         }
         final QuantitationType that = ( QuantitationType ) object;
-        if ( getId() != null && that.getId() != null ) {
+        if ( that.getId() != null && this.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
-                && Objects.equals( getGeneralType(), that.getGeneralType() )
-                && Objects.equals( getType(), that.getType() )
-                && Objects.equals( getRepresentation(), that.getRepresentation() )
-                && Objects.equals( getScale(), that.getScale() )
-                && Objects.equals( getIsPreferred(), that.getIsPreferred() )
-                && Objects.equals( getIsRatio(), that.getIsRatio() )
-                && Objects.equals( getIsNormalized(), that.getIsNormalized() )
-                && Objects.equals( getIsBackground(), that.getIsBackground() )
-                && Objects.equals( getIsBackgroundSubtracted(), that.getIsBackgroundSubtracted() )
-                && Objects.equals( getIsRecomputedFromRawData(), that.getIsRecomputedFromRawData() );
+        return StringUtils.equalsIgnoreCase( getName(), that.getName() )
+                && Objects.equals( generalType, that.generalType )
+                && Objects.equals( type, that.type )
+                && Objects.equals( scale, that.scale )
+                && Objects.equals( representation, that.representation )
+                && Objects.equals( isRatio, that.isRatio )
+                && Objects.equals( isNormalized, that.isNormalized )
+                && Objects.equals( isBackground, that.isBackground )
+                && Objects.equals( isBackgroundSubtracted, that.isBackgroundSubtracted )
+                && Objects.equals( isBatchCorrected, that.isBatchCorrected )
+                && Objects.equals( isRecomputedFromRawData, that.isRecomputedFromRawData );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash( getName(), getGeneralType(), getType(), getRepresentation(), getScale(), getIsPreferred(),
-                getIsRatio(), getIsNormalized(), getIsBackground(), getIsBackgroundSubtracted(), getIsRecomputedFromRawData() );
+        return Objects.hash( super.hashCode(), generalType, type, scale, representation, isRatio, isNormalized,
+                isBackground, isBackgroundSubtracted, isBatchCorrected, isRecomputedFromRawData );
     }
 
     @Override
@@ -261,7 +258,7 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
         if ( isRecomputedFromRawData ) {
             b.append( " [Recomputed From Raw]" );
         }
-        if ( isPreferred || isMaskedPreferred ) {
+        if ( isPreferred || isMaskedPreferred || isSingleCellPreferred ) {
             b.append( " [Preferred]" );
         }
         return b.toString();
@@ -276,8 +273,8 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
         /**
          * Create a new QT with the same spec as the provided one.
          * <p>
-         * Note: since this is a new instance, we don't copy the {@link #getId()}, {@link #getIsPreferred()} or
-         * {@link #getIsMaskedPreferred()} over.
+         * Note: since this is a new instance, we don't copy the {@link #getId()}, {@link #getIsPreferred()},
+         * {@link #getIsMaskedPreferred()} or {@link #getIsSingleCellPreferred()} over.
          */
         public static QuantitationType newInstance( QuantitationType quantitationType ) {
             QuantitationType result = newInstance();
@@ -292,6 +289,7 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
             result.isBackground = quantitationType.isBackground;
             result.isBackgroundSubtracted = quantitationType.isBackgroundSubtracted;
             result.isBatchCorrected = quantitationType.isBatchCorrected;
+            result.isRecomputedFromRawData = quantitationType.isRecomputedFromRawData;
             return result;
         }
 

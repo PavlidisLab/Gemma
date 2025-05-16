@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -54,13 +55,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
-        this.configureMocks();
-
         List<ExperimentalFactor> factors = Arrays.asList( experimentalFactorA_Area, experimentalFactorB );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
@@ -69,14 +68,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             this.checkResults( resultSet );
         }
-    }
-
-    private void configureMocks() {
-
-        this.configureMockAnalysisServiceHelper();
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
     }
 
     /**

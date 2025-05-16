@@ -45,8 +45,8 @@
 		<constructor-arg name="traverseCauses" value="true"/>
 	</bean>
 
-	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
-		<property name="sessionFactory" ref="sessionFactory"/>
+	<bean id="transactionManager" class="ubic.gemma.persistence.hibernate.HibernateTransactionManager">
+		<constructor-arg index="0" ref="sessionFactory"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
@@ -82,6 +82,7 @@
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
 				<prop key="hibernate.search.lucene_version">LUCENE_36</prop>
 				<prop key="hibernate.search.default.indexBase">${gemma.search.dir}</prop>
+				<prop key="hibernate.search.indexing_strategy">manual</prop>
 			</props>
 		</property>
 	</bean>

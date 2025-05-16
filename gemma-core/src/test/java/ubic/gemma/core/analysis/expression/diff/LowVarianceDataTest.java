@@ -19,7 +19,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -40,6 +41,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * Test based on GSE19480, see bug 3177
@@ -70,6 +72,9 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeoService geoService;
+
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     public void checkResults( DifferentialExpressionAnalysis analysis ) {
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
@@ -124,7 +129,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         experimentalFactorService.remove( toremove );
@@ -132,7 +137,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -144,10 +149,9 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void test() {
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
-        AnalysisType aa = analysisService
-                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
+        AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION, aa );
 
@@ -157,9 +161,10 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         assertEquals( 2, factors.size() );
         config.setAnalysisType( aa );
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
 
-        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();

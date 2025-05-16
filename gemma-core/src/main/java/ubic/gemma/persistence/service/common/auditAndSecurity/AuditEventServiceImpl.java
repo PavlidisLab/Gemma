@@ -18,22 +18,23 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
  * @see AuditEventService
  */
-@Service
+@Service("auditEventService")
 public class AuditEventServiceImpl implements AuditEventService {
 
     private final AuditEventDao auditEventDao;
@@ -51,8 +52,14 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Auditable, AuditEvent> getCreateEvents( Collection<? extends Auditable> auditables ) {
+    public <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditables ) {
         return this.auditEventDao.getCreateEvents( auditables );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuditEvent getLastEvent( Auditable auditable ) {
+        return auditEventDao.getLastEvent( auditable );
     }
 
     @Override
@@ -69,39 +76,53 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
-        return this.auditEventDao.getLastEventsByType( auditables, types );
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type ) {
+        return auditEventDao.getLastEvents( auditableClass, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date ) {
-        return this.auditEventDao.getNewSinceDate( date );
+    public <T extends Auditable> Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> getLastEvents(
+            Collection<T> auditables, Collection<Class<? extends AuditEventType>> types ) {
+        Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> results = new HashMap<>();
+        for ( Class<? extends AuditEventType> ti : types ) {
+            Map<T, AuditEvent> results2 = auditEventDao.getLastEvents( auditables, ti );
+            results.put( ti, results2.entrySet().stream()
+                    .filter( e -> ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
+                    .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) );
+        }
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Auditable> getUpdatedSinceDate( java.util.Date date ) {
-        return this.auditEventDao.getUpdatedSinceDate( date );
+    public <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date ) {
+        return this.auditEventDao.getNewSinceDate( auditableClass, date );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date ) {
+        return this.auditEventDao.getUpdatedSinceDate( auditableClass, date );
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
-        return this.auditEventDao.hasEvent( a, type );
+        return this.auditEventDao.getLastEvent( a, type ) != null;
     }
 
     @Override
     @Transactional(readOnly = true)
     public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
-        this.auditEventDao.retainHavingEvent( a, type );
+        final Map<? extends Auditable, AuditEvent> events = auditEventDao.getLastEvents( a, type );
+        CollectionUtils.filter( a, events::containsKey );
     }
 
     @Override
     @Transactional(readOnly = true)
     public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
-        this.auditEventDao.retainLackingEvent( a, type );
+        final Map<? extends Auditable, AuditEvent> events = auditEventDao.getLastEvents( a, type );
+        CollectionUtils.filter( a, ( Predicate<Auditable> ) arg0 -> !events.containsKey( arg0 ) );
     }
-
 }

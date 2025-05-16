@@ -3,6 +3,7 @@
 
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
        xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
@@ -17,6 +18,12 @@
                             name-generator="ubic.gemma.core.context.BeanNameGenerator">
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
+
+    <!-- This bean allow for generating URLs relative to the context path or the host URL -->
+    <bean id="webEntityUrlBuilder" class="ubic.gemma.web.util.WebEntityUrlBuilder">
+        <constructor-arg value="${gemma.hosturl}"/>
+        <constructor-arg ref="servletContext"/>
+    </bean>
 
     <!-- The servlet uses a different Spring context with gemma-core's context as parent -->
     <!-- Unfortunately, bean post-processor do not get applied, so they must be redeclared here if we want them to apply
@@ -56,8 +63,6 @@
                 <prop key="/bioMaterial/*">bioMaterialController</prop>
                 <prop key="/compositeSequence/*">compositeSequenceController</prop>
                 <prop key="/experimentalDesign/*">experimentalDesignController</prop>
-                <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController
-                </prop>
                 <prop key="/getData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/getMetaData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/checkJobProgress.html">taskCompletionController</prop>
@@ -124,23 +129,6 @@
         <aop:scoped-proxy/>
     </bean>
 
-    <bean id="expressionExperimentFormController"
-          class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
-        <property name="successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"/>
-        <property name="commandName" value="expressionExperiment"/>
-        <property name="commandClass"
-                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
-        <property name="formView" value="expressionExperiment.edit"/>
-        <property name="expressionExperimentService" ref="expressionExperimentService"/>
-        <property name="bioAssayService" ref="bioAssayService"/>
-        <property name="bioMaterialService" ref="bioMaterialService"/>
-        <property name="externalDatabaseService" ref="externalDatabaseService"/>
-        <property name="preprocessorService" ref="preprocessorService"/>
-        <property name="persisterHelper" ref="persisterHelper"/>
-        <property name="quantitationTypeService" ref="quantitationTypeService"/>
-        <property name="auditTrailService" ref="auditTrailService"/>
-    </bean>
-
     <!-- <bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
         </bean> -->
     <bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer"/>
@@ -168,10 +156,6 @@
 
     <bean id="javascriptLogger" class="ubic.gemma.web.util.JavascriptLogger">
         <dwr:remote javascript="JavascriptLogger"/>
-    </bean>
-
-    <bean id="emptyController" class="ubic.gemma.web.controller.EmptyController">
-        <dwr:remote javascript="EmptyController"/>
     </bean>
 
     <bean id="differentialExpressionSearchController"
@@ -289,8 +273,6 @@
             <dwr:include method="getProducts"/>
             <dwr:include method="loadGeneDetails"/>
             <dwr:include method="loadGeneEvidence"/>
-            <dwr:include method="loadAllenBrainImages"/>
-            <dwr:include method="getGeneABALink"/>
         </dwr:remote>
     </bean>
 
@@ -604,12 +586,6 @@
         </dwr:remote>
     </bean>
 
-    <bean id="feedReader" class="ubic.gemma.web.feed.FeedReader">
-        <dwr:remote javascript="FeedReader">
-            <dwr:include method="getLatestNews"/>
-        </dwr:remote>
-    </bean>
-
     <bean id="userListController" class="ubic.gemma.web.controller.common.auditAndSecurity.UserListController">
         <dwr:remote javascript="UserListController">
             <dwr:include method="getUsers"/>
@@ -681,12 +657,10 @@
                      javascript="FreeTextGeneResultsValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject"
+                     javascript="GOGroupValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.PhenotypeGroupValueObject"
-                     javascript="PhenotypeGroupValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject"
                      javascript="DatabaseBackedGeneSetValueObject">
@@ -702,40 +676,11 @@
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject"
                      javascript="CitationValueObject"/>
 
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.CharacteristicValueObject"
                      javascript="CharacteristicValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject"
-                     javascript="ScoreValueObject"/>
-
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject"
-                     javascript="PhenotypeAssPubValueObject"/>
-
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject"
-                     javascript="SimpleTreeValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject"
-                     javascript="EvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
-                     javascript="ExperimentalEvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject"
-                     javascript="LiteratureEvidenceValueObject"/>
-
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject"
-                     javascript="DiffExpressionEvidenceValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
                      javascript="ExpressionExperimentSetValueObject">
@@ -747,15 +692,12 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
                      javascript="ExpressionExperimentValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject"
+                     javascript="ExpressionExperimentSubsetValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqValueObject"
                      javascript="GeeqValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqAdminValueObject"
                      javascript="GeeqAdminValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject"
-                     javascript="PhenotypeValueObject"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject"
-                     javascript="ExternalDatabaseStatisticsValueObject"/>
 
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject"/>
@@ -946,6 +888,8 @@
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject"/>
+        <dwr:convert type="bean"
+                     class="ubic.gemma.model.analysis.ProtocolValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject"/>
         <dwr:convert type="bean"

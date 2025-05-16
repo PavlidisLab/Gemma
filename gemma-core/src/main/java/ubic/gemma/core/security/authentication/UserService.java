@@ -5,10 +5,10 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
-import java.util.Collection;
-
 /**
  * Override a few definition from gsec so that we can use Gemma-specific implementations safely.
+ * <p>
+ * Avoid using this service directly, use {@link UserManager} instead.
  * @author poirigui
  */
 public interface UserService extends gemma.gsec.authentication.UserService {

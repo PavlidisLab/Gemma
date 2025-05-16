@@ -22,14 +22,11 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.springframework.stereotype.Service;
 import ubic.basecode.math.KruskalWallis;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelperImpl;
+import ubic.gemma.core.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -62,7 +59,7 @@ public class BatchConfoundUtils {
         Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap = new HashMap<>();
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             BioMaterial bm = bioAssay.getSampleUsed();
-            SVDServiceHelperImpl.populateBMFMap( bioMaterialFactorMap, bm );
+            SVDServiceImpl.populateBMFMap( bioMaterialFactorMap, bm );
         }
         // fill missing values
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
@@ -86,10 +83,10 @@ public class BatchConfoundUtils {
         // FV -> index
         Map<FactorValue, Integer> batchIndexes = new HashMap<>();
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            if ( ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 batchFactor = ef;
 
-                Map<Long, FactorValue> factorValueById = EntityUtils.getIdMap( ef.getFactorValues() );
+                Map<Long, FactorValue> factorValueById = IdentifiableUtils.getIdMap( ef.getFactorValues() );
 
                 // batch factors are not continuous, so the ID is always a Long
                 Map<BioMaterial, Number> bmToFvId = bioMaterialFactorMap.get( batchFactor );
@@ -151,7 +148,7 @@ public class BatchConfoundUtils {
             int df;
 
             int numBatches = batchFactor.getFactorValues().size();
-            if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
                 factorValues.setSize( numBioMaterials );
@@ -175,7 +172,7 @@ public class BatchConfoundUtils {
 //                        + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p )
 //                        + "\t" + numBatches );
             } else {
-                Map<Long, FactorValue> factorValueById = EntityUtils.getIdMap( ef.getFactorValues() );
+                Map<Long, FactorValue> factorValueById = IdentifiableUtils.getIdMap( ef.getFactorValues() );
 
                 Set<FactorValue> usedFactorValues = new HashSet<>( bmToFv.size() );
                 for ( Number val : bmToFv.values() ) {

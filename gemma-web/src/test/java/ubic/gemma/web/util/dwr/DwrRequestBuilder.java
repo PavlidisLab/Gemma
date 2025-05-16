@@ -1,13 +1,12 @@
 package ubic.gemma.web.util.dwr;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import javax.servlet.ServletContext;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Request builder that allows multiple DWR calls to be performed.
@@ -50,16 +49,17 @@ public class DwrRequestBuilder implements RequestBuilder {
                 type = "number";
             } else if ( arg instanceof Boolean ) {
                 type = "boolean";
+            } else if ( arg instanceof JSONObject ) {
+                type = "object";
+            } else if ( arg instanceof JSONArray ) {
+                type = "array";
             } else {
                 throw new IllegalArgumentException( "Unsupported type: " + arg.getClass() );
             }
-            try {
-                callPayload.append( "c" ).append( callId ).append( "-param" ).append( i++ ).append( "=" ).append( type ).append( ":" )
-                        .append( URLEncoder.encode( String.valueOf( arg ), StandardCharsets.UTF_8.name() ) )
-                        .append( '\n' );
-            } catch ( UnsupportedEncodingException e ) {
-                throw new RuntimeException( e );
-            }
+            callPayload.append( "c" ).append( callId ).append( "-param" ).append( i++ ).append( "=" ).append( type ).append( ":" )
+                    // TODO: encoding?
+                    .append( arg )
+                    .append( '\n' );
         }
         callCount++;
         return this;

@@ -20,9 +20,10 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import lombok.Setter;
+import lombok.ToString;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
 /**

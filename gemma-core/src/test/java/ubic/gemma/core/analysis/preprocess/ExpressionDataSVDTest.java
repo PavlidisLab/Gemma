@@ -21,40 +21,138 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author paul
  */
-public class ExpressionDataSVDTest {
+@ContextConfiguration
+public class ExpressionDataSVDTest extends BaseTest {
+
+    @Configuration
+    @TestComponent
+    static class CC {
+
+        @Bean
+        public SimpleExpressionDataLoaderService singleCellDataLoaderService() {
+            return new SimpleExpressionDataLoaderServiceImpl();
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock();
+        }
+
+        @Bean
+        public PersisterHelper persisterHelper() {
+            return mock();
+        }
+
+        @Bean
+        public PreprocessorService preprocessorService() {
+            return mock();
+        }
+
+        @Bean
+        public TaxonService taxonService() {
+            return mock();
+        }
+
+        @Bean
+        public ExternalDatabaseService externalDatabaseService() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private SimpleExpressionDataLoaderService service;
+
+    @Autowired
+    private TaxonService taxonService;
 
     private ExpressionDataDoubleMatrix testData = null;
     private ExpressionDataSVD svd = null;
 
     @Before
     public void setUp() throws Exception {
-
         testData = new ExpressionDataTestMatrix();
-        svd = new ExpressionDataSVD( testData, false );
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
+        Collection<SimplePlatformMetadata> ads = new HashSet<>();
+        SimplePlatformMetadata ad = new SimplePlatformMetadata();
+        ad.setShortName( "test" );
+        ad.setName( "new ad" );
+        ad.setTechnologyType( TechnologyType.GENELIST );
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
+        metaData.setShortName( "test" );
+        metaData.setName( "ee" );
+
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "testing" );
+        qtMetadata.setGeneralType( GeneralType.QUANTITATIVE );
+        qtMetadata.setScale( ScaleType.LOG2 );
+        qtMetadata.setType( StandardQuantitationType.AMOUNT );
+        qtMetadata.setIsRatio( true );
+        metaData.setQuantitationType( qtMetadata );
+
+        DoubleMatrix<String, String> matrix;
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
+            matrix = new DoubleMatrixReader().read( data );
+        }
+
+        Taxon mouseTaxon = new Taxon();
+        when( taxonService.findByCommonName( "mouse" ) ).thenReturn( mouseTaxon );
+
+        ExpressionExperiment ee = service.convert( metaData, matrix );
+        testData = new ExpressionDataDoubleMatrix( ee, ee.getRawExpressionDataVectors() );
+        svd = new ExpressionDataSVD( testData, false );
     }
 
     @Test
@@ -159,6 +257,7 @@ public class ExpressionDataSVDTest {
     @Category(SlowTest.class)
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
+        gc.setElementLimitForStrictness( 15000 );
         InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );

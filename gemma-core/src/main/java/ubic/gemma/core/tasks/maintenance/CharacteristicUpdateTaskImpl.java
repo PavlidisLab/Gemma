@@ -74,16 +74,10 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
 
     @Override
     public TaskResult call() {
-        if ( taskCommand.isRemove() ) {
+        if ( getTaskCommand().isRemove() ) {
             return this.doRemove();
         }
         return this.doUpdate();
-    }
-
-    @Override
-    public void setTaskCommand( CharacteristicUpdateCommand command ) {
-        assert command != null;
-        super.setTaskCommand( command );
     }
 
     private Characteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
@@ -176,14 +170,14 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
     }
 
     private TaskResult doRemove() {
-        Collection<AnnotationValueObject> chars = taskCommand.getAnnotationValueObjects();
+        Collection<AnnotationValueObject> chars = getTaskCommand().getAnnotationValueObjects();
         log.info( "Delete " + chars.size() + " characteristics..." );
 
         Collection<Characteristic> asChars = convertToCharacteristic( chars );
 
         if ( asChars.isEmpty() ) {
             log.info( "No characteristic objects were received" );
-            return new TaskResult( taskCommand, false );
+            return newTaskResult( false );
         }
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
@@ -194,7 +188,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             characteristicService.remove( cFromDatabase );
             log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
-        return new TaskResult( taskCommand, true );
+        return newTaskResult( true );
 
     }
 
@@ -207,9 +201,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
      *
      */
     private TaskResult doUpdate() {
-        Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();
+        Collection<AnnotationValueObject> avos = getTaskCommand().getAnnotationValueObjects();
         if ( avos.isEmpty() )
-            return new TaskResult( taskCommand, false );
+            return newTaskResult( false );
         log.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
         StopWatch timer = new StopWatch();
         timer.start();
@@ -219,7 +213,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
 
         if ( asChars.isEmpty() && factorValues.isEmpty() ) {
             log.info( "Nothing to update" );
-            return new TaskResult( taskCommand, false );
+            return newTaskResult( false );
         }
 
         for ( FactorValue factorValue : factorValues ) {
@@ -227,7 +221,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
         }
 
         if ( asChars.isEmpty() )
-            return new TaskResult( taskCommand, true );
+            return newTaskResult( true );
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
 
@@ -249,7 +243,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
              * Check needed because Characteristics are not securable.
              */
             if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() ) && !securityService
-                    .isEditable( ( Securable ) parent ) ) {
+                    .isEditableByCurrentUser( ( Securable ) parent ) ) {
                 throw new AccessDeniedException( "Access is denied" );
             }
 
@@ -294,7 +288,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             log.info( "Update took: " + timer.getTime() );
         }
 
-        return new TaskResult( taskCommand, true );
+        return newTaskResult( true );
 
     }
 

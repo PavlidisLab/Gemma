@@ -24,15 +24,22 @@
         <param-value>en</param-value>
     </context-param>
 
-    <context-param>
-        <param-name>spring.profiles.active</param-name>
-        <param-value>web</param-value>
-    </context-param>
-
     <!-- Context Configuration locations for Spring XML files -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>classpath*:ubic/gemma/applicationContext-*.xml</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>contextInitializerClasses</param-name>
+        <param-value>ubic.gemma.web.context.InitializeContext</param-value>
+    </context-param>
+
+    <!-- Make HTML escaping the default in Spring JSP/JSTL tags -->
+    <!-- See https://github.com/spring-projects/spring-framework/issues/7891 for more details -->
+    <context-param>
+        <param-name>defaultHtmlEscape</param-name>
+        <param-value>true</param-value>
     </context-param>
 
     <!-- Filters.  -->
@@ -163,19 +170,6 @@
     <servlet>
         <servlet-name>gemma</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <!-- this is always after the JAWR servlets are loaded -->
-        <load-on-startup>2</load-on-startup>
-    </servlet>
-
-    <!-- Defines the Spring-WS MessageDispatcherServlet -->
-    <servlet>
-        <servlet-name>gemma-ws</servlet-name>
-        <servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
-        <init-param>
-            <!-- Transform the location attributes in WSDLs -->
-            <param-name>transformWsdlLocations</param-name>
-            <param-value>false</param-value>
-        </init-param>
         <load-on-startup>0</load-on-startup>
     </servlet>
 
@@ -208,54 +202,10 @@
         <jsp-file>/resources/restapidocs/index.jsp</jsp-file>
     </servlet>
 
-    <servlet>
-        <servlet-name>gemma-static-js</servlet-name>
-        <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
-        <init-param>
-            <param-name>configLocation</param-name>
-            <param-value>/jawr.properties</param-value>
-        </init-param>
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-
-    <servlet>
-        <servlet-name>gemma-static-binary</servlet-name>
-        <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
-        <init-param>
-            <param-name>type</param-name>
-            <param-value>binary</param-value>
-        </init-param>
-        <init-param>
-            <param-name>configLocation</param-name>
-            <param-value>/jawr.properties</param-value>
-        </init-param>
-        <!-- The Jawr Image servlet must start before the Jawr CSS Servlet -->
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-
-    <servlet>
-        <servlet-name>gemma-static-css</servlet-name>
-        <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
-        <init-param>
-            <param-name>configLocation</param-name>
-            <param-value>/jawr.properties</param-value>
-        </init-param>
-        <init-param>
-            <param-name>type</param-name>
-            <param-value>css</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
     <servlet-mapping>
         <servlet-name>gemma</servlet-name>
         <url-pattern>/</url-pattern>
         <url-pattern>/dwr/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma-ws</servlet-name>
-        <url-pattern>/ws/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
@@ -273,18 +223,15 @@
         <url-pattern>/resources/restapidocs/index.html</url-pattern>
     </servlet-mapping>
 
+    <!-- a few static resources to be delivered by Tomcat -->
     <servlet-mapping>
-        <servlet-name>gemma-static-js</servlet-name>
+        <servlet-name>default</servlet-name>
+        <!-- scripts -->
         <url-pattern>*.js</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma-static-css</servlet-name>
+        <!-- styles -->
         <url-pattern>*.css</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma-static-binary</servlet-name>
+        <!-- source mappings -->
+        <url-pattern>*.map</url-pattern>
         <!-- images -->
         <url-pattern>*.png</url-pattern>
         <url-pattern>*.jpg</url-pattern>
@@ -299,14 +246,17 @@
         <url-pattern>*.woff2</url-pattern>
         <!-- flash animation -->
         <url-pattern>*.swf</url-pattern>
-    </servlet-mapping>
-
-    <!-- a few static resources to be delivered by Tomcat -->
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
         <url-pattern>/robots.txt</url-pattern>
         <url-pattern>/sitemap.xml</url-pattern>
     </servlet-mapping>
+
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <page-encoding>utf-8</page-encoding>
+            <trim-directive-whitespaces>true</trim-directive-whitespaces>
+        </jsp-property-group>
+    </jsp-config>
 
     <session-config>
         <session-timeout>60</session-timeout>

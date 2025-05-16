@@ -11,8 +11,8 @@ import org.hibernate.internal.CriteriaImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.FilterCriteriaUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -65,7 +65,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
      */
     protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
         return this.getSessionFactory().getCurrentSession()
-                .createCriteria( elementClass )
+                .createCriteria( getElementClass() )
                 .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
     }
 
@@ -85,7 +85,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d IDs for %s took %d ms.",
-                    result.size(), elementClass.getName(),
+                    result.size(), getElementClass().getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
@@ -109,7 +109,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d entities for %s took %d ms.",
-                    result.size(), elementClass.getName(),
+                    result.size(), getElementClass().getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
 
@@ -154,7 +154,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d entities for %s took %d ms (querying: %d, counting: %d).",
-                    totalElements, elementClass.getName(),
+                    totalElements, getElementClass().getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -205,7 +205,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
-                    totalElements, elementClass.getName(),
+                    totalElements, getElementClass().getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
@@ -237,7 +237,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
         if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
-                    results.size(), elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    results.size(), getElementClass().getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -254,7 +254,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         timer.stop();
         if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Counting %d entities for %s took %d ms.",
-                    ret, elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+                    ret, getElementClass().getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return ret;
     }

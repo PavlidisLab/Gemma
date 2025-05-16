@@ -6,19 +6,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
-import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -28,8 +27,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
 @Getter
 @Setter
-public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment>
-        implements SecureValueObject {
+public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment> implements BioAssaySetValueObject {
 
     private static final long serialVersionUID = -6861385216096602508L;
     protected Integer numberOfBioAssays;
@@ -53,19 +51,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonIgnore
     private Integer bioMaterialCount;
     @JsonIgnore
-    private Boolean currentUserHasWritePermission = null;
-    @JsonIgnore
-    private Boolean currentUserIsOwner = null;
-    @JsonIgnore
     private Long experimentalDesign;
     private String externalDatabase;
     private String externalDatabaseUri;
     private String externalUri;
     private GeeqValueObject geeq;
-    @JsonIgnore
-    private Boolean isPublic = false;
-    @JsonIgnore
-    private Boolean isShared = false;
     private String metadata;
     @JsonProperty("numberOfProcessedExpressionVectors")
     private Integer processedExpressionVectorCount;
@@ -73,6 +63,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String source;
     @JsonIgnore
     private Boolean suitableForDEA = true;
+
+    // these are populated by gsec
+    @JsonIgnore
+    private boolean isPublic = false;
+    @JsonIgnore
+    private boolean isShared = false;
+    @JsonIgnore
+    private boolean userCanWrite = false;
+    @JsonIgnore
+    private boolean userOwned = false;
 
     /**
      * FIXME: this should be named simply "taxon", but that field is already taken for Gemma Web, see {@link #getTaxon()}.
@@ -86,6 +86,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
+
+    @Nullable
+    @GemmaWebOnly
+    private Double minPvalue;
 
     /**
      * Required when using the class as a spring bean.
@@ -113,7 +117,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.description = ee.getDescription();
 
         // accession
-        if ( !ignoreAccession && ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+        if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
@@ -131,7 +135,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Counts
-        if ( Hibernate.isInitialized( ee.getBioAssays() ) ) {
+        if ( ModelUtils.isInitialized( ee.getBioAssays() ) ) {
             this.numberOfBioAssays = ee.getBioAssays().size();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
@@ -139,7 +143,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // ED
-        if ( !ignoreDesign && ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
+        if ( !ignoreDesign && ee.getExperimentalDesign() != null && ModelUtils.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
@@ -151,7 +155,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         batchConfound = ee.getBatchConfound();
 
         // GEEQ: for administrators, create an admin geeq VO. Normal GEEQ VO otherwise.
-        if ( ee.getGeeq() != null && Hibernate.isInitialized( ee.getGeeq() ) ) {
+        if ( ee.getGeeq() != null && ModelUtils.isInitialized( ee.getGeeq() ) ) {
             geeq = SecurityUtil.isUserAdmin() ?
                     new GeeqAdminValueObject( ee.getGeeq() ) :
                     new GeeqValueObject( ee.getGeeq() );
@@ -159,7 +163,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             geeq = null;
         }
 
-        if ( Hibernate.isInitialized( ee.getCharacteristics() ) ) {
+        if ( ModelUtils.isInitialized( ee.getCharacteristics() ) ) {
             characteristics = ee.getCharacteristics().stream()
                     .map( CharacteristicValueObject::new )
                     .collect( Collectors.toSet() );
@@ -177,7 +181,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this( ee );
 
         // ACL
-        boolean[] permissions = EntityUtils.getPermissions( aoi );
+        boolean[] permissions = SecurityUtils.getPermissions( aoi );
         this.setIsPublic( permissions[0] );
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
@@ -202,11 +206,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
         this.metadata = vo.getMetadata();
-        if ( vo.getShortName() == null && ExpressionExperimentSubsetValueObject.class.isAssignableFrom( vo.getClass() ) ) {
-            this.setShortName( ( ( ExpressionExperimentSubsetValueObject ) vo ).getSourceExperimentShortName() );
-        } else {
-            this.shortName = vo.getShortName();
-        }
+        this.shortName = vo.getShortName();
         this.source = vo.getSource();
         this.taxonObject = vo.getTaxonObject();
         this.technologyType = vo.getTechnologyType();
@@ -214,13 +214,14 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.processedExpressionVectorCount = vo.getProcessedExpressionVectorCount();
         this.arrayDesignCount = vo.getArrayDesignCount();
         this.bioMaterialCount = vo.getBioMaterialCount();
-        this.currentUserHasWritePermission = vo.getCurrentUserHasWritePermission();
-        this.currentUserIsOwner = vo.getCurrentUserIsOwner();
+        this.userCanWrite = vo.getUserCanWrite();
+        this.userOwned = vo.getUserOwned();
         this.isPublic = vo.getIsPublic();
         this.isShared = vo.getIsShared();
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
         this.characteristics = vo.getCharacteristics();
+        this.minPvalue = vo.getMinPvalue();
     }
 
     /**
@@ -267,17 +268,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Override
     @JsonIgnore
     public boolean getUserCanWrite() {
-        if ( this.currentUserHasWritePermission == null )
-            return false;
-        return this.currentUserHasWritePermission;
+        return this.userCanWrite;
     }
 
     @Override
     @JsonIgnore
     public boolean getUserOwned() {
-        if ( this.currentUserIsOwner == null )
-            return false;
-        return this.currentUserIsOwner;
+        return this.userOwned;
     }
 
     @Override
@@ -292,12 +289,22 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @Override
     public void setUserCanWrite( boolean userCanWrite ) {
-        this.currentUserHasWritePermission = userCanWrite;
+        this.userCanWrite = userCanWrite;
     }
 
     @Override
     public void setUserOwned( boolean isUserOwned ) {
-        this.currentUserIsOwner = isUserOwned;
+        this.userOwned = isUserOwned;
+    }
+
+    @GemmaWebOnly
+    public boolean getCurrentUserHasWritePermission() {
+        return userCanWrite;
+    }
+
+    @GemmaWebOnly
+    public boolean getCurrentUserIsOwner() {
+        return userOwned;
     }
 
     @Override

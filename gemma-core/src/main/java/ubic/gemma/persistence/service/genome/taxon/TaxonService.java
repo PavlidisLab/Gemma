@@ -66,8 +66,6 @@ public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledServ
      */
     Collection<Taxon> loadAllTaxaWithGenes();
 
-    Collection<TaxonValueObject> getTaxaWithEvidence();
-
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */

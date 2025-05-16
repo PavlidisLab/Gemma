@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -31,23 +31,23 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<BioAssayOutl
 
     @Override
     public TaskResult call() {
-        Collection<BioAssay> bioAssays = bioAssayService.load( taskCommand.getBioAssayIds() );
+        Collection<BioAssay> bioAssays = bioAssayService.load( getTaskCommand().getBioAssayIds() );
         if ( bioAssays.isEmpty() ) {
             throw new RuntimeException( "Could not locate the bioassays" );
         }
 
-        if ( taskCommand.isRevert() ) {
+        if ( getTaskCommand().isRevert() ) {
             sampleRemoveService.unmarkAsMissing( bioAssays );
         } else {
             sampleRemoveService.markAsMissing( bioAssays );
         }
         bioAssays = bioAssayService.thaw( bioAssays );
 
-        Collection<BioAssayValueObject> flagged = new HashSet<>();
+        HashSet<BioAssayValueObject> flagged = new HashSet<>();
         for ( BioAssay ba : bioAssays ) {
             flagged.add( new BioAssayValueObject( ba, false ) );
         }
 
-        return new TaskResult( taskCommand, flagged );
+        return newTaskResult( flagged );
     }
 }

@@ -7,13 +7,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.context.TestComponent;
 
 import static org.junit.Assert.assertNull;
 
 @ContextConfiguration
-public class MissingBuildInfoTest extends AbstractJUnit4SpringContextTests {
+public class MissingBuildInfoTest extends BaseTest {
 
     @Import(BuildInfo.class)
     @Configuration

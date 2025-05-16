@@ -1,1 +1,3 @@
-/bin
+# Generated bundles
+/src/main/webapp/bundles/
+/src/main/webapp/node_modules/

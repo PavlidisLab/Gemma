@@ -19,12 +19,12 @@
 
 package ubic.gemma.model.analysis.expression;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.Store;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 
@@ -39,10 +39,6 @@ import java.util.Set;
 @Indexed
 public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1034074709420077917L;
     private Taxon taxon;
     private Set<BioAssaySet> experiments = new HashSet<>();
 
@@ -56,6 +52,22 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     @DocumentId
     public Long getId() {
         return super.getId();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExpressionExperimentSet ) )
+            return false;
+        ExpressionExperimentSet that = ( ExpressionExperimentSet ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else if ( getName() != null && that.getName() != null ) {
+            return getName().equals( that.getName() );
+        } else {
+            return false;
+        }
     }
 
     @Override

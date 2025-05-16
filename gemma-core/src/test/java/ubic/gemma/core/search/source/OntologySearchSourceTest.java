@@ -17,6 +17,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -35,7 +36,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.core.search.source.OntologySearchSource.getLabelFromTermUri;
 
 @ContextConfiguration
-public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
+public class OntologySearchSourceTest extends BaseTest {
 
     @Configuration
     @TestComponent

@@ -23,12 +23,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
@@ -51,6 +53,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 @Service
+@Transactional(propagation = Propagation.NEVER)
 public class PreprocessorServiceImpl implements PreprocessorService {
 
     private static final Log log = LogFactory.getLog( PreprocessorServiceImpl.class );
@@ -72,7 +75,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
-    private SVDServiceHelper svdService;
+    private SVDService svdService;
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
     @Autowired
@@ -83,7 +86,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    @Transactional(propagation = Propagation.NEVER)
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -113,21 +115,26 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
         if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee ) ) {
+            log.warn( ee + " is not batch-correctable, will not perform ComBat." );
             return;
         }
 
-        Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
+        Collection<ProcessedExpressionDataVector> vecs;
+        try {
+            vecs = this.getProcessedExpressionDataVectors( ee );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new QuantitationTypeConversionRelatedPreprocessingException( ee, e );
+        }
 
         ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
         // Convert to vectors (persist QT)
-        processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
+        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors(), false );
 
-        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, "ComBat batch correction", "" );
+        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, String.format( "ComBat batch correction, vectors were replaced with %d batch-corrected ones.", replaced ) );
     }
 
     @Override
-    @Transactional(propagation = Propagation.NEVER)
     public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
@@ -138,16 +145,17 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     private void processVectorCreate( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {
         try {
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee, ignoreQuantitationMismatch );
-        } catch ( QuantitationMismatchException e ) {
+            processedExpressionDataVectorService.createProcessedDataVectors( ee, true, ignoreQuantitationMismatch );
+        } catch ( QuantitationTypeDetectionException e ) {
             // wrap it in a runtime exception, which will result in a rollback of the current transaction
-            throw new QuantitationMismatchPreprocessingException( ee, e );
+            throw new QuantitationTypeDetectionRelatedPreprocessingException( ee, e );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new QuantitationTypeConversionRelatedPreprocessingException( ee, e );
         }
     }
 
     /**
      * Refresh the batch status of the data set.
-     * @param ee
      */
     private void processBatchInfo( ExpressionExperiment ee ) {
         expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
@@ -241,14 +249,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private void processForSampleCorrelation( ExpressionExperiment ee ) throws SampleCoexpressionRelatedPreprocessingException {
         try {
             sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
-        } catch ( RuntimeException e ) {
+        } catch ( FilteringException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            throw new FilteringRelatedPreprocessingException( ee, e );
+        } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw new SampleCoexpressionRelatedPreprocessingException( ee, e );
         }
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
-        dataFileService.deleteAllFiles( expExp );
+        dataFileService.deleteAllProcessedDataFiles( expExp );
+        dataFileService.deleteAllAnalysisFiles( expExp );
     }
 
     private void checkQuantitationType( ExpressionDataDoubleMatrix correctedData ) {
@@ -294,12 +306,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      *
      * @return processed data vectors; if they don't exist, create them. They will be thawed in either case.
      */
-    private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
+    private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) throws QuantitationTypeConversionException {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
                 .getProcessedDataVectorsAndThaw( ee );
         if ( vecs.isEmpty() ) {
             log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
-            this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            this.processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
             vecs = this.processedExpressionDataVectorService.getProcessedDataVectorsAndThaw( ee );
         }
         return vecs;

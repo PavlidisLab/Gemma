@@ -443,7 +443,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                    persisterHelper.persist( bacs.ba );
+                        persisterHelper.persist( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log
@@ -498,7 +498,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 + " experiments associated with updated platform " + arrayDesign );
         for ( ExpressionExperiment ee : ees4platform ) {
             try {
-                expressionDataFileService.deleteAllFiles( ee );
+                expressionDataFileService.deleteAllAnnotatedFiles( ee );
             } catch ( Exception e ) {
                 ArrayDesignProbeMapperServiceImpl.log
                         .error( "Error deleting files for " + ee + " " + e.getMessage(), e );

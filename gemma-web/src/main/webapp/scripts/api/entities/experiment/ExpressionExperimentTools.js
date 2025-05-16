@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 /**
  *
@@ -720,7 +720,7 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
          cls : "gq-override-value-wrap",
          html :
             "<input id='gq-qual-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
-            "   style='background-color: " + scoreToColor( Number( qval ) ) + "'" +
+            "   style='background-color: " + Gemma.GEEQ.scoreToColor( Number( qval ) ) + "'" +
             "   readonly " + (!ee.geeq.manualQualityOverride ? "disabled" : "") +
             "   value='" + qval +
             "'/> "
@@ -741,7 +741,7 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
             change : function( el, val ) {
                var nr = document.getElementById( 'gq-qual-override-value' );
                nr.value = (Math.round( val ) / 10 - 1).toFixed( 1 );
-               nr.style.background = scoreToColor( Number( nr.value ) );
+               nr.style.background = Gemma.GEEQ.scoreToColor( Number( nr.value ) );
                ee.geeq.manualQualityScore = nr.value;
             }
          }
@@ -828,7 +828,7 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
          cls : "gq-override-value-wrap",
          html :
             "<input id='gq-suit-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
-            "   style='background-color: " + scoreToColor( Number( sval ) ) + "'" +
+            "   style='background-color: " + Gemma.GEEQ.scoreToColor( Number( sval ) ) + "'" +
             "   readonly " + (!ee.geeq.manualSuitabilityOverride ? "disabled" : "") +
             "   value='" + sval +
             "'/> "
@@ -849,7 +849,7 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
             change : function( el, val ) {
                var nr = document.getElementById( 'gq-suit-override-value' );
                nr.value = (Math.round( val ) / 10 - 1).toFixed( 1 );
-               nr.style.background = scoreToColor( Number( nr.value ) );
+               nr.style.background = Gemma.GEEQ.scoreToColor( Number( nr.value ) );
                ee.geeq.manualSuitabilityScore = nr.value;
             }
          }
@@ -899,8 +899,8 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
 
    geeqRowRenderer : function( label, value, labelDesc, valueDesc, valDecimals, warning, extra, normalizeColor ) {
       if ( valDecimals === undefined ) valDecimals = 1;
-      var valColor = normalizeColor ? scoreToColorNormalized( Number( value ) ) : scoreToColor( Number( value ) );
-      var valNumber = roundScore( value, valDecimals );
+      var valColor = normalizeColor ? Gemma.GEEQ.scoreToColorNormalized( Number( value ) ) : Gemma.GEEQ.scoreToColor( Number( value ) );
+      var valNumber = Gemma.GEEQ.roundScore( value, valDecimals );
       var cls = valNumber < 0 ? "negative" : "positive";
       var html =
          '<div class="gq-row ' + (extra ? 'has-extra' : '') + ' " style="background-color: ' + valColor + '">' +
@@ -980,7 +980,7 @@ Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
 
       if ( ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
          panelBC.add( {
-            html : getStatusBadge( 'cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell" )
+            html : Gemma.GEEQ.getStatusBadge( 'cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell" )
          } );
 
       } else {

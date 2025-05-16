@@ -1,5 +1,13 @@
 package ubic.gemma.core.search.lucene;
 
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.util.Version;
 import org.junit.Test;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -7,6 +15,8 @@ import ubic.gemma.model.common.search.SearchSettings;
 import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.assertj.core.util.Sets.set;
 import static org.junit.Assert.*;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
@@ -155,5 +165,43 @@ public class LuceneQueryUtilsTest {
         assertEquals( "BRCA1", quote( "BRCA1" ) );
         assertEquals( "BRCA?", quote( "BRCA?" ) );
         assertEquals( "BRCA1\\\"", quote( "BRCA1\"" ) );
+    }
+
+    /**
+     * Make sure that a query containing a hyphen is not parsed as a negative query.
+     */
+    @Test
+    public void testQueryWithHyphen() throws SearchException {
+        Query query = parseSafely( SearchSettings.expressionExperimentSearch( "single-cell transcriptomics" ), new QueryParser( Version.LUCENE_36, "*", new EnglishAnalyzer( Version.LUCENE_36 ) ) );
+        assertThat( query )
+                .asInstanceOf( type( BooleanQuery.class ) )
+                .extracting( BooleanQuery::clauses )
+                .asInstanceOf( list( BooleanClause.class ) )
+                .satisfiesExactly(
+                        c -> assertThat( c.getQuery() )
+                                .asInstanceOf( type( BooleanQuery.class ) )
+                                .extracting( BooleanQuery::clauses )
+                                .asInstanceOf( list( BooleanClause.class ) )
+                                .satisfiesExactly(
+                                        d -> assertThat( d )
+                                                .extracting( BooleanClause::getQuery )
+                                                .asInstanceOf( type( TermQuery.class ) )
+                                                .extracting( TermQuery::getTerm )
+                                                .extracting( Term::text )
+                                                .isEqualTo( "singl" ),
+                                        d -> assertThat( d )
+                                                .extracting( BooleanClause::getQuery )
+                                                .asInstanceOf( type( TermQuery.class ) )
+                                                .extracting( TermQuery::getTerm )
+                                                .extracting( Term::text )
+                                                .isEqualTo( "cell" )
+                                ),
+                        c -> assertThat( c )
+                                .extracting( BooleanClause::getQuery )
+                                .asInstanceOf( type( TermQuery.class ) )
+                                .extracting( TermQuery::getTerm )
+                                .extracting( Term::text )
+                                .isEqualTo( "transcriptom" )
+                );
     }
 }

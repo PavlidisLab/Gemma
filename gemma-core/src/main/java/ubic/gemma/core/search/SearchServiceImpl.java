@@ -36,14 +36,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -61,7 +59,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -259,8 +257,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             canConvertFromEntity( e.getKey(), e.getValue() );
             canConvertFromId( e.getValue() );
         }
-        // FIXME: remove this in the 1.32 series, we still allow selecting Phenotypes from the UI
-        supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
     }
 
     private void canConvertFromEntity( Class<? extends Identifiable> from, Class<? extends IdentifiableValueObject<?>> to ) {
@@ -340,7 +336,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
         }
 
-        Map<Long, IdentifiableValueObject<?>> entityVosById = EntityUtils.getIdMap( entitiesVos );
+        Map<Long, IdentifiableValueObject<?>> entityVosById = IdentifiableUtils.getIdMap( entitiesVos );
 
         Set<SearchResult<?>> excludedResults = new HashSet<>();
 

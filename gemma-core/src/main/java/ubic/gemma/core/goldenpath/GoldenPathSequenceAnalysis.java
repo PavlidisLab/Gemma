@@ -20,7 +20,6 @@ package ubic.gemma.core.goldenpath;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
@@ -39,9 +38,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,10 +110,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             geneProducts.addAll( this.findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
 
-        if ( geneProducts.size() == 0 )
+        if ( geneProducts.isEmpty() )
             return null;
 
-        Collection<BlatAssociation> results = new HashSet<>();
+        Collection<BlatAssociation> results = new ArrayList<>();
         for ( GeneProduct geneProduct : geneProducts ) {
             if ( GoldenPath.log.isDebugEnabled() )
                 GoldenPath.log.debug( geneProduct );
@@ -403,7 +404,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<Gene>>() {
 
             @Override
-            public Collection<Gene> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<Gene> extractData( ResultSet rs ) throws SQLException {
 
                 Collection<Gene> r = new HashSet<>();
                 while ( rs.next() ) {
@@ -689,7 +690,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<GeneProduct>>() {
 
             @Override
-            public Collection<GeneProduct> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<GeneProduct> extractData( ResultSet rs ) throws SQLException {
                 Collection<GeneProduct> r = new HashSet<>();
                 while ( rs.next() ) {
 
@@ -787,7 +788,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<BlatResult>>() {
             @Override
-            public Collection<BlatResult> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<BlatResult> extractData( ResultSet rs ) throws SQLException {
                 Collection<BlatResult> r = new HashSet<>();
                 while ( rs.next() ) {
 
@@ -802,9 +803,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     Blob targetStarts = rs.getBlob( 3 );
                     Blob queryStarts = rs.getBlob( 4 );
 
-                    blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes ) );
-                    blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts ) );
-                    blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts ) );
+                    blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes, StandardCharsets.ISO_8859_1 ) );
+                    blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts, StandardCharsets.ISO_8859_1 ) );
+                    blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts, StandardCharsets.ISO_8859_1 ) );
 
                     blatResult.setStrand( rs.getString( 5 ) );
 
@@ -851,8 +852,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             return exons;
         }
 
-        String exonStartLocations = SQLUtils.blobToString( exonStarts );
-        String exonEndLocations = SQLUtils.blobToString( exonEnds );
+        String exonStartLocations = SQLUtils.blobToString( exonStarts, StandardCharsets.ISO_8859_1 );
+        String exonEndLocations = SQLUtils.blobToString( exonEnds, StandardCharsets.ISO_8859_1 );
 
         int[] exonStartsInts = SequenceManipulation.blatLocationsToIntArray( exonStartLocations );
         int[] exonEndsInts = SequenceManipulation.blatLocationsToIntArray( exonEndLocations );
@@ -910,8 +911,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( blockSizes == null || blockStarts == null )
             return;
 
-        String exonSizes = SQLUtils.blobToString( blockSizes );
-        String exonStarts = SQLUtils.blobToString( blockStarts );
+        String exonSizes = SQLUtils.blobToString( blockSizes, StandardCharsets.ISO_8859_1 );
+        String exonStarts = SQLUtils.blobToString( blockStarts, StandardCharsets.ISO_8859_1 );
 
         int[] exonSizeInts = SequenceManipulation.blatLocationsToIntArray( exonSizes );
         int[] exonStartInts = SequenceManipulation.blatLocationsToIntArray( exonStarts );

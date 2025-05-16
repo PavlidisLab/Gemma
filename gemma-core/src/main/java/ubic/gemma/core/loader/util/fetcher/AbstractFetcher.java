@@ -22,13 +22,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
@@ -95,7 +92,7 @@ public abstract class AbstractFetcher implements Fetcher {
         this.allowUseExisting = allowUseExisting;
     }
 
-    protected LocalFile fetchedFile( String seekFile ) {
+    protected File fetchedFile( String seekFile ) {
         return this.fetchedFile( seekFile, seekFile );
     }
 
@@ -104,12 +101,8 @@ public abstract class AbstractFetcher implements Fetcher {
      * @param outputFilePath Absolute path to the download location.
      * @return local file
      */
-    protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
-        LocalFile file = LocalFile.Factory.newInstance();
-        file.setVersion( new SimpleDateFormat().format( new Date() ) );
-        file.setRemoteURL( ( new File( seekFilePath ) ).toURI() );
-        file.setLocalURL( ( new File( outputFilePath ).toURI() ) );
-        return file;
+    protected File fetchedFile( String seekFilePath, String outputFilePath ) {
+        return new File( outputFilePath );
     }
 
     protected abstract String formLocalFilePath( String identifier, File newDir );
@@ -123,13 +116,9 @@ public abstract class AbstractFetcher implements Fetcher {
      * @param seekFile     seek file
      * @return collection of local files
      */
-    protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
-        Collection<LocalFile> fallback = new HashSet<>();
-        LocalFile lf = LocalFile.Factory.newInstance();
-        lf.setLocalURL( existingFile.toURI() );
-        lf.setRemoteURL( ( new File( seekFile ) ).toURI() );
-        lf.setSize( existingFile.length() );
-        fallback.add( lf );
+    protected Collection<File> getExistingFile( File existingFile, String seekFile ) {
+        Collection<File> fallback = new HashSet<>();
+        fallback.add( existingFile );
         return fallback;
     }
 

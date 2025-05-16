@@ -15,13 +15,12 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
+import javax.annotation.Nullable;
 
 /**
  * Load experiment from a flat file. See also {@link ubic.gemma.core.loader.expression.DataUpdater} for related
@@ -31,24 +30,20 @@ import java.util.Collection;
  */
 public interface SimpleExpressionDataLoaderService {
 
-    ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrix<String, String> matrix );
-
-    @SuppressWarnings("unused")
-        // Possible external use
-    DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
-            Collection<Object> usedDesignElements, ArrayDesign design );
-
     /**
      * Parses, converts (into Gemma objects), and loads data into the database.
-     *
+     * <p>
+     * If data is provided and preferred, post-processing will be triggered.
      * @param metaData meta data
-     * @param data     tab-delimited file with row names corresponding to CompositeSequence names and column names
-     *                 corresponding to BioAssay names.
+     * @param data     tab-delimited file with row names corresponding to {@link CompositeSequence} names and column
+     *                 names corresponding to {@link BioAssay} names. Note that if you provide samples in the metadata,
+     *                 all the samples referenced in the data file must be declared.
      * @return new experiment
-     * @throws IOException when IO problems occur.
      */
-    ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data ) throws IOException;
+    ExpressionExperiment create( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> data );
 
-    DoubleMatrix<String, String> parse( InputStream data ) throws IOException;
-
+    /**
+     * Convert simple experiment metadata and data into Gemma objects.
+     */
+    ExpressionExperiment convert( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> data );
 }

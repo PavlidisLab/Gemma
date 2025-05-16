@@ -21,9 +21,8 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractService;
 
@@ -55,34 +54,34 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
         return this.DERDao.findByExperimentAnalyzed( experimentsAnalyzed, threshold, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene ) {
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene ) {
         return this.DERDao.findByGene( gene );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed ) {
         return this.DERDao.findByGeneAndExperimentAnalyzed( gene, experimentsAnalyzed );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
         return this.DERDao.findByGeneAndExperimentAnalyzed( gene, experimentsAnalyzed, threshold, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             double threshold, int limit ) {
         return this.DERDao.find( gene, threshold, limit );
     }

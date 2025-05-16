@@ -30,7 +30,7 @@ Gemma.PlatformDetails = Ext
                     html: platformDetails.taxon,
                     listeners: {
                         'afterrender': function (c) {
-                            jQuery('#taxonHelp').qtip({
+                            window.jQuery('#taxonHelp').qtip({
                                 content: "The primary taxon for sequences on this platform (i.e., what it was designed for).",
                                 style: {
                                     name: 'cream'
@@ -117,7 +117,7 @@ Gemma.PlatformDetails = Ext
                 var updateT = '';
                 var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
                 if (isAdmin) {
-                    updateT = '&nbsp;<input type="button" value="Refresh report" onClick="updateArrayDesignReport('
+                    updateT = '&nbsp;<input type="button" value="Refresh report" onClick="Gemma.ArrayDesign.updateArrayDesignReport('
                         + platformDetails.id + ')" />';
                 }
 
@@ -245,14 +245,14 @@ Gemma.PlatformDetails = Ext
                         if (db == "GEO") {
                             text = text + ac + "&nbsp;<a "
                                 + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ac
-                                + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath
+                                + "'><img  ext:qtip='NCBI page for this entry' src='" + Gemma.CONTEXT_PATH
                                 + "/images/logo/geoTiny.png' /></a>";
                         } else if (db == "ArrayExpress") {
                             text = text
                                 + ac
                                 + "&nbsp;<a title='ArrayExpress page for this entry'"
                                 + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                                + ac + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath
+                                + ac + "'><img  ext:qtip='NCBI page for this entry' src='" + Gemma.CONTEXT_PATH
                                 + "/images/logo/arrayExpressTiny.png' /></a>";
 
                         } else {
@@ -340,7 +340,7 @@ Gemma.PlatformDetails = Ext
             renderExperimentLink: function (platformDetails) {
                 var text = platformDetails.expressionExperimentCount + "";
                 if (platformDetails.expressionExperimentCount > 0) {
-                    text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath
+                    text += "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH
                         + "/images/magnifier.png' ext:qtip='View the experiments tab'" + "onClick='Ext.getCmp(&#39;"
                         + this.id + "&#39;).changeTab(&#39;experiments&#39;)'>";
                 }
@@ -400,7 +400,7 @@ Gemma.PlatformDetails = Ext
                     text = 'Raw sequencing platform; no elements defined';
                 } else {
                     var text = platformDetails.designElementCount;
-                    text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath
+                    text += "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH
                         + "/images/magnifier.png' ext:qtip='View the elements tab'" + "onClick='Ext.getCmp(&#39;" + this.id
                         + "&#39;).changeTab(&#39;elements&#39;)'>";
                 }
@@ -424,7 +424,7 @@ Gemma.PlatformDetails = Ext
                 if (isAdmin) {
                     text = text + '&nbsp;<img  style="cursor:pointer" onClick="Ext.getCmp(&#39;' + this.id
                         + '&#39;).promptForAlternateName(' + platformDetails.id
-                        + ');return false;" ext:qtip="Add a new alternate name for this design" src="' + ctxBasePath
+                        + ');return false;" ext:qtip="Add a new alternate name for this design" src="' + Gemma.CONTEXT_PATH
                         + '/images/icons/add.png" />';
                 }
                 return new Ext.Panel({

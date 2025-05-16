@@ -7,18 +7,19 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 
 import static org.junit.Assert.assertTrue;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class SecurityUtilsTest extends AbstractJUnit4SpringContextTests {
+public class SecurityUtilsTest extends BaseTest {
 
     @Configuration
     @TestComponent
     static class SecurityUtilsTestContextConfiguration {
+
     }
 
     @Test

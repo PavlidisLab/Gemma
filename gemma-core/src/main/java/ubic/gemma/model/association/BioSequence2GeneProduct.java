@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,22 +19,18 @@
 package ubic.gemma.model.association;
 
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-
-import java.io.Serializable;
 
 /**
  * An association between a BioSequence and a Gene Product. This class is abstract and is variously subclassed with
  * BlatAssociation in order to capture the scores and other parameters that document why we think there is a connection
  * between a given sequence and a gene product.
  */
-public abstract class BioSequence2GeneProduct implements Identifiable, Serializable {
+public abstract class BioSequence2GeneProduct extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = 8361432485953690591L;
-    private Long id = null;
     private Analysis sourceAnalysis = null;
     private Integer overlap = null;
     private Double score = null;
@@ -63,16 +59,6 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
 
     public void setGeneProduct( GeneProduct geneProduct ) {
         this.geneProduct = geneProduct;
-    }
-
-    @Override
-    @SuppressWarnings("override")
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**
@@ -147,5 +133,4 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     public void setThreePrimeDistanceMeasurementMethod( ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod ) {
         this.threePrimeDistanceMeasurementMethod = threePrimeDistanceMeasurementMethod;
     }
-
 }

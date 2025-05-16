@@ -108,20 +108,6 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
     }
 
     /**
-     * @return Taxon that are on NeuroCarta evidence
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithEvidence() {
-
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : this.taxonDao.findTaxonUsedInEvidence() ) {
-            taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-        }
-        return taxaSpecies;
-    }
-
-    /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     @Override

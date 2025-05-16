@@ -26,6 +26,7 @@ import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
@@ -240,7 +241,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        Thread convertThread = new Thread( new Runnable() {
+        Thread convertThread = ThreadUtils.newThread( new Runnable() {
             @Override
             @SuppressWarnings("synthetic-access")
             public void run() {

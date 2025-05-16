@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 @Service
 public class BioAssaySetServiceImpl implements BioAssaySetService {
@@ -130,6 +131,16 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
     @Transactional(readOnly = true)
     public long countAll() {
         return expressionExperimentService.countAll() + expressionExperimentSubSetService.countAll();
+    }
+
+    @Override
+    public Stream<BioAssaySet> streamAll() {
+        return Stream.concat( expressionExperimentService.streamAll(), expressionExperimentSubSetService.streamAll() );
+    }
+
+    @Override
+    public Stream<BioAssaySet> streamAll( boolean createNewSession ) {
+        return Stream.concat( expressionExperimentService.streamAll( createNewSession ), expressionExperimentSubSetService.streamAll( createNewSession ) );
     }
 
     @Override

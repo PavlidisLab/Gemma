@@ -18,30 +18,47 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Data;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+
+import java.util.Arrays;
 
 /**
+ * Value object for a {@link BulkExpressionDataVector} containing booleans.
+ * <p>
  * This is used to represent missing value data.
- *
  * @author paul
- *
  */
+@Data
 public class BooleanVectorValueObject extends DataVectorValueObject {
-   
-    private static final long serialVersionUID = 1L;
 
-    private final boolean[] data;
+    private boolean[] data;
 
-    public BooleanVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
-        super( dedv, badvo );
+    public BooleanVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badvo, ArrayDesignValueObject advo ) {
+        super( dedv, eevo, qtvo, badvo, advo, null );
         if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
             throw new IllegalArgumentException( "Can only store boolean vectors, got " + dedv.getQuantitationType() );
         }
-
-        this.data = byteArrayConverter.byteArrayToBooleans( dedv.getData() );
+        this.data = dedv.getDataAsBooleans();
     }
 
-    public boolean[] getData() {
-        return data;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( !( obj instanceof BooleanVectorValueObject ) ) {
+            return false;
+        }
+        BooleanVectorValueObject other = ( BooleanVectorValueObject ) obj;
+        return super.equals( obj )
+                && Arrays.equals( data, other.data );
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

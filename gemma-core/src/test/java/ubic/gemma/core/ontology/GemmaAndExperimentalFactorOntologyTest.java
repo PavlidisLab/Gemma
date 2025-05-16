@@ -21,6 +21,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.mock;
 @Ignore("This test is timing out on the CI.")
 @Category(SlowTest.class)
 @ContextConfiguration
-public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4SpringContextTests {
+public class GemmaAndExperimentalFactorOntologyTest extends BaseTest {
 
     @Configuration
     @TestComponent

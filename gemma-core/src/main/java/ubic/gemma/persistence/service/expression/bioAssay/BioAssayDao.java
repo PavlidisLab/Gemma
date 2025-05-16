@@ -18,13 +18,15 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +38,20 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
 
     String OBJECT_ALIAS = "ba";
 
+    @Nullable
+    BioAssay findByShortName( String shortName );
+
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     Collection<BioAssay> findByAccession( String accession );
 
-    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic );
+    Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
+
+    /**
+     * @see BioAssayValueObject#BioAssayValueObject(BioAssay, Map, BioAssay, boolean, boolean)
+     */
+    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities,
+            @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo,
+            @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap,
+            boolean basic, boolean allFactorValues );
 }

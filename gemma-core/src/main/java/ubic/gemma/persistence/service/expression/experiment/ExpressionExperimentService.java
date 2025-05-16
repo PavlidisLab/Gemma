@@ -32,21 +32,21 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +60,7 @@ import java.util.function.Function;
 public interface ExpressionExperimentService extends SecurableBaseService<ExpressionExperiment>,
         SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    @Nonnull
     ExpressionExperiment loadReference( Long id );
 
     /**
@@ -73,6 +74,43 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * References are pre-filtered for ACLs as per {@link #loadIds(Filters, Sort)}.
      */
     Collection<ExpressionExperiment> loadAllReferences();
+
+    /**
+     * Load an experiment with its audit trail initialized.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithAuditTrail( Long id );
+
+    /**
+     * Load troubled experiment IDs.
+     * @see CuratableDao#loadTroubledIds()
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    List<Long> loadTroubledIds();
+
+    /**
+     * Load all ID and name pairs.
+     * <p>
+     * Results are filtered by ACLs at the query-level.
+     */
+    SortedMap<Long, String> loadAllIdAndName();
+
+    /**
+     * Load all short name and name pairs.
+     * <p>
+     * Results are filtered by ACLs at the query-level.
+     */
+    SortedMap<String, String> loadAllShortNameAndName();
+
+    SortedSet<String> loadAllName();
+
+    SortedMap<String, String> loadAllAccessionAndName();
+
+    /**
+     * @see ExpressionExperimentDao#reload(Object)
+     */
+    ExpressionExperiment reload( ExpressionExperiment ee );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -89,6 +127,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+
+    /**
+     * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, List, QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
@@ -125,24 +175,58 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     int removeAllRawDataVectors( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
+     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType, boolean)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension );
+
+    /**
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment)
+     * @return a collection of processed data vectors for the given experiment and list of assays, or
+     * {@link Optional#empty()} if there are no processed vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment, List)
+     * @return a collection of processed data vectors for the given experiment and list of assays, or
+     * {@link Optional#empty()} if there are no processed vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays );
+
+    /**
+     * Create a new set of processed vectors for an experiment.
+     * <p>
+     * You might actually want to use {@link ProcessedExpressionDataVectorService#createProcessedDataVectors(ExpressionExperiment, boolean, boolean)}
+     * as this method is fairly low-level.
      * @see ExpressionExperimentDao#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+    int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
     /**
+     * Replace the processed data vectors for the given experiment.
+     * <p>
+     * You might actually want to use {@link ProcessedExpressionDataVectorService#replaceProcessedDataVectors(ExpressionExperiment, Collection, boolean)} (ExpressionExperiment)}.
+     * as this method is fairly low-level.
      * @see ExpressionExperimentDao#replaceProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
     /**
+     * Remove the processed data vectors for the given experiment.
+     * <p>
+     * You might actually want to use {@link ProcessedExpressionDataVectorService#removeProcessedDataVectors(ExpressionExperiment)}.
+     * as this method is fairly low-level.
      * @see ExpressionExperimentDao#removeProcessedDataVectors(ExpressionExperiment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -200,13 +284,6 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Nullable
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
-    ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
-
-    /**
-     * A lightweight version of {@link #loadAndThawWithRefreshCacheMode(Long)} which thaws as per {@link #thawLite(ExpressionExperiment)}.
-     */
-    @Nullable
-    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id );
 
     /**
@@ -243,6 +320,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( String accession );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findOneByAccession( String accession );
+
     /**
      * @param bibRef bibliographic reference
      * @return a collection of EE that have that reference that BibliographicReference
@@ -262,11 +343,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return experiment the given biomaterial is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByBioMaterial( BioMaterial bm );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-        // slight security overkill, if they got the biomaterial...
-    Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bioMaterials );
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
     /**
      * @param gene gene
@@ -305,6 +382,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByName( String name );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findOneByName( String name );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByQuantitationType( QuantitationType type );
 
@@ -328,11 +409,31 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
 
     /**
-     * Obtain experiment annotations.
-     * @param eeId experiment id.
-     * @return the terms associated this expression experiment.
+     * Retrieve annotations for a given experiment.
+     * <p>
+     * The following are included:
+     * <ul>
+     *     <li>Experiment-level tags</li>
+     *     <li>Experimental design tags</li>
+     *     <li>Sample-level tags</li>
+     * </ul>
      */
-    Set<AnnotationValueObject> getAnnotationsById( Long eeId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee );
+
+    /**
+     * Retrieve annotations for a given experiment subset.
+     * <p>
+     * The following are included:
+     * <ul>
+     *     <li>Experiment-level tags</li>
+     *     <li>Subset-level tags</li>
+     *     <li>Experimental design tags minus the subset factor</li>
+     *     <li>Sample-level tags for the samples within the subset</li>
+     * </ul>
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
@@ -342,6 +443,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      *                       collection
      */
     Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    /**
+     * Obtain the number of design elements for the platform of each bioassay in the given experiment.
+     */
+    Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment );
 
     @Value
     class CharacteristicWithUsageStatisticsAndOntologyTerm {
@@ -420,6 +526,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
     /**
+     * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
+     * <p>
+     * The type of vectors is inferred.
+     * @see #getArrayDesignsUsed(ExpressionExperiment, QuantitationType, Class)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType );
+
+    /**
      * Retrieve the genes used by the preferred vectors of this experiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -452,6 +573,41 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
+     * Retrieve all the dimensions that are linked to the subsets of the given experiment.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain a {@link BioAssayDimension} with its assays initialized as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType );
+
+    /**
+     * Find a {@link BioAssayDimension} by ID.
+     * <p>
+     * This is less efficient than {@link #getBioAssayDimensionById(ExpressionExperiment, Long, Class)} because all bulk
+     * vector types need to be inspected.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId );
+
+    /**
      * @param expressionExperiment experiment
      * @return the amount of biomaterials associated with the given expression experiment.
      */
@@ -459,7 +615,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long getDesignElementDataVectorCount( ExpressionExperiment ee );
+    long getRawDataVectorCount( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
@@ -526,9 +682,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param ee experiment
      * @return quantitation types
      */
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
+    Optional<QuantitationType> getPreferredQuantitationType( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<QuantitationType> getProcessedQuantitationType( ExpressionExperiment ee );
 
     /**
      * Test if the given experiment has processed data vectors.
@@ -543,11 +701,23 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
-     * @param expressionExperiment experiment
-     * @return all the quantitation types used by the given expression experiment
+     * Retrieve all the quantitation types used by the given expression experiment.
+     * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao#findByExpressionExperiment(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<Class<? extends DataVector>, Set<QuantitationType>> getQuantitationTypesByVectorType( ExpressionExperiment ee );
+
+    /**
+     * Retrieve all the quantitation types used by the given experiment and dimension.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Class<? extends BulkExpressionDataVector> dataVectorType );
 
     /**
      * Load all {@link QuantitationType} associated to an expression experiment as VOs.
@@ -561,11 +731,86 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
             Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * @param expressionExperiment experiment
-     * @return any ExpressionExperimentSubSets this Experiment might have.
+     * Obtain all the subsets for a given dataset.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain all the subsets for a given dataset.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee );
+
+    /**
+     * Obtain all the subsets organized by dimension for a given dataset.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain all the subsets organized by dimension for a given dataset.
+     * <p>
+     * Assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimensionWithBioAssays( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain the subsets for a particular dimension.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
+     * Obtain the subsets for a particular dimension.
+     * <p>
+     * Assays are lightly thawed.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
+     * Reconstitute the FV to subset mapping for a given experiment.
+     * <p>
+     * This will generally return a single factor that was used for splitting the dataset. However, if there are
+     * confounding factors, those will be returned as well.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue(
+            ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
+     * Reconstitute the FV to subset mapping for a given experiment and factor.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue(
+            ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
+
+    /**
+     * Reconstitute the FV to subset mapping for a given experiment and factor.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentSubSet getSubSetByIdWithCharacteristics( ExpressionExperiment ee, Long subSetId );
+
+    /**
+     * Obtain a particular subset by ID.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId );
 
     /**
      * Return the taxon for each of the given experiments (or subsets).
@@ -611,10 +856,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
@@ -642,27 +887,26 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
 
+    /**
+     * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @see ExpressionExperimentDao#thawLiter(ExpressionExperiment)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
     /**
-     * Partially thaw the expression experiment given - do not thaw the raw data.
-     *
-     * @param expressionExperiment experiment
-     * @return thawed experiment
+     * @see ExpressionExperimentDao#thawLite(ExpressionExperiment)
      */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
-
-    @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
     boolean isBlackListed( String geoAccession );
 
@@ -679,7 +923,17 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
-    @Secured({ "GROUP_USER" })
+    /**
+     * Update a quantitation type.
+     * <p>
+     * If the provided QT is preferred (i.e. either single-cell, raw or processed), all other QTs in the experiment for
+     * that type of vectors will be set to non-preferred.
+     * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService#update(QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 
     /**

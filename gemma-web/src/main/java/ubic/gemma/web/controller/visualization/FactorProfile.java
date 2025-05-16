@@ -170,7 +170,7 @@ public class FactorProfile {
             this.isContinuous = ef.getType().equals( FactorType.CONTINUOUS );
         } else {
             for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv.getMeasurement() != null ) {
+                if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) {
                     try {
                         Double.parseDouble( fv.getMeasurement().getValue() );
                         this.isContinuous = true;

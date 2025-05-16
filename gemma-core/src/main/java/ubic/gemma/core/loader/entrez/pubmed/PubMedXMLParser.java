@@ -23,21 +23,17 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.*;
-import org.xml.sax.SAXException;
+import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
-
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * Simple class to parse XML in the format defined by
@@ -57,7 +53,10 @@ public class PubMedXMLParser {
     private static final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
     private static final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
 
-    public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
+    private static final XPathExpression xRefSource = XMLUtils.compile( "RefSource/text()" );
+    private static final XPathExpression xPmid = XMLUtils.compile( "PMID/text()" );
+
+    public static void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
         NodeList c = item.getChildNodes();
         for ( int i = 0; i < c.getLength(); i++ ) {
             Node a = c.item( i );
@@ -66,16 +65,16 @@ public class PubMedXMLParser {
             }
             if ( a.getNodeName().equals( "Year" ) ) {
                 try {
-                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), PUB_MED_LOCALE, PUB_MED_DATE_FORMATS ) );
+                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( a ), PUB_MED_LOCALE, PUB_MED_DATE_FORMATS ) );
                 } catch ( ParseException e ) {
                     PubMedXMLParser.log.warn( "Could not extract date of publication from : " + XMLUtils
-                            .getTextValue( ( Element ) a ) );
+                            .getTextValue( a ) );
                 }
             }
         }
     }
 
-    public void extractPublisher( BibliographicReference bibRef, Node item ) {
+    public static void extractPublisher( BibliographicReference bibRef, Node item ) {
         NodeList c = item.getChildNodes();
         for ( int i = 0; i < c.getLength(); i++ ) {
             Node a = c.item( i );
@@ -83,31 +82,20 @@ public class PubMedXMLParser {
                 continue;
             }
             if ( a.getNodeName().equals( "PublisherName" ) ) {
-                bibRef.setPublisher( XMLUtils.getTextValue( ( Element ) a ) );
+                bibRef.setPublisher( XMLUtils.getTextValue( a ) );
             } else if ( a.getNodeName().equals( "PublisherLocation" ) ) {
-                bibRef.setPublisher( bibRef.getPublisher() + " [ " + XMLUtils.getTextValue( ( Element ) a ) + "]" );
+                bibRef.setPublisher( bibRef.getPublisher() + " [ " + XMLUtils.getTextValue( a ) + "]" );
             }
         }
     }
 
-    public Collection<BibliographicReference> parse( InputStream is ) throws IOException {
-
-        try {
-            //            if ( is.available() == 0 ) {
-            //                throw new IOException( "XML stream contains no data." );
-            //            }
-
-            DocumentBuilder builder = createDocumentBuilder();
-            Document document = builder.parse( is );
-
-            PubMedXMLParser.log.debug( "done parsing" );
-            return this.extractBibRefs( document );
-        } catch ( IOException | SAXException | ParserConfigurationException e ) {
-            throw new IOException( e );
-        }
+    public static Collection<BibliographicReference> parse( InputStream is ) throws IOException {
+        Document document = EntrezXmlUtils.parse( is );
+        PubMedXMLParser.log.debug( "done parsing" );
+        return extractBibRefs( document );
     }
 
-    private String extractAuthorList( NodeList authorList ) {
+    private static String extractAuthorList( NodeList authorList ) {
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
             Node item = authorList.item( i );
@@ -152,7 +140,7 @@ public class PubMedXMLParser {
         return al.substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
     }
 
-    private Collection<BibliographicReference> extractBibRefs( Document document ) {
+    private static Collection<BibliographicReference> extractBibRefs( Document document ) {
 
         // Was there an error? (not found)
         if ( document.getElementsByTagName( PubMedXMLParser.ERROR_TAG ).getLength() > 0 ) {
@@ -165,7 +153,7 @@ public class PubMedXMLParser {
             // mebbe it is a book?
             articles = document.getElementsByTagName( "BookDocument" );
             if ( articles.getLength() > 0 ) {
-                return this.parseBookArticles( articles );
+                return parseBookArticles( articles );
             }
             return new HashSet<>();
         }
@@ -178,13 +166,13 @@ public class PubMedXMLParser {
             BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
             Node record = articles.item( i );
 
-            Node article = this.processRecord( bibRef, record );
+            Node article = processRecord( bibRef, record );
 
             assert article != null;
 
-            Node journal = this.processArticle( bibRef, article );
+            Node journal = processArticle( bibRef, article );
 
-            this.processJournalInfo( bibRef, journal );
+            processJournalInfo( bibRef, journal );
 
             result.add( bibRef );
 
@@ -198,7 +186,7 @@ public class PubMedXMLParser {
         return result;
     }
 
-    private Set<Compound> extractChemicals( Node chemNodes ) {
+    private static Set<Compound> extractChemicals( Node chemNodes ) {
         Set<Compound> compounds = new HashSet<>();
         NodeList childNodes = chemNodes.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -229,7 +217,7 @@ public class PubMedXMLParser {
         return compounds;
     }
 
-    private Date extractJournalIssueDate( Node dateNode ) {
+    private static Date extractJournalIssueDate( Node dateNode ) {
 
         String yearText = null;// = XMLUtils.getTextValue( ( Element ) y );
         String medLineText = null;// = XMLUtils.getTextValue( ( Element ) medLineDate );
@@ -242,7 +230,7 @@ public class PubMedXMLParser {
             if ( !( c instanceof Element ) ) {
                 continue;
             }
-            String t = XMLUtils.getTextValue( ( Element ) c );
+            String t = XMLUtils.getTextValue( c );
             switch ( c.getNodeName() ) {
                 case "Year":
                     yearText = t;
@@ -305,7 +293,7 @@ public class PubMedXMLParser {
         }
     }
 
-    private Set<Keyword> extractKeywords( Node keywordNode ) {
+    private static Set<Keyword> extractKeywords( Node keywordNode ) {
         Set<Keyword> keywords = new HashSet<>();
         NodeList childNodes = keywordNode.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -315,7 +303,7 @@ public class PubMedXMLParser {
             }
             Element el = ( Element ) item;
             String keyword = XMLUtils.getTextValue( el );
-            Boolean isMajor = this.isMajorHeading( item );
+            Boolean isMajor = isMajorHeading( item );
             Keyword kw = Keyword.Factory.newInstance();
             kw.setTerm( keyword );
             kw.setIsMajorTopic( isMajor );
@@ -324,11 +312,11 @@ public class PubMedXMLParser {
         return keywords;
     }
 
-    private Date extractPublicationDate( Node dateNode ) {
-        return this.extractJournalIssueDate( dateNode );
+    private static Date extractPublicationDate( Node dateNode ) {
+        return extractJournalIssueDate( dateNode );
     }
 
-    private boolean isRetracted( Node pubtypeList ) {
+    private static boolean isRetracted( Node pubtypeList ) {
         //   private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) {
         NodeList childNodes = pubtypeList.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -336,7 +324,7 @@ public class PubMedXMLParser {
             if ( !( item instanceof Element ) ) {
                 continue;
             }
-            String type = XMLUtils.getTextValue( ( Element ) item );
+            String type = XMLUtils.getTextValue( item );
 
             if ( "Retracted Publication".equals( type ) ) {
                 return true;
@@ -346,19 +334,19 @@ public class PubMedXMLParser {
         //   return publicationTypes;
     }
 
-    private boolean isMajorHeading( Node descriptor ) {
+    private static boolean isMajorHeading( Node descriptor ) {
         Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
         return dmajorTopic.getValue().equals( "Y" );
     }
 
-    private Collection<BibliographicReference> parseBookArticles( NodeList articles ) {
+    private static Collection<BibliographicReference> parseBookArticles( NodeList articles ) {
         Collection<BibliographicReference> result = new HashSet<>();
         int i = 0;
         for ( ; i < articles.getLength(); i++ ) {
             BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
             Node record = articles.item( i );
 
-            this.processBookRecord( bibRef, record );
+            processBookRecord( bibRef, record );
 
             result.add( bibRef );
 
@@ -366,12 +354,12 @@ public class PubMedXMLParser {
                 PubMedXMLParser.log.info( "Processed " + i + " books" );
             }
         }
-        if (i >= 100) PubMedXMLParser.log.info( "Processed " + i + " books" );
+        if ( i >= 100 ) PubMedXMLParser.log.info( "Processed " + i + " books" );
         return result;
     }
 
-    private void processAccession( BibliographicReference bibRef, Node record ) {
-        String accession = XMLUtils.getTextValue( ( Element ) record );
+    private static void processAccession( BibliographicReference bibRef, Node record ) {
+        String accession = XMLUtils.getTextValue( record );
         DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
         dbEntry.setAccession( accession );
         ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
@@ -380,7 +368,7 @@ public class PubMedXMLParser {
         bibRef.setPubAccession( dbEntry );
     }
 
-    private Node processArticle( BibliographicReference bibRef, Node article ) {
+    private static Node processArticle( BibliographicReference bibRef, Node article ) {
         NodeList childNodes = article.getChildNodes();
         Node journal = null;
         for ( int j = 0; j < childNodes.getLength(); j++ ) {
@@ -391,13 +379,13 @@ public class PubMedXMLParser {
             String name = item.getNodeName();
             switch ( name ) {
                 case "ArticleTitle":
-                    bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
+                    bibRef.setTitle( XMLUtils.getTextValue( item ) );
                     break;
                 case "Journal":
                     journal = item;
                     break;
                 case "AuthorList":
-                    bibRef.setAuthorList( this.extractAuthorList( item.getChildNodes() ) );
+                    bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
                     break;
                 case "Pagination":
                     bibRef.setPages( XMLUtils.extractOneChildText( item, "MedlinePgn" ) );
@@ -434,7 +422,7 @@ public class PubMedXMLParser {
                     }
                     break;
                 case "PublicationTypeList":
-                    bibRef.setRetracted( this.isRetracted( item ) );
+                    bibRef.setRetracted( isRetracted( item ) );
                     break;
                 case "Language":
                 case "DateCompleted":
@@ -453,7 +441,7 @@ public class PubMedXMLParser {
         return journal;
     }
 
-    private void processBookInfo( BibliographicReference bibRef, Node article ) {
+    private static void processBookInfo( BibliographicReference bibRef, Node article ) {
         NodeList childNodes = article.getChildNodes();
 
         for ( int j = 0; j < childNodes.getLength(); j++ ) {
@@ -463,21 +451,21 @@ public class PubMedXMLParser {
             }
             String name = item.getNodeName();
             if ( name.equals( "Publisher" ) ) {
-                this.extractPublisher( bibRef, item );
+                PubMedXMLParser.extractPublisher( bibRef, item );
             } else if ( name.equals( "PubDate" ) && bibRef.getPublicationDate() == null ) {
-                this.extractBookPublicationYear( bibRef, item );
+                PubMedXMLParser.extractBookPublicationYear( bibRef, item );
             } else if ( name.equals( "AuthorList" ) ) {
                 if ( ( ( Element ) item ).hasAttribute( "Type" ) ) {
                     if ( ( ( Element ) item ).getAttribute( "Type" ).equals( "editors" ) ) {
-                        bibRef.setEditor( this.extractAuthorList( item.getChildNodes() ) );
+                        bibRef.setEditor( extractAuthorList( item.getChildNodes() ) );
                     } else {
-                        bibRef.setAuthorList( this.extractAuthorList( item.getChildNodes() ) );
+                        bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
                     }
                 }
             } else if ( name.equals( "BookTitle" ) ) {
                 if ( bibRef.getTitle() == null )
-                    bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
-                bibRef.setPublication( XMLUtils.getTextValue( ( Element ) item ) );
+                    bibRef.setTitle( XMLUtils.getTextValue( item ) );
+                bibRef.setPublication( XMLUtils.getTextValue( item ) );
             }
         }
     }
@@ -488,7 +476,7 @@ public class PubMedXMLParser {
      * @param bibRef bib ref
      * @param record record
      */
-    private void processBookRecord( BibliographicReference bibRef, Node record ) {
+    private static void processBookRecord( BibliographicReference bibRef, Node record ) {
 
         NodeList recordNodes = record.getChildNodes();
         for ( int p = 0; p < recordNodes.getLength(); p++ ) {
@@ -501,13 +489,13 @@ public class PubMedXMLParser {
             switch ( name ) {
                 case "ArticleTitle":
                     // this is the title of the chapter.
-                    bibRef.setTitle( StringUtils.strip( XMLUtils.getTextValue( ( Element ) item ) ) );
+                    bibRef.setTitle( StringUtils.strip( XMLUtils.getTextValue( item ) ) );
                     break;
                 case "Book":
-                    this.processBookInfo( bibRef, item );
+                    processBookInfo( bibRef, item );
                     break;
                 case "AuthorList":
-                    bibRef.setAuthorList( this.extractAuthorList( item.getChildNodes() ) );
+                    bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
                     break;
                 case "Abstract":
                     bibRef.setAbstractText( "" );
@@ -519,21 +507,21 @@ public class PubMedXMLParser {
                         }
                         if ( jitem.getNodeName().equals( "AbstractText" ) ) {
                             bibRef.setAbstractText(
-                                    bibRef.getAbstractText() + ( XMLUtils.getTextValue( ( Element ) jitem ) ) + " " );
+                                    bibRef.getAbstractText() + ( XMLUtils.getTextValue( jitem ) ) + " " );
                         }
 
                         bibRef.setAbstractText( bibRef.getAbstractText().trim() );
                     }
                     break;
                 case "PMID":
-                    this.processAccession( bibRef, item );
+                    processAccession( bibRef, item );
                     break;
                 case "ContributionDate":
                     /*
                      * Unusual, but happens for books that are updated with new sections. We use this instead of the
                      * publication date.
                      */
-                    this.extractBookPublicationYear( bibRef, item );
+                    PubMedXMLParser.extractBookPublicationYear( bibRef, item );
                     break;
                 default:
                     log.debug( "Unrecognized node name " + name );
@@ -542,7 +530,7 @@ public class PubMedXMLParser {
 
     }
 
-    private void processJournalInfo( BibliographicReference bibRef, Node journal ) {
+    private static void processJournalInfo( BibliographicReference bibRef, Node journal ) {
         NodeList journalNodes = journal.getChildNodes();
         for ( int j = 0; j < journalNodes.getLength(); j++ ) {
             Node item = journalNodes.item( j );
@@ -560,13 +548,13 @@ public class PubMedXMLParser {
                     String jname = jitem.getNodeName();
                     switch ( jname ) {
                         case "Volume":
-                            bibRef.setVolume( XMLUtils.getTextValue( ( Element ) jitem ) );
+                            bibRef.setVolume( XMLUtils.getTextValue( jitem ) );
                             break;
                         case "Issue":
-                            bibRef.setIssue( XMLUtils.getTextValue( ( Element ) jitem ) );
+                            bibRef.setIssue( XMLUtils.getTextValue( jitem ) );
                             break;
                         case "PubDate":
-                            bibRef.setPublicationDate( this.extractPublicationDate( jitem ) );
+                            bibRef.setPublicationDate( extractPublicationDate( jitem ) );
                             break;
                         default:
                             log.debug( "Unrecognized node name " + jname );
@@ -576,7 +564,7 @@ public class PubMedXMLParser {
         }
     }
 
-    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) {
+    private static void processMESH( Node meshHeadings, BibliographicReference bibRef ) {
         NodeList childNodes = meshHeadings.getChildNodes();
 
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -597,13 +585,13 @@ public class PubMedXMLParser {
                 Element descriptor = ( Element ) item;
                 if ( descriptor.getNodeName().equals( "DescriptorName" ) ) {
                     String d = XMLUtils.getTextValue( descriptor );
-                    boolean dmajorB = this.isMajorHeading( descriptor );
+                    boolean dmajorB = isMajorHeading( descriptor );
                     vc.setTerm( d );
                     vc.setIsMajorTopic( dmajorB );
                 } else {
                     MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
                     String q = XMLUtils.getTextValue( descriptor );
-                    boolean qmajorB = this.isMajorHeading( descriptor );
+                    boolean qmajorB = isMajorHeading( descriptor );
                     qual.setIsMajorTopic( qmajorB );
                     qual.setTerm( q );
                     vc.getQualifiers().add( qual );
@@ -615,7 +603,7 @@ public class PubMedXMLParser {
         }
     }
 
-    private Node processRecord( BibliographicReference bibRef, Node record ) {
+    private static Node processRecord( BibliographicReference bibRef, Node record ) {
         Node article = null;
 
         NodeList recordNodes = record.getChildNodes();
@@ -630,13 +618,13 @@ public class PubMedXMLParser {
                     article = item;
                     break;
                 case "ChemicalList":
-                    bibRef.setChemicals( this.extractChemicals( item ) );
+                    bibRef.setChemicals( extractChemicals( item ) );
                     break;
                 case "MeshHeadingList":
-                    this.processMESH( item, bibRef );
+                    processMESH( item, bibRef );
                     break;
                 case "KeywordList":
-                    bibRef.setKeywords( this.extractKeywords( item ) );
+                    bibRef.setKeywords( extractKeywords( item ) );
                     break;
                 case "MedlineJournalInfo": {
                     NodeList jNodes = item.getChildNodes();
@@ -646,13 +634,13 @@ public class PubMedXMLParser {
                             continue;
                         }
                         if ( jitem.getNodeName().equals( "MedlineTA" ) ) {
-                            bibRef.setPublication( XMLUtils.getTextValue( ( Element ) jitem ) );
+                            bibRef.setPublication( XMLUtils.getTextValue( jitem ) );
                         }
                     }
                     break;
                 }
                 case "PMID":
-                    this.processAccession( bibRef, item );
+                    processAccession( bibRef, item );
                     break;
                 case "CommentsCorrectionsList":
                     NodeList jNodes = item.getChildNodes();
@@ -669,23 +657,10 @@ public class PubMedXMLParser {
                         String reftypeName = ( ( Attr ) reftype ).getValue();
                         PubMedXMLParser.log.debug( reftypeName );
                         if ( reftypeName.equals( "RetractionIn" ) ) {
-
-                            try {
-                                XPathFactory xf = XPathFactory.newInstance();
-                                XPath xpath = xf.newXPath();
-                                XPathExpression xgds = xpath.compile( "RefSource/text()" );
-                                String ref = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
-
-                                xgds = xpath.compile( "PMID/text()" );
-                                String pmid = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
-
-                                String description = "Retracted [In: " + ref + " PMID=" + pmid + "]";
-                                bibRef.setDescription( description );
-                            } catch ( XPathExpressionException e ) {
-                                PubMedXMLParser.log
-                                        .warn( "Error while trying to get details of the retraction: " + e.getMessage(),
-                                                e );
-                            }
+                            String ref = XMLUtils.evaluateToString( xRefSource, jitem );
+                            String pmid = XMLUtils.evaluateToString( xPmid, jitem );
+                            String description = "Retracted [In: " + ref + " PMID=" + pmid + "]";
+                            bibRef.setDescription( description );
                             /*
                              * Such papers also have <PublicationType>Retracted Publication</PublicationType>
                              */

@@ -96,13 +96,6 @@
                          cascade="all" lazy="proxy" fetch="select">
                 <column name="MULTIFUNCTIONALITY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
             </many-to-one>
-            <set name="phenotypeAssociations" lazy="true" fetch="select" inverse="true" cascade="all">
-                <cache usage="read-write"/>
-                <key foreign-key="PHENOTYPE_ASSOCIATION_GENE_FKC">
-                    <column name="GENE_FK" sql-type="BIGINT"/>
-                </key>
-                <one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociation"/>
-            </set>
         </subclass>
     </class>
 </hibernate-mapping>

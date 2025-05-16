@@ -23,8 +23,6 @@ import ubic.gemma.model.genome.Gene;
  */
 public abstract class SupportDetails extends IdArray {
 
-    private static final long serialVersionUID = -8148641748805015611L;
-
     // auto-generated. Gene2Gene links can navigate here.
     private Long id;
 

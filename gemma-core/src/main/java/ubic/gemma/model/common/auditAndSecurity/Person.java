@@ -21,16 +21,15 @@ package ubic.gemma.model.common.auditAndSecurity;
 import javax.persistence.Transient;
 
 /**
- * 
+ *
  * Not a persistent class, not used, can be removed
- * 
- * @author     paul
+ *
+ * @author paul
  * @deprecated not needed
  */
 @Deprecated
 public class Person extends Contact {
 
-    private static final long serialVersionUID = -7873047856249494633L;
     private String lastName;
 
     @Transient
@@ -45,5 +44,4 @@ public class Person extends Contact {
     public void setLastName( String lastName ) {
         this.lastName = lastName;
     }
-
 }

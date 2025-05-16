@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.31.13</version>
+		<version>1.32.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -23,6 +23,46 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>webpack-install-dependencies</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>--prefix</argument>
+								<argument>${project.basedir}/src/main/webapp</argument>
+								<argument>${webpackInstallCommand}</argument>
+							</arguments>
+							<skip>${skipWebpack}</skip>
+						</configuration>
+					</execution>
+					<execution>
+						<id>webpack-build</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>--prefix</argument>
+								<argument>${project.basedir}/src/main/webapp</argument>
+								<argument>run</argument>
+								<argument>${webpackBuildCommand}</argument>
+							</arguments>
+							<skip>${skipWebpack}</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
@@ -33,8 +73,18 @@
 						</resource>
 					</webResources>
 					<warSourceExcludes>
-						bundles/**,
-						node_modules/**
+						fonts/**,
+						<!-- TODO: exclude images too, but many of them are not resolved with Webpack -->
+						<!-- images/**, -->
+						node_modules/**,
+						package-lock.json,
+						package.json,
+						scripts/api/**,
+						<!-- TODO: exclude app too, but we need to bundle them with Webpack first -->
+						<!-- scripts/app/**, -->
+						scripts/lib/**,
+						styles/**,
+						webpack.config.js
 					</warSourceExcludes>
 				</configuration>
 			</plugin>
@@ -85,12 +135,12 @@
 			<artifactId>spring-social-core</artifactId>
 			<version>1.0.3.RELEASE</version>
 			<scope>runtime</scope>
-		</dependency>
-		<!-- latest for Spring 3 -->
-		<dependency>
-			<groupId>org.springframework.ws</groupId>
-			<artifactId>spring-ws-core</artifactId>
-			<version>2.1.4.RELEASE</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-web</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Scheduling -->
@@ -107,17 +157,12 @@
 			<artifactId>rome</artifactId>
 			<version>1.0</version>
 		</dependency>
-		<dependency>
-			<groupId>rome</groupId>
-			<artifactId>rome-fetcher</artifactId>
-			<version>1.0</version>
-		</dependency>
 
 		<!-- JSON -->
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20231013</version>
+			<version>20240303</version>
 		</dependency>
 
 		<!-- AJAX -->
@@ -133,19 +178,6 @@
 			<artifactId>sitemesh</artifactId>
 			<!-- 2.6+ requires Java 17 and Jakarta namespace -->
 			<version>2.5.0</version>
-			<scope>runtime</scope>
-		</dependency>
-
-		<!-- Static assets compression -->
-		<dependency>
-			<groupId>net.jawr</groupId>
-			<artifactId>jawr-core</artifactId>
-			<version>${jawr.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.jawr.extensions</groupId>
-			<artifactId>jawr-dwr2.x-extension</artifactId>
-			<version>${jawr.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -186,26 +218,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- needed for Java 9+ -->
-		<dependency>
-			<groupId>com.sun.xml.messaging.saaj</groupId>
-			<artifactId>saaj-impl</artifactId>
-			<version>1.5.3</version>
-			<scope>runtime</scope>
-		</dependency>
-
-		<!-- Gemma Slack Bot -->
-		<dependency>
-			<groupId>com.slack.api</groupId>
-			<artifactId>slack-api-client</artifactId>
-			<version>${slack.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.slack.api</groupId>
-			<artifactId>slack-api-model</artifactId>
-			<version>${slack.version}</version>
-		</dependency>
-
 		<!-- Testing -->
 		<dependency>
 			<groupId>gemma</groupId>
@@ -222,4 +234,21 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<properties>
+		<skipWebpack>false</skipWebpack>
+		<webpackInstallCommand>install</webpackInstallCommand>
+		<webpackBuildCommand>devbuild</webpackBuildCommand>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<properties>
+				<webpackInstallCommand>ci</webpackInstallCommand>
+				<webpackBuildCommand>build</webpackBuildCommand>
+			</properties>
+		</profile>
+	</profiles>
+
 </project>
