@@ -284,7 +284,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
             getSubsetText: function (analysis) {
                 var subsetText = '';
-                if (analysis.subsetFactor) {
+                if (analysis.subsetFactor && analysis.subsetFactorValue.factorValue !='DE_Include') {
                     var subsetFactor = analysis.subsetFactor;
                     var subsetFactorValue = analysis.subsetFactorValue;
                     subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
