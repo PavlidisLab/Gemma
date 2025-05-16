@@ -134,6 +134,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
         cellPopBa.setArrayDesignUsed( sample.getArrayDesignUsed() );
         // we can't fill that yet, because we don't deal with expression data, but the rest of the sequencing
         // information can be copied
+        // is is filled afterwards when we aggregate in SingleCellExpressionExperimentAggregatorServiceImpl#updateSequenceReadCounts(BioAssayDimension, double[])
         // cellPopBa.setSequenceReadCount( sample.getSequenceReadCount() );
         cellPopBa.setSequenceReadLength( sample.getSequenceReadLength() );
         cellPopBa.setSequencePairedReads( sample.getSequencePairedReads() );

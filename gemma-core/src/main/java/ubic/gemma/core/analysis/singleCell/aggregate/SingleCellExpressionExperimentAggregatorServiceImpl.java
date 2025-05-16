@@ -181,7 +181,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
         // update sequencing metadata
         if ( librarySize != null ) {
-            updateSequencingMetadata( scd, librarySize );
+            updateSequenceReadCounts( newBad, librarySize );
         }
 
         // sparsity metrics, only needed for preferred QTs
@@ -266,12 +266,12 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         return newQt;
     }
 
-    private void updateSequencingMetadata( SingleCellDimension scd, double[] librarySize ) {
-        for ( int i = 0; i < scd.getBioAssays().size(); i++ ) {
-            BioAssay ba = scd.getBioAssays().get( i );
+    private void updateSequenceReadCounts( BioAssayDimension bad, double[] librarySize ) {
+        for ( int i = 0; i < bad.getBioAssays().size(); i++ ) {
+            BioAssay ba = bad.getBioAssays().get( i );
             ba.setSequenceReadCount( Math.round( librarySize[i] ) );
         }
-        bioAssayService.update( scd.getBioAssays() );
+        bioAssayService.update( bad.getBioAssays() );
     }
 
     private Map<BioAssay, BioAssay> createSourceBioAssayMap( ExpressionExperiment ee, Collection<BioAssay> cellBAs ) {

@@ -243,6 +243,26 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .hasSize( 16 )
                 .satisfies( bas -> {
                     assertThat( bas )
+                            .extracting( BioAssay::getSequenceReadCount )
+                            .containsExactly( 116L,
+                                    116L,
+                                    116L,
+                                    116L,
+                                    128L,
+                                    128L,
+                                    128L,
+                                    128L,
+                                    190L,
+                                    190L,
+                                    190L,
+                                    190L,
+                                    206L,
+                                    206L,
+                                    206L,
+                                    206L );
+                } )
+                .satisfies( bas -> {
+                    assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } )
@@ -330,6 +350,25 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         assertThat( capt2.getValue() )
                 .hasSize( 16 )
                 .satisfies( bas -> {
+                    assertThat( bas )
+                            .extracting( BioAssay::getSequenceReadCount )
+                            .containsExactly(
+                                    128L,
+                                    128L,
+                                    128L,
+                                    128L,
+                                    141L,
+                                    141L,
+                                    141L,
+                                    141L,
+                                    209L,
+                                    209L,
+                                    209L,
+                                    209L,
+                                    227L,
+                                    227L,
+                                    227L,
+                                    227L );
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
