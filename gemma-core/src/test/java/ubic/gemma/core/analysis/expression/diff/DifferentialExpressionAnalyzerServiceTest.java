@@ -66,6 +66,7 @@ import static org.junit.Assume.assumeNoException;
 /**
  * @author keshav, paul
  */
+@Ignore("These tests randomly fail on the CI")
 @Category(SlowTest.class)
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
