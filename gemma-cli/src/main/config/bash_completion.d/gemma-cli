@@ -1,4 +1,4 @@
-function __gemma_cli_gemma_cli_complete() {
+function __gemma_cli_complete() {
     COMPREPLY=()
     words="${COMP_WORDS[*]}"
     current_option="${COMP_WORDS[$COMP_CWORD-1]}"
@@ -146,7 +146,7 @@ function __gemma_cli_gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' printExperimentalDesign ' ]]; then
         if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--help' '--outFilePrefix' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-h' '-o' '-q' '-t' '-x'" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--eeListfile' '--excludeEEFile' '--experiment' '--expressionQuery' '--force' '--help' '--outFilePrefix' '--standard-location' '--taxon' '-all' '-batchFormat' '-batchOutputFile' '-e' '-eeset' '-f' '-force' '-h' '-o' '-q' '-standardLocation' '-t' '-x'" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -528,4 +528,4 @@ function __gemma_cli_gemma_cli_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
     fi
 }
-complete -o filenames -o bashdefault -F __gemma_cli_gemma_cli_complete 'gemma-cli'
+complete -o filenames -o bashdefault -F __gemma_cli_complete 'gemma-cli'
