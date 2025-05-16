@@ -9,10 +9,12 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -177,17 +179,23 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
         ExpressionExperiment ee = service.thawLite( this.getEntity( arg ) );
-        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
-        if ( outliers != null ) {
-            Set<Long> predictedOutlierBioAssayIds = outliers.stream()
-                    .map( OutlierDetails::getBioAssay )
-                    .map( BioAssay::getId )
-                    .collect( Collectors.toSet() );
-            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
-                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
-            }
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), null, true, true );
+        populateOutliers( ee, bioAssayValueObjects );
+        return bioAssayValueObjects;
+    }
+
+    /**
+     * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
+     */
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
+        ExpressionExperiment ee = service.thawLite( getEntity( datasetArg ) );
+        BioAssayDimension bad = service.getBioAssayDimensionWithAssays( ee, qt );
+        if ( bad == null ) {
+            throw new NotFoundException( "There are no assays associated to " + qt + "." );
         }
+        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad.getBioAssays() );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad.getBioAssays(), assay2sourceAssayMap, true, true );
+        populateOutliers( ee, bioAssayValueObjects );
         return bioAssayValueObjects;
     }
 
@@ -238,28 +246,27 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if ( subset == null ) {
             throw new NotFoundException( "No subset found with ID " + subSetId );
         }
-        return subset.getBioAssays().stream()
-                .map( ba -> {
-                    BioAssay sourceAssay;
-                    if ( ba.getSampleUsed().getSourceBioMaterial() != null ) {
-                        Set<BioAssay> sourceAssays = ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
-                                .filter( subset.getSourceExperiment().getBioAssays()::contains )
-                                .collect( Collectors.toSet() );
-                        if ( sourceAssays.size() == 1 ) {
-                            sourceAssay = sourceAssays.iterator().next();
-                        } else if ( sourceAssays.isEmpty() ) {
-                            log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
-                            sourceAssay = null;
-                        } else {
-                            log.warn( ba + " has more than one source assay in " + subset.getSourceExperiment() + "." );
-                            sourceAssay = null;
-                        }
-                    } else {
-                        log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
-                        sourceAssay = null;
-                    }
-                    return new BioAssayValueObject( ba, null, sourceAssay, false, true );
-                } )
-                .collect( Collectors.toList() );
+        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( subset.getBioAssays(), assay2sourceAssayMap, true, true );
+        populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        return bioAssayValueObjects;
+    }
+
+    public QuantitationType getPreferredQuantitationType( DatasetArg<?> datasetArg ) {
+        return service.getPreferredQuantitationType( getEntity( datasetArg ) )
+                .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );
+    }
+
+    public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
+        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
+        if ( outliers != null ) {
+            Set<Long> predictedOutlierBioAssayIds = outliers.stream()
+                    .map( OutlierDetails::getBioAssay )
+                    .map( BioAssay::getId )
+                    .collect( Collectors.toSet() );
+            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
+                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
+            }
+        }
     }
 }

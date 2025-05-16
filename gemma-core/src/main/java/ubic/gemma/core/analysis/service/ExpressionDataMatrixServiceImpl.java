@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -42,6 +43,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
 
@@ -62,6 +64,8 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    private VectorMergingService vectorMergingService;
 
     @Override
     @Transactional(readOnly = true)
@@ -98,8 +102,20 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
+        return getProcessedExpressionDataMatrix( ee, false );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, boolean thawAssays ) {
         Collection<ProcessedExpressionDataVector> dataVectors = expressionExperimentService.getProcessedDataVectors( ee )
                 .orElseThrow( () -> new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." ) );
+        if ( thawAssays ) {
+            dataVectors.stream()
+                    .map( ProcessedExpressionDataVector::getBioAssayDimension )
+                    .distinct()
+                    .forEach( Thaws::thawBioAssayDimension );
+        }
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 

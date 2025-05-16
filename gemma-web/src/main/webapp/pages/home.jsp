@@ -18,16 +18,21 @@
 <div id="frontPageSlideShow">
     <div class="container flex flex-wrap flex-lg-nowrap justify-space-between g-5 mt-10 mb-10">
         <div class="small w-100" style="max-width: 372px;">
-            Gemma provides data, experimental design annotations, and differential expression analysis results for
-            thousands
-            of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily NCBI <a
-                href="https://www.ncbi.nlm.nih.gov/geo/">GEO</a>),
-            annotate experimental conditions, conduct quality control and compute differential expression using
-            standardized
-            procedures. We have especially good coverage of experiments relevant to the nervous system. See the <a
-                href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information.
-            Gemma was developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis
-            group at UBC</a>.
+            <p>
+                Gemma provides data, experimental design annotations, and differential expression analysis results for
+                thousands of microarray and RNA-seq experiments. We re-analyze raw data from public sources (primarily
+                NCBI <a href="https://www.ncbi.nlm.nih.gov/geo/">GEO</a>), annotate experimental conditions, conduct
+                quality control and compute differential expression using standardized procedures. We have especially
+                good coverage of experiments relevant to the nervous system. See the <a
+                    href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information. Gemma was
+                developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis group at UBC</a>.
+            </p>
+            <p>
+                <b>May 2025:</b> We are happy to announce that Gemma now has support for single-cell/single-nucleus
+                data. While work is still in progress, you can <a href="${appConfig['gemma.gemBrow.url']}/#/scrnaseq">start using
+                data now</a>. We're providing some additional details <a
+                    href="https://pavlidislab.github.io/Gemma/scrnaseq.html">here</a>.
+            </p>
         </div>
 
         <%-- Width here needs to be enough to fit the labels at left and right edges --%>

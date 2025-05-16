@@ -43,7 +43,7 @@ public class IndexerTaskCommand extends TaskCommand {
 
     public IndexerTaskCommand() {
         super();
-        this.setMaxRuntime( IndexerTaskCommand.INDEXER_MAX_RUNTIME );
+        this.setMaxRuntimeMillis( IndexerTaskCommand.INDEXER_MAX_RUNTIME );
     }
 
     @Override

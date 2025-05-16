@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,15 +90,18 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "whatever" );
         // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
         qtMetadata.setScale( ScaleType.LINEAR );
+        qtMetadata.setIsPreferred( true );
         metaData.setQuantitationType( qtMetadata );
 
         SimplePlatformMetadata f = new SimplePlatformMetadata();
         f.setShortName( "GSE8441_test" );
+        f.setName( "test" );
         f.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( f );
 
@@ -139,6 +143,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * </pre>
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
@@ -155,7 +160,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 

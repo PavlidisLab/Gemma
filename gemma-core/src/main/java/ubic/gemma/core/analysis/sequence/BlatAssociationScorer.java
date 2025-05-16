@@ -28,10 +28,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Given a set of BlatAssociations that might be redundant, clean them up and score them.
@@ -72,18 +69,18 @@ public class BlatAssociationScorer {
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = BlatAssociationScorer
+        Map<GeneProduct, List<BlatAssociation>> geneProducts2Associations = BlatAssociationScorer
                 .organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
 
         BlatAssociation globalBest = BlatAssociationScorer
                 .removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
-        assert blatAssociations.size() > 0;
+        assert !blatAssociations.isEmpty();
 
-        Map<Gene, Collection<BlatAssociation>> genes2Associations = BlatAssociationScorer
+        Map<Gene, List<BlatAssociation>> genes2Associations = BlatAssociationScorer
                 .organizeBlatAssociationsByGene( blatAssociations );
 
-        assert genes2Associations.size() > 0;
+        assert !genes2Associations.isEmpty();
 
         /*
          * At this point there should be just one blatAssociation per gene product. However, all of these really might
@@ -171,18 +168,18 @@ public class BlatAssociationScorer {
      * @return map of physical locations for the alignments, and which genes are found there.
      */
     private static Map<PhysicalLocation, Collection<Gene>> clusterGenes(
-            Map<Gene, Collection<BlatAssociation>> associations ) {
+            Map<Gene, List<BlatAssociation>> associations ) {
 
         Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<>();
 
         for ( Gene gene : associations.keySet() ) {
 
-            Collection<BlatAssociation> geneAssoc = associations.get( gene );
+            List<BlatAssociation> geneAssoc = associations.get( gene );
 
             for ( BlatAssociation ba : geneAssoc ) {
                 PhysicalLocation pl = ba.getBlatResult().getTargetAlignedRegion();
                 if ( !clusters.containsKey( pl ) ) {
-                    clusters.put( pl, new HashSet<Gene>() );
+                    clusters.put( pl, new HashSet<>() );
                 }
                 clusters.get( pl ).add( gene );
             }
@@ -214,13 +211,13 @@ public class BlatAssociationScorer {
         blatAssociation.setScore( score );
     }
 
-    private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
+    private static Map<Gene, List<BlatAssociation>> organizeBlatAssociationsByGene(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<Gene, Collection<BlatAssociation>> genes = new HashMap<>();
+        Map<Gene, List<BlatAssociation>> genes = new HashMap<>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             Gene gene = blatAssociation.getGeneProduct().getGene();
             if ( !genes.containsKey( gene ) ) {
-                genes.put( gene, new HashSet<BlatAssociation>() );
+                genes.put( gene, new ArrayList<>() );
             }
             genes.get( gene ).add( blatAssociation );
         }
@@ -234,9 +231,9 @@ public class BlatAssociationScorer {
      * @param blatAssociations blat assocs
      * @return map
      */
-    private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
+    private static Map<GeneProduct, List<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<>();
+        Map<GeneProduct, List<BlatAssociation>> geneProducts = new HashMap<>();
         Collection<BioSequence> sequences = new HashSet<>();
 
         for ( BlatAssociation blatAssociation : blatAssociations ) {
@@ -252,7 +249,7 @@ public class BlatAssociationScorer {
             assert blatAssociation.getGeneProduct() != null;
             GeneProduct geneProduct = blatAssociation.getGeneProduct();
             if ( !geneProducts.containsKey( geneProduct ) ) {
-                geneProducts.put( geneProduct, new HashSet<BlatAssociation>() );
+                geneProducts.put( geneProduct, new ArrayList<>() );
             }
             geneProducts.get( geneProduct ).add( blatAssociation );
 
@@ -271,14 +268,14 @@ public class BlatAssociationScorer {
      * @return blat accoc
      */
     private static BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
-            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
+            Map<GeneProduct, List<BlatAssociation>> geneProduct2BlatAssociations ) {
 
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
-        Collection<BlatAssociation> keepers = new HashSet<>();
+        List<BlatAssociation> keepers = new ArrayList<>();
 
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
-            Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
+            List<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
             if ( geneProductBlatAssociations.isEmpty() )
                 continue;
@@ -297,7 +294,7 @@ public class BlatAssociationScorer {
             }
 
             // Remove the lower-scoring ones for this gene product
-            Collection<BlatAssociation> toKeep = new HashSet<>();
+            List<BlatAssociation> toKeep = new ArrayList<>();
             toKeep.add( best );
             keepers.add( best );
             geneProduct2BlatAssociations.put( geneProduct, toKeep );
@@ -385,7 +382,7 @@ public class BlatAssociationScorer {
      */
     public static Double identity( BlatResult blatResult ) {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
-        long qAliSize = sizeMul * blatResult.getQueryEnd() - blatResult.getQueryStart();
+        long qAliSize = sizeMul * ( blatResult.getQueryEnd() - blatResult.getQueryStart() );
         long tAliSize = blatResult.getTargetEnd() - blatResult.getTargetStart();
         long aliSize = Math.min( qAliSize, tAliSize );
 

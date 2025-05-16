@@ -20,6 +20,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -60,11 +61,16 @@ public interface ExpressionDataMatrixService {
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
 
     /**
-     * @param ee the expression experiment.
-     * @return matrix of preferred data, with all missing values masked
-     * @throws IllegalStateException if there are no processed vectors
+     * Obtain the processed expression data matrix for a given experiment.
      */
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
+
+    /**
+     * @param ee the expression experiment.
+     * @return matrix of preferred data, with all missing values masked
+     * @param thawAssays whether to thaw the assays or not using {@link ubic.gemma.persistence.util.Thaws#thawBioAssayDimension(BioAssayDimension)}
+     */
+    ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, boolean thawAssays );
 
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples );
 

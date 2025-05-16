@@ -238,7 +238,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                         icon: Gemma.CONTEXT_PATH + "/images/icons/cross.png",
                         hidden: true,
                         handler: function (button) {
-                            debugger;
+                            // debugger;
                             var records = this.getSelectionModel().getSelections();
                             this.getStore().remove(records);
                             button.setVisible(false);

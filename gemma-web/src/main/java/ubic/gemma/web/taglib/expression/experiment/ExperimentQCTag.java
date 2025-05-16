@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import gemma.gsec.util.SecurityUtil;
 import lombok.Setter;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
@@ -169,7 +170,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.endTag(); // </th>
         }
 
-        if ( hasSingleCellData ) {
+        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
             writer.startTag( "th" );
             writer.startTag( "strong" );
             writer.appendValue( "Single-cell" );
@@ -343,7 +344,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writePlaceholder( writer );
         }
 
-        if ( hasSingleCellData ) {
+        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
             if ( singleCellSparsityHeatmap != null ) {
                 writer.startTag( "td" );
                 SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );

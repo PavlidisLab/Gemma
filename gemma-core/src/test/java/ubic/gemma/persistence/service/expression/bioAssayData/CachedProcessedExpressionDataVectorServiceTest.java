@@ -27,6 +27,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDa
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.randomBulkVectors;
 
 @ContextConfiguration
@@ -70,13 +72,8 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         }
 
         @Bean
-        public BioAssayDimensionService bioAssayDimensionService( BioAssayDimensionDao bioAssayDimensionDao ) {
-            return new BioAssayDimensionServiceImpl( bioAssayDimensionDao );
-        }
-
-        @Bean
-        public BioAssayDimensionDao bioAssayDimensionDao( SessionFactory sessionFactory ) {
-            return new BioAssayDimensionDaoImpl( sessionFactory );
+        public ExpressionExperimentService expressionExperimentService( SessionFactory sessionFactory ) {
+            return mock();
         }
 
         @Bean

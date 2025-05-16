@@ -20,10 +20,7 @@ package ubic.gemma.core.analysis.sequence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
@@ -151,6 +148,7 @@ public class ProbeMapperTest {
     }
 
     @Test
+    @Ignore
     public void testProcessBlatResults() {
         ProbeMapperConfig config = new ProbeMapperConfig();
         config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.

@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,6 +127,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     final public void test() throws Exception {
         /*

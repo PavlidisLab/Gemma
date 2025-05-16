@@ -8,10 +8,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.FileLockManagerImpl;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -33,6 +35,11 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
         public SingleCellDataDownloaderCli singleCellDataDownloaderCli() {
             return new SingleCellDataDownloaderCli();
         }
+
+        @Bean
+        public FileLockManager fileLockManager() {
+            return new FileLockManagerImpl();
+        }
     }
 
     @Autowired
@@ -45,6 +52,7 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
     private File singleCellDataBasePath;
 
     @Test
+    @Category(SlowTest.class)
     public void testDownloadSingleSampleAccession() {
         assertThat( singleCellDataDownloaderCli )
                 .withArguments( "-e", "GSE224438", "--sample-accessions", "GSM7022367" )

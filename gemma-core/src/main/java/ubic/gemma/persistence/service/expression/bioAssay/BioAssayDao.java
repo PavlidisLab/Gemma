@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -46,5 +47,11 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
 
     Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
 
-    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic );
+    /**
+     * @see BioAssayValueObject#BioAssayValueObject(BioAssay, Map, BioAssay, boolean, boolean)
+     */
+    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities,
+            @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo,
+            @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap,
+            boolean basic, boolean allFactorValues );
 }

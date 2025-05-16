@@ -23,8 +23,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-
-import java.util.Objects;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiable {
 
@@ -86,7 +85,8 @@ public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiabl
      */
     @Override
     public int hashCode() {
-        return Objects.hash( querySequence, targetSequence, targetChromosome, searchedDatabase, targetChromosome );
+        // use IDs for hashing since it's proxy-safe, but also those are guaranteed to be set so it's safe to use
+        return IdentifiableUtils.hash( querySequence, targetSequence, targetChromosome, searchedDatabase, targetChromosome );
     }
 
     /**
@@ -105,11 +105,11 @@ public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiabl
         if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
         } else {
-            return Objects.equals( this.querySequence, that.querySequence )
-                    && Objects.equals( this.targetSequence, that.targetSequence )
-                    && Objects.equals( this.targetChromosome, that.targetChromosome )
-                    && Objects.equals( this.searchedDatabase, that.searchedDatabase )
-                    && Objects.equals( this.targetAlignedRegion, that.targetAlignedRegion );
+            return IdentifiableUtils.equals( this.querySequence, that.querySequence )
+                    && IdentifiableUtils.equals( this.targetSequence, that.targetSequence )
+                    && IdentifiableUtils.equals( this.targetChromosome, that.targetChromosome )
+                    && IdentifiableUtils.equals( this.searchedDatabase, that.searchedDatabase )
+                    && IdentifiableUtils.equals( this.targetAlignedRegion, that.targetAlignedRegion );
         }
     }
 }

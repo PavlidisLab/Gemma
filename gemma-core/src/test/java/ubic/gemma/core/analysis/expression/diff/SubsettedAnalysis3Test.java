@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +111,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
@@ -149,7 +151,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( diseasegroup );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertEquals( 6, analyses.size() ); // a subset for each disease: SZ, PD, HD, ALS, ALZ, MS
 

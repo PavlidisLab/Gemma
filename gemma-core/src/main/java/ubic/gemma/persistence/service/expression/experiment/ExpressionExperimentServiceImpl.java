@@ -1237,7 +1237,6 @@ public class ExpressionExperimentServiceImpl
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
         bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
         return bioAssayDimensions;
     }
@@ -1257,11 +1256,19 @@ public class ExpressionExperimentServiceImpl
         return expressionExperimentDao.getBioAssayDimension( ee, qt, dataVectorType );
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt ) {
+        BioAssayDimension bad = expressionExperimentDao.getBioAssayDimension( ee, qt );
+        if ( bad != null ) {
+            Thaws.thawBioAssayDimension( bad );
+        }
+        return bad;
     }
 
     @Override

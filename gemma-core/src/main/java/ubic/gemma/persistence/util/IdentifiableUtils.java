@@ -9,6 +9,8 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Utilities for {@link ubic.gemma.model.common.Identifiable}.
  * @author poirigui
@@ -74,6 +76,19 @@ public class IdentifiableUtils {
         } else {
             return clazz.getSimpleName() + ( identifiable.getId() != null ? " Id=" + identifiable.getId() : "" );
         }
+    }
+
+    /**
+     * Hash identifiables in a proxy-safe way using their IDs.
+     * <p>
+     * Hashing an entity that does ont have an assigned ID is not allowed as its hash code would change once persisted.
+     */
+    public static int hash( Identifiable... identifiables ) {
+        Object[] ids = new Long[identifiables.length];
+        for ( int i = 0; i < identifiables.length; i++ ) {
+            ids[i] = identifiables[i] != null ? requireNonNull( identifiables[i].getId(), "Cannot hash a transient entity, either persist it first or use a different collection type." ) : null;
+        }
+        return Objects.hash( ids );
     }
 
     /**

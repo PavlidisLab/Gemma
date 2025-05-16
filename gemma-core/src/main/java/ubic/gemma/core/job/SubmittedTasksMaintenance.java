@@ -44,15 +44,12 @@ public class SubmittedTasksMaintenance {
                 case QUEUED:
                     numQueued++;
                     Date submissionTime = task.getSubmissionTime();
-                    Integer maxQueueWait = task.getTaskCommand().getMaxQueueMinutes();
+                    long maxQueueWaitMillis = task.getTaskCommand().getMaxQueueMillis();
                     assert submissionTime != null;
-                    assert maxQueueWait != null;
 
-                    if ( submissionTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) ) ) {
-                        SubmittedTasksMaintenance.log
-                                .warn( "Submitted task " + task.getTaskCommand().getClass().getSimpleName()
-                                        + " has been queued for too long (max=" + maxQueueWait
-                                        + "minutes), attempting to cancel: " + task.getTaskId() );
+                    if ( maxQueueWaitMillis >= 0 && System.currentTimeMillis() > submissionTime.getTime() + maxQueueWaitMillis ) {
+                        SubmittedTasksMaintenance.log.warn( String.format( "Submitted task has been queued for too long (max=%d ms), attempting to cancel: %s %s",
+                                maxQueueWaitMillis, task.getTaskId(), task.getTaskCommand().getClass().getSimpleName() ) );
 
                         task.addEmailAlert();
                         // -> email admin? is worker dead?
@@ -63,13 +60,12 @@ public class SubmittedTasksMaintenance {
                 case RUNNING:
                     numRunning++;
                     Date startTime = task.getStartTime();
-                    int maxRunTime = task.getTaskCommand().getMaxRuntime();
+                    long maxRunTimeMillis = task.getTaskCommand().getMaxRuntimeMillis();
                     assert startTime != null;
 
-                    if ( startTime.before( DateUtils.addMinutes( new Date(), -maxRunTime ) ) ) {
-                        SubmittedTasksMaintenance.log
-                                .warn( "Running task is taking too long, attempting to cancel: " + task.getTaskId()
-                                        + " " + task.getTaskCommand().getClass().getSimpleName() );
+                    if ( maxRunTimeMillis >= 0 && System.currentTimeMillis() > startTime.getTime() + maxRunTimeMillis ) {
+                        SubmittedTasksMaintenance.log.warn( String.format( "Running task is taking too long (max=%d ms), attempting to cancel: %s %s",
+                                maxRunTimeMillis, task.getTaskId(), task.getTaskCommand().getClass().getSimpleName() ) );
 
                         task.addEmailAlert();
 
@@ -99,9 +95,8 @@ public class SubmittedTasksMaintenance {
             }
         }
 
-        if ( tasks.size() > 0 && numDone != tasks.size() )
-            SubmittedTasksMaintenance.log
-                    .info( tasks.size() + " tasks monitored; Done: " + numDone + "; Running: " + numRunning
-                            + "; Cancelled: " + numCancelled + "; Queued: " + numQueued );
+        if ( !tasks.isEmpty() && numDone != tasks.size() )
+            SubmittedTasksMaintenance.log.info( String.format( "%d tasks monitored; Done: %d; Running: %d; Cancelled: %d; Queued: %d",
+                    tasks.size(), numDone, numRunning, numCancelled, numQueued ) );
     }
 }

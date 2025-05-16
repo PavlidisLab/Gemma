@@ -470,6 +470,11 @@ public class GeoBrowserImpl implements GeoBrowser {
             }
         }
 
+        if ( document == null ) {
+            log.warn( "Could not find any details for " + record );
+            return;
+        }
+
         if ( !record.isSuperSeries() && config.isSubSeriesStatus() ) {
             /*
              * I can't find a better way to get subseries info: the eutils doesn't provide this
@@ -664,6 +669,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
     }
 
+    @Nullable
     private Document fetchDetailedGeoSeriesFamilyFromGeo( String geoAccession ) throws IOException, SAXParseException {
         Document document;
         try {
@@ -681,7 +687,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 throw e;
             }
         }
-        throw new FileNotFoundException( "No series file found for " + geoAccession );
+        return null;
     }
 
     @Nullable

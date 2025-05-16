@@ -21,6 +21,12 @@ public class QuantitationTypeByIdArg extends QuantitationTypeArg<Long> {
 
     @Nullable
     @Override
+    QuantitationType getEntity( ExpressionExperiment ee, QuantitationTypeService service ) {
+        return service.loadById( getValue(), ee );
+    }
+
+    @Nullable
+    @Override
     QuantitationType getEntity( ExpressionExperiment ee, QuantitationTypeService service, Class<? extends DesignElementDataVector> dataVectorType ) {
         return service.loadByIdAndVectorType( getValue(), ee, dataVectorType );
     }

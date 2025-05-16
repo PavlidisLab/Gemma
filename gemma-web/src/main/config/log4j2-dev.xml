@@ -36,6 +36,9 @@
         <!-- Apache Commons -->
         <Logger name="org.apache.commons" level="WARN"/>
 
+        <!-- Jena -->
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
+
         <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
 

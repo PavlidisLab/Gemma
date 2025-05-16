@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,6 +153,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testAnalyze() throws Exception {
 

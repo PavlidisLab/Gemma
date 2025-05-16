@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -92,19 +93,11 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         return results;
     }
 
-    /**
-     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
-     *
-     * @param entities the bio assays to convert into a VO
-     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
-     * @return a collection of bioAssay value objects
-     */
     @Override
-    //TODO remove when FactorValueValueObject usage is phased out
-    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic ) {
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues ) {
         List<BioAssayValueObject> vos = new LinkedList<>();
         for ( BioAssay e : entities ) {
-            vos.add( new BioAssayValueObject( e, arrayDesignValueObjects, null, basic, false ) );
+            vos.add( new BioAssayValueObject( e, ad2vo, assay2sourceAssayMap != null ? assay2sourceAssayMap.get( e ) : null, basic, allFactorValues ) );
         }
         return vos;
     }

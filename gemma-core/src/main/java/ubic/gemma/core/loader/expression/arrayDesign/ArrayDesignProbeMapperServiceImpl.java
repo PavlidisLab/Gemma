@@ -443,7 +443,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                    persisterHelper.persist( bacs.ba );
+                        persisterHelper.persist( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log

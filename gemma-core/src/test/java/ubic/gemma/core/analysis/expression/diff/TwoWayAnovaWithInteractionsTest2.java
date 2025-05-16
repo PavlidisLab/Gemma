@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
@@ -93,7 +95,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 

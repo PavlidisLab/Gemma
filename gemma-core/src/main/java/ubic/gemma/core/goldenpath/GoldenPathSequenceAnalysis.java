@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,10 +110,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             geneProducts.addAll( this.findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
 
-        if ( geneProducts.size() == 0 )
+        if ( geneProducts.isEmpty() )
             return null;
 
-        Collection<BlatAssociation> results = new HashSet<>();
+        Collection<BlatAssociation> results = new ArrayList<>();
         for ( GeneProduct geneProduct : geneProducts ) {
             if ( GoldenPath.log.isDebugEnabled() )
                 GoldenPath.log.debug( geneProduct );

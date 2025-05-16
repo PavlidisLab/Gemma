@@ -24,7 +24,10 @@ import ubic.gemma.core.job.notification.TaskPostProcessing;
 import java.util.Date;
 import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * SubmittedTask implementation representing the task running on local TaskRunningService.
@@ -46,8 +49,8 @@ class SubmittedTaskLocal implements SubmittedTask {
     private Status status;
     private CompletableFuture<TaskResult> future;
 
-    public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
-        this.taskId = getTaskCommand().getTaskId();
+    public SubmittedTaskLocal( String taskId, TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
+        this.taskId = taskId;
         this.taskCommand = taskCommand;
 
         // This can be changed by the user AFTER the task was submitted.
@@ -110,7 +113,7 @@ class SubmittedTaskLocal implements SubmittedTask {
         emailAlert = true;
         assert taskPostProcessing != null : "Task postprocessing was null";
         taskPostProcessing.addEmailNotification( future,
-                new EmailNotificationContext( getTaskCommand().getTaskId(), getTaskCommand().getSubmitter(),
+                new EmailNotificationContext( taskId, getTaskCommand().getSubmitter(),
                         getTaskCommand().getTaskClass().getSimpleName() ), executor );
     }
 

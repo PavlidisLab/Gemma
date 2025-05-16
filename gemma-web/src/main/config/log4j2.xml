@@ -90,6 +90,9 @@
 
         <Logger name="org.apache.commons" level="WARN"/>
 
+        <!-- Jena -->
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
+
         <!-- DWR -->
         <Logger name="org.directwebremoting" level="WARN"/>
 

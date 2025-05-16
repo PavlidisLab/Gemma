@@ -4,14 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -73,7 +74,7 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
      * @param bioAssay2SourceBioAssayMap mapping of assays to their source assays
      * @param includeAssays              whether to include assays in the serialization
      */
-    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Map<BioAssay, BioAssay> bioAssay2SourceBioAssayMap, boolean includeAssays, boolean basic, boolean allFactorValues ) {
+    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, @Nullable Map<ArrayDesign, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Map<BioAssay, BioAssay> bioAssay2SourceBioAssayMap, boolean includeAssays, boolean basic, boolean allFactorValues ) {
         super( ees.getId() );
         this.sourceExperimentId = ees.getSourceExperiment().getId();
         if ( ModelUtils.isInitialized( ees.getSourceExperiment() ) ) {

@@ -55,6 +55,6 @@ public abstract class AbstractTask<C extends TaskCommand> implements Task<C> {
      * Create a new task result for this command with an answer.
      */
     protected TaskResult newTaskResult( @Nullable Serializable answer ) {
-        return new TaskResult( taskCommand.getTaskId(), answer );
+        return new TaskResult( answer );
     }
 }

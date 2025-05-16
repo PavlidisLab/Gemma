@@ -66,7 +66,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             return mvr;
         }
 
-        ExpressionDataDoubleMatrix intensities = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix intensities = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         if ( intensities == null || intensities.rows() == 0 ) {
             throw new IllegalStateException( "Could not locate intensity matrix, or it was empty, for " + ee.getShortName() );
         }

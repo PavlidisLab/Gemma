@@ -93,18 +93,17 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     }
 
     /**
-     * @param arrayDesignValueObjectsById pre-populated array design VOs by ID, or null to ignore and the VOs will be
-     *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
-     * @param sourceBioAssay              the source {@link BioAssay} if known, this corresponds to the assay of the
-     *                                    source sample, but since there might be more than one, it must be picked
-     *                                    explicitly based on the context
-     * @param basic                       if true, produce basic factor values in the corresponding biomaterial, see
-     *                                    {@link BioMaterialValueObject#BioMaterialValueObject(BioMaterial, boolean, boolean)}
-     *                                    for more details
-     * @param allFactorValues             include all FVs, including those inherited from the source biomaterial in the
-     *                                    corresponding biomaterial
+     * @param ad2vo           pre-populated array design VOs by array design, or null to ignore and the VOs will be
+     *                        initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     * @param sourceBioAssay  the source {@link BioAssay} if known, this corresponds to the assay of the source sample,
+     *                        but since there might be more than one, it must be picked explicitly based on the context
+     * @param basic           if true, produce basic factor values in the corresponding biomaterial, see
+     *                        {@link BioMaterialValueObject#BioMaterialValueObject(BioMaterial, boolean, boolean)}
+     *                        for more details
+     * @param allFactorValues include all FVs, including those inherited from the source biomaterial in the
+     *                        corresponding biomaterial
      */
-    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable BioAssay sourceBioAssay, boolean basic, boolean allFactorValues ) {
+    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo, @Nullable BioAssay sourceBioAssay, boolean basic, boolean allFactorValues ) {
         super( bioAssay );
         this.shortName = bioAssay.getShortName();
         this.name = bioAssay.getName();
@@ -113,16 +112,16 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         // the platform and original platform are eagerly fetched, so no need for a Utils.isInitialized() test:w
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
-            this.arrayDesign = arrayDesignValueObjectsById.get( ad.getId() );
+        if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
+            this.arrayDesign = ad2vo.get( ad );
         } else {
             this.arrayDesign = new ArrayDesignValueObject( ad );
         }
 
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
-                this.originalPlatform = arrayDesignValueObjectsById.get( ad.getId() );
+            if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
+                this.originalPlatform = ad2vo.get( ad );
             } else {
                 this.originalPlatform = new ArrayDesignValueObject( op );
             }

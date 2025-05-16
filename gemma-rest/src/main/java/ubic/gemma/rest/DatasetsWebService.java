@@ -70,6 +70,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -780,8 +781,19 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType
     ) {
+        if ( quantitationTypeArg != null ) {
+            ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+            QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
+        if ( useProcessedQuantitationType ) {
+            QuantitationType qt = datasetArgService.getPreferredQuantitationType( datasetArg );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
         return respond( datasetArgService.getSamples( datasetArg ) );
     }
 
@@ -2010,35 +2022,26 @@ public class DatasetsWebService {
                 // TODO order the subsets by how they appear in the BioAssayDimension
                 .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
                 .map( subset -> {
-                    Map<Long, ArrayDesignValueObject> id2advo;
+                    Map<ArrayDesign, ArrayDesignValueObject> id2advo;
                     Map<BioAssay, BioAssay> assay2sourceAssayMap;
                     if ( includeAssays ) {
                         id2advo = new HashMap<>();
-                        assay2sourceAssayMap = new HashMap<>();
                         for ( BioAssay ba : subset.getBioAssays() ) {
-                            if ( !id2advo.containsKey( ba.getArrayDesignUsed().getId() ) ) {
-                                id2advo.put( ba.getArrayDesignUsed().getId(), new ArrayDesignValueObject( ba.getArrayDesignUsed() ) );
-                            }
-                            if ( ba.getSampleUsed().getSourceBioMaterial() == null ) {
-                                log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
-                                continue;
-                            }
-                            Set<BioAssay> sourceAssays = ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
-                                    .filter( subset.getSourceExperiment().getBioAssays()::contains )
-                                    .collect( Collectors.toSet() );
-                            if ( sourceAssays.size() == 1 ) {
-                                assay2sourceAssayMap.put( ba, sourceAssays.iterator().next() );
-                            } else if ( sourceAssays.isEmpty() ) {
-                                log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
-                            } else {
-                                log.warn( ba + " has more than one source assay in " + subset.getSourceExperiment() + "." );
+                            id2advo.computeIfAbsent( ba.getArrayDesignUsed(), ArrayDesignValueObject::new );
+                            if ( ba.getOriginalPlatform() != null ) {
+                                id2advo.computeIfAbsent( ba.getOriginalPlatform(), ArrayDesignValueObject::new );
                             }
                         }
+                        assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
                     } else {
                         id2advo = null;
                         assay2sourceAssayMap = null;
                     }
-                    return new ExpressionExperimentSubsetWithFactorValuesObject( subset, fvs.get( subset ), id2advo, includeAssays, assay2sourceAssayMap );
+                    ExpressionExperimentSubsetWithFactorValuesObject vo = new ExpressionExperimentSubsetWithFactorValuesObject( subset, fvs.get( subset ), id2advo, includeAssays, assay2sourceAssayMap );
+                    if ( includeAssays ) {
+                        datasetArgService.populateOutliers( subset.getSourceExperiment(), vo.getBioAssays() );
+                    }
+                    return vo;
                 } )
                 .collect( Collectors.toList() );
         return new ExpressionExperimentSubSetGroupValueObject( bad, ssvos, factors, qts );
@@ -2118,7 +2121,7 @@ public class DatasetsWebService {
 
         public ExpressionExperimentSubsetWithFactorValuesObject( ExpressionExperimentSubSet subset,
                 Set<FactorValue> factorValues,
-                @Nullable Map<Long, ArrayDesignValueObject> id2advo,
+                @Nullable Map<ArrayDesign, ArrayDesignValueObject> id2advo,
                 boolean includeAssays, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap ) {
             super( subset, id2advo, assay2sourceAssayMap, includeAssays, true, true );
             this.factorValues = factorValues.stream()

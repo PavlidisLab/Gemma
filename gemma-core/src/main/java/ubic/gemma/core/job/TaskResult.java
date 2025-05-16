@@ -18,8 +18,6 @@
  */
 package ubic.gemma.core.job;
 
-import org.springframework.util.Assert;
-
 import javax.annotation.Nullable;
 import java.io.Serializable;
 
@@ -31,43 +29,19 @@ import java.io.Serializable;
  */
 public final class TaskResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The task id
-     */
-    private final String taskId;
-
     /**
      * The actual result object
      */
     @Nullable
     private final Serializable answer;
 
-    /**
-     * Set if failed.
-     */
-    private final Exception exception;
-
-    public TaskResult( String taskId, @Nullable Serializable answer ) {
-        Assert.notNull( taskId );
-        this.taskId = taskId;
+    public TaskResult( @Nullable Serializable answer ) {
         this.answer = answer;
-        this.exception = null;
     }
 
-    public TaskResult( String taskId, Exception exception ) {
-        Assert.notNull( taskId );
-        Assert.notNull( exception );
-        this.taskId = taskId;
-        this.answer = null;
-        this.exception = exception;
-    }
-
-    public String getTaskId() {
-        return taskId;
-    }
-
+    /**
+     * The answer of this task, may be an {@link Exception} or {@code null}.
+     */
     @Nullable
     public Serializable getAnswer() {
         return answer;
@@ -75,6 +49,6 @@ public final class TaskResult implements Serializable {
 
     @Nullable
     public Exception getException() {
-        return exception;
+        return answer instanceof Exception ? ( Exception ) answer : null;
     }
 }

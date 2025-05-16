@@ -16,8 +16,6 @@ public class ProtocolValueObject extends IdentifiableValueObject<Protocol> {
 
     private String description;
 
-    private Set<CharacteristicValueObject> characteristics;
-
     public ProtocolValueObject( Protocol protocol ) {
         super( protocol );
         this.name = protocol.getName();

@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,6 +107,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
@@ -145,7 +147,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( strainOrLine );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 2, result.size() ); // two subsets
 

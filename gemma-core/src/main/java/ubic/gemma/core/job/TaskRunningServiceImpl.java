@@ -89,21 +89,20 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public <T extends Task<?>> String submitTask( T task ) {
-        this.checkTask( task );
+        Assert.notNull( task, "Must provide a task." );
+        Assert.notNull( task.getTaskCommand(), "Task must have a task command." );
 
         TaskCommand taskCommand = task.getTaskCommand();
-        this.checkTaskCommand( taskCommand );
 
-        final String taskId = task.getTaskCommand().getTaskId();
-        assert ( taskId != null );
+        final String taskId = TaskUtils.generateTaskId();
 
         if ( TaskRunningServiceImpl.log.isDebugEnabled() ) {
             TaskRunningServiceImpl.log.debug( "Submitting local task with id: " + taskId );
         }
 
-        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing, executorService );
+        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskId, task.getTaskCommand(), taskPostProcessing, executorService );
 
-        final ExecutingTask executingTask = new ExecutingTask( task );
+        final ExecutingTask executingTask = new ExecutingTask( taskId, task );
 
         executingTask.setLifecycleHandler( new TaskLifecycleHandler() {
             @Override
@@ -148,22 +147,10 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
         return taskId;
     }
 
-    /**
-     * We check if there are listeners on task submission queue to decide if remote tasks can be served.
-     */
     @Override
     public <C extends TaskCommand> String submitTaskCommand( final C taskCommand ) {
-        this.checkTaskCommand( taskCommand );
-        final Task<C> task = taskCommandToTaskMatcher.match( taskCommand );
-        return this.submitTask( task );
-    }
-
-    private void checkTask( Task<?> task ) {
-        Assert.notNull( task, "Must provide a task." );
-    }
-
-    private void checkTaskCommand( TaskCommand taskCommand ) {
-        Assert.notNull( taskCommand.getTaskId(), "Must have taskId." );
+        Assert.notNull( taskCommand, "Must provide a task command." );
+        return this.submitTask( taskCommandToTaskMatcher.match( taskCommand ) );
     }
 
     @Override

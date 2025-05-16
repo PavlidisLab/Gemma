@@ -1239,17 +1239,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
-        Long id = ( Long ) getSessionFactory().getCurrentSession()
+        return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
                 .add( Restrictions.eq( "quantitationType", qt ) )
-                .createCriteria( "bioAssayDimension" )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
                 .uniqueResult();
-        if ( id == null ) {
-            return null;
-        }
-        return ( BioAssayDimension ) getSessionFactory().getCurrentSession().get( BioAssayDimension.class, id );
     }
 
     @Override
@@ -1267,20 +1262,14 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    @Nullable
     @Override
     public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
-        Long id = ( Long ) getSessionFactory().getCurrentSession()
+        return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
-                .createCriteria( "bioAssayDimension" )
-                .add( Restrictions.idEq( dimensionId ) )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .add( Restrictions.eq( "bioAssayDimension.id", dimensionId ) )
+                .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
                 .uniqueResult();
-        if ( id == null ) {
-            return null;
-        }
-        return ( BioAssayDimension ) getSessionFactory().getCurrentSession().get( BioAssayDimension.class, id );
     }
 
     @Override

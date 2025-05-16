@@ -44,7 +44,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task );
+        ExecutingTask executingTask = new ExecutingTask( TaskUtils.generateTaskId(), task );
         TaskLifecycleHandler lifecycleHandler = mock( TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -79,7 +79,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task );
+        ExecutingTask executingTask = new ExecutingTask( TaskUtils.generateTaskId(), task );
         TaskLifecycleHandler lifecycleHandler = mock( TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -114,7 +114,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         final Authentication[] authenticationAfterSuccess = new Authentication[1];
         final Authentication[] authenticationAfterComplete = new Authentication[1];
 
-        ExecutingTask executingTask = new ExecutingTask( task );
+        ExecutingTask executingTask = new ExecutingTask( TaskUtils.generateTaskId(), task );
         executingTask.setLifecycleHandler( new TaskLifecycleHandler() {
 
             @Override

@@ -174,7 +174,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             assertEquals( 4, v.getBioAssays().size() );
         }
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         assertEquals( 199, dmatrix.rows() );
         assertEquals( 4, dmatrix.columns() );
 
@@ -222,12 +222,12 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
                 assertNotNull( contrast.getCoefficient() );
-                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.01 );
+                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.0001 );
                 assertNotNull( contrast.getPvalue() );
                 assertEquals( 0.006149004, contrast.getPvalue(), 0.0001 );
                 assertNotNull( contrast.getTstat() );
-                assertEquals( 12.70765, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006135591, r.getPvalue(), 0.00001 );
+                assertEquals( 12.6937, Math.abs( contrast.getTstat() ), 0.0001 );
+                assertEquals( 0.006149003, r.getPvalue(), 0.00001 );
                 break;
             }
         }
@@ -279,7 +279,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
