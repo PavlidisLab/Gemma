@@ -119,7 +119,7 @@ pipeline {
         stage('Package') {
             steps {
                 setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
+                sh 'mvn -B package -DskipTests -DskipWebpack'
             }
             post {
                 success {
