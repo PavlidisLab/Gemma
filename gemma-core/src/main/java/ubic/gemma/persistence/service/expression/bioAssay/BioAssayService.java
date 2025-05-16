@@ -34,6 +34,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author kelsey
@@ -130,5 +131,8 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
-    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
+    /**
+     * @see BioAssayDao#loadValueObjects(Collection, Map, Map, boolean, boolean)
+     */
+    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues );
 }

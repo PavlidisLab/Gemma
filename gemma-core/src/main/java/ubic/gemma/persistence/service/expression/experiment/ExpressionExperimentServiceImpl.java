@@ -1256,11 +1256,19 @@ public class ExpressionExperimentServiceImpl
         return expressionExperimentDao.getBioAssayDimension( ee, qt, dataVectorType );
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt ) {
+        BioAssayDimension bad = expressionExperimentDao.getBioAssayDimension( ee, qt );
+        if ( bad != null ) {
+            Thaws.thawBioAssayDimension( bad );
+        }
+        return bad;
     }
 
     @Override

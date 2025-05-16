@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -142,14 +143,18 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     @Override
     @Transactional(readOnly = true)
-    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
-        Set<ArrayDesign> arrayDesigns = new HashSet<>();
-        arrayDesigns.addAll( entities.stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() ) );
-        arrayDesigns.addAll( entities.stream().map( BioAssay::getOriginalPlatform ).filter( Objects::nonNull ).collect( Collectors.toSet() ) );
-        Map<Long, ArrayDesignValueObject> arrayDesignVosById = arrayDesignDao.loadValueObjects( arrayDesigns )
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues ) {
+        Map<Long, ArrayDesign> arrayDesigns = new HashMap<>();
+        for ( BioAssay ba : entities ) {
+            arrayDesigns.put( ba.getArrayDesignUsed().getId(), ba.getArrayDesignUsed() );
+            if ( ba.getOriginalPlatform() != null ) {
+                arrayDesigns.put( ba.getOriginalPlatform().getId(), ba.getOriginalPlatform() );
+            }
+        }
+        Map<ArrayDesign, ArrayDesignValueObject> ba2vo = arrayDesignDao.loadValueObjects( arrayDesigns.values() )
                 .stream()
-                .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
-        return bioAssayDao.loadValueObjects( entities, arrayDesignVosById, basic );
+                .collect( Collectors.toMap( vo -> arrayDesigns.get( vo.getId() ), Function.identity() ) );
+        return bioAssayDao.loadValueObjects( entities, ba2vo, assay2sourceAssayMap, basic, allFactorValues );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
