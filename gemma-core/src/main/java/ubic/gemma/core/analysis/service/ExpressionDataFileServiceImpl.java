@@ -991,13 +991,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @return true, if the given file is ok to be returned, false if it should be regenerated.
      */
     private boolean checkFileOkToReturn( boolean forceWrite, Path f, Date check ) throws IOException {
-        long lastModifiedMillis = Files.getLastModifiedTime( f ).toMillis();
         if ( Files.exists( f ) ) {
             if ( forceWrite ) {
                 ExpressionDataFileServiceImpl.log
                         .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_FORCED, f ) );
                 return false;
-            } else if ( lastModifiedMillis < check.getTime() ) {
+            } else if ( Files.getLastModifiedTime( f ).toMillis() < check.getTime() ) {
                 ExpressionDataFileServiceImpl.log
                         .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_OUTDATED, f ) );
                 return false;
