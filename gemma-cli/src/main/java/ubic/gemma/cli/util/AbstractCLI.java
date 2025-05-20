@@ -592,7 +592,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                 default:
                     throw new IllegalStateException( "Unsupported batch format " + batchFormat );
             }
-            progressReporter = new BatchTaskProgressReporter( summaryWriter );
+            progressReporter = new BatchTaskProgressReporter( summaryWriter, getCliContext().getConsole() );
             if ( batchReportFrequencySeconds != null ) {
                 progressReporter.setReportFrequencyMillis( batchReportFrequencySeconds * 1000 );
             }
