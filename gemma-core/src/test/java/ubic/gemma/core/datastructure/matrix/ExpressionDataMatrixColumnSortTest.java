@@ -19,8 +19,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -29,7 +27,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -41,10 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author paul
  */
-public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
-
-    @Autowired
-    ExperimentalFactorService experimentalFactorService;
+public class ExpressionDataMatrixColumnSortTest {
 
     @Test
     public void testOrderByExperimentalDesignB() {
@@ -166,7 +160,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
         assertEquals( 100, mat.columns() );
 
-        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
+        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null, null );
 
         assertEquals( 100, ordered.size() );
 
@@ -175,5 +169,4 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         // }
 
     }
-
 }
