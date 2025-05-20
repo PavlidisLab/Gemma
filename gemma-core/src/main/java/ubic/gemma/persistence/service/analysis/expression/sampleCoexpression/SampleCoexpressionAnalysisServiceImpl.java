@@ -243,7 +243,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );
             result.setColumnNames( bioAssays );
-            result = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( result );
+            result = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( result, null, null );
             result = result.subsetRows( result.getColNames() ); // enforce same order on rows.
             return result;
         } catch ( IllegalArgumentException e ) {

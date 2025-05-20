@@ -351,7 +351,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         BulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
 
         // This is the place the actual sort order is determined.
-        List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, primaryFactor );
+        List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null, primaryFactor );
 
         Map<FactorValue, Double> fvV = new HashMap<>();
 

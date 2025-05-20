@@ -290,7 +290,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         /*
          * FIXME this is the place to strip put the outliers.
          */
-        List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors );
+        List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
 
         dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
                 createBADMap( samplesUsed ) ); // enforce ordering
@@ -319,7 +319,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Assert.isTrue( config.getSubsetFactor().getFactorValues().containsAll( subsets.keySet() ), "Subsets must use factor values from " + config.getSubsetFactor() + "." );
         Assert.isTrue( subsets.values().stream().allMatch( ss -> ss.getSourceExperiment().equals( ee ) ), "Subsets must use " + ee + " as source experiment." );
         List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
-        List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors );
+        List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
                 .getBaselineConditions( samplesUsed, factors );
@@ -352,7 +352,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             LinearModelAnalyzer.log.info( "Analyzing subset: " + subsetFactorValue );
 
-            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrixBySubset.get( subsetFactorValue ), factors );
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrixBySubset.get( subsetFactorValue ), factors, null );
 
             /*
              * make a EESubSet
@@ -391,7 +391,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             LinearModelAnalyzer.log.info( "Analyzing subset: " + subsetFactorValue );
 
-            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors );
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors, null );
 
             List<ExperimentalFactor> subsetFactors = this
                     .fixFactorsForSubset( subsets.get( subsetFactorValue ), dmatrix.get( subsetFactorValue ), factors );
@@ -463,7 +463,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             subsetFactorValue = determineSubsetFactorValue( ef, subset );
         }
 
-        orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude() );
+        samplesInSubset = orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude(), null );
 
         // slice.
         ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
@@ -1307,7 +1307,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 throw new IllegalArgumentException( "The subset was empty for fv: " + fv );
             }
             assert samplesInSubset.size() < samplesUsed.size();
-            orderByExperimentalDesign( samplesInSubset, factors );
+            samplesInSubset = orderByExperimentalDesign( samplesInSubset, factors, null );
             ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
                     createBADMap( samplesInSubset ) );
             subMatrices.put( fv, subMatrix );
