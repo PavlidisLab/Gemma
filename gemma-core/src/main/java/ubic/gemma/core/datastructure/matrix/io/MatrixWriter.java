@@ -209,14 +209,14 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     private List<BioMaterial> getBioMaterialsInRequestedOrder( BulkExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
         List<BioMaterial> bioMaterials = new ArrayList<>();
-        if ( orderByDesign ) {
-            bioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
-        } else {
-            for ( int i = 0; i < matrix.columns(); i++ ) {
-                bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
-            }
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
         }
-        return bioMaterials;
+        if ( orderByDesign ) {
+            return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( bioMaterials, null, null );
+        } else {
+            return bioMaterials;
+        }
     }
 
     /**

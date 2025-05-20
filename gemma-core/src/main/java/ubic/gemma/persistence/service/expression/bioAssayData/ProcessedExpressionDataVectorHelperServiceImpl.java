@@ -103,7 +103,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
          * Get the ordering we want.
          */
         List<BioMaterial> orderedSamples = new ArrayList<>( originalSamples );
-        orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
+        orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors(), null );
 
         if ( originalSamples.equals( orderedSamples ) ) {
             log.info( ee + " already has correct ordering; no need to reorder processed vectors." );
