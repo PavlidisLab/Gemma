@@ -142,6 +142,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCell
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregatorCli' -o redoQt -l redo-quantitation-type -r -f --description 'Quantitation to re-aggregate, defaults to the preferred one. Requires the -redo flag. Incompatible with -redoDimension.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregatorCli' -o redoDimension -l redo-dimension -r -f --description 'Dimension to re-aggregate, defaults to the one corresponding to -redoQt. Requires the -redo flag. Incompatible with -redoQt.\nThis option is not available when processing more than one experiment.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregatorCli' -o writeCellTypeMapping -l print-mapping -f --description 'Print the cell type mapping to the standard output. No aggregation is performed or redone.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregatorCli' -o nopost -l no-post-processing -f --description 'Skip post-processing steps after aggregation.'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a aggregateSingleCellData --description 'Aggregate single cell data into pseudo-bulks'
 complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -s h -l help -f --description 'Print this message'
@@ -168,6 +169,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -
 complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -o redoQt -l redo-quantitation-type -r -f --description 'Quantitation to re-aggregate, defaults to the preferred one. Requires the -redo flag. Incompatible with -redoDimension.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -o redoDimension -l redo-dimension -r -f --description 'Dimension to re-aggregate, defaults to the one corresponding to -redoQt. Requires the -redo flag. Incompatible with -redoQt.\nThis option is not available when processing more than one experiment.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -o writeCellTypeMapping -l print-mapping -f --description 'Print the cell type mapping to the standard output. No aggregation is performed or redone.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from aggregateSingleCellData' -o nopost -l no-post-processing -f --description 'Skip post-processing steps after aggregation.'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.LinkAnalysisCli --description 'Analyze expression data sets for coexpressed genes'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.LinkAnalysisCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.LinkAnalysisCli' -s h -l help -f --description 'Print this message'
