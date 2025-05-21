@@ -19,16 +19,13 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.BeanUtils;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
-import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -42,7 +39,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.detectSuspiciousValues;
-import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.infer;
+import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.lintQuantitationType;
 
 
 /**
@@ -50,62 +47,16 @@ import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetecti
  *
  * @author pavlidis
  */
+@CommonsLog
 public class QuantitationTypeConversionUtils {
 
-    /**
-     * This threshold is used to determine if a row has too many identical value; a value of N means that the number of distinct values in the
-     * expression vector of length M must be at least N * M.
-     */
-    private static final double MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT = 0.3;
-
-    /**
-     * We don't apply the "unique values" filter to matrices with fewer columns than this.
-     */
-    private static final int MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER = 4;
-
-
-    private static final Log log = LogFactory.getLog( QuantitationTypeConversionUtils.class.getName() );
-
-    /**
-     * Log2 transform if necessary, do any required filtering prior to analysis. Count data is converted to log2CPM (but
-     * we store log2cpm as the processed data, so that is what would generally be used).
-     *
-     * @param dmatrix matrix
-     * @return ee data double matrix
-     * @throws QuantitationTypeConversionException if data cannot be converted to log2 scale
-     */
-    public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) throws QuantitationTypeConversionException {
-        dmatrix = QuantitationTypeConversionUtils.ensureLog2Scale( dmatrix );
-
-        /*
-         * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
-         * really track this down).
-         *
-         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero.
-         * Filtering out rows that have many identical values helps avoid p-values that clump around specific values in the data.
-         * This happens especially for lowly-expressed genes in RNA-seq but can be observed in microarray
-         * data that has been manipulated by the submitter e.g. when data is "clipped" (e.g., all values under 10 set to 10).
-         */
-        int r = dmatrix.rows();
-        dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
-        if ( dmatrix.rows() < r ) {
-            QuantitationTypeConversionUtils.log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) throws QuantitationTypeConversionException {
+        try {
+            return ensureLog2Scale( expressionData, true );
+        } catch ( QuantitationTypeDetectionException e ) {
+            // never happening
+            throw new RuntimeException( e );
         }
-        r = dmatrix.rows();
-
-        if ( dmatrix.columns() > QuantitationTypeConversionUtils.MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER ) {
-            /* This threshold had been 10^-5, but it's probably too stringent. Also remember
-             * the data are log transformed the threshold should be transformed as well (it's not that simple),
-             * but that's a minor effect.
-             * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, QuantitationTypeConversionUtils.MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT, 0.001 );
-            if ( dmatrix.rows() < r ) {
-                QuantitationTypeConversionUtils.log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
-            }
-        }
-
-        return dmatrix;
-
     }
 
     /**
@@ -141,38 +92,7 @@ public class QuantitationTypeConversionUtils {
                     quantitationType.getRepresentation() ) ) );
         }
 
-        QuantitationTypeDetectionUtils.InferredQuantitationType inferredQuantitationType = infer( dmatrix, quantitationType );
-
-        if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
-            String message = String.format( "The type %s differs from the one inferred from data: %s.",
-                    quantitationType.getType(), inferredQuantitationType.getType() );
-            // if data is meant to be detected, then
-            if ( ignoreQuantitationMismatch ) {
-                log.warn( message );
-            } else {
-                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
-            }
-        }
-
-        if ( quantitationType.getScale() != inferredQuantitationType.getScale() ) {
-            String message = String.format( "The scale %s differs from the one inferred from data: %s.",
-                    quantitationType.getScale(), inferredQuantitationType.getScale() );
-            if ( ignoreQuantitationMismatch ) {
-                log.warn( message );
-            } else {
-                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
-            }
-        }
-
-        if ( quantitationType.getIsRatio() != inferredQuantitationType.isRatio() ) {
-            String message = String.format( "The expression data %s to ratiometric, but the quantitation says otherwise.",
-                    inferredQuantitationType.isRatio() ? "appears" : "does not appear" );
-            if ( ignoreQuantitationMismatch ) {
-                log.warn( message );
-            } else {
-                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
-            }
-        }
+        lintQuantitationType( quantitationType, dmatrix, ignoreQuantitationMismatch );
 
         // special case for log2, we don't need to transform anything
         if ( quantitationType.getScale() == ScaleType.LOG2 ) {
@@ -250,15 +170,6 @@ public class QuantitationTypeConversionUtils {
         }
 
         return log2Matrix;
-    }
-
-    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) throws QuantitationTypeConversionException {
-        try {
-            return ensureLog2Scale( expressionData, true );
-        } catch ( QuantitationTypeDetectionException e ) {
-            // never happening
-            throw new RuntimeException( e );
-        }
     }
 
     /**
