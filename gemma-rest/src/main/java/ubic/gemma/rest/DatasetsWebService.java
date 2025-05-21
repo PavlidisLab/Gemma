@@ -1357,6 +1357,7 @@ public class DatasetsWebService {
                     .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
                     .build();
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new InternalServerErrorException( e );
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
@@ -1417,6 +1418,7 @@ public class DatasetsWebService {
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new InternalServerErrorException( e );
         }
     }
@@ -1470,7 +1472,10 @@ public class DatasetsWebService {
                 throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L, e );
             } catch ( RejectedExecutionException e ) {
                 throw new ServiceUnavailableException( "Too many file generation tasks are being processed at this time.", 30L, e );
-            } catch ( IOException | InterruptedException e ) {
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new InternalServerErrorException( e );
+            } catch ( IOException e ) {
                 throw new InternalServerErrorException( e );
             }
         } else {
@@ -1494,7 +1499,10 @@ public class DatasetsWebService {
             } catch ( RejectedExecutionException e ) {
                 log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
                 return streamTabularDatasetSingleCellExpression( ee, qt, download );
-            } catch ( IOException | InterruptedException e ) {
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new InternalServerErrorException( e );
+            } catch ( IOException e ) {
                 throw new InternalServerErrorException( e );
             }
         }
@@ -1549,6 +1557,7 @@ public class DatasetsWebService {
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new InternalServerErrorException( e );
         }
     }

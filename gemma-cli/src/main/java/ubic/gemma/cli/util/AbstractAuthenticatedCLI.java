@@ -174,7 +174,10 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
                     throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "':\n"
                             + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
                 }
-            } catch ( IOException | InterruptedException e ) {
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException( e );
+            } catch ( IOException e ) {
                 throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
             }
         }

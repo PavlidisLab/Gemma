@@ -312,7 +312,10 @@ public class ShellDelegatingBlat implements Blat {
                 if ( exit != 0 ) {
                     throw new IOException( "Could not start server" );
                 }
-            } catch ( IllegalThreadStateException | InterruptedException e1 ) {
+            } catch ( InterruptedException e1 ) {
+                Thread.currentThread().interrupt();
+                ShellDelegatingBlat.log.info( "Server seems to have started" );
+            } catch ( IllegalThreadStateException e1 ) {
                 ShellDelegatingBlat.log.info( "Server seems to have started" );
             }
 

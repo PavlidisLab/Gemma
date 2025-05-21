@@ -71,6 +71,7 @@ public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecy
                 } catch ( IOException e ) {
                     log.error( "Error reading npm serve process output.", e );
                 } catch ( InterruptedException e ) {
+                    Thread.currentThread().interrupt();
                     throw new RuntimeException( e );
                 }
             }, "gemma-npm-serve-monitor-thread" ).start();

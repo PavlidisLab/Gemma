@@ -84,7 +84,10 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
             Thread.sleep( Long.MAX_VALUE );
         } catch ( IOException e ) {
             addErrorObject( ee, "Failed to acquire a " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + filename + ".", e );
-        } catch ( InterruptedException | TimeoutException e ) {
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        } catch ( TimeoutException e ) {
             throw new RuntimeException( e );
         }
     }

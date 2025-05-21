@@ -161,6 +161,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 throw new RuntimeException( e.getCause() );
             }
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         }
         return matrix.rows();

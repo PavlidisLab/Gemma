@@ -29,8 +29,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.batch.*;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.concurrent.Executors;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -223,6 +223,9 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             awaitBatchExecutorService();
             return progressReporter != null && progressReporter.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
         } catch ( Exception e ) {
+            if ( e instanceof InterruptedException ) {
+                Thread.currentThread().interrupt();
+            }
             if ( executorService != null ) {
                 List<Runnable> stillRunning = executorService.shutdownNow();
                 if ( !stillRunning.isEmpty() ) {

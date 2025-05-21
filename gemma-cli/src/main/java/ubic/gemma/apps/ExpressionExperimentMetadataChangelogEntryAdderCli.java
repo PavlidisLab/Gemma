@@ -64,6 +64,7 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
         } catch ( IOException e ) {
             addErrorObject( expressionExperiment, e );
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         }
     }

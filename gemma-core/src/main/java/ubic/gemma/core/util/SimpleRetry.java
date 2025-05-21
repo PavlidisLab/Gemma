@@ -53,6 +53,7 @@ public class SimpleRetry<E extends Exception> {
                     try {
                         Thread.sleep( backoffDelay );
                     } catch ( InterruptedException e1 ) {
+                        Thread.currentThread().interrupt();
                         throw new RuntimeException( e1 );
                     }
                 }
