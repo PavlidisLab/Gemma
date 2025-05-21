@@ -29,7 +29,7 @@
 				<executions>
 					<execution>
 						<id>webpack-install-dependencies</id>
-						<phase>generate-resources</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
@@ -45,7 +45,7 @@
 					</execution>
 					<execution>
 						<id>webpack-build</id>
-						<phase>generate-resources</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
