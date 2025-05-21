@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
+import static ubic.gemma.core.analysis.preprocess.filter.LowVarianceFilter.ensureLog2ScaleAndFilterLowVarianceDesignElements;
 
 /**
  * Manage the mean-variance relationship.
@@ -75,7 +75,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         try {
-            intensities = filterAndLog2Transform( intensities );
+            intensities = ensureLog2ScaleAndFilterLowVarianceDesignElements( intensities );
         } catch ( QuantitationTypeConversionException e ) {
             log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
         }
