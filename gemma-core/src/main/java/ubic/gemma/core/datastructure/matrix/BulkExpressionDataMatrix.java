@@ -89,9 +89,9 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
     QuantitationType getQuantitationType();
 
     /**
-     * @return a {@link BioAssayDimension} that covers all the biomaterials in this matrix.
-     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
-     *                               used in the experiment.
+     * Obtain the largest {@link BioAssayDimension} that covers all the biomaterials in this matrix.
+     * @return the best {@link BioAssayDimension} for this matrix, or  {@link null} if no such dimension
+     * exists
      */
     BioAssayDimension getBestBioAssayDimension();
 

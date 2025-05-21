@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Base class for ExpressionDataMatrix implementations.
@@ -80,53 +81,34 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
 
     @Override
     public BioAssayDimension getBestBioAssayDimension() {
-
         Collection<BioAssayDimension> dims = new HashSet<>( this.bioAssayDimensions.values() );
-
-        BioAssayDimension b = dims.iterator().next();
-
-        if ( dims.size() > 1 ) {
-            /*
-             * Special complication if there is more than one BioAssayDimension
-             */
-
-            int s = -1;
-            Collection<BioMaterial> allBioMaterials = new HashSet<>();
-            // find the largest BioAssayDimension
-            for ( BioAssayDimension bioAssayDimension : dims ) {
-                if ( bioAssayDimension.getBioAssays().size() > s ) {
-                    s = bioAssayDimension.getBioAssays().size();
-                    b = bioAssayDimension;
-
-                }
-
-                for ( BioAssay ba : b.getBioAssays() ) {
-                    allBioMaterials.add( ba.getSampleUsed() );
-                }
-            }
-
-            /*
-             * Sanity check: make sure all the biomaterials are accounted for by the chosen BioAssayDimension.
-             */
-
-            for ( BioAssay ba : b.getBioAssays() ) {
-                if ( !allBioMaterials.contains( ba.getSampleUsed() ) ) {
-                    /*
-                     * In rare cases none of the usual ones has all the samples.
-                     *
-                     * This can also happen if the data are not sample-matched or vector-merged
-                     */
-                    throw new IllegalStateException(
-                            "Could not find an appropriate BioAssayDimension to represent the data matrix; data might need to be matched or merged" );
-
-                }
-
-            }
-
+        if ( dims.isEmpty() ) {
+            throw new IllegalStateException( "There are no dimensions defined for this matrix." );
+        } else if ( dims.size() == 1 ) {
+            return dims.iterator().next();
         }
 
-        return b;
+        // Special complication if there is more than one BioAssayDimension
+        Collection<BioMaterial> allBioMaterials = dims.stream()
+                .map( BioAssayDimension::getBioAssays )
+                .flatMap( Collection::stream )
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toSet() );
 
+        // find the largest BioAssayDimension that contain all the biomaterials
+        return dims.stream()
+                .filter( dim -> {
+                    // too small to contain all BMs
+                    if ( dim.getBioAssays().size() < allBioMaterials.size() ) {
+                        return false;
+                    }
+                    Set<BioMaterial> bms = dim.getBioAssays().stream()
+                            .map( BioAssay::getSampleUsed )
+                            .collect( Collectors.toSet() );
+                    return bms.containsAll( allBioMaterials );
+                } )
+                .max( Comparator.comparingInt( dim -> dim.getBioAssays().size() ) )
+                .orElseThrow( () -> new IllegalStateException( "Could not find an appropriate BioAssayDimension to represent the data matrix; data might need to be matched or merged" ) );
     }
 
     @Override
