@@ -44,28 +44,32 @@ public class EntrezUtils {
         T call() throws IOException;
     }
 
+    private static final Object monitor = new Object();
+
     /**
      * Coordinate calls to the Entrez API so that we always respect the recommended usage.
      * <p>
      * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK25497/">A General Introduction to the E-utilities</a> for
      * more information about usage policies.
      */
-    public synchronized static <T> T doNicely( EntrezCall<T> task, @Nullable String apiKey ) throws IOException {
-        long timeoutMs = StringUtils.isNotBlank( apiKey ) ? TIMEOUT_AUTHENTICATED_MS : TIMEOUT_ANONYMOUS_MS;
-        long diff = System.currentTimeMillis() - lastCall;
-        if ( diff < timeoutMs ) {
-            try {
-                log.debug( "Last Entrez API call occurred " + diff + " ms ago, waiting " + ( timeoutMs - diff ) + " ms..." );
-                Thread.sleep( timeoutMs - diff );
-            } catch ( InterruptedException e ) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException( e );
+    public static <T> T doNicely( EntrezCall<T> task, @Nullable String apiKey ) throws IOException {
+        synchronized ( monitor ) {
+            long timeoutMs = StringUtils.isNotBlank( apiKey ) ? TIMEOUT_AUTHENTICATED_MS : TIMEOUT_ANONYMOUS_MS;
+            long diff = System.currentTimeMillis() - lastCall;
+            if ( diff < timeoutMs ) {
+                try {
+                    log.debug( "Last Entrez API call occurred " + diff + " ms ago, waiting " + ( timeoutMs - diff ) + " ms..." );
+                    monitor.wait( timeoutMs - diff );
+                } catch ( InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException( e );
+                }
             }
-        }
-        try {
-            return task.call();
-        } finally {
-            lastCall = System.currentTimeMillis();
+            try {
+                return task.call();
+            } finally {
+                lastCall = System.currentTimeMillis();
+            }
         }
     }
 
