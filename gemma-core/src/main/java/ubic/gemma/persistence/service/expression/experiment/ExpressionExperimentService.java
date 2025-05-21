@@ -131,13 +131,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     /**
      * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, QuantitationType)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, List, QuantitationType)
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt );
 
     /**
@@ -191,7 +191,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return a collection of processed data vectors for the given experiment and list of assays, or
      * {@link Optional#empty()} if there are no processed vectors
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
@@ -199,7 +199,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return a collection of processed data vectors for the given experiment and list of assays, or
      * {@link Optional#empty()} if there are no processed vectors
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays );
 
     /**
