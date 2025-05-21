@@ -112,11 +112,16 @@ public class SingleCellDataVectorAggregatorUtils {
                 break;
             case VARIANCE:
                 // does not preserve scale due to X^2
+                qt.setType( StandardQuantitationType.AMOUNT );
                 qt.setScale( ScaleType.OTHER );
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+                break;
             case MEAN:
             case STANDARD_DEVIATION:
-                // preserve scale and representation
+                // scale is preserved
                 qt.setType( StandardQuantitationType.AMOUNT );
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+                break;
             case MEDIAN:
             case SUM:
             case MAX:
