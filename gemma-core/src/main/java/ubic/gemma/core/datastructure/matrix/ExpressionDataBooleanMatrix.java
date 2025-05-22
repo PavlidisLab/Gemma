@@ -36,9 +36,8 @@ import java.util.*;
  *
  * @author pavlidis
  */
-public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
+public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDataMatrix<Boolean> {
 
-    private static final long serialVersionUID = 1L;
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
     public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
@@ -67,25 +66,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
-        return this.matrix.get( matrix.getRowIndexByName( designElement ),
-                matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
-    }
-
-    @Override
     public Boolean get( int row, int column ) {
         return matrix.get( row, column );
-    }
-
-    @Override
-    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Boolean[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return this.getColumn( index );
     }
 
     @Override
@@ -101,11 +83,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Boolean[][] getRawMatrix() {
         Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -116,20 +93,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         }
 
         return dMatrix;
-    }
-
-    @Override
-    public Boolean[] getRow( CompositeSequence designElement ) {
-        Integer row = this.rowElementMap.get( designElement );
-        if ( row == null )
-            return null;
-        Object[] rawRow = matrix.getRow( row );
-        Boolean[] result = new Boolean[rawRow.length];
-        for ( int i = 0, k = rawRow.length; i < k; i++ ) {
-            assert rawRow[i] instanceof Boolean : "Got a " + rawRow[i].getClass().getName();
-            result[i] = ( Boolean ) rawRow[i];
-        }
-        return result;
     }
 
     @Override
@@ -154,13 +117,14 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public void set( int row, int column, Boolean value ) {
-        throw new UnsupportedOperationException();
+    protected String format( int row, int column ) {
+        Boolean val = matrix.get( row, column );
+        return val != null ? String.valueOf( val ) : "";
     }
 
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
+        if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException();
         }
 

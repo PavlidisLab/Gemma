@@ -49,7 +49,7 @@ public class RandomBulkDataUtils {
         return randomBulkVectors( ee, bad, ad, qt, vectorClass );
     }
 
-    private static <T extends BulkExpressionDataVector> Collection<T> randomBulkVectors( ExpressionExperiment ee, BioAssayDimension bad, ArrayDesign ad, QuantitationType qt, Class<T> vectorClass ) {
+    public static <T extends BulkExpressionDataVector> Collection<T> randomBulkVectors( ExpressionExperiment ee, BioAssayDimension bad, ArrayDesign ad, QuantitationType qt, Class<T> vectorClass ) {
         Set<T> vectors = new HashSet<>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             T vector = BeanUtils.instantiate( vectorClass );

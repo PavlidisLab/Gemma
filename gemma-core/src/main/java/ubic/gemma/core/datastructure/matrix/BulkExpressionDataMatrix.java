@@ -8,12 +8,11 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Interface for bulk expression data matrices.
@@ -28,7 +27,9 @@ import java.util.List;
  * Put it together, and the result is that there can be more than one {@link BioAssay} per column; the same {@link BioMaterial}
  * can be used in multiple columns (supported implicitly). There can also be more than on BioMaterial in one column
  * (we don't support this yet either). The same {@link BioSequence} can be found in multiple rows. A row can contain
- * data from more than one {@link CompositeSequence}.
+ * data from more than one {@link CompositeSequence}. These cases are handled by the {@link MultiAssayBulkExpressionDataMatrix}
+ * interface and their corresponding implementations. This interface assumes the simplest case where each column is
+ * represented by a {@link BioAssay} and each row is represented by a {@link CompositeSequence}.
  * <p>
  * There are a few constraints: a particular {@link CompositeSequence} can only be used once, in a single row. At the
  * moment we do not directly support technical replicates, though this should be possible. A {@link BioAssay} can only
@@ -42,83 +43,47 @@ import java.util.List;
  * @author keshav
  * @see BioAssayDimension
  * @see BulkExpressionDataVector
+ * @see MultiAssayBulkExpressionDataMatrix
  */
 public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
 
     /**
-     * Create a matrix using all the vectors, which are assumed to all be of the same quantitation type.
-     *
-     * @param vectors raw vectors
-     * @return matrix of appropriate type.
+     * Create a bulk expression data matrix from a collection of vectors. All vectors must share the same {@link QuantitationType}.
      */
     static BulkExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        Assert.isTrue( !vectors.isEmpty(), "No vectors." );
-        PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
-        switch ( representation ) {
+        Assert.isTrue( !vectors.isEmpty(), "There must be at least one vector." );
+        PrimitiveType repr = vectors.iterator().next().getQuantitationType().getRepresentation();
+        switch ( repr ) {
             case DOUBLE:
-                return new ExpressionDataDoubleMatrix( vectors );
-            case STRING:
-                return new ExpressionDataStringMatrix( vectors );
+                return new BulkExpressionDataDoubleMatrix( new ArrayList<>( vectors ) );
             case INT:
-                return new ExpressionDataIntegerMatrix( vectors );
-            case BOOLEAN:
-                return new ExpressionDataBooleanMatrix( vectors );
+                return new BulkExpressionDataIntMatrix( new ArrayList<>( vectors ) );
             default:
-                throw new UnsupportedOperationException( "Don't know how to deal with matrices of " + representation + "." );
+                throw new UnsupportedOperationException( "Bulk data matrix of of " + repr + " is not supported." );
         }
     }
 
     /**
-     * The experiment this matrix is associated with, if known.
+     * Obtain the dimension for the columns of this matrix.
      */
-    @Nullable
-    @Override
-    ExpressionExperiment getExpressionExperiment();
+    BioAssayDimension getBioAssayDimension();
 
     /**
-     * Return the quantitation types for this matrix. Often (usually) there will be just one.
-     *
-     * @return qts
-     */
-    Collection<QuantitationType> getQuantitationTypes();
-
-    /**
-     * Obtain the single quantitation type for this matrix.
-     * @throws IllegalStateException if there is more than one quantitation type.
-     */
-    QuantitationType getQuantitationType();
-
-    /**
-     * Obtain the largest {@link BioAssayDimension} that covers all the biomaterials in this matrix.
-     * @return the best {@link BioAssayDimension} for this matrix, or  {@code null} if no such dimension
-     * exists
-     */
-    BioAssayDimension getBestBioAssayDimension();
-
-    /**
-     * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
+     * @return true if any values are null or NaN (for doubles and floats); any other value that is considered missing.
      */
     boolean hasMissingValues();
 
     /**
      * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
-     * designelements per row, it is possible for this method to retrieve a data that does not come from the bioassay
+     * design elements per row, it is possible for this method to retrieve a data that does not come from the bioassay
      * and/or designelement arguments.
      *
      * @param designElement de
      * @param bioAssay      ba
-     * @return T t
+     * @return the value at the given design element and bioassay, or {@code null} if the value is missing
      */
+    @Nullable
     T get( CompositeSequence designElement, BioAssay bioAssay );
-
-    /**
-     * Access a submatrix
-     *
-     * @param designElements de
-     * @param bioAssays      bas
-     * @return T[][]
-     */
-    T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
 
     /**
      * Access the entire matrix.
@@ -129,79 +94,25 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
 
     /**
      * Access a single column of the matrix.
-     *
-     * @param bioAssay i
-     * @return T[]
+     * @return a vector for the given column, or null if the column is not present
      */
+    @Nullable
     T[] getColumn( BioAssay bioAssay );
-
-    /**
-     * Access a submatrix slice by columns
-     *
-     * @param bioAssays ba
-     * @return t[][]
-     */
-    T[][] getColumns( List<BioAssay> bioAssays );
-
-    /**
-     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
-     * design.
-     *
-     * @param el el
-     * @return int
-     */
-    int columns( CompositeSequence el );
-
-    /**
-     * @param index i
-     * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
-     * 'fake'.
-     */
-    BioMaterial getBioMaterialForColumn( int index );
-
-    /**
-     * @param bioMaterial bm
-     * @return the index of the column for the data for the bioMaterial, or -1 if missing
-     */
-    int getColumnIndex( BioMaterial bioMaterial );
 
     /**
      * @return the index of the column for the data for the bioAssay, or -1 if missing
      */
     int getColumnIndex( BioAssay bioAssay );
 
-    /**
-     * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
-     * needed because a matrix can combine data from multiple array designs, each of which will generate its own
-     * bioassaydimension. Note that if this represents a subsetted data set, the return value may be a lightweight
-     * 'fake'.
-     *
-     * @param designElement de
-     * @return bad
-     */
-    BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
+    int getColumnIndex( BioMaterial bioMaterial );
 
     /**
-     * @param index i
-     * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
-     * used in the study.
-     */
-    Collection<BioAssay> getBioAssaysForColumn( int index );
-
-    /**
-     * Obtain a single assay for a column.
-     * @param index
-     * @return
-     * @throws IllegalStateException if there is more than one assay for the column.
+     * Obtain an assay corresponding to a given column.
      */
     BioAssay getBioAssayForColumn( int index );
 
     /**
-     * Set a value in the matrix, by index
-     *
-     * @param row    row
-     * @param column col
-     * @param value  val
+     * Obtain a biomaterial corresponding to a column.
      */
-    void set( int row, int column, T value );
+    BioMaterial getBioMaterialForColumn( int index );
 }

@@ -10,22 +10,22 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
 
 /**
  * @author poirigui
  */
-public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressionDataMatrix<Double>, ExpressionDataPrimitiveDoubleMatrix {
+public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpressionDataMatrix<Double> implements ExpressionDataPrimitiveDoubleMatrix {
 
     private static final Comparator<CompositeSequence> designElementComparator = Comparator.comparing( CompositeSequence::getName )
-            .thenComparing( CompositeSequence::getId );
+            .thenComparing( CompositeSequence::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     private final ExpressionExperiment expressionExperiment;
     private final QuantitationType quantitationType;
@@ -151,6 +151,11 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     }
 
     @Override
+    public BioMaterial getBioMaterialForColumn( int j ) {
+        return bioAssays.get( j ).getSampleUsed();
+    }
+
+    @Override
     public List<String> getCellIds() {
         return singleCellDimension.getCellIds();
     }
@@ -208,11 +213,30 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     }
 
     @Override
+    public int[] getRowIndices( CompositeSequence designElement ) {
+        int i = getRowIndex( designElement );
+        if ( i == -1 ) {
+            return null;
+        }
+        int j = i;
+        while ( designElements.get( j ).equals( designElement ) ) {
+            j++;
+        }
+        int[] indices = new int[j - i];
+        for ( int k = i; k < j; k++ ) {
+            indices[k - i] = k;
+        }
+        return indices;
+    }
+
+    @Override
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         if ( rowElements == null ) {
-            rowElements = designElements.stream()
-                    .map( de -> new ExpressionDataMatrixRowElement( this, getRowIndex( de ) ) )
-                    .collect( Collectors.toList() );
+            List<ExpressionDataMatrixRowElement> re = new ArrayList<>( designElements.size() );
+            for ( int i = 0; i < designElements.size(); i++ ) {
+                re.add( new ExpressionDataMatrixRowElement( this, i ) );
+            }
+            rowElements = Collections.unmodifiableList( re );
         }
         return rowElements;
     }
@@ -221,19 +245,11 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     public ExpressionDataMatrixRowElement getRowElement( int row ) {
         if ( rowElements != null ) {
             return rowElements.get( row );
-        } else {
+        } else if ( row >= 0 && row < rows() ) {
             return new ExpressionDataMatrixRowElement( this, row );
+        } else {
+            throw new IndexOutOfBoundsException();
         }
-    }
-
-    @Nullable
-    @Override
-    public ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement ) {
-        int i = getRowIndex( designElement );
-        if ( i == -1 ) {
-            return null;
-        }
-        return getRowElement( i );
     }
 
     @Override
@@ -249,5 +265,10 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     @Override
     public SingleCellDimension getSingleCellDimension() {
         return singleCellDimension;
+    }
+
+    @Override
+    protected String format( int i, int j ) {
+        return format( getAsDouble( i, j ) );
     }
 }

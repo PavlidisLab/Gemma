@@ -21,6 +21,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -85,7 +86,12 @@ public class ExpressionDataWriterUtils {
      */
     public static String constructSampleName( BulkExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
         BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
-        Collection<BioAssay> bioAssaysForColumn = matrix.getBioAssaysForColumn( assayColumnIndex );
+        Collection<BioAssay> bioAssaysForColumn;
+        if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
+            bioAssaysForColumn = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getBioAssaysForColumn( assayColumnIndex );
+        } else {
+            bioAssaysForColumn = Collections.singleton( matrix.getBioAssayForColumn( assayColumnIndex ) );
+        }
         return constructSampleName( bioMaterialForColumn, bioAssaysForColumn );
     }
 

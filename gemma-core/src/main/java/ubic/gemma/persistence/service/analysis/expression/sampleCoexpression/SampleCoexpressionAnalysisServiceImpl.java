@@ -265,7 +265,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         DoubleMatrix<BioAssay, BioAssay> cormat = this.dataToDoubleMat( mat );
         // Check consistency
-        BioAssayDimension bestBioAssayDimension = mat.getBestBioAssayDimension();
+        BioAssayDimension bestBioAssayDimension = mat.getBioAssayDimension();
         if ( cormat.rows() != bestBioAssayDimension.getBioAssays().size() ) {
             throw new RuntimeException( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_BIOASSAY_MISMATCH,
                     bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
@@ -378,7 +378,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
          * Using ordered samples isn't necessary, it doesn't matter so long as the design matrix is in the same order.
          * We always want to use all the samples. There is no need to create a new bioAssayDimension.
          */
-        BioAssayDimension bad = matrix.getBestBioAssayDimension(); // this is what we do for the non-regressed version.
+        BioAssayDimension bad = matrix.getBioAssayDimension(); // this is what we do for the non-regressed version.
         assert bad.getId() != null;
 
         List<BioMaterial> samplesUsed = new ArrayList<>();

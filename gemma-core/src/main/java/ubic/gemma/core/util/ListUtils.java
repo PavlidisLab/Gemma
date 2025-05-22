@@ -4,6 +4,7 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.binarySearch;
 
@@ -26,6 +27,17 @@ public class ListUtils {
         Map<T, Integer> element2position = new HashMap<>( list.size() );
         fillMap( element2position, list );
         return element2position;
+    }
+
+    public static <T> Map<T, int[]> indexOfAllElements( List<T> list ) {
+        int size = list.size();
+        Map<T, List<Integer>> element2positions = new HashMap<>( size );
+        for ( int i = 0; i < size; i++ ) {
+            T element = list.get( i );
+            element2positions.computeIfAbsent( element, k -> new ArrayList<>() ).add( i );
+        }
+        return element2positions.entrySet().stream()
+                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().mapToInt( Integer::intValue ).toArray() ) );
     }
 
     /**

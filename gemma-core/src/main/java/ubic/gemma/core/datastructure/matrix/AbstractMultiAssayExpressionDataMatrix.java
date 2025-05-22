@@ -26,26 +26,31 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.mergeQuantitationTypes;
+
 /**
- * Base class for ExpressionDataMatrix implementations.
+ * Base class for ExpressionDataMatrix implementations that can deal with multiple BioAssays per BioMaterial.
+ * <p>
  * Implementation note: The underlying DoubleMatrixNamed is indexed by Integers, which are in turn mapped to BioAssays
  * etc. held here. Thus the 'names' of the underlying matrix are just numbers.
  *
  * @author pavlidis
  */
-abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataMatrix<T>, Serializable {
+abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<T> implements MultiAssayBulkExpressionDataMatrix<T>, ExpressionDataMatrix<T> {
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
+
+    private static final Comparator<CompositeSequence> DESIGN_ELEMENT_COMPARATOR = Comparator
+            .comparing( CompositeSequence::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( CompositeSequence::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     @Nullable
     protected ExpressionExperiment expressionExperiment;
@@ -80,12 +85,23 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     }
 
     @Override
-    public BioAssayDimension getBestBioAssayDimension() {
+    public Collection<BioAssayDimension> getBioAssayDimensions() {
+        return new HashSet<>( this.bioAssayDimensions.values() );
+    }
+
+    @Override
+    public BioAssayDimension getBioAssayDimension() {
+        return getBestBioAssayDimension()
+                .orElseThrow( () -> new IllegalStateException( "Could not find an appropriate BioAssayDimension to represent the data matrix; data might need to be matched or merged" ) );
+    }
+
+    @Override
+    public Optional<BioAssayDimension> getBestBioAssayDimension() {
         Collection<BioAssayDimension> dims = new HashSet<>( this.bioAssayDimensions.values() );
         if ( dims.isEmpty() ) {
             throw new IllegalStateException( "There are no dimensions defined for this matrix." );
         } else if ( dims.size() == 1 ) {
-            return dims.iterator().next();
+            return Optional.of( dims.iterator().next() );
         }
 
         // Special complication if there is more than one BioAssayDimension
@@ -107,8 +123,7 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
                             .collect( Collectors.toSet() );
                     return bms.containsAll( allBioMaterials );
                 } )
-                .max( Comparator.comparingInt( dim -> dim.getBioAssays().size() ) )
-                .orElseThrow( () -> new IllegalStateException( "Could not find an appropriate BioAssayDimension to represent the data matrix; data might need to be matched or merged" ) );
+                .max( Comparator.comparingInt( dim -> dim.getBioAssays().size() ) );
     }
 
     @Override
@@ -118,7 +133,7 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
 
     @Override
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
-        if ( index >= columns() ) {
+        if ( index < 0 || index >= columns() ) {
             throw new IndexOutOfBoundsException();
         }
         return this.columnBioAssayMapByInteger.get( index );
@@ -128,23 +143,41 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     public BioAssay getBioAssayForColumn( int index ) {
         Collection<BioAssay> assays = getBioAssaysForColumn( index );
         if ( assays.size() > 1 ) {
-            throw new IllegalStateException( "More than one assay for column " + index );
+            throw new IllegalStateException( "More than one assay for column " + index + ", use getBioAssaysForColumn() instead." );
         }
         return assays.iterator().next();
     }
 
     @Override
     public BioMaterial getBioMaterialForColumn( int index ) {
-        if ( index >= columns() ) {
+        if ( index < 0 || index >= columns() ) {
             throw new IndexOutOfBoundsException();
         }
         return this.columnBioMaterialMapByInteger.get( index );
     }
 
     @Override
+    public T[] getColumn( BioAssay bioAssay ) {
+        int index = getColumnIndex( bioAssay );
+        if ( index == -1 ) {
+            return null;
+        }
+        return this.getColumn( index );
+    }
+
+    @Override
     public int getColumnIndex( BioMaterial bioMaterial ) {
         Integer j = columnBioMaterialMap.get( bioMaterial );
         return j != null ? j : -1;
+    }
+
+    @Override
+    public T[] getRow( CompositeSequence designElement ) {
+        int index = getRowIndex( designElement );
+        if ( index == -1 ) {
+            return null;
+        }
+        return getRow( index );
     }
 
     @Override
@@ -159,14 +192,26 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
 
     @Override
     public CompositeSequence getDesignElementForRow( int index ) {
-        if ( index >= rows() ) {
+        if ( index < 0 || index >= rows() ) {
             throw new IndexOutOfBoundsException();
         }
         return this.rowDesignElementMapByInteger.get( index );
     }
 
     @Override
-    @Nullable
+    public T get( CompositeSequence designElement, BioAssay bioAssay ) {
+        Integer index = this.rowElementMap.get( designElement );
+        if ( index == null ) {
+            return null;
+        }
+        Integer j = this.columnAssayMap.get( bioAssay );
+        if ( j == null ) {
+            return null;
+        }
+        return get( index, j );
+    }
+
+    @Override
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
@@ -179,9 +224,10 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     @Override
     public QuantitationType getQuantitationType() {
         if ( quantitationTypes.size() > 1 ) {
-            throw new IllegalStateException( "More than one quantitation type in this matrix" );
+            return mergeQuantitationTypes( quantitationTypes );
+        } else {
+            return quantitationTypes.iterator().next();
         }
-        return quantitationTypes.iterator().next();
     }
 
     @Override
@@ -205,25 +251,28 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     }
 
     @Override
+    public int[] getRowIndices( CompositeSequence designElement ) {
+        Integer index = rowElementMap.get( designElement );
+        if ( index == null ) {
+            return null;
+        }
+        return new int[] { index };
+    }
+
+    @Override
     public ExpressionDataMatrixRowElement getRowElement( int index ) {
         if ( rowElements != null ) {
             return rowElements.get( index );
-        } else {
+        } else if ( index >= 0 && index < rows() ) {
             return new ExpressionDataMatrixRowElement( this, index );
+        } else {
+            throw new IndexOutOfBoundsException();
         }
     }
 
-    @Nullable
-    @Override
-    public ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement ) {
-        Integer j = rowElementMap.get( designElement );
-        return j != null ? getRowElement( j ) : null;
-    }
-
-    protected abstract void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors );
-
     /**
      * Obtain the column index of a given assay.
+     *
      * @return the index, or -1 if not found
      */
     @Override
@@ -231,6 +280,13 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
         Integer j = columnAssayMap.get( bioAssay );
         return j != null ? j : -1;
     }
+
+    /**
+     * Format the value at the provided indices of the matrix.
+     */
+    protected abstract String format( int row, int column );
+
+    protected abstract void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors );
 
     protected void init() {
         quantitationTypes = new HashSet<>();
@@ -262,8 +318,14 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
      * @param row The row number to be used by this design element.
      */
     protected void addToRowMaps( int row, CompositeSequence designElement ) {
-        rowDesignElementMapByInteger.put( row, designElement );
-        rowElementMap.put( designElement, row );
+        CompositeSequence prevValue;
+        if ( ( prevValue = rowDesignElementMapByInteger.put( row, designElement ) ) != null ) {
+            throw new IllegalStateException( "Row index: " + row + " is already associated to another design element: " + prevValue + "." );
+        }
+        Integer prevIndex;
+        if ( ( prevIndex = rowElementMap.put( designElement, row ) ) != null ) {
+            throw new IllegalStateException( designElement + " is already associated with a row " + prevIndex + ", it cannot be assigned to row " + row + "." );
+        }
     }
 
     /**
@@ -330,36 +392,36 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
      * </p>
      */
     protected int setUpColumnElements() {
-        BaseExpressionDataMatrix.log.debug( "Setting up column elements" );
+        AbstractMultiAssayExpressionDataMatrix.log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && !this.bioAssayDimensions.isEmpty() : "No bioAssayDimensions defined";
 
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions.values() ) {
             List<BioAssay> bioAssays = dimension.getBioAssays();
-            BaseExpressionDataMatrix.log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
+            AbstractMultiAssayExpressionDataMatrix.log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
             this.getBioMaterialGroupsForAssays( bioMaterialMap, bioAssays );
         }
 
-        if ( BaseExpressionDataMatrix.log.isDebugEnabled() )
-            BaseExpressionDataMatrix.log.debug( bioMaterialMap.size() + " biomaterialGroups (correspond to columns)" );
+        if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
+            AbstractMultiAssayExpressionDataMatrix.log.debug( bioMaterialMap.size() + " biomaterialGroups (correspond to columns)" );
         int column = 0;
 
         for ( BioMaterial bioMaterial : bioMaterialMap.keySet() ) {
-            if ( BaseExpressionDataMatrix.log.isDebugEnabled() )
-                BaseExpressionDataMatrix.log.debug( "Column " + column + " **--->>>> " + bioMaterial );
+            if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
+                AbstractMultiAssayExpressionDataMatrix.log.debug( "Column " + column + " **--->>>> " + bioMaterial );
             for ( BioAssay assay : bioMaterialMap.get( bioMaterial ) ) {
                 if ( this.columnBioMaterialMap.containsKey( bioMaterial ) ) {
                     int existingColumn = columnBioMaterialMap.get( bioMaterial );
                     this.columnAssayMap.put( assay, existingColumn );
-                    if ( BaseExpressionDataMatrix.log.isDebugEnabled() )
-                        BaseExpressionDataMatrix.log.debug( assay + " --> column " + existingColumn );
+                    if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
+                        AbstractMultiAssayExpressionDataMatrix.log.debug( assay + " --> column " + existingColumn );
 
                     columnBioAssayMapByInteger.computeIfAbsent( existingColumn, k -> new HashSet<>() );
                     columnBioAssayMapByInteger.get( existingColumn ).add( assay );
                 } else {
-                    if ( BaseExpressionDataMatrix.log.isDebugEnabled() ) {
-                        BaseExpressionDataMatrix.log.debug( bioMaterial + " --> column " + column );
-                        BaseExpressionDataMatrix.log.debug( assay + " --> column " + column );
+                    if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() ) {
+                        AbstractMultiAssayExpressionDataMatrix.log.debug( bioMaterial + " --> column " + column );
+                        AbstractMultiAssayExpressionDataMatrix.log.debug( assay + " --> column " + column );
                     }
                     this.columnBioMaterialMap.put( bioMaterial, column );
                     this.columnAssayMap.put( assay, column );
@@ -373,9 +435,9 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
             column++;
         }
 
-        if ( BaseExpressionDataMatrix.log.isDebugEnabled() ) {
+        if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() ) {
             for ( BioAssay o : this.columnAssayMap.keySet() ) {
-                BaseExpressionDataMatrix.log.debug( o + " " + this.columnAssayMap.get( o ) );
+                AbstractMultiAssayExpressionDataMatrix.log.debug( o + " " + this.columnAssayMap.get( o ) );
             }
         }
 
@@ -460,7 +522,7 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
                 }
             }
         }
-        BaseExpressionDataMatrix.log.debug( "Selected " + vectorsOfInterest.size() + " vectors" );
+        AbstractMultiAssayExpressionDataMatrix.log.debug( "Selected " + vectorsOfInterest.size() + " vectors" );
         return vectorsOfInterest;
     }
 
@@ -488,38 +550,28 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
         return vectorsOfInterest;
     }
 
-    protected Collection<BulkExpressionDataVector> selectVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
-        return this.selectVectors( quantitationType, vectors );
+    @Override
+    protected String formatRepresentation() {
+        // we don't want an IllegalStateException if there are multiple, incompatible QTs
+        return quantitationTypes.iterator().next().getRepresentation().name().toLowerCase();
     }
 
-    private Collection<BulkExpressionDataVector> selectVectors( QuantitationType quantitationType,
-            Collection<? extends BulkExpressionDataVector> vectors ) {
-        Collection<BulkExpressionDataVector> vectorsOfInterest = new LinkedHashSet<>();
-        this.quantitationTypes.add( quantitationType );
-        List<BulkExpressionDataVector> sorted = this.sortVectorsByDesignElement( vectors );
-        int i = 0;
-        for ( BulkExpressionDataVector vector : sorted ) {
-            QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            if ( this.expressionExperiment == null )
-                this.expressionExperiment = vector.getExpressionExperiment();
-            if ( vectorQuantitationType.equals( quantitationType ) ) {
-                vectorsOfInterest.add( vector );
-                CompositeSequence designElement = vector.getDesignElement();
-                this.getQuantitationTypes().add( vectorQuantitationType );
-                this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
-                this.addToRowMaps( i, designElement );
-                i++;
-            }
-        }
-        return vectorsOfInterest;
+    @Override
+    protected String getRowLabel( int i ) {
+        return this.rowDesignElementMapByInteger.get( i ).getName();
+    }
+
+    @Override
+    protected String getColumnLabel( int j ) {
+        return this.getBioMaterialForColumn( j ).getName() + ":" +
+                this.getBioAssaysForColumn( j ).stream().map( BioAssay::getName ).collect( Collectors.joining( "," ) );
     }
 
     private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
             List<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
-            if ( BaseExpressionDataMatrix.log.isDebugEnabled() )
-                BaseExpressionDataMatrix.log.debug( "      " + ba );
+            if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
+                AbstractMultiAssayExpressionDataMatrix.log.debug( "      " + ba );
             BioMaterial bm = ba.getSampleUsed();
             bioMaterialMap
                     .computeIfAbsent( bm, k -> new HashSet<>() )
@@ -529,11 +581,8 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
 
     private List<BulkExpressionDataVector> sortVectorsByDesignElement(
             Collection<? extends BulkExpressionDataVector> vectors ) {
-        List<BulkExpressionDataVector> vectorSort = new ArrayList<>( vectors );
-        Comparator<BulkExpressionDataVector> cmp = Comparator
-                .comparing( ( BulkExpressionDataVector vector ) -> vector.getDesignElement().getName(), Comparator.nullsLast( Comparator.naturalOrder() ) )
-                .thenComparing( ( BulkExpressionDataVector vector ) -> vector.getDesignElement().getId() );
-        vectorSort.sort( cmp );
-        return vectorSort;
+        return vectors.stream()
+                .sorted( Comparator.comparing( BulkExpressionDataVector::getDesignElement, DESIGN_ELEMENT_COMPARATOR ) )
+                .collect( Collectors.toList() );
     }
 }

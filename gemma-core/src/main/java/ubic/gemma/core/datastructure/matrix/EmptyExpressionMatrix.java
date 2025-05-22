@@ -18,13 +18,11 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Used to make a 'dummy matrix' that has the column information populated. This is useful for processing where we want
@@ -32,9 +30,11 @@ import java.util.List;
  *
  * @author paul
  */
-public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
+public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatrix<Object> {
 
-    private static final long serialVersionUID = 1L;
+    private static final Object[][] EMPTY_MATRIX = new Object[0][0];
+    private static final Object[] EMPTY_COLUMN = new Object[0];
+
     private final int numCols;
 
     public EmptyExpressionMatrix( BioAssayDimension ba ) {
@@ -64,48 +64,27 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object get( CompositeSequence designElement, BioAssay bioAssay ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Object get( int row, int column ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getColumn( BioAssay bioAssay ) {
-        throw new UnsupportedOperationException();
+        throw new IndexOutOfBoundsException();
     }
 
     @Override
     public Object[] getColumn( int column ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
+        if ( column >= 0 && column < numCols ) {
+            return EMPTY_COLUMN;
+        } else {
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     @Override
     public Object[][] getRawMatrix() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[] getRow( CompositeSequence designElement ) {
-        throw new UnsupportedOperationException();
+        return EMPTY_MATRIX;
     }
 
     @Override
     public Object[] getRow( int index ) {
-        throw new UnsupportedOperationException();
+        throw new IndexOutOfBoundsException();
     }
 
     @Override
@@ -119,14 +98,12 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public void set( int row, int column, Object value ) {
-        throw new UnsupportedOperationException();
-
+    protected String format( int row, int column ) {
+        throw new IndexOutOfBoundsException();
     }
 
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         throw new UnsupportedOperationException();
     }
-
 }

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -39,9 +39,15 @@ import java.util.List;
 public interface ExpressionDataMatrix<T> {
 
     /**
-     * Return the expression experiment this matrix is holding data for.
+     * Return the expression experiment this matrix is holding data for, if known.
      */
+    @Nullable
     ExpressionExperiment getExpressionExperiment();
+
+    /**
+     * Obtain the quantitation type for this matrix.
+     */
+    QuantitationType getQuantitationType();
 
     /**
      * Obtain all the design elements in this data matrix.
@@ -98,14 +104,25 @@ public interface ExpressionDataMatrix<T> {
     int getRowIndex( CompositeSequence designElement );
 
     /**
-     * @return list of elements representing the row 'labels'.
+     * Obtain all the rows that correspond to the given design element, or {@code null} if the design element is not
+     * found.
      */
+    @Nullable
+    int[] getRowIndices( CompositeSequence designElement );
+
+    /**
+     * @return list of elements representing the row 'labels'.
+     * @deprecated use {@link #getDesignElements()} instead
+     */
+    @Deprecated
     List<ExpressionDataMatrixRowElement> getRowElements();
 
+    /**
+     * @throws IndexOutOfBoundsException if the supplied index is not within zero and {@link #rows()}
+     * @deprecated use {@link #getDesignElementForRow(int)} instead
+     */
+    @Deprecated
     ExpressionDataMatrixRowElement getRowElement( int row );
-
-    @Nullable
-    ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement );
 
     /**
      * Access a single value of the matrix by row and column.

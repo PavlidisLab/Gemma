@@ -992,7 +992,7 @@ public class DataUpdaterImpl implements DataUpdater {
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
-        BioAssayDimension bioAssayDimension = data.getBestBioAssayDimension();
+        BioAssayDimension bioAssayDimension = data.getBioAssayDimension();
 
         assert bioAssayDimension != null;
         assert !bioAssayDimension.getBioAssays().isEmpty();
