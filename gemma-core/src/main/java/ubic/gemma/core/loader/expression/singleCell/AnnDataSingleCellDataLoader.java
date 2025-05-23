@@ -274,7 +274,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             log.warn( "Detecting counts from dense matrices are not supported, ignoring " + layer + "." );
             return false;
         }
-        for ( long i = 0; i < data.size(); i += 1000 ) {
+        // check up to 1 million values
+        for ( long i = 0; i < data.size(); i += ( data.size() / 1000 ) ) {
             double[] vec = data.slice( i, Math.min( i + 1000, data.size() ) ).toDoubleVector();
             for ( double d : vec ) {
                 double uv;
