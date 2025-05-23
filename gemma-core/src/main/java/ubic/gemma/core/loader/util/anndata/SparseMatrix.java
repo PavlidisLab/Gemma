@@ -16,7 +16,7 @@ public class SparseMatrix implements Matrix {
 
     private final H5Group group;
     private final int[] shape;
-    private final int[] indptr;
+    private final long[] indptr;
 
     public SparseMatrix( H5Group group ) {
         if ( !group.hasAttribute( "encoding-type" ) ) {
@@ -34,7 +34,7 @@ public class SparseMatrix implements Matrix {
                 .map( H5Attribute::toIntegerVector )
                 .orElseThrow( () -> new IllegalArgumentException( "The sparse matrix does not have a shape attribute." ) );
         Assert.isTrue( this.shape.length == 2 );
-        this.indptr = group.getDataset( "indptr" ).toIntegerVector();
+        this.indptr = group.getDataset( "indptr" ).toLongVector();
         int expectedIndptrLength = isCsr() ? shape[0] + 1 : shape[1] + 1;
         Assert.isTrue( indptr.length == expectedIndptrLength, "The 'indptr' dataset must contain " + expectedIndptrLength + " elements." );
         Assert.isTrue( group.exists( "data" ) );
@@ -67,7 +67,7 @@ public class SparseMatrix implements Matrix {
         }
     }
 
-    public int[] getIndptr() {
+    public long[] getIndptr() {
         return indptr;
     }
 

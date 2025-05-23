@@ -92,10 +92,14 @@ public class H5Dataset implements AutoCloseable {
 
     @WillClose
     public boolean[] toBooleanVector() {
+        long size = size();
+        if ( size > Integer.MAX_VALUE ) {
+            throw new IllegalStateException( "The size of the dataset (" + size + ") is too large to be read into a boolean array." );
+        }
         try {
-            int[] buf = new int[( int ) size()];
+            int[] buf = new int[( int ) size];
             H5Dread( datasetId, HDF5Constants.H5T_NATIVE_HBOOL, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
-            boolean[] bools = new boolean[( int ) size()];
+            boolean[] bools = new boolean[( int ) size];
             for ( int i = 0; i < buf.length; i++ ) {
                 bools[i] = buf[i] != 0;
             }
@@ -107,8 +111,12 @@ public class H5Dataset implements AutoCloseable {
 
     @WillClose
     public int[] toIntegerVector() {
+        long size = size();
+        if ( size >= Integer.MAX_VALUE ) {
+            throw new IllegalStateException( "The size of the dataset (" + size + ") is too large to be read into a integer array." );
+        }
         try {
-            int[] buf = new int[( int ) size()];
+            int[] buf = new int[( int ) size];
             H5Dread( datasetId, HDF5Constants.H5T_NATIVE_INT32, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
             return buf;
         } finally {
@@ -117,9 +125,28 @@ public class H5Dataset implements AutoCloseable {
     }
 
     @WillClose
-    public double[] toDoubleVector() {
+    public long[] toLongVector() {
+        long size = size();
+        if ( size >= Integer.MAX_VALUE ) {
+            throw new IllegalStateException( "The size of the dataset (" + size + ") is too large to be read into a long array." );
+        }
         try {
-            double[] buf = new double[( int ) size()];
+            long[] buf = new long[( int ) size];
+            H5Dread( datasetId, HDF5Constants.H5T_NATIVE_INT64, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+            return buf;
+        } finally {
+            close();
+        }
+    }
+
+    @WillClose
+    public double[] toDoubleVector() {
+        long size = size();
+        if ( size >= Integer.MAX_VALUE ) {
+            throw new IllegalStateException( "The size of the dataset (" + size + ") is too large to be read into a double array." );
+        }
+        try {
+            double[] buf = new double[( int ) size];
             H5Dread( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
             return buf;
         } finally {
@@ -129,11 +156,15 @@ public class H5Dataset implements AutoCloseable {
 
     @WillClose
     public String[] toStringVector() {
+        long size = size();
+        if ( size >= Integer.MAX_VALUE ) {
+            throw new IllegalStateException( "The size of the dataset (" + size + ") is too large to be read into a string array." );
+        }
         try {
             if ( getType().getFundamentalType() == H5FundamentalType.ENUM ) {
                 return getType().getMemberNames();
             } else {
-                String[] buf = new String[( int ) size()];
+                String[] buf = new String[( int ) size];
                 H5Dread_VLStrings( datasetId, H5Type.STRING, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             }
@@ -195,7 +226,7 @@ public class H5Dataset implements AutoCloseable {
          * @param scalarType a datatype to write into the buffer
          */
         @WillClose
-        public void toByteVector( byte[] buf, int start, int end, long scalarType ) {
+        public void toByteVector( byte[] buf, long start, long end, long scalarType ) {
             Assert.isTrue( start >= 0 && start < end, "Invalid slice [" + start + ", " + end + "[." );
             long sourceSize = size();
             long targetSize = end - start;
@@ -215,9 +246,14 @@ public class H5Dataset implements AutoCloseable {
 
         @WillClose
         public byte[] toByteVector( long scalarType ) {
-            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            long size = size();
+            long bufSize = size * H5Tget_size( scalarType );
+            if ( bufSize > Integer.MAX_VALUE ) {
+                throw new IllegalStateException( "The size of the dataspace (" + size + " for " + bufSize + "B) is too large to be read into a byte array." );
+            }
+            long memSpaceId = H5Screate_simple( 1, new long[] { size }, null );
             try {
-                byte[] buf = new byte[( int ) size() * ( int ) H5Tget_size( scalarType )];
+                byte[] buf = new byte[( int ) bufSize];
                 H5Dread( datasetId, scalarType, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             } finally {
@@ -227,11 +263,15 @@ public class H5Dataset implements AutoCloseable {
         }
 
         public boolean[] toBooleanVector() {
-            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            long size = size();
+            if ( size > Integer.MAX_VALUE ) {
+                throw new IllegalStateException( "The size of the dataspace (" + size + ") is too large to be read into a boolean array." );
+            }
+            long memSpaceId = H5Screate_simple( 1, new long[] { size }, null );
             try {
-                int[] buf = new int[( int ) size()];
+                int[] buf = new int[( int ) size];
                 H5Dread_int( datasetId, HDF5Constants.H5T_NATIVE_HBOOL, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
-                boolean[] bools = new boolean[( int ) size()];
+                boolean[] bools = new boolean[( int ) size];
                 for ( int i = 0; i < buf.length; i++ ) {
                     bools[i] = buf[i] != 0;
                 }
@@ -244,9 +284,13 @@ public class H5Dataset implements AutoCloseable {
 
         @WillClose
         public int[] toIntegerVector() {
-            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            long size = size();
+            if ( size > Integer.MAX_VALUE ) {
+                throw new IllegalStateException( "The size of the dataspace (" + size + ") is too large to be read into a integer array." );
+            }
+            long memSpaceId = H5Screate_simple( 1, new long[] { size }, null );
             try {
-                int[] buf = new int[( int ) size()];
+                int[] buf = new int[( int ) size];
                 H5Dread_int( datasetId, HDF5Constants.H5T_NATIVE_INT32, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             } finally {
@@ -257,9 +301,11 @@ public class H5Dataset implements AutoCloseable {
 
         @WillClose
         public double[] toDoubleVector() {
-            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            long size = size();
+            Assert.state( size <= Integer.MAX_VALUE, "The size of the dataspace (" + size + ") is too large to be read into a double array." );
+            long memSpaceId = H5Screate_simple( 1, new long[] { size }, null );
             try {
-                double[] buf = new double[( int ) size()];
+                double[] buf = new double[( int ) size];
                 H5Dread_double( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             } finally {
