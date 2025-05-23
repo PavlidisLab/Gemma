@@ -35,7 +35,8 @@ public class SparseMatrix implements Matrix {
                 .orElseThrow( () -> new IllegalArgumentException( "The sparse matrix does not have a shape attribute." ) );
         Assert.isTrue( this.shape.length == 2 );
         this.indptr = group.getDataset( "indptr" ).toIntegerVector();
-        Assert.isTrue( indptr.length == shape[0] + 1, "The 'indptr' dataset must contain " + shape[0] + " elements." );
+        int expectedIndptrLength = isCsr() ? shape[0] + 1 : shape[1] + 1;
+        Assert.isTrue( indptr.length == expectedIndptrLength, "The 'indptr' dataset must contain " + expectedIndptrLength + " elements." );
         Assert.isTrue( group.exists( "data" ) );
         Assert.isTrue( group.exists( "indices" ) );
     }
