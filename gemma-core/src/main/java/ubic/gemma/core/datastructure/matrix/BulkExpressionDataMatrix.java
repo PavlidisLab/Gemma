@@ -90,7 +90,7 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
 
     /**
      * Obtain the largest {@link BioAssayDimension} that covers all the biomaterials in this matrix.
-     * @return the best {@link BioAssayDimension} for this matrix, or  {@link null} if no such dimension
+     * @return the best {@link BioAssayDimension} for this matrix, or  {@code null} if no such dimension
      * exists
      */
     BioAssayDimension getBestBioAssayDimension();
