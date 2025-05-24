@@ -62,6 +62,7 @@ pipeline {
                         if (gemmaVersion.endsWith('-SNAPSHOT')) {
                             error("A support build must not have a -SNAPSHOT suffix.")
                         }
+                        cliRef = gemmaVersion
                     } else if (stagingBuild) {
                         if (!gemmaVersion.endsWith("-SNAPSHOT")) {
                             error("A staging build must have a -SNAPSHOT suffix.")
@@ -255,6 +256,7 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
+                            branch 'support-*'
                             branch params.STAGING_BRANCH + '-*'
                             // never deploy the development CLI, it's too risky
                             // branch 'development'
