@@ -27,7 +27,6 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -293,13 +292,13 @@ public class ExpressionExperimentEditController extends BaseController {
         if ( recomputeSingleCellSparsityMetrics ) {
             // this does nothing if there is no single-cell data (beside clearing the metrics fields), maybe it
             // should be moved to the pre-processor service at some point
-            taskExecutor.execute( new DelegatingSecurityContextRunnable( () -> {
+            taskExecutor.execute( () -> {
                 singleCellExpressionExperimentService.updateSparsityMetrics( expressionExperiment );
-            } ) );
+            } );
         }
 
         if ( reprocess ) {
-            taskExecutor.execute( new DelegatingSecurityContextRunnable( () -> {
+            taskExecutor.execute( () -> {
                 try {
                     ExpressionExperiment thawedEe = expressionExperimentService.thaw( expressionExperiment );
                     preprocessorService.process( thawedEe );
@@ -307,7 +306,7 @@ public class ExpressionExperimentEditController extends BaseController {
                     log.error( "There was an error while updating the experiment after "
                             + "making changes to the quantitation types and/or biomaterial map.", e );
                 }
-            } ) );
+            } );
         }
 
         return new ModelAndView( "expressionExperiment.edit" )
@@ -484,6 +483,7 @@ public class ExpressionExperimentEditController extends BaseController {
 
     /**
      * Change the relationship between assays and biomaterials.
+     *
      * @return true if there were changes
      */
     private boolean updateBioMaterialMap( ExpressionExperiment expressionExperiment, String assayToMaterialMap ) {

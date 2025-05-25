@@ -11,6 +11,6 @@ public class Log4jConfig {
 
     @Bean
     public static TaskExecutorThreadContextInheritPostProcessor taskExecutorThreadContextInheritPostProcessor() {
-        return new TaskExecutorThreadContextInheritPostProcessor( true );
+        return new TaskExecutorThreadContextInheritPostProcessor();
     }
 }

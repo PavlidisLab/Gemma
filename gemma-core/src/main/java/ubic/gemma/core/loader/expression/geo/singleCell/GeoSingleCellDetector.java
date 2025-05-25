@@ -19,6 +19,7 @@ import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
