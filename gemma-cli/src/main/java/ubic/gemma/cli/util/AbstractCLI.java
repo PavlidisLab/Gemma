@@ -18,6 +18,7 @@
  */
 package ubic.gemma.cli.util;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
@@ -29,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.batch.*;
+import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
@@ -299,6 +301,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     /**
      * Include a detailed help footer in the --help menu.
+     *
      * @see HelpUtils#printHelp(PrintWriter, String, Options, String, String)
      */
     @Nullable
@@ -474,6 +477,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     /**
      * Add a success object to indicate success in a batch processing.
+     *
      * @param successObject object that was processed
      * @param message       success message
      */
@@ -545,26 +549,33 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * Successes and errors are reported automatically if {@link #addSuccessObject(Serializable, String)} or {@link #addErrorObject(Serializable, String)}
      * haven't been invoked during the execution of the callable/runnable.
      */
-    protected final ExecutorService getBatchTaskExecutor() {
-        // BatchTaskExecutorService is package-private
-        return getBatchTaskExecutorInternal();
-    }
-
-    /**
-     * Internal batch task executor, because {@link BatchTaskExecutorService} is package-private.
-     */
-    private synchronized BatchTaskExecutorService getBatchTaskExecutorInternal() {
+    protected synchronized final BatchTaskExecutorService getBatchTaskExecutor() {
         Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
         if ( executorService == null ) {
-            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService(), getBatchTaskProgressReporter() );
+            executorService = new BatchTaskExecutorService( createExecutor(), getBatchTaskProgressReporter() );
+            if ( applicationContext.getEnvironment().acceptsProfiles( "metrics" ) ) {
+                MeterRegistry meterRegistry = applicationContext.getBean( MeterRegistry.class );
+                new GenericExecutorMetrics( executorService, "gemmaCliBatchTasks" )
+                        .bindTo( meterRegistry );
+            }
         }
         return executorService;
+    }
+
+    private ExecutorService createExecutor() {
+        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
+        if ( this.numThreads > 1 ) {
+            return Executors.newFixedThreadPool( this.numThreads, threadFactory );
+        } else {
+            return Executors.newSingleThreadExecutor( threadFactory );
+        }
     }
 
     /**
      * This needs to be synchronized because multiple threads might try to report progress at the same time.
      */
-    private synchronized BatchTaskProgressReporter getBatchTaskProgressReporter() {
+    protected synchronized BatchTaskProgressReporter getBatchTaskProgressReporter() {
+        Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
         if ( progressReporter == null ) {
             BatchTaskSummaryWriter summaryWriter;
             switch ( batchFormat ) {
@@ -616,19 +627,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     }
 
     /**
-     * Create an {@link ExecutorService} to be used for running batch tasks.
-     */
-    protected ExecutorService createBatchTaskExecutorService() {
-        Assert.isNull( executorService, "There is already a batch task ExecutorService." );
-        ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
-        if ( this.numThreads > 1 ) {
-            return Executors.newFixedThreadPool( this.numThreads, threadFactory );
-        } else {
-            return Executors.newSingleThreadExecutor( threadFactory );
-        }
-    }
-
-    /**
      * Set the frequency at which the batch task executor should report progress.
      * <p>
      * The default is to report progress every 30 seconds. It may be overwritten by the {@code -batchReportFrequency}
@@ -662,9 +660,11 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         if ( remainingTasks > 0 ) {
             log.info( String.format( "Awaiting for %d batch tasks to finish...", remainingTasks ) );
         }
-        getBatchTaskProgressReporter().setEstimatedMaxTasks( getBatchTaskProgressReporter().getCompletedTasks() + remainingTasks );
+        // this always exists since we have a batch task executor
+        assert progressReporter != null;
+        progressReporter.setEstimatedMaxTasks( progressReporter.getCompletedTasks() + remainingTasks );
         while ( !executorService.awaitTermination( 100, TimeUnit.MILLISECONDS ) ) {
-            getBatchTaskProgressReporter().reportProgress();
+            progressReporter.reportProgress();
         }
     }
 }
