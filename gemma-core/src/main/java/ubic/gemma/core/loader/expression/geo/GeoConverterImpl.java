@@ -1999,28 +1999,28 @@ public class GeoConverterImpl implements GeoConverter {
     private Characteristic convertSeriesType( GeoSeries series, GeoSeriesType seriesType ) {
         switch ( seriesType ) {
             case EXPRESSION_PROFILING_BY_RT_PRC:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://www.ebi.ac.uk/efo/EFO_0002943" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://purl.obolibrary.org/obo/OBI_0001361" );
             case EXPRESSION_PROFILING_BY_MPSS:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://www.ebi.ac.uk/efo/EFO_0002942" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://purl.obolibrary.org/obo/OBI_0002015" );
             case EXPRESSION_PROFILING_BY_TILING_ARRAY:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://www.ebi.ac.uk/efo/EFO_0002769" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://purl.obolibrary.org/obo/OBI_0001235" );
             case EXPRESSION_PROFILING_BY_ARRAY:
             case EXPRESSION_PROFILING_BY_SNP_ARRAY:
             case NON_CODING_RNA_PROFILING_BY_ARRAY:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002768" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://purl.obolibrary.org/obo/OBI_0001463" );
             case METHYLATION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002761" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://purl.obolibrary.org/obo/OBI_0001266" );
             case METHYLATION_PROFILING_BY_GENOME_TILING_ARRAY:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002759" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://purl.obolibrary.org/obo/OBI_0001332" );
             case EXPRESSION_PROFILING_BY_SAGE:
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://www.ebi.ac.uk/efo/EFO_0002941" );
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://purl.obolibrary.org/obo/OBI_0002029" );
             case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
                 return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
             case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
                 boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
                 for ( GeoSample sample : series.getSamples() ) {
                     if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
-                        return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://purl.obolibrary.org/obo/OBI_0003109" );
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "single-nucleus RNA sequencing", "http://purl.obolibrary.org/obo/OBI_0003109" );
                     } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
                         // check for evidence of conding RNA
                         if ( isCodingRNA( series ) ) {
