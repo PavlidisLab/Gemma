@@ -2039,7 +2039,7 @@ public class GeoConverterImpl implements GeoConverter {
                 } else if ( isNonCodingRNA( series ) ) {
                     return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
                 } else {
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by high throughput sequencing", "http://purl.obolibrary.org/obo/OBI_0001985" );
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "bulk RNA-seq assay", "http://purl.obolibrary.org/obo/OBI_0003090" );
                 }
             default:
                 log.warn( "Cannot convert " + seriesType + " to an assay type." );
