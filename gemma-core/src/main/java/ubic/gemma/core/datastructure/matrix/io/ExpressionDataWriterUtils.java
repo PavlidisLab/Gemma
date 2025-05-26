@@ -140,28 +140,25 @@ public class ExpressionDataWriterUtils {
     /**
      * @param bioAssays   BAs
      * @param bioMaterial BM
-     * @return String representing the external identifier of the biomaterial. This will usually be a GEO or ArrayExpression
-     * accession id, or else blank.
+     * @return string representing the external identifier of the biomaterial. This will usually be a GEO or
+     * ArrayExpress accession, or {@code null} if no such identifier is available.
      */
+    @Nullable
     public static String constructSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
-        String name = "";
-
         if ( bioMaterial.getExternalAccession() != null ) {
-            name = bioMaterial.getExternalAccession().getAccession();
-        } else if ( StringUtils.isBlank( name ) && !bioAssays.isEmpty() ) {
+            return constructRCompatibleColumnName( bioMaterial.getExternalAccession().getAccession() );
+        } else if ( !bioAssays.isEmpty() ) {
+            // use the external IDs of the associated bioassays
             List<String> ids = new ArrayList<>();
             for ( BioAssay ba : bioAssays ) {
                 if ( ba.getAccession() != null ) {
                     ids.add( ba.getAccession().getAccession() );
                 }
             }
-
-            name = StringUtils.join( ids, "/" );
+            return !ids.isEmpty() ? constructRCompatibleColumnName( StringUtils.join( ids, "/" ) ) : null;
+        } else {
+            return null;
         }
-
-        name = StringUtils.isBlank( name ) ? "" : name;
-
-        return constructRCompatibleColumnName( name );
     }
 
     private static String constructRCompatibleColumnName( String colName ) {
