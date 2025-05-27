@@ -435,7 +435,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
             try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false ) ) {
                 log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
-                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), numVecs ) ) );
+                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), 10, numVecs ) ) );
             }
         } else {
             // reset the metrics to null since there is no preferred vectors

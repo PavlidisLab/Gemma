@@ -251,7 +251,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true, config );
             }
             vecs = scVecs
-                    .peek( createStreamMonitor( getClass().getName(), numberOfVectors ) )
+                    .peek( createStreamMonitor( getClass().getName(), 10, numberOfVectors ) )
                     .map( createAggregator( aggregationMethod, cellLevelCharacteristics ) )
                     .collect( Collectors.toList() );
         } else {

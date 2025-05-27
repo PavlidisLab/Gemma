@@ -196,7 +196,10 @@ public class SingleCellExpressionDataVectorUtils {
         return arr.elements();
     }
 
-    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {
+    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, int reportFrequency, long numVecs ) {
+        if ( reportFrequency <= 0 ) {
+            return x -> { /* no-op */ };
+        }
         Log log = LogFactory.getLog( logCategory );
         return new Consumer<SingleCellExpressionDataVector>() {
             final StopWatch timer = StopWatch.createStarted();
@@ -205,7 +208,7 @@ public class SingleCellExpressionDataVectorUtils {
             @Override
             public void accept( SingleCellExpressionDataVector x ) {
                 int done = i.incrementAndGet();
-                if ( done % 10 == 0 ) {
+                if ( done % reportFrequency == 0 ) {
                     log.info( String.format( "Processed %d/%d vectors (%f.2 vectors/sec)", done, numVecs, 1000.0 * done / timer.getTime() ) );
                 }
             }
