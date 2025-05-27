@@ -34,7 +34,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.profiling.StopWatchUtils;
@@ -127,7 +126,6 @@ public class ExpressionExperimentDaoImpl
     private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
 
     private final CompressedStringListType cellIdsUserType;
-    private SessionRegistryImpl sessionRegistryImpl;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -3055,6 +3053,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " does not have an associated single-cell dimension." );
+        }
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
@@ -3076,6 +3077,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " does not have an associated single-cell dimension." );
+        }
         return streamQuery( session ->
                         session.createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
                                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
@@ -3088,6 +3092,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement ) {
         SingleCellDimension dimension = getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " does not have an associated single-cell dimension." );
+        }
         return ( SingleCellExpressionDataVector ) getSessionFactory().getCurrentSession()
                 .createQuery( createSelectSingleCellDataVector( false, true, true ) + " "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and scedv.designElement = :de" )
