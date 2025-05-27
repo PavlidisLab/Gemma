@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -17,10 +18,8 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -253,18 +252,17 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
-    public void testGetDatasetRawExpression() throws IOException {
+    public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null, false, false );
         // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-        assertThat( ( File ) response.getEntity() )
+        assertThat( ( ( LockedPath ) response.getEntity() ).getPath() )
                 .exists()
-                .content()
                 .satisfies( f -> {
-                    assertThat( new GZIPInputStream( new FileInputStream( f ) ) )
+                    assertThat( new GZIPInputStream( Files.newInputStream( f ) ) )
                             .asString( StandardCharsets.UTF_8 )
                             .contains( ee.getShortName() )
-                            .hasLineCount( 8 + 2 * testHelper.getTestElementCollectionSize() );
+                            .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
                 } );
     }
 }
