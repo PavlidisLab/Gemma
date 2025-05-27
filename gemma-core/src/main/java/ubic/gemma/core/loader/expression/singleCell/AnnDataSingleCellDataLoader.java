@@ -224,13 +224,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             qt.setDescription( "AnnData" );
         }
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        H5FundamentalType fundamentalType;
         try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
-            fundamentalType = datasetType.getFundamentalType();
+            detectQuantitationType( qt, h5File, layer, datasetType );
+            qt.setDescription( String.format( "Data from a layer located at '%s' originally encoded as an %s of %ss.",
+                    layer.getPath(), layer.getEncodingType(), datasetType.toString().toLowerCase() ) );
         }
-        detectQuantitationType( qt, h5File, layer, fundamentalType );
-        qt.setDescription( String.format( "Data from a layer located at '%s' originally encoded as an %s of %ss.",
-                layer.getPath(), layer.getEncodingType(), fundamentalType.toString().toLowerCase() ) );
         log.info( "Detected quantitation type for '" + layer.getPath() + "': " + qt );
         return qt;
     }
@@ -238,19 +236,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     /**
      * TODO: use {@link ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils}
      */
-    private void detectQuantitationType( QuantitationType qt, AnnData h5File, Layer layer, H5FundamentalType fundamentalType ) {
-        if ( fundamentalType.equals( H5FundamentalType.INTEGER ) ) {
+    private void detectQuantitationType( QuantitationType qt, AnnData h5File, Layer layer, H5Type dataType ) {
+        if ( dataType.getFundamentalType().equals( H5FundamentalType.INTEGER ) ) {
             qt.setType( StandardQuantitationType.COUNT );
             qt.setScale( ScaleType.COUNT );
-            // TODO: support integer QTs
-            qt.setRepresentation( PrimitiveType.INT );
-        } else if ( fundamentalType.equals( H5FundamentalType.FLOAT ) ) {
+            if ( dataType.getSize() <= 4 ) {
+                qt.setRepresentation( PrimitiveType.INT );
+            } else if ( dataType.getSize() <= 8 ) {
+                qt.setRepresentation( PrimitiveType.LONG );
+            } else {
+                throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+            }
+        } else if ( dataType.getFundamentalType().equals( H5FundamentalType.FLOAT ) ) {
             // detect various count encodings
             for ( ScaleType st : new ScaleType[] { ScaleType.COUNT, ScaleType.LOG2, ScaleType.LN, ScaleType.LOG10, ScaleType.LOG1P } ) {
                 if ( isCountEncodedInDouble( layer, st ) ) {
                     qt.setType( StandardQuantitationType.COUNT );
                     qt.setScale( st );
-                    qt.setRepresentation( PrimitiveType.DOUBLE );
+                    if ( dataType.getSize() <= 4 ) {
+                        qt.setRepresentation( PrimitiveType.FLOAT );
+                    } else if ( dataType.getSize() <= 8 ) {
+                        qt.setRepresentation( PrimitiveType.DOUBLE );
+                    } else {
+                        throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+                    }
                     return;
                 }
             }
@@ -262,9 +271,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 log.warn( "Scale type cannot be detected for non-counting data in " + layer.getPath() + "." );
                 qt.setScale( ScaleType.OTHER );
             }
-            qt.setRepresentation( PrimitiveType.DOUBLE );
+            if ( dataType.getSize() <= 4 ) {
+                qt.setRepresentation( PrimitiveType.FLOAT );
+            } else if ( dataType.getSize() <= 8 ) {
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+            } else {
+                throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+            }
         } else {
-            throw new IllegalArgumentException( "Unsupported H5 fundamental type " + fundamentalType + " for a quantitation type." );
+            throw new IllegalArgumentException( "Unsupported H5 type " + dataType + " for a quantitation type." );
         }
     }
 
@@ -992,7 +1007,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 sampleEnds[k] = end;
                 sampleIndices[k] = j;
             }
-            byte[] vectorData = new byte[8 * nnz];
+            byte[] vectorData = new byte[vector.getQuantitationType().getRepresentation().getSizeInBytes() * nnz];
             int[] vectorIndices = new int[nnz];
             // select indices relevant to BAs
             int sampleOffsetInVector = 0;

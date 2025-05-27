@@ -317,7 +317,7 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( loader.getSequencingMetadata( dim ) ).isEmpty();
             assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement()
                     .satisfies( vec -> {
-                        assertThat( vec.getDataAsDoubles() ).isEmpty();
+                        assertThat( vec.getDataAsFloats() ).isEmpty();
                     } );
         }
     }
@@ -424,7 +424,7 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement().satisfies( vec -> {
                 assertThat( vec.getDesignElement() ).isEqualTo( designElements.iterator().next() );
                 assertThat( vec.getDataIndices() ).containsExactly( 19, 80 );
-                assertThat( vec.getDataAsDoubles() ).containsExactly( 1.1773239374160767, 0.6338212490081787 );
+                assertThat( vec.getDataAsFloats() ).containsExactly( 1.1773239374160767f, 0.6338212490081787f );
             } );
         }
     }
