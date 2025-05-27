@@ -3,6 +3,7 @@ package ubic.gemma.apps;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.description.Category;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -67,9 +68,18 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
         }
         BioAssayDimension dimension;
         SingleCellDimension scd;
+        SingleCellExpressionExperimentService.SingleCellDimensionConfig config = SingleCellExpressionExperimentService.SingleCellDimensionConfig.builder()
+                .includeBioAssays( true )
+                .includeCellTypeAssignments( true )
+                .includeCellLevelCharacteristics( true )
+                .includeCellLevelMeasurements( true )
+                .includeCharacteristics( false )
+                .includeIndices( false )
+                .includeValues( false )
+                .build();
         if ( ( dimension = eeService.getBioAssayDimension( ee, qt ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + dimension );
-        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, false, false ) ) != null ) {
+        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, config ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + scd );
             try ( Stream<String> cellIds = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                 if ( cellIds != null ) {
@@ -110,6 +120,23 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
                     } else {
                         getCliContext().getOutputStream().printf( "\t\t\t\tToo many characteristics (%d), ignoring.%n", clc.getNumberOfCharacteristics() );
                     }
+                }
+            }
+            if ( !scd.getCellLevelMeasurements().isEmpty() ) {
+                getCliContext().getOutputStream().println( "\t\tCell-level Measurements:" );
+                for ( CellLevelMeasurements clm : scd.getCellLevelMeasurements() ) {
+                    getCliContext().getOutputStream().println( "\t\t\t" + clm );
+                    Characteristic cat = clm.getCategory();
+                    if ( cat != null && cat.getCategory() != null ) {
+                        getCliContext().getOutputStream().println( "\t\t\t\tCategory: " + cat.getCategory() );
+                    } else {
+                        getCliContext().getOutputStream().println( "\t\t\t\tCategory: <unassigned>" );
+                    }
+                    getCliContext().getOutputStream().printf( "\t\t\t\tValues: %s, ...%n",
+                            requireNonNull( singleCellExpressionExperimentService.streamCellLevelMeasurements( ee, qt, clm.getId(), true ) )
+                                    .limit( 10 )
+                                    .map( String::valueOf )
+                                    .collect( Collectors.joining( ", " ) ) );
                 }
             }
         }

@@ -2,7 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
+import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Category;
@@ -10,10 +10,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -164,8 +161,58 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    <T> T getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    <T> T[] getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex, int endIndexExclusive );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    <T> Stream<T> streamCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId, boolean createNewSession );
+
+    /**
+     * Configuration for loading a single-cell dimension.
+     * <p>
+     * If a particular relation is not loaded, it will be set to {@code null} to prevent unexpected use.
+     */
+    @Value
+    @Builder
+    class SingleCellDimensionConfig {
+        /**
+         * Include bioassays.
+         */
+        boolean includeBioAssays;
+        /**
+         * Include cell type assignments.
+         */
+        boolean includeCellTypeAssignments;
+        /**
+         * Include cell-level characteristics.
+         */
+        boolean includeCellLevelCharacteristics;
+        /**
+         * Include cell-level measurements.
+         */
+        boolean includeCellLevelMeasurements;
+        /**
+         * Include characteristics in the cell type assignments and cell-level characteristics.
+         */
+        boolean includeCharacteristics;
+        /**
+         * Include indices in the cell type assignments and cell-level characteristics.
+         */
+        boolean includeIndices;
+        /**
+         * Include values from cell-level measurements.
+         */
+        boolean includeValues;
+    }
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionConfig config );
 
     /**
      * Obtain a single-cell dimension used for a given dataset and QT.
@@ -184,7 +231,7 @@ public interface SingleCellExpressionExperimentService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionConfig config );
 
     /**
      * Obtain the preferred single-cell dimension.
@@ -343,6 +390,19 @@ public interface SingleCellExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    void addCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    void addCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dimension, CellLevelMeasurements clm );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm );
 
     /**
      * Obtain the cell types of a given single-cell dataset.
