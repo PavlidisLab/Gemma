@@ -45,7 +45,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
     private String note;
     private String detail;
     @JsonIgnore
-    private AuditEventType eventType;
+    private Class<? extends AuditEventType> eventType;
 
     /**
      * Required when using the class as a spring bean.
@@ -60,14 +60,18 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
 
     public AuditEventValueObject( AuditEvent ae ) {
         super( ae );
-        if ( ae.getPerformer() != null )
-            this.setPerformer( ae.getPerformer().getUserName() );
-        if ( ae.getAction() != null )
-            this.setAction( ae.getAction().name() );
-        this.setEventType( ae.getEventType() );
-        this.setNote( ae.getNote() );
-        this.setDate( ae.getDate() );
-        this.setDetail( ae.getDetail() );
+        if ( ae.getPerformer() != null ) {
+            performer = ae.getPerformer().getUserName();
+        }
+        if ( ae.getAction() != null ) {
+            action = ae.getAction().name();
+        }
+        if ( ae.getEventType() != null ) {
+            eventType = ae.getEventType().getClass();
+        }
+        note = ae.getNote();
+        date = ae.getDate();
+        detail = ae.getDetail();
     }
 
     @Schema(implementation = AuditAction.class)
@@ -109,16 +113,16 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         this.detail = detail;
     }
 
-    public AuditEventType getEventType() {
+    public Class<? extends AuditEventType> getEventType() {
         return this.eventType;
     }
 
-    public void setEventType( AuditEventType eventType ) {
+    public void setEventType( Class<? extends AuditEventType> eventType ) {
         this.eventType = eventType;
     }
 
     public String getEventTypeName() {
-        return this.getEventType() == null ? "" : this.getEventType().getClass().getSimpleName();
+        return eventType != null ? eventType.getSimpleName() : "";
     }
 
     public String getNote() {
