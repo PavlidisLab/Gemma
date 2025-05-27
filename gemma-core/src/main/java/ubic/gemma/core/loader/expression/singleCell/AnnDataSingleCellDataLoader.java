@@ -865,13 +865,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 // ignore entries that are missing a gene mapping
                 .filter( i -> statefulDesignElementMapper.contains( genes.get( i ) ) )
                 .mapToObj( i -> {
-                    assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
                     vector.setOriginalDesignElement( genes.get( i ) );
                     vector.setDesignElement( statefulDesignElementMapper.matchOne( genes.get( i ) ).get() );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );
-                    populateVectorData( vector, i, scd, matrix, m );
+                    try {
+                        populateVectorData( vector, i, scd, matrix, m );
+                    } catch ( Exception e ) {
+                        throw new RuntimeException( String.format( "Failed to load single-cell vector for %s from row %d.",
+                                vector.getDesignElement(), i ), e );
+                    }
                     return vector;
                 } )
                 .onClose( matrix::close );
@@ -961,18 +965,23 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         if ( m.isSimpleCase ) {
             // this is using the same storage strategy from ByteArrayConverter
             try ( H5Dataset data = matrix.getData() ) {
+                long start = matrix.getIndptr()[i];
+                long end = matrix.getIndptr()[i + 1];
+                if ( end - start > scd.getNumberOfCells() ) {
+                    throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
+                }
                 switch ( vector.getQuantitationType().getRepresentation() ) {
                     case FLOAT:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F32BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.IEEE_F32BE ) );
                         break;
                     case DOUBLE:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE ) );
                         break;
                     case INT:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I32BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.STD_I32BE ) );
                         break;
                     case LONG:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I64BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.STD_I64BE ) );
                         break;
                 }
             }
@@ -1006,6 +1015,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 sampleStarts[k] = start;
                 sampleEnds[k] = end;
                 sampleIndices[k] = j;
+            }
+            if ( nnz > scd.getNumberOfCells() ) {
+                throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
             }
             byte[] vectorData = new byte[vector.getQuantitationType().getRepresentation().getSizeInBytes() * nnz];
             int[] vectorIndices = new int[nnz];

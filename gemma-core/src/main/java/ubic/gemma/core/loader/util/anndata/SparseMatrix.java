@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.util.anndata;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
@@ -37,6 +38,10 @@ public class SparseMatrix implements Matrix {
         this.indptr = group.getDataset( "indptr" ).toLongVector();
         int expectedIndptrLength = isCsr() ? shape[0] + 1 : shape[1] + 1;
         Assert.isTrue( indptr.length == expectedIndptrLength, "The 'indptr' dataset must contain " + expectedIndptrLength + " elements." );
+        Assert.isTrue( indptr[0] == 0, "The first element of 'indptr' must be 0." );
+        long nnz = group.getDataset( "data" ).size();
+        Assert.isTrue( indptr[expectedIndptrLength - 1] == nnz, "The last element of 'indptr' must be the number of non-zeroes." );
+        Assert.isTrue( ArrayUtils.isSorted( indptr ), "The 'indptr' dataset must be sorted." );
         Assert.isTrue( group.exists( "data" ) );
         Assert.isTrue( group.exists( "indices" ) );
     }
