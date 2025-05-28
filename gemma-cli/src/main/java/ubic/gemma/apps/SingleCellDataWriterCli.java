@@ -293,16 +293,20 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
                 }
             case MEX:
-                if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
+                if ( isStreamingOutput() ) {
                     log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
                     try ( OutputStream stream = openOutputFile( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX, isForce() ) ) {
                         return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, stream );
                     }
                 } else {
-                    if ( !isForce() && Files.exists( outputFile ) ) {
-                        throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
+                    Path mexDir = outputFile;
+                    if ( mexDir == null ) {
+                        mexDir = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     }
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
+                    if ( !isForce() && Files.exists( mexDir ) ) {
+                        throw new RuntimeException( mexDir + " already exists, use -force/--force to override." );
+                    }
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), mexDir );
                 }
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
@@ -326,16 +330,20 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
                         return 0;
                     }
-                } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
+                } else if ( isStreamingOutput() ) {
                     log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
                     try ( OutputStream stream = openOutputFile( ee, null, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX, isForce() ) ) {
                         return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, stream );
                     }
                 } else {
-                    if ( !isForce() && Files.exists( outputFile ) ) {
-                        throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
+                    Path mexDir = outputFile;
+                    if ( mexDir == null ) {
+                        mexDir = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     }
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
+                    if ( !isForce() && Files.exists( mexDir ) ) {
+                        throw new RuntimeException( mexDir + " already exists, use -force/--force to override." );
+                    }
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), mexDir );
                 }
             case CELL_IDS:
                 try ( PrintStream printer = new PrintStream( openOutputFile( ee, null, qt, ".cellIds.txt.gz", isForce() ), true, StandardCharsets.UTF_8.name() ) ) {
@@ -351,6 +359,10 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
         }
+    }
+
+    private boolean isStreamingOutput() {
+        return standardOutput || ( outputFile != null && ( outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) );
     }
 
     @Nullable
