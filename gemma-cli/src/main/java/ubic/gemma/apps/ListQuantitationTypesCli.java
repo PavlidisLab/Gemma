@@ -69,7 +69,7 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
         SingleCellDimension scd;
         if ( ( dimension = eeService.getBioAssayDimension( ee, qt ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + dimension );
-        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, false, false ) ) != null ) {
+        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + scd );
             try ( Stream<String> cellIds = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                 if ( cellIds != null ) {
