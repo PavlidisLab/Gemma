@@ -240,7 +240,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
                     assertThat( vec.getSingleCellDimension().getCellIds() )
-                            .isInstanceOf( UninitializedList.class );
+                            .isNotInstanceOf( UninitializedList.class );
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
