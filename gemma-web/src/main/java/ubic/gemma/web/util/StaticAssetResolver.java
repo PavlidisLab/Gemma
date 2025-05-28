@@ -67,6 +67,14 @@ public class StaticAssetResolver implements InitializingBean {
     }
 
     /**
+     * Return the static asset server, if any.
+     */
+    @Nullable
+    public StaticAssetServer getStaticAssetServer() {
+        return staticAssetServer;
+    }
+
+    /**
      * Resolve a URL to a static asset.
      */
     public String resolveUrl( String path ) {
