@@ -43,7 +43,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Basic implementation of the {@link CLI} interface.
@@ -119,14 +120,11 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     private Integer batchReportFrequencySeconds;
 
     /**
-     * Indicate if we are "inside" {@link #doWork()}.
+     * Batch task executor service.
+     * <p>
+     * This is only available within {@link #doWork()} or during the execution of a batch task.
      */
-    private boolean insideDoWork = false;
-
-    @Nullable
-    private BatchTaskExecutorService executorService;
-    @Nullable
-    private BatchTaskProgressReporter progressReporter;
+    private volatile BatchTaskExecutorService executorService = null;
 
     @Override
     public String getCommandName() {
@@ -220,19 +218,18 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             printHelp( options, new PrintWriter( getCliContext().getErrorStream(), true ) );
             return FAILURE;
         }
-        try {
-            work();
-            awaitBatchExecutorService();
-            return progressReporter != null && progressReporter.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
+        try ( BatchTaskExecutorService executorService = createBatchTaskExecutor() ) {
+            this.executorService = executorService;
+            doWork();
+            executorService.shutdownAndAwaitTermination();
+            return executorService.getProgressReporter().hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
         } catch ( Exception e ) {
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
-            if ( executorService != null ) {
-                List<Runnable> stillRunning = executorService.shutdownNow();
-                if ( !stillRunning.isEmpty() ) {
-                    log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
-                }
+            List<Runnable> stillRunning = executorService.shutdownNow();
+            if ( !stillRunning.isEmpty() ) {
+                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
@@ -242,18 +239,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                 return FAILURE;
             }
         } finally {
-            if ( executorService != null ) {
-                executorService = null;
-            }
-            if ( progressReporter != null ) {
-                // always summarize processing, even if an error is thrown
-                try {
-                    progressReporter.close();
-                } catch ( IOException e ) {
-                    log.error( "Failed to close batch task executor.", e );
-                }
-                progressReporter = null;
-            }
+            this.executorService = null;
         }
     }
 
@@ -410,18 +396,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     }
 
     /**
-     * Default workflow of a CLI.
-     */
-    private void work() throws Exception {
-        try {
-            insideDoWork = true;
-            doWork();
-        } finally {
-            insideDoWork = false;
-        }
-    }
-
-    /**
      * Command line implementation.
      * <p>
      * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}.
@@ -549,15 +523,20 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * Successes and errors are reported automatically if {@link #addSuccessObject(Serializable, String)} or {@link #addErrorObject(Serializable, String)}
      * haven't been invoked during the execution of the callable/runnable.
      */
-    protected synchronized final BatchTaskExecutorService getBatchTaskExecutor() {
-        Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
-        if ( executorService == null ) {
-            executorService = new BatchTaskExecutorService( createExecutor(), getBatchTaskProgressReporter() );
-            if ( applicationContext.getEnvironment().acceptsProfiles( "metrics" ) ) {
-                MeterRegistry meterRegistry = applicationContext.getBean( MeterRegistry.class );
-                new GenericExecutorMetrics( executorService, "gemmaCliBatchTasks" )
-                        .bindTo( meterRegistry );
-            }
+    protected final BatchTaskExecutorService getBatchTaskExecutor() {
+        return requireNonNull( executorService, "Batch tasks can only be submitted in doWork()." );
+    }
+
+    protected final BatchTaskProgressReporter getBatchTaskProgressReporter() {
+        return getBatchTaskExecutor().getProgressReporter();
+    }
+
+    private BatchTaskExecutorService createBatchTaskExecutor() {
+        BatchTaskExecutorService executorService = new BatchTaskExecutorService( createExecutor(), createProgressReporter() );
+        if ( applicationContext != null && applicationContext.getEnvironment().acceptsProfiles( "metrics" ) ) {
+            MeterRegistry meterRegistry = applicationContext.getBean( MeterRegistry.class );
+            new GenericExecutorMetrics( executorService, "gemmaCliBatchTasks" )
+                    .bindTo( meterRegistry );
         }
         return executorService;
     }
@@ -571,45 +550,39 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         }
     }
 
-    /**
-     * This needs to be synchronized because multiple threads might try to report progress at the same time.
-     */
-    protected synchronized BatchTaskProgressReporter getBatchTaskProgressReporter() {
-        Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
-        if ( progressReporter == null ) {
-            BatchTaskSummaryWriter summaryWriter;
-            switch ( batchFormat ) {
-                case TEXT:
-                    try {
-                        summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
-                                new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
-                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
-                    } catch ( IOException e ) {
-                        throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
-                    }
-                    break;
-                case TSV:
-                    try {
-                        summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
-                                new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
-                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
-                    } catch ( IOException e ) {
-                        throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
-                    }
-                    break;
-                case LOG:
-                    summaryWriter = new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY );
-                    break;
-                case SUPPRESS:
-                    summaryWriter = new SuppressBatchTaskSummaryWriter();
-                    break;
-                default:
-                    throw new IllegalStateException( "Unsupported batch format " + batchFormat );
-            }
-            progressReporter = new BatchTaskProgressReporter( summaryWriter, getCliContext().getConsole() );
-            if ( batchReportFrequencySeconds != null ) {
-                progressReporter.setReportFrequencyMillis( batchReportFrequencySeconds * 1000 );
-            }
+    private BatchTaskProgressReporter createProgressReporter() {
+        BatchTaskSummaryWriter summaryWriter;
+        switch ( batchFormat ) {
+            case TEXT:
+                try {
+                    summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
+                            new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
+                            new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
+                }
+                break;
+            case TSV:
+                try {
+                    summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
+                            new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
+                            new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
+                }
+                break;
+            case LOG:
+                summaryWriter = new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY );
+                break;
+            case SUPPRESS:
+                summaryWriter = new SuppressBatchTaskSummaryWriter();
+                break;
+            default:
+                throw new IllegalStateException( "Unsupported batch format " + batchFormat );
+        }
+        BatchTaskProgressReporter progressReporter = new BatchTaskProgressReporter( summaryWriter, getCliContext().getConsole() );
+        if ( batchReportFrequencySeconds != null ) {
+            progressReporter.setReportFrequencyMillis( batchReportFrequencySeconds * 1000 );
         }
         return progressReporter;
     }
@@ -632,14 +605,14 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * The default is to report progress every 30 seconds. It may be overwritten by the {@code -batchReportFrequency}
      * option.
      */
-    protected void setReportFrequencyMillis( int reportFrequencyMillis ) {
+    protected final void setReportFrequencyMillis( int reportFrequencyMillis ) {
         getBatchTaskProgressReporter().setReportFrequencyMillis( reportFrequencyMillis );
     }
 
     /**
      * Set the estimated maximum number of batch tasks to be processed.
      */
-    protected void setEstimatedMaxTasks( int estimatedMaxTasks ) {
+    protected final void setEstimatedMaxTasks( int estimatedMaxTasks ) {
         getBatchTaskProgressReporter().setEstimatedMaxTasks( estimatedMaxTasks );
     }
 
@@ -649,22 +622,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * The batch task executor will be shutdown, preventing any new tasks from being submitted.
      */
     protected final void awaitBatchExecutorService() throws InterruptedException {
-        if ( executorService == null ) {
-            return;
-        }
-        executorService.shutdown();
-        if ( executorService.isTerminated() ) {
-            return;
-        }
-        int remainingTasks = executorService.getRemainingTasks();
-        if ( remainingTasks > 0 ) {
-            log.info( String.format( "Awaiting for %d batch tasks to finish...", remainingTasks ) );
-        }
-        // this always exists since we have a batch task executor
-        assert progressReporter != null;
-        progressReporter.setEstimatedMaxTasks( progressReporter.getCompletedTasks() + remainingTasks );
-        while ( !executorService.awaitTermination( 100, TimeUnit.MILLISECONDS ) ) {
-            progressReporter.reportProgress();
-        }
+        getBatchTaskExecutor().shutdownAndAwaitTermination();
     }
 }
