@@ -97,7 +97,12 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
 
     @Override
     public Boolean[] getRow( int index ) {
-        return matrix.getRow( index );
+        Object[] rawRow = matrix.getRow( index );
+        Boolean[] row = new Boolean[matrix.rows()];
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            row[i] = ( Boolean ) rawRow[i];
+        }
+        return row;
     }
 
     @Override
