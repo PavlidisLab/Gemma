@@ -2454,7 +2454,7 @@ public class ExpressionExperimentDaoImpl
         for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
             Assert.notNull( labelling.getCellTypes() );
             Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell types must match the number of cell IDs." );
+                    "The number of cell type assignments (" + labelling.getCellTypeIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
             int numberOfCellTypeLabels = labelling.getCellTypes().size();
             Assert.isTrue( numberOfCellTypeLabels > 0,
                     "There must be at least one cell type label declared in the cellTypes collection." );
@@ -2485,7 +2485,7 @@ public class ExpressionExperimentDaoImpl
         }
         for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
             Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell-level characteristics must match the number of cell IDs." );
+                    "The number of cell-level characteristic assignments (" + clc.getIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
             int numberOfCharacteristics = clc.getCharacteristics().size();
             Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),
                     "The number of cell-level characteristics must match the size of the characteristics collection." );
