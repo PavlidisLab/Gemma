@@ -40,7 +40,7 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
     private StringMatrix<Integer, Integer> matrix;
 
     public ExpressionDataStringMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
+        super();
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }

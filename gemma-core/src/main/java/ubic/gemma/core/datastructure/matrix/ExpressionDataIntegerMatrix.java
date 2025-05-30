@@ -30,14 +30,11 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
     public ExpressionDataIntegerMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
-
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
                 throw new IllegalStateException( "Cannot convert non-integer quantitation types into int matrix" );
             }
         }
-
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }

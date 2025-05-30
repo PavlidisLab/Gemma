@@ -61,7 +61,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
 
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -75,7 +74,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
@@ -90,7 +88,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
-        this.init();
         for ( QuantitationType qt : quantitationTypes ) {
             if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
@@ -103,7 +100,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
-        this.init();
         if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalStateException(
                     "Cannot convert non-double quantitation types into double matrix: " + quantitationType );
@@ -123,7 +119,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix, Collection<QuantitationType> quantitationTypes ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -150,7 +145,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param sourceMatrix matrix
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -197,7 +191,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             throw new IllegalArgumentException( "Matrix is invalid" );
         }
 
-        this.init();
         this.expressionExperiment = ee;
         this.matrix = matrix;
         this.quantitationTypes.add( qt );
@@ -242,7 +235,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse,
             BioAssayDimension reorderedDim ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
 
         this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );

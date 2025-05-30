@@ -68,6 +68,20 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
 
     private List<ExpressionDataMatrixRowElement> rowElements = null;
 
+    protected AbstractMultiAssayExpressionDataMatrix() {
+        quantitationTypes = new HashSet<>();
+        bioAssayDimensions = new HashMap<>();
+
+        rowElementMap = new LinkedHashMap<>();
+        rowDesignElementMapByInteger = new LinkedHashMap<>();
+
+        columnAssayMap = new LinkedHashMap<>();
+        columnBioMaterialMap = new LinkedHashMap<>();
+        columnBioMaterialMapByInteger = new LinkedHashMap<>();
+        columnBioAssayMapByInteger = new LinkedHashMap<>();
+
+    }
+
     @Override
     public int columns( CompositeSequence el ) {
         int j = 0;
@@ -287,20 +301,6 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     protected abstract String format( int row, int column );
 
     protected abstract void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors );
-
-    protected void init() {
-        quantitationTypes = new HashSet<>();
-        bioAssayDimensions = new HashMap<>();
-
-        rowElementMap = new LinkedHashMap<>();
-        rowDesignElementMapByInteger = new LinkedHashMap<>();
-
-        columnAssayMap = new LinkedHashMap<>();
-        columnBioMaterialMap = new LinkedHashMap<>();
-        columnBioMaterialMapByInteger = new LinkedHashMap<>();
-        columnBioAssayMapByInteger = new LinkedHashMap<>();
-
-    }
 
     protected <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
             Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {

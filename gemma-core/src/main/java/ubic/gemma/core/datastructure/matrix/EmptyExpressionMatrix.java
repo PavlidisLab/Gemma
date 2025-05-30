@@ -38,16 +38,12 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
     private final int numCols;
 
     public EmptyExpressionMatrix( BioAssayDimension ba ) {
-        super();
-        super.init();
         CompositeSequence dummy = CompositeSequence.Factory.newInstance();
         this.bioAssayDimensions.put( dummy, ba );
         this.numCols = this.setUpColumnElements();
     }
 
     public EmptyExpressionMatrix( Collection<BioAssayDimension> dims ) {
-        super();
-        super.init();
         long i = -1;
         for ( BioAssayDimension ba : dims ) {
             CompositeSequence dummy = CompositeSequence.Factory.newInstance();

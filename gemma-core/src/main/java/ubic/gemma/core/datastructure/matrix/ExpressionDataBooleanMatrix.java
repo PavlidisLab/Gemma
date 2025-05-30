@@ -41,8 +41,6 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
     public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
-
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
                 throw new IllegalStateException( "Cannot convert non-boolean quantitation types into boolean matrix" );
@@ -55,7 +53,6 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
 
     public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors,
             List<QuantitationType> qtypes ) {
-        this.init();
         Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
         this.vectorsToMatrix( selectedVectors );
     }
