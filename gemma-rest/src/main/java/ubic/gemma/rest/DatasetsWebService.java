@@ -117,6 +117,7 @@ import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
 import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
 import static ubic.gemma.rest.util.Responders.respond;
+import static ubic.gemma.rest.util.Responders.sendfile;
 
 /**
  * RESTful interface for datasets.
@@ -1336,7 +1337,7 @@ public class DatasetsWebService {
         try ( LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) ) ) {
             String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
-            return Response.ok( p.steal() )
+            return sendfile( p.getPath() )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
                     .build();
@@ -1403,7 +1404,7 @@ public class DatasetsWebService {
         }
         try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
             String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
-            return Response.ok( p.steal() )
+            return sendfile( p.getPath() )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
                     .build();
@@ -1460,7 +1461,7 @@ public class DatasetsWebService {
         if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
             try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, false, 5, TimeUnit.SECONDS ) ) {
                 if ( Files.exists( p.getPath() ) ) {
-                    return Response.ok( p.steal() )
+                    return Response.ok( p.getPath() )
                             .type( APPLICATION_10X_MEX_TYPE )
                             .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
                             .build();
@@ -1481,7 +1482,7 @@ public class DatasetsWebService {
         } else {
             try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, false, 5, TimeUnit.SECONDS ) ) {
                 if ( !force && Files.exists( p.getPath() ) ) {
-                    return Response.ok( p.steal() )
+                    return Response.ok( p.getPath() )
                             .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                             .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() ) ) + "\"" )
                             .build();
@@ -1543,7 +1544,7 @@ public class DatasetsWebService {
         try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
             String filename = file.getPath().getFileName().toString();
-            return Response.ok( file.steal() )
+            return sendfile( file.getPath() )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();

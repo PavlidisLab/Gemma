@@ -20,6 +20,8 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -30,6 +32,10 @@ import java.util.List;
 public class Responders {
 
     private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Requested resource was not found in our database.";
+
+    public static Response.ResponseBuilder sendfile( Path file ) {
+        return Response.ok( Sendfile.of( file ) );
+    }
 
     /**
      * Produce a {@link ResponseDataObject} that wraps the given argument.

@@ -79,13 +79,20 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         return new MapAssert<>( actual.getStringHeaders() );
     }
 
-
     /**
      * Asserts that the response has the given header.
+     */
+    public ResponseAssert hasHeader( String name ) {
+        maps.assertContainsKey( info, actual.getStringHeaders(), name );
+        return myself;
+    }
+
+    /**
+     * Asserts that the response has the given header with a particular value.
      * <p>
      * If the header is multivalued, asserts that at least one value is satisfied.
      */
-    public ResponseAssert hasHeader( String name, String value ) {
+    public ResponseAssert hasHeaderWithValue( String name, String value ) {
         maps.assertHasEntrySatisfying( info, actual.getStringHeaders(), name,
                 new Condition<>( l -> l.contains( value ), "associated to %s", name ) );
         return myself;
@@ -96,7 +103,20 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         return myself;
     }
 
-    public ResponseAssert doesNotHaveHeader( String name, String value ) {
+    /**
+     * Asserts that the response does not have the given header.
+     */
+    public ResponseAssert doesNotHaveHeader( String name ) {
+        maps.assertDoesNotContainKey( info, actual.getStringHeaders(), name );
+        return myself;
+    }
+
+    /**
+     * Asserts that the response does not have the given header with a particular value.
+     * <p>
+     * If the header is multivalued, asserts that no value is satisfied.
+     */
+    public ResponseAssert doesNotHaveHeaderWithValue( String name, String value ) {
         Map.Entry<String, String> entry = org.assertj.core.util.Maps.newHashMap( name, value ).entrySet().iterator().next();
         //noinspection unchecked
         maps.assertDoesNotContain( info, actual.getStringHeaders(), new Map.Entry[] { entry } );
@@ -104,14 +124,29 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
     }
 
     /**
+     * Asserts that the response has a 'Content-Length' header.
+     */
+    public ResponseAssert hasLength() {
+        return hasHeader( "Content-Length" );
+    }
+
+    /**
+     * Asserts that the response has a 'Content-Length' header with the given length.
+     */
+    public ResponseAssert hasLength( int length ) {
+        objects.assertEqual( info, actual.getLength(), length );
+        return myself;
+    }
+
+    /**
      * Asserts that the response has the given 'Content-Encoding' header.
      */
     public ResponseAssert hasEncoding( String encoding ) {
-        return hasHeader( "Content-Encoding", encoding );
+        return hasHeaderWithValue( "Content-Encoding", encoding );
     }
 
     public ResponseAssert doesNotHaveEncoding( String encoding ) {
-        return doesNotHaveHeader( "Content-Encoding", encoding );
+        return doesNotHaveHeaderWithValue( "Content-Encoding", encoding );
     }
 
     public ResponseAssert hasLanguage( Locale locale ) {
@@ -141,10 +176,5 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
 
     public InputStreamAssert entityAsStream() {
         return new InputStreamAssert( actual.readEntity( InputStream.class ) );
-    }
-
-    public ResponseAssert hasLength( int length ) {
-        objects.assertEqual( info, actual.getLength(), length );
-        return myself;
     }
 }

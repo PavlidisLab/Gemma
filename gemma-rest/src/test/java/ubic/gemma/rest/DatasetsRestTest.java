@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -17,9 +16,9 @@ import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ubic.gemma.rest.util.Assertions.assertThat;
 
 /**
  * @author tesarst
@@ -254,14 +254,34 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
-        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null, false, false );
-        // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-        assertThat( ( ( LockedPath ) response.getEntity() ).getPath() )
-                .exists()
-                .satisfies( f -> {
-                    assertThat( new GZIPInputStream( Files.newInputStream( f ) ) )
+        assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( new MediaType( "text", "tab-separated-values" ) )
+                .hasHeaderSatisfying( "Content-Disposition", values -> {
+                    assertThat( values ).singleElement().asString().endsWith( "_expmat.unfilt.data.txt\"" );
+                } )
+                .hasLength()
+                .entityAsStream()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( ee.getShortName() )
+                // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
+                .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
+
+        // as a download, the Content-Encoding is not set and the .gz extension is kept, the payload also remains
+        // compressed
+        assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).queryParam( "download", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                .hasLength()
+                .hasHeaderSatisfying( "Content-Disposition", values -> {
+                    assertThat( values ).singleElement().asString().endsWith( "_expmat.unfilt.data.txt.gz\"" );
+                } )
+                .entityAsStream()
+                .satisfies( stream -> {
+                    assertThat( new GZIPInputStream( stream ) )
                             .asString( StandardCharsets.UTF_8 )
                             .contains( ee.getShortName() )
+                            // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
                             .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
                 } );
     }

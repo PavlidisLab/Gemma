@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -66,6 +67,7 @@ import java.util.List;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Called from JS
+@CommonsLog
 @Controller
 public class ExpressionExperimentDataFetchController {
 
@@ -207,13 +209,17 @@ public class ExpressionExperimentDataFetchController {
             downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
-        response.setContentLength( ( int ) Files.size( f ) );
+        response.setContentLengthLong( Files.size( f ) );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
         if ( enableTomcatSendfile ) {
-            downloadViaSendfile( f, request, response );
-        } else {
-            downloadViaStream( f, response );
+            if ( Boolean.TRUE.equals( request.getAttribute( "org.apache.tomcat.sendfile.support" ) ) ) {
+                downloadViaSendfile( f, request, response );
+                return;
+            } else {
+                log.warn( "Tomcat sendfile is not supported for this request. Falling back to stream download." );
+            }
         }
+        downloadViaStream( f, response );
     }
 
     /**
