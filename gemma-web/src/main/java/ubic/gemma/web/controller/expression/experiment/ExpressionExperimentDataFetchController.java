@@ -47,6 +47,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
@@ -82,14 +83,21 @@ public class ExpressionExperimentDataFetchController {
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
 
+    @Value("${tomcat.sendfile.enabled}")
+    private boolean enableTomcatSendfile;
+
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
      */
     @RequestMapping(value = "/getData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void downloadFile( @RequestParam("file") String filename, HttpServletResponse response ) throws IOException {
+    public void downloadFile( @RequestParam("file") String filename, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "The 'file' parameter must not be empty." );
+        }
+        // prevent lock files from being downloaded
+        if ( filename.endsWith( ".lock" ) ) {
+            throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
@@ -97,12 +105,12 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response );
         }
     }
 
     @RequestMapping(value = "/getMetaData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletResponse response ) throws IOException {
+    public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         ExpressionExperimentMetaFileType type = this.getType( typeId );
         if ( type == null ) {
@@ -115,7 +123,7 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), response );
+            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response );
         }
     }
 
@@ -194,13 +202,30 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletResponse response ) throws IOException {
+    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
             downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
         response.setContentLength( ( int ) Files.size( f ) );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
+        if ( enableTomcatSendfile ) {
+            downloadViaSendfile( f, request, response );
+        } else {
+            downloadViaStream( f, response );
+        }
+    }
+
+    /**
+     * Uses Tomcat sendfile to download the file.
+     */
+    private void downloadViaSendfile( Path f, HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        request.setAttribute( "org.apache.tomcat.sendfile.filename", f.toString() );
+        request.setAttribute( "org.apache.tomcat.sendfile.start", 0L );
+        request.setAttribute( "org.apache.tomcat.sendfile.end", Files.size( f ) );
+    }
+
+    private void downloadViaStream( Path f, HttpServletResponse response ) throws IOException {
         try ( InputStream in = Files.newInputStream( f ) ) {
             FileCopyUtils.copy( in, response.getOutputStream() );
             response.flushBuffer();
