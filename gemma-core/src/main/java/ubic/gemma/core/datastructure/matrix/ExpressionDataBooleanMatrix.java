@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import cern.colt.matrix.ObjectMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -68,13 +67,10 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
-    public Boolean[] getColumn( int index ) {
-        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
-        Boolean[] res = new Boolean[rawResult.size()];
-        int i = 0;
-        for ( Object o : rawResult.toArray() ) {
-            res[i] = ( Boolean ) o;
-            i++;
+    public Boolean[] getColumn( int column ) {
+        Boolean[] res = new Boolean[matrix.rows()];
+        for ( int i = 0; i < res.length; i++ ) {
+            res[i] = this.matrix.get( i, column );
         }
         return res;
     }
@@ -82,22 +78,19 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     @Override
     public Boolean[][] getRawMatrix() {
         Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            Object[] rawRow = matrix.getRow( i );
-            for ( int j = 0; j < rawRow.length; j++ ) {
-                dMatrix[i][j] = ( Boolean ) rawRow[i];
+        for ( int i = 0; i < dMatrix.length; i++ ) {
+            for ( int j = 0; j < dMatrix[i].length; j++ ) {
+                dMatrix[i][j] = matrix.get( i, j );
             }
         }
-
         return dMatrix;
     }
 
     @Override
     public Boolean[] getRow( int index ) {
-        Object[] rawRow = matrix.getRow( index );
-        Boolean[] row = new Boolean[matrix.rows()];
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            row[i] = ( Boolean ) rawRow[i];
+        Boolean[] row = new Boolean[matrix.columns()];
+        for ( int j = 0; j < row.length; j++ ) {
+            row[j] = this.matrix.get( index, j );
         }
         return row;
     }
