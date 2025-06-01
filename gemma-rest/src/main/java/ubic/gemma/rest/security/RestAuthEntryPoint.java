@@ -17,10 +17,8 @@ package ubic.gemma.rest.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -66,8 +64,15 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
             realm = "Gemma RESTful API";
             version = null;
         }
-        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED.getStatusCode(), MESSAGE_401 );
-        ResponseErrorObject errorObject = new ResponseErrorObject( version, new BuildInfoValueObject( buildInfo ), errorBody );
+        WellComposedErrorBody errorBody = WellComposedErrorBody.builder()
+                .code( Response.Status.UNAUTHORIZED.getStatusCode() )
+                .message( MESSAGE_401 )
+                .build();
+        ResponseErrorObject errorObject = ResponseErrorObject.builder()
+                .apiVersion( version )
+                .buildInfo( BuildInfoValueObject.from( buildInfo ) )
+                .error( errorBody )
+                .build();
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );

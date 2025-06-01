@@ -15,30 +15,27 @@
 package ubic.gemma.rest.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
 import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Object acting as a payload for the ResponseErrorObject.
  * @author tesarst
  */
 @Value
+@Builder
+@Jacksonized
 public class WellComposedErrorBody {
 
     int code;
 
     String message;
 
+    @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     List<WellComposedError> errors = new ArrayList<>();
-
-    /**
-     * Adds descriptive values from the throwable object to the instance of WellComposedErrorBody.
-     * @param t the throwable to read the description from.
-     */
-    public void addError( Throwable t, @Nullable String location, @Nullable LocationType locationType ) {
-        this.errors.add( new WellComposedError( t.getClass().getName(), t.getMessage(), location, locationType ) );
-    }
 }

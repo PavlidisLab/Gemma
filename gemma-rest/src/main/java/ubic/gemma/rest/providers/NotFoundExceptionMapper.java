@@ -7,11 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.ResponseErrorObject;
+import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This mapper ensures that raised {@link NotFoundException} throughout the API contain well-formed {@link ResponseErrorObject}
@@ -38,10 +41,21 @@ public class NotFoundExceptionMapper extends AbstractExceptionMapper<NotFoundExc
 
     @Override
     protected WellComposedErrorBody getWellComposedErrorBody( NotFoundException exception ) {
-        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND.getStatusCode(), exception.getMessage() );
-        if ( exception.getCause() != null ) {
-            errorBody.addError( ExceptionUtils.getRootCause( exception ), null, null );
-        }
-        return errorBody;
+        return WellComposedErrorBody.builder()
+                .code( Response.Status.NOT_FOUND.getStatusCode() )
+                .message( exception.getMessage() )
+                .errors( getErrors( exception ) )
+                .build();
     }
+
+    private List<WellComposedError> getErrors( NotFoundException exception ) {
+        if ( exception.getCause() != null ) {
+            // TODO: report the exact request parameter that caused this
+            Throwable t = ExceptionUtils.getRootCause( exception );
+            return Collections.singletonList( WellComposedError.builder().reason( t.getClass().getName() ).message( t.getMessage() ).location( null ).locationType( null ).build() );
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
 }

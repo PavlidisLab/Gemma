@@ -45,7 +45,7 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
      */
     protected WellComposedErrorBody getWellComposedErrorBody( E exception ) {
         // for security reasons, we don't include the error object in the response entity
-        return new WellComposedErrorBody( getStatus( exception ).getStatusCode(), exception.getMessage() );
+        return WellComposedErrorBody.builder().code( getStatus( exception ).getStatusCode() ).message( exception.getMessage() ).build();
     }
 
     protected Response.ResponseBuilder getResponseBuilder( ContainerRequest request, E exception ) {
@@ -81,7 +81,7 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         if ( request == null || acceptsJson( request ) ) {
             return responseBuilder
                     .type( MediaType.APPLICATION_JSON_TYPE )
-                    .entity( new ResponseErrorObject( version, new BuildInfoValueObject( buildInfo ), body ) )
+                    .entity( ResponseErrorObject.builder().apiVersion( version ).buildInfo( BuildInfoValueObject.from( buildInfo ) ).error( body ).build() )
                     .build();
         } else {
             StringBuilder builder = new StringBuilder();
@@ -90,15 +90,13 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
             builder.append( "Version: " ).append( version != null ? version : "?" ).append( '\n' );
             builder.append( "Build info: " ).append( buildInfo ).append( '\n' );
             builder.append( "Message: " ).append( body.getMessage() );
-            if ( body.getErrors() != null ) {
-                List<WellComposedError> errors = body.getErrors();
-                for ( int i = 0; i < errors.size(); i++ ) {
-                    WellComposedError e = errors.get( i );
-                    builder.append( '\n' ).append( '\n' )
-                            .append( "Error #" ).append( i + 1 ).append( '\n' )
-                            .append( "Reason: " ).append( e.getReason() ).append( '\n' )
-                            .append( "Message: " ).append( e.getMessage() );
-                }
+            List<WellComposedError> errors = body.getErrors();
+            for ( int i = 0; i < errors.size(); i++ ) {
+                WellComposedError e = errors.get( i );
+                builder.append( '\n' ).append( '\n' )
+                        .append( "Error #" ).append( i + 1 ).append( '\n' )
+                        .append( "Reason: " ).append( e.getReason() ).append( '\n' )
+                        .append( "Message: " ).append( e.getMessage() );
             }
             return responseBuilder
                     .type( MediaType.TEXT_PLAIN_TYPE )

@@ -12,8 +12,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
-import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.MediaType;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 /**
@@ -229,26 +228,21 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testAllWithTooLargeLimit() {
-        assertThatThrownBy( () -> {
-            datasetsWebService.getDatasets(
-                    null,
-                    FilterArg.valueOf( "" ),
-                    OffsetArg.valueOf( "0" ),
-                    LimitArg.valueOf( "101" ),
-                    SortArg.valueOf( "+id" )
-            );
-        } ).isInstanceOf( MalformedArgException.class );
+        assertThat( target( "/datasets" ).queryParam( "limit", "101" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .entityAs( ResponseErrorObject.class )
+                .extracting( ResponseErrorObject::getError )
+                .satisfies( err -> {
+                    assertThat( err.getCode() ).isEqualTo( 400 );
+                    assertThat( err.getMessage() ).isEqualTo( "The provided limit cannot exceed 100." );
+                } );
     }
 
     @Test
     public void testFilterByGeeqQualityScore() {
-        datasetsWebService.getDatasets(
-                null,
-                FilterArg.valueOf( "geeq.publicQualityScore <= 1.0" ),
-                OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" )
-        );
+        assertThat( target( "/datasets" ).queryParam( "filter", "geeq.publicQualityScore <= 1.0" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
     @Test
