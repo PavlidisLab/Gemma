@@ -41,7 +41,7 @@ public class StaticAssetResolver implements InitializingBean {
             Assert.isTrue( allowedDir.startsWith( "/" ) && allowedDir.endsWith( "/" ),
                     "An allowed resource directory must start and end with '/'." );
         }
-        log.info( String.format( "Static assets will be served from %s for the following paths:\n\t%s",
+        log.info( String.format( "Static assets will be served from '%s' for the following paths:\n\t%s",
                 staticAssetServer.getBaseUrl(), String.join( "\n\t", allowedDirs ) ) );
         if ( !staticAssetServer.isAlive() ) {
             String message = "The static asset server does not appear to be running.";
@@ -53,13 +53,6 @@ public class StaticAssetResolver implements InitializingBean {
             }
             log.warn( message );
         }
-    }
-
-    /**
-     * Return the static asset server, if any.
-     */
-    public StaticAssetServer getStaticAssetServer() {
-        return staticAssetServer;
     }
 
     /**
