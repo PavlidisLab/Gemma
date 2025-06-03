@@ -48,8 +48,14 @@
                             <!-- only include test classes that are meant to be re-used -->
                             <includes>
                                 <include>org/springframework/security/test/**/*.class</include>
-                                <include>ubic/gemma/core/util/test/**/*.class</include>
                                 <include>ubic/gemma/core/ontology/TestOntologyConfig.class</include>
+                                <include>ubic/gemma/core/util/test/**/*.class</include>
+                                <!-- FIXME: this is not a scalable approach, we should have a separate test module -->
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/NegativeBinomialDistribution.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomBulkDataUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomDataUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomExpressionDataMatrixUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomSingleCellDataUtils.class</include>
                                 <include>ubic/gemma/applicationContext-dataSourceInitializer.xml</include>
                                 <include>log4j2-test.xml</include>
                             </includes>
