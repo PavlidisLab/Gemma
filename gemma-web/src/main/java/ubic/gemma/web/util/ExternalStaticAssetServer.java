@@ -6,6 +6,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
+/**
+ * An external static asset server that provide assets from a specified base URL.
+ * @author poirigui
+ */
 public class ExternalStaticAssetServer implements StaticAssetServer {
 
     private final String baseUrl;

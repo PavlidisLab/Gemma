@@ -14,6 +14,10 @@ import java.nio.file.Path;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
+/**
+ * An internal static asset server that uses npm to serve static assets.
+ * @author poirigui
+ */
 @CommonsLog
 public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecycle {
 
