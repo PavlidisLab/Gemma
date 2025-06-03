@@ -49,6 +49,7 @@
                             <includes>
                                 <include>org/springframework/security/test/**/*.class</include>
                                 <include>ubic/gemma/core/util/test/**/*.class</include>
+                                <include>ubic/gemma/core/ontology/TestOntologyConfig.class</include>
                             </includes>
                         </configuration>
                     </execution>
