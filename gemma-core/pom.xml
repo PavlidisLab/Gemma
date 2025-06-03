@@ -50,6 +50,8 @@
                                 <include>org/springframework/security/test/**/*.class</include>
                                 <include>ubic/gemma/core/util/test/**/*.class</include>
                                 <include>ubic/gemma/core/ontology/TestOntologyConfig.class</include>
+                                <include>ubic/gemma/applicationContext-dataSourceInitializer.xml</include>
+                                <include>log4j2-test.xml</include>
                             </includes>
                         </configuration>
                     </execution>
