@@ -115,10 +115,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         perform( get( "/bibRefView.html" ).param( "id", String.valueOf( br.getId() ) ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "bibRefView" ) )
-                .andExpect( model().attribute( "bibliographicReferenceId", br.getId() ) )
-                .andExpect( model().attribute( "existsInSystem", Boolean.TRUE ) )
-                .andExpect( model().attribute( "byAccession", Boolean.FALSE ) )
-                .andExpect( model().attributeDoesNotExist( "accession" ) );
+                .andExpect( model().attribute( "bibliographicReference", br ) );
     }
 
     @Test
@@ -126,10 +123,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         perform( get( "/bibRefView.html" ).param( "accession", br.getPubAccession().getAccession() ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "bibRefView" ) )
-                .andExpect( model().attribute( "bibliographicReferenceId", br.getId() ) )
-                .andExpect( model().attribute( "existsInSystem", Boolean.TRUE ) )
-                .andExpect( model().attribute( "byAccession", Boolean.TRUE ) )
-                .andExpect( model().attribute( "accession", br.getPubAccession().getAccession() ) );
+                .andExpect( model().attribute( "bibliographicReference", br ) );
     }
 
     @Test
@@ -137,10 +131,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         perform( get( "/bibRefView.html" ).param( "accession", "1294000" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "bibRefView" ) )
-                .andExpect( model().attribute( "bibliographicReferenceId", nullValue() ) )
-                .andExpect( model().attribute( "existsInSystem", Boolean.FALSE ) )
-                .andExpect( model().attribute( "byAccession", Boolean.TRUE ) )
-                .andExpect( model().attribute( "accession", "1294000" ) );
+                .andExpect( model().attribute( "bibliographicReferenceId", nullValue() ) );
     }
 
     @Test

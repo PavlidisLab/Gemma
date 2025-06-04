@@ -22,6 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,6 +59,8 @@ import java.util.Map.Entry;
  * @author keshav
  */
 @Controller
+// FIXME: this is necessary in tests because of the InitializingBean interface
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class BibliographicReferenceController extends BaseController implements InitializingBean {
 
     private static final String messagePrefix = "Reference with PubMed Id";
@@ -120,7 +124,7 @@ public class BibliographicReferenceController extends BaseController implements 
             // attempt to fetch it from PubMed
             try {
                 bibRef = this.pubMedXmlFetcher.retrieve( accession );
-                return new ModelAndView( "bibRefAdd" )
+                return new ModelAndView( "bibRefView" )
                         .addObject( "bibliographicReference", bibRef );
             } catch ( NumberFormatException e ) {
                 // ignore, this will be treated as an EntityNotFoundException
