@@ -144,9 +144,15 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
-    public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
-        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
+    @Transactional(readOnly = true)
+    public long countExperimentLinkedReferences() {
+        return this.bibliographicReferenceDao.countExperimentLinkedReferences();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit ) {
+        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences( offset, limit );
     }
 
     @Override
