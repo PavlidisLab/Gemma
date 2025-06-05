@@ -303,8 +303,8 @@ Gemma.SecurityManager.managePermissions = function( elid, clazz, id, securityFor
 
       var securityPanel = new Ext.Window( {
          title : "Security for: "
-            + (securityFormTitle === null ? Ext.util.Format.ellipsis( securityInfo.entityName, 70, true )
-               : securityFormTitle),
+            + (securityFormTitle ? securityFormTitle
+               : Ext.util.Format.ellipsis( securityInfo.entityName, 70, true )),
          minimizable : false,
          maximizable : false,
          width : widgetWidth + 30, // needed for chrome
