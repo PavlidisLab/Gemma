@@ -194,6 +194,6 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
-        return filter.getFilteredMatrix( dataVectors );
+        return filter.transformAndFilter( dataVectors );
     }
 }

@@ -21,11 +21,9 @@ package ubic.gemma.core.analysis.preprocess.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.math.Constants;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -42,7 +40,7 @@ import java.util.Map;
  *
  * @author Paul
  */
-public class ExpressionExperimentFilter {
+public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
      * Minimum number of samples for keeping rows when min-present filtering. Rows with more missing values
@@ -65,85 +63,6 @@ public class ExpressionExperimentFilter {
         this.config = config;
     }
 
-    @SuppressWarnings("unused") // Possible external use
-    public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
-        return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
-    }
-
-    /**
-     * Remove rows that have a low variance, below the stated quantile
-     *
-     * @param quantile e.g. 10 to remove 10% lowest variance rows.
-     * @param matrix   the data matrix
-     * @return filtered matrix
-     */
-    @SuppressWarnings("unused") // Possible external use
-    public static ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix, int quantile ) {
-        if ( quantile <= 0 || quantile >= 100 ) {
-            throw new IllegalArgumentException( "quantile must be between 1 and 100" );
-        }
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( quantile / 100.0 );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( true );
-        return rowLevelFilter.filter( matrix );
-    }
-
-    /**
-     * Remove rows that have a low diversity of values (equality judged based on tolerancee set in RowLevelFilter). This
-     * happens when people "set values less than 10 equal to 10" for example. This effectively filters rows that have
-     * too many missing values, because missing values are counted as a single value.
-     *
-     * The tolerance is set to a default value of Constants.SMALLISH.
-     *
-     * @param threshold fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at
-     *                  least 5 distinct values.
-     * @param matrix    the data matrix
-     * @return updated matrix
-     */
-    public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,
-            double threshold ) {
-        return tooFewDistinctValues( matrix, threshold, Constants.SMALLISH );
-    }
-
-    /**
-     * @param matrix     the data matrix
-     * @param threshold  fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at 5 distinct values.
-     * @param tolerance differences smaller than this are counted as "the same value".
-     */
-    public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,
-            double threshold, double tolerance ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.DISTINCTVALUES );
-        rowLevelFilter.setTolerance( tolerance );
-        rowLevelFilter.setRemoveAllNegative( false );
-
-        /*
-         * 0.5 means: 1/2 of the values must be distinct. Close to zero means none of the values are distinct. 1.0 means
-         * they are all distinct.
-         */
-        rowLevelFilter.setLowCut( threshold );
-        rowLevelFilter.setUseAsFraction( false );
-        return rowLevelFilter.filter( matrix );
-    }
-
-
-    /**
-     * Remove rows that have a variance of zero (within a small constant)
-     *
-     * @param matrix the data matrix
-     * @return filtered matrix
-     */
-    public static ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( Constants.SMALLISH );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( false );
-        return rowLevelFilter.filter( matrix );
-    }
-
     /**
      * Provides a ready-to-use expression data matrix that is transformed and filtered. The processes that are applied,
      * in this order:
@@ -161,21 +80,54 @@ public class ExpressionExperimentFilter {
      * @return filtered matrix
      * @throws NoRowsLeftAfterFilteringException if filtering results in no row left in the expression matrix
      */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
+    public ExpressionDataDoubleMatrix transformAndFilter( Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
         this.transform( eeDoubleMatrix );
         return this.filter( eeDoubleMatrix );
     }
 
     /**
-     * Remove probes that are on the array as hybridization or RNA quality controls (AFFX*)
-     *
-     * @param matrix the matrix
+     * @param eeDoubleMatrix , already masked for missing values.
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
-        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
-        return affyProbeNameFilter.filter( matrix );
+    @Override
+    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException, InsufficientSamplesException, InsufficientProbesException {
+        if ( eeDoubleMatrix.rows() == 0 )
+            throw new IllegalArgumentException( "No data found!" );
+
+        if ( !config.isIgnoreMinimumSampleThreshold() ) {
+            if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+                throw new InsufficientSamplesException(
+                        String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", FilterConfig.MINIMUM_SAMPLE ) );
+            } else if ( !config.isIgnoreMinimumRowsThreshold()
+                    && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+                        String.format( "To few rows in (%d) prior to filtering, data sets are not analyzed unless they have at least %d to be eligible for analysis.",
+                                eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
+            }
+        }
+
+        eeDoubleMatrix = this.doFilter( eeDoubleMatrix );
+
+        if ( eeDoubleMatrix == null )
+            throw new IllegalStateException( "Failed to get filtered data matrix, it was null" );
+
+        if ( eeDoubleMatrix.rows() == 0 ) {
+            ExpressionExperimentFilter.log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering." );
+        } else if ( !config.isIgnoreMinimumRowsThreshold()
+                && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+                    String.format( "To few rows (%d) after filtering, data sets are not analyzed unless they have at least %d rows.",
+                            eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
+        } else if ( !config.isIgnoreMinimumSampleThreshold()
+                && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+            throw new InsufficientSamplesException(
+                    String.format( "Not enough samples, must have at least %d to be eligible for link analysis.",
+                            FilterConfig.MINIMUM_SAMPLE ) );
+        }
+
+        return eeDoubleMatrix;
     }
 
     /**
@@ -236,7 +188,7 @@ public class ExpressionExperimentFilter {
          * Always remove rows that have a variance of zero.
          */
         ExpressionExperimentFilter.log.debug( "Filtering rows with zero variance" );
-        filteredMatrix = ExpressionExperimentFilter.zeroVarianceFilter( filteredMatrix );
+        filteredMatrix = new ZeroVarianceFilter().filter( filteredMatrix );
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
@@ -305,46 +257,13 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * @param eeDoubleMatrix , already masked for missing values.
+     * Remove probes that are on the array as hybridization or RNA quality controls (AFFX*)
+     *
+     * @param matrix the matrix
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException, InsufficientSamplesException, InsufficientProbesException {
-        if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
-            throw new IllegalArgumentException( "No data found!" );
-
-        if ( !config.isIgnoreMinimumSampleThreshold() ) {
-            if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-                throw new InsufficientSamplesException( eeDoubleMatrix.getExpressionExperiment(),
-                        String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", FilterConfig.MINIMUM_SAMPLE ) );
-            } else if ( !config.isIgnoreMinimumRowsThreshold()
-                    && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
-                        String.format( "To few rows in (%d) prior to filtering, data sets are not analyzed unless they have at least %d to be eligible for analysis.",
-                                eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
-            }
-        }
-
-        eeDoubleMatrix = this.doFilter( eeDoubleMatrix );
-
-        if ( eeDoubleMatrix == null )
-            throw new IllegalStateException( "Failed to get filtered data matrix, it was null" );
-
-        if ( eeDoubleMatrix.rows() == 0 ) {
-            ExpressionExperimentFilter.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering." );
-        } else if ( !config.isIgnoreMinimumRowsThreshold()
-                && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
-                    String.format( "To few rows (%d) after filtering, data sets are not analyzed unless they have at least %d rows.",
-                            eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
-        } else if ( !config.isIgnoreMinimumSampleThreshold()
-                && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-            throw new InsufficientSamplesException( eeDoubleMatrix.getExpressionExperiment(),
-                    String.format( "Not enough samples, must have at least %d to be eligible for link analysis.",
-                            FilterConfig.MINIMUM_SAMPLE ) );
-        }
-
-        return eeDoubleMatrix;
+    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
+        return new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } ).filter( matrix );
     }
 
     /**
@@ -425,12 +344,7 @@ public class ExpressionExperimentFilter {
     }
 
     private ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( true );
-        return rowLevelFilter.filter( matrix );
+        return new LowVarianceFilter( config.getLowVarianceCut() ).filter( matrix );
     }
 
     /**
@@ -457,8 +371,7 @@ public class ExpressionExperimentFilter {
      * Filter rows that lack BioSequences associated with the probes.
      */
     private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-        RowsWithSequencesFilter f = new RowsWithSequencesFilter();
-        return f.filter( eeDoubleMatrix );
+        return new RowsWithSequencesFilter().filter( eeDoubleMatrix );
     }
 
     /**

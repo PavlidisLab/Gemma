@@ -18,8 +18,6 @@
  */
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * @author Paul
  */
@@ -27,8 +25,8 @@ public class InsufficientSamplesException extends InsufficientDataException {
 
     private static final long serialVersionUID = 1L;
 
-    public InsufficientSamplesException( ExpressionExperiment ee, String message ) {
-        super( ee, message );
+    public InsufficientSamplesException( String message ) {
+        super( message );
     }
 
 }
