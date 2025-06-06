@@ -16,6 +16,10 @@
     <h2>${fn:escapeXml(bioAssay.name)}</h2>
     <table>
         <tr>
+            <td class="label">Short Name:</td>
+            <td>${bioAssay.shortName}</td>
+        </tr>
+        <tr>
             <td class="label"><fmt:message key="databaseEntry.title" />:</td>
             <td>
                 <c:choose>
