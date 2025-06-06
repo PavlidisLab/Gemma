@@ -597,7 +597,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
         this.vispcaWindow = new Gemma.VisualizationWithThumbsWindow({
             thumbnails: false,
             readMethod: DEDVController.getDEDVForPcaVisualization,
-            title: "Top loaded probes for PC" + component,
+            title: "Top loaded elements for PC" + component,
             showLegend: false,
             downloadLink: String.format(Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1", eeid,
                 component, count)
