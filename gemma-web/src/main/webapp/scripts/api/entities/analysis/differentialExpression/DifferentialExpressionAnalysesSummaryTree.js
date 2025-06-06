@@ -24,7 +24,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             lines: false,
             containerScroll: false,
             // panel
-            autoScroll: true,
+            autoScroll: false,
             border: false,
             layout: 'fit',
             root: {
@@ -156,8 +156,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                             subsetText += this.getBaseline(resultSet);
                             subsetText += this.getActionLinks(resultSet, analysisName[0], this.ee.id,  primaryFactorID, nodeId);
                         } else {
-                            nodeText += this.getBaseline(resultSet);
-                            nodeText += this.getActionLinks(resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId);
+                            nodeText += "<span style='white-space:normal;'>" + this.getBaseline(resultSet) + "</span>"
+                            nodeText += "<span>" + this.getActionLinks(resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId) +"</span>" ;
                         }
 
                         parentText = '<b>'
