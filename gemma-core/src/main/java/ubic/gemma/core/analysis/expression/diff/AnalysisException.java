@@ -16,7 +16,7 @@ public class AnalysisException extends RuntimeException {
         this.config = config;
     }
 
-    public AnalysisException( Throwable cause, DifferentialExpressionAnalysisConfig config ) {
+    public AnalysisException( DifferentialExpressionAnalysisConfig config, Throwable cause ) {
         super( cause );
         this.config = config;
     }
