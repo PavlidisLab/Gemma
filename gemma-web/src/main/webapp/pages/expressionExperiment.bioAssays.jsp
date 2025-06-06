@@ -80,7 +80,7 @@
                         numPossibleOutliers="${numPossibleOutliers}"
                         class="mb-3" />
             </div>
-            <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(expressionExperiment, 'WRITE')">
+            <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(#expressionExperiment, 'WRITE')">
                 <div id="bioAssayTable" class="v-padded mb-3"></div>
                 <input id="eeId" type="hidden" value="${expressionExperiment.id}" />
                 <script type="text/javascript">
