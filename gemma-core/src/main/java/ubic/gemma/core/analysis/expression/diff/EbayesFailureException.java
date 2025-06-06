@@ -7,6 +7,6 @@ package ubic.gemma.core.analysis.expression.diff;
 public class EbayesFailureException extends AnalysisException {
 
     public EbayesFailureException( Throwable cause, DifferentialExpressionAnalysisConfig config ) {
-        super( cause, config );
+        super( config, cause );
     }
 }
