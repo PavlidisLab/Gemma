@@ -15,6 +15,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,10 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
+import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.*;
 
@@ -51,28 +53,54 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
-        //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
-                .setParameter( "id", id ).setParameter( "databaseName", databaseName ).uniqueResult();
+                        "from BibliographicReference b "
+                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                .setParameter( "id", id )
+                .setParameter( "databaseName", databaseName )
+                .uniqueResult();
     }
 
     @Override
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
-        //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference b where b.pubAccession=:externalId" )
                 .setParameter( "externalId", externalId ).uniqueResult();
     }
 
     @Override
-    public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
-        final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession ";
-        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<>();
+    public long countExperimentLinkedReferences() {
+        Query q = this.getSessionFactory().getCurrentSession()
+                // FIXME: include the authorList in the distinct count
+                .createQuery( "select count(distinct b.title) from ExpressionExperiment e join e.primaryPublication b "
+                        + AclQueryUtils.formAclRestrictionClause( "e.id" )
+                        + " and b.authorList is not null and b.authorList <> '' and b.title is not null and b.title <> '' " );
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        return ( Long ) q.uniqueResult();
+    }
+
+    @Override
+    public Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit ) {
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select b, e.id, e.shortName from ExpressionExperiment e join e.primaryPublication b "
+                        + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
+                        + " and b.authorList is not null and b.authorList <> '' and b.title is not null and b.title <> '' "
+                        + "group by b.authorList, b.title, e "
+                        + "order by b.authorList, b.title" );
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
-        List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query ).list();
+        List<Object[]> os = q
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .setCacheable( true )
+                .list();
+        Map<BibliographicReference, Set<ExpressionExperiment>> result = new HashMap<>();
         for ( Object[] o : os ) {
-            result.put( ( ExpressionExperiment ) o[0], ( BibliographicReference ) o[1] );
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setId( ( Long ) o[1] );
+            ee.setShortName( ( String ) o[2] );
+            result.computeIfAbsent( ( BibliographicReference ) o[0], k -> new HashSet<>() )
+                    .add( ee );
         }
         return result;
     }

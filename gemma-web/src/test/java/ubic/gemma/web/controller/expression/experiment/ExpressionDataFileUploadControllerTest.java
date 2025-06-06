@@ -2,6 +2,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.job.SubmittedTask;
@@ -22,10 +23,12 @@ public class ExpressionDataFileUploadControllerTest extends BaseWebIntegrationTe
     private TaskRunningService taskRunningService;
 
     @Test
+    @Ignore("This test is broken as DWR does not pass on the payload to the controller method.")
     public void testValidate() throws Exception {
         JSONObject command = new JSONObject();
         command.put( "shortName", "foo" );
         command.put( "name", "foo" );
+        command.put( "quantitationTypeName", "foo" );
         perform( dwr( ExpressionDataFileUploadController.class, "validate", command ) )
                 .andExpect( callback().exist() )
                 .andDo( getCallback( ( taskId ) -> {

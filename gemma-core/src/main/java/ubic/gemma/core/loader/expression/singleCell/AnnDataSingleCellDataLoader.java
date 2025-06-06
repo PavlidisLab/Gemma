@@ -356,23 +356,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, null ) );
             }
+            assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
                 throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
                         unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
             }
-            assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
+            // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
+            // this column is indexed, so it's very fast to use indexOf
+            Dataframe.Column<String, String> cellIds = var.getIndex( String.class );
+            int[] cellPositions = new int[dimension.getNumberOfCells()];
+            for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
+                cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
+            }
             int[] codes = cellTypes.getCodes();
-            if ( unknownCellTypeCode != -1 ) {
-                // rewrite unknown codes, make a copy to ensure we don't modify the AnnData object
-                codes = Arrays.copyOf( codes, codes.length );
-                for ( int i = 0; i < codes.length; i++ ) {
-                    if ( codes[i] == unknownCellTypeCode ) {
-                        codes[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
-                    }
+            // rewrite the original codes to match the cell positions in the dimension
+            int[] cellTypeIndices = new int[dimension.getNumberOfCells()];
+            for ( int i = 0; i < cellTypeIndices.length; i++ ) {
+                if ( codes[cellPositions[i]] == unknownCellTypeCode ) {
+                    cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+                } else {
+                    cellTypeIndices[i] = codes[cellPositions[i]];
                 }
             }
-            assignment.setCellTypeIndices( codes );
-            assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( codes ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
+            assignment.setCellTypeIndices( cellTypeIndices );
+            assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( cellTypeIndices ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
             return Collections.singleton( assignment );
         }
     }
@@ -436,11 +443,18 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     log.warn( "The " + factorName + " column has too too many values (" + values.length + ") for importing into a cell-level characteristic, ignoring." );
                     continue;
                 }
-                int[] indices = new int[values.length];
+                // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
+                // this column is indexed, so it's very fast to use indexOf
+                Dataframe.Column<String, String> cellIds = vars.getIndex( String.class );
+                int[] cellPositions = new int[dimension.getNumberOfCells()];
+                for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
+                    cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
+                }
+                int[] indices = new int[dimension.getNumberOfCells()];
                 Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
-                for ( int i = 0; i < values.length; i++ ) {
-                    String val = values[i];
+                for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+                    String val = values[cellPositions[i]];
                     if ( val != null ) {
                         int j;
                         if ( valToIndex.containsKey( val ) ) {

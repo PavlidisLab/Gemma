@@ -79,25 +79,34 @@ public class BibliographicReferenceController extends BaseController implements 
     }
 
     @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showAllForExperiments() {
-        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
-                .getAllExperimentLinkedReferences();
+    public ModelAndView showAllForExperiments( @RequestParam(value = "offset", defaultValue = "0") int offset, @RequestParam(value = "limit", defaultValue = "100") int limit ) {
+        Assert.isTrue( offset >= 0, "Offset must be postiive." );
+        Assert.isTrue( limit > 0 && limit <= 100, "Limit must be between 1 and 100." );
+        Map<BibliographicReference, Set<ExpressionExperiment>> eeToBibRefs = bibliographicReferenceService
+                .getAllExperimentLinkedReferences( offset, limit );
+        long count = bibliographicReferenceService.countExperimentLinkedReferences();
 
         // map sorted in natural order of the keys
         SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<>();
-        for ( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet() ) {
-            if ( entry.getValue().getTitle() == null || entry.getValue().getTitle().isEmpty()
-                    || entry.getValue().getAuthorList() == null || entry.getValue().getAuthorList().isEmpty() ) {
-                continue;
+        for ( Entry<BibliographicReference, Set<ExpressionExperiment>> entry : eeToBibRefs.entrySet() ) {
+            CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getKey() );
+            for ( ExpressionExperiment ee : entry.getValue() ) {
+                citationToEEs.computeIfAbsent( cvo, k -> new ArrayList<>() )
+                        .add( new ExpressionExperimentValueObject( ee, true, true ) );
             }
-            CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
-            if ( !citationToEEs.containsKey( cvo ) ) {
-                citationToEEs.put( cvo, new ArrayList<>() );
-            }
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true, true ) );
         }
 
+        Integer firstPageOffset = 0;
+        Integer previousPageOffset = offset > 0 ? Math.max( offset - limit, 0 ) : null;
+        Integer nextPageOffset = offset + limit < count ? offset + limit : null;
+        Integer lastPageOffset = ( int ) ( count - ( count % limit ) );
+
         return new ModelAndView( "bibRefAllExperiments" )
+                .addObject( "firstPageOffset", firstPageOffset )
+                .addObject( "previousPageOffset", previousPageOffset )
+                .addObject( "nextPageOffset", nextPageOffset )
+                .addObject( "lastPageOffset", lastPageOffset )
+                .addObject( "totalCitations", count )
                 .addObject( "citationToEEs", citationToEEs );
     }
 
@@ -120,7 +129,7 @@ public class BibliographicReferenceController extends BaseController implements 
             // attempt to fetch it from PubMed
             try {
                 bibRef = this.pubMedXmlFetcher.retrieve( accession );
-                return new ModelAndView( "bibRefAdd" )
+                return new ModelAndView( "bibRefView" )
                         .addObject( "bibliographicReference", bibRef );
             } catch ( NumberFormatException e ) {
                 // ignore, this will be treated as an EntityNotFoundException

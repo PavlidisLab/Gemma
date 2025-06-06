@@ -72,9 +72,9 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         assertNotNull( ed );
         assertNotNull( ed.getId() );
         perform( get( "/experimentalDesign/showExperimentalDesign.html" )
-                        .param( "edid", ed.getId().toString() ) )
+                .param( "edid", ed.getId().toString() ) )
                 .andExpect( status().isOk() )
-                .andExpect( request().attribute( "id", ed.getId() ) )
+                .andExpect( request().attribute( "expressionExperiment", ee ) )
                 .andExpect( view().name( "experimentalDesign.detail" ) )
                 .andExpect( model().attribute( "needsAttention", equalTo( false ) ) )
                 .andExpect( model().attribute( "randomExperimentalDesignThatNeedsAttention", nullValue() ) );
@@ -85,9 +85,9 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         ExperimentalDesign ed = ee.getExperimentalDesign();
         assertTrue( ed != null && ee.getId() != null );
         perform( get( "/experimentalDesign/showExperimentalDesign.html" )
-                        .param( "eeid", ee.getId().toString() ) )
+                .param( "eeid", ee.getId().toString() ) )
                 .andExpect( status().isOk() )
-                .andExpect( request().attribute( "id", ed.getId() ) )
+                .andExpect( request().attribute( "expressionExperiment", ee ) )
                 .andExpect( view().name( "experimentalDesign.detail" ) );
     }
 
@@ -97,7 +97,7 @@ public class ExperimentalDesignControllerIntegrationTest extends BaseSpringWebTe
         assertNotNull( ee.getShortName() );
         assertTrue( ed != null && ee.getId() != null );
         perform( get( "/experimentalDesign/showExperimentalDesign.html" )
-                        .param( "shortName", ee.getShortName() ) )
+                .param( "shortName", ee.getShortName() ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "experimentalDesign.detail" ) );
     }

@@ -99,6 +99,8 @@ public class SraFetcher {
      */
     public String fetchRunInfo( String accession ) throws IOException {
         URL fetchUrl = EntrezUtils.fetchById( "sra", accession, EntrezRetmode.TEXT, "runinfo", ncbiApiKey );
-        return EntrezUtils.doNicely( () -> IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 ), ncbiApiKey );
+        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+            return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
+        }, ncbiApiKey ), "fetching " + fetchUrl );
     }
 }

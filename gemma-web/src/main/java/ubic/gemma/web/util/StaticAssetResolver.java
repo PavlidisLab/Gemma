@@ -11,8 +11,6 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.web.taglib.AbstractStaticAssetTag;
 
-import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
 import java.util.Arrays;
 
 /**
@@ -31,12 +29,8 @@ public class StaticAssetResolver implements InitializingBean {
     @Value("${gemma.staticAssetServer.allowedDirs}")
     private String[] allowedDirs;
 
-    @Nullable
-    @Autowired(required = false)
-    private StaticAssetServer staticAssetServer;
-
     @Autowired
-    private ServletContext servletContext;
+    private StaticAssetServer staticAssetServer;
 
     @Autowired
     private Environment environment;
@@ -47,31 +41,18 @@ public class StaticAssetResolver implements InitializingBean {
             Assert.isTrue( allowedDir.startsWith( "/" ) && allowedDir.endsWith( "/" ),
                     "An allowed resource directory must start and end with '/'." );
         }
-        if ( staticAssetServer != null ) {
-            log.info( String.format( "Static assets will be served from %s for the following paths:\n\t%s",
-                    staticAssetServer.getBaseUrl(), String.join( "\n\t", allowedDirs ) ) );
-            if ( !staticAssetServer.isAlive() ) {
-                String message = "The static asset server does not appear to be running.";
-                if ( staticAssetServer instanceof ExternalStaticAssetServer
-                        && environment.acceptsProfiles( EnvironmentProfiles.DEV ) ) {
-                    message += " You may start it with:\n"
-                            + "\tnpm --prefix gemma-web/src/main/webapp run serve\n"
-                            + "or by launching the \"Serve static assets\" run configuration in IntelliJ.";
-                }
-                log.warn( message );
+        log.info( String.format( "Static assets will be served from '%s' for the following paths:\n\t%s",
+                staticAssetServer.getBaseUrl(), String.join( "\n\t", allowedDirs ) ) );
+        if ( !staticAssetServer.isAlive() ) {
+            String message = "The static asset server does not appear to be running.";
+            if ( staticAssetServer instanceof ExternalStaticAssetServer
+                    && environment.acceptsProfiles( EnvironmentProfiles.DEV ) ) {
+                message += " You may start it with:\n"
+                        + "\tnpm --prefix gemma-web/src/main/webapp run serve\n"
+                        + "or by launching the \"Serve static assets\" run configuration in IntelliJ.";
             }
-        } else {
-            log.debug( "Static assets will be served from the webapp resources under the following paths:\n\t"
-                    + String.join( "\n\t", allowedDirs ) );
+            log.warn( message );
         }
-    }
-
-    /**
-     * Return the static asset server, if any.
-     */
-    @Nullable
-    public StaticAssetServer getStaticAssetServer() {
-        return staticAssetServer;
     }
 
     /**
@@ -81,10 +62,6 @@ public class StaticAssetResolver implements InitializingBean {
         Assert.isTrue( Arrays.stream( allowedDirs ).anyMatch( path::startsWith ),
                 "Path for static asset must start with one of " + String.join( ",", allowedDirs ) + "." );
         Assert.isTrue( path.startsWith( "/" ) );
-        if ( staticAssetServer != null ) {
-            return staticAssetServer.getBaseUrl() + path;
-        } else {
-            return servletContext.getContextPath() + path;
-        }
+        return staticAssetServer.getBaseUrl() + path;
     }
 }

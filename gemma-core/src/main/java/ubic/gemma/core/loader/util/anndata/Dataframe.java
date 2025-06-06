@@ -112,10 +112,22 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
      */
     public Column<K, K> getIndex() {
         Assert.notNull( indexClass, "No index type is specified, cannot create the index." );
-        if ( index == null ) {
-            index = new IndexedColumn( getColumn( getIndexColumn(), indexClass ) );
+        return getIndex( indexClass );
+    }
+
+    /**
+     * Obtain the index column.
+     */
+    public <T> Column<T, T> getIndex( Class<T> indexClass ) {
+        if ( this.indexClass != null && !this.indexClass.isAssignableFrom( indexClass ) ) {
+            throw new IllegalArgumentException( String.format( "The requested index type %s does not match the index type of this dataframe: %s", indexClass.getName(), this.indexClass.getName() ) );
         }
-        return index;
+        if ( index == null ) {
+            //noinspection unchecked
+            index = new IndexedColumn( ( Column<K, K> ) getColumn( getIndexColumn(), indexClass ) );
+        }
+        //noinspection unchecked
+        return ( Column<T, T> ) index;
     }
 
     /**

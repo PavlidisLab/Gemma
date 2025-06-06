@@ -40,8 +40,6 @@ import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -78,13 +76,6 @@ public class GemmaCLI {
             VERBOSITY_OPTION = "v",
             PROFILING_OPTION = "profiling",
             TESTDB_OPTION = "testdb";
-
-    /**
-     * Pattern used to match password in the CLI arguments.
-     * <p>
-     * Passwords are no longer allowed as of 1.29.0, but some users might still supply their passwords.
-     */
-    private static final Pattern PASSWORD_IN_CLI_MATCHER = Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" );
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
 
@@ -389,11 +380,6 @@ public class GemmaCLI {
      * Mask password for logging
      */
     static String getOptStringForLogging( String[] argsToPass ) {
-        Matcher matcher = PASSWORD_IN_CLI_MATCHER.matcher( StringUtils.join( argsToPass, " " ) );
-        if ( matcher.find() ) {
-            System.err.println( "It seems that you still supply the -p/--password argument through the CLI. This feature has been removed for security purposes in Gemma 1.29." );
-            return matcher.replaceAll( "$1 XXXXXX" );
-        }
         return Arrays.stream( argsToPass )
                 .map( ShellUtils::quoteIfNecessary )
                 .collect( Collectors.joining( " " ) );
@@ -423,7 +409,7 @@ public class GemmaCLI {
             footer.append( '\n' );
         }
 
-        footer.append( "To get help for a specific tool, use: '" + GEMMA_CLI_EXE + " <commandName> --help'." );
+        footer.append( "To get help for a specific tool, use: '" ).append( GEMMA_CLI_EXE ).append( " <commandName> --help'." );
 
         HelpUtils.printHelp( writer, GEMMA_CLI_EXE + " [options] [commandName] [commandOptions]", options, null, footer.toString() );
     }

@@ -50,14 +50,6 @@
             </Policies>
             <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
         </RollingFile>
-        <RollingFile name="phenocartaFile" fileName="${gemma.log.dir}/gemma-phenocarta.log"
-                     filePattern="${gemma.log.dir}/gemma-phenocarta.log.%i">
-            <PatternLayout pattern="[PhenoCarta - %d] %m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="10000KB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="100" fileIndex="min"/>
-        </RollingFile>
         <RollingFile name="annotationsFile" fileName="${gemma.log.dir}/gemma-annotations.log"
                      filePattern="${gemma.log.dir}/gemma-annotations.log.%i">
             <PatternLayout pattern="${gemma.log.pattern}"/>
@@ -133,9 +125,6 @@
             <!-- batch results are not send to Slack -->
         </Logger>
         <Logger name="ubic.gemma.contrib" level="INFO"/>
-        <Logger name="ubic.gemma.core.association.phenotype" level="INFO">
-            <AppenderRef ref="phenocartaFile"/>
-        </Logger>
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="INFO">
             <AppenderRef ref="auditFile"/>
         </Logger>

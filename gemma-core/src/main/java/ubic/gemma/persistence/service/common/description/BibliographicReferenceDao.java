@@ -27,6 +27,7 @@ import ubic.gemma.persistence.service.BrowsingDao;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see BibliographicReference
@@ -44,7 +45,20 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
      */
     BibliographicReference findByExternalId( DatabaseEntry externalId );
 
-    Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
+    /**
+     * Count the number of distinct references that are linked to experiments.
+     * <p>
+     * To be distinct, two references must have different author lists and titles.
+     * @see ubic.gemma.model.common.description.CitationValueObject
+     */
+    long countExperimentLinkedReferences();
+
+    /**
+     * To save some space, the EEs only have their ID and short name filled.
+     * <p>
+     * References are sorted by author and title.
+     */
+    Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 
@@ -54,5 +68,4 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
             Collection<BibliographicReference> records );
 
     Collection<Long> listAll();
-
 }

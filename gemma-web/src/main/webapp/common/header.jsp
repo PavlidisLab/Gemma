@@ -10,8 +10,8 @@
 
 <div id="extheaderandnavigation"></div>
 
-<spring:eval expression="@staticAssetResolver.staticAssetServer" var="staticAssetServer" />
-<c:if test="${staticAssetServer != null and !staticAssetServer.isAlive()}">
+<spring:eval expression="@staticAssetServer" var="staticAssetServer" />
+<c:if test="${!staticAssetServer.isAlive()}">
     <div style="background-color: yellow; padding: 1em;">
         The static asset server does not appear to be running.
         <spring:eval expression="@environment.acceptsProfiles('dev')" var="isDevProfileEnabled" />
