@@ -21,7 +21,7 @@ package ubic.gemma.core.analysis.preprocess.filter;
 import java.io.Serializable;
 
 /**
- * Holds settings for filtering.
+ * Holds settings for filtering with {@link ExpressionExperimentFilter}.
  *
  * @author Paul
  */

@@ -21,10 +21,14 @@ package ubic.gemma.core.analysis.preprocess.filter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 
 /**
+ * Base interface for expression data filters.
+ * <p>
+ * A filter is a function that takes an expression data matrix and produces a filtered version of it.
  * @author pavlidis
+ * @param <T> the type of expression data matrix this filter operates on
  */
-interface Filter<T extends ExpressionDataMatrix<Double>> {
-    
-    @SuppressWarnings("unused") // Ensures consistency
-    T filter( T dataMatrix );
+@FunctionalInterface
+public interface Filter<T extends ExpressionDataMatrix<?>> {
+
+    T filter( T dataMatrix ) throws FilteringException;
 }

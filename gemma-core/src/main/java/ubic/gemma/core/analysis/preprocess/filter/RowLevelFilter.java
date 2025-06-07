@@ -27,39 +27,43 @@ import ubic.basecode.math.Stats;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * Filter data at the row-level.
+ * <p>
+ * This is a low-level filter utility meant to be used by other filters.
  * @author pavlidis
  */
-public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
+class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
+
     private static final Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
+
     private boolean removeAllNegative = false;
     private Method method = Method.MAX;
     private double lowCut = -Double.MAX_VALUE;
-
     private double highCut = Double.MAX_VALUE;
-
     private boolean useLowAsFraction = false;
-
     private boolean useHighAsFraction = false;
+    @Nullable
     private Map<CompositeSequence, Double> ranks = null;
     private double tolerance = Constants.SMALL;
+
+    public RowLevelFilter() {
+    }
 
     /**
      * @param ranks Map of rank values in range 0...1
      */
-    RowLevelFilter( Map<CompositeSequence, Double> ranks ) {
+    public RowLevelFilter( Map<CompositeSequence, Double> ranks ) {
         this.ranks = ranks;
-        this.setUseLowCutAsFraction( true );
-        this.setUseHighCutAsFraction( true );
-        this.setMethod( Method.RANK );
-    }
-
-    public RowLevelFilter() {
+        this.useLowAsFraction = true;
+        this.useHighAsFraction = true;
+        this.method = Method.RANK;
     }
 
     @Override
@@ -193,7 +197,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     /**
      * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
      * by DISTINCTVALUE filter.
-     *
+     * <p>
      * Changed to ignore NAs in distinct value counting mode. All the other methods already did that.
      *
      * @param tolerance tolerance
@@ -333,7 +337,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     }
 
     private void logInfo( int numRows, List<CompositeSequence> kept ) {
-        if ( kept.size() == 0 ) {
+        if ( kept.isEmpty() ) {
             RowLevelFilter.log.warn( "All rows filtered out!" );
             return;
         }
