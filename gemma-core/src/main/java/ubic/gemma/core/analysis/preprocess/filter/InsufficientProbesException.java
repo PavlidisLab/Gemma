@@ -16,12 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.analysis.preprocess;
-
-import ubic.gemma.core.analysis.preprocess.filter.InsufficientDataException;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import javax.annotation.Nullable;
+package ubic.gemma.core.analysis.preprocess.filter;
 
 /**
  * @author paul
@@ -30,8 +25,7 @@ public class InsufficientProbesException extends InsufficientDataException {
 
     private static final long serialVersionUID = 1L;
 
-    public InsufficientProbesException( @Nullable ExpressionExperiment ee, String message ) {
+    public InsufficientProbesException( String message ) {
         super( message );
     }
-
 }

@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.preprocess.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -75,7 +74,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
                         String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", FilterConfig.MINIMUM_SAMPLE ) );
             } else if ( !config.isIgnoreMinimumRowsThreshold()
                     && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+                throw new InsufficientProbesException(
                         String.format( "To few rows in (%d) prior to filtering, data sets are not analyzed unless they have at least %d to be eligible for analysis.",
                                 eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
             }
@@ -88,10 +87,10 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
 
         if ( eeDoubleMatrix.rows() == 0 ) {
             ExpressionExperimentFilter.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering." );
+            throw new InsufficientProbesException( "No rows left after filtering." );
         } else if ( !config.isIgnoreMinimumRowsThreshold()
                 && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( eeDoubleMatrix.getExpressionExperiment(),
+            throw new InsufficientProbesException(
                     String.format( "To few rows (%d) after filtering, data sets are not analyzed unless they have at least %d rows.",
                             eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
         } else if ( !config.isIgnoreMinimumSampleThreshold()
