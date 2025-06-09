@@ -17,11 +17,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.randomBulkVectors;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.setSeed;
 
 public class RepetitiveValuesFilterTest {
 
     @Test
     public void testFilterLog2cpmData() throws NoRowsLeftAfterFilteringException {
+        setSeed( 123 );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         for ( int i = 0; i < 10; i++ ) {
             ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
@@ -89,6 +91,7 @@ public class RepetitiveValuesFilterTest {
 
     @Test
     public void testQuantileNormalizedData() throws NoRowsLeftAfterFilteringException {
+        setSeed( 123 );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         for ( int i = 0; i < 10; i++ ) {
             ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
