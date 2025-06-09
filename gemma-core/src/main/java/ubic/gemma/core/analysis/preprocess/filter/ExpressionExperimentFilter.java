@@ -21,22 +21,19 @@ package ubic.gemma.core.analysis.preprocess.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * Methods to handle filtering expression experiments for analysis.
+ * Default filter used for various analyses of expression experiments.
+ * <p>
+ * For DEA and mean-variance analyses, a much less stringent filter, {@link RepetitiveValuesFilter}, is used.
  *
  * @author Paul
  */
@@ -61,29 +58,6 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
     public ExpressionExperimentFilter( Collection<ArrayDesign> arrayDesignsUsed, FilterConfig config ) {
         this.arrayDesignsUsed = arrayDesignsUsed;
         this.config = config;
-    }
-
-    /**
-     * Provides a ready-to-use expression data matrix that is transformed and filtered. The processes that are applied,
-     * in this order:
-     * <ol>
-     * <li>Log transform, if requested and not already done
-     * <li>Use the missing value data to mask the preferred data (ratiometric data only)
-     * <li>Remove rows that don't have biosequences (always applied)
-     * <li>Remove Affymetrix control probes (Affymetrix only)
-     * <li>Remove rows that have too many missing values (as configured)
-     * <li>Remove rows with low variance (ratiometric) or CV (one-color) (as configured)
-     * <li>Remove rows with very high or low expression (as configured)
-     * </ol>
-     *
-     * @param dataVectors data vectors
-     * @return filtered matrix
-     * @throws NoRowsLeftAfterFilteringException if filtering results in no row left in the expression matrix
-     */
-    public ExpressionDataDoubleMatrix transformAndFilter( Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
-        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
-        this.transform( eeDoubleMatrix );
-        return this.filter( eeDoubleMatrix );
     }
 
     /**
@@ -266,66 +240,6 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         return new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } ).filter( matrix );
     }
 
-    /**
-     * @param eeDoubleMatrix the matrix
-     * @return true if the data looks like it is already log transformed, false otherwise. This is based on the
-     * quantitation types and, as a check, looking at the data itself.
-     */
-    private boolean isLogTransformed( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-        Collection<QuantitationType> quantitationTypes = eeDoubleMatrix.getQuantitationTypes();
-        for ( QuantitationType qt : quantitationTypes ) {
-            ScaleType scale = qt.getScale();
-            if ( scale.equals( ScaleType.LN ) || scale.equals( ScaleType.LOG10 ) || scale.equals( ScaleType.LOG2 )
-                    || scale.equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                ExpressionExperimentFilter.log.info( "Quantitationtype says the data is already log transformed" );
-                return true;
-            }
-        }
-
-        if ( this.isTwoColor() ) {
-            ExpressionExperimentFilter.log.info( "Data is from a two-color array, assuming it is log transformed" );
-            return true;
-        }
-
-        for ( int i = 0; i < eeDoubleMatrix.rows(); i++ ) {
-            for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
-                double v = eeDoubleMatrix.getAsDouble( i, j );
-                if ( v > 20 ) {
-                    ExpressionExperimentFilter.log.info( "Data has large values, doesn't look log transformed" );
-                    return false;
-                }
-            }
-        }
-
-        ExpressionExperimentFilter.log.info( "Data looks log-transformed, but not sure...assuming it is" );
-        return true;
-
-    }
-
-    /**
-     * Determine if the expression experiment uses two-color arrays.
-     *
-     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
-     */
-    private Boolean isTwoColor() {
-        Boolean answer = null;
-
-        if ( arrayDesignsUsed.isEmpty() ) {
-            throw new IllegalStateException();
-        }
-
-        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-            TechnologyType techType = arrayDesign.getTechnologyType();
-            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
-            if ( answer != null && !answer.equals( isTwoC ) ) {
-                throw new UnsupportedOperationException(
-                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
-            }
-            answer = isTwoC;
-        }
-        return answer;
-    }
-
     private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Double> ranks ) {
         // check for null ranks, in which case we can't use this.
@@ -372,22 +286,6 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
      */
     private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         return new RowsWithSequencesFilter().filter( eeDoubleMatrix );
-    }
-
-    /**
-     * Transform the data as configured (e.g., take log) -- which could mean no action
-     */
-    private void transform( ExpressionDataDoubleMatrix datamatrix ) {
-
-        if ( !config.isLogTransform() ) {
-            return;
-        }
-
-        boolean alreadyLogged = this.isLogTransformed( datamatrix );
-        if ( !alreadyLogged ) {
-            MatrixStats.logTransform( datamatrix.getMatrix() );
-        }
-
     }
 
     private boolean usesAffymetrix() {
