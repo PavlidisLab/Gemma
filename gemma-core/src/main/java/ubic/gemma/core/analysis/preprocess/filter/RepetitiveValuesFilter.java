@@ -1,11 +1,11 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.ArrayUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -29,6 +29,7 @@ import java.util.Optional;
  * unique value filter.
  * @author paul
  */
+@CommonsLog
 public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
@@ -41,52 +42,74 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
      * We don't apply the "unique values" filter to matrices with fewer columns than this.
      */
     private static final int MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER = 4;
-    protected Log log = LogFactory.getLog( this.getClass() );
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dmatrix ) throws NoRowsLeftAfterFilteringException {
         QuantitationType qt = dmatrix.getQuantitationType();
+
+        if ( qt.getIsNormalized() ) {
+            log.info( "Matrix contains normalized expression data, filtering of repetitive rows will be based on ranks." );
+            return filterRepetitiveValuesByRanks( dmatrix );
+        }
+
+        if ( qt.getIsBatchCorrected() ) {
+            log.warn( "Matrix contains batch-corrected expression  data, filtering of repetitive will be based on ranks." );
+            return filterRepetitiveValuesByRanks( dmatrix );
+        }
+
         if ( QuantitationTypeDetectionUtils.isLog2cpm( qt ) ) {
-            if ( qt.getIsNormalized() ) {
-                log.info( "Matrix contains normalized log2cpm data, filtering of repetitive rows will be based on ranks." );
-                return filterRepetitiveValuesByRanks( dmatrix );
-            }
-            if ( qt.getIsBatchCorrected() ) {
-                log.warn( "Matrix contains batch-corrected log2cpm data, filtering of repetitive will be based on ranks." );
-                return filterRepetitiveValuesByRanks( dmatrix );
-            }
             long[] librarySize = dmatrix.getBestBioAssayDimension()
                     .flatMap( this::getLibrarySize )
                     .orElse( null );
             if ( librarySize != null ) {
                 log.info( "Matrix contains log2cpm data with known library sizes, the repetitive values filter will use values that are not corrected for library size." );
-                DoubleMatrix<CompositeSequence, BioMaterial> unnormalizedMatrix = dmatrix.getMatrix().copy();
-                double[] log2LibrarySize = new double[librarySize.length];
-                for ( int j = 0; j < librarySize.length; j++ ) {
-                    log2LibrarySize[j] = Math.log( librarySize[j] + 1.0 ) / Math.log( 2 );
-                }
-                // undo the log2cpm transformation, but keep values in the log2 scale
-                for ( int i = 0; i < unnormalizedMatrix.rows(); i++ ) {
-                    for ( int j = 0; j < unnormalizedMatrix.columns(); j++ ) {
-                        unnormalizedMatrix.set( i, j, unnormalizedMatrix.get( i, j ) + log2LibrarySize[j] );
-                    }
-                }
-                ExpressionDataDoubleMatrix cm2 = new ExpressionDataDoubleMatrix( dmatrix, unnormalizedMatrix );
-                DoubleMatrix<CompositeSequence, BioMaterial> filteredMatrix = filterRepetitiveValues( cm2 ).getMatrix().copy();
-                // reapply the log2cpm transformation
-                for ( int i = 0; i < filteredMatrix.rows(); i++ ) {
-                    for ( int j = 0; j < filteredMatrix.columns(); j++ ) {
-                        filteredMatrix.set( i, j, filteredMatrix.get( i, j ) - log2LibrarySize[j] );
-                    }
-                }
-                return new ExpressionDataDoubleMatrix( dmatrix, filteredMatrix );
+                return filterLog2cpm( dmatrix, librarySize );
             } else {
                 log.warn( dmatrix + " contains is log2cpm, but no library sizes were found in the BioAssays, filtering of repetitive rows might not work very well." );
-                return filterRepetitiveValues( dmatrix );
             }
-        } else {
-            return filterRepetitiveValues( dmatrix );
         }
+
+        return filterRepetitiveValues( dmatrix );
+    }
+
+    /**
+     * Obtain the library sizes from a BAD
+     */
+    private Optional<long[]> getLibrarySize( BioAssayDimension bioAssayDimension ) {
+        long[] librarySize = new long[bioAssayDimension.getBioAssays().size()];
+        List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            BioAssay ba = bioAssays.get( i );
+            if ( ba.getSequenceReadCount() != null ) {
+                librarySize[i] = ba.getSequenceReadCount();
+            } else {
+                return Optional.empty();
+            }
+        }
+        return Optional.of( librarySize );
+    }
+
+    private ExpressionDataDoubleMatrix filterLog2cpm( ExpressionDataDoubleMatrix dmatrix, long[] librarySize ) throws NoRowsLeftAfterFilteringException {
+        DoubleMatrix<CompositeSequence, BioMaterial> unnormalizedMatrix = dmatrix.getMatrix().copy();
+        double[] log2LibrarySize = new double[librarySize.length];
+        for ( int j = 0; j < librarySize.length; j++ ) {
+            log2LibrarySize[j] = Math.log( librarySize[j] + 1.0 ) / Math.log( 2 );
+        }
+        // undo the log2cpm transformation, but keep values in the log2 scale
+        for ( int i = 0; i < unnormalizedMatrix.rows(); i++ ) {
+            for ( int j = 0; j < unnormalizedMatrix.columns(); j++ ) {
+                unnormalizedMatrix.set( i, j, unnormalizedMatrix.get( i, j ) + log2LibrarySize[j] );
+            }
+        }
+        ExpressionDataDoubleMatrix cm2 = new ExpressionDataDoubleMatrix( dmatrix, unnormalizedMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> filteredMatrix = filterRepetitiveValues( cm2 ).getMatrix().copy();
+        // reapply the log2cpm transformation
+        for ( int i = 0; i < filteredMatrix.rows(); i++ ) {
+            for ( int j = 0; j < filteredMatrix.columns(); j++ ) {
+                filteredMatrix.set( i, j, filteredMatrix.get( i, j ) - log2LibrarySize[j] );
+            }
+        }
+        return new ExpressionDataDoubleMatrix( dmatrix, filteredMatrix );
     }
 
     private ExpressionDataDoubleMatrix filterRepetitiveValuesByRanks( ExpressionDataDoubleMatrix dmatrix ) throws NoRowsLeftAfterFilteringException {
@@ -97,13 +120,13 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
             Arrays.sort( sorted );
             for ( int i = 0; i < column.length; i++ ) {
                 // find the rank of the value in the sorted array
-                ranks[i][j] = Arrays.binarySearch( sorted, column[i] );
+                ranks[i][j] = ArrayUtils.binarySearchFirst( sorted, column[i] );
             }
         }
-        DenseDoubleMatrix<CompositeSequence, BioMaterial> countMatrix = new DenseDoubleMatrix<>( ranks );
-        countMatrix.setRowNames( dmatrix.getMatrix().getRowNames() );
-        countMatrix.setColumnNames( dmatrix.getMatrix().getColNames() );
-        ExpressionDataDoubleMatrix kept = filterRepetitiveValues( new ExpressionDataDoubleMatrix( dmatrix, countMatrix ) );
+        DenseDoubleMatrix<CompositeSequence, BioMaterial> rankMatrix = new DenseDoubleMatrix<>( ranks );
+        rankMatrix.setRowNames( dmatrix.getMatrix().getRowNames() );
+        rankMatrix.setColumnNames( dmatrix.getMatrix().getColNames() );
+        ExpressionDataDoubleMatrix kept = filterRepetitiveValues( new ExpressionDataDoubleMatrix( dmatrix, rankMatrix ) );
         return new ExpressionDataDoubleMatrix( dmatrix, kept.getDesignElements() );
     }
 
@@ -112,6 +135,7 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
      * really track this down).
      * <p>
      * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero.
+     * <p>
      * Filtering out rows that have many identical values helps avoid p-values that clump around specific values in the data.
      * This happens especially for lowly-expressed genes in RNA-seq but can be observed in microarray
      * data that has been manipulated by the submitter e.g. when data is "clipped" (e.g., all values under 10 set to 10).
@@ -137,22 +161,5 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
             throw new NoRowsLeftAfterFilteringException( "No rows left after filtering for repetitive values in " + dmatrix.getQuantitationType() );
         }
         return dmatrix;
-    }
-
-    /**
-     * Obtain the library sizes from a BAD
-     */
-    private Optional<long[]> getLibrarySize( BioAssayDimension bioAssayDimension ) {
-        long[] librarySize = new long[bioAssayDimension.getBioAssays().size()];
-        List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-        for ( int i = 0; i < bioAssays.size(); i++ ) {
-            BioAssay ba = bioAssays.get( i );
-            if ( ba.getSequenceReadCount() != null ) {
-                librarySize[i] = ba.getSequenceReadCount();
-            } else {
-                return Optional.empty();
-            }
-        }
-        return Optional.of( librarySize );
     }
 }
