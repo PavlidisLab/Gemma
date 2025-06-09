@@ -121,7 +121,7 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     /**
      * Set the high threshold for removal. If not set, no filtering will occur.
      *
-     * @param h the threshold
+     * @param h the threshold, inclusive
      */
     public void setHighCut( double h ) {
         highCut = h;
@@ -130,7 +130,7 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     /**
      * Set the low threshold for removal.
      *
-     * @param lowCut the threshold
+     * @param lowCut the threshold, exclusive
      */
     public void setLowCut( double lowCut ) {
         this.lowCut = lowCut;
