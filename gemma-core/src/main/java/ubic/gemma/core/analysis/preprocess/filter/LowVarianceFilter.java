@@ -24,4 +24,9 @@ public class LowVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
         rowLevelFilter.setRemoveAllNegative( false );
         return rowLevelFilter.filter( dataMatrix );
     }
+
+    @Override
+    public String toString() {
+        return "LowVarianceFilter Low=" + lowVarianceCut;
+    }
 }
