@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
-import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
@@ -37,6 +36,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
@@ -167,9 +167,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) throws InsufficientProbesException {
         if ( datamatrix.rows() == 0 ) {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(), "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(),
+            throw new InsufficientProbesException(
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
                             + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }

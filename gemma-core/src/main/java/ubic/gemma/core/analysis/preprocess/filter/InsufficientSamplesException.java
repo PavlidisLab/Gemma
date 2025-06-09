@@ -28,5 +28,4 @@ public class InsufficientSamplesException extends InsufficientDataException {
     public InsufficientSamplesException( String message ) {
         super( message );
     }
-
 }

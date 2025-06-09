@@ -14,11 +14,9 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
