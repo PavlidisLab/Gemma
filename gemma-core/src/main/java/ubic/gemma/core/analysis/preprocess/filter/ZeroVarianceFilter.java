@@ -21,6 +21,6 @@ public class ZeroVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     @Override
     public String toString() {
-        return "ZeroVarianceFilter";
+        return "ZeroVarianceFilter Threshold=" + Constants.SMALLISH;
     }
 }

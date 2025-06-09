@@ -164,4 +164,44 @@ public class RepetitiveValuesFilterTest {
         assertThat( filteredMatrix.getDesignElements() )
                 .doesNotContain( deToDrop );
     }
+
+    @Test
+    public void testRepetitiveValuesWithNonZeroVariance() throws NoRowsLeftAfterFilteringException {
+        setSeed( 123 );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        for ( int i = 0; i < 10; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
+        }
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "test" );
+        for ( int i = 0; i < 10; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+
+        // only fill half the row with zeroes
+        CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        for ( int j = 0; j < 7; j++ ) {
+            cm.set( 5, j, 0.0 );
+        }
+
+        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+
+        // filtering the count matrix should drop the row with all zeroes easily
+        assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
+                .satisfies( fm -> {
+                    assertThat( fm.rows() ).isEqualTo( 9 );
+                    assertThat( fm.getDesignElements() )
+                            .doesNotContain( deToDrop );
+                } );
+    }
 }

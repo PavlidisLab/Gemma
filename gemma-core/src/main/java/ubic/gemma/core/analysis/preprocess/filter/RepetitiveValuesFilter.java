@@ -33,15 +33,15 @@ import java.util.Optional;
 public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
+     * We don't apply the "unique values" filter to matrices with fewer columns than this.
+     */
+    private static final int MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER = 4;
+
+    /**
      * This threshold is used to determine if a row has too many identical value; a value of N means that the number of distinct values in the
      * expression vector of length M must be at least N * M.
      */
     private static final double MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT = 0.3;
-
-    /**
-     * We don't apply the "unique values" filter to matrices with fewer columns than this.
-     */
-    private static final int MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER = 4;
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dmatrix ) throws NoRowsLeftAfterFilteringException {
@@ -147,12 +147,12 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
             log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
         }
         r = dmatrix.rows();
-        if ( dmatrix.columns() > MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER ) {
+        if ( dmatrix.columns() >= MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER ) {
             /* This threshold had been 10^-5, but it's probably too stringent. Also remember
              * the data are log transformed the threshold should be transformed as well (it's not that simple),
              * but that's a minor effect.
              * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            dmatrix = new TooFewDistinctValuesFilter( MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT, 0.001 ).filter( dmatrix );
+            dmatrix = new TooFewDistinctValuesFilter( MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT ).filter( dmatrix );
             if ( dmatrix.rows() < r ) {
                 log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
             }
@@ -165,7 +165,7 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
 
     @Override
     public String toString() {
-        return String.format( "RepetitiveValuesFilter Minimum Samples=%d Minimum Distinct Values=%s%%",
+        return String.format( "RepetitiveValuesFilter Minimum Samples=%d Minimum Distinct Values=%f%%",
                 MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER, 100 * MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT );
     }
 }
