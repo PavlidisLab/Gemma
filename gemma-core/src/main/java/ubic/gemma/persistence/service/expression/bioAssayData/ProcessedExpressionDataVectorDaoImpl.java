@@ -122,9 +122,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
-        if ( preferredMaskedDataQuantitationType.getIsNormalized() ) {
-            log.info( "Data is already normalized, skipping normalization step." );
-        } else if ( preferredMaskedDataQuantitationType.getIsRatio() ) {
+        if ( preferredMaskedDataQuantitationType.getIsRatio() ) {
             log.info( "Data is on a ratio scale, skipping normalization step." );
         } else if ( maskedVectorObjects.size() < ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
             log.info( "Not enough data vectors (" + maskedVectorObjects.size() + ") to perform normalization." );
