@@ -400,4 +400,8 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "ExpressionExperimentFilter Platforms= " + arrayDesignsUsed + "\n" + config;
+    }
 }

@@ -162,4 +162,10 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
         }
         return dmatrix;
     }
+
+    @Override
+    public String toString() {
+        return String.format( "RepetitiveValuesFilter Minimum Samples=%d Minimum Distinct Values=%s%%",
+                MINIMUM_COLUMNS_TO_APPLY_UNIQUE_VALUES_FILTER, 100 * MINIMUM_UNIQUE_VALUES_FRACTION_PER_ELEMENT );
+    }
 }

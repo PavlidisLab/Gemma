@@ -258,6 +258,17 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         }
     }
 
+    @Override
+    public String toString() {
+        return String.format( "%s Method=%s Low=%f%s High=%f%s Tolerance=%f%s",
+                "RowLevelFilter",
+                method,
+                useLowAsFraction ? 100 * lowCut : lowCut, useLowAsFraction ? "%" : "",
+                useLowAsFraction ? 100 * highCut : highCut, useHighAsFraction ? "%" : "",
+                tolerance,
+                removeAllNegative ? " [Drop Negatives]" : "" );
+    }
+
     /**
      *
      * @param data to be inspected

@@ -190,4 +190,9 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         minPresentFractionIsSet = true;
         minPresentFraction = k;
     }
+
+    @Override
+    public String toString() {
+        return "RowMissingValueFilter";
+    }
 }

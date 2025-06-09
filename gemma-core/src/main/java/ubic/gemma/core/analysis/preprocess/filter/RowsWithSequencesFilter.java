@@ -53,4 +53,8 @@ public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatri
         return new ExpressionDataDoubleMatrix( dataMatrix, kept );
     }
 
+    @Override
+    public String toString() {
+        return "RowWithSequencesFilter";
+    }
 }

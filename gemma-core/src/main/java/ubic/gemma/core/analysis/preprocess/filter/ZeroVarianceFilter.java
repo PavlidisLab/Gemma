@@ -18,4 +18,9 @@ public class ZeroVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
         rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
     }
+
+    @Override
+    public String toString() {
+        return "ZeroVarianceFilter";
+    }
 }
