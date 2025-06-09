@@ -33,4 +33,9 @@ public class TooFewDistinctValuesFilter implements Filter<ExpressionDataDoubleMa
         rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
     }
+
+    @Override
+    public String toString() {
+        return String.format( "TooFewDistinctValuesFilter Tolerance=%f Threshold=%f", tolerance, threshold );
+    }
 }
