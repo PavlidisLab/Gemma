@@ -124,14 +124,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         if ( preferredMaskedDataQuantitationType.getIsNormalized() ) {
             log.info( "Data is already normalized, skipping normalization step." );
-        } else if ( !preferredMaskedDataQuantitationType.getIsRatio()
-                && maskedVectorObjects.size() > ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
+        } else if ( preferredMaskedDataQuantitationType.getIsRatio() ) {
+            log.info( "Data is on a ratio scale, skipping normalization step." );
+        } else if ( maskedVectorObjects.size() < ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
+            log.info( "Not enough data vectors (" + maskedVectorObjects.size() + ") to perform normalization." );
+        } else {
             log.info( "Normalizing the data" );
             this.renormalize( maskedVectorObjects );
             preferredMaskedDataQuantitationType.setIsNormalized( true );
             quantitationTypeDao.update( preferredMaskedDataQuantitationType );
-        } else {
-            log.info( "Normalization skipped for this data set (not suitable)" );
         }
 
         /*
