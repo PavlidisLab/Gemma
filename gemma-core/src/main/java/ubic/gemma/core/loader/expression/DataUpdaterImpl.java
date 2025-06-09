@@ -951,15 +951,32 @@ public class DataUpdaterImpl implements DataUpdater {
      * @return QT
      */
     private QuantitationType makeCountQt() {
-        QuantitationType countqt = this.makeQt( false );
-        countqt.setName( "Counts" );
-        countqt.setType( StandardQuantitationType.COUNT );
-        countqt.setScale( ScaleType.COUNT );
-        countqt.setDescription( "Read counts for gene model" );
-        countqt.setIsBackgroundSubtracted( false );
-        countqt.setIsNormalized( false );
-        countqt.setIsRecomputedFromRawData( true ); // assume this is true...
-        return countqt;
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "Counts" );
+        qt.setDescription( "Read counts for gene model" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsRecomputedFromRawData( true ); // assume this is true...
+        return qt;
+    }
+
+    /**
+     * RNA-seq
+     *
+     * @return QT
+     */
+    private QuantitationType makeRPKMQt() {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "RPKM" );
+        qt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setIsRecomputedFromRawData( true ); // assume this is true...
+        return qt;
     }
 
     /**
@@ -968,13 +985,14 @@ public class DataUpdaterImpl implements DataUpdater {
      * @return QT
      */
     private QuantitationType makelog2cpmQt() {
-        QuantitationType qt = this.makeQt( true );
+        QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "log2cpm" );
+        qt.setDescription( "log-2 transformed read counts per million" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
-        qt.setDescription( "log-2 transformed read counts per million" );
-        qt.setIsBackgroundSubtracted( false );
-        qt.setIsNormalized( false );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsPreferred( true );
         qt.setIsRecomputedFromRawData( true ); // assume this is true...
         return qt;
     }
@@ -1020,44 +1038,6 @@ public class DataUpdaterImpl implements DataUpdater {
             vectors.add( vector );
         }
         return vectors;
-    }
-
-    /**
-     * Generic
-     *
-     * @param  preferred preffered
-     * @return QT
-     */
-    private QuantitationType makeQt( boolean preferred ) {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setScale( ScaleType.LINEAR );
-        qt.setIsBackground( false );
-        qt.setIsRatio( false );
-        qt.setIsBackgroundSubtracted( true );
-        qt.setIsNormalized( true );
-        qt.setIsPreferred( preferred );
-        qt.setIsBatchCorrected( false );
-        qt.setType( StandardQuantitationType.AMOUNT );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        return qt;
-    }
-
-    /**
-     * RNA-seq
-     *
-     * @return QT
-     */
-    private QuantitationType makeRPKMQt() {
-        QuantitationType rpkmqt = this.makeQt( false );
-        rpkmqt.setIsRatio( false );
-        rpkmqt.setName( "RPKM" );
-        rpkmqt.setIsPreferred( false );
-        rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
-        rpkmqt.setIsBackgroundSubtracted( false );
-        rpkmqt.setIsNormalized( true );
-        rpkmqt.setIsRecomputedFromRawData( true ); // assume this is true...
-        return rpkmqt;
     }
 
     /**
