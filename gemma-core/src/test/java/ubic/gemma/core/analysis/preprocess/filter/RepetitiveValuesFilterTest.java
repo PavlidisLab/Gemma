@@ -22,10 +22,10 @@ import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkD
 public class RepetitiveValuesFilterTest {
 
     @Test
-    public void testFilterLog2cpmData() throws NoRowsLeftAfterFilteringException {
+    public void testFilterLog2cpmData() throws FilteringException {
         setSeed( 123 );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        for ( int i = 0; i < 10; i++ ) {
+        for ( int i = 0; i < 100; i++ ) {
             ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
         }
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -55,7 +55,7 @@ public class RepetitiveValuesFilterTest {
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
                 .satisfies( fm -> {
-                    assertThat( fm.rows() ).isEqualTo( 9 );
+                    assertThat( fm.rows() ).isEqualTo( 99 );
                     assertThat( fm.getDesignElements() )
                             .doesNotContain( deToDrop );
                 } );
@@ -84,16 +84,16 @@ public class RepetitiveValuesFilterTest {
         ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmM );
         // calculate log2cpm
         ExpressionDataDoubleMatrix filteredMatrix = new RepetitiveValuesFilter().filter( log2cpmMatrix );
-        assertThat( filteredMatrix.rows() ).isEqualTo( 9 );
+        assertThat( filteredMatrix.rows() ).isEqualTo( 99 );
         assertThat( filteredMatrix.getDesignElements() )
                 .doesNotContain( deToDrop );
     }
 
     @Test
-    public void testQuantileNormalizedData() throws NoRowsLeftAfterFilteringException {
+    public void testQuantileNormalizedData() throws FilteringException {
         setSeed( 123 );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        for ( int i = 0; i < 10; i++ ) {
+        for ( int i = 0; i < 100; i++ ) {
             ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
         }
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -123,7 +123,7 @@ public class RepetitiveValuesFilterTest {
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
                 .satisfies( fm -> {
-                    assertThat( fm.rows() ).isEqualTo( 9 );
+                    assertThat( fm.rows() ).isEqualTo( 99 );
                     assertThat( fm.getDesignElements() )
                             .doesNotContain( deToDrop );
                 } );
@@ -160,16 +160,60 @@ public class RepetitiveValuesFilterTest {
         ExpressionDataDoubleMatrix normalizedLg2fcMatrix = new ExpressionDataDoubleMatrix( ee, normalizedQt, normalizedLog2cpm );
 
         ExpressionDataDoubleMatrix filteredMatrix = new RepetitiveValuesFilter().filter( normalizedLg2fcMatrix );
-        assertThat( filteredMatrix.rows() ).isEqualTo( 9 );
+        assertThat( filteredMatrix.rows() ).isEqualTo( 99 );
         assertThat( filteredMatrix.getDesignElements() )
                 .doesNotContain( deToDrop );
     }
 
     @Test
-    public void testRepetitiveValuesWithNonZeroVariance() throws NoRowsLeftAfterFilteringException {
+    public void testRepetitiveValuesWithNonZeroVariance() throws FilteringException {
         setSeed( 123 );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        for ( int i = 0; i < 100; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
+        }
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "test" );
         for ( int i = 0; i < 10; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+
+        // only fill half the row with zeroes
+        CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        for ( int j = 0; j < 10; j++ ) {
+            if ( j < 7 ) {
+                cm.set( 5, j, 0.0 );
+            } else {
+                cm.set( 5, j, ( double ) j - 8.0 );
+            }
+        }
+
+        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+
+        // filtering the count matrix should drop the row with all zeroes easily
+        assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
+                .satisfies( fm -> {
+                    assertThat( fm.rows() ).isEqualTo( 99 );
+                    assertThat( fm.getDesignElements() )
+                            .doesNotContain( deToDrop );
+                } );
+    }
+
+    @Test
+    public void testRepetitiveValuesWithCountData() throws FilteringException {
+        setSeed( 123 );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        for ( int i = 0; i < 100; i++ ) {
             ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
         }
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -183,15 +227,19 @@ public class RepetitiveValuesFilterTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
-        qt.setScale( ScaleType.LINEAR );
+        qt.setScale( ScaleType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
         DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
-        for ( int j = 0; j < 7; j++ ) {
-            cm.set( 5, j, 0.0 );
+        for ( int j = 0; j < 10; j++ ) {
+            if ( j < 7 ) {
+                cm.set( 5, j, 0.0 );
+            } else {
+                cm.set( 5, j, ( double ) j - 8.0 );
+            }
         }
 
         countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
@@ -199,7 +247,51 @@ public class RepetitiveValuesFilterTest {
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
                 .satisfies( fm -> {
-                    assertThat( fm.rows() ).isEqualTo( 9 );
+                    assertThat( fm.rows() ).isEqualTo( 99 );
+                    assertThat( fm.getDesignElements() )
+                            .doesNotContain( deToDrop );
+                } );
+    }
+
+    @Test
+    public void testFilterWithNonLogScaleData() throws FilteringException {
+        setSeed( 123 );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        for ( int i = 0; i < 100; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
+        }
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "test" );
+        for ( int i = 0; i < 10; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+
+        // only fill half the row with zeroes
+        CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        for ( int j = 0; j < 10; j++ ) {
+            if ( j < 7 ) {
+                cm.set( 5, j, 0.0 );
+            } else {
+                cm.set( 5, j, ( double ) j - 8.0 );
+            }
+        }
+
+        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+
+        // filtering the count matrix should drop the row with all zeroes easily
+        assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
+                .satisfies( fm -> {
+                    assertThat( fm.rows() ).isEqualTo( 99 );
                     assertThat( fm.getDesignElements() )
                             .doesNotContain( deToDrop );
                 } );

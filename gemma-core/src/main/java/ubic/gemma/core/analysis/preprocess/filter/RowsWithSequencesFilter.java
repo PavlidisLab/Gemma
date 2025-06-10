@@ -50,7 +50,7 @@ public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatri
         RowsWithSequencesFilter.log
                 .info( "Retaining " + kept.size() + "/" + numRows + " rows that have associated BioSequences" );
 
-        return new ExpressionDataDoubleMatrix( dataMatrix, kept );
+        return dataMatrix.sliceRows( kept );
     }
 
     @Override

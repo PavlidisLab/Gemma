@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Used to make a 'dummy matrix' that has the column information populated. This is useful for processing where we want
@@ -80,6 +81,14 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
 
     @Override
     public Object[] getRow( int index ) {
+        throw new IndexOutOfBoundsException();
+    }
+
+    @Override
+    public ExpressionDataMatrix<Object> sliceRows( List<CompositeSequence> designElements ) {
+        if ( designElements.isEmpty() ) {
+            return this;
+        }
         throw new IndexOutOfBoundsException();
     }
 
