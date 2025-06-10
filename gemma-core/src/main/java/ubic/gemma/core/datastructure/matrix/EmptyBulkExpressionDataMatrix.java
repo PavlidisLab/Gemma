@@ -2,9 +2,11 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * An empty bulk expression data matrix.
@@ -40,6 +42,14 @@ public class EmptyBulkExpressionDataMatrix extends AbstractBulkExpressionDataMat
 
     @Override
     public Object[] getRow( int index ) {
+        throw new IndexOutOfBoundsException();
+    }
+
+    @Override
+    public ExpressionDataMatrix<Object> sliceRows( List<CompositeSequence> designElements ) {
+        if ( designElements.isEmpty() ) {
+            return this;
+        }
         throw new IndexOutOfBoundsException();
     }
 
