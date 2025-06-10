@@ -390,7 +390,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
+        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next() ) ) {
             assertNotNull( lockedPath.getPath() );
         }
     }

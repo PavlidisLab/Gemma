@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -376,5 +375,10 @@ public interface ExpressionDataFileService {
      */
     LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
 
-    LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
+    LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException;
+
+    /**
+     * Write a differential expression analysis archive file for a given analysis to a particular output directory.
+     */
+    LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path outputDir ) throws IOException;
 }

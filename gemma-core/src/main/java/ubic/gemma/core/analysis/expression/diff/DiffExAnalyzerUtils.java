@@ -399,6 +399,6 @@ public class DiffExAnalyzerUtils {
     }
 
     private static String formatFactorValue( FactorValue fv ) {
-        return fv.getValue();
+        return FactorValueUtils.getSummaryString( fv );
     }
 }

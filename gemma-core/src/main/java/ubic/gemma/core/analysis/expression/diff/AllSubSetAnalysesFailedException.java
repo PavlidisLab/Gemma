@@ -2,7 +2,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -10,12 +9,9 @@ import java.util.Collection;
  * @author poirigui
  */
 @Getter
-public class AllSubSetAnalysesFailedException extends AnalysisException {
+public class AllSubSetAnalysesFailedException extends AllAnalysesFailedException {
 
-    private final Collection<AnalysisException> subsetExceptions;
-
-    public AllSubSetAnalysesFailedException( String message, Collection<AnalysisException> subsetExceptions, DifferentialExpressionAnalysisConfig config ) {
-        super( message, config );
-        this.subsetExceptions = new ArrayList<>( subsetExceptions );
+    public AllSubSetAnalysesFailedException( String message, Collection<? extends AnalysisException> subsetExceptions, DifferentialExpressionAnalysisConfig config ) {
+        super( message, subsetExceptions, config );
     }
 }

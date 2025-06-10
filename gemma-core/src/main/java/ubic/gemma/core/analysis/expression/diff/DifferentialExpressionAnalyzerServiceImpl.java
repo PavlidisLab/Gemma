@@ -112,15 +112,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
-    public Collection<ExpressionAnalysisResultSet> extendAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis toUpdate ) {
+    public Collection<ExpressionAnalysisResultSet> extendAnalysis( ExpressionExperiment ee, DifferentialExpressionAnalysis toUpdate, DifferentialExpressionAnalysisConfig baseConfig ) {
 
         /*
          * One way to do this is redo without saving, and then copy the results over to the given result sets that
          * match. But that requires matching up old and new result sets.
          */
         toUpdate = differentialExpressionAnalysisService.thaw( toUpdate );
-        DifferentialExpressionAnalysisConfig config = this.copyConfig( toUpdate );
+        DifferentialExpressionAnalysisConfig config = this.extendConfig( baseConfig, toUpdate );
 
         Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, toUpdate, config );
 
@@ -141,25 +140,28 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, boolean persist ) {
+    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee, DifferentialExpressionAnalysis dea ) {
+        return redoAnalysis( ee, dea, new DifferentialExpressionAnalysisConfig() );
+    }
 
-        if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
+    @Override
+    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config ) {
+
+        if ( !differentialExpressionAnalysisService.canDelete( dea ) ) {
             throw new IllegalArgumentException(
                     "Cannot redo the analysis because it is included in a meta-analysis (or something). "
                             + "Delete the constraining entity first." );
         }
 
-        copyMe = differentialExpressionAnalysisService.thaw( copyMe );
+        dea = differentialExpressionAnalysisService.thaw( dea );
 
-        DifferentialExpressionAnalyzerServiceImpl.log.info( "Will base analysis on old one: " + copyMe );
-        DifferentialExpressionAnalysisConfig config = this.copyConfig( copyMe );
-        boolean rnaSeq = this.expressionExperimentService.isRNASeq( ee );
-        config.setUseWeights( rnaSeq );
-        Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, copyMe, config );
+        DifferentialExpressionAnalysisConfig newConfig = this.extendConfig( config, dea );
+        DifferentialExpressionAnalyzerServiceImpl.log.info( "Will base analysis on old one: " + dea + "\n" + newConfig );
+        Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, dea, newConfig );
 
-        if ( persist ) {
-            return this.persistAnalyses( ee, results, config );
+        if ( config.isPersist() ) {
+            return this.persistAnalyses( ee, results, newConfig );
         }
         return results;
     }
@@ -227,7 +229,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // we do this here because now we have IDs for everything.
         if ( config.isMakeArchiveFile() ) {
-            try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
+            try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis ) ) {
                 log.info( "Create archive file at " + lockedPath.getPath() );
             } catch ( IOException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
@@ -301,34 +303,35 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
 
-    private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe ) {
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+    /**
+     * Extend a base configuration with the factors and interactions from the given differential expression analysis.
+     */
+    private DifferentialExpressionAnalysisConfig extendConfig( DifferentialExpressionAnalysisConfig baseConfig,
+            DifferentialExpressionAnalysis dea ) {
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig( baseConfig );
 
-        if ( copyMe.getSubsetFactorValue() != null ) {
-            config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
+        if ( dea.getSubsetFactorValue() != null ) {
+            config.setSubsetFactor( dea.getSubsetFactorValue().getExperimentalFactor() );
         }
 
-        Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
+        Collection<ExpressionAnalysisResultSet> resultSets = dea.getResultSets();
         Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<>();
+        Collection<Collection<ExperimentalFactor>> interactionsFromOldExp = new HashSet<>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
-            factorsFromOldExp.addAll( oldfactors );
-
-            /*
-             * If we included the interaction before, include it again.
-             */
-            if ( oldfactors.size() == 2 ) {
+            factorsFromOldExp.addAll( rs.getExperimentalFactors() );
+            // if we included the interaction before, include it again.
+            if ( rs.getExperimentalFactors().size() >= 2 ) {
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
-                config.addInteractionToInclude( oldfactors );
+                interactionsFromOldExp.add( rs.getExperimentalFactors() );
             }
-
         }
 
         if ( factorsFromOldExp.isEmpty() ) {
             throw new IllegalStateException( "Old analysis didn't have any factors" );
         }
 
-        config.getFactorsToInclude().addAll( factorsFromOldExp );
+        config.addFactorsToInclude( factorsFromOldExp );
+        config.addInteractionsToInclude( interactionsFromOldExp );
         return config;
     }
 

@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
@@ -916,8 +915,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
-        try ( LockedPath lockedPath = fileLockManager.acquirePathLock( dataDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
+    public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException {
+        return writeDiffExAnalysisArchiveFile( analysis, dataDir );
+    }
+
+    @Override
+    public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path outputDir ) throws IOException {
+        try ( LockedPath lockedPath = fileLockManager.acquirePathLock( outputDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
                 OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
             log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
             writeDiffExArchive( analysis, stream );

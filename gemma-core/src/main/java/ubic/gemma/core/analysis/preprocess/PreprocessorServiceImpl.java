@@ -197,7 +197,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             PreprocessorServiceImpl.log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                this.analyzerService.redoAnalysis( ee, copyMe, true );
+                this.analyzerService.redoAnalysis( ee, copyMe );
             }
         }
     }

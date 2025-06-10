@@ -19,17 +19,15 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import ubic.gemma.core.analysis.expression.diff.AnalysisType;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.cli.util.OptionsUtils;
+import ubic.gemma.core.analysis.expression.diff.*;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -41,8 +39,11 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.cli.util.OptionsUtils.*;
 
 /**
  * A command line interface to the {@link DifferentialExpressionAnalysis}.
@@ -80,16 +81,19 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private boolean ignoreBatch = true;
     private boolean delete = false;
-    private boolean tryToCopyOld = false;
+    private boolean redo = false;
 
     /**
      * Use moderated statistics.
      */
-    private boolean ebayes = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
+    private boolean moderateStatistics = DifferentialExpressionAnalysisConfig.DEFAULT_MODERATE_STATISTICS;
 
     private boolean persist = true;
     private boolean makeArchiveFiles = true;
     private boolean ignoreFailingSubsets = false;
+
+    @Nullable
+    private Path outputDir = null;
 
     @Override
     public String getCommandName() {
@@ -109,7 +113,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         addForceOption( options );
 
-        options.addOption( "factors", "factors", true, "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" );
+        options.addOption( Option.builder( "factors" ).longOpt( "factors" )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .desc( "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
+                .build() );
 
         options.addOption( "subset", "subset", true,
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors. "
@@ -134,8 +142,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
 
-        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them." );
+        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with -nodb." );
 
+        options.addOption( Option.builder( "outputDir" )
+                .longOpt( "output-dir" )
+                .hasArg().type( Path.class )
+                .desc( "Directory to write output files to. If not specified, it will default to the analysis output directory. This requires -nodb to be set." )
+                .build() );
     }
 
     private EnumMap<AnalysisType, MessageSourceResolvable> getAnalysisTypeDescriptions() {
@@ -148,60 +161,20 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( "type" ) ) {
-            if ( !commandLine.hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
-            }
-            this.type = OptionsUtils.getEnumOptionValue( commandLine, "type" );
-        }
-
-        if ( commandLine.hasOption( "subset" ) ) {
-            if ( !commandLine.hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
-            }
-
-            // note we add the given factor to the list of factors overall to make sure it is considered
-            this.subsetFactorIdentifier = commandLine.getOptionValue( "subset" );
-        }
-
-        if ( commandLine.hasOption( "usebatch" ) ) {
-            this.ignoreBatch = false;
-        }
-
-        if ( commandLine.hasOption( "delete" ) ) {
-            this.delete = true;
-        }
-
-        if ( commandLine.hasOption( "nobayes" ) ) {
-            this.ebayes = false;
-        }
-
-        if ( commandLine.hasOption( "nodb" ) ) {
-            this.persist = false;
-        }
-
-        if ( commandLine.hasOption( "ignoreFailingSubsets" ) ) {
-            this.ignoreFailingSubsets = true;
-        }
-
-        if ( commandLine.hasOption( "nofiles" ) ) {
-            this.makeArchiveFiles = false;
-        }
-
-        this.tryToCopyOld = commandLine.hasOption( "redo" );
-
+        this.type = OptionsUtils.getEnumOptionValue( commandLine, "type", requires( toBeSet( "factors" ) ) );
+        // note we add the given factor to the list of factors overall to make sure it is considered
+        this.subsetFactorIdentifier = getOptionValue( commandLine, "subset", requires( toBeSet( "factors" ) ) );
         if ( commandLine.hasOption( "factors" ) ) {
-
-            if ( this.tryToCopyOld ) {
-                throw new IllegalArgumentException( "You can't specify 'redo' and 'factors' together" );
-            }
-
-            String rawFactors = commandLine.getOptionValue( "factors" );
-            String[] factorIDst = StringUtils.split( rawFactors, "," );
-            if ( factorIDst != null ) {
-                this.factorIdentifiers.addAll( Arrays.asList( factorIDst ) );
-            }
+            this.factorIdentifiers.addAll( Arrays.asList( commandLine.getOptionValues( "factors" ) ) );
         }
+        this.ignoreBatch = !commandLine.hasOption( "usebatch" );
+        this.delete = commandLine.hasOption( "delete" );
+        this.moderateStatistics = !commandLine.hasOption( "nobayes" );
+        this.persist = !commandLine.hasOption( "nodb" );
+        this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
+        this.outputDir = getParsedOptionValue( commandLine, "outputDir", requires( toBeSet( "nodb" ) ) );
+        this.ignoreFailingSubsets = commandLine.hasOption( "ignoreFailingSubsets" );
+        this.redo = hasOption( commandLine, "redo", requires( allOf( toBeUnset( "subset" ), toBeUnset( "factors" ) ) ) );
     }
 
     @Override
@@ -224,7 +197,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
         config.setMakeArchiveFile( this.makeArchiveFiles );
-        config.setModerateStatistics( this.ebayes );
+        config.setModerateStatistics( this.moderateStatistics );
         config.setPersist( this.persist );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
         config.setUseWeights( super.eeService.isRNASeq( ee ) );
@@ -307,8 +280,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
              * Automatically
              */
 
-            if ( tryToCopyOld ) {
-                this.tryToRedoBasedOnOldAnalysis( ee );
+            if ( redo ) {
+                this.tryToRedoBasedOnOldAnalysis( ee, config );
             }
 
             Collection<ExperimentalFactor> factorsToUse = new HashSet<>();
@@ -329,12 +302,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( factorsToUse.size() > 3 ) {
 
-                if ( !tryToCopyOld ) {
+                if ( !redo ) {
                     throw new RuntimeException(
                             "Experiment has too many factors to run automatically: " + ee.getShortName()
                                     + "; try using the -redo flag to base it on an old analysis, or select factors manually" );
                 }
-                results = this.tryToRedoBasedOnOldAnalysis( ee );
+                results = this.tryToRedoBasedOnOldAnalysis( ee, config );
 
             } else {
 
@@ -364,7 +337,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         } else {
             log.info( "Writing results to disk" );
             for ( DifferentialExpressionAnalysis r : results ) {
-                try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( r, config ) ) {
+                try ( LockedPath lockedPath = outputDir != null ? expressionDataFileService.writeDiffExAnalysisArchiveFile( r, outputDir ) : expressionDataFileService.writeDiffExAnalysisArchiveFile( r ) ) {
                     log.info( "Wrote to " + lockedPath.getPath() );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
@@ -443,7 +416,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Run the analysis using configuration based on an old analysis.
      */
-    private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
+    private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee, DifferentialExpressionAnalysisConfig config ) {
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
                 .findByExperiment( ee );
 
@@ -453,8 +426,22 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-        for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-            results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.persist ) );
+        Collection<AnalysisException> analysisExceptions = new ArrayList<>();
+        for ( DifferentialExpressionAnalysis dea : oldAnalyses ) {
+            try {
+                results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, dea, config ) );
+            } catch ( AnalysisException e ) {
+                // FIXME: this is not exactly correct since the analysis might not be related to a subset factor, maybe
+                //        introduce another configuration option?
+                if ( config.isIgnoreFailingSubsets() ) {
+                    analysisExceptions.add( e );
+                } else {
+                    throw e;
+                }
+            }
+        }
+        if ( results.isEmpty() ) {
+            throw new AllAnalysesFailedException( "All analyses failed for " + ee, analysisExceptions, config );
         }
         return results;
     }
