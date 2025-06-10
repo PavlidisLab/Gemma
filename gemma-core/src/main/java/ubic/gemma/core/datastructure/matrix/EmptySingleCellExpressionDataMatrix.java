@@ -59,7 +59,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
 
     @Override
     public Object[] getColumn( int column ) {
-        if (column >= 0 && column < columns()) {
+        if ( column >= 0 && column < columns() ) {
             return EMPTY_COLUMN;
         } else {
             throw new IndexOutOfBoundsException();
@@ -89,6 +89,14 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
     @Override
     public int[] getRowIndices( CompositeSequence designElement ) {
         return null;
+    }
+
+    @Override
+    public ExpressionDataMatrix<Object> sliceRows( List<CompositeSequence> designElements ) {
+        if ( designElements.isEmpty() ) {
+            return this;
+        }
+        throw new IndexOutOfBoundsException();
     }
 
     @Override

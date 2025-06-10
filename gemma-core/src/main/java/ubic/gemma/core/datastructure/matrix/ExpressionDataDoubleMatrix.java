@@ -144,7 +144,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param rowsToUse rows
      * @param sourceMatrix matrix
      */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
+    private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -338,6 +338,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     public Double[] getRow( int index ) {
         // FIXME: DoubleMatrix.getRowObj is not efficient
         return ArrayUtils.toObject( matrix.getRow( index ) );
+    }
+
+    @Override
+    public ExpressionDataDoubleMatrix sliceRows( List<CompositeSequence> designElements ) {
+        return new ExpressionDataDoubleMatrix( this, designElements );
     }
 
     @Override

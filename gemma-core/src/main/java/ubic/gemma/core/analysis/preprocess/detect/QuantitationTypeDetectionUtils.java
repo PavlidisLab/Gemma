@@ -39,6 +39,14 @@ public class QuantitationTypeDetectionUtils {
                 qt.getScale() == ScaleType.LOG2;
     }
 
+    /**
+     * Check if a given QT holds log-transformed data.
+     */
+    public static boolean isLogTransformed( QuantitationType qt ) {
+        return qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LN || qt.getScale() == ScaleType.LOG10
+                || qt.getScale() == ScaleType.LOG1P || qt.getScale() == ScaleType.LOGBASEUNKNOWN;
+    }
+
     public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix ) {
         try {
             lintQuantitationType( quantitationType, dmatrix, true );

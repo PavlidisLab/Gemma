@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -79,7 +79,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             intensities = new RepetitiveValuesFilter().filter( QuantitationTypeConversionUtils.ensureLog2Scale( intensities ) );
         } catch ( QuantitationTypeConversionException e ) {
             log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is.", e );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
+        } catch ( FilteringException e ) {
             log.warn( "Problem filtering data. Check that the appropriate log scale is used. Mean-variance will be computed as is.", e );
         }
 

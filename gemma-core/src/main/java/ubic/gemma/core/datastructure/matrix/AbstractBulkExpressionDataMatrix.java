@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<T> implements BulkExpressionDataMatrix<T> {
 
+    @Nullable
     private final ExpressionExperiment expressionExperiment;
     private final QuantitationType quantitationType;
     private final BioAssayDimension bioAssayDimension;
@@ -41,7 +42,7 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
     @Nullable
     private List<ExpressionDataMatrixRowElement> rowElements;
 
-    protected AbstractBulkExpressionDataMatrix( ExpressionExperiment expressionExperiment, BioAssayDimension dimension,
+    protected AbstractBulkExpressionDataMatrix( @Nullable ExpressionExperiment expressionExperiment, BioAssayDimension dimension,
             QuantitationType quantitationType, List<CompositeSequence> designElements ) {
         this.expressionExperiment = expressionExperiment;
         this.bioAssayDimension = dimension;
@@ -82,6 +83,7 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
         designElementsIndex = ListUtils.indexOfAllElements( designElements );
     }
 
+    @Nullable
     @Override
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
