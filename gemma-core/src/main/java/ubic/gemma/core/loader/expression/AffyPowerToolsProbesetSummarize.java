@@ -378,20 +378,17 @@ public class AffyPowerToolsProbesetSummarize {
                 .info( "Target platform has " + csMap.size() + " elements, apt data matrix has " + matrix.rows() );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
-
-            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
-            vector.setDataAsDoubles( matrix.getRow( i ) );
-
             CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
             if ( cs == null ) {
                 continue;
             }
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setDesignElement( cs );
             vector.setQuantitationType( this.quantitationType );
             vector.setExpressionExperiment( expressionExperiment );
             vector.setBioAssayDimension( bioAssayDimension );
+            vector.setDataAsDoubles( matrix.getRow( i ) );
             vectors.add( vector );
-
         }
         AffyPowerToolsProbesetSummarize.log
                 .info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
