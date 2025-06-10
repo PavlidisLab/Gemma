@@ -22,8 +22,7 @@ public class TooFewDistinctValuesFilter implements Filter<ExpressionDataDoubleMa
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( RowLevelFilter.Method.DISTINCTVALUES );
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.DISTINCTVALUES );
         /*
          * 0.5 means: 1/2 of the values must be distinct. Close to zero means none of the values are distinct. 1.0 means
          * they are all distinct.

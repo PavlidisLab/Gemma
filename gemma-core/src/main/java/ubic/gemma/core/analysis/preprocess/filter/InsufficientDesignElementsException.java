@@ -19,13 +19,12 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
 /**
+ * Exception indicating that there is insufficient design elements (rows) to perform a particular filter.
  * @author paul
  */
-public class InsufficientProbesException extends InsufficientDataException {
+public class InsufficientDesignElementsException extends InsufficientDataException {
 
-    private static final long serialVersionUID = 1L;
-
-    public InsufficientProbesException( String message ) {
+    public InsufficientDesignElementsException( String message ) {
         super( message );
     }
 }

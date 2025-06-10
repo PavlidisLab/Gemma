@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author pavlidis
@@ -89,6 +90,11 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
     @Override
     public String[] getRow( int index ) {
         return matrix.getRow( index );
+    }
+
+    @Override
+    public ExpressionDataMatrix<String> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

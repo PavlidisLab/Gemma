@@ -11,8 +11,7 @@ public class ZeroVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( RowLevelFilter.Method.VAR );
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.VAR );
         rowLevelFilter.setLowCut( Constants.SMALLISH );
         rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( false );

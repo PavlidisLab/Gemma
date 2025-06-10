@@ -318,7 +318,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         fConfig.setIgnoreMinimumSampleThreshold( true );
         fConfig.setRequireSequences( requireSequences );
         // Loads using new array designs will fail. So we allow special case where there are no sequences.
-        return expressionDataMatrixService.getFilteredMatrix( ee, fConfig, vectors );
+        return expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
     }
 
     /**

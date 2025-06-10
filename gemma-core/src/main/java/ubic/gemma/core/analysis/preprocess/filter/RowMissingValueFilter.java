@@ -140,7 +140,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 .info( "Retaining " + kept.size() + " rows that meet criterion of at least " + minPresentCount
                         + " non-missing values" );
 
-        return new ExpressionDataDoubleMatrix( data, kept );
+        return data.sliceRows( kept );
 
     }
 

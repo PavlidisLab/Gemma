@@ -93,7 +93,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
         AffyProbeNameFilter.log.info( "There are " + kept.size() + " rows left after Affy probe name filtering." );
 
-        return new ExpressionDataDoubleMatrix( data, kept );
+        return data.sliceRows( kept );
     }
 
     private void setCriteria( Pattern[] criteria ) {

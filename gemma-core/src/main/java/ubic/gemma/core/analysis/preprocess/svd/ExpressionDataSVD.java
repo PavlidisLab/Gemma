@@ -420,7 +420,7 @@ public class ExpressionDataSVD {
         }
 
         // remove genes which are near the origin in SVD space. FIXME: make sure the missing values are still masked.
-        return new ExpressionDataDoubleMatrix( this.expressionData, keepers );
+        return this.expressionData.sliceRows( keepers );
 
     }
 

@@ -10,7 +10,7 @@ public class LowVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
     private final double lowVarianceCut;
 
     /**
-     * @param lowVarianceCut minimum variance to keep a row.
+     * @param lowVarianceCut minimum variance to keep a row, exclusive.
      */
     public LowVarianceFilter( double lowVarianceCut ) {
         this.lowVarianceCut = lowVarianceCut;
@@ -18,8 +18,7 @@ public class LowVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( RowLevelFilter.Method.VAR );
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.VAR );
         rowLevelFilter.setLowCut( lowVarianceCut, false );
         rowLevelFilter.setRemoveAllNegative( false );
         return rowLevelFilter.filter( dataMatrix );

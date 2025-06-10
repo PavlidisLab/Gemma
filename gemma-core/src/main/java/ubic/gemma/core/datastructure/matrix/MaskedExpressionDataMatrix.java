@@ -153,6 +153,11 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
     }
 
     @Override
+    public ExpressionDataMatrix<T> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing masked matrices is not supported." );
+    }
+
+    @Override
     @Deprecated
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         return matrix.getRowElements();

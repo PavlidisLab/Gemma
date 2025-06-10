@@ -39,6 +39,17 @@ import java.util.Map;
 public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
+     * Fewer rows than this, and we bail.
+     */
+    public static final int MINIMUM_ROWS_TO_BOTHER = 50;
+    /**
+     * How many samples a dataset has to have before we consider analyzing it.
+     *
+     * @see ExpressionExperimentFilter#MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
+     */
+    public final static int MINIMUM_SAMPLE = 20;
+
+    /**
      * Minimum number of samples for keeping rows when min-present filtering. Rows with more missing values
      * than this are always removed. This can be increased by the use of the min fraction present filter which sets a
      * fraction.
@@ -59,45 +70,45 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         this.config = config;
     }
 
+    @Override
+    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) throws InsufficientDesignElementsException, InsufficientSamplesException {
+        return filter( matrix, new FilterResult() );
+    }
+
     /**
      * @param eeDoubleMatrix , already masked for missing values.
      * @return filtered matrix
      */
-    @Override
-    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException, InsufficientSamplesException, InsufficientProbesException {
+    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix, FilterResult result ) throws InsufficientSamplesException, InsufficientDesignElementsException {
         if ( eeDoubleMatrix.rows() == 0 )
-            throw new IllegalArgumentException( "No data found!" );
+            throw new NoDesignElementsException( "No data found!" );
 
         if ( !config.isIgnoreMinimumSampleThreshold() ) {
-            if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+            if ( eeDoubleMatrix.columns() < MINIMUM_SAMPLE ) {
                 throw new InsufficientSamplesException(
-                        String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", FilterConfig.MINIMUM_SAMPLE ) );
+                        String.format( "Not enough samples, must have at least %d to be eligible for link analysis.", MINIMUM_SAMPLE ) );
             } else if ( !config.isIgnoreMinimumRowsThreshold()
-                    && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException(
+                    && eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientDesignElementsException(
                         String.format( "To few rows in (%d) prior to filtering, data sets are not analyzed unless they have at least %d to be eligible for analysis.",
-                                eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
+                                eeDoubleMatrix.rows(), MINIMUM_ROWS_TO_BOTHER ) );
             }
         }
 
-        eeDoubleMatrix = this.doFilter( eeDoubleMatrix );
-
-        if ( eeDoubleMatrix == null )
-            throw new IllegalStateException( "Failed to get filtered data matrix, it was null" );
+        eeDoubleMatrix = this.doFilter( eeDoubleMatrix, result );
 
         if ( eeDoubleMatrix.rows() == 0 ) {
-            ExpressionExperimentFilter.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering." );
+            throw new NoDesignElementsException( "No rows left after filtering." );
         } else if ( !config.isIgnoreMinimumRowsThreshold()
-                && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(
+                && eeDoubleMatrix.rows() < MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientDesignElementsException(
                     String.format( "To few rows (%d) after filtering, data sets are not analyzed unless they have at least %d rows.",
-                            eeDoubleMatrix.rows(), FilterConfig.MINIMUM_ROWS_TO_BOTHER ) );
+                            eeDoubleMatrix.rows(), MINIMUM_ROWS_TO_BOTHER ) );
         } else if ( !config.isIgnoreMinimumSampleThreshold()
-                && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+                && eeDoubleMatrix.columns() < MINIMUM_SAMPLE ) {
             throw new InsufficientSamplesException(
                     String.format( "Not enough samples, must have at least %d to be eligible for link analysis.",
-                            FilterConfig.MINIMUM_SAMPLE ) );
+                            MINIMUM_SAMPLE ) );
         }
 
         return eeDoubleMatrix;
@@ -111,15 +122,15 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
      * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
      * type, if present) are masked
      */
-    private ExpressionDataDoubleMatrix doFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) throws NoRowsLeftAfterFilteringException {
+    private ExpressionDataDoubleMatrix doFilter( ExpressionDataDoubleMatrix eeDoubleMatrix, FilterResult result ) throws NoDesignElementsException {
 
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
         int startingRows = eeDoubleMatrix.rows();
-        config.setStartingRows( startingRows );
+        result.setStartingRows( startingRows );
 
         if ( config.isRequireSequences() ) {
-            filteredMatrix = this.noSequencesFilter( eeDoubleMatrix );
+            filteredMatrix = this.filterNoSequences( eeDoubleMatrix );
             if ( filteredMatrix.rows() == 0 ) {
                 // This can happen if the array design is not populated. To avoid problems with useless failures, just
                 // skip this step.
@@ -141,19 +152,19 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
 
         if ( this.usesAffymetrix() ) {
             ExpressionExperimentFilter.log.debug( "Filtering Affymetrix controls" );
-            filteredMatrix = this.affyControlProbeFilter( filteredMatrix );
+            filteredMatrix = this.filterAffyControlProbes( filteredMatrix );
             afterAffyControlsFilter = filteredMatrix.rows();
         }
-        config.setAfterInitialFilter( afterAffyControlsFilter );
+        result.setAfterInitialFilter( afterAffyControlsFilter );
 
         if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
             ExpressionExperimentFilter.log.debug( "Filtering for missing data" );
-            filteredMatrix = this.minPresentFilter( filteredMatrix );
+            filteredMatrix = this.filterMissingValues( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
-            config.setAfterMinPresentFilter( afterMinPresentFilter );
+            result.setAfterMinPresentFilter( afterMinPresentFilter );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after minimum non-missing data filtering" );
+                throw new NoDesignElementsException( "No rows left after minimum non-missing data filtering" );
             }
         }
 
@@ -163,9 +174,9 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         ExpressionExperimentFilter.log.debug( "Filtering rows with zero variance" );
         filteredMatrix = new ZeroVarianceFilter().filter( filteredMatrix );
         afterZeroVarianceCut = filteredMatrix.rows();
-        config.setAfterZeroVarianceCut( afterZeroVarianceCut );
+        result.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
-            throw new NoRowsLeftAfterFilteringException( "No rows left after filtering rows with zero variance" );
+            throw new NoDesignElementsException( "No rows left after filtering rows with zero variance" );
         }
 
         /*
@@ -174,12 +185,12 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         if ( config.isLowExpressionCutIsSet() ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low or too high expression" );
             Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
-            filteredMatrix = this.lowExpressionFilter( filteredMatrix, ranks );
+            filteredMatrix = this.filterLowExpression( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
-            config.setAfterLowExpressionCut( afterLowExpressionCut );
+            result.setAfterLowExpressionCut( afterLowExpressionCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after expression level filtering" );
+                throw new NoDesignElementsException( "No rows left after expression level filtering" );
             }
         }
 
@@ -195,12 +206,12 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
          */
         if ( config.isLowVarianceCutIsSet() ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low variance " );
-            filteredMatrix = this.lowVarianceFilter( filteredMatrix );
+            filteredMatrix = this.filterLowVariance( filteredMatrix );
             afterLowVarianceCut = filteredMatrix.rows();
-            config.setAfterLowVarianceCut( afterLowVarianceCut );
+            result.setAfterLowVarianceCut( afterLowVarianceCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( "No rows left after variance filtering" );
+                throw new NoDesignElementsException( "No rows left after variance filtering" );
             }
         }
 
@@ -235,11 +246,14 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
      * @param matrix the matrix
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
+    private ExpressionDataDoubleMatrix filterAffyControlProbes( ExpressionDataDoubleMatrix matrix ) {
         return new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } ).filter( matrix );
     }
 
-    private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
+    /**
+     * Filter rows with low expression levels.
+     */
+    private ExpressionDataDoubleMatrix filterLowExpression( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Double> ranks ) {
         // check for null ranks, in which case we can't use this.
         for ( Double d : ranks.values() ) {
@@ -256,7 +270,10 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         return rowLevelFilter.filter( matrix );
     }
 
-    private ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
+    /**
+     * Filter rows with low variance.
+     */
+    private ExpressionDataDoubleMatrix filterLowVariance( ExpressionDataDoubleMatrix matrix ) {
         return new LowVarianceFilter( config.getLowVarianceCut() ).filter( matrix );
     }
 
@@ -266,7 +283,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
      * @param matrix with missing values masked already
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix ) {
+    private ExpressionDataDoubleMatrix filterMissingValues( ExpressionDataDoubleMatrix matrix ) {
         ExpressionExperimentFilter.log.info( "Filtering out genes that are missing too many values" );
 
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
@@ -281,9 +298,10 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
     }
 
     /**
-     * Filter rows that lack BioSequences associated with the probes.
+     * Remove rows that lack a {@link ubic.gemma.model.genome.biosequence.BioSequence} associated to their design
+     * element.
      */
-    private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+    private ExpressionDataDoubleMatrix filterNoSequences( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         return new RowsWithSequencesFilter().filter( eeDoubleMatrix );
     }
 
