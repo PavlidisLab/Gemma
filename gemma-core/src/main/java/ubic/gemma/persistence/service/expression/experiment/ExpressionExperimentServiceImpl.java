@@ -290,13 +290,7 @@ public class ExpressionExperimentServiceImpl
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
         createDimensionIfNecessary( newVectors );
-        if ( quantitationType.getId() == null ) {
-            log.info( "Creating " + quantitationType + "..." );
-            quantitationType = quantitationTypeService.create( quantitationType, RawExpressionDataVector.class );
-            for ( RawExpressionDataVector vector : newVectors ) {
-                vector.setQuantitationType( quantitationType );
-            }
-        }
+        createQuantitationTypeIfNecessary( newVectors, RawExpressionDataVector.class );
         return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
@@ -386,6 +380,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
         createDimensionIfNecessary( vectors );
+        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
         return expressionExperimentDao.createProcessedDataVectors( ee, vectors );
     }
 
@@ -399,6 +394,8 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
         createDimensionIfNecessary( vectors );
+        // unlike raw vectors, the "new" processed vectors might use a different QT
+        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
         return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
     }
 
@@ -415,6 +412,23 @@ public class ExpressionExperimentServiceImpl
             bad = this.bioAssayDimensionService.findOrCreate( bad );
             for ( BulkExpressionDataVector vector : vectors ) {
                 vector.setBioAssayDimension( bad );
+            }
+        }
+    }
+
+    private <T extends DataVector> void createQuantitationTypeIfNecessary( Collection<T> vectors, Class<? extends DataVector> vectorType ) {
+        Set<QuantitationType> quantitationType = vectors.stream()
+                .map( DataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+        if ( quantitationType.size() != 1 ) {
+            throw new IllegalArgumentException( "Vectors must share a common quantitation type." );
+        }
+        QuantitationType qt = quantitationType.iterator().next();
+        if ( qt.getId() == null ) {
+            log.info( "Creating " + qt + "..." );
+            qt = quantitationTypeService.create( qt, vectorType );
+            for ( DataVector vector : vectors ) {
+                vector.setQuantitationType( qt );
             }
         }
     }
