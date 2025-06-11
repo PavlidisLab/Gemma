@@ -25,11 +25,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.Constants;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -239,6 +241,10 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
+
+        /* FIXME: filter out rows from the count matrix that have all zero counts */
+
+
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                 .convertToLog2Cpm( properCountMatrix, librarySize );
 
@@ -314,6 +320,10 @@ public class DataUpdaterImpl implements DataUpdater {
 
             QuantitationType log2cpmQt = this.makelog2cpmQt();
             DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
+
+            /* FIXME: filter out rows from the count matrix that have all zero counts */
+
+
             DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                     .convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
 

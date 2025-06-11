@@ -215,6 +215,9 @@ public class QuantitationTypeConversionUtils {
                  */
                 QuantitationTypeConversionUtils.log.info( " **** Converting from count to log2 counts per million **** " );
                 DoubleMatrix1D librarySize = MatrixStats.colSums( transformedMatrix );
+                /* FIXME: filter out rows from the count matrix that have all zero counts. Hree, this should already probably have been done */
+
+
                 transformedMatrix = MatrixStats.convertToLog2Cpm( transformedMatrix, librarySize );
                 // as we convert counts to log2cpm
                 type = StandardQuantitationType.AMOUNT;
