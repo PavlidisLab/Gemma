@@ -50,8 +50,8 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
 
@@ -357,8 +357,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             // Case of no experimental design; just put in a dummy factor.
-            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance();
-            dummyFactor.setName( "No factors" );
+            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance( "No factors", FactorType.CATEGORICAL );
             for ( BioMaterial bm : bms ) {
                 int j = mat.getColumnIndex( bm );
 
