@@ -5,11 +5,10 @@ import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.MatrixStats;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -89,12 +88,13 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
             return filterDistinctValuesByRanks( filterZeroVariance( dmatrix ), rank( dmatrix ) );
         }
 
-        if ( qt.getType() == StandardQuantitationType.COUNT ) {
+        // the scale type does not really matter here since the counts will be converted to identical floating point values
+        if ( QuantitationTypeUtils.isCount( qt ) ) {
             log.info( "Matrix contains counts, filtering of repetitive rows will be based on the actual values." );
             return filterDistinctValues( dmatrix );
         }
 
-        if ( QuantitationTypeDetectionUtils.isLog2cpm( qt ) ) {
+        if ( QuantitationTypeUtils.isLog2cpm( qt ) ) {
             long[] librarySize = dmatrix.getBestBioAssayDimension().flatMap( this::getLibrarySize ).orElse( null );
             if ( librarySize != null ) {
                 log.info( "Matrix contains log2cpm data with known library sizes, the repetitive values filter will use values that are not corrected for library size." );
@@ -105,7 +105,7 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
             }
         }
 
-        if ( QuantitationTypeDetectionUtils.isLogTransformed( qt ) ) {
+        if ( QuantitationTypeUtils.isLogTransformed( qt ) ) {
             return filterDistinctValuesByRanks( filterZeroVariance( dmatrix ), rank( dmatrix ) );
         } else {
             log.warn( "Matrix does not contain log-transformed data, will attempt to convert it to log2..." );
