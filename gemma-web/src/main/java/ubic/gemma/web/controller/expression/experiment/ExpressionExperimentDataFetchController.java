@@ -107,7 +107,7 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response );
+            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
         }
     }
 
@@ -125,7 +125,8 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response );
+            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
+                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT );
         }
     }
 
@@ -140,6 +141,10 @@ public class ExpressionExperimentDataFetchController {
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
         List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
+            if ( type == ExpressionExperimentMetaFileType.MULTIQC_DATA || type == ExpressionExperimentMetaFileType.MULTIQC_LOG ) {
+                // don't display these in the GUI
+                continue;
+            }
             // Some files are prefixed with the experiments accession
             expressionDataFileService.getMetadataFile( ee, type, false )
                     .map( LockedPath::closeAndGetPath )
@@ -193,10 +198,6 @@ public class ExpressionExperimentDataFetchController {
         return f;
     }
 
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
-
     /**
      * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
@@ -204,13 +205,15 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletRequest request, HttpServletResponse response ) throws IOException {
+    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletRequest request, HttpServletResponse response, boolean downloadAsAttachment ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
             downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
         response.setContentLengthLong( Files.size( f ) );
-        response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
+        if ( downloadAsAttachment ) {
+            response.addHeader( "Content-Disposition", "attachment; filename=\"" + downloadName + "\"" );
+        }
         if ( enableTomcatSendfile ) {
             if ( Boolean.TRUE.equals( request.getAttribute( "org.apache.tomcat.sendfile.support" ) ) ) {
                 downloadViaSendfile( f, request, response );
