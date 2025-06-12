@@ -104,7 +104,7 @@ public class QuantitationTypeDetectionUtils {
         return qt;
     }
 
-    public static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
+    private static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
             matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );
