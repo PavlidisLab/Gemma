@@ -79,6 +79,15 @@ public interface DifferentialExpressionAnalyzerService {
             DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config );
 
     /**
+     * Redo multiple analyses.
+     *
+     * @param ignoreFailingAnalyses if true, analyses that fail will not be reported as errors, but will be skipped.
+     *                              Note that if all analyses fail, a {@link AllAnalysesFailedException} will be raised.
+     * @see #redoAnalysis(ExpressionExperiment, DifferentialExpressionAnalysis, DifferentialExpressionAnalysisConfig)
+     */
+    Collection<DifferentialExpressionAnalysis> redoAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> deas, DifferentialExpressionAnalysisConfig config, boolean ignoreFailingAnalyses );
+
+    /**
      * @param expressionExperiment the experiment
      * @param config               config
      * @return persistent analyses.

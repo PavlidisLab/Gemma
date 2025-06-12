@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -162,6 +163,28 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         if ( config.isPersist() ) {
             return this.persistAnalyses( ee, results, newConfig );
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> redoAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> deas, DifferentialExpressionAnalysisConfig config, boolean ignoreFailingAnalyses ) {
+        Assert.isTrue( !deas.isEmpty(), "At least one analysis must be supplied." );
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        Collection<AnalysisException> analysisExceptions = new ArrayList<>();
+        for ( DifferentialExpressionAnalysis dea : deas ) {
+            try {
+                results.addAll( redoAnalysis( ee, dea, config ) );
+            } catch ( AnalysisException e ) {
+                if ( ignoreFailingAnalyses ) {
+                    analysisExceptions.add( e );
+                } else {
+                    throw e;
+                }
+            }
+        }
+        if ( results.isEmpty() ) {
+            throw new AllAnalysesFailedException( "All analyses failed for " + ee, analysisExceptions, config );
         }
         return results;
     }
