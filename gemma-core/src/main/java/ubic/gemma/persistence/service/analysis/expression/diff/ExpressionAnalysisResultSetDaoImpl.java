@@ -413,6 +413,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
                 .setParameter( "rs", resultSet )
                 .uniqueResult();
+        if ( pvd == null ) {
+            return null;
+        }
         double[] counts = pvd.getBinCounts();
         Integer numBins = pvd.getNumBins();
         assert numBins == counts.length;
