@@ -29,12 +29,14 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -246,31 +248,27 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private boolean isLogTransformed( ExpressionDataDoubleMatrix eeDoubleMatrix, Collection<ArrayDesign> arrayDesignsUsed ) {
         Collection<QuantitationType> quantitationTypes = eeDoubleMatrix.getQuantitationTypes();
         for ( QuantitationType qt : quantitationTypes ) {
-            ScaleType scale = qt.getScale();
-            if ( scale.equals( ScaleType.LN ) || scale.equals( ScaleType.LOG10 ) || scale.equals( ScaleType.LOG2 )
-                    || scale.equals( ScaleType.LOGBASEUNKNOWN ) ) {
+            if ( QuantitationTypeUtils.isLogTransformed( qt ) ) {
                 log.info( "Quantitation type says the data is already log transformed" );
                 return true;
             }
         }
 
-        if ( this.isTwoColor( arrayDesignsUsed ) ) {
+        // assume based on the platform
+        if ( isTwoColor( arrayDesignsUsed ) ) {
             log.info( "Data is from a two-color array, assuming it is log transformed" );
             return true;
         }
 
-        for ( int i = 0; i < eeDoubleMatrix.rows(); i++ ) {
-            for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
-                double v = eeDoubleMatrix.getAsDouble( i, j );
-                if ( v > 20 ) {
-                    log.info( "Data has large values, doesn't look log transformed" );
-                    return false;
-                }
-            }
+        // detect based on the data itself
+        QuantitationType inferredQt = QuantitationTypeDetectionUtils.inferQuantitationType( eeDoubleMatrix );
+        if ( QuantitationTypeUtils.isLogTransformed( inferredQt ) ) {
+            log.info( "Data looks log-transformed, but not sure...assuming it is" );
+            return true;
+        } else {
+            log.info( "Data has large values, doesn't look log transformed" );
+            return false;
         }
-
-        log.info( "Data looks log-transformed, but not sure...assuming it is" );
-        return true;
     }
 
     /**
@@ -278,13 +276,11 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      *
      * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
      */
-    private Boolean isTwoColor( Collection<ArrayDesign> arrayDesignsUsed ) {
-        Boolean answer = null;
-
+    private boolean isTwoColor( Collection<ArrayDesign> arrayDesignsUsed ) {
         if ( arrayDesignsUsed.isEmpty() ) {
             throw new IllegalStateException();
         }
-
+        Boolean answer = null;
         for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
             TechnologyType techType = arrayDesign.getTechnologyType();
             boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
