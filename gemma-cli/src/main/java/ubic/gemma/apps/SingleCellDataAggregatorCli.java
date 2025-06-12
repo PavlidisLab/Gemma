@@ -212,7 +212,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             }
 
             if ( previousQt != null && previousQt.getIsPreferred() && !makePreferred ) {
-                log.warn( "The previous quantitation type is the preferred one, consider using -" + MAKE_PREFERRED_OPTION + " to make the new one preferred as well." );
+                throw new IllegalStateException( "The previous quantitation type is the preferred one, use -" + MAKE_PREFERRED_OPTION + " to make the new one preferred as well." );
             }
 
             Map<FactorValue, ExpressionExperimentSubSet> subsetsByFv = eeService.getSubSetsByFactorValueWithCharacteristicsAndBioAssays( expressionExperiment, cellTypeFactor, dimension );
