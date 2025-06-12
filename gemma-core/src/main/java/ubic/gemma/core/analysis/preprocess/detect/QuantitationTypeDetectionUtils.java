@@ -9,7 +9,6 @@ import cern.jet.math.Functions;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -28,24 +27,6 @@ import java.util.List;
 
 @CommonsLog
 public class QuantitationTypeDetectionUtils {
-
-    /**
-     * Check if a given quantitation type holds log2 CPM.
-     */
-    public static boolean isLog2cpm( QuantitationType qt ) {
-        return StringUtils.contains( qt.getName(), "log2cpm" ) &&
-                qt.getGeneralType() == GeneralType.QUANTITATIVE &&
-                qt.getType() == StandardQuantitationType.AMOUNT &&
-                qt.getScale() == ScaleType.LOG2;
-    }
-
-    /**
-     * Check if a given QT holds log-transformed data.
-     */
-    public static boolean isLogTransformed( QuantitationType qt ) {
-        return qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LN || qt.getScale() == ScaleType.LOG10
-                || qt.getScale() == ScaleType.LOG1P || qt.getScale() == ScaleType.LOGBASEUNKNOWN;
-    }
 
     public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix ) {
         try {
