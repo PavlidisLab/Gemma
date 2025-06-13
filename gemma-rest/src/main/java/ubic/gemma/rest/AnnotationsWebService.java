@@ -124,10 +124,10 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public List<AnnotationSearchResultValueObject> getAnnotationsParents(
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsParents(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct children.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
-        return getAnnotationsParentsOrChildren( termUri, direct, true );
+        return respond( getAnnotationsParentsOrChildren( termUri, direct, true ) );
     }
 
     /**
@@ -145,10 +145,10 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public List<AnnotationSearchResultValueObject> getAnnotationsChildren(
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsChildren(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct parents.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
-        return getAnnotationsParentsOrChildren( termUri, direct, false );
+        return respond(getAnnotationsParentsOrChildren( termUri, direct, false ) );
     }
 
     private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {
