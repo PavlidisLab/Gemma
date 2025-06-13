@@ -204,12 +204,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
-        Path outputLocation = outputLocations.iterator().next()
-                .closeAndGetPath();
+        Path outputLocation = outputLocations.iterator().next();
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();

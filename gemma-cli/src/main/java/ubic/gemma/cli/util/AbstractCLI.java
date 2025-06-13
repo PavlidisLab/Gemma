@@ -201,20 +201,12 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 // check if -h/--help was passed alongside a required argument
-                if ( ArrayUtils.contains( getCliContext().getArguments(), "-h" ) || ArrayUtils.contains( getCliContext().getArguments(), "--help" ) ) {
+                if ( ArrayUtils.containsAny( getCliContext().getArguments(), "-h", "--help" ) ) {
                     printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
                     return SUCCESS;
                 }
-                getCliContext().getErrorStream().println( "Required option(s) were not supplied: " + e.getMessage() );
-            } else if ( e instanceof AlreadySelectedException ) {
-                getCliContext().getErrorStream().println( "The option(s) " + e.getMessage() + " were already selected" );
-            } else if ( e instanceof MissingArgumentException ) {
-                getCliContext().getErrorStream().println( "Missing argument: " + e.getMessage() );
-            } else if ( e instanceof UnrecognizedOptionException ) {
-                getCliContext().getErrorStream().println( "Unrecognized option: " + e.getMessage() );
-            } else {
-                getCliContext().getErrorStream().println( e.getMessage() );
             }
+            getCliContext().getErrorStream().println( e.getMessage() );
             printHelp( options, new PrintWriter( getCliContext().getErrorStream(), true ) );
             return FAILURE;
         }
@@ -235,7 +227,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                 log.warn( "Operation was aborted by the current user." );
                 return ABORTED;
             } else {
-                log.error( String.format( "%s failed: %s", getCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
+                log.error( String.format( "%s failed: %s", getActualCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
                 return FAILURE;
             }
         } finally {
@@ -278,11 +270,18 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * This will be included in the 'Usage: ...' error message when the CLI is misused.
      */
     protected String getUsage() {
+        return "gemma-cli [options] " + getActualCommandName() + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
+    }
+
+    /**
+     * Obtain the actual command name used to invoke this CLI.
+     */
+    private String getActualCommandName() {
         String commandName = this.getCliContext().getCommandNameOrAliasUsed();
         if ( commandName == null ) {
             commandName = getClass().getName();
         }
-        return "gemma-cli [options] " + commandName + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
+        return commandName;
     }
 
     /**

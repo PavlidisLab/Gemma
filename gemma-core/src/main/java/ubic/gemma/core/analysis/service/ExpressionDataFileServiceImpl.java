@@ -744,7 +744,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
+                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getPath() );
                 int written = writeProcessedExpressionData( ee, filtered, null, writer, false );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return Optional.of( lockedPath.toShared() );
@@ -872,11 +872,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+    public Collection<Path> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
-        Collection<LockedPath> result = new HashSet<>();
+        Collection<Path> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            result.add( this.writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) );
+            try ( LockedPath lockedPath = writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) ) {
+                result.add( lockedPath.getPath() );
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<Path> writeDiffExpressionDataFiles( ExpressionExperiment ee, Path outputDir ) throws IOException {
+        Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
+        Collection<Path> result = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            try ( LockedPath lockedPath = writeDiffExAnalysisArchiveFile( analysis, outputDir ) ) {
+                result.add( lockedPath.getPath() );
+            }
         }
         return result;
     }
@@ -918,6 +932,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException {
         return writeDiffExAnalysisArchiveFile( analysis, dataDir );
     }
+
 
     @Override
     public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path outputDir ) throws IOException {

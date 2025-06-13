@@ -362,7 +362,9 @@ public interface ExpressionDataFileService {
      * @param forceWrite whether to force write
      * @return collection of files, one per analysis.
      */
-    Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Collection<Path> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+
+    Collection<Path> writeDiffExpressionDataFiles( ExpressionExperiment ee, Path outputDir ) throws IOException;
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that

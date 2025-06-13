@@ -18,10 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import lombok.Value;
+import org.apache.commons.cli.*;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -31,6 +29,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -187,6 +186,109 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
         options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
         singleExperimentOptions.add( opt );
+    }
+
+    /**
+     * Add an option that is only available in single-experiment mode to an option group.
+     * <p>
+     * The group itself must be added to the options via {@link Options#addOptionGroup}
+     */
+    private void addSingleExperimentOption( OptionGroup optionGroup, Option option ) {
+        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        optionGroup.addOption( option );
+        singleExperimentOptions.add( option.getOpt() );
+    }
+
+    protected static final String OUTPUT_FILE_OPTION = "o",
+            OUTPUT_DIR_OPTION = "d",
+            STANDARD_LOCATION_OPTION = "standardLocation",
+            STANDARD_OUTPUT_OPTION = "stdout";
+
+    /**
+     * Add options for writing expression data files, such as raw or processed data files.
+     * @param addStdoutOption whether the standard output option should be added
+     * @param addOutputFileOption whether the output file option should be added
+     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
+     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
+     */
+    protected void addExpressionDataFileOptions( Options options, String what, boolean addStdoutOption, boolean addOutputFileOption ) {
+        OptionGroup og = new OptionGroup();
+        if ( addOutputFileOption ) {
+            addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
+                    .longOpt( "output-file" ).hasArg().type( Path.class )
+                    .desc( "Write " + what + " to the given output file." ).build() );
+        }
+        og.addOption( Option.builder( OUTPUT_DIR_OPTION )
+                .longOpt( "output-dir" ).hasArg().type( Path.class )
+                .desc( "Write " + what + " inside the given directory." ).build() );
+        og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
+                .longOpt( "standard-location" )
+                .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
+                .build() );
+        if ( addStdoutOption ) {
+            addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
+                    .longOpt( "stdout" )
+                    .desc( "Write " + what + " to standard output. This option is incompatible with -outputFile, -outputDir and -standardLocation." )
+                    .build() );
+        }
+        options.addOptionGroup( og );
+    }
+
+    @Value
+    protected class ExpressionDataFileResult {
+        /**
+         * Write the file to the standard location in the {@code ${gemma.appdata.home}/dataFiles} directory.
+         */
+        boolean standardLocation;
+        /**
+         * Write the file to standard output.
+         */
+        boolean standardOutput;
+        /**
+         * Write the file to the given output file.
+         */
+        @Nullable
+        Path outputFile;
+        /**
+         * Write the file to the given output directory.
+         */
+        @Nullable
+        Path outputDir;
+
+        /**
+         *
+         * @param filenameToUseIfDirectory if the output directory is set, this filename will be used to create the
+         *                                 output file. Use utilities in {@link ubic.gemma.core.analysis.service.ExpressionDataFileUtils}
+         *                                 to generate the filename.
+         */
+        public Path getOutputFile( String filenameToUseIfDirectory ) {
+            if ( getOutputFile() != null ) {
+                return checkIfExists( outputFile );
+            } else if ( getOutputDir() != null ) {
+                return checkIfExists( getOutputDir().resolve( filenameToUseIfDirectory ) );
+            } else {
+                throw new IllegalStateException( "This result does not have an output file or directory set." );
+            }
+        }
+
+        private Path checkIfExists( Path o ) {
+            if ( !isForce() && Files.exists( o ) ) {
+                throw new RuntimeException( o + " already exists, use -" + FORCE_OPTION + " to overwrite it." );
+            }
+            return o;
+        }
+    }
+
+    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine ) throws ParseException {
+        if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
+            log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
+            return new ExpressionDataFileResult( true, false, null, null );
+        }
+        return new ExpressionDataFileResult(
+                commandLine.hasOption( STANDARD_LOCATION_OPTION ),
+                commandLine.hasOption( STANDARD_OUTPUT_OPTION ),
+                commandLine.getParsedOptionValue( OUTPUT_FILE_OPTION ),
+                commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION ) );
     }
 
     @Override
@@ -348,7 +450,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
-     * Pre-process BioAssays.
+     * Preprocess the set of {@link BioAssaySet} before invoking {@link #processBioAssaySets(Collection)} or
+     * {@link #processBioAssaySet(BioAssaySet)}.
+     * <p>
+     * This can be an opportunity to filter or modify the set of experiments.
      */
     protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         return expressionExperiments;
