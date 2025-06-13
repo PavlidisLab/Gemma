@@ -17,7 +17,7 @@
     <table>
         <tr>
             <td class="label">Short Name:</td>
-            <td>${bioAssay.shortName}</td>
+            <td>${fn:escapeXml(bioAssay.shortName)}</td>
         </tr>
         <tr>
             <td class="label"><fmt:message key="databaseEntry.title" />:</td>
