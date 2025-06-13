@@ -22,15 +22,13 @@ public class TooFewDistinctValuesFilter implements Filter<ExpressionDataDoubleMa
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.DISTINCTVALUES );
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.DISTINCT_VALUES );
         /*
          * 0.5 means: 1/2 of the values must be distinct. Close to zero means none of the values are distinct. 1.0 means
          * they are all distinct.
          */
         rowLevelFilter.setLowCut( threshold );
-        rowLevelFilter.setUseAsFraction( false );
         rowLevelFilter.setTolerance( Constants.SMALLISH );
-        rowLevelFilter.setRemoveAllNegative( false );
         return rowLevelFilter.filter( matrix );
     }
 

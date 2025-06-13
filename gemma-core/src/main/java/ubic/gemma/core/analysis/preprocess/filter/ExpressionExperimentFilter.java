@@ -264,7 +264,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
             }
         }
 
-        RowLevelFilter rowLevelFilter = new RowLevelFilter( ranks );
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( ranks::get );
         rowLevelFilter.setLowCut( config.getLowExpressionCut() );
         rowLevelFilter.setHighCut( config.getHighExpressionCut() );
         return rowLevelFilter.filter( matrix );

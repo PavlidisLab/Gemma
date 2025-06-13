@@ -235,7 +235,7 @@ public class RepetitiveValuesFilterTest {
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
         DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
         for ( int j = 0; j < 10; j++ ) {
-            if ( j < 7 ) {
+            if ( j < 8 ) {
                 cm.set( 5, j, 0.0 );
             } else {
                 cm.set( 5, j, ( double ) j - 8.0 );
@@ -279,7 +279,7 @@ public class RepetitiveValuesFilterTest {
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
         DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
         for ( int j = 0; j < 10; j++ ) {
-            if ( j < 7 ) {
+            if ( j < 8 ) {
                 cm.set( 5, j, 0.0 );
             } else {
                 cm.set( 5, j, ( double ) j - 8.0 );
