@@ -19,8 +19,7 @@ public class LowVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.VAR );
-        rowLevelFilter.setLowCut( lowVarianceCut, false );
-        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setLowCut( lowVarianceCut );
         return rowLevelFilter.filter( dataMatrix );
     }
 

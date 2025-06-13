@@ -13,8 +13,6 @@ public class ZeroVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.VAR );
         rowLevelFilter.setLowCut( Constants.SMALLISH );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
     }
 

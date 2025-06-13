@@ -1,7 +1,13 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
 import lombok.Data;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 
+/**
+ * Hold the results of filtering with {@link ExpressionExperimentFilter}.
+ * @see ExpressionExperimentFilter#filter(ExpressionDataDoubleMatrix, FilterResult)
+ * @author poirigui
+ */
 @Data
 public class FilterResult {
     private int startingRows = 0;
