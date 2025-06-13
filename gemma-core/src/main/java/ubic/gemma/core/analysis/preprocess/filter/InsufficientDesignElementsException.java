@@ -16,20 +16,15 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.analysis.preprocess;
-
-import ubic.gemma.core.analysis.preprocess.filter.InsufficientDataException;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+package ubic.gemma.core.analysis.preprocess.filter;
 
 /**
+ * Exception indicating that there is insufficient design elements (rows) to perform a particular filter.
  * @author paul
  */
-public class InsufficientProbesException extends InsufficientDataException {
+public class InsufficientDesignElementsException extends InsufficientDataException {
 
-    private static final long serialVersionUID = 1L;
-
-    public InsufficientProbesException( ExpressionExperiment ee, String message ) {
-        super( ee, message );
+    public InsufficientDesignElementsException( String message ) {
+        super( message );
     }
-
 }

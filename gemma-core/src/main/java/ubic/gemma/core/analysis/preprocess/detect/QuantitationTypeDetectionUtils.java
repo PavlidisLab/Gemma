@@ -11,9 +11,9 @@ import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -28,8 +28,55 @@ import java.util.List;
 @CommonsLog
 public class QuantitationTypeDetectionUtils {
 
+    public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix ) {
+        try {
+            lintQuantitationType( quantitationType, dmatrix, true );
+        } catch ( InferredQuantitationMismatchException e ) {
+            // never happens
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Check if a given quantitation type adequately describes a given expression data matrix.
+     */
+    public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix, boolean ignoreQuantitationMismatch ) throws InferredQuantitationMismatchException {
+        QuantitationTypeDetectionUtils.InferredQuantitationType inferredQuantitationType = infer( dmatrix, quantitationType );
+
+        if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
+            String message = String.format( "The type %s differs from the one inferred from data: %s.",
+                    quantitationType.getType(), inferredQuantitationType.getType() );
+            // if data is meant to be detected, then
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+
+        if ( quantitationType.getScale() != inferredQuantitationType.getScale() ) {
+            String message = String.format( "The scale %s differs from the one inferred from data: %s.",
+                    quantitationType.getScale(), inferredQuantitationType.getScale() );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+
+        if ( quantitationType.getIsRatio() != inferredQuantitationType.isRatio() ) {
+            String message = String.format( "The expression data %s to ratiometric, but the quantitation says otherwise.",
+                    inferredQuantitationType.isRatio() ? "appears" : "does not appear" );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+    }
+
     @Value
-    public static class InferredQuantitationType {
+    private static class InferredQuantitationType {
         StandardQuantitationType type;
         ScaleType scale;
         boolean isRatio;
@@ -57,7 +104,7 @@ public class QuantitationTypeDetectionUtils {
         return qt;
     }
 
-    public static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
+    private static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
             matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );

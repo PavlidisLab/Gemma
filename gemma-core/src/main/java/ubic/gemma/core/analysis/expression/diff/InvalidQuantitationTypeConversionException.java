@@ -8,6 +8,6 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 public class InvalidQuantitationTypeConversionException extends AnalysisException {
 
     public InvalidQuantitationTypeConversionException( QuantitationTypeConversionException e, DifferentialExpressionAnalysisConfig config ) {
-        super( e, config );
+        super( config, e );
     }
 }
