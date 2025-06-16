@@ -1,15 +1,15 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.FloatArrayList;
-import cern.colt.list.IntArrayList;
-import cern.colt.list.LongArrayList;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -130,70 +130,106 @@ public class SingleCellExpressionDataVectorUtils {
         return Arrays.copyOfRange( vector.getDataAsLongs(), start, end );
     }
 
-    /**
-     * Obtain the data of a sample.
-     */
     public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
-        int start = getSampleStart( vector, sampleIndex, 0 );
-        int end = getSampleEnd( vector, sampleIndex, start );
-        float[] data = vector.getDataAsFloats();
-        FloatArrayList arr = new FloatArrayList();
-        for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
-                arr.add( data[i] );
-            }
-        }
-        arr.trimToSize();
-        return arr.elements();
+        return getSampleDataAsFloats( vector, vector.getDataAsFloatBuffer(), sampleIndex, cellLevelCharacteristics, row );
     }
 
     /**
      * Obtain the data of a sample.
      */
-    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+    public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, FloatBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
         Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        double[] data = vector.getDataAsDoubles();
-        DoubleArrayList arr = new DoubleArrayList();
+        int nnz = 0;
         for ( int i = start; i < end; i++ ) {
             if ( cellLevelCharacteristics.getIndices()[i] == row ) {
-                arr.add( data[i] );
+                nnz++;
             }
         }
-        arr.trimToSize();
-        return arr.elements();
+        int k = 0;
+        float[] arr = new float[nnz];
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr[k++] = data.get( i );
+            }
+        }
+        return arr;
+    }
+
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        return getSampleDataAsDoubles( vector, vector.getDataAsDoubleBuffer(), sampleIndex, cellLevelCharacteristics, row );
+    }
+
+    /**
+     * Obtain the data of a sample.
+     */
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, DoubleBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        int nnz = 0;
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                nnz++;
+            }
+        }
+        int k = 0;
+        double[] arr = new double[nnz];
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr[k++] = data.get( i );
+            }
+        }
+        return arr;
     }
 
     public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        return getSampleDataAsInts( vector, vector.getDataAsIntBuffer(), sampleIndex, cellLevelCharacteristics, row );
+    }
+
+    public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, IntBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
         Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        int[] data = vector.getDataAsInts();
-        IntArrayList arr = new IntArrayList();
+        int nnz = 0;
         for ( int i = start; i < end; i++ ) {
             if ( cellLevelCharacteristics.getIndices()[i] == row ) {
-                arr.add( data[i] );
+                nnz++;
             }
         }
-        arr.trimToSize();
-        return arr.elements();
+        int k = 0;
+        int[] arr = new int[nnz];
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr[k++] = data.get( i );
+            }
+        }
+        return arr;
     }
 
     public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        return getSampleDataAsLongs( vector, vector.getDataAsLongBuffer(), sampleIndex, cellLevelCharacteristics, row );
+    }
+
+    public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, LongBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
         Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        long[] data = vector.getDataAsLongs();
-        LongArrayList arr = new LongArrayList();
+        int nnz = 0;
         for ( int i = start; i < end; i++ ) {
             if ( cellLevelCharacteristics.getIndices()[i] == row ) {
-                arr.add( data[i] );
+                nnz++;
             }
         }
-        arr.trimToSize();
-        return arr.elements();
+        int k = 0;
+        long[] arr = new long[nnz];
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr[k++] = data.get( i );
+            }
+        }
+        return arr;
     }
 
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, int reportFrequency, long numVecs ) {
