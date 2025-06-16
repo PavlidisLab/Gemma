@@ -3089,7 +3089,9 @@ public class ExpressionExperimentDaoImpl
         if ( !keepDimensions ) {
             removeUnusedSingleCellDimensions( ee );
         }
-        log.info( "Removed " + deletedVectors + " single-cell data vectors from " + ee );
+        if ( deletedVectors > 0 ) {
+            log.info( "Removed " + deletedVectors + " single-cell data vectors from " + ee );
+        }
         return deletedVectors;
     }
 
