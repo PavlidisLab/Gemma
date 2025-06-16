@@ -141,16 +141,17 @@ public class SingleCellExpressionDataVectorUtils {
         Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
+        int[] dataIndices = vector.getDataIndices();
         int nnz = 0;
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 nnz++;
             }
         }
         int k = 0;
         float[] arr = new float[nnz];
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 arr[k++] = data.get( i );
             }
         }
@@ -169,15 +170,16 @@ public class SingleCellExpressionDataVectorUtils {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
+        int[] dataIndices = vector.getDataIndices();
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 nnz++;
             }
         }
         int k = 0;
         double[] arr = new double[nnz];
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 arr[k++] = data.get( i );
             }
         }
@@ -193,15 +195,16 @@ public class SingleCellExpressionDataVectorUtils {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
+        int[] dataIndices = vector.getDataIndices();
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 nnz++;
             }
         }
         int k = 0;
         int[] arr = new int[nnz];
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 arr[k++] = data.get( i );
             }
         }
@@ -217,15 +220,16 @@ public class SingleCellExpressionDataVectorUtils {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
+        int[] dataIndices = vector.getDataIndices();
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 nnz++;
             }
         }
         int k = 0;
         long[] arr = new long[nnz];
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 arr[k++] = data.get( i );
             }
         }

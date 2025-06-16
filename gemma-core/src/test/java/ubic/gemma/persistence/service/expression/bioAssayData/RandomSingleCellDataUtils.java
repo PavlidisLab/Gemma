@@ -2,9 +2,12 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.jet.random.NegativeBinomial;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -76,7 +79,7 @@ public class RandomSingleCellDataUtils {
     }
 
     /**
-     * Generate random single-cell vectors with 1000 cells/sample and 10% sparsity.
+     * Generate random single-cell vectors with 1000 cells/sample and 90% sparsity.
      * @see #randomSingleCellVectors(ExpressionExperiment, ArrayDesign, QuantitationType, int, double)
      */
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt ) {
@@ -146,6 +149,29 @@ public class RandomSingleCellDataUtils {
                 throw new UnsupportedOperationException( "Sampling " + qt.getRepresentation() + " is not supported." );
         }
         return vector;
+    }
+
+    /**
+     * Generate a random cell type assignment with 10 cell types and 10% sparsity.
+     */
+    public static CellTypeAssignment randomCellTypeAssignment( SingleCellDimension scd ) {
+        return randomCellTypeAssignment( scd, 10, 0.1 );
+    }
+
+    public static CellTypeAssignment randomCellTypeAssignment( SingleCellDimension scd, int numberOfCellTypes, double sparsity ) {
+        List<Characteristic> cellTypes = new ArrayList<>();
+        for ( int i = 0; i < numberOfCellTypes; i++ ) {
+            cellTypes.add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
+        }
+        int[] cellTypeIndices = new int[scd.getNumberOfCells()];
+        for ( int i = 0; i < cellTypeIndices.length; i++ ) {
+            if ( random.nextDouble() <= sparsity ) {
+                cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+            } else {
+                cellTypeIndices[i] = random.nextInt( 10 );
+            }
+        }
+        return CellTypeAssignment.Factory.newInstance( "", cellTypes, cellTypeIndices );
     }
 
     private static void setRandomFloatData( SingleCellExpressionDataVector vector, QuantitationType qt, int step, int N ) {
