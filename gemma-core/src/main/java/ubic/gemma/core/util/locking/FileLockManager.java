@@ -1,6 +1,7 @@
 package ubic.gemma.core.util.locking;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -48,4 +49,24 @@ public interface FileLockManager {
      * @throws InterruptedException if the thread was interrupted while waiting for the lock
      */
     LockedPath tryAcquirePathLock( Path path, boolean exclusive, long timeout, TimeUnit timeUnit ) throws IOException, TimeoutException, InterruptedException;
+
+    /**
+     * @see java.nio.file.Files#newInputStream(Path, OpenOption...)
+     */
+    InputStream newInputStream( Path path, OpenOption... openOptions ) throws IOException;
+
+    /**
+     * @see java.nio.file.Files#newBufferedReader(Path)
+     */
+    Reader newBufferedReader( Path path ) throws IOException;
+
+    /**
+     * @see java.nio.file.Files#newOutputStream(Path, OpenOption...)
+     */
+    OutputStream newOutputStream( Path path, OpenOption... openOptions ) throws IOException;
+
+    /**
+     * @see java.nio.file.Files#newBufferedWriter(Path, OpenOption...) (Path)
+     */
+    Writer newBufferedWriter( Path path, OpenOption... openOptions ) throws IOException;
 }

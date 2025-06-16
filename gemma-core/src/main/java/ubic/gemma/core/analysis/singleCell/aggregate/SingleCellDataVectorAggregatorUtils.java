@@ -160,8 +160,8 @@ public class SingleCellDataVectorAggregatorUtils {
 
     private static Function<SingleCellExpressionDataVector, double[]> createDoubleMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
         if ( cellLevelCharacteristics != null ) {
-            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[][]> m = createDoubleMethodWithClc( method );
-            return vec -> Arrays.stream( m.apply( vec, cellLevelCharacteristics ) ).flatMapToDouble( Arrays::stream ).toArray();
+            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[]> m = createDoubleMethodWithClc( method );
+            return vec -> m.apply( vec, cellLevelCharacteristics );
         }
         switch ( method ) {
             case MAX:
@@ -193,7 +193,7 @@ public class SingleCellDataVectorAggregatorUtils {
         }
     }
 
-    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[][]> createDoubleMethodWithClc( SingleCellAggregationMethod method ) {
+    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[]> createDoubleMethodWithClc( SingleCellAggregationMethod method ) {
         switch ( method ) {
             case MAX:
                 return SingleCellDescriptive::max;

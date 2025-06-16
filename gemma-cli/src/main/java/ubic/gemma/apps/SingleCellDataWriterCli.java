@@ -14,6 +14,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataIntegerMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -64,6 +65,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Autowired
     private BuildInfo buildInfo;
@@ -201,6 +205,37 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     }
 
     private int aggregate( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
+        List<BioAssay> assays;
+        if ( samples != null ) {
+            assays = Arrays.stream( samples )
+                    .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
+                    .collect( Collectors.toList() );
+        } else {
+            assays = null;
+        }
+        if ( result.isStandardLocation() ) {
+            throw new UnsupportedOperationException( "Writing aggregated data to the standard location is not supported." );
+        } else if ( result.isStandardOutput() ) {
+            fileName = null;
+            try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+                return aggregate( ee, qt, assays, writer );
+            }
+        } else {
+            if ( samples != null ) {
+                assays = Arrays.stream( samples )
+                        .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
+                        .collect( Collectors.toList() );
+                fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ".aggregated.tsv.gz" ) );
+            } else {
+                fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ".aggregated.tsv.gz" ) );
+            }
+            try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
+                return aggregate( ee, qt, assays, writer );
+            }
+        }
+    }
+
+    private int aggregate( ExpressionExperiment ee, QuantitationType qt, @Nullable List<BioAssay> assays, Writer writer ) throws IOException {
         SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod aggregationMethod = this.aggregationMethod != null
                 ? this.aggregationMethod : SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM;
         CellLevelCharacteristics cellLevelCharacteristics;
@@ -218,7 +253,6 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 cellLevelCharacteristics != null ? ( " and " + cellLevelCharacteristics ) : "",
                 aggregationMethod,
                 samples != null ? " for the following samples: " + Arrays.toString( samples ) : "" ) );
-        List<BioAssay> assays = null;
         Collection<RawExpressionDataVector> vecs;
         SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig config = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.builder()
                 .includeCellIds( false )
@@ -230,10 +264,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             log.info( "Single-cell data will be streamed by batch of " + fetchSize + " vectors." );
             long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
             Stream<SingleCellExpressionDataVector> scVecs;
-            if ( samples != null ) {
-                assays = Arrays.stream( samples )
-                        .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
-                        .collect( Collectors.toList() );
+            if ( assays != null ) {
                 scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, true, config );
             } else {
                 scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true, config );
@@ -245,16 +276,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         } else {
             log.info( "Single-cell data will be loaded into memory. This process can use a lot of memory, press Ctrl-C at any time to interrupt." );
             Collection<SingleCellExpressionDataVector> scVecs;
-            if ( samples != null ) {
-                assays = Arrays.stream( samples )
-                        .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
-                        .collect( Collectors.toList() );
+            if ( assays != null ) {
                 scVecs = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, assays, qt, config );
             } else {
                 scVecs = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, config );
             }
-            vecs = SingleCellDataVectorAggregatorUtils.aggregate( scVecs,
-                    aggregationMethod, cellLevelCharacteristics );
+            vecs = SingleCellDataVectorAggregatorUtils.aggregate( scVecs, aggregationMethod, cellLevelCharacteristics );
         }
         BulkExpressionDataMatrix<?> matrix;
         if ( aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT || aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST ) {
@@ -265,23 +292,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( true );
         matrixWriter.setScaleType( scaleType );
-        if ( result.isStandardLocation() ) {
-            throw new UnsupportedOperationException( "Writing aggregated data to the standard location is not supported." );
-        } else if ( result.isStandardOutput() ) {
-            fileName = null;
-            try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                return matrixWriter.write( matrix, writer );
-            }
-        } else {
-            if ( assays != null ) {
-                fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ".aggregated.tsv.gz" ) );
-            } else {
-                fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ".aggregated.tsv.gz" ) );
-            }
-            try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
-                return matrixWriter.write( matrix, writer );
-            }
-        }
+        return matrixWriter.write( matrix, writer );
     }
 
     private int slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
@@ -388,9 +399,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     private OutputStream openOutputFile( Path fileName ) throws IOException {
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+            return new GZIPOutputStream( fileLockManager.newOutputStream( fileName ) );
         } else {
-            return Files.newOutputStream( fileName );
+            return fileLockManager.newOutputStream( fileName );
         }
     }
 }
