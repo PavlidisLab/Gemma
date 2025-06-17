@@ -519,6 +519,41 @@ public class SingleCellDescriptive {
         return d;
     }
 
+    public static double[] sumWithUnknown( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        int numAssays = vector.getSingleCellDimension().getBioAssays().size();
+        // reserve one extra for unknown
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int numCharacteristicsWithUnknown = numCharacteristics + 1;
+        int unknownIndex = numCharacteristics; // the last index is for unknown characteristics
+        double[] d = new double[numAssays * numCharacteristicsWithUnknown];
+        Buffer data = vector.getDataAsBuffer();
+        for ( int i = 0; i < numAssays; i++ ) {
+            for ( int j = 0; j < numCharacteristicsWithUnknown; j++ ) {
+                int ix = i * numCharacteristicsWithUnknown + j;
+                int characteristicIndex = j == unknownIndex ? -1 : j;
+                switch ( representation ) {
+                    case FLOAT:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, ( FloatBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case DOUBLE:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, ( DoubleBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case INT:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, ( IntBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case LONG:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, ( LongBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    default:
+                        throw unsupportedRepresentation( representation, "sum" );
+                }
+            }
+        }
+        return d;
+    }
+
     public static double[] sumUnscaled( SingleCellExpressionDataVector vector ) {
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();

@@ -20,7 +20,7 @@ public class SingleCellDataVectorAggregatorUtilsTest {
         List<SingleCellExpressionDataVector> vectors = RandomSingleCellDataUtils.randomSingleCellVectors();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         CellTypeAssignment cta = RandomSingleCellDataUtils.randomCellTypeAssignment( scd, 10, 0.0 );
-        Collection<RawExpressionDataVector> aggregatedVectors = aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM, cta );
+        Collection<RawExpressionDataVector> aggregatedVectors = aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM, cta, false );
         assertThat( aggregatedVectors )
                 .hasSize( 100 )
                 .extracting( RawExpressionDataVector::getDataAsDoubles )
@@ -61,5 +61,37 @@ public class SingleCellDataVectorAggregatorUtilsTest {
             }
         }
         assertThat( actualLibrarySizes ).isEqualTo( expectedLibrarySizes );
+    }
+
+    @Test
+    public void testAggregateWithUnknown() {
+        RandomSingleCellDataUtils.setSeed( 123L );
+        List<SingleCellExpressionDataVector> vectors = RandomSingleCellDataUtils.randomSingleCellVectors();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        CellTypeAssignment cta = RandomSingleCellDataUtils.randomCellTypeAssignment( scd, 10, 0.1 );
+        Collection<RawExpressionDataVector> aggregatedVectors = aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM, cta, true );
+        assertThat( aggregatedVectors )
+                .hasSize( 100 )
+                .extracting( RawExpressionDataVector::getDataAsDoubles )
+                .first()
+                .asInstanceOf( InstanceOfAssertFactories.DOUBLE_ARRAY )
+                .hasSize( 44 )
+                .containsExactly( 49.0, 38.0, 47.0, 41.0, 22.0, 104.0, 57.0, 46.0, 40.0, 54.0, 61.0, 25.0, 102.0, 66.0, 60.0, 82.0, 43.0, 85.0, 47.0, 31.0, 42.0, 15.0, 86.0, 28.0, 40.0, 30.0, 51.0, 52.0, 39.0, 43.0, 43.0, 88.0, 65.0, 40.0, 42.0, 90.0, 21.0, 64.0, 44.0, 49.0, 95.0, 53.0, 59.0, 58.0 );
+
+        double[] expectedCounts = new double[4 * 11];
+        SingleCellExpressionDataVector firstVector = vectors.iterator().next();
+        double[] data = firstVector.getDataAsDoubles();
+        for ( int i = 0; i < data.length; i++ ) {
+            int cellIndex = firstVector.getDataIndices()[i];
+            int sampleIndex = scd.getBioAssays().indexOf( scd.getBioAssay( cellIndex ) );
+            int cellTypeIndex = cta.getCellTypeIndices()[cellIndex];
+            if ( cellTypeIndex != -1 ) {
+                expectedCounts[11 * sampleIndex + cellTypeIndex] += data[i];
+            } else {
+                expectedCounts[11 * sampleIndex + 10] += data[i]; // unknown
+            }
+        }
+        assertThat( aggregatedVectors.iterator().next().getDataAsDoubles() )
+                .containsExactly( expectedCounts );
     }
 }
