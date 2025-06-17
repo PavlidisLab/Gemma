@@ -266,8 +266,9 @@ public class SingleCellDescriptive {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int count = 0;
+        int[] dataIndices = vector.getDataIndices();
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 count++;
             }
         }
