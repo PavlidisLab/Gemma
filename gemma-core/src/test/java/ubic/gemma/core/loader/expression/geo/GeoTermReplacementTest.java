@@ -94,7 +94,7 @@ public class GeoTermReplacementTest {
 
         List<Rec> records = new ArrayList<>();
         try ( InputStream is = getClass().getResourceAsStream( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ) ) {
-            for ( CSVRecord record : CSVParser.parse( requireNonNull( is ), StandardCharsets.UTF_8, CSVFormat.TDF.withCommentMarker( '#' ) ) ) {
+            for ( CSVRecord record : CSVParser.parse( requireNonNull( is ), StandardCharsets.UTF_8, CSVFormat.TDF.builder().setCommentMarker( '#' ).get() ) ) {
                 String synonym = record.get( 0 );
                 String value = record.get( 1 );
                 String valueUri = record.get( 2 );
@@ -179,7 +179,7 @@ public class GeoTermReplacementTest {
                     continue;
                 }
                 assertions.assertThat( rec.value )
-                        .withFailMessage( "%s: Replace '%s' with '%s' from %s", rec.synonym, rec.value, term.getLabel(), os )
+                        .withFailMessage( "%s: Replace '%s' with '%s' %s from %s", rec.synonym, rec.value, term.getLabel(), term.getUri(), os )
                         .isEqualTo( term.getLabel() );
                 seen.add( rec.synonym );
             }
