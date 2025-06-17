@@ -61,6 +61,15 @@ public class SingleCellDataVectorAggregatorUtilsTest {
             }
         }
         assertThat( actualLibrarySizes ).isEqualTo( expectedLibrarySizes );
+
+        Collection<RawExpressionDataVector> aggregatedCountVectors = aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST, cta, false );
+        assertThat( aggregatedCountVectors )
+                .hasSize( 100 )
+                .extracting( RawExpressionDataVector::getDataAsInts )
+                .first()
+                .asInstanceOf( InstanceOfAssertFactories.INT_ARRAY )
+                .hasSize( 40 )
+                .containsExactly( 8, 14, 15, 9, 7, 10, 9, 11, 13, 4, 13, 8, 12, 13, 13, 5, 11, 5, 14, 6, 15, 10, 9, 6, 7, 6, 6, 18, 10, 13, 10, 16, 7, 13, 11, 12, 10, 7, 5, 9 );
     }
 
     @Test
@@ -93,5 +102,14 @@ public class SingleCellDataVectorAggregatorUtilsTest {
         }
         assertThat( aggregatedVectors.iterator().next().getDataAsDoubles() )
                 .containsExactly( expectedCounts );
+
+        Collection<RawExpressionDataVector> aggregatedCountVectors = aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST, cta, true );
+        assertThat( aggregatedCountVectors )
+                .hasSize( 100 )
+                .extracting( RawExpressionDataVector::getDataAsInts )
+                .first()
+                .asInstanceOf( InstanceOfAssertFactories.INT_ARRAY )
+                .hasSize( 44 )
+                .containsExactly( 9, 6, 8, 9, 5, 14, 9, 6, 7, 13, 14, 6, 14, 13, 11, 13, 7, 13, 8, 5, 6, 4, 14, 7, 7, 7, 12, 10, 6, 9, 5, 13, 10, 7, 4, 13, 6, 13, 11, 8, 14, 6, 9, 9 );
     }
 }

@@ -188,12 +188,24 @@ public class SingleCellDataVectorAggregatorUtils {
     }
 
     private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, int[]> createIntMethodWithClc( SingleCellAggregationMethod method, boolean aggregateUnknownCharacteristics ) {
-        switch ( method ) {
-            case COUNT:
-            case COUNT_FAST:
-                throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with " + method + "." );
-            default:
-                throw new IllegalArgumentException();
+        if ( aggregateUnknownCharacteristics ) {
+            switch ( method ) {
+                case COUNT:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with COUNT." );
+                case COUNT_FAST:
+                    return SingleCellDescriptive::countFastWithUnknown;
+                default:
+                    throw new IllegalArgumentException();
+            }
+        } else {
+            switch ( method ) {
+                case COUNT:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with COUNT." );
+                case COUNT_FAST:
+                    return SingleCellDescriptive::countFast;
+                default:
+                    throw new IllegalArgumentException();
+            }
         }
     }
 

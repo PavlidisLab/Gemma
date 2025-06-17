@@ -275,6 +275,52 @@ public class SingleCellDescriptive {
         return count;
     }
 
+    public static int[] countFast( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        int numSamples = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int[] count = new int[numSamples * numCharacteristics];
+        int lastStart = 0;
+        for ( int sampleIndex = 0; sampleIndex < numSamples; sampleIndex++ ) {
+            int start = getSampleStart( vector, sampleIndex, lastStart );
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int[] dataIndices = vector.getDataIndices();
+            for ( int i = start; i < end; i++ ) {
+                for ( int row = 0; row < numCharacteristics; row++ ) {
+                    if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
+                        count[sampleIndex * numCharacteristics + row]++;
+                    }
+                }
+            }
+            lastStart = end;
+        }
+        return count;
+    }
+
+    public static int[] countFastWithUnknown( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        int numSamples = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int numCharacteristicsWithUnknown = numCharacteristics + 1; // reserve one extra for unknown
+        int unknownIndex = numCharacteristics; // the last index is for unknown characteristics
+        int[] count = new int[numSamples * numCharacteristicsWithUnknown];
+        int lastStart = 0;
+        for ( int sampleIndex = 0; sampleIndex < numSamples; sampleIndex++ ) {
+            int start = getSampleStart( vector, sampleIndex, lastStart );
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int[] dataIndices = vector.getDataIndices();
+            for ( int i = start; i < end; i++ ) {
+                int cellIndex = dataIndices[i];
+                for ( int row = 0; row < numCharacteristicsWithUnknown; row++ ) {
+                    int cix = row == unknownIndex ? CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC : row;
+                    if ( cellLevelCharacteristics.getIndices()[cellIndex] == cix ) {
+                        count[sampleIndex * numCharacteristicsWithUnknown + row]++;
+                    }
+                }
+            }
+            lastStart = end;
+        }
+        return count;
+    }
+
     /**
      * Compute the number of cells expressed strictly above the given threshold.
      * @param threshold a threshold value, assumed to be in the {@link ScaleType} of the vector
