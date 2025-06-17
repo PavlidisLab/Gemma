@@ -3,6 +3,7 @@ package ubic.gemma.core.analysis.service;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.basecode.util.FileTools;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.util.BuildInfo;
@@ -65,20 +66,25 @@ public class DiffExAnalysisResultSetWriter {
             zipOut.closeEntry();
 
             // Add a file for each result set with contrasts information.
-            int i = 0;
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
                 if ( resultSet.getExperimentalFactors().size() > 1 ) {
                     // Skip interactions.
                     log.info( "Result file for interaction is omitted" ); // Why?
                     continue;
                 }
-
-                if ( resultSet.getId() == null ) { // -nodb option on analysis
-                    zipOut.putNextEntry( new ZipEntry( "resultset_" + ++i + "of" + analysis.getResultSets().size()
-                            + ".data.txt" ) ); // to make it clearer this is not an ID
+                String result;
+                String resultSetName = resultSet.getExperimentalFactors().stream()
+                        .map( ExperimentalFactor::getName )
+                        .sorted()
+                        .map( FileTools::cleanForFileName )
+                        .collect( Collectors.joining( "_" ) );
+                if ( resultSet.getId() != null ) {
+                    result = "resultset_" + resultSet.getId() + "_" + resultSetName + ".data.txt";
                 } else {
-                    zipOut.putNextEntry( new ZipEntry( "resultset_ID" + resultSet.getId() + ".data.txt" ) );
+                    // for -nodb
+                    result = "resultset_" + resultSetName + ".data.txt";
                 }
+                zipOut.putNextEntry( new ZipEntry( result ) );
                 writeDiffExpressionResultSetData( resultSet, geneAnnotations, config, hasSignificantBatchConfound, timestamp, new OutputStreamWriter( zipOut, StandardCharsets.UTF_8 ) );
                 zipOut.closeEntry();
             }
