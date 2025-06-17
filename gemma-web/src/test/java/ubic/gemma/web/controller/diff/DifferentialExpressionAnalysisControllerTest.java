@@ -9,12 +9,12 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -126,7 +126,7 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 2L ), any(), any() ) ).thenReturn( ee );
         perform( dwr( DifferentialExpressionAnalysisController.class, "run", 1L )
-                        .and( 2L ) )
+                .and( 2L ) )
                 .andExpect( callback( 0 ).value( nullValue() ) )
                 .andExpect( callback( 1 ).value( nullValue() ) )
                 .andExpect( callback( 2 ).doesNotExist() )

@@ -36,10 +36,9 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.controller.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

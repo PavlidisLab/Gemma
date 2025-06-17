@@ -36,7 +36,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.controller.ControllerUtils;
+import ubic.gemma.web.controller.util.ControllerUtils;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;

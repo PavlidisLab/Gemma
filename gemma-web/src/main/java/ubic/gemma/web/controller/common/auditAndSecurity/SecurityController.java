@@ -45,7 +45,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAna
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;

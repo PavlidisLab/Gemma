@@ -42,7 +42,7 @@
     <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.scheduler.jobs.BatchInfoRepopulationJob"/>
+                <property name="jobClass" value="ubic.gemma.web.tasks.BatchInfoRepopulationJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="expressionExperimentService" value-ref="expressionExperimentService"/>
@@ -110,7 +110,7 @@
     <bean id="ee2cExperimentUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.scheduler.jobs.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -126,7 +126,7 @@
     <bean id="ee2cSampleUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.scheduler.jobs.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -142,7 +142,7 @@
     <bean id="ee2cExperimentalDesignUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.scheduler.jobs.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -158,7 +158,7 @@
     <bean id="ee2adUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.scheduler.jobs.Ee2AdUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2AdUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>

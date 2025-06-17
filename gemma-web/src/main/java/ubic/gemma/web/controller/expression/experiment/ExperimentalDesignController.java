@@ -47,7 +47,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 

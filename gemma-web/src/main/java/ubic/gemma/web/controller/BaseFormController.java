@@ -59,7 +59,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @return the view to use.
      */
     protected ModelAndView getCancelView( HttpServletRequest request ) {
-        return new ModelAndView( WebConstants.HOME_PAGE );
+        return new ModelAndView( "/home.html" );
     }
 
     /**

@@ -37,7 +37,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.controller.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import java.util.ArrayList;

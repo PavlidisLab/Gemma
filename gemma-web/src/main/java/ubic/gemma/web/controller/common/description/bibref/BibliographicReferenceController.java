@@ -42,9 +42,9 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.remote.JsonReaderResponse;
-import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.util.ListBatchCommand;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.view.JsonReaderResponse;
 
 import java.io.IOException;
 import java.util.*;

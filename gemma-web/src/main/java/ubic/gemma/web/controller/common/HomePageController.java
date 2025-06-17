@@ -29,7 +29,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.WebConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -77,13 +76,13 @@ public class HomePageController {
     public RedirectView redirectToHomePage( HttpServletRequest request ) {
         String uri = ServletUriComponentsBuilder.fromRequest( request )
                 .scheme( null ).host( null ).port( -1 )
-                .replacePath( WebConstants.HOME_PAGE )
+                .replacePath( "/home.html" )
                 .build()
                 .toUriString();
         return new RedirectView( uri );
     }
 
-    @RequestMapping(value = WebConstants.HOME_PAGE, method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = "/home.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
         mav.addObject( "buildInfo", buildInfo );

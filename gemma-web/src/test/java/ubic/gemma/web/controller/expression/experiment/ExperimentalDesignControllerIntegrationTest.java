@@ -27,8 +27,8 @@ import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.web.util.EntityDelegator;
 
 import java.util.Collection;
 

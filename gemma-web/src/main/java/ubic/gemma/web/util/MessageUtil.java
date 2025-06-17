@@ -15,8 +15,6 @@ package ubic.gemma.web.util;
  * specific language governing permissions and limitations under the License.
  */
 
-import java.util.Locale;
-
 /**
  * Provides methods for putting messages to the user in the session.
  * <p>

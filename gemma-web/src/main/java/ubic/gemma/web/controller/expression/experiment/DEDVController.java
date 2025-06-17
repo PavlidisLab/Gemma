@@ -51,7 +51,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
-import ubic.gemma.web.controller.ControllerUtils;
+import ubic.gemma.web.controller.util.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;

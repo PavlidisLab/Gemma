@@ -32,7 +32,7 @@ import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.controller.persistence.SessionListManager;
 
 import java.io.IOException;
 import java.util.*;

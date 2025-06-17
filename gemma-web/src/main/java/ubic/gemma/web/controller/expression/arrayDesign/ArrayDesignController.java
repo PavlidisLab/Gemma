@@ -58,12 +58,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.remote.JsonReaderResponse;
-import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.util.EntityDelegator;
+import ubic.gemma.web.util.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
+import ubic.gemma.web.view.JsonReaderResponse;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;

@@ -29,8 +29,8 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;
-import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.BaseSpringWebTest;
+import ubic.gemma.web.util.EntityDelegator;
 
 import java.util.Date;
 
