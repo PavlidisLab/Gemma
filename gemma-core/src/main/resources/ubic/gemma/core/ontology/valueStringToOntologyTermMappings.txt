@@ -644,8 +644,8 @@ intestine	intestine	http://purl.obolibrary.org/obo/UBERON_0000160	organism part	
 intrahepatic cholangiocarcinoma	intrahepatic cholangiocarcinoma	http://purl.obolibrary.org/obo/MONDO_0003210	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 invasive breast carcinomas	invasive ductal breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0004953	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 invasive ductal carcinoma	invasive ductal breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0004953	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-Ionizing radiation	radiation exposure measurement	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-ionizing radiation (IR)	radiation exposure measurement	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+Ionizing radiation	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+ionizing radiation (IR)	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 iPSC	induced pluripotent stem cell line cell	http://purl.obolibrary.org/obo/CLO_0037307	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 iPSC-derived astrocytes	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 iPSCs	induced pluripotent stem cell line cell	http://purl.obolibrary.org/obo/CLO_0037307	cell line	http://purl.obolibrary.org/obo/CLO_0000031
