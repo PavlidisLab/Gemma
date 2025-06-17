@@ -91,6 +91,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private String aggregateByCellTypeAssignment;
     @Nullable
     private String aggregateByCellLevelCharacteristics;
+    private String aggregateUnknownCellTypes;
 
     @Nullable
     @Override
