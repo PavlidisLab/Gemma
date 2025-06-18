@@ -653,7 +653,7 @@ iPSCs	induced pluripotent stem cell	http://www.ebi.ac.uk/efo/EFO_0004905	cell ty
 ipsilateral	ipsilateral to	http://purl.obolibrary.org/obo/PATO_0002035	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 IPTG	isopropyl β-D-thiogalactopyranoside	http://purl.obolibrary.org/obo/CHEBI_61448	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 IRd (insulin resistant)	insulin resistance	http://www.ebi.ac.uk/efo/EFO_0002614	phenotype	http://www.ebi.ac.uk/efo/EFO_0000651
-irradiated	radiation exposure measurement	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+irradiated	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Ischaemic heart disease	myocardial ischemia	http://purl.obolibrary.org/obo/MONDO_0024644	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Ischemic Stroke	Ischemic stroke	http://purl.obolibrary.org/obo/HP_0002140	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Ishikawa Cell Line	Ishikawa cell	http://purl.obolibrary.org/obo/CLO_0037163	cell line	http://purl.obolibrary.org/obo/CLO_0000031
