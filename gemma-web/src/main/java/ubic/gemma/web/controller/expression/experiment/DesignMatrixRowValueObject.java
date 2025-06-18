@@ -39,7 +39,7 @@ public class DesignMatrixRowValueObject implements Serializable {
     private static final long serialVersionUID = 1;
     private int count;
     private List<String> factors;
-    private List<String> factorTypes;
+    private final List<String> factorTypes;
     private Map<String, String> factorValueMap;
 
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {

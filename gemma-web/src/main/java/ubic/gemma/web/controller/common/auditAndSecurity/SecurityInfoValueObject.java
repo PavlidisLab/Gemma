@@ -35,7 +35,7 @@ public class SecurityInfoValueObject {
     /**
      * Groups the user has control over.
      */
-    private Collection<String> availableGroups = new HashSet<String>();
+    private Collection<String> availableGroups = new HashSet<>();
 
     /**
      * Current focus. Can be null
@@ -51,8 +51,8 @@ public class SecurityInfoValueObject {
     private Long entityId;
     private String entityName;
     private String entityShortName;
-    private Collection<String> groupsThatCanRead = new HashSet<String>();
-    private Collection<String> groupsThatCanWrite = new HashSet<String>();
+    private Collection<String> groupsThatCanRead = new HashSet<>();
+    private Collection<String> groupsThatCanWrite = new HashSet<>();
 
     private boolean isPubliclyReadable;
     private boolean isShared;
@@ -62,7 +62,7 @@ public class SecurityInfoValueObject {
      */
     private SidValueObject owner;
 
-    private Collection<String> ownersGroups = new HashSet<String>();
+    private Collection<String> ownersGroups = new HashSet<>();
 
     public SecurityInfoValueObject() {
     }

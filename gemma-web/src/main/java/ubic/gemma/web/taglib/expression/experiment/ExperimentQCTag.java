@@ -27,7 +27,7 @@ import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 import ubic.gemma.web.taglib.TagWriterUtils;
-import ubic.gemma.web.util.StaticAssetResolver;
+import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;

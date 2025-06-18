@@ -19,9 +19,12 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -43,8 +46,13 @@ import java.io.IOException;
  */
 @Controller
 @RequestMapping("/bibRefSearch.html")
-public class PubMedQueryController extends BaseController implements InitializingBean {
+public class PubMedQueryController implements InitializingBean {
 
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 

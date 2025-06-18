@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -57,8 +58,8 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
@@ -73,7 +74,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @CommonsLog
-public class ExpressionExperimentEditController extends BaseController {
+public class ExpressionExperimentEditController {
 
     private static final List<String>
             STANDARD_QUANTITATION_TYPES = Arrays.stream( StandardQuantitationType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
@@ -95,6 +96,10 @@ public class ExpressionExperimentEditController extends BaseController {
     private AuditTrailService auditTrailService;
     @Autowired
     private Persister persisterHelper;
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
 
     @Autowired
     private TaskExecutor taskExecutor;
@@ -292,9 +297,7 @@ public class ExpressionExperimentEditController extends BaseController {
         if ( recomputeSingleCellSparsityMetrics ) {
             // this does nothing if there is no single-cell data (beside clearing the metrics fields), maybe it
             // should be moved to the pre-processor service at some point
-            taskExecutor.execute( () -> {
-                singleCellExpressionExperimentService.updateSparsityMetrics( expressionExperiment );
-            } );
+            taskExecutor.execute( () -> singleCellExpressionExperimentService.updateSparsityMetrics( expressionExperiment ) );
         }
 
         if ( reprocess ) {

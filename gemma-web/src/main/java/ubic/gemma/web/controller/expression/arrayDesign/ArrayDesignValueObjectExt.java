@@ -19,7 +19,6 @@
 
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
@@ -54,6 +53,14 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
         formatTechnologyType();
 
         addAnnotationFileLinks();
+    }
+
+    public Set<String> getAdditionalTaxa() {
+        return additionalTaxa;
+    }
+
+    public void setAdditionalTaxa( Set<String> additionalTaxa ) {
+        this.additionalTaxa = additionalTaxa;
     }
 
     public String getAllParentsAnnotationLink() {

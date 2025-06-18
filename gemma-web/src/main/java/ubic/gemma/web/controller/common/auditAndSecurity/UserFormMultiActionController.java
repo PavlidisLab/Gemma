@@ -21,9 +21,12 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
@@ -34,12 +37,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.JsonUtil;
+import ubic.gemma.web.controller.util.JsonUtil;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -57,7 +59,7 @@ import java.util.regex.Pattern;
  * @author keshav
  */
 @Controller
-public class UserFormMultiActionController extends BaseController {
+public class UserFormMultiActionController {
 
     public static final int MIN_PASSWORD_LENGTH = 6;
 
@@ -65,18 +67,23 @@ public class UserFormMultiActionController extends BaseController {
      * RFC 5322 email pattern.
      */
     private static final Pattern RFC_5322_EMAIL_PATTERN = Pattern.compile( "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$" );
+    protected final Log log = LogFactory.getLog( getClass().getName() );
 
     @Autowired
     private UserManager userManager;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private MailEngine mailEngine;
-
     @Autowired
     private ServletContext servletContext;
+    @Autowired
+    private MessageSource messageSource;
+    @Autowired
+    private MessageUtil messageUtil;
+
+    @Value("${gemma.hosturl}")
+    private String hostUrl;
 
     /**
      * Entry point for updates.
@@ -117,7 +124,7 @@ public class UserFormMultiActionController extends BaseController {
                 changed = true;
             }
 
-            if ( password.length() > 0 ) {
+            if ( !password.isEmpty() ) {
                 if ( !StringUtils.equals( password, passwordConfirm ) ) {
                     throw new IllegalArgumentException( "Passwords do not match." );
                 }
@@ -181,7 +188,7 @@ public class UserFormMultiActionController extends BaseController {
      * Resets the password to a random alphanumeric (of length MIN_PASSWORD_LENGTH).
      */
     @RequestMapping(value = "/resetPassword.html", method = RequestMethod.POST)
-    public void resetPassword( @RequestParam("email") String email, @RequestParam("username") String username, HttpServletRequest request, HttpServletResponse response ) throws IOException {
+    public void resetPassword( @RequestParam("email") String email, @RequestParam("username") String username, HttpServletRequest request, HttpServletResponse response, Locale locale ) throws IOException {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'resetPassword' method..." );
         }
@@ -201,7 +208,7 @@ public class UserFormMultiActionController extends BaseController {
 
             String token = userManager.changePasswordForUser( email, username, passwordEncoder.encodePassword( pwd, username ) );
 
-            sendResetConfirmationEmail( request, token, username, pwd, email );
+            sendResetConfirmationEmail( request, token, username, pwd, email, locale );
 
             JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
         } catch ( AuthenticationException e ) {
@@ -217,33 +224,22 @@ public class UserFormMultiActionController extends BaseController {
      * Send an email to request signup confirmation.
      */
     private void sendResetConfirmationEmail( HttpServletRequest request, String token, String username, String password,
-            String email ) {
-
+            String email, Locale locale ) {
         try {
             Map<String, Object> model = new HashMap<>();
             model.put( "password", password );
             model.put( "message", messageSource.getMessage( "login.passwordReset.emailMessage", null, request.getLocale() ) );
-
-            this.sendConfirmationEmail( token, username, email, model, "passwordReset.vm" );
-
+            model.put( "username", username );
+            model.put( "confirmLink",
+                    hostUrl + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
+            try {
+                mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), "passwordReset.vm", model );
+            } catch ( Exception e ) {
+                log.error( "Couldn't send email to " + email, e );
+            }
             messageUtil.saveMessage( "login.passwordReset", new Object[] { username, email }, "??login.passwordReset??" );
         } catch ( Exception e ) {
             throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
-        }
-
-    }
-
-    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model, String templateName ) {
-        Locale locale = LocaleContextHolder.getLocale();
-        try {
-            model.put( "username", username );
-            model.put( "confirmLink",
-                    Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
-
-            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), templateName, model );
-
-        } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + email, e );
         }
     }
 }

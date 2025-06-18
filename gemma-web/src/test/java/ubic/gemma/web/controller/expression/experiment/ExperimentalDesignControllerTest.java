@@ -18,7 +18,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.web.util.BaseWebTest;
-import ubic.gemma.web.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityDelegator;
 
 import java.util.function.Function;
 

@@ -19,9 +19,12 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,10 +44,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.ListBatchCommand;
-import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.view.JsonReaderResponse;
+import ubic.gemma.web.controller.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 
 import java.io.IOException;
 import java.util.*;
@@ -57,9 +60,14 @@ import java.util.Map.Entry;
  * @author keshav
  */
 @Controller
-public class BibliographicReferenceController extends BaseController implements InitializingBean {
+public class BibliographicReferenceController implements InitializingBean {
 
     private static final String messagePrefix = "Reference with PubMed Id";
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;

@@ -25,7 +25,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 /**
  * A controller to pre-process expression data (including updating diagnostics)

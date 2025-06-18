@@ -15,6 +15,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionAnalysisController;
 import ubic.gemma.web.util.BaseWebTest;
 
 import static org.hamcrest.CoreMatchers.nullValue;

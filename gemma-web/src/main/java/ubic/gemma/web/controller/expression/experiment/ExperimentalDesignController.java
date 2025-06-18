@@ -21,8 +21,13 @@ package ubic.gemma.web.controller.expression.experiment;
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -46,15 +51,16 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.IdentifiableUtils;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.EntityDelegator;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.controller.util.upload.FileUploadUtil;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -67,8 +73,13 @@ import java.util.*;
 @Controller
 @RequestMapping("/experimentalDesign")
 @SuppressWarnings("unused")
-public class ExperimentalDesignController extends BaseController {
+public class ExperimentalDesignController {
 
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
@@ -92,20 +103,23 @@ public class ExperimentalDesignController extends BaseController {
     @Autowired
     private WebEntityUrlBuilder entityUrlBuilder;
 
-    public void createDesignFromFile( Long eeid, String filePath ) {
+    @Value("${gemma.download.path}/userUploads")
+    private Path uploadDir;
+
+    @Secured("GROUP_ADMIN")
+    public void createDesignFromFile( Long eeid, String filename ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid, EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
 
         if ( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot import an experimental design for an experiment that already has design data populated." );
         }
 
-        File f = new File( filePath );
-
-        if ( !f.canRead() ) {
+        Path f = FileUploadUtil.getUploadedFile( filename, uploadDir );
+        if ( !Files.isReadable( f ) ) {
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try ( InputStream is = new FileInputStream( f ) ) {
+        try ( InputStream is = Files.newInputStream( f ) ) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. However, this call is wrapped in a transaction
             // as a fail safe.
@@ -247,7 +261,6 @@ public class ExperimentalDesignController extends BaseController {
 
         Set<Statement> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
-            //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
             for ( Statement c : fv.getCharacteristics() ) {
                 chars.add( this.createTemplateStatement( c ) );
                 break;
@@ -341,7 +354,7 @@ public class ExperimentalDesignController extends BaseController {
 
     /**
      * Make an exact copy of a factorvalue and add it to the experiment.
-     * As per https://github.com/PavlidisLab/Gemma/issues/1160
+     * As per <a href="https://github.com/PavlidisLab/Gemma/issues/1160">#1160</a>
      * @param e the experimental factor
      * @param fvId the id of the FV to duplicate
      */

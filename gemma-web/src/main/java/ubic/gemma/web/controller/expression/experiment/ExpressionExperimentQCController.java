@@ -26,6 +26,8 @@ import cern.jet.stat.Descriptive;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
@@ -54,6 +56,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
@@ -102,10 +105,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
-import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
@@ -128,7 +131,7 @@ import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.
  * @author paul
  */
 @Controller
-public class ExpressionExperimentQCController extends BaseController {
+public class ExpressionExperimentQCController {
 
     /**
      * Default size for an image, in pixel.
@@ -149,6 +152,11 @@ public class ExpressionExperimentQCController extends BaseController {
      * Maximum factor size when up-scaling an image.
      */
     private static final int MAX_IMAGE_SIZE_FACTOR = 5;
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -822,6 +830,9 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     private Map<ExperimentalFactor, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new IllegalArgumentException( "ExpressionExperiment does not have an experimental design." );
+        }
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         Map<ExperimentalFactor, String> efs = new HashMap<>();
         for ( ExperimentalFactor ef : factors ) {
@@ -926,6 +937,9 @@ public class ExpressionExperimentQCController extends BaseController {
         int maxWidth = 30;
         Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
         Collection<ExperimentalFactor> continuousFactors = new HashSet<>();
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new IllegalArgumentException( "ExpressionExperiment does not have an experimental design." );
+        }
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = ef.getType().equals( FactorType.CONTINUOUS );
             if ( isContinous ) {

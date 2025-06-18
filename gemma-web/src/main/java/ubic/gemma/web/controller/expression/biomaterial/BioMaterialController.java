@@ -36,8 +36,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.web.util.EntityDelegator;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import java.util.*;
 import java.util.stream.Collectors;

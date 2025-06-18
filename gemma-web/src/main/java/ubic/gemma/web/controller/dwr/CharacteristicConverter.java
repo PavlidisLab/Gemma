@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,12 +25,10 @@ import org.directwebremoting.dwrp.ProtocolConstants;
 import org.directwebremoting.extend.*;
 import org.directwebremoting.util.LocalUtil;
 import org.directwebremoting.util.Messages;
-
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -77,8 +75,7 @@ public class CharacteristicConverter extends BeanConverter {
 
             // Loop through the properties passed in
 
-            for ( Iterator<Entry<String, String>> it = tokens.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<String, String> entry = it.next();
+            for ( Entry<String, String> entry : tokens.entrySet() ) {
                 String key = entry.getKey();
                 String val = entry.getValue();
 

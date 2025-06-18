@@ -26,12 +26,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -45,8 +45,8 @@ import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAna
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.web.util.EntityDelegator;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
 import java.util.*;
@@ -76,6 +76,9 @@ public class SecurityController {
     private UserManager userManager;
     @Autowired
     private ServletContext servletContext;
+
+    @Value("${gemma.hosturl}")
+    private String hostUrl;
 
     public boolean addUserToGroup( String userName, String groupName ) {
 
@@ -111,7 +114,7 @@ public class SecurityController {
         String emailAddress = u.getEmail();
         if ( StringUtils.isNotBlank( emailAddress ) ) {
             SecurityController.log.debug( "Sending email notification to " + emailAddress );
-            String manageGroupsUrl = Settings.getHostUrl() + servletContext.getContextPath() + "/manageGroups.html";
+            String manageGroupsUrl = hostUrl + servletContext.getContextPath() + "/manageGroups.html";
             String body = userTakingAction.getUserName() + " has added you to the group '" + groupName
                     + "'.\nTo view groups you belong to, visit " + manageGroupsUrl
                     + "\n\nIf you believe you received this email in error, contact " + mailEngine.getAdminEmailAddress()
@@ -260,10 +263,8 @@ public class SecurityController {
     }
 
     public Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<>();
-
         // Add experiments.
-        secs.addAll( this.getUsersExperiments( privateOnly ) );
+        Collection<Securable> secs = new HashSet<>( this.getUsersExperiments( privateOnly ) );
 
         Collection<SecurityInfoValueObject> result = this.securables2VOs( secs, currentGroup );
 
@@ -323,10 +324,6 @@ public class SecurityController {
         return true;
     }
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
     public SecurityInfoValueObject updatePermission( SecurityInfoValueObject settings ) {
         EntityDelegator<? extends Securable> sd = new EntityDelegator<>();
         sd.setId( settings.getEntityId() );
@@ -369,8 +366,8 @@ public class SecurityController {
             // throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
             // }
 
-            Boolean readable = settings.isCurrentGroupCanRead();
-            Boolean writeable = settings.isCurrentGroupCanWrite();
+            boolean readable = settings.isCurrentGroupCanRead();
+            boolean writeable = settings.isCurrentGroupCanWrite();
 
             if ( readable ) {
                 securityService.makeReadableByGroup( s, currentGroupName );
@@ -463,7 +460,8 @@ public class SecurityController {
     }
 
     private Collection<String> getGroupsUserCanEdit() {
-        return securityService.getGroupsUserCanEdit( userManager.getCurrentUsername() );
+        String username = userManager.getCurrentUsername();
+        return username != null ? securityService.getGroupsUserCanEdit( username ) : Collections.emptyList();
     }
 
     /**
@@ -584,7 +582,7 @@ public class SecurityController {
         Map<T, Collection<String>> groupsEditableBy = securityService.getGroupsEditableBy( securables );
 
         // int i = 0; // TESTING
-        for ( Securable s : securables ) {
+        for ( T s : securables ) {
 
             Collection<String> groupsThatCanRead = groupsReadableBy.get( s );
             Collection<String> groupsThatCanWrite = groupsEditableBy.get( s );
@@ -600,8 +598,8 @@ public class SecurityController {
             vo.setCurrentUserOwns( false );//securityService.isOwnedByCurrentUser( s ) );
             vo.setCurrentUserCanwrite( securityService.isEditableByCurrentUser( s ) );
 
-            vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
-            vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<String>() : groupsThatCanWrite );
+            vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<>() : groupsThatCanRead );
+            vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<>() : groupsThatCanWrite );
 
             vo.setEntityClazz( s.getClass().getName() );
 

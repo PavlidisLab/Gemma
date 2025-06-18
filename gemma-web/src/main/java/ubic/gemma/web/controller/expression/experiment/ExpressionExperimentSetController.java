@@ -22,7 +22,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,9 +39,9 @@ import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.persistence.util.IdentifiableUtils;
-import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.persistence.SessionListManager;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,8 +55,13 @@ import java.util.HashSet;
  */
 @Controller
 @RequestMapping("/expressionExperimentSet")
-public class ExpressionExperimentSetController extends BaseController {
+public class ExpressionExperimentSetController {
 
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
 

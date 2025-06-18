@@ -43,28 +43,9 @@ import java.util.Map.Entry;
 @Controller
 public class HomePageController {
 
-    private static final TaxonComparator TAXON_COMPARATOR = new TaxonComparator();
-
-    private static final class TaxonComparator implements Comparator<Map.Entry<Taxon, Long>> {
-        @Override
-        public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
-            Long e1value = e1.getValue();
-            Long e2value = e2.getValue();
-
-            int cf = e1value.compareTo( e2value );
-            if ( cf == 0 ) {
-                try {
-                    String e1commonName = e1.getKey().getCommonName();
-                    String e2commonName = e2.getKey().getCommonName();
-
-                    cf = e1commonName.compareTo( e2commonName );
-                } catch ( Exception e ) {
-                    cf = 1;
-                }
-            }
-            return cf;
-        }
-    }
+    private static final Comparator<Map.Entry<Taxon, Long>> TAXON_COMPARATOR = Entry
+            .<Taxon, Long>comparingByValue( Comparator.naturalOrder() )
+            .thenComparing( e -> e.getKey().getCommonName(), Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

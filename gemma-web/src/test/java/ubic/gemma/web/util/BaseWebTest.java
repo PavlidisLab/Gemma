@@ -12,6 +12,8 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.web.controller.util.DefaultHandlerExceptionResolver;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.ServletContext;
 
@@ -36,7 +38,7 @@ public abstract class BaseWebTest extends BaseTest {
 
         @Bean
         public MessageUtil messageUtil() {
-            return new MessageUtilImpl();
+            return new MessageUtil();
         }
 
         @Bean

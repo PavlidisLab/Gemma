@@ -14,6 +14,12 @@
  */
 package ubic.gemma.web.controller.persistence;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class GeneSetListContainer extends AbstractSetListContainer {
 
     private static final long serialVersionUID = 2163440335723257830L;

@@ -20,15 +20,11 @@ package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
@@ -254,7 +250,7 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      *                          or private
      */
     @Secured({ "GROUP_USER" })
-    Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly );
+    Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, @Nullable Long taxonId, boolean sharedPublicOnly );
 
     /**
      * Returns just the current users gene sets

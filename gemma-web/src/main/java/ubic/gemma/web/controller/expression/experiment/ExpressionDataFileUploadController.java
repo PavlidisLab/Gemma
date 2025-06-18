@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -43,11 +44,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.controller.util.upload.FileUploadUtil;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -68,6 +71,9 @@ public class ExpressionDataFileUploadController {
     private ArrayDesignService arrayDesignService;
     @Autowired
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Value("${gemma.download.path}/userUploads")
+    private Path uploadDir;
 
     @RequestMapping(value = "/expressionExperiment/upload.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show() {
@@ -90,7 +96,7 @@ public class ExpressionDataFileUploadController {
             try {
                 SimpleExpressionExperimentMetadata metadata = getMetadata( getTaskCommand() );
 
-                File file = getFile( getTaskCommand() );
+                Path file = getFile( getTaskCommand() );
                 DoubleMatrix<String, String> matrix = getData( getTaskCommand() );
 
                 /*
@@ -270,8 +276,8 @@ public class ExpressionDataFileUploadController {
     }
 
     private DoubleMatrix<String, String> getData( SimpleExpressionExperimentLoadTaskCommand taskCommand ) throws IOException {
-        File file = getFile( taskCommand );
-        try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) ) {
+        Path file = getFile( taskCommand );
+        try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.toString() ) ) {
             if ( stream == null ) {
                 throw new IllegalStateException( "Could not read from file " + file );
             }
@@ -279,16 +285,14 @@ public class ExpressionDataFileUploadController {
         }
     }
 
-    private File getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
-        File file;
+    private Path getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
         String localPath = ed.getServerFilePath();
         if ( StringUtils.isBlank( localPath ) ) {
             throw new IllegalArgumentException( "Must provide the file" );
         }
 
-        file = new File( localPath );
-
-        if ( !file.canRead() ) {
+        Path file = FileUploadUtil.getUploadedFile( localPath, uploadDir );
+        if ( !Files.isReadable( file ) ) {
             throw new IllegalArgumentException( "Cannot read from file:" + file );
         }
 

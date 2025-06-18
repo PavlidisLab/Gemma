@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -44,13 +43,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -186,18 +184,6 @@ public class ExpressionExperimentDataFetchController {
         return taskRunningService.submitTask( job );
     }
 
-    public File getOutputFile( String filename ) {
-        // exclude any paths leading to the filename
-        filename = FilenameUtils.getName( filename );
-        File f = dataDir.resolve( filename ).toFile();
-        try {
-            FileUtils.forceMkdirParent( f );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        return f;
-    }
-
     /**
      * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
@@ -251,7 +237,7 @@ public class ExpressionExperimentDataFetchController {
 
     class CoExpressionDataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
             super( eeId );
@@ -289,7 +275,7 @@ public class ExpressionExperimentDataFetchController {
      */
     class DataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
@@ -427,7 +413,7 @@ public class ExpressionExperimentDataFetchController {
 
     class DiffExpressionDataWriterTask extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         DiffExpressionDataWriterTask( ExpressionExperimentDataFetchCommand command ) {
             super( command );

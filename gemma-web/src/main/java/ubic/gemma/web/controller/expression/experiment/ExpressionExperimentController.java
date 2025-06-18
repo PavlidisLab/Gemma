@@ -26,6 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
@@ -47,7 +48,6 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
@@ -92,16 +92,16 @@ import ubic.gemma.persistence.util.FactorValueVector;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.controller.persistence.SessionListManager;
 import ubic.gemma.web.controller.util.ControllerUtils;
-import ubic.gemma.web.util.EntityDelegator;
-import ubic.gemma.web.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.view.JsonReaderResponse;
+import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
-import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.util.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
-import ubic.gemma.web.view.JsonReaderResponse;
-import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
@@ -202,6 +202,9 @@ public class ExpressionExperimentController {
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+   
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
      * level.
@@ -377,8 +380,6 @@ public class ExpressionExperimentController {
     public String getDescription( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, true );
 
-        Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
-
         StringBuilder descriptive = new StringBuilder();
 
         if ( ee.getDescription() != null ) {
@@ -386,7 +387,12 @@ public class ExpressionExperimentController {
                     ExpressionExperimentController.TRIM_SIZE ) );
         }
 
+        if ( ee.getExperimentalDesign() == null ) {
+            return descriptive.append( "</br><b>(No Experimental Design)</b>" ).toString();
+        }
+
         // Is there any factor info to add?
+        Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
         if ( efs.isEmpty() ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
         String efUri = "&nbsp;<a target='_blank' href='" + servletContext.getContextPath()
@@ -527,7 +533,7 @@ public class ExpressionExperimentController {
             }
             if ( svdService.hasPca( ee ) ) {
                 qc.setHasPCA( svdService.hasPca( ee ) );
-                qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
+                qc.setNumFactors( 3 );
             } else {
                 qc.setHasPCA( false );
             }
@@ -782,7 +788,6 @@ public class ExpressionExperimentController {
         List<Map<String, Object>> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
-            //noinspection MismatchedQueryAndUpdateOfCollection
             Map<String, Object> record = new HashMap<>();
             record.put( "id", ee.getId() );
             record.put( "shortName", ee.getShortName() );
@@ -985,7 +990,7 @@ public class ExpressionExperimentController {
         }
         if ( svdService.hasPca( expressionExperiment ) ) {
             result.put( "hasPCA", true );
-            result.put( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
+            result.put( "numFactors", 3 );
         } else {
             result.put( "hasPCA", false );
         }
@@ -1924,7 +1929,7 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
+                PubMedSearch pms = new PubMedSearch( ncbiApiKey );
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;

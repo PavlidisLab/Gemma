@@ -25,7 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseSpringWebTest;
-import ubic.gemma.web.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityDelegator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;

@@ -3,6 +3,7 @@ package ubic.gemma.web.util;
 import org.junit.Test;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.controller.util.EntityDelegator;
 
 import static org.junit.Assert.*;
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.genome;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
@@ -25,7 +26,7 @@ import org.springframework.web.servlet.mvc.AbstractController;
 import ubic.gemma.core.analysis.sequence.BlatResult2Psl;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.web.view.TextView;
+import ubic.gemma.web.controller.util.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -44,6 +45,7 @@ import java.util.HashSet;
  * @author pavlidis
  */
 @Controller
+@CommonsLog
 public class BlatResultTrackController extends AbstractController {
 
     @Autowired
@@ -58,13 +60,14 @@ public class BlatResultTrackController extends AbstractController {
         } catch ( NumberFormatException e ) {
             // return error view.
         }
-        Collection<Long> ids = new HashSet<Long>();
+        Collection<Long> ids = new HashSet<>();
         ids.add( id );
 
         Collection<BlatResult> res = blatResultService.load( ids );
 
-        if ( res.size() == 0 ) {
+        if ( res.isEmpty() ) {
             // should be an error.
+            log.warn( "No BlatResult found for id: " + id );
         }
 
         assert res.size() == 1;

@@ -19,7 +19,10 @@
 package ubic.gemma.web.controller.expression.designElement;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -40,8 +43,8 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import java.beans.PropertyEditorSupport;
 import java.util.ArrayList;
@@ -54,8 +57,13 @@ import java.util.HashSet;
  */
 @Controller
 @RequestMapping("/compositeSequence")
-public class CompositeSequenceController extends BaseController {
+public class CompositeSequenceController {
 
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService;
     @Autowired
@@ -76,7 +84,7 @@ public class CompositeSequenceController extends BaseController {
             mav.getModel().put( "message", "No search critera provided" );
             // return showAll( request, response );
         } else {
-            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = null;
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary;
             try {
                 compositeSequenceSummary = search( filter, arid );
             } catch ( SearchException e ) {
@@ -103,7 +111,7 @@ public class CompositeSequenceController extends BaseController {
      */
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
 
-        if ( ids == null || ids.size() == 0 ) {
+        if ( ids == null || ids.isEmpty() ) {
             return new HashSet<>();
         }
 
@@ -197,7 +205,7 @@ public class CompositeSequenceController extends BaseController {
     private Collection<CompositeSequenceMapValueObject> getSummaries(
             Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<>();
-        if ( compositeSequences.size() > 0 ) {
+        if ( !compositeSequences.isEmpty() ) {
             Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }

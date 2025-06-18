@@ -14,8 +14,8 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
-import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.util.ServiceUnavailableException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.ServiceUnavailableException;
 
 import javax.servlet.ServletContext;
 import java.io.StringWriter;
@@ -34,6 +34,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 @RequestMapping("/ont")
 @Controller
 @CommonsLog
+@SuppressWarnings("HttpUrlsUsage")
 public class OntologyController {
 
     private static final String
@@ -184,6 +185,7 @@ public class OntologyController {
         if ( oi.getUri() == null ) {
             return escapeHtml4( oi.getLabel() );
         } else {
+            //noinspection SpellCheckingInspection
             return String.format( "<a href=\"%s\">%s</a>",
                     escapeHtml4( oi.getUri()
                             .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), servletContext.getContextPath() + "/ont/TGFVO/" )

@@ -38,7 +38,7 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     private String searchString = null;
     private boolean viewSampling;
     private boolean maskMissing = false;
-    private QuantitationType quantitationType = null;
+    private QuantitationType quantitationType;
 
     public ExpressionExperimentVisualizationCommand() {
         this.quantitationType = QuantitationType.Factory.newInstance();

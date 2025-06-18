@@ -1,8 +1,8 @@
 /*
  * The Gemma-Production project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ import java.util.Collection;
 /**
  * Expression data for one probe; designed for conveying small amounts of data to clients. NOTE the data are
  * standardized by default.
- * 
+ *
  * @author kelsey
  *
  */
@@ -58,7 +58,7 @@ public class GeneExpressionProfile {
     /**
      * Whether the vector is adjusted to mean=0, variance=1
      */
-    private boolean standardized = true;
+    private boolean standardized;
 
     /**
      * A value indicating 'importance', which can be used to influence display in visualizations. BADLY NAMED.
@@ -70,8 +70,8 @@ public class GeneExpressionProfile {
      */
     private Collection<GeneValueObject> genes;
     private CompositeSequenceValueObject probe;
-    private Double pValue = null;
-    private Double rank = null;
+    private Double pValue;
+    private Double rank;
 
     /**
      */
@@ -170,6 +170,10 @@ public class GeneExpressionProfile {
      */
     public boolean isStandardized() {
         return standardized;
+    }
+
+    public void setStandardized( boolean standardized ) {
+        this.standardized = standardized;
     }
 
     public void setColor( String color ) {

@@ -23,8 +23,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.web.util.CacheMonitor;
-import ubic.gemma.web.util.HibernateMonitor;
 
 import javax.servlet.ServletContext;
 import java.lang.management.ManagementFactory;
@@ -90,20 +88,6 @@ public class SystemMonitorController {
 
     public void resetHibernateStatus() {
         this.hibernateMonitor.resetStats();
-    }
-
-    /**
-     * @param cacheMonitor the cacheMonitor to set
-     */
-    public void setCacheMonitor( CacheMonitor cacheMonitor ) {
-        this.cacheMonitor = cacheMonitor;
-    }
-
-    /**
-     * @param hibernateMonitor the hibernateMonitor to set
-     */
-    public void setHibernateMonitor( HibernateMonitor hibernateMonitor ) {
-        this.hibernateMonitor = hibernateMonitor;
     }
 
     @RequestMapping(value = "/admin/systemStats.html", method = { RequestMethod.GET, RequestMethod.HEAD })

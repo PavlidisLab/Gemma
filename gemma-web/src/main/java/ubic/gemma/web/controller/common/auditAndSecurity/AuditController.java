@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityDelegator;
 
 import java.util.Collection;
 import java.util.HashSet;

@@ -37,9 +37,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.web.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
-import ubic.gemma.web.view.JsonReaderResponse;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -137,7 +137,8 @@ public class CharacteristicBrowserController {
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs,
             boolean searchCategories, String categoryConstraint ) {
 
-        boolean searchEfs = true; // fixme, make this optional
+        // FIXME: make this optional
+        // boolean searchEfs = true;
 
         queryString = queryString.trim();
 
@@ -146,20 +147,17 @@ public class CharacteristicBrowserController {
             return results;
         }
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Collection<Characteristic> chars;
+        //noinspection HttpUrlsUsage
         if ( queryString.startsWith( "http://" ) ) {
             chars = characteristicService.findByUri( queryString );
-            if ( searchCategories ) {
-                chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
-                chars.addAll( characteristicService.findByCategoryUri( queryString ) );
-            }
         } else {
             chars = characteristicService.findByValueStartingWith( queryString );
+        }
 
-            if ( searchCategories ) {
-                chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
-                chars.addAll( characteristicService.findByCategoryUri( queryString ) );
-            }
+        if ( searchCategories ) {
+            chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
+            chars.addAll( characteristicService.findByCategoryUri( queryString ) );
         }
 
         Collection<Class<?>> parentClasses = new HashSet<>();
@@ -173,9 +171,9 @@ public class CharacteristicBrowserController {
             parentClasses.add( FactorValue.class );
         }
 
-        if ( searchEfs ) {
-            parentClasses.add( ExperimentalFactor.class );
-        }
+        // if ( searchEfs ) {
+        parentClasses.add( ExperimentalFactor.class );
+        // }
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, MAX_RESULTS );
 
