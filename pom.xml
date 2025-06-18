@@ -805,7 +805,7 @@
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.18.2</jackson.version>
-		<swagger.version>2.2.30</swagger.version>
+		<swagger.version>2.2.33</swagger.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.45.3</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
@@ -818,12 +818,12 @@
 		<!-- full path to the HDF5 JAR -->
 		<hdf5.jarPath>/usr/lib/java/hdf5.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.105</tomcat.version>
+		<tomcat.version>9.0.106</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<!-- TODO: move that in pavlab-starter-parent -->
-		<mockito.version>5.17.0</mockito.version>
+		<mockito.version>5.18.0</mockito.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
