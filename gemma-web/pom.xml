@@ -143,14 +143,6 @@
 			</exclusions>
 		</dependency>
 
-		<!-- Scheduling -->
-		<!-- This is the latest Quartz release compatible with Spring 3 -->
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
-			<version>1.8.6</version>
-		</dependency>
-
 		<!-- RSS feeds (depends on spring-web version) -->
 		<dependency>
 			<groupId>rome</groupId>

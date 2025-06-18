@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.tasks.analysis.sequence;
+package ubic.gemma.core.tasks.analysis.sequence;
 
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;

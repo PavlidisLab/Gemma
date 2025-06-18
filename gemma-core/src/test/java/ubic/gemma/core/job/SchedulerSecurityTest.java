@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.job;
+package ubic.gemma.core.job;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
@@ -30,11 +30,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean;
+import ubic.gemma.core.scheduler.SecureQuartzJobBean;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
-import ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean;
-import ubic.gemma.web.scheduler.SecureQuartzJobBean;
-import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.*;
  *
  * @author keshav
  */
-public class SchedulerSecurityTest extends BaseWebIntegrationTest {
+public class SchedulerSecurityTest extends BaseIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

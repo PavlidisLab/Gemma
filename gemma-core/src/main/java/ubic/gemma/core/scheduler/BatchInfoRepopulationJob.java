@@ -1,4 +1,4 @@
-package ubic.gemma.web.tasks;
+package ubic.gemma.core.scheduler;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -10,7 +10,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchProblemsUpdateEve
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.scheduler.SecureQuartzJobBean;
 
 import java.util.Collection;
 import java.util.Date;

@@ -42,7 +42,7 @@
     <bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.tasks.BatchInfoRepopulationJob"/>
+                <property name="jobClass" value="ubic.gemma.core.scheduler.BatchInfoRepopulationJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="expressionExperimentService" value-ref="expressionExperimentService"/>
@@ -59,7 +59,7 @@
     <bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean
-                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                class="ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <constructor-arg ref="groupAgentSecurityContext"/>
                 <property name="targetObject" ref="expressionExperimentReportService"/>
                 <property name="concurrent" value="false"/>
@@ -72,7 +72,7 @@
     <bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean
-                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                class="ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <constructor-arg ref="groupAgentSecurityContext"/>
                 <property name="targetObject" ref="arrayDesignReportService"/>
                 <property name="concurrent" value="false"/>
@@ -85,7 +85,7 @@
     <bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean
-                class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+                class="ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <constructor-arg ref="groupAgentSecurityContext"/>
                 <property name="targetObject" ref="whatsNewService"/>
                 <property name="concurrent" value="false"/>
@@ -97,7 +97,7 @@
     </bean>
     <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
-            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+            <bean class="ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <constructor-arg ref="groupAgentSecurityContext"/>
                 <property name="targetObject" ref="tableMaintenanceUtil"/>
                 <property name="concurrent" value="false"/>
@@ -110,7 +110,7 @@
     <bean id="ee2cExperimentUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.core.scheduler.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -126,7 +126,7 @@
     <bean id="ee2cSampleUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.core.scheduler.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -142,7 +142,7 @@
     <bean id="ee2cExperimentalDesignUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2cUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.core.scheduler.Ee2cUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -158,7 +158,7 @@
     <bean id="ee2adUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
             <bean class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-                <property name="jobClass" value="ubic.gemma.web.tasks.Ee2AdUpdateJob"/>
+                <property name="jobClass" value="ubic.gemma.core.scheduler.Ee2AdUpdateJob"/>
                 <property name="jobDataAsMap">
                     <map>
                         <entry key="tableMaintenanceUtil" value-ref="tableMaintenanceUtil"/>
@@ -172,7 +172,7 @@
     </bean>
     <bean id="indexExperimentsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="jobDetail">
-            <bean class="ubic.gemma.web.scheduler.SecureMethodInvokingJobDetailFactoryBean">
+            <bean class="ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean">
                 <constructor-arg ref="groupAgentSecurityContext"/>
                 <property name="targetObject" ref="indexerService"/>
                 <property name="targetMethod" value="index"/>

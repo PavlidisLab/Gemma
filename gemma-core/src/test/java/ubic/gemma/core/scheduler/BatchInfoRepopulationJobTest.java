@@ -1,4 +1,4 @@
-package ubic.gemma.web.tasks;
+package ubic.gemma.core.scheduler;
 
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -7,16 +7,16 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.util.Date;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class BatchInfoRepopulationJobTest extends BaseWebIntegrationTest {
+public class BatchInfoRepopulationJobTest extends BaseIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

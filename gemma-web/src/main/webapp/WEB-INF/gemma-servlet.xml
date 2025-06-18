@@ -402,7 +402,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="progressStatusService" class="ubic.gemma.web.job.progress.ProgressStatusServiceImpl">
+    <bean id="progressStatusService" class="ubic.gemma.web.controller.job.ProgressStatusControllerImpl">
         <aop:scoped-proxy/>
         <dwr:remote javascript="ProgressStatusService">
             <dwr:include method="getProgressStatus"/>
@@ -775,7 +775,7 @@
                      javascript="ArrayDesignValueObjectExt">
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.job.progress.SubmittedTaskValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.job.SubmittedTaskValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.tasks.maintenance.IndexerTaskCommand">
             <dwr:exclude method="securityContext"/>

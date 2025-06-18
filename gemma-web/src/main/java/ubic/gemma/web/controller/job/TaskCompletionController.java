@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.job;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.web.job.progress.ProgressStatusService;
 
 /**
  * Exposes progress status service check result to the front end.
@@ -31,7 +30,7 @@ import ubic.gemma.web.job.progress.ProgressStatusService;
 public class TaskCompletionController {
 
     @Autowired
-    private ProgressStatusService progressStatusService;
+    private ProgressStatusController progressStatusService;
 
     public Object checkResult( String taskId ) throws Exception {
         return progressStatusService.checkResult( taskId );

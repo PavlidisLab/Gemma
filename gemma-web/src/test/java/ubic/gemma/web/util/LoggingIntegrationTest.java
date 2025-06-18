@@ -1,4 +1,4 @@
-package ubic.gemma.web.logging;
+package ubic.gemma.web.util;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;

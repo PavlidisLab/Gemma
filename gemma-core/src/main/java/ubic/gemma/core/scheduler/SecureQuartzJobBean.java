@@ -1,4 +1,4 @@
-package ubic.gemma.web.scheduler;
+package ubic.gemma.core.scheduler;
 
 import lombok.Setter;
 import org.quartz.JobExecutionContext;

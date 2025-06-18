@@ -12,24 +12,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.web.job.progress;
+package ubic.gemma.web.controller.job;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import ubic.gemma.core.job.progress.ProgressData;
-import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 
 import java.util.Collection;
 import java.util.List;
 
 /**
- * These methods are exposed to front-end.
+ * These methods are exposed to front-end via DWR.
  *
  * @author paul
  */
-@Component
+@Controller
 @SuppressWarnings("unused") // Possible external use
-public interface ProgressStatusService {
+public interface ProgressStatusController {
 
     /**
      * Set up an email alert for this job; an email will be sent when it has finished (or failed).

@@ -1,4 +1,4 @@
-package ubic.gemma.web.logging;
+package ubic.gemma.core.logging;
 
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;

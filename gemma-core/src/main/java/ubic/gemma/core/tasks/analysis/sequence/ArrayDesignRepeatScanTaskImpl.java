@@ -1,4 +1,4 @@
-package ubic.gemma.web.tasks.analysis.sequence;
+package ubic.gemma.core.tasks.analysis.sequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;

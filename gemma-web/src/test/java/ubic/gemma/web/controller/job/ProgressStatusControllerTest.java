@@ -18,17 +18,14 @@
  */
 package ubic.gemma.web.controller.job;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.job.SubmittedTask;
-import ubic.gemma.core.job.TaskCommand;
-import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.job.*;
 import ubic.gemma.core.job.progress.ProgressData;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.web.job.progress.ProgressStatusService;
-import ubic.gemma.web.util.BaseSpringWebTest;
-import ubic.gemma.web.util.MockLongJobController;
+import ubic.gemma.web.util.BaseWebIntegrationTest;
 
 import java.util.List;
 
@@ -39,10 +36,11 @@ import static org.junit.Assert.*;
  *
  * @author pavlidis
  */
-public class TaskRunningTest extends BaseSpringWebTest {
+@CommonsLog
+public class ProgressStatusControllerTest extends BaseWebIntegrationTest {
 
     @Autowired
-    private ProgressStatusService progressStatusService;
+    private ProgressStatusController progressStatusController;
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -85,7 +83,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         wait:
         while ( true ) {
             Thread.sleep( 500 );
-            List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
+            List<ProgressData> result = progressStatusController.getProgressStatus( taskId );
             if ( result.size() > 0 ) {
 
                 for ( ProgressData lr : result ) {
@@ -121,7 +119,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         wait:
         while ( true ) {
             Thread.sleep( 500 );
-            List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
+            List<ProgressData> result = progressStatusController.getProgressStatus( taskId );
             if ( result.size() > 0 ) {
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
@@ -140,4 +138,5 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
     private class TestTaskCommand extends TaskCommand {
     }
+
 }

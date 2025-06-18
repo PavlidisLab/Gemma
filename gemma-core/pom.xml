@@ -276,6 +276,14 @@
             <version>1.9.25</version>
         </dependency>
 
+        <!-- Scheduling -->
+        <!-- This is the latest Quartz release compatible with Spring 3 -->
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>1.8.6</version>
+        </dependency>
+
         <!-- Testing -->
         <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.scheduler;
+package ubic.gemma.core.scheduler;
 
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;

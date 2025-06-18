@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.util;
+package ubic.gemma.web.controller.job;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

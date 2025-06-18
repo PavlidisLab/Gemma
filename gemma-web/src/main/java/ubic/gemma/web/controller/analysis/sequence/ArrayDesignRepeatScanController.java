@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.analysis.sequence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.job.TaskRunningService;
-import ubic.gemma.web.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
+import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 

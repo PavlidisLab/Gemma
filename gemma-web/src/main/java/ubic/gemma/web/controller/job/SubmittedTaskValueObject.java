@@ -1,8 +1,7 @@
-package ubic.gemma.core.job.progress;
+package ubic.gemma.web.controller.job;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.job.SubmittedTask;
-import ubic.gemma.core.job.TaskResult;
 
 import java.io.Serializable;
 import java.util.Collection;

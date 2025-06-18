@@ -13,7 +13,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.job.progress;
+package ubic.gemma.web.controller.job;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,7 +23,6 @@ import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
-import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -37,9 +36,9 @@ import java.util.Vector;
  * @author klc
  */
 @Component
-public class ProgressStatusServiceImpl implements ProgressStatusService {
+public class ProgressStatusControllerImpl implements ProgressStatusController {
 
-    private static final Log log = LogFactory.getLog( ProgressStatusServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ProgressStatusControllerImpl.class.getName() );
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -94,7 +93,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         List<ProgressData> statusObjects = new Vector<>();
 
         if ( task == null ) {
-            ProgressStatusServiceImpl.log.warn( "It looks like job " + taskId
+            ProgressStatusControllerImpl.log.warn( "It looks like job " + taskId
                     + " has gone missing; assuming it is dead or finished already" );
 
             // We should assume it is dead.
@@ -121,7 +120,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
             ProgressData data;
             switch ( task.getStatus() ) {
                 case COMPLETED:
-                    ProgressStatusServiceImpl.log.debug( "Job " + taskId + " is done" );
+                    ProgressStatusControllerImpl.log.debug( "Job " + taskId + " is done" );
                     data = new ProgressData( taskId, 1, progressMessage + "Done!", true );
                     break;
                 case FAILED:
