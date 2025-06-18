@@ -32,10 +32,6 @@ import java.util.Arrays;
  */
 public class MeanVarianceRelation extends AbstractIdentifiable implements SecuredChild {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1442923993171126882L;
     private double[] means;
     private double[] variances;
 
@@ -87,8 +83,7 @@ public class MeanVarianceRelation extends AbstractIdentifiable implements Secure
 
     @Override
     public int hashCode() {
-        // hashing would be to costly
-        return 0;
+        throw new UnsupportedOperationException( "MeanVarianceRelation cannot be hashed." );
     }
 
     public static final class Factory {
@@ -97,6 +92,11 @@ public class MeanVarianceRelation extends AbstractIdentifiable implements Secure
             return new MeanVarianceRelation();
         }
 
+        public static MeanVarianceRelation newInstance( double[] means, double[] variances ) {
+            MeanVarianceRelation mvr = newInstance();
+            mvr.setMeans( means );
+            mvr.setVariances( variances );
+            return mvr;
+        }
     }
-
 }

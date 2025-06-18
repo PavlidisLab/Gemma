@@ -981,6 +981,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
         if ( mvr.getId() == null ) {
+            Assert.isTrue( mvr.getMeans().length == mvr.getVariances().length,
+                    "The number of means and variances must correspond." );
             getSessionFactory().getCurrentSession().persist( mvr );
         }
         ee.setMeanVarianceRelation( mvr );
