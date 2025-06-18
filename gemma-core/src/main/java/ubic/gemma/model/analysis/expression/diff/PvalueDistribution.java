@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public class PvalueDistribution extends AbstractIdentifiable {
 
-    private Integer numBins;
+    private int numBins;
     private double[] binCounts;
 
     public double[] getBinCounts() {
@@ -36,11 +36,11 @@ public class PvalueDistribution extends AbstractIdentifiable {
         this.binCounts = binCounts;
     }
 
-    public Integer getNumBins() {
+    public int getNumBins() {
         return this.numBins;
     }
 
-    public void setNumBins( Integer numBins ) {
+    public void setNumBins( int numBins ) {
         this.numBins = numBins;
     }
 
@@ -67,8 +67,11 @@ public class PvalueDistribution extends AbstractIdentifiable {
     }
 
     public static final class Factory {
-        public static PvalueDistribution newInstance() {
-            return new PvalueDistribution();
+        public static PvalueDistribution newInstance( double[] binCounts ) {
+            PvalueDistribution pvd = new PvalueDistribution();
+            pvd.setNumBins( binCounts.length );
+            pvd.setBinCounts( binCounts );
+            return pvd;
         }
     }
 

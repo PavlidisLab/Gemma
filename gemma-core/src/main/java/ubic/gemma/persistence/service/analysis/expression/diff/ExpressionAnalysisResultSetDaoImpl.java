@@ -417,7 +417,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             return null;
         }
         double[] counts = pvd.getBinCounts();
-        Integer numBins = pvd.getNumBins();
+        int numBins = pvd.getNumBins();
         assert numBins == counts.length;
         Histogram hist = new Histogram( resultSet.getId().toString(), numBins, 0.0, 1.0 );
         for ( int i = 0; i < numBins; i++ ) {

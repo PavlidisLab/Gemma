@@ -314,9 +314,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 pvalHist.fill( pvalue );
         }
 
-        PvalueDistribution pvd = PvalueDistribution.Factory.newInstance();
-        pvd.setNumBins( 100 );
-        pvd.setBinCounts( pvalHist.getArray() );
+        PvalueDistribution pvd = PvalueDistribution.Factory.newInstance( pvalHist.getArray() );
         resultSet.setPvalueDistribution( pvd ); // do not save yet.
     }
 
