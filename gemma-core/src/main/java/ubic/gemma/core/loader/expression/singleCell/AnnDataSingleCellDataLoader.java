@@ -82,6 +82,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private String cellTypeFactorName;
 
     /**
+     * Ignore cell type assignment.
+     */
+    private boolean ignoreCellTypeFactor;
+
+    /**
      * An indicator for unknown cell type if the dataset uses something else than the {@code -1} code.
      */
     @Nullable
@@ -338,7 +343,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
-        checkCellTypeFactorName();
+        if ( ignoreCellTypeFactor ) {
+            log.info( "Ignoring the cell type factor, no cell type assignments will be returned." );
+            return Collections.emptySet();
+        } else if ( cellTypeFactorName == null ) {
+            throw new IllegalStateException( "A cell type factor name must be set to determine cell type assignments. Possible values are:\n\t"
+                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
+                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
+                    .collect( Collectors.joining( "\n\t" ) ) );
+        }
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
             CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
@@ -1128,15 +1141,6 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private void checkSampleFactorName() throws IOException {
         if ( sampleFactorName == null ) {
             throw new IllegalStateException( "The sample factor name must be set. Possible values are:\n\t"
-                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
-                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
-                    .collect( Collectors.joining( "\n\t" ) ) );
-        }
-    }
-
-    private void checkCellTypeFactorName() throws IOException {
-        if ( cellTypeFactorName == null ) {
-            throw new IllegalStateException( "A cell type factor name must be set to determine cell type assignments. Possible values are:\n\t"
                     + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
                     .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
                     .collect( Collectors.joining( "\n\t" ) ) );
