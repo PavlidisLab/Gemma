@@ -1774,7 +1774,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( ee );
+        this.differentialExpressionAnalysisService.removeForExperiment( ee, true );
 
         // Remove any sample coexpression matrices
         this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
@@ -1783,7 +1783,7 @@ public class ExpressionExperimentServiceImpl
         this.principalComponentAnalysisService.removeForExperiment( ee );
 
         // Remove coexpression analyses
-        this.coexpressionAnalysisService.removeForExperiment( ee );
+        this.coexpressionAnalysisService.removeForExperiment( ee, true );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

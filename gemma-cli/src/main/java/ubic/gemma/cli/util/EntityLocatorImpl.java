@@ -346,7 +346,7 @@ public class EntityLocatorImpl implements EntityLocator {
                 () -> String.format( "Could not locate an analysis matching '%s' in %s.%s",
                         analysisIdentifier,
                         ee.getShortName(),
-                        formatPossibleValues( differentialExpressionAnalysisService.getAnalyses( ee ), false ) ) );
+                        formatPossibleValues( differentialExpressionAnalysisService.getAnalyses( ee, true ), false ) ) );
     }
 
     @Nullable

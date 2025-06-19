@@ -206,7 +206,7 @@ class ExpressionDataFileHelperService {
     }
 
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment ee ) {
-        return differentialExpressionAnalysisService.getAnalyses( ee );
+        return differentialExpressionAnalysisService.getAnalyses( ee, true );
     }
 
     public DifferentialExpressionAnalysis getAnalysisById( Long analysisId ) {

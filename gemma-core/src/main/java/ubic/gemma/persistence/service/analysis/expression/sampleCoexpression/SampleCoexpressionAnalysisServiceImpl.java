@@ -194,13 +194,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Override
     @Transactional(readOnly = true)
     public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return sampleCoexpressionAnalysisDao.existsByExperiment( ee );
+        return sampleCoexpressionAnalysisDao.existsByExperiment( ee, true );
     }
 
     @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.sampleCoexpressionAnalysisDao.remove( this.sampleCoexpressionAnalysisDao.findByExperiment( ee ) );
+        this.sampleCoexpressionAnalysisDao.remove( this.sampleCoexpressionAnalysisDao.findByExperiment( ee, true ) );
     }
 
     /**

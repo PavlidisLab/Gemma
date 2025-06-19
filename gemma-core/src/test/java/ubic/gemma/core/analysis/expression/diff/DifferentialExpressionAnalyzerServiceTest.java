@@ -131,7 +131,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
+                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ), true );
         assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
 
         assertTrue( differentialExpressionAnalysisService

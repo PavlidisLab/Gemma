@@ -97,7 +97,7 @@ public class DifferentialExpressionAnalysisTaskImpl
         }
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .getAnalyses( ee );
+                .getAnalyses( ee, true );
 
         if ( !diffAnalyses.isEmpty() ) {
             log.info(

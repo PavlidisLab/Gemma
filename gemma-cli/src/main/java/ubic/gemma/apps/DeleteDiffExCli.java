@@ -41,7 +41,7 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         log.info( "--------- Deleting any diff ex analyses for " + ee + " --------" );
-        deas.removeForExperiment( ee );
+        deas.removeForExperiment( ee, true );
         log.info( "--------- Finished Deleting for " + ee + " -------" );
     }
 }

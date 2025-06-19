@@ -21,13 +21,10 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
@@ -49,18 +46,13 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<DifferentialExpressionAnalysis> find( Gene gene,
-            ExpressionAnalysisResultSet resultSet, double threshold );
+    Collection<DifferentialExpressionAnalysis> findByName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
@@ -70,15 +62,7 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
-    Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
-
-    /**
-     * @param expressionExperiments ees
-     * @return quite deeply thawed analyses (not the results themselves, but metadata)
-     */
-    @SuppressWarnings("unused")
-    Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
-            Collection<? extends BioAssaySet> expressionExperiments );
+    Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment, boolean includeSubSets );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })

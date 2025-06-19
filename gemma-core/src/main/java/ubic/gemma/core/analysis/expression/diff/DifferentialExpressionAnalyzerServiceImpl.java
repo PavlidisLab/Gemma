@@ -76,7 +76,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
-                .findByExperiment( expressionExperiment );
+                .findByExperiment( expressionExperiment, true );
 
         int result = 0;
         if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
@@ -136,7 +136,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .getAnalyses( expressionExperiment );
+                .getAnalyses( expressionExperiment, true );
         return differentialExpressionAnalysisService.thaw( expressionAnalyses );
     }
 
@@ -366,7 +366,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByExperiment( expressionExperiment );
+                .findByExperiment( expressionExperiment, true );
         int numDeleted = 0;
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
             DifferentialExpressionAnalyzerServiceImpl.log

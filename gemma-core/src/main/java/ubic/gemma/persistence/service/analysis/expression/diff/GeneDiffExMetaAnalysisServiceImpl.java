@@ -89,38 +89,7 @@ public class GeneDiffExMetaAnalysisServiceImpl extends AbstractService<GeneDiffe
 
     @Override
     @Transactional(readOnly = true)
-    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
-        return this.geneDiffExMetaAnalysisDao.loadResult( idResult );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
-        return this.geneDiffExMetaAnalysisDao.loadWithResultId( idResult );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name ) {
         return geneDiffExMetaAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return geneDiffExMetaAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
-        Collection<Long> haveAnalysis = new HashSet<>();
-        Collection<GeneDifferentialExpressionMetaAnalysis> analyses = this.findByTaxon( taxon );
-        for ( GeneDifferentialExpressionMetaAnalysis a : analyses ) {
-            for ( ExpressionAnalysisResultSet r : a.getResultSetsIncluded() ) {
-                haveAnalysis.add( r.getAnalysis().getExperimentAnalyzed().getId() );
-            }
-        }
-        return haveAnalysis;
     }
 }

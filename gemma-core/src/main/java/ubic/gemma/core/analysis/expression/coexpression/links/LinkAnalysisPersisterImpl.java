@@ -46,7 +46,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
 
     @Override
     public boolean deleteAnalyses( BioAssaySet ee ) {
-        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByExperiment( ee );
+        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByExperiment( ee, true );
 
         if ( oldAnalyses.isEmpty() )
             return false;
