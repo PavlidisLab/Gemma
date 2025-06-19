@@ -80,7 +80,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "processed data", true, true );
+        addExpressionDataFileOptions( options, "processed data" );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );

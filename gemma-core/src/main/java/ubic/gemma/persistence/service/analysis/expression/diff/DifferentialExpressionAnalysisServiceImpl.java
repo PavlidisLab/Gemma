@@ -111,6 +111,12 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
+    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets ) {
+        return differentialExpressionAnalysisDao.findByExperimentAnalyzedAndId( expressionExperiment, analysisId, includeSubSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
         return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment );
     }

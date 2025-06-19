@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -15,6 +16,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -46,6 +48,8 @@ public class EntityLocatorImpl implements EntityLocator {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Override
     public Taxon locateTaxon( String identifier ) {
@@ -334,6 +338,15 @@ public class EntityLocatorImpl implements EntityLocator {
                     "Could not locate any assay matching '" + sampleId + "' in " + ee.getShortName() + " for " + qt + "." + formatPossibleValues( scd.getBioAssays(), true ) );
         }
         throw new NullPointerException();
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis locateDiffExAnalysis( ExpressionExperiment ee, String analysisIdentifier ) {
+        return requireNonNull( differentialExpressionAnalysisService.findByExperimentAnalyzedAndId( ee, Long.parseLong( analysisIdentifier ), true ),
+                () -> String.format( "Could not locate an analysis matching '%s' in %s.%s",
+                        analysisIdentifier,
+                        ee.getShortName(),
+                        formatPossibleValues( differentialExpressionAnalysisService.getAnalyses( ee ), false ) ) );
     }
 
     @Nullable

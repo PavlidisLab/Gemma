@@ -305,6 +305,28 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     }
 
     @Override
+    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet experimentAnalyzed, Long analysisId, boolean includeSubSets ) {
+        DifferentialExpressionAnalysis result = ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
+                        + "where a.experimentAnalyzed = :experimentAnalyzed and a.id = :id" )
+                .setParameter( "experimentAnalyzed", experimentAnalyzed )
+                .setParameter( "id", analysisId )
+                .uniqueResult();
+
+        // try to lookup subsets if we haven't found the analysis directly
+        if ( result == null && experimentAnalyzed instanceof ExpressionExperiment && includeSubSets ) {
+            return ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select a from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet subset "
+                            + "where subset.sourceExperiment = :experimentAnalyzed and a.experimentAnalyzed = subset and a.id = :id" )
+                    .setParameter( "experimentAnalyzed", experimentAnalyzed )
+                    .setParameter( "id", analysisId )
+                    .uniqueResult();
+        }
+
+        return result;
+    }
+
+    @Override
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
             Collection<Long> experimentIds ) {
 

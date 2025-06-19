@@ -204,7 +204,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
@@ -389,7 +389,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next() ) ) {
+        try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analyses.iterator().next(), true ) ) {
             assertNotNull( lockedPath.getPath() );
         }
     }

@@ -64,7 +64,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        addExpressionDataFileOptions( options, "raw data", true, true );
+        addExpressionDataFileOptions( options, "raw data" );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation/--standard-location." ).build() );
         OptionsUtils.addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the data. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
         addForceOption( options );

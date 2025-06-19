@@ -206,18 +206,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Add options for writing expression data files, such as raw or processed data files.
-     * @param addStdoutOption whether the standard output option should be added
-     * @param addOutputFileOption whether the output file option should be added
+     *
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
      */
-    protected void addExpressionDataFileOptions( Options options, String what, boolean addStdoutOption, boolean addOutputFileOption ) {
+    protected void addExpressionDataFileOptions( Options options, String what ) {
         OptionGroup og = new OptionGroup();
-        if ( addOutputFileOption ) {
-            addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
-                    .longOpt( "output-file" ).hasArg().type( Path.class )
-                    .desc( "Write " + what + " to the given output file." ).build() );
-        }
+        addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
+                .longOpt( "output-file" ).hasArg().type( Path.class )
+                .desc( "Write " + what + " to the given output file." ).build() );
         og.addOption( Option.builder( OUTPUT_DIR_OPTION )
                 .longOpt( "output-dir" ).hasArg().type( Path.class )
                 .desc( "Write " + what + " inside the given directory." ).build() );
@@ -225,12 +222,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 .longOpt( "standard-location" )
                 .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
                 .build() );
-        if ( addStdoutOption ) {
-            addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
-                    .longOpt( "stdout" )
-                    .desc( "Write " + what + " to standard output. This option is incompatible with -outputFile, -outputDir and -standardLocation." )
-                    .build() );
-        }
+        addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
+                .longOpt( "stdout" )
+                .desc( "Write " + what + " to standard output. This option is incompatible with -outputFile, -outputDir and -standardLocation." )
+                .build() );
         options.addOptionGroup( og );
     }
 

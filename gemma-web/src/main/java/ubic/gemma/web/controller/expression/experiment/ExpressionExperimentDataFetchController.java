@@ -429,7 +429,7 @@ public class ExpressionExperimentDataFetchController {
             if ( this.getTaskCommand().getAnalysisId() != null ) {
 
                 Path f;
-                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( getTaskCommand().getAnalysisId(), getTaskCommand().isForceRewrite() ) ) {
+                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileById( getTaskCommand().getAnalysisId(), getTaskCommand().isForceRewrite() ) ) {
                     f = lockedPath.getPath();
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );

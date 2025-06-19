@@ -30,7 +30,6 @@ import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -42,6 +41,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -159,7 +159,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         options.addOption( Option.builder( "outputDir" )
                 .longOpt( "output-dir" )
                 .hasArg().type( Path.class )
-                .desc( "Directory to write output files to. If not specified, it will default to the analysis output directory. This requires -nodb to be set." )
+                .desc( "Directory to write output files to. If not specified, it will default to the current directory. This requires -nodb to be set." )
                 .build() );
     }
 
@@ -323,12 +323,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             }
         } else {
             log.info( "Writing results to disk" );
-            for ( DifferentialExpressionAnalysis r : results ) {
-                try ( LockedPath lockedPath = outputDir != null ? expressionDataFileService.writeDiffExAnalysisArchiveFile( r, outputDir ) : expressionDataFileService.writeDiffExAnalysisArchiveFile( r ) ) {
-                    log.info( "Wrote to " + lockedPath.getPath() );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
+            try {
+                expressionDataFileService.writeDiffExAnalysisArchiveFiles( results, outputDir != null ? outputDir : Paths.get( "" ), isForce() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
         }
     }

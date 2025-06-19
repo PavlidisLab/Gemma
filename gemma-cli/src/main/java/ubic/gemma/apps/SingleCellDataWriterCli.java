@@ -114,7 +114,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
 
-        addExpressionDataFileOptions( options, "single-cell expression data", true, true );
+        addExpressionDataFileOptions( options, "single-cell expression data" );
 
         // slicing individual samples
         addSingleExperimentOption( options, Option.builder( "samples" )

@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,12 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
      * @see #findByFactor(ExperimentalFactor)
      */
     Collection<DifferentialExpressionAnalysis> findByFactors( Collection<ExperimentalFactor> experimentalFactors );
+
+    /**
+     * Find an analysis for the given experiment and identifier.
+     */
+    @Nullable
+    DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet experimentAnalyzed, Long analysisId, boolean includeSubSets );
 
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
 
