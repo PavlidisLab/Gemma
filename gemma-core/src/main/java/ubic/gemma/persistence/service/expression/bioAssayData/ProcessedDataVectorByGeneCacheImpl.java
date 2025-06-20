@@ -18,8 +18,8 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
@@ -49,6 +49,9 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     private final Cache cache;
 
+    @Value("${gemma.cache." + VECTOR_CACHE_NAME + ".enabled}")
+    private boolean enabled = true;
+
     @Autowired
     public ProcessedDataVectorByGeneCacheImpl( CacheManager cacheManager ) {
         this.cache = CacheUtils.getCache( cacheManager, VECTOR_CACHE_NAME );
@@ -57,6 +60,9 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
     @Override
     public Collection<DoubleVectorValueObject> get( ExpressionExperiment ee, Long geneId ) {
         Assert.notNull( ee.getId() );
+        if ( !enabled ) {
+            return null;
+        }
         Long eeId = ee.getId();
         Cache.ValueWrapper element = cache.get( new CacheKey( eeId, geneId ) );
         if ( element == null )
@@ -73,12 +79,18 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Override
     public void putById( Long eeId, Long geneId, Collection<DoubleVectorValueObject> collection ) {
+        if ( !enabled ) {
+            return;
+        }
         cache.put( new CacheKey( eeId, geneId ), unmodifiableCollection( collection ) );
     }
 
     @Override
     public void evict( ExpressionExperiment ee ) {
         Assert.notNull( ee.getId() );
+        if ( !enabled ) {
+            return;
+        }
         Long eeId = ee.getId();
         CacheUtils.evictIf( cache, o -> {
             CacheKey k = ( CacheKey ) o;
@@ -88,10 +100,13 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Override
     public void clear() {
+        if ( !enabled ) {
+            return;
+        }
         cache.clear();
     }
 
-    @Value
+    @lombok.Value
     private static class CacheKey implements Serializable {
         Long expressionExperimentId;
         Long geneId;
