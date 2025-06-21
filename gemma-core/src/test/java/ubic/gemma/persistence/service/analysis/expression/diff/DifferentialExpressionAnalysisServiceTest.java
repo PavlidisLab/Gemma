@@ -126,17 +126,17 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     @Test
     public void testFindByInvestigation() {
 
-        Collection<DifferentialExpressionAnalysis> results = analysisService.findByExperiment( e1 );
+        Collection<DifferentialExpressionAnalysis> results = analysisService.findByExperiment( e1, true );
         assertEquals( 1, results.size() );
         DifferentialExpressionAnalysis dea = results.iterator().next();
         assertEquals( dea1_name, dea.getName() );
 
-        results = analysisService.findByExperiment( e2 );
+        results = analysisService.findByExperiment( e2, true );
         assertEquals( 1, results.size() );
         dea = results.iterator().next();
         assertEquals( dea2_name, dea.getName() );
 
-        results = analysisService.findByExperiment( e3 );
+        results = analysisService.findByExperiment( e3, true );
         assertEquals( 2, results.size() );
     }
 
@@ -147,7 +147,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         investigations.add( e3 );
 
         Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> results = analysisService
-                .findByExperiments( investigations );
+                .findByExperiments( investigations, true );
         assertEquals( 2, results.keySet().size() );
 
         assertEquals( 1, results.get( e1 ).size() );

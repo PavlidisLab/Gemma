@@ -42,9 +42,11 @@ public class QuantitationType extends AbstractDescribable {
     private boolean isBatchCorrected;
 
     /**
-     * This is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
-     * It might be wise to separate out "quantile normalized", but since we always quantile normalize ProcessedData, this
-     * isn't very useful.
+     * Indicate that the data has been normalized in some way.
+     * <p>
+     * For processed data, this is always a quantile normalization.
+     * <p>
+     * For raw data, this is pretty confusing since we don't make clear what we mean by "normalized".
      */
     private boolean isNormalized;
 

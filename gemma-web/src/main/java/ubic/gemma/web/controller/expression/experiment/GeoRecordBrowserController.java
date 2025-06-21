@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 
@@ -32,7 +32,7 @@ import java.util.Collection;
 /**
  * @author pavlidis
  */
-@Component
+@Controller
 @CommonsLog
 public class GeoRecordBrowserController {
 

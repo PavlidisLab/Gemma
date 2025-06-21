@@ -37,7 +37,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -48,13 +47,11 @@ import java.util.*;
  * @author pavlidis
  * @author keshav
  */
-public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> implements ExpressionDataPrimitiveDoubleMatrix {
+public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionDataMatrix<Double> implements BulkExpressionDataPrimitiveDoubleMatrix {
 
-    private static final int MAX_ROWS_TO_STRING = 200;
-    private static final long serialVersionUID = 1L;
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrix<CompositeSequence, BioMaterial> matrix;
 
+    private DoubleMatrix<CompositeSequence, BioMaterial> matrix;
     private Map<CompositeSequence, Double> ranks = new HashMap<>();
 
     /**
@@ -64,7 +61,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
 
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -78,7 +74,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
@@ -93,7 +88,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
-        this.init();
         for ( QuantitationType qt : quantitationTypes ) {
             if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(
@@ -106,7 +100,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     public ExpressionDataDoubleMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
-        this.init();
         if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalStateException(
                     "Cannot convert non-double quantitation types into double matrix: " + quantitationType );
@@ -126,7 +119,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix, Collection<QuantitationType> quantitationTypes ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -142,6 +134,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     }
 
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix dmatrix, DoubleMatrix<CompositeSequence, BioMaterial> copiedMatrix ) {
+        this( dmatrix, copiedMatrix, dmatrix.getQuantitationTypes() );
+    }
+
     /**
      * Create a matrix based on another one's selected rows.
      *
@@ -149,7 +145,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param sourceMatrix matrix
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -196,7 +191,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             throw new IllegalArgumentException( "Matrix is invalid" );
         }
 
-        this.init();
         this.expressionExperiment = ee;
         this.matrix = matrix;
         this.quantitationTypes.add( qt );
@@ -241,7 +235,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse,
             BioAssayDimension reorderedDim ) {
-        this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
 
         this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );
@@ -285,17 +278,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double get( CompositeSequence designElement, BioAssay bioAssay ) {
-        Integer i = this.rowElementMap.get( designElement );
-        Integer j = this.columnAssayMap.get( bioAssay );
-        if ( i == null || j == null ) {
-            ExpressionDataDoubleMatrix.log.warn( "No matrix element for " + designElement + ", " + bioAssay );
-            return null;
-        }
-        return this.matrix.get( i, j );
-    }
-
-    @Override
     public Double get( int row, int column ) {
         return matrix.get( row, column );
     }
@@ -306,26 +288,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
-    }
-
-    public double[][] getAsDoubles( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
-    }
-
-    @Override
-    public Double[] getColumn( BioAssay bioAssay ) {
-        return getColumn( this.columnAssayMap.get( bioAssay ) );
-    }
-
-    /**
-     * Retrieve the given column without boxing.
-     * @see #getColumn(BioAssay)
-     */
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
-        Integer j = this.columnAssayMap.get( bioAssay );
-        if ( j == null ) {
+        int j = getColumnIndex( bioAssay );
+        if ( j == -1 ) {
             return null;
         }
         return getColumnAsDoubles( j );
@@ -340,11 +305,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     @Override
     public double[] getColumnAsDoubles( int index ) {
         return this.matrix.getColumn( index );
-    }
-
-    @Override
-    public Double[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     @Override
@@ -366,18 +326,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public Double[] getRow( CompositeSequence designElement ) {
-        Integer row = this.rowElementMap.get( designElement );
-        if ( row == null ) {
-            return null;
-        }
-        return this.getRow( row );
-    }
-
-    @Override
     public double[] getRowAsDoubles( CompositeSequence designElement ) {
-        Integer row = this.rowElementMap.get( designElement );
-        if ( row == null ) {
+        int row = getRowIndex( designElement );
+        if ( row == -1 ) {
             return null;
         }
         return this.getRowAsDoubles( row );
@@ -412,7 +363,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return matrix.rows();
     }
 
-    @Override
+    /**
+     * Modifying the matrix directly is not recommended, make a copy instead.
+     */
+    @Deprecated
     public void set( int row, int column, @Nullable Double value ) {
         if ( value == null ) {
             matrix.set( row, column, Double.NaN );
@@ -430,7 +384,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         if ( this.getQuantitationTypes().size() > 1 ) {
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
-        BioAssayDimension bad = this.getBestBioAssayDimension();
+        BioAssayDimension bad = this.getBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
             ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
             v.setBioAssayDimension( bad );
@@ -457,7 +411,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
 
-        BioAssayDimension bad = this.getBestBioAssayDimension();
+        BioAssayDimension bad = this.getBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
             RawExpressionDataVector v = RawExpressionDataVector.Factory.newInstance();
             v.setBioAssayDimension( bad );
@@ -496,70 +450,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         matrix.set( row, column, value );
     }
 
-    /**
-     * Sets the row of matrix to the input data.
-     *
-     * @param rowIndex The row index of the data in the matrix to be replaced.
-     * @param data The input data.
-     */
-    @SuppressWarnings("unused") // Useful interface
-    public void setRow( int rowIndex, Double[] data ) {
-        if ( rowIndex > this.matrix.rows() ) {
-            throw new RuntimeException(
-                    "Specified row index " + rowIndex + " is larger than the matrix of size " + this.matrix.rows()
-                            + "." );
-        }
-
-        for ( int j = 0; j < data.length; j++ ) {
-            this.matrix.set( rowIndex, j, data[j] );
-        }
-    }
-
     @Override
-    public String toString() {
-        int columns = this.columns();
-        int rows = this.rows();
-
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMaximumFractionDigits( 4 );
-
-        StringBuilder buf = new StringBuilder();
-        if ( rows <= ExpressionDataDoubleMatrix.MAX_ROWS_TO_STRING ) {
-            buf.append( rows ).append( " x " ).append( columns ).append( " matrix of double values\n" );
-        } else {
-            buf.append( rows ).append( " x " ).append( columns ).append( " matrix of double values, showing up to " )
-                    .append( ExpressionDataDoubleMatrix.MAX_ROWS_TO_STRING ).append( " rows\n" );
-        }
-        int stop = 0;
-        buf.append( "Probe" );
-        for ( int i = 0; i < columns; i++ ) {
-            buf.append( "\t" ).append( this.getBioMaterialForColumn( i ).getName() ).append( ":" );
-            for ( BioAssay ba : this.getBioAssaysForColumn( i ) ) {
-                buf.append( ba.getName() ).append( "," );
-            }
-        }
-        buf.append( "\n" );
-
-        for ( int j = 0; j < rows; j++ ) {
-
-            buf.append( this.rowDesignElementMapByInteger.get( j ).getName() );
-            for ( int i = 0; i < columns; i++ ) {
-                double val = this.getAsDouble( j, i );
-                if ( Double.isNaN( val ) ) {
-                    buf.append( "\t" ).append( val );
-                } else {
-                    buf.append( "\t" ).append( nf.format( this.getAsDouble( j, i ) ) );
-                }
-            }
-
-            buf.append( "\n" );
-
-            if ( stop++ > ExpressionDataDoubleMatrix.MAX_ROWS_TO_STRING ) {
-                buf.append( "\n(Stopping after " + ExpressionDataDoubleMatrix.MAX_ROWS_TO_STRING + " rows) ...\n" );
-                break;
-            }
-        }
-        return buf.toString();
+    protected String format( int row, int column ) {
+        return format( matrix.get( row, column ) );
     }
 
     /**
@@ -567,7 +460,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
+        if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
 

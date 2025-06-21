@@ -78,8 +78,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         className = c.getCategory();
         termUri = c.getValueUri();
         termName = c.getValue();
-        // FIXME: should we use null instead of "" for missing evidence code?
-        evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "";
+        evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
     }
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {

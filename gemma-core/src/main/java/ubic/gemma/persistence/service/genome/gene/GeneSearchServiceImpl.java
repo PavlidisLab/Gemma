@@ -132,7 +132,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException {
+    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, @Nullable Long taxonId ) throws SearchException {
         Taxon taxon = null;
         String taxonName = "";
         if ( taxonId != null ) {

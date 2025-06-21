@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.genome.taxon;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
@@ -29,7 +29,7 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
-public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
+public interface TaxonService extends BaseImmutableService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
 
     Taxon findByCommonName( String commonName );
 
@@ -53,14 +53,6 @@ public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledServ
     @Secured({ "GROUP_USER" })
     void remove( Taxon taxon );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<Taxon> entities );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Taxon taxon );
-
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
@@ -80,4 +72,6 @@ public interface TaxonService extends BaseService<Taxon>, FilteringVoEnabledServ
      * @return List of taxa with array designs in gemma
      */
     Collection<TaxonValueObject> getTaxaWithArrays();
+
+    void updateGenesUsable( Taxon taxon, boolean isGenesUsable );
 }

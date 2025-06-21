@@ -7,24 +7,24 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +36,18 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Configuration
     @TestComponent
     static class ExperimentalDesignControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.download.path=/tmp" );
+        }
+
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
+        }
 
         @Bean
         public ExperimentalDesignController experimentalDesignController() {

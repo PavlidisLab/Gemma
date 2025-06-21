@@ -96,13 +96,19 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
         return myself;
     }
 
-    public CliAssert failsWith( int exitStatus ) {
-        objects.assertEqual( info, actual.executeCommand( cliContext ), exitStatus );
+    /**
+     * Assert that the command fails.
+     */
+    public CliAssert fails() {
+        objects.assertNotEqual( info, actual.executeCommand( cliContext ), 0 );
         return myself;
     }
 
-    public CliAssert fails() {
-        objects.assertNotEqual( info, actual.executeCommand( cliContext ), 0 );
+    /**
+     * Assert that the command fails with the given exit status.
+     */
+    public CliAssert failsWith( int exitStatus ) {
+        objects.assertEqual( info, actual.executeCommand( cliContext ), exitStatus );
         return myself;
     }
 
@@ -111,6 +117,6 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
     }
 
     public ByteArrayAssert standardError() {
-        return new ByteArrayAssert( out.toByteArray() );
+        return new ByteArrayAssert( err.toByteArray() );
     }
 }

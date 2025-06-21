@@ -20,7 +20,10 @@ package ubic.gemma.web.controller.genome.gene;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -35,9 +38,9 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.controller.ControllerUtils;
-import ubic.gemma.web.view.TextView;
+import ubic.gemma.web.controller.util.ControllerUtils;
+import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.controller.util.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -56,8 +59,13 @@ import static ubic.gemma.core.util.TsvUtils.format;
  */
 @Controller
 @RequestMapping(value = { "/gene", "/g" })
-public class GeneController extends BaseController {
+public class GeneController {
 
+    protected final Log log = LogFactory.getLog( getClass().getName() );
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private GeneService geneService;
     @Autowired

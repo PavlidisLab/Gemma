@@ -82,6 +82,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private String cellTypeFactorName;
 
     /**
+     * Ignore cell type assignment.
+     */
+    private boolean ignoreCellTypeFactor;
+
+    /**
      * An indicator for unknown cell type if the dataset uses something else than the {@code -1} code.
      */
     @Nullable
@@ -224,13 +229,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             qt.setDescription( "AnnData" );
         }
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        H5FundamentalType fundamentalType;
         try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
-            fundamentalType = datasetType.getFundamentalType();
+            detectQuantitationType( qt, h5File, layer, datasetType );
+            qt.setDescription( String.format( "Data from a layer located at '%s' originally encoded as an %s of %ss.",
+                    layer.getPath(), layer.getEncodingType(), datasetType.toString().toLowerCase() ) );
         }
-        detectQuantitationType( qt, h5File, layer, fundamentalType );
-        qt.setDescription( String.format( "Data from a layer located at '%s' originally encoded as an %s of %ss.",
-                layer.getPath(), layer.getEncodingType(), fundamentalType.toString().toLowerCase() ) );
         log.info( "Detected quantitation type for '" + layer.getPath() + "': " + qt );
         return qt;
     }
@@ -238,19 +241,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     /**
      * TODO: use {@link ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils}
      */
-    private void detectQuantitationType( QuantitationType qt, AnnData h5File, Layer layer, H5FundamentalType fundamentalType ) {
-        if ( fundamentalType.equals( H5FundamentalType.INTEGER ) ) {
+    private void detectQuantitationType( QuantitationType qt, AnnData h5File, Layer layer, H5Type dataType ) {
+        if ( dataType.getFundamentalType().equals( H5FundamentalType.INTEGER ) ) {
             qt.setType( StandardQuantitationType.COUNT );
             qt.setScale( ScaleType.COUNT );
-            // TODO: support integer QTs
-            qt.setRepresentation( PrimitiveType.INT );
-        } else if ( fundamentalType.equals( H5FundamentalType.FLOAT ) ) {
+            if ( dataType.getSize() <= 4 ) {
+                qt.setRepresentation( PrimitiveType.INT );
+            } else if ( dataType.getSize() <= 8 ) {
+                qt.setRepresentation( PrimitiveType.LONG );
+            } else {
+                throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+            }
+        } else if ( dataType.getFundamentalType().equals( H5FundamentalType.FLOAT ) ) {
             // detect various count encodings
             for ( ScaleType st : new ScaleType[] { ScaleType.COUNT, ScaleType.LOG2, ScaleType.LN, ScaleType.LOG10, ScaleType.LOG1P } ) {
                 if ( isCountEncodedInDouble( layer, st ) ) {
                     qt.setType( StandardQuantitationType.COUNT );
                     qt.setScale( st );
-                    qt.setRepresentation( PrimitiveType.DOUBLE );
+                    if ( dataType.getSize() <= 4 ) {
+                        qt.setRepresentation( PrimitiveType.FLOAT );
+                    } else if ( dataType.getSize() <= 8 ) {
+                        qt.setRepresentation( PrimitiveType.DOUBLE );
+                    } else {
+                        throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+                    }
                     return;
                 }
             }
@@ -262,9 +276,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 log.warn( "Scale type cannot be detected for non-counting data in " + layer.getPath() + "." );
                 qt.setScale( ScaleType.OTHER );
             }
-            qt.setRepresentation( PrimitiveType.DOUBLE );
+            if ( dataType.getSize() <= 4 ) {
+                qt.setRepresentation( PrimitiveType.FLOAT );
+            } else if ( dataType.getSize() <= 8 ) {
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+            } else {
+                throw new IllegalArgumentException( "Data type is too large for being stored in single or double precision float: " + dataType );
+            }
         } else {
-            throw new IllegalArgumentException( "Unsupported H5 fundamental type " + fundamentalType + " for a quantitation type." );
+            throw new IllegalArgumentException( "Unsupported H5 type " + dataType + " for a quantitation type." );
         }
     }
 
@@ -274,7 +294,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             log.warn( "Detecting counts from dense matrices are not supported, ignoring " + layer + "." );
             return false;
         }
-        for ( int i = 0; i < data.size(); i += 1000 ) {
+        // check up to 1 million values
+        for ( long i = 0; i < data.size(); i += ( data.size() / 1000 ) ) {
             double[] vec = data.slice( i, Math.min( i + 1000, data.size() ) ).toDoubleVector();
             for ( double d : vec ) {
                 double uv;
@@ -322,7 +343,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
-        checkCellTypeFactorName();
+        if ( ignoreCellTypeFactor ) {
+            log.info( "Ignoring the cell type factor, no cell type assignments will be returned." );
+            return Collections.emptySet();
+        } else if ( cellTypeFactorName == null ) {
+            throw new IllegalStateException( "A cell type factor name must be set to determine cell type assignments. Possible values are:\n\t"
+                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
+                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
+                    .collect( Collectors.joining( "\n\t" ) ) );
+        }
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
             CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
@@ -340,23 +369,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, null ) );
             }
+            assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
                 throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
                         unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
             }
-            assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
+            // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
+            // this column is indexed, so it's very fast to use indexOf
+            Dataframe.Column<String, String> cellIds = var.getIndex( String.class );
+            int[] cellPositions = new int[dimension.getNumberOfCells()];
+            for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
+                cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
+            }
             int[] codes = cellTypes.getCodes();
-            if ( unknownCellTypeCode != -1 ) {
-                // rewrite unknown codes, make a copy to ensure we don't modify the AnnData object
-                codes = Arrays.copyOf( codes, codes.length );
-                for ( int i = 0; i < codes.length; i++ ) {
-                    if ( codes[i] == unknownCellTypeCode ) {
-                        codes[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
-                    }
+            // rewrite the original codes to match the cell positions in the dimension
+            int[] cellTypeIndices = new int[dimension.getNumberOfCells()];
+            for ( int i = 0; i < cellTypeIndices.length; i++ ) {
+                if ( codes[cellPositions[i]] == unknownCellTypeCode ) {
+                    cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+                } else {
+                    cellTypeIndices[i] = codes[cellPositions[i]];
                 }
             }
-            assignment.setCellTypeIndices( codes );
-            assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( codes ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
+            assignment.setCellTypeIndices( cellTypeIndices );
+            assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( cellTypeIndices ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
             return Collections.singleton( assignment );
         }
     }
@@ -420,11 +456,18 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     log.warn( "The " + factorName + " column has too too many values (" + values.length + ") for importing into a cell-level characteristic, ignoring." );
                     continue;
                 }
-                int[] indices = new int[values.length];
+                // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
+                // this column is indexed, so it's very fast to use indexOf
+                Dataframe.Column<String, String> cellIds = vars.getIndex( String.class );
+                int[] cellPositions = new int[dimension.getNumberOfCells()];
+                for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
+                    cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
+                }
+                int[] indices = new int[dimension.getNumberOfCells()];
                 Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
-                for ( int i = 0; i < values.length; i++ ) {
-                    String val = values[i];
+                for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+                    String val = values[cellPositions[i]];
                     if ( val != null ) {
                         int j;
                         if ( valToIndex.containsKey( val ) ) {
@@ -849,13 +892,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 // ignore entries that are missing a gene mapping
                 .filter( i -> statefulDesignElementMapper.contains( genes.get( i ) ) )
                 .mapToObj( i -> {
-                    assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
                     vector.setOriginalDesignElement( genes.get( i ) );
                     vector.setDesignElement( statefulDesignElementMapper.matchOne( genes.get( i ) ).get() );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );
-                    populateVectorData( vector, i, scd, matrix, m );
+                    try {
+                        populateVectorData( vector, i, scd, matrix, m );
+                    } catch ( Exception e ) {
+                        throw new RuntimeException( String.format( "Failed to load single-cell vector for %s from row %d.",
+                                vector.getDesignElement(), i ), e );
+                    }
                     return vector;
                 } )
                 .onClose( matrix::close );
@@ -945,18 +992,23 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         if ( m.isSimpleCase ) {
             // this is using the same storage strategy from ByteArrayConverter
             try ( H5Dataset data = matrix.getData() ) {
+                long start = matrix.getIndptr()[i];
+                long end = matrix.getIndptr()[i + 1];
+                if ( end - start > scd.getNumberOfCells() ) {
+                    throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
+                }
                 switch ( vector.getQuantitationType().getRepresentation() ) {
                     case FLOAT:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F32BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.IEEE_F32BE ) );
                         break;
                     case DOUBLE:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE ) );
                         break;
                     case INT:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I32BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.STD_I32BE ) );
                         break;
                     case LONG:
-                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I64BE ) );
+                        vector.setData( data.slice( start, end ).toByteVector( H5Type.STD_I64BE ) );
                         break;
                 }
             }
@@ -991,7 +1043,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 sampleEnds[k] = end;
                 sampleIndices[k] = j;
             }
-            byte[] vectorData = new byte[8 * nnz];
+            if ( nnz > scd.getNumberOfCells() ) {
+                throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
+            }
+            byte[] vectorData = new byte[vector.getQuantitationType().getRepresentation().getSizeInBytes() * nnz];
             int[] vectorIndices = new int[nnz];
             // select indices relevant to BAs
             int sampleOffsetInVector = 0;
@@ -1086,15 +1141,6 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private void checkSampleFactorName() throws IOException {
         if ( sampleFactorName == null ) {
             throw new IllegalStateException( "The sample factor name must be set. Possible values are:\n\t"
-                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
-                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
-                    .collect( Collectors.joining( "\n\t" ) ) );
-        }
-    }
-
-    private void checkCellTypeFactorName() throws IOException {
-        if ( cellTypeFactorName == null ) {
-            throw new IllegalStateException( "A cell type factor name must be set to determine cell type assignments. Possible values are:\n\t"
                     + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
                     .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
                     .collect( Collectors.joining( "\n\t" ) ) );

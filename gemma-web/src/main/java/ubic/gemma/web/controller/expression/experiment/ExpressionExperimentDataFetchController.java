@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.io.FileUtils;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -43,12 +43,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -65,6 +65,7 @@ import java.util.List;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Called from JS
+@CommonsLog
 @Controller
 public class ExpressionExperimentDataFetchController {
 
@@ -82,14 +83,21 @@ public class ExpressionExperimentDataFetchController {
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
 
+    @Value("${tomcat.sendfile.enabled}")
+    private boolean enableTomcatSendfile;
+
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
      */
     @RequestMapping(value = "/getData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void downloadFile( @RequestParam("file") String filename, HttpServletResponse response ) throws IOException {
+    public void downloadFile( @RequestParam("file") String filename, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "The 'file' parameter must not be empty." );
+        }
+        // prevent lock files from being downloaded
+        if ( filename.endsWith( ".lock" ) ) {
+            throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
@@ -97,12 +105,12 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
         }
     }
 
     @RequestMapping(value = "/getMetaData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletResponse response ) throws IOException {
+    public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         ExpressionExperimentMetaFileType type = this.getType( typeId );
         if ( type == null ) {
@@ -115,7 +123,8 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), response );
+            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
+                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT );
         }
     }
 
@@ -130,6 +139,10 @@ public class ExpressionExperimentDataFetchController {
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
         List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
+            if ( type == ExpressionExperimentMetaFileType.MULTIQC_DATA || type == ExpressionExperimentMetaFileType.MULTIQC_LOG ) {
+                // don't display these in the GUI
+                continue;
+            }
             // Some files are prefixed with the experiments accession
             expressionDataFileService.getMetadataFile( ee, type, false )
                     .map( LockedPath::closeAndGetPath )
@@ -171,22 +184,6 @@ public class ExpressionExperimentDataFetchController {
         return taskRunningService.submitTask( job );
     }
 
-    public File getOutputFile( String filename ) {
-        // exclude any paths leading to the filename
-        filename = FilenameUtils.getName( filename );
-        File f = dataDir.resolve( filename ).toFile();
-        try {
-            FileUtils.forceMkdirParent( f );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        return f;
-    }
-
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
-
     /**
      * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
@@ -194,13 +191,36 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletResponse response ) throws IOException {
+    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletRequest request, HttpServletResponse response, boolean downloadAsAttachment ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
             downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
-        response.setContentLength( ( int ) Files.size( f ) );
-        response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
+        response.setContentLengthLong( Files.size( f ) );
+        if ( downloadAsAttachment ) {
+            response.addHeader( "Content-Disposition", "attachment; filename=\"" + downloadName + "\"" );
+        }
+        if ( enableTomcatSendfile ) {
+            if ( Boolean.TRUE.equals( request.getAttribute( "org.apache.tomcat.sendfile.support" ) ) ) {
+                downloadViaSendfile( f, request, response );
+                return;
+            } else {
+                log.warn( "Tomcat sendfile is not supported for this request. Falling back to stream download." );
+            }
+        }
+        downloadViaStream( f, response );
+    }
+
+    /**
+     * Uses Tomcat sendfile to download the file.
+     */
+    private void downloadViaSendfile( Path f, HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        request.setAttribute( "org.apache.tomcat.sendfile.filename", f.toString() );
+        request.setAttribute( "org.apache.tomcat.sendfile.start", 0L );
+        request.setAttribute( "org.apache.tomcat.sendfile.end", Files.size( f ) );
+    }
+
+    private void downloadViaStream( Path f, HttpServletResponse response ) throws IOException {
         try ( InputStream in = Files.newInputStream( f ) ) {
             FileCopyUtils.copy( in, response.getOutputStream() );
             response.flushBuffer();
@@ -217,7 +237,7 @@ public class ExpressionExperimentDataFetchController {
 
     class CoExpressionDataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
             super( eeId );
@@ -255,7 +275,7 @@ public class ExpressionExperimentDataFetchController {
      */
     class DataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
@@ -393,7 +413,7 @@ public class ExpressionExperimentDataFetchController {
 
     class DiffExpressionDataWriterTask extends AbstractTask<ExpressionExperimentDataFetchCommand> {
 
-        protected Log log = LogFactory.getLog( this.getClass().getName() );
+        protected final Log log = LogFactory.getLog( this.getClass().getName() );
 
         DiffExpressionDataWriterTask( ExpressionExperimentDataFetchCommand command ) {
             super( command );
@@ -409,7 +429,7 @@ public class ExpressionExperimentDataFetchController {
             if ( this.getTaskCommand().getAnalysisId() != null ) {
 
                 Path f;
-                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( getTaskCommand().getAnalysisId(), getTaskCommand().isForceRewrite() ) ) {
+                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileById( getTaskCommand().getAnalysisId(), getTaskCommand().isForceRewrite() ) ) {
                     f = lockedPath.getPath();
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );

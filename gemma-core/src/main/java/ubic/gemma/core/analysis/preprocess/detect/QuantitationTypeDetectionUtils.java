@@ -501,7 +501,7 @@ public class QuantitationTypeDetectionUtils {
             return;
         }
 
-        String[] columnNames = a.getBestBioAssayDimension().getBioAssays().stream()
+        String[] columnNames = a.getBioAssayDimension().getBioAssays().stream()
                 .map( BioAssay::getName )
                 .toArray( String[]::new );
 

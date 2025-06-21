@@ -191,13 +191,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
          * Redo any old diff ex analyses
          */
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
-                .findByExperiment( ee );
+                .findByExperiment( ee, true );
 
         if ( !oldAnalyses.isEmpty() ) {
 
             PreprocessorServiceImpl.log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                this.analyzerService.redoAnalysis( ee, copyMe, true );
+                this.analyzerService.redoAnalysis( ee, copyMe );
             }
         }
     }

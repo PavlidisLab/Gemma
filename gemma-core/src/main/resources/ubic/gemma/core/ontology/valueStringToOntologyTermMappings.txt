@@ -644,8 +644,8 @@ intestine	intestine	http://purl.obolibrary.org/obo/UBERON_0000160	organism part	
 intrahepatic cholangiocarcinoma	intrahepatic cholangiocarcinoma	http://purl.obolibrary.org/obo/MONDO_0003210	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 invasive breast carcinomas	invasive ductal breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0004953	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 invasive ductal carcinoma	invasive ductal breast carcinoma	http://purl.obolibrary.org/obo/MONDO_0004953	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-Ionizing radiation	radiation exposure	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-ionizing radiation (IR)	radiation exposure	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+Ionizing radiation	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+ionizing radiation (IR)	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 iPSC	induced pluripotent stem cell line cell	http://purl.obolibrary.org/obo/CLO_0037307	cell line	http://purl.obolibrary.org/obo/CLO_0000031
 iPSC-derived astrocytes	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 iPSCs	induced pluripotent stem cell line cell	http://purl.obolibrary.org/obo/CLO_0037307	cell line	http://purl.obolibrary.org/obo/CLO_0000031
@@ -653,7 +653,7 @@ iPSCs	induced pluripotent stem cell	http://www.ebi.ac.uk/efo/EFO_0004905	cell ty
 ipsilateral	ipsilateral to	http://purl.obolibrary.org/obo/PATO_0002035	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 IPTG	isopropyl β-D-thiogalactopyranoside	http://purl.obolibrary.org/obo/CHEBI_61448	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 IRd (insulin resistant)	insulin resistance	http://www.ebi.ac.uk/efo/EFO_0002614	phenotype	http://www.ebi.ac.uk/efo/EFO_0000651
-irradiated	radiation exposure	http://www.ebi.ac.uk/efo/EFO_0020980	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
+irradiated	exposure to radiation	http://purl.obolibrary.org/obo/ECTO_0000001	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Ischaemic heart disease	myocardial ischemia	http://purl.obolibrary.org/obo/MONDO_0024644	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Ischemic Stroke	Ischemic stroke	http://purl.obolibrary.org/obo/HP_0002140	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Ishikawa Cell Line	Ishikawa cell	http://purl.obolibrary.org/obo/CLO_0037163	cell line	http://purl.obolibrary.org/obo/CLO_0000031

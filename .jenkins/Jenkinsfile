@@ -48,38 +48,37 @@ pipeline {
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     buildHash = env.GIT_COMMIT
-                    if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
-                        error("A production build must not have a -SNAPSHOT suffix.")
-                    }
-                    if (env.BRANCH_NAME != "master" && !gemmaVersion.endsWith("-SNAPSHOT")) {
-                        error("A development build must have a -SNAPSHOT suffix.")
-                    }
-                    if (env.BRANCH_NAME == 'master') {
+                    def productionBuild = env.BRNACH_NAME == 'master'
+                    def supportBuild = env.BRANCH_NAME.startsWith('support-')
+                    def stagingBuild = env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*'
+                    if (productionBuild) {
+                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
+                            error("A production build must not have a -SNAPSHOT suffix.")
+                        }
                         dataDir = params.DATA_DIR
-                    } else if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                        dataDir = params.STAGING_DATA_DIR
-                    } else {
-                        dataDir = params.DEV_DATA_DIR
-                    }
-                    if (env.BRANCH_NAME == 'master') {
                         deployServer = 'moe'
                         deployRef = 'gemma'
-                    } else {
-                        deployServer = 'chalmers'
-                        if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                            deployRef = 'gemma-staging'
-                        } else {
-                            deployRef = 'gemma'
-                        }
-                    }
-                    if (env.BRANCH_NAME == 'master') {
                         cliRef = 'production'
-                    } else {
-                        if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                            cliRef = 'staging'
-                        } else {
-                            cliRef = gemmaVersion
+                    } else if (supportBuild) {
+                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
+                            error("A support build must not have a -SNAPSHOT suffix.")
                         }
+                    } else if (stagingBuild) {
+                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
+                            error("A staging build must have a -SNAPSHOT suffix.")
+                        }
+                        dataDir = params.STAGING_DATA_DIR
+                        deployServer = 'chalmers'
+                        deployRef = 'gemma-staging'
+                        cliRef = 'staging'
+                    } else {
+                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
+                            error("A development build must have a -SNAPSHOT suffix.")
+                        }
+                        dataDir = params.DEV_DATA_DIR
+                        deployServer = 'chalmers'
+                        deployRef = 'gemma'
+                        cliRef = gemmaVersion
                     }
                 }
                 sh 'mvn -B clean'
@@ -102,7 +101,7 @@ pipeline {
         stage('Run quick unit tests') {
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
+                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest -DskipVersionFile'
             }
             post {
                 always {
@@ -119,7 +118,7 @@ pipeline {
         stage('Package') {
             steps {
                 setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests -DskipWebpack'
+                sh 'mvn -B package -DskipTests -DskipVersionFile'
             }
             post {
                 success {
@@ -135,6 +134,7 @@ pipeline {
             when {
                 anyOf {
                     branch 'master'
+                    branch 'support-*'
                     branch 'hotfix-*'
                     branch 'release-*'
                     branch 'development'
@@ -149,6 +149,7 @@ pipeline {
                     when {
                         anyOf {
                             // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+                            branch 'support-*'
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
@@ -157,7 +158,7 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack'
+                        sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
                     }
                     post {
                         always {
@@ -175,6 +176,7 @@ pipeline {
                     when {
                         anyOf {
                             // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+                            branch 'support-*'
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
@@ -184,7 +186,7 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -Dmaven.javadoc.skip=true -DskipWebpack'
+                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -Dmaven.javadoc.skip=true -DskipWebpack -DskipVersionFile'
                         }
                     }
                     post {
@@ -203,6 +205,7 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
+                            branch 'support-*'
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
@@ -238,7 +241,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B deploy -DskipTests -DskipWebpack'
+                        sh 'mvn -B deploy -DskipTests -DskipWebpack -DskipVersionFile'
                     }
                 }
                 stage('Deploy Maven website') {
@@ -252,7 +255,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B site-deploy -DskipWebpack'
+                        sh 'mvn -B site-deploy -DskipWebpack -DskipVersionFile'
                         script {
                             if (dataDir != null) {
                                 sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"

@@ -22,13 +22,16 @@ package ubic.gemma.persistence.service.association.coexpression;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Paul
@@ -79,7 +82,7 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        queryCacheExecutor.submit( new DelegatingSecurityContextRunnable( new Runnable() {
+        queryCacheExecutor.submit( new Runnable() {
 
             private static final int MAX_WARNINGS = 5;
 
@@ -109,7 +112,7 @@ class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, Initializing
                     }
                 }
             }
-        } ) );
+        } );
     }
 
     @Override

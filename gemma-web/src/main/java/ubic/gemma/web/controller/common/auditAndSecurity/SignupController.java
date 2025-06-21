@@ -21,23 +21,25 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.authentication.LoginDetailsValueObject;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.util.SecurityUtil;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.MailEngine;
-import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
-import ubic.gemma.web.util.JsonUtil;
+import ubic.gemma.web.controller.util.JsonUtil;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -54,24 +56,32 @@ import java.util.Map;
  * @author keshav
  */
 @Controller
-public class SignupController extends BaseController implements InitializingBean {
+@CommonsLog
+public class SignupController implements InitializingBean {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private UserManager userManager;
-
     @Autowired
     private MailEngine mailEngine;
-
+    @Autowired
+    protected MessageSource messageSource;
+    @Autowired
+    protected MessageUtil messageUtil;
     @Autowired
     private ServletContext servletContext;
 
-    private ReCaptcha reCaptcha = new ReCaptcha( Settings.getString( "gemma.recaptcha.privateKey" ) );
+    @Value("${gemma.hosturl}")
+    private String hostUrl;
+    @Value("${gemma.recaptcha.privateKey}")
+    private String recaptchaPrivateKey;
+
+    private ReCaptcha reCaptcha;
 
     @Override
     public void afterPropertiesSet() {
+        reCaptcha = new ReCaptcha( recaptchaPrivateKey );
         if ( reCaptcha.isPrivateKeySet() ) {
             log.warn( "No recaptcha private key is configured, skipping validation" );
         }
@@ -129,6 +139,7 @@ public class SignupController extends BaseController implements InitializingBean
         LoginDetailsValueObject LDVo = new LoginDetailsValueObject();
 
         if ( userManager.loggedIn() ) {
+            assert userManager.getCurrentUsername() != null;
             LDVo.setUserName( userManager.getCurrentUsername() );
             LDVo.setLoggedIn( true );
         } else {
@@ -137,20 +148,6 @@ public class SignupController extends BaseController implements InitializingBean
 
         return LDVo;
 
-    }
-
-    /**
-     * @param passwordEncoder the passwordEncoder to set
-     */
-    public void setPasswordEncoder( PasswordEncoder passwordEncoder ) {
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    /**
-     * @param userManager the userManager to set
-     */
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
     }
 
     /*
@@ -224,7 +221,7 @@ public class SignupController extends BaseController implements InitializingBean
         String email = u.getEmail();
 
         Map<String, Object> model = new HashMap<>();
-        model.put( "siteurl", Settings.getHostUrl() + servletContext.getContextPath() + "/" );
+        model.put( "siteurl", hostUrl + servletContext.getContextPath() + "/" );
 
         this.sendConfirmationEmail( u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
 
@@ -242,7 +239,7 @@ public class SignupController extends BaseController implements InitializingBean
         try {
             model.put( "username", username );
             model.put( "confirmLink",
-                    Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
+                    hostUrl + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
 
             mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), templateName, model );
 

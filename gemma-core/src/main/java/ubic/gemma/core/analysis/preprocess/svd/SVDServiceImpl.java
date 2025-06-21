@@ -162,7 +162,7 @@ public class SVDServiceImpl implements SVDService {
          */
         DoubleMatrix<Integer, BioMaterial> v = svd.getV();
 
-        BioAssayDimension b = mat.getBestBioAssayDimension();
+        BioAssayDimension b = mat.getBioAssayDimension();
 
         PrincipalComponentAnalysis pca = this.updatePca( ee, svd, v, b );
 

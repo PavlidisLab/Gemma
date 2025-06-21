@@ -40,7 +40,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeoutException;
  * OntologyService and the CharacteristicService. Edits to characteristics are handled by
  *
  * @author paul
- * @see ubic.gemma.web.controller.common.CharacteristicBrowserController for related methods.
+ * @see ubic.gemma.web.controller.common.description.CharacteristicBrowserController for related methods.
  */
 @SuppressWarnings("unused")
 @Controller

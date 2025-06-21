@@ -1,5 +1,6 @@
 package ubic.gemma.cli.util;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,4 +41,6 @@ public interface EntityLocator {
     BioAssay locateBioAssay( ExpressionExperiment ee, String sampleId );
 
     BioAssay locateBioAssay( ExpressionExperiment ee, QuantitationType quantitationType, String sampleId );
+
+    DifferentialExpressionAnalysis locateDiffExAnalysis( ExpressionExperiment ee, String analysisIdentifier );
 }

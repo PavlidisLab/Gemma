@@ -110,7 +110,7 @@
 
     </table>
 
-    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(expressionExperiment, 'WRITE')">
+    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(#expressionExperiment, 'WRITE')">
         <c:if test="${!hasPopulatedDesign}">
             <div
                     style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">

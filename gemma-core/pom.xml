@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.0</version>
+        <version>1.32.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -23,6 +23,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipVersionFile}</skip>
                             <target>
                                 <exec executable="git" outputproperty="gemma.hash" logError="true">
                                     <arg value="rev-parse"/>
@@ -48,7 +49,16 @@
                             <!-- only include test classes that are meant to be re-used -->
                             <includes>
                                 <include>org/springframework/security/test/**/*.class</include>
+                                <include>ubic/gemma/core/ontology/TestOntologyConfig.class</include>
                                 <include>ubic/gemma/core/util/test/**/*.class</include>
+                                <!-- FIXME: this is not a scalable approach, we should have a separate test module -->
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/NegativeBinomialDistribution.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomBulkDataUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomDataUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomExpressionDataMatrixUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomSingleCellDataUtils.class</include>
+                                <include>ubic/gemma/applicationContext-dataSourceInitializer.xml</include>
+                                <include>log4j2-test.xml</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -84,7 +94,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <phase>generate-test-sources</phase>
@@ -266,6 +276,14 @@
             <version>1.9.25</version>
         </dependency>
 
+        <!-- Scheduling -->
+        <!-- This is the latest Quartz release compatible with Spring 3 -->
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>1.8.6</version>
+        </dependency>
+
         <!-- Testing -->
         <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>
@@ -282,4 +300,8 @@
         </dependency>
 
     </dependencies>
+
+    <properties>
+        <skipVersionFile>false</skipVersionFile>
+    </properties>
 </project>

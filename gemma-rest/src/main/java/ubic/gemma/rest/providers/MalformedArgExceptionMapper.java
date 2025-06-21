@@ -7,10 +7,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.MalformedArgException;
+import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import java.util.Collections;
+import java.util.List;
 
 @Provider
 @Component
@@ -28,11 +31,20 @@ public class MalformedArgExceptionMapper extends AbstractExceptionMapper<Malform
 
     @Override
     protected WellComposedErrorBody getWellComposedErrorBody( MalformedArgException exception ) {
-        WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST.getStatusCode(), exception.getMessage() );
+        return WellComposedErrorBody.builder()
+                .code( Response.Status.BAD_REQUEST.getStatusCode() )
+                .message( exception.getMessage() )
+                .errors( getErrors( exception ) )
+                .build();
+    }
+
+    private List<WellComposedError> getErrors( MalformedArgException exception ) {
         if ( exception.getCause() != null ) {
             // TODO: report the exact request parameter that caused this
-            body.addError( ExceptionUtils.getRootCause( exception ), null, null );
+            Throwable t = ExceptionUtils.getRootCause( exception );
+            return Collections.singletonList( WellComposedError.builder().reason( t.getClass().getName() ).message( t.getMessage() ).location( null ).locationType( null ).build() );
+        } else {
+            return Collections.emptyList();
         }
-        return body;
     }
 }

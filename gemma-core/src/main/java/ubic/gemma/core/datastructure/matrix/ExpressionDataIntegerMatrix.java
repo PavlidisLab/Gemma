@@ -12,7 +12,10 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Warning, not fully tested.
@@ -20,22 +23,18 @@ import java.util.*;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Possible external use
-public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Integer> {
+public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDataMatrix<Integer> {
 
     private static final Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
-    private static final long serialVersionUID = 1L;
 
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
     public ExpressionDataIntegerMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
-
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
                 throw new IllegalStateException( "Cannot convert non-integer quantitation types into int matrix" );
             }
         }
-
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }
@@ -46,40 +45,13 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer get( CompositeSequence designElement, BioAssay bioAssay ) {
-        int i = this.rowElementMap.get( designElement );
-        int j = this.columnAssayMap.get( bioAssay );
-        return this.matrix.get( i, j );
-    }
-
-    @Override
     public Integer get( int row, int column ) {
         return matrix.get( row, column );
     }
 
     @Override
-    public Integer[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Integer[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return this.getColumn( index );
-    }
-
-    @Override
     public Integer[] getColumn( int index ) {
         return this.matrix.getColumn( index );
-    }
-
-    @Override
-    public Integer[][] getColumns( List<BioAssay> bioAssays ) {
-        Integer[][] res = new Integer[bioAssays.size()][];
-        for ( int i = 0; i < bioAssays.size(); i++ ) {
-            res[i] = this.getColumn( bioAssays.get( i ) );
-        }
-        return res;
     }
 
     @Override
@@ -89,11 +61,6 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
             res[i] = this.matrix.getRow( i );
         }
         return res;
-    }
-
-    @Override
-    public Integer[] getRow( CompositeSequence designElement ) {
-        return this.matrix.getRow( this.getRowIndex( designElement ) );
     }
 
     @Override
@@ -118,23 +85,19 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return matrix.rows();
     }
 
-    @Override
-    public void set( int row, int column, Integer value ) {
-        this.matrix.setObj( row, column, value );
-    }
-
     public Integer get( CompositeSequence designElement, BioMaterial bioMaterial ) {
         return this.matrix.get( matrix.getRowIndexByName( designElement ),
                 matrix.getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
     }
 
-    public Collection<CompositeSequence> getRowMap() {
-        return this.rowElementMap.keySet();
+    @Override
+    protected String format( int row, int column ) {
+        return String.valueOf( matrix.get( row, column ) );
     }
 
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
+        if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
 
@@ -151,7 +114,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     private IntegerMatrix<CompositeSequence, Integer> createMatrix(
             Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
 
-        int numRows = this.rowDesignElementMapByInteger.keySet().size();
+        int numRows = this.rowDesignElementMapByInteger.size();
 
         IntegerMatrix<CompositeSequence, Integer> mat = new IntegerMatrix<>( numRows, maxSize );
 

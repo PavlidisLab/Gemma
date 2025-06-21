@@ -25,17 +25,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 /**
  * @author paul
+ * @deprecated use {@link DifferentialExpressionAnalysisWriterCli} instead.
  */
+@Deprecated
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
-
-    private static final String DESCRIPTION = "Generate analysis text files (diff expression)";
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
@@ -49,10 +48,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         return "generateDataFile";
     }
 
-
     @Override
     public String getShortDesc() {
-        return ExpressionExperimentDataFileGeneratorCli.DESCRIPTION;
+        return "Generate analysis text files (diff expression). This is deprecated, use getDiffExAnalysis instead.";
     }
 
     @Override
@@ -75,8 +73,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         getBatchTaskExecutor().submit( () -> {
             log.info( "Processing Experiment: " + ee1.getName() );
             ExpressionExperiment ee = this.eeService.thawLite( ee1 );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite )
-                    .forEach( LockedPath::close );
+            expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFiles( ee, forceWrite );
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
             return null;

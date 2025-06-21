@@ -93,7 +93,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType ) {
-        SingleCellDimension scd = getSingleCellDimensionWithoutCellIds( ee, quantitationType, true, true, true, true, false );
+        SingleCellDimension scd = getSingleCellDimension( ee, quantitationType );
         if ( scd == null ) {
             return null;
         }
@@ -125,7 +125,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, SingleCellVectorInitializationConfig config ) {
-        SingleCellDimension scd = getSingleCellDimensionWithoutCellIds( ee, quantitationType, true, true, true, true, false );
+        SingleCellDimension scd = config.isIncludeCellIds() ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         if ( scd == null ) {
             return null;
         }
@@ -435,7 +435,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
             try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false ) ) {
                 log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
-                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), numVecs ) ) );
+                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), 10, numVecs ) ) );
             }
         } else {
             // reset the metrics to null since there is no preferred vectors

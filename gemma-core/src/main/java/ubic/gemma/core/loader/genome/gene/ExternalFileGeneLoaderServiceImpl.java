@@ -23,13 +23,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
@@ -229,8 +229,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      */
     private void updateTaxonWithGenesLoaded( Taxon taxon ) {
         if ( !taxon.getIsGenesUsable() ) {
-            taxon.setIsGenesUsable( true );
-            taxonService.update( taxon );
+            taxonService.updateGenesUsable( taxon, true );
             log.info( "Updating taxon genes loaded to true for taxon " + taxon );
         }
 

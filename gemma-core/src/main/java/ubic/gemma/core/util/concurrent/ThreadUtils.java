@@ -1,9 +1,16 @@
 package ubic.gemma.core.util.concurrent;
 
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.gemma.core.logging.log4j.DelegatingThreadContextRunnable;
 
 /**
  * Utilities for creating {@link Thread} objects.
+ * <p>
+ * All threads created will see their runnable wrapped with:
+ * <ul>
+ * <li>{@link DelegatingSecurityContextRunnable}</li>
+ * <li>{@link DelegatingThreadContextRunnable}</li>
+ * </ul>
  * @author poirigui
  */
 public class ThreadUtils {
@@ -17,6 +24,6 @@ public class ThreadUtils {
     }
 
     private static Runnable wrap( Runnable runnable ) {
-        return DelegatingThreadContextRunnable.create( runnable );
+        return DelegatingSecurityContextRunnable.create( DelegatingThreadContextRunnable.create( runnable ), null );
     }
 }

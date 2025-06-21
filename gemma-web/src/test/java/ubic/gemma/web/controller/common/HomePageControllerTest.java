@@ -1,6 +1,5 @@
 package ubic.gemma.web.controller.common;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

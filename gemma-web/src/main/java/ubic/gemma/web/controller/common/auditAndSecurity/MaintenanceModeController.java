@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.Constants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,7 +69,7 @@ public class MaintenanceModeController {
         } else if ( StringUtils.isNotBlank( start ) ) {
             config.put( "maintenanceMode", true );
         }
-        return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
+        return new ModelAndView( new RedirectView( "/home.html", true ) );
 
     }
 }

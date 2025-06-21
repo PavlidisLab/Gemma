@@ -2,7 +2,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.util.Assert;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
@@ -91,7 +90,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
-        Assert.isTrue( cellIndex >= 0 && cellIndex < numberOfCells, "The cell index must be in the range [0, " + numberOfCells + "[." );
+        if ( cellIndex < 0 || cellIndex > numberOfCells ) {
+            throw new IndexOutOfBoundsException( "Cell index must be in the range [0, " + numberOfCells + "[." );
+        }
         return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCells, cellIndex );
     }
 
@@ -101,7 +102,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public List<String> getCellIdsBySample( int sampleIndex ) {
-        Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
+        if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
+            throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
+        }
         return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
     }
 
@@ -113,7 +116,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public int getNumberOfCellsBySample( int sampleIndex ) {
-        Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
+        if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
+            throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
+        }
         if ( sampleIndex == bioAssays.size() - 1 ) {
             return numberOfCells - bioAssaysOffset[sampleIndex];
         } else {

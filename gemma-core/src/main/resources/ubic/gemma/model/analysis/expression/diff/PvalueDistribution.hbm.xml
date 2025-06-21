@@ -4,8 +4,8 @@
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
     <class name="ubic.gemma.model.analysis.expression.diff.PvalueDistribution" table="PVALUE_DISTRIBUTION"
-    >
-        <cache usage="read-write"/>
+           mutable="false">
+        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">

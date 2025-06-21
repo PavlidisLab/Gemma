@@ -76,13 +76,6 @@ public class VisualizationValueObject {
         Map<Long, GeneValueObject> idMap = IdentifiableUtils.getIdMap( genes );
         this.populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
-        Collection<Long> validatedProbeIdList = new ArrayList<>();
-        if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
-            for ( DifferentialExpressionValueObject devo : validatedProbes ) {
-                validatedProbeIdList.add( devo.getProbeId() );
-            }
-        }
-
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
                 this.setEEwithPvalue( vector.getExpressionExperiment(),
@@ -94,10 +87,11 @@ public class VisualizationValueObject {
             }
 
             String color = null;
-            Collection<Long> vectorGeneids = vector.getGenes();
+            Collection<Long> vectorGeneIds = vector.getGenes();
             Collection<GeneValueObject> vectorGenes = new HashSet<>();
             for ( Long g : idMap.keySet() ) {
-                if ( !vectorGeneids.contains( g ) ) {
+                assert vectorGeneIds != null;
+                if ( !vectorGeneIds.contains( g ) ) {
                     continue;
                 }
                 vectorGenes.add( idMap.get( g ) );
@@ -157,7 +151,7 @@ public class VisualizationValueObject {
             Collection<GeneValueObject> vectorGenes = new HashSet<>();
 
             String color = "black";
-            if ( genes != null && vectorGeneids != null ) {
+            if ( vectorGeneids != null ) {
                 for ( GeneValueObject g : genes ) {
                     // This seems inefficient. We should just pass in the genes for this vector.
                     if ( !vectorGeneids.contains( g.getId() ) ) {

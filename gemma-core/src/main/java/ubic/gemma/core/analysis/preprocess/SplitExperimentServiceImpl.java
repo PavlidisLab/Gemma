@@ -27,9 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -139,7 +139,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
                 log.info( vectors.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
-                qt2mat.put( qt, BulkExpressionDataMatrix.getMatrix( vectors ) );
+                qt2mat.put( qt, MultiAssayBulkExpressionDataMatrix.getMatrix( vectors ) );
             }
 
             if ( !foundPreferred ) {

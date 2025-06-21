@@ -46,6 +46,13 @@ public class H5Type implements AutoCloseable {
         return members;
     }
 
+    /**
+     * Obtain the size of the type in bytes.
+     */
+    public long getSize() {
+        return H5Tget_size( typeId );
+    }
+
     @Override
     public String toString() {
         return getFundamentalType().toString();

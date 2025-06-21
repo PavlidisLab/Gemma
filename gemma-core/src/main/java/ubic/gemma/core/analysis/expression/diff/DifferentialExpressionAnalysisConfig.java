@@ -41,9 +41,9 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.write
 public class DifferentialExpressionAnalysisConfig {
 
     /**
-     * Default value for whether empirical Bayes moderation of test statistics should be used.
+     * Default value for whether moderated test statistics should be used.
      */
-    public static final boolean DEFAULT_EBAYES = true;
+    public static final boolean DEFAULT_MODERATE_STATISTICS = true;
 
     /**
      * Type of analysis to perform.
@@ -56,9 +56,11 @@ public class DifferentialExpressionAnalysisConfig {
     private final Map<ExperimentalFactor, FactorValue> baselineFactorValues = new HashMap<>();
 
     /**
-     * Whether empirical Bayes moderated test statistics should be used.
+     * Whether moderated test statistics should be used.
+     * <p>
+     * This is usually done with the empirical Bayes method.
      */
-    private boolean moderateStatistics = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
+    private boolean moderateStatistics = DifferentialExpressionAnalysisConfig.DEFAULT_MODERATE_STATISTICS;
 
     private final Set<ExperimentalFactor> factorsToInclude = new HashSet<>();
 
@@ -76,7 +78,7 @@ public class DifferentialExpressionAnalysisConfig {
     private ExperimentalFactor subsetFactor;
 
     /**
-     * If this is non-null, this was a subset analysis, for this factor value.
+     * If this is non-null, this is a subset analysis for this factor value.
      * <p>
      * Only applicable for analysis on a {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
      */
@@ -106,6 +108,27 @@ public class DifferentialExpressionAnalysisConfig {
      */
     private long maxAnalysisTimeMillis = 0;
 
+    public DifferentialExpressionAnalysisConfig() {
+    }
+
+    /**
+     * Copy constructor.
+     */
+    public DifferentialExpressionAnalysisConfig( DifferentialExpressionAnalysisConfig baseConfig ) {
+        this.analysisType = baseConfig.getAnalysisType();
+        this.baselineFactorValues.putAll( baseConfig.getBaselineFactorValues() );
+        this.moderateStatistics = baseConfig.isModerateStatistics();
+        this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
+        this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
+        this.persist = baseConfig.isPersist();
+        this.subsetFactor = baseConfig.getSubsetFactor();
+        this.subsetFactorValue = baseConfig.getSubsetFactorValue();
+        this.ignoreFailingSubsets = baseConfig.isIgnoreFailingSubsets();
+        this.useWeights = baseConfig.isUseWeights();
+        this.makeArchiveFile = baseConfig.isMakeArchiveFile();
+        this.maxAnalysisTimeMillis = baseConfig.getMaxAnalysisTimeMillis();
+    }
+
     /**
      * Add a collection of factors to include in the analysis.
      */
@@ -120,6 +143,12 @@ public class DifferentialExpressionAnalysisConfig {
         HashSet<ExperimentalFactor> fs = new HashSet<>( factors );
         Assert.isTrue( fs.size() == 2, "An interaction must have two factors." );
         interactionsToInclude.add( fs );
+    }
+
+    public void addInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactions ) {
+        for ( Collection<ExperimentalFactor> interaction : interactions ) {
+            addInteractionToInclude( interaction );
+        }
     }
 
     public void addBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baselineConditions ) {

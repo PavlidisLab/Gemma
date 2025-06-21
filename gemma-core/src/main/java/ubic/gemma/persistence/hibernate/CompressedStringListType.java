@@ -101,13 +101,12 @@ public class CompressedStringListType implements UserType, ParameterizedType {
 
     @Override
     public Serializable disassemble( @Nullable Object value ) throws HibernateException {
-        //noinspection unchecked
-        return value != null ? String.join( delimiter, ( List<String> ) value ) : null;
+        return ( Serializable ) deepCopy( value );
     }
 
     @Override
     public Object assemble( @Nullable Serializable cached, Object owner ) throws HibernateException {
-        return cached != null ? Arrays.asList( StringUtils.split( ( String ) cached, delimiter ) ) : null;
+        return deepCopy( cached );
     }
 
     @Override

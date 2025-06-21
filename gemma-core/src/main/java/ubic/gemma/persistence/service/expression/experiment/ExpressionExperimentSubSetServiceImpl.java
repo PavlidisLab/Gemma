@@ -87,7 +87,7 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     public void remove( ExpressionExperimentSubSet subset ) {
         subset = ensureInSession( subset );
         // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( subset );
+        this.differentialExpressionAnalysisService.removeForExperiment( subset, true );
         super.remove( subset );
     }
 

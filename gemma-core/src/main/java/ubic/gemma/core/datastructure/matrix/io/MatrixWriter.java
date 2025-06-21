@@ -22,6 +22,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -37,10 +38,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.clearScalarConversionThreadLocalStorage;
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
@@ -97,7 +95,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @throws IOException when the write failed
      */
     public int write( BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
-        QuantitationType qt = matrix.getQuantitationTypes().iterator().next();
+        QuantitationType qt = matrix.getQuantitationType();
 
         List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, false );
         this.writeHeader( bioMaterials, matrix, geneAnnotations, writer );
@@ -141,7 +139,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        QuantitationType qt = matrix.getQuantitationTypes().iterator().next();
+        QuantitationType qt = matrix.getQuantitationType();
 
         List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, true );
 
@@ -209,14 +207,14 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     private List<BioMaterial> getBioMaterialsInRequestedOrder( BulkExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
         List<BioMaterial> bioMaterials = new ArrayList<>();
-        if ( orderByDesign ) {
-            bioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
-        } else {
-            for ( int i = 0; i < matrix.columns(); i++ ) {
-                bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
-            }
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
         }
-        return bioMaterials;
+        if ( orderByDesign ) {
+            return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( bioMaterials, null, null );
+        } else {
+            return bioMaterials;
+        }
     }
 
     /**
@@ -235,7 +233,13 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             appendBaseHeader( "Expression data", buildInfo, writer );
         }
 
-        for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
+        Collection<QuantitationType> qts;
+        if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
+            qts = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getQuantitationTypes();
+        } else {
+            qts = Collections.singleton( matrix.getQuantitationType() );
+        }
+        for ( QuantitationType qt : qts ) {
             writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
             if ( autoFlush ) {
                 writer.flush();

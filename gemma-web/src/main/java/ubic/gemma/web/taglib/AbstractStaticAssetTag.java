@@ -4,7 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
-import ubic.gemma.web.util.StaticAssetResolver;
+import ubic.gemma.web.assets.StaticAssetResolver;
 
 import javax.servlet.jsp.JspException;
 

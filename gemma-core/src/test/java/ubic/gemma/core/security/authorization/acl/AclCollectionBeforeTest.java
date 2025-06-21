@@ -84,7 +84,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         securityService.makePrivate( one );
         super.runAsUser( userName );
         assertTrue( securityService.isPrivate( one ) );
-        coexpressionAnalysisService.findByExperiments( ees );
+        coexpressionAnalysisService.findByExperiments( ees, true );
         super.runAsUser( userName );
     }
 
@@ -93,7 +93,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         // both data sets are public here.
         super.runAsUser( userName );
         Map<BioAssaySet, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
-                .findByExperiments( ees );
+                .findByExperiments( ees, true );
         assertNotNull( r );
     }
 }

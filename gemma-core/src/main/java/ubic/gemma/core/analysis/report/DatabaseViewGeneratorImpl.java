@@ -253,7 +253,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                 ee = expressionExperimentService.thawLite( ee );
 
                 Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
-                        .getAnalyses( ee );
+                        .getAnalyses( ee, true );
                 if ( results == null || results.isEmpty() ) {
                     DatabaseViewGeneratorImpl.log.warn( "No differential expression results found for " + ee );
                     continue;

@@ -155,42 +155,49 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         String sampleColumn = null;
         String cellTypeColumn = null;
         String unknownCellTypeIndicator = null;
+        boolean ignoreCellTypeColumn = false;
         if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
             AnnDataSingleCellDataLoaderConfig annDataConfig = ( AnnDataSingleCellDataLoaderConfig ) config;
             sampleColumn = annDataConfig.getSampleFactorName();
             cellTypeColumn = annDataConfig.getCellTypeFactorName();
             unknownCellTypeIndicator = annDataConfig.getUnknownCellTypeIndicator();
+            ignoreCellTypeColumn = annDataConfig.isIgnoreCellTypeFactor();
         }
-        for ( Dataframe.Column<?, ?> col : var ) {
-            if ( !col.getType().equals( String.class ) ) {
-                continue;
-            }
-            if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that '" + col.getName() + "' is the sample name column." );
-                sampleColumn = col.getName();
-            }
-            if ( cellTypeColumn == null && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that '" + col.getName() + "' is the cell type column." );
-                cellTypeColumn = col.getName();
-                if ( unknownCellTypeIndicator == null ) {
-                    unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
-                    if ( unknownCellTypeIndicator != null ) {
-                        log.info( "Detected that '" + col.getName() + "' uses '" + unknownCellTypeIndicator + "' as an unknown cell type indicator." );
+        if ( sampleColumn == null || ( cellTypeColumn == null && !ignoreCellTypeColumn ) ) {
+            log.info( "Automatically detecting sample and/or cell type columns in AnnData file " + annDataFile + "..." );
+            for ( Dataframe.Column<?, ?> col : var ) {
+                if ( !col.getType().equals( String.class ) ) {
+                    continue;
+                }
+                if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                    log.info( "Detected that '" + col.getName() + "' is the sample name column." );
+                    sampleColumn = col.getName();
+                }
+                if ( cellTypeColumn == null && !ignoreCellTypeColumn && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                    log.info( "Detected that '" + col.getName() + "' is the cell type column." );
+                    cellTypeColumn = col.getName();
+                    if ( unknownCellTypeIndicator == null ) {
+                        unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
+                        if ( unknownCellTypeIndicator != null ) {
+                            log.info( "Detected that '" + col.getName() + "' uses '" + unknownCellTypeIndicator + "' as an unknown cell type indicator." );
+                        }
                     }
                 }
             }
-        }
-        if ( sampleColumn != null || cellTypeColumn != null ) {
-            if ( sampleColumn != null ) {
-                loader.setSampleFactorName( sampleColumn );
+            if ( sampleColumn == null ) {
+                log.warn( "Failed to detect a sample name column in AnnData file " + annDataFile + "." );
             }
-            if ( cellTypeColumn != null ) {
-                loader.setCellTypeFactorName( cellTypeColumn );
-                loader.setUnknownCellTypeIndicator( unknownCellTypeIndicator );
+            if ( cellTypeColumn == null && !ignoreCellTypeColumn ) {
+                log.warn( "Failed to detect a cell type column in AnnData file " + annDataFile + "." );
             }
-        } else {
-            log.warn( "Failed to detect AnnData loader settings, the loader will be left unconfigured." );
         }
+        if ( sampleColumn != null ) {
+            loader.setSampleFactorName( sampleColumn );
+        }
+        if ( cellTypeColumn != null ) {
+            loader.setCellTypeFactorName( cellTypeColumn );
+        }
+        loader.setIgnoreCellTypeFactor( ignoreCellTypeColumn );
     }
 
     private void configureRawX( AnnDataSingleCellDataLoader loader, AnnData ad, SingleCellDataLoaderConfig config ) {

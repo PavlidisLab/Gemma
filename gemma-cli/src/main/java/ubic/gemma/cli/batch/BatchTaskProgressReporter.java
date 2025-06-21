@@ -3,8 +3,10 @@ package ubic.gemma.cli.batch;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.util.AnsiEscapeCodes;
 
 import javax.annotation.Nullable;
+import java.io.Console;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BatchTaskProgressReporter implements AutoCloseable {
 
     private final BatchTaskSummaryWriter summaryWriter;
+    private final Console console;
 
     private final AtomicInteger numberOfSuccessOrErrorObjects = new AtomicInteger( 0 );
     private volatile boolean hasErrorObjects = false;
@@ -29,8 +32,16 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     private int estimatedMaxTasks = -1;
     private int reportFrequencyMillis = 30000;
 
-    public BatchTaskProgressReporter( BatchTaskSummaryWriter summaryWriter ) {
+    /**
+     *
+     * @param summaryWriter      a writer to report batch task results, results are emitted as they are added and
+     *                           {@link BatchTaskSummaryWriter#close()} is invoked when the reporter is closed to
+     *                           provide an opportunity to write a summary
+     * @param console a console capable of receiving ANSI escape codes
+     */
+    public BatchTaskProgressReporter( BatchTaskSummaryWriter summaryWriter, @Nullable Console console ) {
         this.summaryWriter = summaryWriter;
+        this.console = console;
     }
 
     /**
@@ -175,15 +186,23 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     private void reportProgress( int completedTasks ) {
-        if ( timer.getTime() > reportFrequencyMillis && completedTasks > lastCompletedTasks ) {
-            if ( estimatedMaxTasks > 0 ) {
-                log.info( String.format( "Completed %d/%d batch tasks.", completedTasks, estimatedMaxTasks ) );
-            } else {
-                log.info( String.format( "Completed %d batch tasks.", completedTasks ) );
+        Assert.state( completedTasks >= lastCompletedTasks );
+        if ( completedTasks > lastCompletedTasks ) {
+            if ( timer.getTime() > reportFrequencyMillis ) {
+                reportProgressToLogger( completedTasks );
+                timer.reset();
+                timer.start();
+                lastCompletedTasks = completedTasks;
             }
-            timer.reset();
-            timer.start();
-            lastCompletedTasks = completedTasks;
+            reportProgressToConsole( completedTasks );
+        }
+    }
+
+    private void reportProgressToLogger( int completedTasks ) {
+        if ( estimatedMaxTasks > 0 ) {
+            log.info( String.format( "Completed %d/%d batch tasks.", completedTasks, estimatedMaxTasks ) );
+        } else {
+            log.info( String.format( "Completed %d batch tasks.", completedTasks ) );
         }
     }
 
@@ -198,5 +217,28 @@ public class BatchTaskProgressReporter implements AutoCloseable {
         } catch ( IOException e ) {
             log.error( "Failed to complete batch task summary.", e );
         }
+        clearProgressIndicatorInConsole();
+    }
+
+    /**
+     * Report progress to console using ANSI escape sequences.
+     */
+    private void reportProgressToConsole( int completedTasks ) {
+        if ( console == null ) {
+            return;
+        }
+        if ( estimatedMaxTasks > 0 && completedTasks <= estimatedMaxTasks ) {
+            console.printf( AnsiEscapeCodes.progress( Math.round( 100.0f * completedTasks / estimatedMaxTasks ) ) );
+        } else {
+            // indeterminate if there is no max task estimate or if we are over the max
+            console.printf( AnsiEscapeCodes.indeterminateProgress() );
+        }
+    }
+
+    private void clearProgressIndicatorInConsole() {
+        if ( console == null ) {
+            return;
+        }
+        console.printf( AnsiEscapeCodes.clearProgress() );
     }
 }

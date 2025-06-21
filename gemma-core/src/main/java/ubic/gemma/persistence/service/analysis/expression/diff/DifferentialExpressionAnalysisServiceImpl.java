@@ -18,20 +18,21 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
@@ -48,9 +49,8 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * @see DifferentialExpressionAnalysisService
  */
 @Service
+@CommonsLog
 public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
-
-    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
     private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
@@ -79,13 +79,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
-            double threshold ) {
-        return this.differentialExpressionAnalysisDao.find( gene, resultSet, threshold );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
         return this.differentialExpressionAnalysisDao.findByFactor( ef );
     }
@@ -94,13 +87,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Transactional(readOnly = true)
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
             Collection<Long> experimentIds ) {
-        return this.differentialExpressionAnalysisDao.findByExperimentIds( experimentIds );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon ) {
-        return this.differentialExpressionAnalysisDao.findByTaxon( taxon );
+        return this.differentialExpressionAnalysisDao.findByExperimentAnalyzedId( experimentIds );
     }
 
     @Override
@@ -111,15 +98,14 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment );
+    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets ) {
+        return differentialExpressionAnalysisDao.findByExperimentAnalyzedAndId( expressionExperiment, analysisId, includeSubSets );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
-            Collection<? extends BioAssaySet> expressionExperiments ) {
-        return this.differentialExpressionAnalysisDao.getAnalyses( expressionExperiments );
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment, boolean includeSubSets ) {
+        return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment, includeSubSets );
     }
 
     @Override
@@ -199,7 +185,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit ) {
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( ids, offset, limit );
+                .getAnalysesByExperimentIds( ids, offset, limit, true );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
@@ -245,9 +231,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional
-    public void removeForExperiment( BioAssaySet ee ) {
+    public void removeForExperiment( BioAssaySet ee, boolean includeSubSets ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByExperiment( ee );
+                .findByExperiment( ee, includeSubSets );
         this.remove( diffAnalyses );
     }
 
@@ -269,17 +255,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( experiment );
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
+        return this.differentialExpressionAnalysisDao.findByExperiment( experiment, includeSubSets );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
-            Collection<BioAssaySet> experiments ) {
+            Collection<BioAssaySet> experiments, boolean includeSubSets ) {
         return this.differentialExpressionAnalysisDao
-                .findByExperiments( experiments );
+                .findByExperiments( experiments, includeSubSets );
     }
 
     @Override
@@ -290,8 +275,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
+        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( experimentAnalyzedIds, includeSubSets );
     }
 
     @Override

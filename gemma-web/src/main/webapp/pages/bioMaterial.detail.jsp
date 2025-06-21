@@ -177,7 +177,7 @@
 
     <br>
 
-    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(bioMaterial, 'WRITE,ADMINISTRATION')">
+    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(#bioMaterial, 'WRITE')">
         <td colspan="2">
             <div>
                 <input type="button"

@@ -17,6 +17,7 @@ public class AnnDataSingleCellDataLoaderConfig extends SingleCellDataLoaderConfi
     private String sampleFactorName;
     @Nullable
     private String cellTypeFactorName;
+    private boolean ignoreCellTypeFactor;
     @Nullable
     private String unknownCellTypeIndicator;
     @Nullable

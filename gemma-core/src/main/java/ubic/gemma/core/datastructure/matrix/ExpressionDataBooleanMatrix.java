@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import cern.colt.matrix.ObjectMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -36,14 +35,11 @@ import java.util.*;
  *
  * @author pavlidis
  */
-public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
+public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDataMatrix<Boolean> {
 
-    private static final long serialVersionUID = 1L;
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
     public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        this.init();
-
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
                 throw new IllegalStateException( "Cannot convert non-boolean quantitation types into boolean matrix" );
@@ -56,7 +52,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
     public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors,
             List<QuantitationType> qtypes ) {
-        this.init();
         Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
         this.vectorsToMatrix( selectedVectors );
     }
@@ -67,74 +62,37 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
-        return this.matrix.get( matrix.getRowIndexByName( designElement ),
-                matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
-    }
-
-    @Override
     public Boolean get( int row, int column ) {
         return matrix.get( row, column );
     }
 
     @Override
-    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Boolean[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return this.getColumn( index );
-    }
-
-    @Override
-    public Boolean[] getColumn( int index ) {
-        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
-        Boolean[] res = new Boolean[rawResult.size()];
-        int i = 0;
-        for ( Object o : rawResult.toArray() ) {
-            res[i] = ( Boolean ) o;
-            i++;
+    public Boolean[] getColumn( int column ) {
+        Boolean[] res = new Boolean[matrix.rows()];
+        for ( int i = 0; i < res.length; i++ ) {
+            res[i] = this.matrix.get( i, column );
         }
         return res;
     }
 
     @Override
-    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Boolean[][] getRawMatrix() {
         Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            Object[] rawRow = matrix.getRow( i );
-            for ( int j = 0; j < rawRow.length; j++ ) {
-                dMatrix[i][j] = ( Boolean ) rawRow[i];
+        for ( int i = 0; i < dMatrix.length; i++ ) {
+            for ( int j = 0; j < dMatrix[i].length; j++ ) {
+                dMatrix[i][j] = matrix.get( i, j );
             }
         }
-
         return dMatrix;
     }
 
     @Override
-    public Boolean[] getRow( CompositeSequence designElement ) {
-        Integer row = this.rowElementMap.get( designElement );
-        if ( row == null )
-            return null;
-        Object[] rawRow = matrix.getRow( row );
-        Boolean[] result = new Boolean[rawRow.length];
-        for ( int i = 0, k = rawRow.length; i < k; i++ ) {
-            assert rawRow[i] instanceof Boolean : "Got a " + rawRow[i].getClass().getName();
-            result[i] = ( Boolean ) rawRow[i];
-        }
-        return result;
-    }
-
-    @Override
     public Boolean[] getRow( int index ) {
-        return matrix.getRow( index );
+        Boolean[] row = new Boolean[matrix.columns()];
+        for ( int j = 0; j < row.length; j++ ) {
+            row[j] = this.matrix.get( index, j );
+        }
+        return row;
     }
 
     @Override
@@ -154,13 +112,14 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    public void set( int row, int column, Boolean value ) {
-        throw new UnsupportedOperationException();
+    protected String format( int row, int column ) {
+        Boolean val = matrix.get( row, column );
+        return val != null ? String.valueOf( val ) : "";
     }
 
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
+        if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException();
         }
 

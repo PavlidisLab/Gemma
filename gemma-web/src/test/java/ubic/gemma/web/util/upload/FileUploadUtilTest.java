@@ -23,22 +23,35 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.web.controller.util.upload.FileUploadUtil;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class FileUploadUtilTest {
 
-    private File copiedFile;
+    private static final Path UPLOAD_DIR = Paths.get( Settings.getDownloadPath() ).resolve( "userUploads" );
+
+    private Path copiedFile;
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if ( copiedFile != null ) {
-            assertTrue( copiedFile.delete() );
+            Files.delete( copiedFile );
         }
+    }
+
+    @Test
+    public void testGetUploadedFile() {
+        assertEquals( UPLOAD_DIR.resolve( "foo.txt" ), FileUploadUtil.getUploadedFile( "bar/foo.txt", UPLOAD_DIR ) );
+        assertEquals( UPLOAD_DIR.resolve( "foo.txt" ), FileUploadUtil.getUploadedFile( "../foo.txt", UPLOAD_DIR ) );
+        assertThrows( IllegalArgumentException.class, () -> FileUploadUtil.getUploadedFile( "..", UPLOAD_DIR ) );
+        assertThrows( IllegalArgumentException.class, () -> FileUploadUtil.getUploadedFile( ".", UPLOAD_DIR ) );
     }
 
     @Test
@@ -57,10 +70,15 @@ public class FileUploadUtilTest {
         request.setContent( text_contents.getBytes() );
         request.addFile( sourceFile );
 
-        copiedFile = FileUploadUtil.copyUploadedFile( request, key );
-        assertTrue( copiedFile.exists() );
-        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
-        assertEquals( expectedSize, copiedFile.length() );
+        copiedFile = FileUploadUtil.copyUploadedFile( request, key, UPLOAD_DIR );
+        assertTrue( Files.exists( copiedFile ) );
+        assertTrue( copiedFile.getFileName().toString().endsWith( "__test_upload.txt" ) );
+        assertEquals( expectedSize, Files.size( copiedFile ) );
+
+        assertEquals( copiedFile, FileUploadUtil.getUploadedFile( copiedFile.toString(), UPLOAD_DIR ) );
+        assertEquals( copiedFile, FileUploadUtil.getUploadedFile( copiedFile.getFileName().toString(), UPLOAD_DIR ) );
+        assertEquals( copiedFile, FileUploadUtil.getUploadedFile( Paths.get( "foo", "bar" ).resolve( copiedFile.getFileName() ).toString(), UPLOAD_DIR ) );
+        assertEquals( copiedFile, FileUploadUtil.getUploadedFile( Paths.get( "foo", ".." ).resolve( copiedFile.getFileName() ).toString(), UPLOAD_DIR ) );
     }
 
     @Test
@@ -79,10 +97,10 @@ public class FileUploadUtilTest {
         request.setContent( text_contents.getBytes() );
         request.addFile( sourceFile );
 
-        copiedFile = FileUploadUtil.copyUploadedFile( request, key );
-        assertTrue( copiedFile.exists() );
-        assertTrue( copiedFile.getName().endsWith( "__test_upload.txt" ) );
-        assertEquals( expectedSize, copiedFile.length() );
+        copiedFile = FileUploadUtil.copyUploadedFile( request, key, UPLOAD_DIR );
+        assertTrue( Files.exists( copiedFile ) );
+        assertTrue( copiedFile.getFileName().toString().endsWith( "__test_upload.txt" ) );
+        assertEquals( expectedSize, Files.size( copiedFile ) );
     }
 
 }

@@ -18,25 +18,24 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.WebContextFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
-import ubic.gemma.web.util.upload.FailedMultipartHttpServletRequest;
-import ubic.gemma.web.util.upload.FileUploadUtil;
-import ubic.gemma.web.util.upload.UploadInfo;
-import ubic.gemma.web.view.JSONView;
+import ubic.gemma.web.controller.util.upload.FailedMultipartHttpServletRequest;
+import ubic.gemma.web.controller.util.upload.FileUploadUtil;
+import ubic.gemma.web.controller.util.upload.UploadInfo;
+import ubic.gemma.web.controller.util.view.JSONView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,9 +46,11 @@ import java.util.Map;
  * @author keshav
  * @author Traces of Matt Raible
  */
+@CommonsLog
 public class FileUploadController extends AbstractController {
 
-    private static Log log = LogFactory.getLog( FileUploadController.class.getName() );
+    @Value("${gemma.download.path}/userUploads")
+    private Path uploadDir;
 
     public UploadInfo getUploadStatus() {
         HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
@@ -64,9 +65,9 @@ public class FileUploadController extends AbstractController {
      *
      */
     public String upload( InputStream is ) throws IOException {
-        File copiedFile = FileUploadUtil.copyUploadedInputStream( is );
+        Path copiedFile = FileUploadUtil.copyUploadedInputStream( is, uploadDir );
         FileUploadController.log.info( "DWR Uploaded file!" );
-        return copiedFile.getAbsolutePath();
+        return copiedFile.toString();
     }
 
     @Override
@@ -100,12 +101,12 @@ public class FileUploadController extends AbstractController {
 
             for ( String key : fileMap.keySet() ) {
                 MultipartFile multipartFile = fileMap.get( key );
-                File copiedFile = null;
+                Path copiedFile = null;
                 try {
-                    copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
+                    copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request, uploadDir );
                     FileUploadController.log.info( "Uploaded file: " + copiedFile );
                     model.put( "success", true );
-                    model.put( "localFile", StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) );
+                    model.put( "localFile", StringEscapeUtils.escapeJava( copiedFile.toString() ) );
                     model.put( "originalFile", multipartFile.getOriginalFilename() );
                     model.put( "size", multipartFile.getSize() );
 

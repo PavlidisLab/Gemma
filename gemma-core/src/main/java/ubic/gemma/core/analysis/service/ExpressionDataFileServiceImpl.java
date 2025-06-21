@@ -29,12 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
@@ -553,11 +549,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
             try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize ) ) {
-                return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), cs2gene, writer );
+                return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), cs2gene, writer );
             }
         } else {
             Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
-            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), vectors.size() ) ), cs2gene, writer );
+            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, vectors.size() ) ), cs2gene, writer );
         }
     }
 
@@ -598,7 +594,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
         if ( !forceWrite && Files.exists( destDir ) ) {
-            throw new IllegalArgumentException( "Output directory " + destDir + " already exists." );
+            throw new IllegalArgumentException( "Output directory " + destDir + " already exists, use forceWrite to overwrite." );
         }
         try ( LockedPath ignored = fileLockManager.acquirePathLock( destDir, true ) ) {
             Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
@@ -618,7 +614,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     if ( scaleType != null && qt.getScale() != scaleType ) {
                         log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
                     }
-                    return writer.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
+                    return writer.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
                 }
             } else {
                 SingleCellExpressionDataMatrix<?> matrix = helperService.getSingleCellMatrix( ee, samples, qt, cs2gene );
@@ -748,7 +744,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
+                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getPath() );
                 int written = writeProcessedExpressionData( ee, filtered, null, writer, false );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return Optional.of( lockedPath.toShared() );
@@ -876,67 +872,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-        Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
-        Collection<LockedPath> result = new HashSet<>();
-        for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            result.add( this.writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) );
-        }
-        return result;
-    }
-
-    @Override
-    public LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException {
-        DifferentialExpressionAnalysis analysis = helperService.getAnalysisById( analysisId );
-        return writeOrLocateDiffExAnalysisArchiveFile( analysis, forceCreate );
-    }
-
-    private LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
-        String filename = getDiffExArchiveFileName( analysis );
-        try ( LockedPath f = this.getOutputFile( filename, false ) ) {
-            // Force create if file is older than one year
-            if ( !forceCreate && Files.exists( f.getPath() ) ) {
-                Date d = new Date( f.getPath().toFile().lastModified() );
-                Calendar calendar = Calendar.getInstance();
-                calendar.add( Calendar.YEAR, -1 );
-                forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
-            }
-
-            // If not force create and the file exists (can be read from), return the existing file.
-            if ( !forceCreate && Files.exists( f.getPath() ) ) {
-                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-                return f.steal();
-            }
-
-            // (Re-)create the file
-            try ( LockedPath lockedPath = f.toExclusive();
-                    OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
-                log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
-                writeDiffExArchive( analysis, stream );
-                return lockedPath.toShared();
-            }
-        }
-    }
-
-    @Override
-    public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
-        try ( LockedPath lockedPath = fileLockManager.acquirePathLock( dataDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
-                OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
-            log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
-            writeDiffExArchive( analysis, stream );
-            return lockedPath.toShared();
-        }
-    }
-
-    private void writeDiffExArchive( DifferentialExpressionAnalysis analysis, OutputStream stream ) throws IOException {
-        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
-        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
-        AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
-        analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
-        new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, null, hasSignificantBatchConfound.get(), stream );
-    }
-
-    @Override
     public Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
         // randomize file name if temporary in case of access by more than one user at once
         try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, filtered, JSON_BULK_DATA_FILE_SUFFIX ), false ) ) {
@@ -970,7 +905,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
-                BulkExpressionDataMatrix<?> expressionDataMatrix = BulkExpressionDataMatrix.getMatrix( vectors );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = MultiAssayBulkExpressionDataMatrix.getMatrix( vectors );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
                 int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
                 log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );
@@ -980,6 +915,97 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 throw e;
             }
         }
+    }
+
+    @Override
+    public Collection<Path> writeOrLocateDiffExAnalysisArchiveFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+        Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
+        Collection<Path> result = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            try ( LockedPath lockedPath = writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) ) {
+                result.add( lockedPath.getPath() );
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public LockedPath writeOrLocateDiffExAnalysisArchiveFileById( Long analysisId, boolean forceCreate ) throws IOException {
+        DifferentialExpressionAnalysis analysis = helperService.getAnalysisById( analysisId );
+        return writeOrLocateDiffExAnalysisArchiveFile( analysis, forceCreate );
+    }
+
+    @Override
+    public LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
+        String filename = getDiffExArchiveFileName( analysis );
+        try ( LockedPath f = this.getOutputFile( filename, false ) ) {
+            // Force create if file is older than one year
+            if ( !forceCreate && Files.exists( f.getPath() ) ) {
+                Date d = new Date( f.getPath().toFile().lastModified() );
+                Calendar calendar = Calendar.getInstance();
+                calendar.add( Calendar.YEAR, -1 );
+                forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
+            }
+
+            // If not force create and the file exists (can be read from), return the existing file.
+            if ( !forceCreate && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+
+            // (Re-)create the file
+            try ( LockedPath lockedPath = f.toExclusive(); OutputStream stream = openFile( lockedPath.getPath() ) ) {
+                log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
+                writeDiffExAnalysisArchiveFile( analysis, stream );
+                return lockedPath.toShared();
+            }
+        }
+    }
+
+    @Override
+    public Collection<Path> writeDiffExAnalysisArchiveFiles( ExpressionExperiment ee, Path outputDir, boolean forceWrite ) throws IOException {
+        return writeDiffExAnalysisArchiveFiles( helperService.getAnalyses( ee ), outputDir, forceWrite );
+    }
+
+    @Override
+    public Collection<Path> writeDiffExAnalysisArchiveFiles( Collection<DifferentialExpressionAnalysis> analyses, Path outputDir, boolean forceWrite ) throws IOException {
+        Collection<Path> result = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            Path diffExFile = outputDir.resolve( getDiffExArchiveFileName( analysis ) );
+            writeDiffExAnalysisArchiveFile( analysis, diffExFile, forceWrite );
+            result.add( diffExFile );
+        }
+        return result;
+    }
+
+    @Override
+    public void writeDiffExAnalysisArchiveFileById( Long id, Path outputFile, boolean forceWrite ) throws IOException {
+        writeDiffExAnalysisArchiveFile( helperService.getAnalysisById( id ), outputFile, forceWrite );
+    }
+
+    @Override
+    public void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path file, boolean forceWrite ) throws IOException {
+        if ( !forceWrite && Files.exists( file ) ) {
+            throw new IllegalArgumentException( file + " already exists, use forceWrite to overwrite." );
+        }
+        try ( OutputStream stream = openFile( file ) ) {
+            writeDiffExAnalysisArchiveFile( analysis, stream );
+            log.info( "Wrote " + analysis + " to " + file + "." );
+        }
+    }
+
+    @Override
+    public void writeDiffExAnalysisArchiveFileById( Long analysisId, OutputStream outputStream ) throws IOException {
+        writeDiffExAnalysisArchiveFile( helperService.getAnalysisById( analysisId ), outputStream );
+    }
+
+    @Override
+    public void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, OutputStream stream ) throws IOException {
+        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
+        AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
+        analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
+        new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, null, hasSignificantBatchConfound.get(), stream );
     }
 
     /**

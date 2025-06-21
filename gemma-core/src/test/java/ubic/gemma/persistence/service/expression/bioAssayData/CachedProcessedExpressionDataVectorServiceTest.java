@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -45,6 +46,14 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
     @Configuration
     @TestComponent
     static class CC extends BaseDatabaseTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer(
+                    "gemma.cache.ProcessedExpressionDataVectorCache.enabled=true",
+                    "gemma.cache.ProcessedExpressionDataVectorByGeneCache.enabled=true"
+            );
+        }
 
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {

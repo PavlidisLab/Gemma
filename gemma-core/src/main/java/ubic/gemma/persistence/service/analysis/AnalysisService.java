@@ -18,14 +18,11 @@
  */
 package ubic.gemma.persistence.service.analysis;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Provides basic services for dealing with analyses
@@ -34,49 +31,5 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface AnalysisService<T extends Analysis> extends BaseImmutableService<T> {
-
-    /**
-     * @param toDelete deletes the given analysis from the system
-     */
-    @Override
-    @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
-    void remove( T toDelete );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<T> findByName( String name );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<T> findByTaxon( Taxon taxon );
-
-    /**
-     * Not secured: for internal use only
-     *
-     * @param idsToFilter starting list of bioassayset ids.
-     * @return the ones which have a coexpression analysis.
-     */
-    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
-
-    /**
-     * Not secured: for internal use only
-     *
-     * @param taxon taxon
-     * @return ids of bioassaysets from the given taxon that have a coexpression analysis
-     */
-    Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
-
-    /**
-     * @param id id
-     * @return the analysis with the specified ID
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    T load( Long id );
-
-    /**
-     * @return all of the analysis objects
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<T> loadAll();
 
 }

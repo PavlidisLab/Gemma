@@ -72,7 +72,7 @@ class AnalysisSelectionAndExecutionService {
 
         // if this is a subset analysis, see if we can reuse an existing set of subsets
         if ( config.getSubsetFactor() != null ) {
-            Map<FactorValue, ExpressionExperimentSubSet> subsets = expressionExperimentService.getSubSetsByFactorValue( expressionExperiment, config.getSubsetFactor(), dmatrix.getBestBioAssayDimension() );
+            Map<FactorValue, ExpressionExperimentSubSet> subsets = expressionExperimentService.getSubSetsByFactorValue( expressionExperiment, config.getSubsetFactor(), dmatrix.getBioAssayDimension() );
             if ( subsets != null ) {
                 log.info( String.format( "%s already has subsets for %s, reusing them:\n\t%s", expressionExperiment,
                         config.getSubsetFactor(),

@@ -170,10 +170,13 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = eeService.thawLite( ee );
+
         if ( this.justbackfillLog2cpm ) {
             try {
+                ExpressionExperiment finalEe = ee;
                 QuantitationType qt = this.eeService.getPreferredQuantitationType( ee )
-                        .orElseThrow( () -> new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() ) );
+                        .orElseThrow( () -> new IllegalArgumentException( "No preferred quantitation type for " + finalEe.getShortName() ) );
                 if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
                     log.warn( "Preferred data is not counts for " + ee );
                     addErrorObject( ee.getShortName(), "Preferred data is not counts" );

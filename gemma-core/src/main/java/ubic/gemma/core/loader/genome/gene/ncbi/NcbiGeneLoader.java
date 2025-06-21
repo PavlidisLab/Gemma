@@ -148,8 +148,7 @@ public class NcbiGeneLoader {
                 }
 
                 if ( !taxon.getIsGenesUsable() ) {
-                    taxon.setIsGenesUsable( true );
-                    taxonService.update( taxon );
+                    taxonService.updateGenesUsable( taxon, true );
                     NcbiGeneLoader.log.debug( "Updating taxon genes usable to true for taxon " + taxon );
                 }
             }

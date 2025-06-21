@@ -14,7 +14,9 @@
  */
 package ubic.gemma.rest.util;
 
+import lombok.Builder;
 import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
 /**
  * Wrapper for an error response payload compliant with the <a href="https://google.github.io/styleguide/jsoncstyleguide.xml#error">Google JSON style-guide</a>.
@@ -22,6 +24,8 @@ import lombok.Value;
  * @author tesarst
  */
 @Value
+@Builder
+@Jacksonized
 public class ResponseErrorObject {
 
     /**

@@ -24,8 +24,8 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import java.util.Collection;
 
@@ -34,19 +34,7 @@ import java.util.Collection;
  *
  * @author kelsey
  */
-public interface CoexpressionAnalysisService extends BaseService<CoexpressionAnalysis>, SingleExperimentAnalysisService<CoexpressionAnalysis> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( CoexpressionAnalysis o );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( Collection<CoexpressionAnalysis> o );
+public interface CoexpressionAnalysisService extends SingleExperimentAnalysisService<CoexpressionAnalysis>, SecurableBaseService<CoexpressionAnalysis> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
@@ -65,20 +53,20 @@ public interface CoexpressionAnalysisService extends BaseService<CoexpressionAna
     boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
     @Override
-    void removeForExperiment( BioAssaySet ee );
+    void removeForExperiment( BioAssaySet ee, boolean includeSubSets );
 
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * Not secured: for internal use only
      *
-     * @param idsToFilter starting list of bioassayset ids.
+     * @param experimentAnalyzedIds    starting list of bioassayset ids.
+     * @param includeSubSets
      * @return the ones which have a coexpression analysis.
      */
     @Override
-    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
 
     /**
      * Not secured: for internal use only

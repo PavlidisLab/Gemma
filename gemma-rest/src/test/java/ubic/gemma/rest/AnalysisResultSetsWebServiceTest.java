@@ -28,7 +28,6 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -274,17 +273,20 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 .hasMediaType( new MediaType( "text", "tab-separated-values", "UTF-8" ) )
                 .entityAsStream()
                 .satisfies( is -> {
-                    // FIXME: I could not find the equivalent of withFirstRecordAsHeader() in the builder API
-                    CSVParser reader = CSVFormat.Builder.create( CSVFormat.TDF.withFirstRecordAsHeader() )
-                            .setSkipHeaderRecord( false )
-                            .setCommentMarker( '#' ).build()
+                    CSVParser reader = CSVFormat.TDF.builder()
+                            .setHeader()
+                            .setSkipHeaderRecord( true )
+                            .setCommentMarker( '#' )
+                            .get()
                             .parse( new InputStreamReader( is ) );
-                    assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
+                    assertThat( reader.getHeaderNames() ).containsExactly( "id", "probe_id", "probe_name",
+                            "gene_id", "gene_name", "gene_ncbi_id", "gene_ensembl_id", "gene_official_symbol",
+                            "gene_official_name", "pvalue", "corrected_pvalue", "rank" );
                     CSVRecord record = reader.iterator().next();
-                    assertEquals( record.get( "pvalue" ), "1.0" );
-                    assertEquals( record.get( "corrected_pvalue" ), "0.0001" );
+                    assertEquals( "1.0", record.get( "pvalue" ) );
+                    assertEquals( "0.0001", record.get( "corrected_pvalue" ) );
                     // rank is null, it should appear as an empty string
-                    assertEquals( record.get( "rank" ), "" );
+                    assertEquals( "", record.get( "rank" ) );
                 } );
     }
 }

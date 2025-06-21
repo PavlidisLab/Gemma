@@ -22,6 +22,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.util.NetDatasourceUtil;
+import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.File;
 import java.io.IOException;

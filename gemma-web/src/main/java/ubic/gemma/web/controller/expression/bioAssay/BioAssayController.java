@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -69,9 +69,22 @@ public class BioAssayController {
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
 
-    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = {"id"})
     public ModelAndView show( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
         BioAssay bioAssay = bioAssayService.loadOrFail( id, EntityNotFoundException::new );
+        bioAssay = bioAssayService.thaw( bioAssay );
+        return new ModelAndView( "bioAssay.detail" )
+                .addObject( "bioAssay", bioAssay )
+                .addAllObjects( getBioAssayHierarchy( bioAssay, dimensionId ) )
+                .addObject( "bioAssaySets", bioAssayService.getBioAssaySets( bioAssay ).stream().sorted( Comparator.comparing( BioAssaySet::getName ) ).collect( Collectors.toList() ) );
+    }
+
+    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = {"shortName"})
+    public ModelAndView showByShortName( @RequestParam("shortName") String shortName, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+        BioAssay bioAssay = bioAssayService.findByShortName( shortName );
+        if (bioAssay == null) {
+            throw new EntityNotFoundException( "No BioAssay with the short name " + shortName + ".");
+        }
         bioAssay = bioAssayService.thaw( bioAssay );
         return new ModelAndView( "bioAssay.detail" )
                 .addObject( "bioAssay", bioAssay )

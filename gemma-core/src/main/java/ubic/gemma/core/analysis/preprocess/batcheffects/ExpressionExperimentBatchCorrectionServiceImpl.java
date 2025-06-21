@@ -193,7 +193,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * @return the originalDataMatrix with the corrected values now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
      */
     private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
-        if ( originalDataMatrix.getBestBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
+        if ( originalDataMatrix.getBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
             return correctedMatrix;
         }
 
@@ -390,7 +390,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             for ( int i = 0; i < mat.columns(); i++ ) {
                 biomaterials.add( mat.getBioMaterialForColumn( i ) );
             }
-            ExpressionDataMatrixColumnSort.orderByExperimentalDesign( biomaterials, retainedFactors );
+            orderedSamples = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( biomaterials, retainedFactors, null );
         }
         return buildDesignMatrix( retainedFactors, orderedSamples, true );
     }

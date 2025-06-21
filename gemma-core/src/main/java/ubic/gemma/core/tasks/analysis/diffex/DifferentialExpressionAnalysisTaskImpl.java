@@ -93,11 +93,11 @@ public class DifferentialExpressionAnalysisTaskImpl
 
         if ( getTaskCommand().getToRedo() != null ) {
             log.info( "Redoing existing analysis" );
-            return differentialExpressionAnalyzerService.redoAnalysis( ee, getTaskCommand().getToRedo(), true );
+            return differentialExpressionAnalyzerService.redoAnalysis( ee, getTaskCommand().getToRedo() );
         }
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .getAnalyses( ee );
+                .getAnalyses( ee, true );
 
         if ( !diffAnalyses.isEmpty() ) {
             log.info(
