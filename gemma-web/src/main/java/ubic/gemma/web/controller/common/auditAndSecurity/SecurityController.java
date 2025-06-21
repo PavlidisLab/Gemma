@@ -32,8 +32,8 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.Describable;
@@ -79,6 +79,8 @@ public class SecurityController {
 
     @Value("${gemma.hosturl}")
     private String hostUrl;
+    @Value("${gemma.admin.email}")
+    private String adminEmailAddress;
 
     public boolean addUserToGroup( String userName, String groupName ) {
 
@@ -115,10 +117,11 @@ public class SecurityController {
         if ( StringUtils.isNotBlank( emailAddress ) ) {
             SecurityController.log.debug( "Sending email notification to " + emailAddress );
             String manageGroupsUrl = hostUrl + servletContext.getContextPath() + "/manageGroups.html";
-            String body = userTakingAction.getUserName() + " has added you to the group '" + groupName
-                    + "'.\nTo view groups you belong to, visit " + manageGroupsUrl
-                    + "\n\nIf you believe you received this email in error, contact " + mailEngine.getAdminEmailAddress()
-                    + ".";
+            String body = String.format( "%s has added you to the group '%s'.\n"
+                            + "To view groups you belong to, visit %s\n"
+                            + "\n"
+                            + "If you believe you received this email in error, contact %s.",
+                    userTakingAction.getUserName(), groupName, manageGroupsUrl, adminEmailAddress );
             mailEngine.sendMessage( emailAddress, "You have been added to a group on Gemma", body );
         }
 

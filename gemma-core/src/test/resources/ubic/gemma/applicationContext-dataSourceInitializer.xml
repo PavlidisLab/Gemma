@@ -17,7 +17,8 @@
         </property>
         <property name="enabled" value="${gemma.testdb.initialize}"/>
     </bean>
-    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer" depends-on="createDatabaseInitializer">
+    <bean id="dataSourceInitializer" class="org.springframework.jdbc.datasource.init.DataSourceInitializer"
+          depends-on="createDatabaseInitializer">
         <property name="dataSource" ref="dataSource"/>
         <property name="databasePopulator">
             <bean class="org.springframework.jdbc.datasource.init.CompositeDatabasePopulator">

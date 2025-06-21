@@ -93,7 +93,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
         AffyProbeNameFilter.log.info( "There are " + kept.size() + " rows left after Affy probe name filtering." );
 
-        return new ExpressionDataDoubleMatrix( data, kept );
+        return data.sliceRows( kept );
     }
 
     private void setCriteria( Pattern[] criteria ) {
@@ -124,6 +124,16 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AffyProbeNameFilter"
+                + ( skip_ST ? " [Skip ST]" : "" )
+                + ( skip_AFFX ? " [Skip AFFX]" : "" )
+                + ( skip_F ? " [Skip F]" : "" )
+                + ( skip_X ? " [Skip X]" : "" )
+                + ( skip_G ? " [Skip G]" : "" );
     }
 
     public enum Pattern {

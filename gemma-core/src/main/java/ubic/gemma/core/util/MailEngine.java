@@ -22,11 +22,6 @@ import java.util.Map;
 public interface MailEngine {
 
     /**
-     * Return the admin email address used for {@link #sendAdminMessage(String, String)}
-     */
-    String getAdminEmailAddress();
-
-    /**
      * Send an email message to the administrator.
      */
     void sendAdminMessage( String subject, String bodyText );
