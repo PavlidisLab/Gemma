@@ -128,7 +128,7 @@
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.BibliographicReference" maxElementsInMemory="10000"
-           eternal="true" overflowToDisk="false"/>
+           timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.BibliographicReference.annotations" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>

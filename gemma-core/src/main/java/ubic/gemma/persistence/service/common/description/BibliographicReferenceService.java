@@ -25,7 +25,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,7 +40,7 @@ import java.util.Set;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @ParametersAreNonnullByDefault
 public interface BibliographicReferenceService
-        extends BaseImmutableService<BibliographicReference>, BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
+        extends BaseService<BibliographicReference>, BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
     List<BibliographicReference> browse( int start, int limit );
 
