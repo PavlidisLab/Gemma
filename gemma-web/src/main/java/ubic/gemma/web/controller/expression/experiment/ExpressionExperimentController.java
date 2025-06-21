@@ -445,8 +445,12 @@ public class ExpressionExperimentController {
                 .stream()
                 .filter( factor -> !ExperimentalDesignUtils.isBatchFactor( factor )
                         && factor.getType() != FactorType.CONTINUOUS
-                        // cell type factors apply to sub-biomaterials, so they don't make sense to display
-                        && ( factor.getCategory() == null || !CharacteristicUtils.hasCategory( factor.getCategory(), Categories.CELL_TYPE ) ) )
+                        && ee.getBioAssays().stream()
+                        .map( BioAssay::getSampleUsed )
+                        .map( BioMaterial::getFactorValues )
+                        .flatMap( Collection::stream )
+                        .map( FactorValue::getExperimentalFactor )
+                        .anyMatch( factor::equals ) )
                 .collect( Collectors.toSet() );
 
         CountingMap<FactorValueVector> assayCount = new CountingMap<>();
