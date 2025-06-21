@@ -30,8 +30,8 @@ public class SingleCellDataVectorAggregatorUtils {
      * <p>
      * Vectors from different experiments, QTs or dimension can be mixed.
      */
-    public static Function<SingleCellExpressionDataVector, RawExpressionDataVector> createAggregator( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
-        Function<SingleCellExpressionDataVector, ?> func = createMethod( method, cellLevelCharacteristics );
+    public static Function<SingleCellExpressionDataVector, RawExpressionDataVector> createAggregator( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
+        Function<SingleCellExpressionDataVector, ?> func = createMethod( method, cellLevelCharacteristics, aggregateUnknownCharacteristics );
         return new Function<SingleCellExpressionDataVector, RawExpressionDataVector>() {
 
             private final Map<QuantitationType, QuantitationType> qt2qt = new HashMap<>();
@@ -40,7 +40,7 @@ public class SingleCellDataVectorAggregatorUtils {
             @Override
             public RawExpressionDataVector apply( SingleCellExpressionDataVector singleCellExpressionDataVector ) {
                 QuantitationType qt = qt2qt.computeIfAbsent( singleCellExpressionDataVector.getQuantitationType(), k -> createQt( k, method ) );
-                BioAssayDimension bad = scd2bad.computeIfAbsent( singleCellExpressionDataVector.getSingleCellDimension(), k -> createBad( k, cellLevelCharacteristics ) );
+                BioAssayDimension bad = scd2bad.computeIfAbsent( singleCellExpressionDataVector.getSingleCellDimension(), k -> createBad( k, cellLevelCharacteristics, aggregateUnknownCharacteristics ) );
                 if ( method == SingleCellAggregationMethod.COUNT || method == SingleCellAggregationMethod.COUNT_FAST ) {
                     //noinspection unchecked
                     return aggregateToIntByDescriptive( singleCellExpressionDataVector, qt, bad, ( Function<SingleCellExpressionDataVector, int[]> ) func );
@@ -57,17 +57,17 @@ public class SingleCellDataVectorAggregatorUtils {
      * <p>
      * Vectors from different experiments, QTs or dimension can be mixed.
      */
-    public static Collection<RawExpressionDataVector> aggregate( Collection<SingleCellExpressionDataVector> vectors, SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
+    public static Collection<RawExpressionDataVector> aggregate( Collection<SingleCellExpressionDataVector> vectors, SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
         if ( vectors.isEmpty() ) {
             return Collections.emptySet();
         }
-        Function<SingleCellExpressionDataVector, ?> func = createMethod( method, cellLevelCharacteristics );
+        Function<SingleCellExpressionDataVector, ?> func = createMethod( method, cellLevelCharacteristics, aggregateUnknownCharacteristics );
         Map<QuantitationType, QuantitationType> qt2qt = new HashMap<>();
         Map<SingleCellDimension, BioAssayDimension> scd2bad = new HashMap<>();
         ArrayList<RawExpressionDataVector> result = new ArrayList<>( vectors.size() );
         for ( SingleCellExpressionDataVector vec : vectors ) {
             QuantitationType qt = qt2qt.computeIfAbsent( vec.getQuantitationType(), k -> createQt( k, method ) );
-            BioAssayDimension bad = scd2bad.computeIfAbsent( vec.getSingleCellDimension(), k -> createBad( k, cellLevelCharacteristics ) );
+            BioAssayDimension bad = scd2bad.computeIfAbsent( vec.getSingleCellDimension(), k -> createBad( k, cellLevelCharacteristics, aggregateUnknownCharacteristics ) );
             if ( method == SingleCellAggregationMethod.COUNT || method == SingleCellAggregationMethod.COUNT_FAST ) {
                 //noinspection unchecked
                 result.add( aggregateToIntByDescriptive( vec, qt, bad, ( Function<SingleCellExpressionDataVector, int[]> ) func ) );
@@ -86,7 +86,7 @@ public class SingleCellDataVectorAggregatorUtils {
         throw new UnsupportedOperationException( "Aggregating single-cell data matrices is not supported yet." );
     }
 
-    private static BioAssayDimension createBad( SingleCellDimension scDim, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
+    private static BioAssayDimension createBad( SingleCellDimension scDim, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
         if ( cellLevelCharacteristics != null ) {
             List<BioAssay> assays = new ArrayList<>( scDim.getBioAssays().size() * cellLevelCharacteristics.getNumberOfCharacteristics() );
             for ( BioAssay ba : scDim.getBioAssays() ) {
@@ -94,6 +94,10 @@ public class SingleCellDataVectorAggregatorUtils {
                     BioMaterial sample = BioMaterial.Factory.newInstance( ba.getSampleUsed().getName() + " - " + c.getValue(), ba.getSampleUsed().getSourceTaxon() );
                     sample.setSourceBioMaterial( ba.getSampleUsed() );
                     assays.add( BioAssay.Factory.newInstance( ba.getName() + " - " + c.getValue(), ba.getArrayDesignUsed(), sample ) );
+                }
+                if ( aggregateUnknownCharacteristics ) {
+                    // add an assay for the unknown characteristics
+                    assays.add( BioAssay.Factory.newInstance( ba.getName() + " - Unknown", ba.getArrayDesignUsed(), ba.getSampleUsed() ) );
                 }
             }
             return BioAssayDimension.Factory.newInstance( assays );
@@ -112,11 +116,16 @@ public class SingleCellDataVectorAggregatorUtils {
                 break;
             case VARIANCE:
                 // does not preserve scale due to X^2
+                qt.setType( StandardQuantitationType.AMOUNT );
                 qt.setScale( ScaleType.OTHER );
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+                break;
             case MEAN:
             case STANDARD_DEVIATION:
-                // preserve scale and representation
+                // scale is preserved
                 qt.setType( StandardQuantitationType.AMOUNT );
+                qt.setRepresentation( PrimitiveType.DOUBLE );
+                break;
             case MEDIAN:
             case SUM:
             case MAX:
@@ -130,18 +139,18 @@ public class SingleCellDataVectorAggregatorUtils {
         return qt;
     }
 
-    private static Function<SingleCellExpressionDataVector, ?> createMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
+    private static Function<SingleCellExpressionDataVector, ?> createMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
         if ( method == SingleCellAggregationMethod.COUNT || method == SingleCellAggregationMethod.COUNT_FAST ) {
-            return createIntMethod( method, cellLevelCharacteristics );
+            return createIntMethod( method, cellLevelCharacteristics, aggregateUnknownCharacteristics );
         } else {
-            return createDoubleMethod( method, cellLevelCharacteristics );
+            return createDoubleMethod( method, cellLevelCharacteristics, aggregateUnknownCharacteristics );
         }
     }
 
-    private static Function<SingleCellExpressionDataVector, int[]> createIntMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
+    private static Function<SingleCellExpressionDataVector, int[]> createIntMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
         if ( cellLevelCharacteristics != null ) {
-            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, int[][]> m = createIntMethodWithClc( method );
-            return vec -> Arrays.stream( m.apply( vec, cellLevelCharacteristics ) ).flatMapToInt( Arrays::stream ).toArray();
+            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, int[]> m = createIntMethodWithClc( method, aggregateUnknownCharacteristics );
+            return vec -> m.apply( vec, cellLevelCharacteristics );
         }
         switch ( method ) {
             case COUNT:
@@ -153,10 +162,10 @@ public class SingleCellDataVectorAggregatorUtils {
         }
     }
 
-    private static Function<SingleCellExpressionDataVector, double[]> createDoubleMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics ) {
+    private static Function<SingleCellExpressionDataVector, double[]> createDoubleMethod( SingleCellAggregationMethod method, @Nullable CellLevelCharacteristics cellLevelCharacteristics, boolean aggregateUnknownCharacteristics ) {
         if ( cellLevelCharacteristics != null ) {
-            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[][]> m = createDoubleMethodWithClc( method );
-            return vec -> Arrays.stream( m.apply( vec, cellLevelCharacteristics ) ).flatMapToDouble( Arrays::stream ).toArray();
+            BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[]> m = createDoubleMethodWithClc( method, aggregateUnknownCharacteristics );
+            return vec -> m.apply( vec, cellLevelCharacteristics );
         }
         switch ( method ) {
             case MAX:
@@ -178,31 +187,61 @@ public class SingleCellDataVectorAggregatorUtils {
         }
     }
 
-    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, int[][]> createIntMethodWithClc( SingleCellAggregationMethod method ) {
-        switch ( method ) {
-            case COUNT:
-            case COUNT_FAST:
-                throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with " + method );
-            default:
-                throw new IllegalArgumentException();
+    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, int[]> createIntMethodWithClc( SingleCellAggregationMethod method, boolean aggregateUnknownCharacteristics ) {
+        if ( aggregateUnknownCharacteristics ) {
+            switch ( method ) {
+                case COUNT:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with COUNT." );
+                case COUNT_FAST:
+                    return SingleCellDescriptive::countFastWithUnknown;
+                default:
+                    throw new IllegalArgumentException();
+            }
+        } else {
+            switch ( method ) {
+                case COUNT:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with COUNT." );
+                case COUNT_FAST:
+                    return SingleCellDescriptive::countFast;
+                default:
+                    throw new IllegalArgumentException();
+            }
         }
     }
 
-    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[][]> createDoubleMethodWithClc( SingleCellAggregationMethod method ) {
-        switch ( method ) {
-            case MAX:
-                return SingleCellDescriptive::max;
-            case MIN:
-                return SingleCellDescriptive::min;
-            case MEAN:
-            case MEDIAN:
-            case VARIANCE:
-            case STANDARD_DEVIATION:
-                throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with " + method );
-            case SUM:
-                return SingleCellDescriptive::sum;
-            default:
-                throw new IllegalArgumentException();
+    private static BiFunction<SingleCellExpressionDataVector, CellLevelCharacteristics, double[]> createDoubleMethodWithClc( SingleCellAggregationMethod method, boolean aggregateUnknownCharacteristics ) {
+        if ( aggregateUnknownCharacteristics ) {
+            switch ( method ) {
+                case SUM:
+                    return SingleCellDescriptive::sumWithUnknown;
+                case MEAN:
+                case MEDIAN:
+                case VARIANCE:
+                case STANDARD_DEVIATION:
+                case MAX:
+                case MIN:
+                case COUNT:
+                case COUNT_FAST:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with " + method + "." );
+                default:
+                    throw new IllegalArgumentException();
+            }
+        } else {
+            switch ( method ) {
+                case MAX:
+                    return SingleCellDescriptive::max;
+                case MIN:
+                    return SingleCellDescriptive::min;
+                case MEAN:
+                case MEDIAN:
+                case VARIANCE:
+                case STANDARD_DEVIATION:
+                    throw new UnsupportedOperationException( "Cannot aggregate by cell-level characteristics with " + method );
+                case SUM:
+                    return SingleCellDescriptive::sum;
+                default:
+                    throw new IllegalArgumentException();
+            }
         }
     }
 
@@ -228,7 +267,7 @@ public class SingleCellDataVectorAggregatorUtils {
 
     public enum SingleCellAggregationMethod {
         /**
-         * Simply add up the unscaled values.
+         * @see SingleCellDescriptive#sum(SingleCellExpressionDataVector)
          */
         SUM,
         /**

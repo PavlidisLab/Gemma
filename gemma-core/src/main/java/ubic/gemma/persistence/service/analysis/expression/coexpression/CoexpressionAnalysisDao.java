@@ -20,9 +20,8 @@ package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.AnalysisDao;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 import java.util.Collection;
@@ -32,10 +31,11 @@ import java.util.Collection;
  */
 public interface CoexpressionAnalysisDao extends SingleExperimentAnalysisDao<CoexpressionAnalysis> {
 
+    Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
+
     CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
 
     Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
     boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
-
 }

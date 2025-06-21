@@ -58,8 +58,8 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return this.coexpressionAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
+        return this.coexpressionAnalysisDao.getExperimentsWithAnalysis( experimentAnalyzedIds );
     }
 
     @Override
@@ -83,7 +83,7 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
     @Transactional
     public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd ) {
-        Collection<CoexpressionAnalysis> analyses = this.findByExperiment( expressionExperiment );
+        Collection<CoexpressionAnalysis> analyses = this.findByExperiment( expressionExperiment, true );
         if ( analyses.size() > 1 ) {
             throw new IllegalStateException( "Multiple coexpression analyses for one experiment" );
         } else if ( analyses.isEmpty() ) {
@@ -124,27 +124,20 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> findByExperiment( BioAssaySet investigation ) {
-        return this.coexpressionAnalysisDao.findByExperiment( investigation );
+    public Collection<CoexpressionAnalysis> findByExperiment( BioAssaySet investigation, boolean includeSubSets ) {
+        return this.coexpressionAnalysisDao.findByExperiment( investigation, includeSubSets );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<CoexpressionAnalysis>> findByExperiments(
-            Collection<BioAssaySet> investigations ) {
-        return this.coexpressionAnalysisDao.findByExperiments( investigations );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> findByName( String name ) {
-        return this.coexpressionAnalysisDao.findByName( name );
+            Collection<BioAssaySet> investigations, boolean includeSubSets ) {
+        return this.coexpressionAnalysisDao.findByExperiments( investigations, includeSubSets );
     }
 
     @Override
     @Transactional
-    public void removeForExperiment( BioAssaySet ee ) {
-        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByExperiment( ee ) );
+    public void removeForExperiment( BioAssaySet ee, boolean includeSubSets ) {
+        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByExperiment( ee, includeSubSets ) );
     }
-
 }

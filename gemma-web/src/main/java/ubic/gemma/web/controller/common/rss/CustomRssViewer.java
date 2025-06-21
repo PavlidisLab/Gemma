@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -86,7 +85,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
         int newCount = ( Integer ) model.get( "newCount" );
         feed.setTitle( "RSS | Gemma" );
         feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
-        feed.setLink( gemmaHostUrl + WebConstants.HOME_PAGE );
+        feed.setLink( gemmaHostUrl + "/home.html" );
 
         super.buildFeedMetadata( model, feed, request );
     }

@@ -25,6 +25,7 @@ import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.File;
 import java.io.IOException;
@@ -164,7 +165,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     }
 
     protected void unPack( final File toUnpack ) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = ubic.gemma.core.util.concurrent.Executors.newSingleThreadExecutor();
         Future<?> future = executor.submit( () -> {
             File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );
             /*

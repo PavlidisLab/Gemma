@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -443,7 +442,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                        persisterHelper.persist( bacs.ba );
+                    persisterHelper.persist( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log
@@ -512,13 +511,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      */
     private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
             final AtomicBoolean loaderDone, final boolean persist ) {
-        this.taskExecutor.execute( new DelegatingSecurityContextRunnable( new Runnable() {
-            @Override
-            public void run() {
-                ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist );
-            }
-        } ) );
-
+        this.taskExecutor.execute( () -> ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist ) );
     }
 
     /**

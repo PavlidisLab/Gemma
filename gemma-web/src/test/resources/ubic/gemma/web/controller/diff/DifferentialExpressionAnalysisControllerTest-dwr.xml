@@ -21,7 +21,7 @@ http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.
     </bean>
 
     <bean id="differentialExpressionAnalysisController"
-          class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController">
+          class="ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionAnalysisController">
         <dwr:remote javascript="DifferentialExpressionAnalysisController">
             <dwr:include method="run"/>
         </dwr:remote>

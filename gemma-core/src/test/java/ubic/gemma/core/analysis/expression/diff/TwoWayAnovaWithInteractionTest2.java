@@ -16,7 +16,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +142,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * </pre>
      */
     @Test
-    @Ignore
     @Category(SlowTest.class)
     public void test() {
 
@@ -175,14 +173,11 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                 .load( persistent.iterator().next().getId() );
         assertNotNull( refetched );
 
-        refetched = differentialExpressionAnalysisService.thaw( refetched );
-        for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            expressionAnalysisResultSetService.thaw( ears );
-        }
+        refetched = differentialExpressionAnalysisService.thawFully( refetched );
 
         this.checkResults( refetched );
 
-        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, true );
+        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched );
 
     }
 
@@ -217,19 +212,19 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                     case "205969_at":
                         if ( sexFactor ) {
                             found1 = true;
-                            assertEquals( 0.3333, pvalue, 0.001 );
+                            assertEquals( 0.3196, pvalue, 0.001 );
                         } else if ( interaction ) {
                             found2 = true;
-                            assertEquals( 0.8480, pvalue, 0.001 );
+                            assertEquals( 0.8439, pvalue, 0.001 );
                         } else {
                             found3 = true;
-                            assertEquals( 0.1323, pvalue, 0.001 );
+                            assertEquals( 0.1206, pvalue, 0.001 );
                         }
                         break;
                     case "217757_at":
                         if ( interaction ) {
                             found4 = true;
-                            assertEquals( 0.7621, pvalue, 0.001 );
+                            assertEquals( 0.7974, pvalue, 0.001 );
                         }
                         break;
                     case "constant":

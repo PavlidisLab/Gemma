@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -33,6 +32,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
@@ -356,7 +356,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                     .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ) ) );
         } else {
             securityFilteredEevos = new ArrayList<>( expressionExperimentService
-                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ) ) );
+                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds, true ) ) );
         }
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<>();

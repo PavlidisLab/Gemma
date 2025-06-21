@@ -1,8 +1,8 @@
 package ubic.gemma.rest.providers;
 
 import org.glassfish.jersey.message.internal.FileProvider;
+import ubic.gemma.core.util.locking.FileLockManager;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -28,7 +28,6 @@ import java.nio.file.Path;
 @Provider
 @Produces({ "application/octet-stream", "*/*" })
 @Consumes({ "application/octet-stream", "*/*" })
-@Singleton
 public class PathProvider implements MessageBodyReader<Path>, MessageBodyWriter<Path> {
 
     private final FileProvider fileProvider = new FileProvider();

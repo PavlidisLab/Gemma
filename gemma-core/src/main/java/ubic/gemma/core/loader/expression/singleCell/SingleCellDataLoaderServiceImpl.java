@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
 @CommonsLog
@@ -438,7 +439,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     mapper.getName(), 100.0 * stats.getOverlap(), 100.0 * stats.getCoverage() );
             log.info( mappingDetails );
             loader.setDesignElementToGeneMapper( mapper );
-            vectors = loader.loadVectors( platform.getCompositeSequences(), dim, qt ).collect( Collectors.toSet() );
+            vectors = loader.loadVectors( platform.getCompositeSequences(), dim, qt )
+                    .peek( createStreamMonitor( getClass().getName(), 100, ( long ) ( stats.getCoverage() * platform.getCompositeSequences().size() ) ) )
+                    .collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

@@ -131,7 +131,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
+                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ), true );
         assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
 
         assertTrue( differentialExpressionAnalysisService
@@ -204,12 +204,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
-        Path outputLocation = outputLocations.iterator().next()
-                .closeAndGetPath();
+        Path outputLocation = outputLocations.iterator().next();
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
@@ -390,7 +389,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
+        try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analyses.iterator().next(), true ) ) {
             assertNotNull( lockedPath.getPath() );
         }
     }

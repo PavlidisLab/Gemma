@@ -3,12 +3,13 @@ package ubic.gemma.web.controller.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 
@@ -22,28 +23,28 @@ public class TaxonController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @RequestMapping("/showAllTaxa.html")
+    @RequestMapping(value = "/showAllTaxa.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllTxa() {
         return new ModelAndView( "taxa" )
                 .addObject( "taxa", taxonService.loadAll() );
     }
 
-    @RequestMapping(value = "/showTaxon.html", params = { "id" })
+    @RequestMapping(value = "/showTaxon.html", params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showTaxonById( @RequestParam("id") Long id ) {
         return showTaxon( taxonService.load( id ), "ID", id.toString() );
     }
 
-    @RequestMapping(value = "/showTaxon.html", params = { "ncbiId" })
+    @RequestMapping(value = "/showTaxon.html", params = { "ncbiId" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showTaxonByNcbiId( @RequestParam("ncbiId") Integer ncbiId ) {
         return showTaxon( taxonService.findByNcbiId( ncbiId ), "NCBI ID", ncbiId.toString() );
     }
 
-    @RequestMapping(value = "/showTaxon.html", params = { "commonName" })
+    @RequestMapping(value = "/showTaxon.html", params = { "commonName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showTaxonByCommonName( @RequestParam("commonName") String name ) {
         return showTaxon( taxonService.findByCommonName( name ), "common name", name );
     }
 
-    @RequestMapping(value = "/showTaxon.html", params = { "scientificName" })
+    @RequestMapping(value = "/showTaxon.html", params = { "scientificName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showTaxonByScientificName( @RequestParam("scientificName") String name ) {
         return showTaxon( taxonService.findByCommonName( name ), "scientific name", name );
     }

@@ -2,7 +2,7 @@ Ext.namespace('Gemma');
 
 /**
  *
- * Grid to display expression experiments with differential evidence for each probe (e.g., for a single gene).
+ * Grid to display expression experiments with differential evidence for each platform element (e.g., for a single gene).
  *
  */
 Gemma.ProbeLevelDiffExGrid = Ext
@@ -161,7 +161,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                                 {
                                     id: 'p',
                                     header: "Sig. (q-value)",
-                                    tooltip: "The significance measure of the result for the probe, shown in color if it met threshold",
+                                    tooltip: "The significance measure of the result for the element, shown in color if it met threshold",
                                     dataIndex: "p",
                                     width: 80,
                                     renderer: function (p, metadata, record) {
@@ -290,7 +290,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                         // object....
                     }
 
-                    var title = "Visualization of Probes ";
+                    var title = "Visualization of elements ";
 
                     // ID passed is either for the EE or a subset.
 

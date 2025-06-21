@@ -4,12 +4,12 @@ package ubic.gemma.web.controller.expression.experiment;
  * Wrapper for metadata file information for the frontend
  */
 @SuppressWarnings("unused")
-        // used in frontend
+// used in frontend
 public class MetaFile {
-    private int typeId;
-    private String displayName;
+    private final int typeId;
+    private final String displayName;
 
-    MetaFile( int typeId, String displayName ) {
+    public MetaFile( int typeId, String displayName ) {
         this.typeId = typeId;
         this.displayName = displayName;
     }

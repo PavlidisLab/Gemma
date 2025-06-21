@@ -25,7 +25,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.5.1</version>
 				<executions>
 					<execution>
 						<id>webpack-install-dependencies</id>
@@ -141,14 +141,6 @@
 					<artifactId>spring-web</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		<!-- Scheduling -->
-		<!-- This is the latest Quartz release compatible with Spring 3 -->
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
-			<version>1.8.6</version>
 		</dependency>
 
 		<!-- RSS feeds (depends on spring-web version) -->

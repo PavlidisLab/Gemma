@@ -192,6 +192,158 @@ public class AnnDataSingleCellDataLoaderTest {
     }
 
     @Test
+    public void testSubsetOfGSE225158() throws IOException {
+        try ( AnnDataSingleCellDataLoader loader = createLoader() ) {
+            Collection<BioAssay> bas = new HashSet<>();
+            for ( String sampleName : loader.getSampleNames() ) {
+                if ( sampleName.equals( "C-1262" ) ) {
+                    bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
+                }
+            }
+
+            SingleCellDimension dimension = loader.getSingleCellDimension( bas );
+            assertThat( dimension.getBioAssays() ).hasSize( 1 ).extracting( ba -> ba.getSampleUsed().getName() )
+                    .containsExactly( "C-1262" );
+            assertThat( dimension.getCellIds() )
+                    .startsWith(
+                            "AGACAAACATCATCTT_3",
+                            "TTTCATGAGGCGCTCT_3",
+                            "AGTAGTCTCGAGAATA_3",
+                            "GTCTTTATCATTTGCT_3",
+                            "GAACTGTTCAGCGCAC_3",
+                            "ACGGAAGTCATTGGTG_3",
+                            "AGGGTGAAGACCTCCG_3",
+                            "TCAGGGCAGGTCACCC_3",
+                            "TCGTAGAGTGGGCTCT_3",
+                            "ATCGCCTCATCAGTGT_3" );
+            assertThat( dimension.getNumberOfCells() ).isEqualTo( 81 );
+
+            assertThat( loader.getGenes() )
+                    .hasSize( 1000 )
+                    .startsWith( "SLC4A1AP" );
+
+            assertThat( loader.getCellTypeAssignments( dimension ) )
+                    .singleElement()
+                    .satisfies( assignment -> {
+                        assertThat( assignment.getCellTypes() )
+                                .hasSize( 8 )
+                                .extracting( Characteristic::getValue )
+                                .containsExactly( "Astrocytes", "Endothelial", "Interneurons", "MSNs", "Microglia", "Mural/Fibroblast", "Oligos", "Oligos_Pre" );
+                        assertThat( assignment.getNumberOfCellTypes() )
+                                .isEqualTo( 8 );
+                        assertThat( assignment.getCellTypeIndices() )
+                                .startsWith( 3, 6, 3, 6, 6, 7, 6, 6, 0, 6, 6, 3, 6, 6, 3, 3, 3, 1, 0, 6, 3, 0, 6, 6, 3 );
+                    } );
+
+            loader.setMaxCharacteristics( 1000 );
+            assertThat( loader.getOtherCellLevelCharacteristics( dimension ) )
+                    .hasSize( 17 )
+                    .allSatisfy( s -> {
+                        assertThat( s.getCharacteristics() )
+                                .allSatisfy( c -> {
+                                    assertThat( c.getCategory() ).isNotNull();
+                                    assertThat( c.getValue() ).isNotNull();
+                                } );
+                    } );
+
+            assertThat( loader.getSamplesCharacteristics( bas ) )
+                    .hasSize( 1 )
+                    .extractingByKey( BioMaterial.Factory.newInstance( "C-1262" ) )
+                    .satisfies( c -> {
+                        assertThat( c )
+                                .hasSize( 36 )
+                                .contains( Characteristic.Factory.newInstance( "Manner.of.Death", null, "Accidental", null ) )
+                                .contains( Characteristic.Factory.newInstance( "Age", null, "41.0", null ) )
+                                .contains( Characteristic.Factory.newInstance( "DSM.IV.AUD", null, "1", null ) );
+                    } );
+
+            Map<BioMaterial, Set<FactorValue>> fva = new HashMap<>();
+            assertThat( loader.getFactors( bas, fva ) )
+                    .hasSize( 36 )
+                    .noneSatisfy( factor -> {
+                        assertThat( factor.getName() ).isEqualTo( "ID" );
+                        assertThat( factor.getName() ).isEqualTo( "celltype1" );
+                    } )
+                    .satisfiesOnlyOnce( factor -> {
+                        assertThat( factor.getName() ).isEqualTo( "Cause.of.Death" );
+                        assertThat( factor.getFactorValues() )
+                                .hasSize( 7 )
+                                .flatExtracting( FactorValue::getCharacteristics )
+                                .extracting( Characteristic::getValue )
+                                .contains( "Aspiration", "Cardiac Tamponade", "Cardiovascular Disease" );
+                    } )
+                    .satisfiesOnlyOnce( factor -> {
+                        assertThat( factor.getName() ).isEqualTo( "BMI" );
+                        assertThat( factor.getType() ).isEqualTo( FactorType.CONTINUOUS );
+                        assertThat( factor.getFactorValues() ).isNotEmpty().allSatisfy( fv -> {
+                            assertThat( fv.getMeasurement() ).isNotNull();
+                            assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                        } );
+                    } )
+                    .satisfiesOnlyOnce( factor -> {
+                        assertThat( factor.getName() ).isEqualTo( "Age" );
+                        assertThat( factor.getType() ).isEqualTo( FactorType.CONTINUOUS );
+                        assertThat( factor.getFactorValues() ).isNotEmpty().allSatisfy( fv -> {
+                            assertThat( fv.getMeasurement() ).isNotNull();
+                            assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                        } );
+                    } );
+
+            assertThat( fva )
+                    .hasSize( 1 )
+                    .allSatisfy( ( bm, fvs ) -> {
+                        assertThat( fvs )
+                                .hasSize( 36 )
+                                .satisfiesOnlyOnce( fv -> {
+                                    assertThat( fv.getExperimentalFactor().getName() ).isEqualTo( "DSM.IV.CUD" );
+                                    assertThat( fv.getMeasurement() ).isNotNull();
+                                    assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.INT );
+                                } )
+                                .satisfiesOnlyOnce( fv -> {
+                                    assertThat( fv.getExperimentalFactor().getName() ).isEqualTo( "Age" );
+                                    assertThat( fv.getMeasurement() ).isNotNull();
+                                    assertThat( fv.getMeasurement().getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                                } );
+                    } );
+
+            Set<QuantitationType> qts = loader.getQuantitationTypes();
+            assertThat( qts ).hasSize( 1 ).first().satisfies( qt -> {
+                assertThat( qt.getName() ).isEqualTo( "AnnData" );
+                assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+                assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG1P );
+                assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+            } );
+
+            assertThat( loader.getSequencingMetadata( dimension ) ).isEmpty();
+
+            Map<String, CompositeSequence> elementsMapping = new HashMap<>();
+            elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
+            loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+
+            QuantitationType qt = qts.iterator().next();
+            try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ) ) {
+                List<SingleCellExpressionDataVector> v = vectors.collect( Collectors.toList() );
+                assertThat( v )
+                        .hasSize( 1 )
+                        .satisfiesExactly( vector -> {
+                            assertThat( vector.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
+                            assertThat( vector.getOriginalDesignElement() ).isEqualTo( "SLCO3A1" );
+                            assertThat( vector.getDataAsDoubles() )
+                                    .hasSize( 60 )
+                                    .usingComparatorWithPrecision( 0.00000001 )
+                                    .containsExactly( 1.3746704255794753, 0.3528762689055167, 1.2686111607353916, 0.8369941121819804, 0.8096822440089331, 1.189743096791675, 0.3554619839116539, 0.7549583134112616, 1.0395058886552426, 0.6767597674068522, 0.9992692732369385, 0.39051215823682767, 0.5028740781699685, 0.5704111114098488, 0.7122815983068315, 1.0005248669579279, 0.9017513483943169, 1.4048782927520853, 0.7246730672907271, 1.1954195609383826, 0.9042812403576517, 0.7186910883498587, 0.8754570708525086, 0.7727145540332053, 0.23376983378330393, 1.3960480771579002, 0.6050393661256476, 0.8148388704750358, 0.5459014185781306, 0.6340705809018696, 1.208930533226765, 0.7653234520936772, 0.8287030575836597, 0.8682524973241574, 0.8420750270558868, 0.7013980942153507, 1.507802159022156, 0.9080604772845193, 0.6027463528053245, 0.748796847566076, 0.7101189007663451, 1.021765039066014, 0.8028628966055134, 0.8064426530224313, 0.39845672834965723, 0.7365002604921542, 0.6033648257916698, 0.5554795302904862, 1.1330746770067306, 0.0, 0.7088592671395884, 0.6152600808118198, 1.5843188523387683, 0.7178833324887561, 1.1720673685656684, 0.5266727695315606, 0.0, 0.5817358478762545, 0.6674277001523695, 0.4217527063654217 );
+                            assertThat( vector.getDataIndices() )
+                                    .hasSize( 60 )
+                                    .containsExactly( 0, 1, 2, 4, 6, 7, 9, 10, 11, 12, 13, 14, 15, 19, 20, 22,
+                                            23, 25, 26, 28, 29, 30, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 47, 48,
+                                            49, 50, 51, 53, 54, 55, 56, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 70, 71,
+                                            73, 74, 75, 77, 79, 80 );
+                        } );
+            }
+        }
+    }
+
+    @Test
     public void testLoadSpecificSamples() throws IOException {
         try ( AnnDataSingleCellDataLoader loader = createLoader() ) {
             // load two samples
@@ -317,7 +469,7 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( loader.getSequencingMetadata( dim ) ).isEmpty();
             assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement()
                     .satisfies( vec -> {
-                        assertThat( vec.getDataAsDoubles() ).isEmpty();
+                        assertThat( vec.getDataAsFloats() ).isEmpty();
                     } );
         }
     }
@@ -424,7 +576,7 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement().satisfies( vec -> {
                 assertThat( vec.getDesignElement() ).isEqualTo( designElements.iterator().next() );
                 assertThat( vec.getDataIndices() ).containsExactly( 19, 80 );
-                assertThat( vec.getDataAsDoubles() ).containsExactly( 1.1773239374160767, 0.6338212490081787 );
+                assertThat( vec.getDataAsFloats() ).containsExactly( 1.1773239374160767f, 0.6338212490081787f );
             } );
         }
     }

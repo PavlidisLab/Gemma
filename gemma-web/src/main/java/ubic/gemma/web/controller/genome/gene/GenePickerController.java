@@ -21,18 +21,18 @@ package ubic.gemma.web.controller.genome.gene;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.model.genome.gene.GOGroupValueObject;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneSearchService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.persistence.SessionListManager;
+import ubic.gemma.web.controller.persistence.SessionListManager;
 
 import java.io.IOException;
 import java.util.*;
@@ -178,7 +178,7 @@ public class GenePickerController {
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
         // create SearchResultDisplayObjects
-        if ( sessionResult != null && sessionResult.size() > 0 ) {
+        if ( sessionResult != null && !sessionResult.isEmpty() ) {
             for ( SessionBoundGeneSetValueObject gvo : sessionResult ) {
                 SearchResultDisplayObject srDo = new SearchResultDisplayObject( gvo );
                 srDo.setUserOwned( true );
@@ -189,8 +189,7 @@ public class GenePickerController {
         Collections.sort( sessionSets );
 
         // maintain order: session sets first
-        Collection<SearchResultDisplayObject> results = new ArrayList<>();
-        results.addAll( sessionSets );
+        Collection<SearchResultDisplayObject> results = new ArrayList<>( sessionSets );
         try {
             results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
         } catch ( ParseSearchException e ) {
@@ -215,7 +214,7 @@ public class GenePickerController {
      */
     public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
 
-        Collection<GeneValueObject> geneValueObjects = null;
+        Collection<GeneValueObject> geneValueObjects;
         try {
             geneValueObjects = this.geneService.searchGenes( query, taxonId );
         } catch ( SearchException e ) {

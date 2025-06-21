@@ -237,6 +237,13 @@ public class OptionsUtils {
     }
 
     /**
+     * Check if any of the given options is present in the command line.
+     */
+    public static boolean hasAnyOption( CommandLine commandLine, String... options ) {
+        return Arrays.stream( options ).anyMatch( commandLine::hasOption );
+    }
+
+    /**
      * Make sure that the given predicate is satisfied.
      * <p>
      * This is useful as a top-level predicate as it prepents "requires " to the description.

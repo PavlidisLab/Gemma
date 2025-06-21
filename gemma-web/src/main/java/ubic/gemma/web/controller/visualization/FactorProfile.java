@@ -19,8 +19,7 @@
 
 package ubic.gemma.web.controller.visualization;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -36,9 +35,9 @@ import java.util.List;
  *
  * @author paul
  */
+@CommonsLog
 public class FactorProfile {
 
-    private static Log log = LogFactory.getLog( FactorProfile.class );
     /**
      * In which case the Y values will not be constant and we provide but a single vector.
      */
@@ -119,7 +118,7 @@ public class FactorProfile {
         this.plots = new ArrayList<>();
         List<DoublePoint> currentList = new ArrayList<>();
         int i = 0;
-        Double lastValue = 0.0;
+        double lastValue = 0.0;
         boolean first = true;
         int nullCount = 0;
 
@@ -139,9 +138,7 @@ public class FactorProfile {
                 } else if ( d != lastValue ) {
                     // save the list we just finished.
                     currentList.add( new DoublePoint( i, 0 ) );
-                    if ( currentList.size() > 0 ) {
-                        this.plots.add( currentList );
-                    }
+                    this.plots.add( currentList );
 
                     // start a new list, don't increment the X axis.
                     currentList = new ArrayList<>();
@@ -156,7 +153,7 @@ public class FactorProfile {
             FactorProfile.log.warn( nullCount + " null value(s) not added to plot list of DoublePoints." );
         }
 
-        if ( currentList.size() > 0 ) {
+        if ( !currentList.isEmpty() ) {
             this.plots.add( currentList );
         }
 

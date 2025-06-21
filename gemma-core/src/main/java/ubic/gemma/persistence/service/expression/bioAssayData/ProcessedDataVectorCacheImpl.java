@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,9 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
 
     private final Cache cache;
 
+    @Value("${gemma.cache." + VECTOR_CACHE_NAME + ".enabled}")
+    private boolean enabled;
+
     @Autowired
     public ProcessedDataVectorCacheImpl( CacheManager cacheManager ) {
         this.cache = CacheUtils.getCache( cacheManager, VECTOR_CACHE_NAME );
@@ -30,6 +34,9 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
     @Override
     public Collection<DoubleVectorValueObject> get( ExpressionExperiment ee ) {
         Assert.notNull( ee.getId() );
+        if ( !enabled ) {
+            return null;
+        }
         Cache.ValueWrapper val = cache.get( ee.getId() );
         //noinspection unchecked
         return val != null ? ( Collection<DoubleVectorValueObject> ) val.get() : null;
@@ -38,17 +45,26 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
     @Override
     public void put( ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
         Assert.notNull( ee.getId() );
+        if ( !enabled ) {
+            return;
+        }
         cache.put( ee.getId(), unmodifiableCollection( vectors ) );
     }
 
     @Override
     public void evict( ExpressionExperiment ee ) {
         Assert.notNull( ee.getId() );
+        if ( !enabled ) {
+            return;
+        }
         cache.evict( ee.getId() );
     }
 
     @Override
     public void clear() {
+        if ( !enabled ) {
+            return;
+        }
         cache.clear();
     }
 }

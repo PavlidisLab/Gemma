@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -312,7 +313,10 @@ public class ShellDelegatingBlat implements Blat {
                 if ( exit != 0 ) {
                     throw new IOException( "Could not start server" );
                 }
-            } catch ( IllegalThreadStateException | InterruptedException e1 ) {
+            } catch ( InterruptedException e1 ) {
+                Thread.currentThread().interrupt();
+                ShellDelegatingBlat.log.info( "Server seems to have started" );
+            } catch ( IllegalThreadStateException e1 ) {
                 ShellDelegatingBlat.log.info( "Server seems to have started" );
             }
 

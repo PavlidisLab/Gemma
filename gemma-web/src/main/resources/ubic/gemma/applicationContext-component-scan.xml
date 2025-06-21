@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.core.context.BeanNameGenerator">
+        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent" />
+        <!-- controllers are added to the gemma-servlet context -->
+        <context:exclude-filter type="regex" expression="ubic\.gemma\.web\.controller\..*"/>
+    </context:component-scan>
+</beans>

@@ -52,7 +52,7 @@ public interface DifferentialExpressionAnalyzerService {
      * @return collection of results
      */
     Collection<ExpressionAnalysisResultSet> extendAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis toUpdate );
+            DifferentialExpressionAnalysis toUpdate, DifferentialExpressionAnalysisConfig config );
 
     /**
      * @param expressionExperiment the experiment
@@ -61,16 +61,31 @@ public interface DifferentialExpressionAnalyzerService {
     Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
-     * Redo
+     * Redo an analysis.
+     * @see #redoAnalysis(ExpressionExperiment, DifferentialExpressionAnalysis, DifferentialExpressionAnalysisConfig)
+     */
+    Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee, DifferentialExpressionAnalysis dea );
+
+    /**
+     * Redo an analysis.
      *
-     * @param ee      the experiment
-     * @param persist whether to persist when done
-     * @param copyMe  analysis to base new one on
-     *                whether the results should be persisted
+     * @param ee     the experiment
+     * @param dea    analysis to base new one on
+     * @param config configuration for the analysis, factors and interactions will be ignored, but all other settings
+     *               apply as usual
      * @return DEAs
      */
     Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, boolean persist );
+            DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config );
+
+    /**
+     * Redo multiple analyses.
+     *
+     * @param ignoreFailingAnalyses if true, analyses that fail will not be reported as errors, but will be skipped.
+     *                              Note that if all analyses fail, a {@link AllAnalysesFailedException} will be raised.
+     * @see #redoAnalysis(ExpressionExperiment, DifferentialExpressionAnalysis, DifferentialExpressionAnalysisConfig)
+     */
+    Collection<DifferentialExpressionAnalysis> redoAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> deas, DifferentialExpressionAnalysisConfig config, boolean ignoreFailingAnalyses );
 
     /**
      * @param expressionExperiment the experiment
@@ -90,5 +105,4 @@ public interface DifferentialExpressionAnalyzerService {
      */
     DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config );
-
 }

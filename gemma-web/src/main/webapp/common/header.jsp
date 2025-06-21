@@ -11,16 +11,14 @@
 <div id="extheaderandnavigation"></div>
 
 <spring:eval expression="@staticAssetServer" var="staticAssetServer" />
-<c:if test="${staticAssetServer != null}">
-    <c:if test="${!staticAssetServer.isAlive()}">
-        <div style="background-color: yellow; padding: 1em;">
-            The static asset server does not appear to be running.
-            <spring:eval expression="@environment.acceptsProfiles('dev')" var="isDevProfileEnabled" />
-            <c:if test="${isDevProfileEnabled}">
-                ${staticAssetServer.getLaunchInstruction()}
-            </c:if>
-        </div>
-    </c:if>
+<c:if test="${!staticAssetServer.isAlive()}">
+    <div style="background-color: yellow; padding: 1em;">
+        The static asset server does not appear to be running.
+        <spring:eval expression="@environment.acceptsProfiles('dev')" var="isDevProfileEnabled" />
+        <c:if test="${isDevProfileEnabled}">
+            ${staticAssetServer.getLaunchInstruction()}
+        </c:if>
+    </div>
 </c:if>
 
 <c:if test="${appConfig['maintenanceMode']}">

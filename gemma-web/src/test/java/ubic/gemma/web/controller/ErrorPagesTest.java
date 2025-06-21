@@ -5,7 +5,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ubic.gemma.web.util.BaseWebIntegrationTest;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

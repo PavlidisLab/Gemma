@@ -13,6 +13,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
+import java.nio.*;
 import java.util.function.ToDoubleFunction;
 
 import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
@@ -36,7 +37,7 @@ public class SingleCellDescriptive {
         return applyDescriptive( vector, sampleIndex, DescriptiveWithMissing::max, "max" );
     }
 
-    public static double[][] max( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+    public static double[] max( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
         return applyDescriptive( vector, cellLevelCharacteristics, DescriptiveWithMissing::max, "max" );
     }
 
@@ -52,7 +53,7 @@ public class SingleCellDescriptive {
         return applyDescriptive( vector, sampleIndex, DescriptiveWithMissing::min, "min" );
     }
 
-    public static double[][] min( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+    public static double[] min( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
         return applyDescriptive( vector, cellLevelCharacteristics, DescriptiveWithMissing::min, "min" );
     }
 
@@ -265,10 +266,57 @@ public class SingleCellDescriptive {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int count = 0;
+        int[] dataIndices = vector.getDataIndices();
         for ( int i = start; i < end; i++ ) {
-            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+            if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
                 count++;
             }
+        }
+        return count;
+    }
+
+    public static int[] countFast( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        int numSamples = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int[] count = new int[numSamples * numCharacteristics];
+        int lastStart = 0;
+        for ( int sampleIndex = 0; sampleIndex < numSamples; sampleIndex++ ) {
+            int start = getSampleStart( vector, sampleIndex, lastStart );
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int[] dataIndices = vector.getDataIndices();
+            for ( int i = start; i < end; i++ ) {
+                for ( int row = 0; row < numCharacteristics; row++ ) {
+                    if ( cellLevelCharacteristics.getIndices()[dataIndices[i]] == row ) {
+                        count[sampleIndex * numCharacteristics + row]++;
+                    }
+                }
+            }
+            lastStart = end;
+        }
+        return count;
+    }
+
+    public static int[] countFastWithUnknown( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        int numSamples = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int numCharacteristicsWithUnknown = numCharacteristics + 1; // reserve one extra for unknown
+        int unknownIndex = numCharacteristics; // the last index is for unknown characteristics
+        int[] count = new int[numSamples * numCharacteristicsWithUnknown];
+        int lastStart = 0;
+        for ( int sampleIndex = 0; sampleIndex < numSamples; sampleIndex++ ) {
+            int start = getSampleStart( vector, sampleIndex, lastStart );
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int[] dataIndices = vector.getDataIndices();
+            for ( int i = start; i < end; i++ ) {
+                int cellIndex = dataIndices[i];
+                for ( int row = 0; row < numCharacteristicsWithUnknown; row++ ) {
+                    int cix = row == unknownIndex ? CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC : row;
+                    if ( cellLevelCharacteristics.getIndices()[cellIndex] == cix ) {
+                        count[sampleIndex * numCharacteristicsWithUnknown + row]++;
+                    }
+                }
+            }
+            lastStart = end;
         }
         return count;
     }
@@ -431,26 +479,33 @@ public class SingleCellDescriptive {
         }
     }
 
-    private static double[][] applyDescriptive( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics, ToDoubleFunction<DoubleArrayList> func, String operation ) {
-        double[][] result = new double[vector.getSingleCellDimension().getBioAssays().size()][cellLevelCharacteristics.getNumberOfCharacteristics()];
-        for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
-            for ( int row = 0; row < cellLevelCharacteristics.getNumberOfCharacteristics(); row++ ) {
-                result[sampleIndex][row] = applyDescriptive( vector, sampleIndex, cellLevelCharacteristics, row, func, operation );
+    private static double[] applyDescriptive( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics, ToDoubleFunction<DoubleArrayList> func, String operation ) {
+        Buffer buffer = vector.getDataAsBuffer();
+        int numAssays = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        double[] result = new double[numAssays * numCharacteristics];
+        for ( int sampleIndex = 0; sampleIndex < numAssays; sampleIndex++ ) {
+            for ( int row = 0; row < numCharacteristics; row++ ) {
+                result[sampleIndex * numAssays + row] = applyDescriptive( vector, buffer, sampleIndex, cellLevelCharacteristics, row, func, operation );
             }
         }
         return result;
     }
 
     private static double applyDescriptive( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row, ToDoubleFunction<DoubleArrayList> func, String operation ) {
+        return applyDescriptive( vector, vector.getDataAsBuffer(), sampleIndex, cellLevelCharacteristics, row, func, operation );
+    }
+
+    private static double applyDescriptive( SingleCellExpressionDataVector vector, Buffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row, ToDoubleFunction<DoubleArrayList> func, String operation ) {
         switch ( vector.getQuantitationType().getRepresentation() ) {
             case FLOAT:
-                return func.applyAsDouble( new DoubleArrayList( float2double( getSampleDataAsFloats( vector, sampleIndex, cellLevelCharacteristics, row ) ) ) );
+                return func.applyAsDouble( new DoubleArrayList( float2double( getSampleDataAsFloats( vector, ( FloatBuffer ) data, sampleIndex, cellLevelCharacteristics, row ) ) ) );
             case DOUBLE:
-                return func.applyAsDouble( new DoubleArrayList( getSampleDataAsDoubles( vector, sampleIndex, cellLevelCharacteristics, row ) ) );
+                return func.applyAsDouble( new DoubleArrayList( getSampleDataAsDoubles( vector, ( DoubleBuffer ) data, sampleIndex, cellLevelCharacteristics, row ) ) );
             case INT:
-                return func.applyAsDouble( new DoubleArrayList( int2double( getSampleDataAsInts( vector, sampleIndex, cellLevelCharacteristics, row ) ) ) );
+                return func.applyAsDouble( new DoubleArrayList( int2double( getSampleDataAsInts( vector, ( IntBuffer ) data, sampleIndex, cellLevelCharacteristics, row ) ) ) );
             case LONG:
-                return func.applyAsDouble( new DoubleArrayList( long2double( getSampleDataAsLongs( vector, sampleIndex, cellLevelCharacteristics, row ) ) ) );
+                return func.applyAsDouble( new DoubleArrayList( long2double( getSampleDataAsLongs( vector, ( LongBuffer ) data, sampleIndex, cellLevelCharacteristics, row ) ) ) );
             default:
                 throw unsupportedRepresentation( vector.getQuantitationType().getRepresentation(), operation );
         }
@@ -481,26 +536,62 @@ public class SingleCellDescriptive {
         return d;
     }
 
-    public static double[][] sum( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+    public static double[] sum( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         int numAssays = vector.getSingleCellDimension().getBioAssays().size();
         int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
-        double[][] d = new double[numAssays][numCharacteristics];
-        for ( int i = 0; i < d.length; i++ ) {
-            for ( int j = 0; j < d[i].length; j++ ) {
+        double[] d = new double[numAssays * numCharacteristics];
+        Buffer data = vector.getDataAsBuffer();
+        for ( int i = 0; i < numAssays; i++ ) {
+            for ( int j = 0; j < numCharacteristics; j++ ) {
                 switch ( representation ) {
                     case FLOAT:
-                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        d[i * numCharacteristics + j] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, ( FloatBuffer ) data, i, cellLevelCharacteristics, j ), scaleType );
                         break;
                     case DOUBLE:
-                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        d[i * numCharacteristics + j] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, ( DoubleBuffer ) data, i, cellLevelCharacteristics, j ), scaleType );
                         break;
                     case INT:
-                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        d[i * numCharacteristics + j] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, ( IntBuffer ) data, i, cellLevelCharacteristics, j ), scaleType );
                         break;
                     case LONG:
-                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        d[i * numCharacteristics + j] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, ( LongBuffer ) data, i, cellLevelCharacteristics, j ), scaleType );
+                        break;
+                    default:
+                        throw unsupportedRepresentation( representation, "sum" );
+                }
+            }
+        }
+        return d;
+    }
+
+    public static double[] sumWithUnknown( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        int numAssays = vector.getSingleCellDimension().getBioAssays().size();
+        // reserve one extra for unknown
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        int numCharacteristicsWithUnknown = numCharacteristics + 1;
+        int unknownIndex = numCharacteristics; // the last index is for unknown characteristics
+        double[] d = new double[numAssays * numCharacteristicsWithUnknown];
+        Buffer data = vector.getDataAsBuffer();
+        for ( int i = 0; i < numAssays; i++ ) {
+            for ( int j = 0; j < numCharacteristicsWithUnknown; j++ ) {
+                int ix = i * numCharacteristicsWithUnknown + j;
+                int characteristicIndex = j == unknownIndex ? -1 : j;
+                switch ( representation ) {
+                    case FLOAT:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, ( FloatBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case DOUBLE:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, ( DoubleBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case INT:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, ( IntBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
+                        break;
+                    case LONG:
+                        d[ix] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, ( LongBuffer ) data, i, cellLevelCharacteristics, characteristicIndex ), scaleType );
                         break;
                     default:
                         throw unsupportedRepresentation( representation, "sum" );

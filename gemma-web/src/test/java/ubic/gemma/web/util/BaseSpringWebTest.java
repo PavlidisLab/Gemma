@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.util;
 
-import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -29,8 +28,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-
-import java.util.logging.Logger;
 
 /**
  * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing

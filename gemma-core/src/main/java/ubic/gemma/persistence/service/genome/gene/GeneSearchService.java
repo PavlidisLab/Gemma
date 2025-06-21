@@ -48,7 +48,7 @@ public interface GeneSearchService {
 
     Collection<Gene> getGOGroupGenes( String goQuery, @Nullable Taxon taxon ) throws SearchException;
 
-    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException;
+    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, @Nullable Long taxonId ) throws SearchException;
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.

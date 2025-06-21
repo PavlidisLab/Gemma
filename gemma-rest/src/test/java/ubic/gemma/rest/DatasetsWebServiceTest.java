@@ -561,7 +561,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).hasProcessedExpressionData( ee );
         verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS );
@@ -589,7 +589,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
@@ -626,7 +626,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
     }
 
@@ -648,7 +648,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/annotations" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasHeader( "Cache-Control", "max-age=1200" );
+                .hasHeaderWithValue( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotations( ee );
     }
@@ -735,7 +735,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaType( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasEncoding( "gzip" )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" );
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" );
     }
 
     @Test
@@ -750,7 +750,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaType( MediaType.APPLICATION_OCTET_STREAM_TYPE )
                 .doesNotHaveEncoding( "gzip" )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt.gz\"" );
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt.gz\"" );
     }
 
     @Test
@@ -765,7 +765,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasMediaType( DatasetsWebService.APPLICATION_10X_MEX_TYPE )
                 .doesNotHaveEncoding( "gzip" )
-                .hasHeader( "Content-Disposition", "attachment; filename=\"data.mex.tar\"" )
+                .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.mex.tar\"" )
                 .entityAsStream()
                 .satisfies( is -> {
                     List<String> files = new ArrayList<>();

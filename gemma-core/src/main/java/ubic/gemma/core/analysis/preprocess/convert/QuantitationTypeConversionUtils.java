@@ -19,10 +19,10 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
@@ -38,7 +38,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -119,10 +118,10 @@ public class QuantitationTypeConversionUtils {
      * @param dmatrix                    the matrix to be transformed to a log2 scale if necessary.
      * @param ignoreQuantitationMismatch if true, ignore mismatch between matrix quantitation types and that inferred
      *                                   from data
-     * @throws QuantitationTypeConversionException if transformation to log2 scale is impossible
-     * @throws InferredQuantitationMismatchException              if the inferred scale type differs that inferred from data
      * @return a data matrix that is guaranteed to be on a log2 scale or the original input matrix if it was already the
      * case
+     * @throws QuantitationTypeConversionException   if transformation to log2 scale is impossible
+     * @throws InferredQuantitationMismatchException if the inferred scale type differs that inferred from data
      */
     @CheckReturnValue
     public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
@@ -216,6 +215,9 @@ public class QuantitationTypeConversionUtils {
                  */
                 QuantitationTypeConversionUtils.log.info( " **** Converting from count to log2 counts per million **** " );
                 DoubleMatrix1D librarySize = MatrixStats.colSums( transformedMatrix );
+                /* FIXME: filter out rows from the count matrix that have all zero counts. Hree, this should already probably have been done */
+
+
                 transformedMatrix = MatrixStats.convertToLog2Cpm( transformedMatrix, librarySize );
                 // as we convert counts to log2cpm
                 type = StandardQuantitationType.AMOUNT;
@@ -287,7 +289,45 @@ public class QuantitationTypeConversionUtils {
     }
 
     /**
+     * Merge a given collection of quantitation types.
+     *
+     * @throws IllegalStateException if the QTs are incompatible
+     */
+    public static QuantitationType mergeQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
+        Assert.isTrue( quantitationTypes.size() > 1, "Two or more quantitation types are needed for merging." );
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Merged from " + quantitationTypes.size() + " quantitation types" );
+        qt.setDescription( quantitationTypes.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n" ) ) );
+        qt.setGeneralType( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getGeneralType ) );
+        qt.setType( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getType ) );
+        qt.setScale( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getScale ) );
+        qt.setRepresentation( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getRepresentation ) );
+        qt.setIsRatio( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getIsRatio ) );
+        qt.setIsRecomputedFromRawData( quantitationTypes.stream().allMatch( QuantitationType::getIsRecomputedFromRawData ) );
+        if ( quantitationTypes.stream().anyMatch( QuantitationType::getIsNormalized ) ) {
+            throw new IllegalStateException( "One more quantitation types were normalized, cannot merge them. Use getQuantitationTypes() instead." );
+        }
+        if ( quantitationTypes.stream().anyMatch( QuantitationType::getIsBatchCorrected ) ) {
+            throw new IllegalStateException( "One more quantitation types were batch-corrected, cannot merge them. Use getQuantitationTypes() instead." );
+        }
+        // TODO: background, backgroundSubtracted?
+        return qt;
+    }
+
+    private static <S> S getUniqueQuantitationTypeField( Collection<QuantitationType> quantitationTypes, Function<QuantitationType, S> a ) {
+        Set<S> uv = quantitationTypes.stream()
+                .map( a )
+                .collect( Collectors.toSet() );
+        if ( uv.size() > 1 ) {
+            throw new IllegalStateException( "There is more than one quantitation type in this matrix, use getQuantitationTypes() instead." );
+        } else {
+            return uv.iterator().next();
+        }
+    }
+
+    /**
      * Convert a collection of vectors.
+     *
      * @param createQtFunc a function to create a converted {@link QuantitationType}
      * @param doToVector   a consumer to post-process the created vector (first argument) given the original vector
      *                     (second argument)

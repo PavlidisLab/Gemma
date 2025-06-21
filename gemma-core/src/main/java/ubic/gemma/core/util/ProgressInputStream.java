@@ -49,10 +49,10 @@ public class ProgressInputStream extends FilterInputStream {
                 progressReporter.reportProgress( progressInBytes, maxSizeInBytes, true );
                 reportedAtEof = true;
             }
-            return read;
+        } else {
+            progressInBytes += oneByte ? 1 : read;
+            progressReporter.reportProgress( progressInBytes, maxSizeInBytes, false );
         }
-        progressInBytes += oneByte ? 1 : read;
-        progressReporter.reportProgress( progressInBytes, maxSizeInBytes, false );
         return read;
     }
 }

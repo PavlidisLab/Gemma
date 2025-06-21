@@ -3,7 +3,6 @@
 
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
        xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
@@ -14,16 +13,10 @@
    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- Note: the component-scan directive can be found in gemma-core's applicationContext-component-scan.xml -->
-    <context:component-scan base-package="ubic.gemma.web"
+    <context:component-scan base-package="ubic.gemma.web.controller"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator">
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
-
-    <!-- This bean allow for generating URLs relative to the context path or the host URL -->
-    <bean id="webEntityUrlBuilder" class="ubic.gemma.web.util.WebEntityUrlBuilder">
-        <constructor-arg value="${gemma.hosturl}"/>
-        <constructor-arg ref="servletContext"/>
-    </bean>
 
     <!-- The servlet uses a different Spring context with gemma-core's context as parent -->
     <!-- Unfortunately, bean post-processor do not get applied, so they must be redeclared here if we want them to apply
@@ -39,11 +32,6 @@
         configuration of the interceptor; otherwise this would be configured by default. TODO: switch to RequestMappingHandlerMapping -->
     <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
         <property name="order" value="1"/>
-    </bean>
-
-    <!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
-    <bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
-        <property name="order" value="2"/>
     </bean>
 
     <!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
@@ -105,10 +93,10 @@
     <!-- ==================================================== -->
     <!-- Exception handler. -->
     <!-- ==================================================== -->
-    <bean id="exceptionResolver" class="ubic.gemma.web.util.DefaultHandlerExceptionResolver"/>
+    <bean id="exceptionResolver" class="ubic.gemma.web.controller.util.DefaultHandlerExceptionResolver"/>
 
     <!-- Used for file uploads. Simply defining this makes Spring use it. -->
-    <bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
+    <bean id="multipartResolver" class="ubic.gemma.web.controller.util.upload.CommonsMultipartMonitoredResolver">
         <property name="maxUploadSize" value="104857600"/>
     </bean>
     <!-- # 100 megabytes # 104857600 # 20 megabytes gemma.max.fileupload.size.bytes= -->
@@ -121,19 +109,6 @@
         <property name="suffix" value=".jsp"/>
     </bean>
 
-    <bean id="geneSetListContainer" class="ubic.gemma.web.persistence.GeneSetListContainer" scope="session">
-        <aop:scoped-proxy/>
-    </bean>
-
-    <bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer" scope="session">
-        <aop:scoped-proxy/>
-    </bean>
-
-    <!-- <bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
-        </bean> -->
-    <bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer"/>
-
-
     <bean id="arrayDesignFormController"
           class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
         <property name="commandName" value="arrayDesign"/>
@@ -141,8 +116,8 @@
         <property name="formView" value="arrayDesign.edit"/>
         <property name="successView" value="redirect:/arrays/showAllArrayDesigns.html"/>
         <property name="arrayDesignService" ref="arrayDesignService"/>
+        <property name="messageUtil" ref="messageUtil"/>
     </bean>
-
 
     <!-- ============================================ -->
     <!-- DWR CONFIGURATION -->
@@ -154,12 +129,12 @@
         <dwr:config-param name="crossDomainSessionSecurity" value="false"/>
     </dwr:controller>
 
-    <bean id="javascriptLogger" class="ubic.gemma.web.util.JavascriptLogger">
+    <bean id="javascriptLogger" class="ubic.gemma.web.controller.common.JavascriptLogger">
         <dwr:remote javascript="JavascriptLogger"/>
     </bean>
 
     <bean id="differentialExpressionSearchController"
-          class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
+          class="ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionSearchController">
         <dwr:remote javascript="DifferentialExpressionSearchController">
             <dwr:include method="scheduleDiffExpSearchTask"/>
             <dwr:include method="getDiffExpSearchTaskProgress"/>
@@ -171,7 +146,7 @@
     </bean>
 
     <bean id="coexpressionSearchController"
-          class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchController">
+          class="ubic.gemma.web.controller.analysis.expression.coexpression.CoexpressionSearchController">
         <dwr:remote javascript="CoexpressionSearchController">
             <dwr:include method="doSearch"/>
             <dwr:include method="doSearchQuickComplete"/>
@@ -304,7 +279,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchController">
+    <bean id="generalSearchController" class="ubic.gemma.web.controller.search.GeneralSearchController">
         <dwr:remote javascript="SearchService">
             <dwr:include method="ajaxSearch"/>
         </dwr:remote>
@@ -397,7 +372,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="taskCompletionController" class="ubic.gemma.web.controller.TaskCompletionController">
+    <bean id="taskCompletionController" class="ubic.gemma.web.controller.job.TaskCompletionController">
         <dwr:remote javascript="TaskCompletionController">
             <dwr:include method="checkResult"/>
         </dwr:remote>
@@ -413,7 +388,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="progressStatusService" class="ubic.gemma.web.job.progress.ProgressStatusServiceImpl">
+    <bean id="progressStatusService" class="ubic.gemma.web.controller.job.ProgressStatusController">
         <aop:scoped-proxy/>
         <dwr:remote javascript="ProgressStatusService">
             <dwr:include method="getProgressStatus"/>
@@ -439,7 +414,7 @@
     </bean>
 
 
-    <bean id="indexController" class="ubic.gemma.web.controller.IndexController">
+    <bean id="indexController" class="ubic.gemma.web.controller.common.IndexController">
         <dwr:remote javascript="IndexService">
             <dwr:include method="index"/>
         </dwr:remote>
@@ -461,7 +436,7 @@
     </bean>
 
     <bean id="expressionExperimentReportGenerationController"
-          class="ubic.gemma.web.controller.ExpressionExperimentReportGenerationController">
+          class="ubic.gemma.web.controller.analysis.report.ExpressionExperimentReportGenerationController">
         <dwr:remote javascript="ExpressionExperimentReportGenerationController">
             <dwr:include method="run"/>
             <dwr:include method="runAll"/>
@@ -469,7 +444,7 @@
     </bean>
 
     <bean id="differentialExpressionAnalysisController"
-          class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController">
+          class="ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionAnalysisController">
         <dwr:remote javascript="DifferentialExpressionAnalysisController">
             <dwr:include method="run"/>
             <dwr:include method="redo"/>
@@ -480,7 +455,8 @@
         </dwr:remote>
     </bean>
 
-    <bean id="diffExMetaAnalyzerController" class="ubic.gemma.web.controller.diff.DiffExMetaAnalyzerController">
+    <bean id="diffExMetaAnalyzerController"
+          class="ubic.gemma.web.controller.analysis.expression.diff.DiffExMetaAnalyzerController">
         <dwr:remote javascript="DiffExMetaAnalyzerController">
             <dwr:include method="analyzeResultSets"/>
             <dwr:include method="findDetailMetaAnalysisById"/>
@@ -532,7 +508,8 @@
         </dwr:remote>
     </bean>
 
-    <bean id="characteristicBrowserController" class="ubic.gemma.web.controller.common.CharacteristicBrowserController">
+    <bean id="characteristicBrowserController"
+          class="ubic.gemma.web.controller.common.description.CharacteristicBrowserController">
         <dwr:remote javascript="CharacteristicBrowserController">
             <dwr:include method="findCharacteristics"/>
             <dwr:include method="findCharacteristicsCustom"/>
@@ -543,7 +520,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="auditController" class="ubic.gemma.web.remote.AuditController">
+    <bean id="auditController" class="ubic.gemma.web.controller.common.auditAndSecurity.AuditController">
         <dwr:remote javascript="AuditController">
             <dwr:include method="getEvents"/>
             <dwr:include method="getAuditable"/>
@@ -627,14 +604,14 @@
     <dwr:configuration>
 
         <dwr:init>
-            <dwr:converter id="classConverter" class="ubic.gemma.web.remote.ClassConverter"/>
-            <dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter"/>
+            <dwr:converter id="classConverter" class="ubic.gemma.web.controller.dwr.ClassConverter"/>
+            <dwr:converter id="characteristicConverter" class="ubic.gemma.web.controller.dwr.CharacteristicConverter"/>
             <dwr:converter id="standardQuantitationTypeConverter"
-                           class="ubic.gemma.web.remote.StandardQuantitationTypeConverter"/>
-            <dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter"/>
-            <dwr:converter id="directionConverter" class="ubic.gemma.web.remote.DirectionConverter"/>
-            <dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter"/>
-            <dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter"/>
+                           class="ubic.gemma.web.controller.dwr.StandardQuantitationTypeConverter"/>
+            <dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.controller.dwr.ScaleTypeConverter"/>
+            <dwr:converter id="directionConverter" class="ubic.gemma.web.controller.dwr.DirectionConverter"/>
+            <dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.controller.dwr.GOEvidenceCodeConverter"/>
+            <dwr:converter id="doublePointConverter" class="ubic.gemma.web.controller.dwr.DoublePointConverter"/>
         </dwr:init>
 
 
@@ -702,7 +679,7 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject"/>
         <dwr:convert type="bean"
-                     class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Gene"/>
+                     class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastVO"/>
@@ -712,10 +689,8 @@
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Cell"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene"/>
-        <dwr:convert type="bean"
-                     class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.web.controller.GeneralSearchController$SearchResultValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.search.GeneralSearchController$SearchResultValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject"/>
@@ -740,12 +715,10 @@
         <dwr:convert type="bean" class="ubic.gemma.core.search.SearchResultDisplayObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.util.upload.UploadInfo"/>
-        <dwr:convert type="bean" class="ubic.gemma.core.image.aba.Image"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.util.upload.UploadInfo"/>
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.feed.NewsItem"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.search.SearchSettingsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.VisualizationValueObject"/>
@@ -755,7 +728,6 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.common.measurement.MeasurementValueObject"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.ontology.OntologyTreeNode"/>
         <!-- yes, used -->
         <dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"/>
 
@@ -788,7 +760,7 @@
                      javascript="ArrayDesignValueObjectExt">
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.job.progress.SubmittedTaskValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.job.SubmittedTaskValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.tasks.maintenance.IndexerTaskCommand">
             <dwr:exclude method="securityContext"/>
@@ -868,7 +840,8 @@
             <dwr:include method="name"/>
         </dwr:convert>
 
-        <dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"/>
+        <dwr:convert type="bean"
+                     class="ubic.gemma.web.controller.analysis.expression.diff.DiffExpressionSearchCommand"/>
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand"/>
@@ -881,10 +854,8 @@
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.DatabaseEntryValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.description.ExternalDatabaseValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.designElement.CompositeSequenceValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.core.image.ABALinkOutValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject"/>
@@ -898,15 +869,14 @@
                      class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.IncludedResultSetInfoValueObject"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo"/>
+        <dwr:convert type="bean"
+                     class="ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionAnalyzerInfo"/>
 
         <dwr:convert type="bean"
                      class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.remote.ListBatchCommand"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.common.description.Property"/>
-        <dwr:convert type="bean" class="ubic.gemma.model.common.description.DataProperty"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.util.view.JsonReaderResponse"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.util.EntityDelegator"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.util.ListBatchCommand"/>
 
         <dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
             <dwr:include method="x"/>

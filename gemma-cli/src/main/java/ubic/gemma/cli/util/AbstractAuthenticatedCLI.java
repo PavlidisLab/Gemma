@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
-import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +32,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need authentication.
@@ -43,8 +41,9 @@ import java.util.concurrent.ExecutorService;
  * password. If no environment variables are supplied, they will be prompted if the standard input is attached to a
  * console (i.e tty).
  * <p>
- * If the {@code test} or {@code testdb} profile is active, environment variables with the {@code $GEMMA_TEST_DB_} prefix
+ * If the {@code test} or {@code testdb} profile is active, environment variables with the {@code $GEMMA_TESTDB_} prefix
  * will be looked up instead.
+ *
  * @author pavlidis
  */
 public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements InitializingBean, EnvironmentAware {
@@ -174,7 +173,10 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
                     throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "':\n"
                             + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), StandardCharsets.UTF_8 ) ) );
                 }
-            } catch ( IOException | InterruptedException e ) {
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException( e );
+            } catch ( IOException e ) {
                 throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
             }
         }
@@ -187,10 +189,5 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
             throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
                     passwordEnv, passwordCmdEnv ) );
         }
-    }
-
-    @Override
-    protected ExecutorService createBatchTaskExecutorService() {
-        return new DelegatingSecurityContextExecutorService( super.createBatchTaskExecutorService() );
     }
 }

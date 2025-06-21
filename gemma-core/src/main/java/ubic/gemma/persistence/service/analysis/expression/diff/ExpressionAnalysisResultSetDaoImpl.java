@@ -413,8 +413,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
                 .setParameter( "rs", resultSet )
                 .uniqueResult();
+        if ( pvd == null ) {
+            return null;
+        }
         double[] counts = pvd.getBinCounts();
-        Integer numBins = pvd.getNumBins();
+        int numBins = pvd.getNumBins();
         assert numBins == counts.length;
         Histogram hist = new Histogram( resultSet.getId().toString(), numBins, 0.0, 1.0 );
         for ( int i = 0; i < numBins; i++ ) {

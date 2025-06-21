@@ -26,7 +26,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -195,12 +198,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                         taxon.getCommonName(), entry.getValue(), query );
 
                 int numWithDifferentialExpressionAnalysis = differentialExpressionAnalysisService
-                        .getExperimentsWithAnalysis( entry.getValue() ).size();
+                        .getExperimentsWithAnalysis( entry.getValue(), true ).size();
 
                 assert numWithDifferentialExpressionAnalysis <= entry.getValue().size();
 
                 int numWithCoexpressionAnalysis = coexpressionAnalysisService
-                        .getExperimentsWithAnalysis( entry.getValue() ).size();
+                        .getExperimentsWithAnalysis( entry.getValue(), true ).size();
 
                 ftvo.setNumWithCoexpressionAnalysis( numWithCoexpressionAnalysis );
                 ftvo.setNumWithDifferentialExpressionAnalysis( numWithDifferentialExpressionAnalysis );

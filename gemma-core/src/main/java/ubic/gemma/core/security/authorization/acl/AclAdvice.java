@@ -74,8 +74,10 @@ public class AclAdvice extends BaseAclAdvice {
          * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
          * would be expensive to traverse.
          */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                .equals( "processedExpressionDataVectors" ) ) ) {
+        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
+                && ( propertyName.equals( "rawExpressionDataVectors" )
+                || propertyName.equals( "processedExpressionDataVectors" )
+                || propertyName.equals( "singleCellExpressionDataVectors" ) ) ) {
             if ( AclAdvice.log.isTraceEnabled() )
                 AclAdvice.log.trace( "Skipping checking acl on vectors on " + object );
             return true;

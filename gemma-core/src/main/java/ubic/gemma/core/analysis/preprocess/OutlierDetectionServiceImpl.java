@@ -95,7 +95,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         }
 
         /* Sort all samples by median correlation */
-        Collections.sort( allSamples, OutlierDetails.MedianComparator );
+        Collections.sort( allSamples, OutlierDetails.MEDIAN_COMPARATOR );
 
         int numOutliers = 0;
 
@@ -210,7 +210,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             }
         }
 
-        Collections.sort( inliers, OutlierDetails.FirstQuartileComparator );
+        Collections.sort( inliers, OutlierDetails.FIRST_QUARTILE_COMPARATOR );
 
         double threshold = inliers.get( 0 ).getFirstQuartile();
 

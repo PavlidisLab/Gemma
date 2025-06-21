@@ -4,7 +4,9 @@ import org.junit.Test;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,5 +74,18 @@ public class SingleCellExpressionDataDoubleMatrixTest {
                         0.0,
                         0.0,
                         0.0 );
+    }
+
+    @Test
+    public void testRepeatedElements() {
+        List<SingleCellExpressionDataVector> vecs = new ArrayList<>();
+        vecs.addAll( randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.LOG1P ) );
+        vecs.addAll( randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.LOG1P ) );
+        SingleCellExpressionDataDoubleMatrix mat = new SingleCellExpressionDataDoubleMatrix( vecs );
+        assertThat( mat.getDesignElements() )
+                .hasSize( 200 );
+        CompositeSequence de = mat.getDesignElements().iterator().next();
+        assertThat( mat.getRowIndex( de ) ).isEqualTo( 0 );
+        assertThat( mat.getRowIndices( de ) ).containsExactly( 0, 1 );
     }
 }

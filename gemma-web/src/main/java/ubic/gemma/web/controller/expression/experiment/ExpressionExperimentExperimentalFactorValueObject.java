@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,12 +32,12 @@ public class ExpressionExperimentExperimentalFactorValueObject {
 
     private ExpressionExperimentValueObject expressionExperiment;
 
-    private Collection<ExperimentalFactorValueObject> experimentalFactors;
+    private final Collection<ExperimentalFactorValueObject> experimentalFactors;
 
     private int numFactors;
 
     public ExpressionExperimentExperimentalFactorValueObject() {
-        experimentalFactors = new HashSet<ExperimentalFactorValueObject>();
+        experimentalFactors = new HashSet<>();
     }
 
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {

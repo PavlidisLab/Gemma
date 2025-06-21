@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis;
 
-import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
@@ -28,18 +28,6 @@ import java.util.Collection;
 /**
  * @see ubic.gemma.model.analysis.Analysis
  */
-public interface AnalysisDao<T extends SingleExperimentAnalysis> extends BaseDao<T> {
+public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
 
-    /**
-     * @param name name
-     * @return a collection of analysis that have a name that starts with the given name
-     */
-    Collection<T> findByName( String name );
-
-    Collection<T> findByTaxon( Taxon taxon );
-
-    /**
-     * Indicate if there is an analysis (or at least one) for the given experiment.
-     */
-    boolean existsByExperiment( BioAssaySet ee );
 }

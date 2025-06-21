@@ -154,4 +154,11 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
         AbstractService.log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
         return taxaWithArrays;
     }
+
+    @Override
+    @Transactional
+    public void updateGenesUsable( Taxon taxon, boolean isGenesUsable ) {
+        taxon.setIsGenesUsable( isGenesUsable );
+        update( taxon );
+    }
 }

@@ -152,7 +152,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
 
         assertNotNull( data.getBestBioAssayDimension() );
-        assertEquals( rawMatrix.columns(), data.getBestBioAssayDimension().getBioAssays().size() );
+        assertEquals( rawMatrix.columns(), data.getBioAssayDimension().getBioAssays().size() );
         assertEquals( probes.size(), data.getMatrix().rows() );
 
         /*

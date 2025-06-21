@@ -155,7 +155,7 @@ public class RootWebService {
             this.documentationUrl = apiDocsUrl;
             this.specificationUrl = specUrl;
             this.externalDatabases = externalDatabases;
-            this.buildInfo = new BuildInfoValueObject( buildInfo );
+            this.buildInfo = BuildInfoValueObject.from( buildInfo );
         }
 
         @Deprecated

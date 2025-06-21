@@ -3,8 +3,8 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="test">
-    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer">
-        <property name="dataSource" >
+    <bean id="createDatabaseInitializer" class="org.springframework.jdbc.datasource.init.DataSourceInitializer">
+        <property name="dataSource">
             <bean class="ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory">
                 <constructor-arg ref="dataSource"/>
             </bean>
@@ -17,7 +17,7 @@
         </property>
         <property name="enabled" value="${gemma.testdb.initialize}"/>
     </bean>
-    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer">
+    <bean class="org.springframework.jdbc.datasource.init.DataSourceInitializer" depends-on="createDatabaseInitializer">
         <property name="dataSource" ref="dataSource"/>
         <property name="databasePopulator">
             <bean class="org.springframework.jdbc.datasource.init.CompositeDatabasePopulator">

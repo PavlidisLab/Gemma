@@ -58,11 +58,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.remote.JsonReaderResponse;
-import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.ListBatchCommand;
+import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
-import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.ServletContext;
@@ -592,9 +592,9 @@ public class ArrayDesignController {
     /**
      * Inner class used for building array design summary
      */
-    class GenerateArraySummaryLocalTask extends AbstractTask<EntityTaskCommand> {
+    class GenerateArraySummaryLocalTask extends AbstractTask<EntityTaskCommand<ArrayDesign>> {
 
-        public GenerateArraySummaryLocalTask( EntityTaskCommand command ) {
+        public GenerateArraySummaryLocalTask( EntityTaskCommand<ArrayDesign> command ) {
             super( command );
         }
 

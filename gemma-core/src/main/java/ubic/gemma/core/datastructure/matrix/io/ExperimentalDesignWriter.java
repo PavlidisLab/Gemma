@@ -114,8 +114,11 @@ public class ExperimentalDesignWriter {
 
             /* column 1 */
             String externalId = ExpressionDataWriterUtils.constructSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
-
-            writer.append( externalId );
+            if ( externalId != null ) {
+                writer.append( externalId );
+            } else {
+                writer.append( "" );
+            }
 
             /* columns 2 ... n where n+1 is the number of factors */
             Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();

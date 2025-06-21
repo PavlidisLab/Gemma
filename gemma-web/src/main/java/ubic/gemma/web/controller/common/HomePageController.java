@@ -29,7 +29,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.WebConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -44,28 +43,9 @@ import java.util.Map.Entry;
 @Controller
 public class HomePageController {
 
-    private static final TaxonComparator TAXON_COMPARATOR = new TaxonComparator();
-
-    private static final class TaxonComparator implements Comparator<Map.Entry<Taxon, Long>> {
-        @Override
-        public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
-            Long e1value = e1.getValue();
-            Long e2value = e2.getValue();
-
-            int cf = e1value.compareTo( e2value );
-            if ( cf == 0 ) {
-                try {
-                    String e1commonName = e1.getKey().getCommonName();
-                    String e2commonName = e2.getKey().getCommonName();
-
-                    cf = e1commonName.compareTo( e2commonName );
-                } catch ( Exception e ) {
-                    cf = 1;
-                }
-            }
-            return cf;
-        }
-    }
+    private static final Comparator<Map.Entry<Taxon, Long>> TAXON_COMPARATOR = Entry
+            .<Taxon, Long>comparingByValue( Comparator.naturalOrder() )
+            .thenComparing( e -> e.getKey().getCommonName(), Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -77,13 +57,13 @@ public class HomePageController {
     public RedirectView redirectToHomePage( HttpServletRequest request ) {
         String uri = ServletUriComponentsBuilder.fromRequest( request )
                 .scheme( null ).host( null ).port( -1 )
-                .replacePath( WebConstants.HOME_PAGE )
+                .replacePath( "/home.html" )
                 .build()
                 .toUriString();
         return new RedirectView( uri );
     }
 
-    @RequestMapping(value = WebConstants.HOME_PAGE, method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = "/home.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
         mav.addObject( "buildInfo", buildInfo );

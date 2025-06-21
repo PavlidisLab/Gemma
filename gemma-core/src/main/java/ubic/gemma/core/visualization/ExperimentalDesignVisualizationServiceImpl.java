@@ -32,9 +32,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -50,8 +50,8 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
 
@@ -348,7 +348,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<>();
 
-        BulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
+        MultiAssayBulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
 
         // This is the place the actual sort order is determined.
         List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null, primaryFactor );
@@ -357,8 +357,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             // Case of no experimental design; just put in a dummy factor.
-            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance();
-            dummyFactor.setName( "No factors" );
+            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance( "No factors", FactorType.CATEGORICAL );
             for ( BioMaterial bm : bms ) {
                 int j = mat.getColumnIndex( bm );
 

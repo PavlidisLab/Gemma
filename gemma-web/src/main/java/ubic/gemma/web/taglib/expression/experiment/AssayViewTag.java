@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.web.util.StaticAssetResolver;
+import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;

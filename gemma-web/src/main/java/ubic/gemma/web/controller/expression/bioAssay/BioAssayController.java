@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
 import java.util.*;

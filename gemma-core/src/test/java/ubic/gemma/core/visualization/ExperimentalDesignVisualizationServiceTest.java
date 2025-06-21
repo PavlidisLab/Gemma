@@ -187,7 +187,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         }
         ExpressionExperimentValueObject eeVo = new ExpressionExperimentValueObject( ee );
         CellLevelCharacteristics cta = CellLevelCharacteristics.Factory.newInstance( cts, indices );
-        Collection<RawExpressionDataVector> aggregatedVectors = SingleCellDataVectorAggregatorUtils.aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM, cta );
+        Collection<RawExpressionDataVector> aggregatedVectors = SingleCellDataVectorAggregatorUtils.aggregate( vectors, SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM, cta, false );
         QuantitationTypeValueObject qtVo = new QuantitationTypeValueObject( aggregatedVectors.iterator().next().getQuantitationType() );
         BioAssayDimension bad = aggregatedVectors.iterator().next().getBioAssayDimension();
         BioAssayDimensionValueObject badVo = new BioAssayDimensionValueObject( bad );

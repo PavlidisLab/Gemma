@@ -33,7 +33,6 @@ import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -118,7 +117,6 @@ public class ExpressionDataSVDTest extends BaseTest {
 
     @Before
     public void setUp() throws Exception {
-        testData = new ExpressionDataTestMatrix();
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
         Collection<SimplePlatformMetadata> ads = new HashSet<>();

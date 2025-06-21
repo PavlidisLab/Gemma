@@ -25,13 +25,14 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -39,7 +40,7 @@ import java.util.Map;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @ParametersAreNonnullByDefault
 public interface BibliographicReferenceService
-        extends BaseImmutableService<BibliographicReference>, BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
+        extends BaseService<BibliographicReference>, BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
     List<BibliographicReference> browse( int start, int limit );
 
@@ -95,13 +96,16 @@ public interface BibliographicReferenceService
      */
     BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
+    long countExperimentLinkedReferences();
+
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
      *
      * @return all references with EEs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
+    Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
 
     /**
      * Get the ExpressionExperiments, if any, that are linked to the given reference.
@@ -110,7 +114,7 @@ public interface BibliographicReferenceService
      * @return datasets
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    java.util.Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
+    Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
 
     Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );

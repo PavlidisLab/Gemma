@@ -9,17 +9,17 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class SingleCellExpressionDataIntMatrix implements SingleCellExpressionDataMatrix<Integer>, ExpressionDataPrimitiveIntMatrix {
+public class SingleCellExpressionDataIntMatrix extends AbstractSingleCellExpressionDataMatrix<Integer> implements ExpressionDataPrimitiveIntMatrix {
 
     private static final Comparator<CompositeSequence> designElementComparator = Comparator.comparing( CompositeSequence::getName )
-            .thenComparing( CompositeSequence::getId );
+            .thenComparing( CompositeSequence::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     private final ExpressionExperiment expressionExperiment;
     private final QuantitationType quantitationType;
@@ -123,6 +123,11 @@ public class SingleCellExpressionDataIntMatrix implements SingleCellExpressionDa
     }
 
     @Override
+    public BioMaterial getBioMaterialForColumn( int j ) {
+        return bioAssays.get( j ).getSampleUsed();
+    }
+
+    @Override
     public List<String> getCellIds() {
         return singleCellDimension.getCellIds();
     }
@@ -180,11 +185,30 @@ public class SingleCellExpressionDataIntMatrix implements SingleCellExpressionDa
     }
 
     @Override
+    public int[] getRowIndices( CompositeSequence designElement ) {
+        int i = getRowIndex( designElement );
+        if ( i == -1 ) {
+            return null;
+        }
+        int j = i;
+        while ( designElements.get( j ).equals( designElement ) ) {
+            j++;
+        }
+        int[] indices = new int[j - i];
+        for ( int k = i; k < j; k++ ) {
+            indices[k - i] = k;
+        }
+        return indices;
+    }
+
+    @Override
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         if ( rowElements == null ) {
-            rowElements = designElements.stream()
-                    .map( de -> new ExpressionDataMatrixRowElement( this, getRowIndex( de ) ) )
-                    .collect( Collectors.toList() );
+            List<ExpressionDataMatrixRowElement> re = new ArrayList<>( designElements.size() );
+            for ( int i = 0; i < designElements.size(); i++ ) {
+                re.add( new ExpressionDataMatrixRowElement( this, i ) );
+            }
+            rowElements = Collections.unmodifiableList( re );
         }
         return rowElements;
     }
@@ -196,16 +220,6 @@ public class SingleCellExpressionDataIntMatrix implements SingleCellExpressionDa
         } else {
             return new ExpressionDataMatrixRowElement( this, row );
         }
-    }
-
-    @Nullable
-    @Override
-    public ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement ) {
-        int i = getRowIndex( designElement );
-        if ( i == -1 ) {
-            return null;
-        }
-        return getRowElement( i );
     }
 
     @Override
@@ -221,5 +235,10 @@ public class SingleCellExpressionDataIntMatrix implements SingleCellExpressionDa
     @Override
     public SingleCellDimension getSingleCellDimension() {
         return singleCellDimension;
+    }
+
+    @Override
+    protected String format( int i, int j ) {
+        return format( getAsInt( i, j ) );
     }
 }

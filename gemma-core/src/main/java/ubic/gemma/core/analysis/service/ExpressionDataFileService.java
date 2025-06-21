@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -357,24 +356,58 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     /**
-     * Locate or create the differential expression data file(s) for a given experiment.
+     * Locate or create the differential expression archive file(s) for a given experiment.
      *
      * @param ee         the experiment
      * @param forceWrite whether to force write
      * @return collection of files, one per analysis.
+     * @see #writeOrLocateDiffExAnalysisArchiveFiles(ExpressionExperiment, boolean)
      */
-    Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Collection<Path> writeOrLocateDiffExAnalysisArchiveFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
-     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
-     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
-     * set with contrasts info (such as fold change for each factor value)
-     *
-     * @param analysisId  analysis ID
-     * @param forceCreate whether to force creation
-     * @return file
+     * Locate or create the differential expression archive file for a given analysis ID.
+     * @see #writeOrLocateDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, boolean)
      */
-    LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
+    LockedPath writeOrLocateDiffExAnalysisArchiveFileById( Long analysisId, boolean forceWrite ) throws IOException;
 
-    LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
+    /**
+     * Locate or create the differential expression archive file for a given analysis.
+     * <p>
+     * We generate an archive that contains following files:
+     * - differential expression analysis file (q-values per factor)
+     * - file for each result set with contrasts info (such as fold change for each factor value).
+     *
+     * @param analysis   analysis
+     * @param forceWrite whether to force creation
+     * @return a locked path to the archive file, which must be released after use
+     */
+    LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceWrite ) throws IOException;
+
+    /**
+     * Write all the differential expression data files for a given experiment to a particular directory.
+     * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, Path, boolean)
+     */
+    Collection<Path> writeDiffExAnalysisArchiveFiles( ExpressionExperiment ee, Path outputDir, boolean forceWrite ) throws IOException;
+
+    Collection<Path> writeDiffExAnalysisArchiveFiles( Collection<DifferentialExpressionAnalysis> analyses, Path outputDir, boolean forceWrite ) throws IOException;
+
+    /**
+     * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, Path, boolean)
+     */
+    void writeDiffExAnalysisArchiveFileById( Long id, Path outputFile, boolean forceWrite ) throws IOException;
+
+    /**
+     * Write a differential expression analysis archive file for a given analysis to a particular file.
+     * @param forceWrite whether to force write and ignore any pre-existing file
+     * @throws IllegalArgumentException if a file already exists and forceWrite is false
+     */
+    void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path file, boolean forceWrite ) throws IOException;
+
+    /**
+     * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, OutputStream)
+     */
+    void writeDiffExAnalysisArchiveFileById( Long id, OutputStream outputStream ) throws IOException;
+
+    void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, OutputStream outputStream ) throws IOException;
 }

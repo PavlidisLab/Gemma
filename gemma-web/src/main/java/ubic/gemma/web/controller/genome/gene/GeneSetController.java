@@ -23,6 +23,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,10 +37,9 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.web.persistence.SessionListManager;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.controller.persistence.SessionListManager;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -138,17 +138,20 @@ public class GeneSetController {
      * @return string
      */
     public String canCurrentUserEditGroup( GeneSetValueObject gsvo ) {
-        boolean userCanEditGroup = false;
-        boolean groupIsDBBacked = false;
+        boolean userCanEditGroup;
+        boolean groupIsDBBacked;
         if ( gsvo instanceof DatabaseBackedGeneSetValueObject ) {
             groupIsDBBacked = true;
             try {
                 userCanEditGroup = securityService.isEditableByCurrentUser( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
-            } catch ( org.springframework.security.access.AccessDeniedException ade ) {
-                return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
+            } catch ( AccessDeniedException ade ) {
+                // ignore
+                userCanEditGroup = false;
             }
+        } else {
+            groupIsDBBacked = false;
+            userCanEditGroup = false;
         }
-
         return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + userCanEditGroup + "}";
     }
 

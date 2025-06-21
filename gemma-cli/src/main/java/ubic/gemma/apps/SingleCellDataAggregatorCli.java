@@ -43,6 +43,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             CLC_OPTION = "clc",
             FACTOR_OPTION = "factor",
             MAKE_PREFERRED_OPTION = "p",
+            SKIP_POST_PROCESSING_OPTION = "nopost",
             ADJUST_LIBRARY_SIZES_OPTION = "adjustLibrarySizes",
             ALLOW_UNMAPPED_CHARACTERISTICS_OPTION = "allowUnmappedCharacteristics",
             ALLOW_UNMAPPED_FACTOR_VALUES_OPTION = "allowUnmappedFactorValues",
@@ -75,6 +76,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private boolean allowUnmappedCharacteristics;
     private boolean allowUnmappedFactorValues;
     private boolean makePreferred;
+    private boolean skipPostProcessing;
     private boolean adjustLibrarySizes;
     private boolean redo;
     @Nullable
@@ -115,6 +117,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         options.addOption( REDO_QT_OPTION, "redo-quantitation-type", true, "Quantitation to re-aggregate, defaults to the preferred one. Requires the -" + REDO_OPTION + " flag. Incompatible with -" + REDO_DIMENSION_OPTION + "." );
         addSingleExperimentOption( options, REDO_DIMENSION_OPTION, "redo-dimension", true, "Dimension to re-aggregate, defaults to the one corresponding to -" + REDO_QT_OPTION + ". Requires the -" + REDO_OPTION + " flag. Incompatible with -" + REDO_QT_OPTION + "." );
         options.addOption( PRINT_MAPPING_OPTION, "print-mapping", false, "Print the cell type mapping to the standard output. No aggregation is performed or redone." );
+        options.addOption( SKIP_POST_PROCESSING_OPTION, "no-post-processing", false, "Skip post-processing steps after aggregation." );
     }
 
     @Override
@@ -130,6 +133,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         mappingFile = commandLine.getParsedOptionValue( MAPPING_FILE_OPTION );
         printMapping = commandLine.hasOption( PRINT_MAPPING_OPTION );
         makePreferred = commandLine.hasOption( MAKE_PREFERRED_OPTION );
+        skipPostProcessing = commandLine.hasOption( SKIP_POST_PROCESSING_OPTION );
         adjustLibrarySizes = commandLine.hasOption( ADJUST_LIBRARY_SIZES_OPTION );
         redo = commandLine.hasOption( REDO_OPTION );
         redoQt = getOptionValue( commandLine, REDO_QT_OPTION,
@@ -208,7 +212,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             }
 
             if ( previousQt != null && previousQt.getIsPreferred() && !makePreferred ) {
-                log.warn( "The previous quantitation type is the preferred one, consider using -" + MAKE_PREFERRED_OPTION + " to make the new one preferred as well." );
+                throw new IllegalStateException( "The previous quantitation type is the preferred one, use -" + MAKE_PREFERRED_OPTION + " to make the new one preferred as well." );
             }
 
             Map<FactorValue, ExpressionExperimentSubSet> subsetsByFv = eeService.getSubSetsByFactorValueWithCharacteristicsAndBioAssays( expressionExperiment, cellTypeFactor, dimension );
@@ -307,17 +311,19 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 addErrorObject( expressionExperiment, "Failed to generate a data file for " + newQt + ".", e );
             }
 
-            log.info( "Reprocessing experiment since a new set of raw data vectors was added or replaced..." );
-            try {
-                expressionExperiment = eeService.thaw( expressionExperiment );
-                preprocessorService.process( expressionExperiment );
-                addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
-            } catch ( Exception e ) {
-                addErrorObject( expressionExperiment, "Failed to post-process the data from " + newQt + ".", e );
-            } finally {
-                // if process() fails, vector might or might not have been created, so we should evict the cache of
-                // Gemma Web regardless
-                refreshProcessedVectors = true;
+            if ( !skipPostProcessing ) {
+                log.info( "Reprocessing experiment since a new set of raw data vectors was added or replaced..." );
+                try {
+                    expressionExperiment = eeService.thaw( expressionExperiment );
+                    preprocessorService.process( expressionExperiment );
+                    addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
+                } catch ( Exception e ) {
+                    addErrorObject( expressionExperiment, "Failed to post-process the data from " + newQt + ".", e );
+                } finally {
+                    // if process() fails, vector might or might not have been created, so we should evict the cache of
+                    // Gemma Web regardless
+                    refreshProcessedVectors = true;
+                }
             }
         }
 

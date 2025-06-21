@@ -18,19 +18,27 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.SimpleFormController;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,9 +49,13 @@ import static java.util.Objects.requireNonNull;
  *
  * @author keshav
  */
-public class ArrayDesignFormController extends BaseFormController {
+@CommonsLog
+public class ArrayDesignFormController extends SimpleFormController {
 
-    private ArrayDesignService arrayDesignService = null;
+    @Setter
+    private ArrayDesignService arrayDesignService;
+    @Setter
+    private MessageUtil messageUtil;
 
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -81,11 +93,12 @@ public class ArrayDesignFormController extends BaseFormController {
 
         log.debug( "entering processFormSubmission" );
 
-        return super.processFormSubmission( request, response, command, errors );
-    }
+        if ( request.getParameter( "cancel" ) != null ) {
+            messageUtil.saveMessage( "errors.cancel", "Cancelled" );
+            return getCancelView( request );
+        }
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
+        return super.processFormSubmission( request, response, command, errors );
     }
 
     /**
@@ -101,22 +114,17 @@ public class ArrayDesignFormController extends BaseFormController {
 
         String idString = request.getParameter( "id" );
 
-        Long id;
         ArrayDesignValueObject arrayDesign = null;
 
         // should be caught by validation.
+        long id;
         if ( idString != null ) {
             try {
                 id = Long.parseLong( idString );
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "Invalid ID for platform.", e );
             }
-            Collection<Long> ids = new HashSet<Long>();
-            ids.add( id );
-            Collection<ArrayDesignValueObject> arrayDesigns = arrayDesignService.loadValueObjectsByIds( ids );
-            if ( arrayDesigns.size() > 0 )
-                arrayDesign = arrayDesigns.iterator().next();
-
+            arrayDesign = arrayDesignService.loadValueObjectById( id );
         }
 
         if ( arrayDesign == null ) {
@@ -125,7 +133,6 @@ public class ArrayDesignFormController extends BaseFormController {
         return arrayDesign;
     }
 
-    @Override
     protected ModelAndView getCancelView( HttpServletRequest request ) {
         long id = Long.parseLong( requireNonNull( request.getParameter( "id" ),
                 "The 'id' query parameter is required." ) );
@@ -146,4 +153,15 @@ public class ArrayDesignFormController extends BaseFormController {
         return mapping;
     }
 
+    /**
+     * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
+     * custom editors (call super.initBinder() in your implementation)
+     */
+    @InitBinder
+    protected void initBinder( WebDataBinder binder ) {
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        binder.registerCustomEditor( Integer.class, null, new CustomNumberEditor( Integer.class, nf, true ) );
+        binder.registerCustomEditor( Long.class, null, new CustomNumberEditor( Long.class, nf, true ) );
+        binder.registerCustomEditor( byte[].class, new ByteArrayMultipartFileEditor() );
+    }
 }

@@ -42,7 +42,7 @@ public class TaxaWebServiceTest extends BaseJerseyIntegrationTest {
     public void createFixtures() {
         Random random = new Random();
         taxon = new Taxon();
-        taxon.setNcbiId( random.nextInt() );
+        taxon.setNcbiId( 1000 + random.nextInt( Integer.MAX_VALUE - 1000 ) );
         taxon.setCommonName( "common_name_" + random.nextInt() );
         taxon.setScientificName( "scientific_name_" + RandomStringUtils.randomAlphabetic( 10 ) );
         taxon.setIsGenesUsable( false );

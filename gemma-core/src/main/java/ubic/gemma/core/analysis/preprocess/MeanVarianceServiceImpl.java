@@ -104,13 +104,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             mat.viewRow( row ).assign( matrix.getRowAsDoubles( row ) );
         }
         MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
-
-        MeanVarianceRelation mvr = MeanVarianceRelation.Factory.newInstance();
-        if ( mve.getMeanVariance() != null ) {
-            mvr.setMeans( mve.getMeanVariance().viewColumn( 0 ).toArray() );
-            mvr.setVariances( mve.getMeanVariance().viewColumn( 1 ).toArray() );
-        }
-
-        return mvr;
+        return MeanVarianceRelation.Factory.newInstance(
+                mve.getMeanVariance().viewColumn( 0 ).toArray(),
+                mve.getMeanVariance().viewColumn( 1 ).toArray() );
     }
 }

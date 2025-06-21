@@ -20,26 +20,25 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.IncludedResultSetInfoValueObject;
 import ubic.gemma.model.common.BaseValueObject;
-import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import java.util.Collection;
 
 /**
  * @author Paul
  */
-public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis> {
+public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis>, SecurableBaseService<GeneDifferentialExpressionMetaAnalysis> {
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
 
-    @Secured({ "GROUP_USER" })
-    BaseValueObject delete( Long id );
-
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
@@ -51,7 +50,6 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
 
     Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 
-    GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
-
-    GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+    @Secured({ "GROUP_ADMIN" })
+    BaseValueObject delete( Long id );
 }

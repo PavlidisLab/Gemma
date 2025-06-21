@@ -122,12 +122,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
-        if ( !preferredMaskedDataQuantitationType.getIsRatio()
-                && maskedVectorObjects.size() > ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
+        if ( preferredMaskedDataQuantitationType.getIsRatio() ) {
+            log.info( "Data is on a ratio scale, skipping normalization step." );
+        } else if ( maskedVectorObjects.size() < ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
+            log.info( "Not enough data vectors (" + maskedVectorObjects.size() + ") to perform normalization." );
+        } else {
             log.info( "Normalizing the data" );
             this.renormalize( maskedVectorObjects );
-        } else {
-            log.info( "Normalization skipped for this data set (not suitable)" );
+            preferredMaskedDataQuantitationType.setIsNormalized( true );
+            quantitationTypeDao.update( preferredMaskedDataQuantitationType );
         }
 
         /*
@@ -502,22 +505,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
 
         present.setGeneralType( preferredQt.getGeneralType() );
-        present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
+        present.setType( preferredQt.getType() );
         present.setScale( preferredQt.getScale() );
+        present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
 
         present.setIsBackground( false );
-        present.setIsPreferred( false ); // This is the correct thing to do because it's not raw data.
-        present.setIsMaskedPreferred( true );
         present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
 
         present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
         present.setIsRecomputedFromRawData(
                 preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fastq etc.
 
-        present.setIsNormalized( preferredQt.getIsNormalized() );
+        // we do not copy the normalized flag from raw QTs because it does not guarantee to mean it is quantile-normalized
+        // present.setIsNormalized( preferredQt.getIsNormalized() );
 
         present.setIsRatio( preferredQt.getIsRatio() );
-        present.setType( preferredQt.getType() );
+
+        present.setIsMaskedPreferred( true );
 
         return quantitationTypeDao.create( present, ProcessedExpressionDataVector.class );
     }

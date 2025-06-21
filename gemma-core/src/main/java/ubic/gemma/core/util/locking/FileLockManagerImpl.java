@@ -6,11 +6,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -169,6 +166,38 @@ public class FileLockManagerImpl implements FileLockManager {
         }
     }
 
+    @Override
+    public InputStream newInputStream( Path path, OpenOption... openOptions ) throws IOException {
+        try ( LockedPath lockedPath = acquirePathLock( path, false ) ) {
+            InputStream inputStream = Files.newInputStream( path, openOptions );
+            return new LockedPathInputStream( inputStream, lockedPath );
+        }
+    }
+
+    @Override
+    public Reader newBufferedReader( Path path ) throws IOException {
+        try ( LockedPath lockedPath = acquirePathLock( path, false ) ) {
+            BufferedReader bufferedReader = Files.newBufferedReader( path );
+            return new LockedPathReader( bufferedReader, lockedPath );
+        }
+    }
+
+    @Override
+    public OutputStream newOutputStream( Path path, OpenOption... openOptions ) throws IOException {
+        try ( LockedPath lockedPath = acquirePathLock( path, true ) ) {
+            OutputStream outputStream = Files.newOutputStream( path, openOptions );
+            return new LockedPathOutputStream( outputStream, lockedPath );
+        }
+    }
+
+    @Override
+    public Writer newBufferedWriter( Path path, OpenOption... openOptions ) throws IOException {
+        try ( LockedPath lockedPath = acquirePathLock( path, true ) ) {
+            BufferedWriter bufferedWriter = Files.newBufferedWriter( path, openOptions );
+            return new LockedPathWriter( bufferedWriter, lockedPath );
+        }
+    }
+
     private ReadWriteFileLock createReadWriteLock( Path path ) {
         Path lockPath = resolveLockPath( path );
         try {
@@ -182,6 +211,78 @@ public class FileLockManagerImpl implements FileLockManager {
 
     private Path resolveLockPath( Path path ) {
         return path.resolveSibling( path.getFileName() + ".lock" );
+    }
+
+    private static class LockedPathInputStream extends FilterInputStream {
+        private final LockedPath lockedPath;
+
+        public LockedPathInputStream( InputStream inputStream, LockedPath lockedPath ) {
+            super( inputStream );
+            this.lockedPath = lockedPath.steal();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                lockedPath.close();
+            }
+        }
+    }
+
+    private static class LockedPathReader extends FilterReader {
+        private final LockedPath lockedPath;
+
+        public LockedPathReader( BufferedReader bufferedReader, LockedPath lockedPath ) {
+            super( bufferedReader );
+            this.lockedPath = lockedPath.steal();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                lockedPath.close();
+            }
+        }
+    }
+
+    private static class LockedPathOutputStream extends FilterOutputStream {
+        private final LockedPath lockedPath;
+
+        public LockedPathOutputStream( OutputStream outputStream, LockedPath steal ) {
+            super( outputStream );
+            lockedPath = steal.steal();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                lockedPath.close();
+            }
+        }
+    }
+
+    private static class LockedPathWriter extends FilterWriter {
+        private final LockedPath lockedPath;
+
+        public LockedPathWriter( BufferedWriter bufferedWriter, LockedPath lockedPath ) {
+            super( bufferedWriter );
+            this.lockedPath = lockedPath.steal();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                lockedPath.close();
+            }
+        }
     }
 
     private class LockedPathImpl implements LockedPath {

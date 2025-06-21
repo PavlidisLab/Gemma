@@ -20,14 +20,13 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +36,7 @@ import java.util.Map;
  */
 public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnalysisDao<DifferentialExpressionAnalysis> {
 
-    Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
-            double threshold );
+    Collection<DifferentialExpressionAnalysis> findByName( String name );
 
     /**
      * Retrieve analyses associated with the factor, either through the subset factor or as factors for result sets.
@@ -50,17 +48,20 @@ public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnaly
      */
     Collection<DifferentialExpressionAnalysis> findByFactors( Collection<ExperimentalFactor> experimentalFactors );
 
-    Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
+    /**
+     * Find an analysis for the given experiment and identifier.
+     */
+    @Nullable
+    DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet experimentAnalyzed, Long analysisId, boolean includeSubSets );
+
+    Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentAnalyzedId( Collection<Long> experimentAnalyzedId );
 
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
-    Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
-            Collection<? extends BioAssaySet> expressionExperiments );
-
-    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
 
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> expressionExperimentIds, int offset, int limit );
+            Collection<Long> expressionExperimentIds, int offset, int limit, boolean includeSubSets );
 }
