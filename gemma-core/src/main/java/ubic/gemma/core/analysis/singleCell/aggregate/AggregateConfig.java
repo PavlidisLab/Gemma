@@ -2,6 +2,9 @@ package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.Builder;
 import lombok.Getter;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+
+import javax.annotation.Nullable;
 
 /**
  * Configuration for aggregating single-cell data.
@@ -11,6 +14,13 @@ import lombok.Getter;
 @Builder
 public
 class AggregateConfig {
+    /**
+     * Categorical mask to use on data.
+     * <p>
+     * The category of the characteristics must be {@link ubic.gemma.model.common.description.Categories#MASK}.
+     */
+    @Nullable
+    CellLevelCharacteristics mask;
     /**
      * Make the resulting QT preferred.
      */
