@@ -53,7 +53,7 @@
 
 	<!-- Hibernate SessionFactory -->
 	<bean id="sessionFactory" class="ubic.gemma.persistence.hibernate.LocalSessionFactoryBean"
-		  depends-on="ehcache">
+		  depends-on="ehcache,dataSourceInitializer">
 		<property name="dataSource" ref="dataSource"/>
 		<property name="configLocation" value="classpath:hibernate.cfg.xml"/>
 		<property name="hibernateProperties">
