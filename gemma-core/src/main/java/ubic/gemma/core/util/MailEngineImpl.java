@@ -58,11 +58,6 @@ public class MailEngineImpl implements MailEngine {
     @Value("${gemma.support.email}")
     private String supportEmailAddress;
 
-    @Override
-    public String getAdminEmailAddress() {
-        return adminEmailAddress;
-    }
-
     /**
      * Sends a message to the gemma administrator as defined in the Gemma.properties file
      */
