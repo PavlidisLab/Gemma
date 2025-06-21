@@ -118,8 +118,8 @@
     <cache name="ubic.gemma.model.genome.Gene.accessions" maxElementsInMemory="200000" eternal="true"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.description.DatabaseEntry" maxElementsInMemory="200000" eternal="false"
-           overflowToDisk="false"/>
+    <cache name="ubic.gemma.model.common.description.DatabaseEntry" maxElementsInMemory="200000"
+           eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.ExternalDatabase" maxElementsInMemory="100"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
