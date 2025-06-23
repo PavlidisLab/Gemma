@@ -392,6 +392,10 @@ public class DataUpdaterImpl implements DataUpdater {
     @Transactional(propagation = Propagation.NEVER)
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdaterImpl.log.info( "------  Begin processing: " + ee + " -----" );
+
+        // fully thaw the EE as we will be replacing its vectors
+        ee = experimentService.thaw( ee );
+
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
 
         if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
@@ -423,7 +427,6 @@ public class DataUpdaterImpl implements DataUpdater {
             auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Data was apparently not available" );
             throw new RuntimeException( "Data was apparently not available" );
         }
-        ee = experimentService.thawLite( ee );
 
         Map<ArrayDesign, Collection<BioAssay>> targetPlats2BioAssays = this.determinePlatformsFromCELs( ee, files );
 
