@@ -22,7 +22,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -52,7 +51,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
         ad = arrayDesignService.thaw( ad );
 
         Collection<BioSequence> seqs = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                FileTools.resourceToPath( "/data/loader/genome/blast" ), true,
+                true,
                 new MockFastaCmd( ad.getPrimaryTaxon() ) );
 
         assertNotNull( seqs );

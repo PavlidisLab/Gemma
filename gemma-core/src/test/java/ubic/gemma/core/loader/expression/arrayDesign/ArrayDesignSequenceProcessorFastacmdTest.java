@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -58,7 +57,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app
                     .processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
+                            false );
             if ( res != null ) {
                 if ( res.size() == 242 ) {
                     log.warn(
@@ -87,7 +86,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
     }
 
     private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
         if ( fastacmdExe == null ) {
             log.warn( "No fastacmd executable is configured, skipping test" );
             return false;

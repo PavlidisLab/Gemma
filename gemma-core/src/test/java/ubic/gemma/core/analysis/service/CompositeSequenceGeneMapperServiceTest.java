@@ -69,7 +69,7 @@ import static org.junit.Assert.*;
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
     private final String arrayAccession = "GPL96";
-    private final Blat blat = new ShellDelegatingBlat();
+    private final ShellDelegatingBlat blat = new ShellDelegatingBlat();
     private final String csName = "117_at";// "218120_s_at";
     private final String geneOfficialSymbol = "HSPA6";// "HMOX2";
     private ArrayDesign ad = null;

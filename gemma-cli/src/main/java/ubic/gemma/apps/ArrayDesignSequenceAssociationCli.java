@@ -142,7 +142,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
+                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, force );
             if ( updated != null ) {
                 log.info( "Updated or created " + updated );
             }
@@ -206,7 +206,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 String[] databases = chooseBLASTdbs( taxon );
 
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
-                        databases, null, taxon, force );
+                        databases, taxon, force );
 
                 this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             }
@@ -216,7 +216,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             String[] databases = chooseBLASTdbs( taxon );
 
             arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
-                    databases, null, force );
+                    databases, force );
             this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
         }
     }

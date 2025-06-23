@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -124,7 +123,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     @Ignore("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
         Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe != null );
 
         File fi = new File( fastacmdExe );
@@ -145,7 +144,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" ) ) {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, f, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
+                            taxon, true );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
@@ -158,7 +157,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
         Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -171,7 +170,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         try {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
+                            false );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );

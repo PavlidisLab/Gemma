@@ -17,6 +17,8 @@ package ubic.gemma.core.loader.expression;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -28,7 +30,6 @@ import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.profiling.StopWatchUtils;
-import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,8 +38,11 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -423,13 +427,13 @@ public class AffyPowerToolsProbesetSummarize {
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
-     * @param  targetPlatform ad
-     * @param  cdfFileName    e g. HG-U133A_2.cdf
-     * @param  celfiles       celfiles
-     * @param  outputPath     path
+     * @param targetPlatform ad
+     * @param cdfFileName    e g. HG-U133A_2.cdf
+     * @param celfiles       celfiles
+     * @param outputPath     path
      * @return string
      */
-    private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName, List<String> celfiles,
+    private String[] getCDFCommand( ArrayDesign targetPlatform, @Nullable String cdfFileName, List<String> celfiles,
             String outputPath ) {
         String toolPath = Settings.getString( "affy.power.tools.exec" );
 
@@ -457,8 +461,7 @@ public class AffyPowerToolsProbesetSummarize {
          * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
          */
 
-        return toolPath + " -a " + AffyPowerToolsProbesetSummarize.METHOD + " -d " + cdfFullPath + " -o " + outputPath
-                + " " + StringUtils.join( celfiles, " " );
+        return ArrayUtils.addAll( new String[] { toolPath, "-a", AffyPowerToolsProbesetSummarize.METHOD, "-d", cdfFullPath, "-o", outputPath }, celfiles.toArray( new String[0] ) );
     }
 
     /**
@@ -466,7 +469,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
      */
-    private List<String> getCelFiles( Collection<File> files, Collection<String> accessionsOfInterest ) {
+    private List<String> getCelFiles( Collection<File> files, @Nullable Collection<String> accessionsOfInterest ) {
 
         Set<String> celfiles = new HashSet<>();
         for ( File f : files ) {
@@ -514,12 +517,12 @@ public class AffyPowerToolsProbesetSummarize {
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param  ad         ad
-     * @param  celfiles   celfiles
-     * @param  outputPath directory
+     * @param ad         ad
+     * @param celfiles   celfiles
+     * @param outputPath directory
      * @return string or null if not found.s
      */
-    private String getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
+    private String[] getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.
          */
@@ -550,8 +553,9 @@ public class AffyPowerToolsProbesetSummarize {
         this.checkFileReadable( mps );
         this.checkFileReadable( qcc );
 
-        return toolPath + " -a " + AffyPowerToolsProbesetSummarize.METHOD + " -p " + pgf + " -c " + clf + " -m " + mps
-                + " -o " + outputPath + " --qc-probesets " + qcc + " " + StringUtils.join( celfiles, " " );
+        return ArrayUtils.addAll( new String[] { toolPath, "-a", AffyPowerToolsProbesetSummarize.METHOD,
+                        "-p", pgf, "-c", clf, "-m", mps, "-o", outputPath, "--qc-probesets", qcc },
+                celfiles.toArray( new String[0] ) );
     }
 
     private String getOutputFilePath( ExpressionExperiment ee ) {
@@ -585,7 +589,7 @@ public class AffyPowerToolsProbesetSummarize {
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
         String outputPath = this.getOutputFilePath( ee );
-        String cmd;
+        String[] cmd;
 
         // look for a CDF first.
         File cdf = this.findCdf( targetPlatform );
@@ -607,44 +611,31 @@ public class AffyPowerToolsProbesetSummarize {
         AffyPowerToolsProbesetSummarize.log.info( "Original platform: " + originalPlatform
                 + "; Target platform (apt-probeset-summarize will be called with): " + targetPlatform );
 
-        AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
-
-        int exitVal = Integer.MIN_VALUE;
+        AffyPowerToolsProbesetSummarize.log.info( "Running: " + Arrays.toString( cmd ) );
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
         try {
-            final Process run = Runtime.getRuntime().exec( cmd );
-            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream(), true );
-            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
-            gscErr.start();
-            gscIn.start();
+            final Process run = new ProcessBuilder( cmd )
+                    // TODO: switch to Redirect.DISCARD from Java 9
+                    .redirectOutput( ProcessBuilder.Redirect.appendTo( new File( "/dev/null" ) ) )
+                    .redirectError( ProcessBuilder.Redirect.PIPE )
+                    .start();
 
-            int i = 0;
-            while ( exitVal == Integer.MIN_VALUE ) {
-                try {
-                    exitVal = run.exitValue();
-                } catch ( IllegalThreadStateException e ) {
-                    // okay, still waiting.
-                }
-                Thread.sleep( 1000 );
-
-                if ( ++i % AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_S == 0 ) {
-                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
-                    Long size = outputFile.length();
-
-                    String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
-                    AffyPowerToolsProbesetSummarize.log
-                            .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
-                                    + " kb (" + minutes + " minutes elapsed)" );
-                }
-
+            while ( !run.waitFor( AFFY_UPDATE_INTERVAL_S, TimeUnit.SECONDS ) ) {
+                File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
+                long size = outputFile.length();
+                String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
+                AffyPowerToolsProbesetSummarize.log
+                        .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                                + " kb (" + minutes + " minutes elapsed)" );
             }
 
-            if ( exitVal > 0 ) {
-                AffyPowerToolsProbesetSummarize.log
-                        .warn( "apt-probeset-summarize exit value was non-zero: " + exitVal );
+            int exitVal = run.exitValue();
+            if ( exitVal != 0 ) {
+                String errorMessage = StringUtils.strip( IOUtils.toString( run.getErrorStream(), StandardCharsets.UTF_8 ) );
+                throw new RuntimeException( "apt-probeset-summarize exit value was non-zero: " + exitVal + "\n" + errorMessage );
             }
 
             overallWatch.stop();

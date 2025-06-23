@@ -23,7 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -44,6 +43,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
@@ -402,8 +402,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
-        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, blastDbHome, taxon, force,
+            String[] databaseNames, Taxon taxon, boolean force ) throws IOException {
+        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, taxon, force,
                 null );
     }
 
@@ -412,7 +412,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException {
+            String[] databaseNames, Taxon taxon, boolean force, FastaCmd fc ) throws IOException {
         this.checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = this.parseAccessionFile( sequenceIdentifierFile );
@@ -434,7 +434,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             fc = new SimpleFastaCmd();
 
         Collection<BioSequence> retrievedSequences = this
-                .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
+                .searchBlastDbs( databaseNames, notFound, fc );
 
         // map of accessions to sequence.
         Map<String, BioSequence> found = this
@@ -493,18 +493,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             boolean force ) {
-        return this.processArrayDesign( arrayDesign, databaseNames, null, force );
+        return this.processArrayDesign( arrayDesign, databaseNames, force, null );
     }
 
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            String blastDbHome, boolean force ) {
-        return this.processArrayDesign( arrayDesign, databaseNames, blastDbHome, force, null );
-    }
-
-    @Override
-    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            String blastDbHome, boolean force, FastaCmd fc ) {
+            boolean force, @Nullable FastaCmd fc ) {
 
         Map<String, BioSequence> accessionsToFetch = this.initializeFetchList( arrayDesign, force );
 
@@ -525,7 +519,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( fc == null )
             fc = new SimpleFastaCmd();
         Collection<BioSequence> retrievedSequences = this
-                .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
+                .searchBlastDbs( databaseNames, notFound, fc );
 
         Map<String, BioSequence> found = this
                 .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray, force );
@@ -547,14 +541,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * Update a single sequence in the system.
      *
-     * @param  force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *               information in the BioSequence will be overwritten.
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *              information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
     @Override
-    public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
+    public BioSequence processSingleAccession( String sequenceId, String[] databaseNames,
             boolean force ) {
-        BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId, new SimpleFastaCmd() );
+        BioSequence found = this.searchBlastDbs( databaseNames, sequenceId, new SimpleFastaCmd() );
         if ( found == null )
             return null;
         return this.createOrUpdateGenbankSequence( found, force );
@@ -1039,17 +1033,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return res;
     }
 
-    private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
+    private Collection<BioSequence> searchBlastDbs( String[] databaseNames,
             Collection<String> accessionsToFetch, FastaCmd fc ) {
 
         Collection<BioSequence> retrievedSequences = new HashSet<>();
         for ( String dbName : databaseNames ) {
-            Collection<BioSequence> moreBioSequences;
-            if ( blastDbHome != null ) {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbName, blastDbHome );
-            } else {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbName );
-            }
+            Collection<BioSequence> moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbName );
 
             if ( ArrayDesignSequenceProcessingServiceImpl.log.isDebugEnabled() )
                 ArrayDesignSequenceProcessingServiceImpl.log
@@ -1066,16 +1055,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * Search for a single accession
      */
-    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch,
+    private BioSequence searchBlastDbs( String[] databaseNames, String accessionToFetch,
             FastaCmd fc ) {
 
         for ( String dbName : databaseNames ) {
-            BioSequence moreBioSequence;
-            if ( blastDbHome != null ) {
-                moreBioSequence = fc.getByAccession( accessionToFetch, dbName, blastDbHome );
-            } else {
-                moreBioSequence = fc.getByAccession( accessionToFetch, dbName, null );
-            }
+            BioSequence moreBioSequence = fc.getByAccession( accessionToFetch, dbName );
             if ( moreBioSequence != null )
                 return moreBioSequence;
         }

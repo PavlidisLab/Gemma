@@ -30,6 +30,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
+import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Date;
 
@@ -43,13 +45,14 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     @Autowired
     private BioSequenceService bsService;
 
-    private String inputFileName;
+    @Nullable
+    private Path inputFileName;
 
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().argName( ".out file" )
-                .desc( "RepeatScan file to use as input" ).longOpt( "file" ).build();
+                .desc( "RepeatScan file to use as input" ).longOpt( "file" ).type( Path.class ).build();
         options.addOption( fileOption );
     }
 
@@ -57,7 +60,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
-            this.inputFileName = commandLine.getOptionValue( 'f' );
+            this.inputFileName = commandLine.getParsedOptionValue( 'f' );
         }
     }
 

@@ -154,25 +154,22 @@ public interface ArrayDesignSequenceProcessingService {
      * This method ALWAYS clobbers the BioSequence associations that are associated with the array design (at least, if
      * any of the probe identifiers in the file given match the array design).
      *
+     * @param arrayDesign            plaftorm
      * @param sequenceIdentifierFile Sequence file has two columns: column 1 is a probe id, column 2 is a genbank
-     *        accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
-     *        ones missing will be sought directly in Gemma.
-     * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
-     * @param arrayDesign plaftorm
-     * @param taxon taxon
-     * @param blastDbHome blast db home
-     * @param databaseNames database names
+     *                               accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
+     *                               ones missing will be sought directly in Gemma.
+     * @param databaseNames          database names
+     * @param taxon                  taxon
+     * @param force                  If true, if an existing BioSequence that matches is found in the system, any existing sequence
+     *                               information in the BioSequence will be overwritten.
      * @return bio sequences
      * @throws IOException when IO problems occur.
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException;
+            String[] databaseNames, Taxon taxon, boolean force ) throws IOException;
 
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException;
-
-    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force );
+            String[] databaseNames, Taxon taxon, boolean force, FastaCmd fc ) throws IOException;
 
     /**
      * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
@@ -182,41 +179,36 @@ public interface ArrayDesignSequenceProcessingService {
      * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
      * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
      *
+     * @param arrayDesign   platform
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome where to find the blast databases for sequence retrieval
-     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *        overwritten with a new one.
-     * @param arrayDesign platform
+     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *                      overwritten with a new one.
      * @return bio sequences
      */
-    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
-            boolean force );
+    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force );
 
     /**
      * Provided primarily for testing.
      *
+     * @param arrayDesign   platform
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome where to find the blast databases for sequence retrieval
-     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *        overwritten with a new one.
-     * @param arrayDesign platform
-     * @param fc fasta command
+     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *                      overwritten with a new one.
+     * @param fc            fasta command
      * @return bio sequences
      */
-    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
-            boolean force, FastaCmd fc );
+    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force, FastaCmd fc );
 
     /**
      * Update a single sequence in the system.
      *
-     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     * @param sequenceId    sequence id
      * @param databaseNames database names
-     * @param blastDbHome blast db home
-     * @param sequenceId sequence id
+     * @param force         If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *                      information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
-    BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome, boolean force );
+    BioSequence processSingleAccession( String sequenceId, String[] databaseNames, boolean force );
 
     Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException;
 
