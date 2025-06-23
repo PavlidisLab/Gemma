@@ -26,9 +26,7 @@
             <property name="minimumIdle" value="${gemma.db.minimumIdle}"/>
         </bean>
         <!-- dummy bean for production/dev, in a test environment this will initialize the database  -->
-        <bean id="dataSourceInitializer">
-
-        </bean>
+        <bean id="dataSourceInitializer" class="java.lang.Object"/>
         <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
         <!-- This is lazily initialized because we only need it for scheduled jobs -->
         <bean id="groupAgentSecurityContext"
