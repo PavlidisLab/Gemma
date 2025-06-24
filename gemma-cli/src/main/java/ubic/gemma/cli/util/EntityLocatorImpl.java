@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;

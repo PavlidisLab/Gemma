@@ -27,6 +27,7 @@ import ubic.gemma.core.loader.genome.FastaParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ShellUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +35,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -167,7 +171,7 @@ public class RepeatScan {
                 "-species", taxon.getCommonName(),
                 // FIXME use -dir option to put output where we want; see https://github.com/PavlidisLab/Gemma/issues/53;
                 querySequenceFile.toString() };
-        RepeatScan.log.info( "Running RepeatMasker like this: " + Arrays.toString( cmd ) );
+        RepeatScan.log.info( "Running RepeatMasker like this: " + ShellUtils.join( cmd ) );
 
         final Process run = new ProcessBuilder( cmd )
                 // to ensure that we aren't left waiting for these streams

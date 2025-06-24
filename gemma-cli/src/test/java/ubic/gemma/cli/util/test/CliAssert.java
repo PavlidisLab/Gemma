@@ -6,7 +6,7 @@ import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ByteArrayAssert;
 import org.assertj.core.description.Description;
 import ubic.gemma.cli.util.CLI;
-import ubic.gemma.cli.util.ShellUtils;
+import ubic.gemma.util.ShellUtils;
 import ubic.gemma.cli.util.TestCliContext;
 
 import java.io.*;

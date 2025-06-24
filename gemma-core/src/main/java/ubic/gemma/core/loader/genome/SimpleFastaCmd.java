@@ -23,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ShellUtils;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -130,7 +131,7 @@ public class SimpleFastaCmd implements FastaCmd {
             }
             String[] command = new String[] { SimpleFastaCmd.FASTA_CMD_EXE, "-long_seqids", "-target_only",
                     "-" + DB_OPTION, database, "-" + ENTRY_BATCH_OPTION, tmp.toString() };
-            SimpleFastaCmd.log.info( String.join( " ", command ) );
+            SimpleFastaCmd.log.info( ShellUtils.join( command ) );
             ProcessBuilder pb = new ProcessBuilder( command )
                     .redirectOutput( ProcessBuilder.Redirect.PIPE )
                     .redirectError( ProcessBuilder.Redirect.PIPE );
@@ -152,7 +153,7 @@ public class SimpleFastaCmd implements FastaCmd {
         checkBlastConfig();
         String[] command = new String[] { SimpleFastaCmd.FASTA_CMD_EXE, "-long_seqids", "-target_only",
                 "-" + DB_OPTION, database, "-" + QUERY_OPTION, key };
-        SimpleFastaCmd.log.info( String.join( " ", command ) );
+        SimpleFastaCmd.log.info( ShellUtils.join( command ) );
         ProcessBuilder pb = new ProcessBuilder( command )
                 .redirectOutput( ProcessBuilder.Redirect.PIPE )
                 .redirectError( ProcessBuilder.Redirect.PIPE );

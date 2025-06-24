@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -611,7 +612,7 @@ public class AffyPowerToolsProbesetSummarize {
         AffyPowerToolsProbesetSummarize.log.info( "Original platform: " + originalPlatform
                 + "; Target platform (apt-probeset-summarize will be called with): " + targetPlatform );
 
-        AffyPowerToolsProbesetSummarize.log.info( "Running: " + Arrays.toString( cmd ) );
+        AffyPowerToolsProbesetSummarize.log.info( "Running: " + ShellUtils.join( cmd ) );
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();

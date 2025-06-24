@@ -34,6 +34,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.BufferedWriter;
@@ -277,7 +278,7 @@ public class ShellDelegatingBlat implements Blat {
         }
         String[] cmd = ArrayUtils.addAll( new String[] {
                 gfServerExe, "-stepSize=" + STEPSIZE, "start", this.host, String.valueOf( port ) }, this.getSeqFiles( genome ) );
-        ShellDelegatingBlat.log.info( "Starting gfServer with command " + String.join( " ", cmd ) + "..." );
+        ShellDelegatingBlat.log.info( "Starting gfServer with command: " + ShellUtils.join( cmd ) );
         this.serverProcess = new ProcessBuilder( cmd )
                 .directory( seqDir.toFile() )
                 .redirectOutput( ProcessBuilder.Redirect.INHERIT )
@@ -431,7 +432,7 @@ public class ShellDelegatingBlat implements Blat {
         final String[] cmd = new String[] {
                 gfClientExe, "-nohead", "-minScore=" + ShellDelegatingBlat.MIN_SCORE, host, String.valueOf( portToUse ),
                 seqDir.toString(), querySequenceFile.toString(), outputPath.toString() };
-        ShellDelegatingBlat.log.info( String.join( " ", cmd ) );
+        ShellDelegatingBlat.log.info( ShellUtils.join( cmd ) );
         final Process run = new ProcessBuilder( cmd )
                 // to ensure that we aren't left waiting for these streams
                 // TODO: switch to Redirect.DISCARD for Java 9+
