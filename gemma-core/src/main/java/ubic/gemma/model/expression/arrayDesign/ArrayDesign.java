@@ -55,10 +55,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7566439134502613470L;
     private Integer advertisedNumberOfDesignElements;
     private Set<AlternateName> alternateNames = new HashSet<>();
     private ArrayDesign alternativeTo; // for affymetrix
