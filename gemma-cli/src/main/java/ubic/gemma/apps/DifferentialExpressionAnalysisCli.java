@@ -32,7 +32,6 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -195,7 +194,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( type != null ) {
             throw new IllegalArgumentException( "You can only specify the analysis type when analyzing a single experiment" );
         }
@@ -205,7 +204,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         if ( !factorIdentifiers.isEmpty() ) {
             throw new IllegalArgumentException( "You can only specify the factors when analyzing a single experiment" );
         }
-        super.processBioAssaySets( expressionExperiments );
+        super.processExpressionExperiments( expressionExperiments );
     }
 
     @Override

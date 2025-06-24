@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
@@ -61,11 +61,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Caches caches ) {
-        Collection<BioAssaySet> setMembers = new HashSet<>();
+        Collection<ExpressionExperiment> setMembers = new HashSet<>();
 
-        for ( BioAssaySet baSet : entity.getExperiments() ) {
+        for ( ExpressionExperiment baSet : entity.getExperiments() ) {
             if ( baSet.getId() == null ) {
-                baSet = ( BioAssaySet ) this.doPersist( baSet, caches );
+                baSet = ( ExpressionExperiment ) this.doPersist( baSet, caches );
             }
             setMembers.add( baSet );
         }

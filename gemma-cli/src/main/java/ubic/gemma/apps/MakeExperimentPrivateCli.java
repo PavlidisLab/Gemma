@@ -3,7 +3,7 @@ package ubic.gemma.apps;
 import gemma.gsec.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 public class MakeExperimentPrivateCli extends ExpressionExperimentManipulatingCLI {
 
@@ -21,7 +21,7 @@ public class MakeExperimentPrivateCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void processBioAssaySet( BioAssaySet ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         securityService.makePrivate( ee );
         this.auditTrailService.addUpdateEvent( ee, MakePrivateEvent.class, "Made private from command line" );
     }

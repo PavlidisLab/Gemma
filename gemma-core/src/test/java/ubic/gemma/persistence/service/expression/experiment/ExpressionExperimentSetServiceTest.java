@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -104,7 +103,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         String newName = "newName";
         String newDesc = "newDesc";
-        Set<BioAssaySet> newMembers = new HashSet<>();
+        Set<ExpressionExperiment> newMembers = new HashSet<>();
         newMembers.add( ee1 );
 
         eeSet.setName( newName );
@@ -131,7 +130,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Test(expected = Exception.class)
     public void testAddingExperimentOfWrongTaxonUpdate() {
-        Set<BioAssaySet> newMembers = new HashSet<>();
+        Set<ExpressionExperiment> newMembers = new HashSet<>();
         newMembers.add( ee1 );
         newMembers.add( eeMouse );
         eeSet.setExperiments( newMembers );

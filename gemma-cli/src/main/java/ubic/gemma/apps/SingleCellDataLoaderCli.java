@@ -18,7 +18,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
@@ -357,11 +356,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( dataPath != null || qtName != null || cellTypeAssignmentFile != null || otherCellLevelCharacteristicsFile != null || sequencingMetadataFile != null ) {
             throw new IllegalArgumentException( "Cannot specify a data path, quantitation type name, cell type assignment file, cell-level characteristics file or sequencing metadata file when processing more than one experiment." );
         }
-        super.processBioAssaySets( expressionExperiments );
+        super.processExpressionExperiments( expressionExperiments );
     }
 
     @Override

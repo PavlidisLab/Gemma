@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -111,14 +110,14 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     Collection<String> failedEe;
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         // collect some statistics
         nullPubCount = new ArrayList<>();
         samePubCount = new ArrayList<>();
         diffPubCount = new ArrayList<>();
         failedEe = new ArrayList<>();
 
-        super.processBioAssaySets( expressionExperiments );
+        super.processExpressionExperiments( expressionExperiments );
 
         // print statistics
         log.info( "\n\n========== Summary ==========" );

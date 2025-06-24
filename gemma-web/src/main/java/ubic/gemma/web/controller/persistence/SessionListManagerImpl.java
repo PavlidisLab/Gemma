@@ -22,16 +22,16 @@ package ubic.gemma.web.controller.persistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -126,9 +126,9 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public Collection<Long> getExperimentIdsInSet( Long id ) {
         ExpressionExperimentSet eeSet = expressionExperimentSetService.loadOrFail( id ); // secure
-        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
+        Collection<ExpressionExperiment> datasets = eeSet.getExperiments(); // Not secure.
         Collection<Long> eeids = new HashSet<>();
-        for ( BioAssaySet ee : datasets ) {
+        for ( ExpressionExperiment ee : datasets ) {
             eeids.add( ee.getId() );
         }
         return eeids;
