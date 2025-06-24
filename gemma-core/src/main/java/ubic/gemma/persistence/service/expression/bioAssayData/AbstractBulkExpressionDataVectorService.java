@@ -3,17 +3,17 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.persistence.service.AbstractService;
 
 import java.util.Collection;
 
-public abstract class AbstractDesignElementDataVectorService<T extends DesignElementDataVector> extends AbstractService<T>
-        implements DesignElementDataVectorService<T> {
+public abstract class AbstractBulkExpressionDataVectorService<T extends BulkExpressionDataVector> extends AbstractService<T>
+        implements BulkExpressionDataVectorService<T> {
 
     private final DesignElementDataVectorDao<T> designElementDataVectorDao;
 
-    protected AbstractDesignElementDataVectorService( DesignElementDataVectorDao<T> mainDao ) {
+    protected AbstractBulkExpressionDataVectorService( DesignElementDataVectorDao<T> mainDao ) {
         super( mainDao );
         this.designElementDataVectorDao = mainDao;
     }

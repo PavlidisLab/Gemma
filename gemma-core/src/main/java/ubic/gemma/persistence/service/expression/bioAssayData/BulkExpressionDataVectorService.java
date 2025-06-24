@@ -3,13 +3,13 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
-interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseReadOnlyService<T> {
+public interface BulkExpressionDataVectorService<T extends BulkExpressionDataVector> extends BaseReadOnlyService<T> {
 
     /**
      * Find specific type (raw or processed, depending on the service) of vectors that meet the given criteria.
@@ -17,10 +17,10 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      * @param bioAssayDimension the BA dimension
      * @return the found vectors of type {@link T}
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<T> find( BioAssayDimension bioAssayDimension );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<T> findAndThaw( BioAssayDimension bioAssayDimension );
 
     /**
@@ -41,13 +41,13 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
      * @param quantitationType the QT
      * @return the found vectors of type {@link T}
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<T> find( QuantitationType quantitationType );
 
     /**
      * Find and thaw specific type ({@link T}) of vectors that meet the given criteria.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<T> findAndThaw( QuantitationType quantitationType );
 
     /**

@@ -125,19 +125,19 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
     /**
      * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequences(Gene, ArrayDesign, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign, boolean includeDummyProducts );
 
     /**
      * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequencesById(long, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> getCompositeSequences( Gene gene, boolean includeDummyProducts );
 
     /**
      * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequencesById(long, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> getCompositeSequencesById( Long geneId, boolean includeDummyProducts );
 
     List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );

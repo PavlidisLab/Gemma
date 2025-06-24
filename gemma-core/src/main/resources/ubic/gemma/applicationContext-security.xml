@@ -91,7 +91,7 @@
 
     <!-- After reading collection of composite sequences -->
     <bean id="afterAclArrayDesignCollectionRead"
-          class="ubic.gemma.core.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider">
         <constructor-arg ref="aclService"/>
         <constructor-arg>
             <list>
@@ -104,7 +104,7 @@
     </bean>
 
     <bean id="afterAclArrayDesignRead"
-          class="ubic.gemma.core.security.authorization.acl.AclAfterCompSeqByArrayDesignFilter">
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider">
         <constructor-arg ref="aclService"/>
         <constructor-arg>
             <list>
@@ -118,7 +118,7 @@
 
     <!-- After reading collection of vectors -->
     <bean id="afterAclDataVectorCollectionRead"
-          class="ubic.gemma.core.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider">
         <constructor-arg ref="aclService"/>
         <constructor-arg>
             <list>

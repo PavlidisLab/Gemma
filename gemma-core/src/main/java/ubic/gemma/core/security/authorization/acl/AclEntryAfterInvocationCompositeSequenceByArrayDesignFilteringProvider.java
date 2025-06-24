@@ -7,10 +7,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.List;
 
-public class AclAfterCompSeqByArrayDesignFilter extends AclEntryAfterInvocationByAssociationFilteringProvider {
+/**
+ * Filter {@link CompositeSequence} based on the permissions of the associated {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
+ */
+public class AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider extends AclEntryAfterInvocationByAssociationFilteringProvider {
 
-    public AclAfterCompSeqByArrayDesignFilter( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_ARRAYDESIGN_READ", requirePermission );
+    public AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_COMPOSITE_SEQUENCE_READ", requirePermission );
     }
 
     @Override

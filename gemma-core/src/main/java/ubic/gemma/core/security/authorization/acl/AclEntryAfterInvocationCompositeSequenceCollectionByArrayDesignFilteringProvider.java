@@ -27,16 +27,15 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.util.List;
 
 /**
- * For this particular AfterInvocationProvider, composite sequence authorization is determined based on the secured
- * array design acl. ie. composite sequence security is determined from an owning array desgin's security.
+ * Filter collections of {@link CompositeSequence} based on the permissions of the associated {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}(s).
  *
  * @author keshav (based in part on code from Acegi)
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionCompSeqByArrayDesignFilter extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
+public class AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
-    public AclAfterCollectionCompSeqByArrayDesignFilter( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ", requirePermission );
+    public AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ", requirePermission );
     }
 
     @Override

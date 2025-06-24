@@ -44,7 +44,7 @@ public interface CompositeSequenceService
         extends BaseService<CompositeSequence>, FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     CompositeSequence find( CompositeSequence compositeSequence );
 
     @Override
@@ -56,7 +56,7 @@ public interface CompositeSequenceService
     CompositeSequence create( CompositeSequence compositeSequence );
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> load( Collection<Long> ids );
 
     @Override
@@ -67,13 +67,13 @@ public interface CompositeSequenceService
     @Secured({ "GROUP_USER" })
     void update( CompositeSequence compositeSequence );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByBioSequenceName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
 
     /**
@@ -85,16 +85,16 @@ public interface CompositeSequenceService
 
     Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_READ" })
     CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns );
 

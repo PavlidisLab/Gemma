@@ -31,10 +31,7 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collection;
 import java.util.List;
@@ -45,20 +42,15 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author joseph
  */
-public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
+public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractGeoServiceTest {
 
     @Autowired
     protected GeoService geoService;
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    ArrayDesignService arrayDesignService;
-    @Autowired
-    CompositeSequenceService compositeSequenceService;
-    @Autowired
-    GeneService geneService;
-    @Autowired
-    RawAndProcessedExpressionDataVectorService rawAndProcessedService;
+    private RawAndProcessedExpressionDataVectorService rawAndProcessedService;
+
     private ExpressionExperiment newee = null;
 
     @After

@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Pointcuts;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -96,7 +97,7 @@ public class AclAdvice extends BaseAclAdvice {
     }
 
     @Override
-    protected void createOrUpdateAclSpecialCases( MutableAcl acl, Acl parentAcl, Sid sid, Securable object ) {
+    protected void createOrUpdateAclSpecialCases( MutableAcl acl, @Nullable Acl parentAcl, Sid sid, Securable object ) {
 
         // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
         // If aclParent is passed to this method we overwrite it.

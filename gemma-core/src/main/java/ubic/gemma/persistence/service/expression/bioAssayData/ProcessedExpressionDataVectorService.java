@@ -42,7 +42,7 @@ import java.util.Map;
  * @author Paul
  */
 public interface ProcessedExpressionDataVectorService
-        extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
+        extends BulkExpressionDataVectorService<ProcessedExpressionDataVector> {
 
     /**
      * Create processed vectors and optionally update ranks.

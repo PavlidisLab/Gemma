@@ -7,7 +7,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
-public interface RawAndProcessedExpressionDataVectorService extends DesignElementDataVectorService<BulkExpressionDataVector> {
+public interface RawAndProcessedExpressionDataVectorService extends BulkExpressionDataVectorService<BulkExpressionDataVector> {
 
     /**
      * @see RawAndProcessedExpressionDataVectorDao#removeByCompositeSequence(CompositeSequence)

@@ -21,34 +21,35 @@ package ubic.gemma.core.security.authorization.acl;
 import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 
 import java.util.List;
 
 /**
- * Filter collections of DesignElementDataVectors or DataVectorValueObjects based on the permissions of the associated
- * ExpressionExperiment(s).
+ * Filter collections of {@link DataVector} and {@link DataVectorValueObject}s based on the permissions of the
+ * associated {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}(s).
  *
  * @author pavlidis (based in part on code from Acegi)
  */
-public class AclAfterCollectionDataVectorByExpressionExperimentFilter
+public class AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider
         extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
-    public AclAfterCollectionDataVectorByExpressionExperimentFilter( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_DATAVECTOR_COLLECTION_READ", requirePermission );
+    public AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_DATA_VECTOR_COLLECTION_READ", requirePermission );
     }
 
     @Override
     protected Class<?> getProcessDomainObjectClass() {
-        return DesignElementDataVector.class;
+        return DataVector.class;
     }
 
     @Override
     protected Object getActualDomainObject( Object targetDomainObject ) {
-        if ( targetDomainObject instanceof DesignElementDataVector ) {
-            return ( ( DesignElementDataVector ) targetDomainObject ).getExpressionExperiment();
+        if ( targetDomainObject instanceof DataVector ) {
+            return ( ( DataVector ) targetDomainObject ).getExpressionExperiment();
         } else if ( targetDomainObject instanceof DataVectorValueObject ) {
+            // can be either a EE or EE subset VO, both of which are securable VOs
             return ( ( DataVectorValueObject ) targetDomainObject ).getExpressionExperiment();
         }
         throw new IllegalArgumentException( String.format( "Don't know how to find actual domain object for %s.",

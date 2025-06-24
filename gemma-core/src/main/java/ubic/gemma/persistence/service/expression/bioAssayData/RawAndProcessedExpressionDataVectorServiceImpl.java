@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
-public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<BulkExpressionDataVector> implements RawAndProcessedExpressionDataVectorService {
+public class RawAndProcessedExpressionDataVectorServiceImpl extends AbstractBulkExpressionDataVectorService<BulkExpressionDataVector> implements RawAndProcessedExpressionDataVectorService {
 
     private final RawAndProcessedExpressionDataVectorDao mainDao;
 
