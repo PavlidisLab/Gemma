@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
@@ -150,7 +149,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Gene g = genes.iterator().next();
 
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequences( g, true );
 
         assertNotNull( compositeSequences );
         assertEquals( compositeSequences.size(), 1 );

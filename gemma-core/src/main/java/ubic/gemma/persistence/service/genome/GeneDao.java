@@ -93,14 +93,35 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
     Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
     /**
-     * @param id id
-     * @return how many platform elements (e.g. probes) represent this gene, totalled up over all platforms.
+     * Obtain the number of platform elements (e.g. probes) associated to this gene, totalled up over all platforms.
+     * <p>
+     * Note that ACLs are applied to the platforms.
+     * @param includeDummyProducts if true, include platform elements related via dummy {@link ubic.gemma.model.genome.gene.GeneProduct}s
      */
-    long getCompositeSequenceCountById( long id );
+    long getCompositeSequenceCount( Gene gene, boolean includeDummyProducts );
 
-    Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
+    /**
+     * @see #getCompositeSequences(Gene, boolean)
+     */
+    long getCompositeSequenceCountById( long id, boolean includeDummyProducts );
 
-    Collection<CompositeSequence> getCompositeSequencesById( long id );
+    /**
+     * Get the composite sequences (e.g. probes) associated with this gene via a particular platform.
+     * @param arrayDesign          platform to restrict composite sequences to
+     * @param includeDummyProducts if true, include platform elements related via dummy {@link ubic.gemma.model.genome.gene.GeneProduct}s
+     */
+    Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign, boolean includeDummyProducts );
+
+    /**
+     * Get the composite sequences (e.g. probes) associated with this gene, for any platform.
+     * @param includeDummyProducts if true, include platform elements related via dummy {@link ubic.gemma.model.genome.gene.GeneProduct}s
+     */
+    Collection<CompositeSequence> getCompositeSequences( Gene gene, boolean includeDummyProducts );
+
+    /**
+     * @see #getCompositeSequences(Gene, boolean)
+     */
+    Collection<CompositeSequence> getCompositeSequencesById( long id, boolean includeDummyProducts );
 
     /**
      * @param taxon taxon
@@ -110,9 +131,11 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     /**
      * @param id id
+     * @param includeDummyProducts include platforms related via dummy {@link ubic.gemma.model.genome.gene.GeneProduct}s
+     *                             in the count
      * @return how many platforms have a representation of this gene
      */
-    int getPlatformCountById( Long id );
+    long getPlatformCountById( Long id, boolean includeDummyProducts );
 
     /**
      * @param taxon taxon

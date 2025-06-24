@@ -130,7 +130,7 @@ public class CompositeSequenceController {
             throw new IllegalArgumentException( "Gene ID must not be null" );
         }
 
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId, true );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
 
         if ( rawSummaries == null || rawSummaries.isEmpty() ) {
