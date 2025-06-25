@@ -35,6 +35,10 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                 if ( event.getException() instanceof ClientErrorException
                         // these should be treated as 400 errors, but they do not inherit from BadRequestException
                         || event.getException() instanceof ParamException
+                        // these are happening when the client closes the connection before the server can respond, in
+                        // gemma-web, see ClientAbortExceptionResolver. It is a Tomcat-specific exception, so we do not
+                        // have the class definition
+                        || "org.apache.catalina.connector.ClientAbortException".equals( event.getException().getClass().getName() )
                         || event.getException() instanceof ServiceUnavailableException ) {
                     log.warn( m, event.getException() );
                 } else {
