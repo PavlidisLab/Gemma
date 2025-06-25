@@ -66,14 +66,14 @@ Gemma.Renderers = {
     },
 
     curationNoteStubRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        if (record.get('needsAttention')) {
+      //  if (record.get('needsAttention')) {
             var orig_note = record.get('curationNote') ? record.get('curationNote') : "";
             var note = orig_note;
             if (note.length > 50) {
                 note = note.substring(0, 49) + "...";
             }
             return "<i ext:qtip='" + orig_note + "'>" + note + "</i>";
-        }
+      //  }
     },
 
 };
