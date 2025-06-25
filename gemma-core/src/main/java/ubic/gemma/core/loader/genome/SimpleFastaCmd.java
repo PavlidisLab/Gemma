@@ -21,10 +21,10 @@ package ubic.gemma.core.loader.genome;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ShellUtils;
 
+import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,32 +41,35 @@ import java.util.Collection;
 @CommonsLog
 public class SimpleFastaCmd implements FastaCmd {
 
-    // this name should be eventually changed to blastdbCmd.exe, since NCBI BLAST changed the name of the program.
-    public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
+    private final String fastaCmdExe;
+    private final String dbOption;
+    private final String queryOption;
+    private final String entryBatchOption;
 
-    private static String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
-
-    private static final String DB_OPTION;
-    private static final String QUERY_OPTION;
-    private static final String ENTRY_BATCH_OPTION;
-
-    static {
-        if ( FASTA_CMD_EXE.endsWith( "blastdbcmd" ) ) {
+    public SimpleFastaCmd( String fastaCmdExe ) {
+        this.fastaCmdExe = fastaCmdExe;
+        if ( fastaCmdExe.endsWith( "blastdbcmd" ) ) {
             log.debug( "Detected that blastdbcmd is being used, setting options accordingly." );
-            DB_OPTION = "db";
-            QUERY_OPTION = "entry";
-            ENTRY_BATCH_OPTION = "entry_batch";
+            dbOption = "db";
+            queryOption = "entry";
+            entryBatchOption = "entry_batch";
         } else {
             log.debug( "Detected that fastacmd is being used, setting options accordingly." );
-            DB_OPTION = "d";
-            QUERY_OPTION = "s";
-            ENTRY_BATCH_OPTION = "i";
+            dbOption = "d";
+            queryOption = "s";
+            entryBatchOption = "i";
         }
     }
 
-    private String blastHome = System.getenv( "BLASTDB" );
+    @Nullable
+    private Path blastHome;
 
-    public void setBlastHome( String blastDbHome ) {
+    /**
+     * Override the {@code BLASTDB} environment variable.
+     * <p>
+     * If {@code null}, the BLAST process will inherit the value of the environment.
+     */
+    public void setBlastHome( @Nullable Path blastDbHome ) {
         this.blastHome = blastDbHome;
     }
 
@@ -129,14 +132,16 @@ public class SimpleFastaCmd implements FastaCmd {
                     }
                 }
             }
-            String[] command = new String[] { SimpleFastaCmd.FASTA_CMD_EXE, "-long_seqids", "-target_only",
-                    "-" + DB_OPTION, database, "-" + ENTRY_BATCH_OPTION, tmp.toString() };
+            String[] command = new String[] { fastaCmdExe, "-long_seqids", "-target_only",
+                    "-" + dbOption, database, "-" + entryBatchOption, tmp.toString() };
             SimpleFastaCmd.log.info( ShellUtils.join( command ) );
             ProcessBuilder pb = new ProcessBuilder( command )
                     .redirectOutput( ProcessBuilder.Redirect.PIPE )
                     .redirectError( ProcessBuilder.Redirect.PIPE );
-            SimpleFastaCmd.log.info( "BLASTDB=" + blastHome );
-            pb.environment().put( "BLASTDB", blastHome );
+            if ( blastHome != null ) {
+                SimpleFastaCmd.log.info( "BLASTDB=" + blastHome );
+                pb.environment().put( "BLASTDB", blastHome.toString() );
+            }
             Process pr = pb.start();
             return getSequencesFromFastaCmdOutput( pr );
         } finally {
@@ -151,14 +156,16 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     private BioSequence getSingle( String key, String database ) throws IOException {
         checkBlastConfig();
-        String[] command = new String[] { SimpleFastaCmd.FASTA_CMD_EXE, "-long_seqids", "-target_only",
-                "-" + DB_OPTION, database, "-" + QUERY_OPTION, key };
+        String[] command = new String[] { fastaCmdExe, "-long_seqids", "-target_only",
+                "-" + dbOption, database, "-" + queryOption, key };
         SimpleFastaCmd.log.info( ShellUtils.join( command ) );
         ProcessBuilder pb = new ProcessBuilder( command )
                 .redirectOutput( ProcessBuilder.Redirect.PIPE )
                 .redirectError( ProcessBuilder.Redirect.PIPE );
-        SimpleFastaCmd.log.info( "BLASTDB=" + blastHome );
-        pb.environment().put( "BLASTDB", blastHome );
+        if ( blastHome != null ) {
+            SimpleFastaCmd.log.info( "BLASTDB=" + blastHome );
+            pb.environment().put( "BLASTDB", blastHome.toString() );
+        }
         Process pr = pb.start();
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         if ( sequences.isEmpty() ) {
@@ -171,10 +178,7 @@ public class SimpleFastaCmd implements FastaCmd {
     }
 
     private void checkBlastConfig() {
-        if ( StringUtils.isBlank( SimpleFastaCmd.FASTA_CMD_EXE ) )
-            throw new IllegalStateException( "No blastdbcmd executable: You must set " + SimpleFastaCmd.FASTA_CMD_CONFIG_NAME
-                    + " in your environment." );
-        if ( blastHome == null ) {
+        if ( blastHome == null && System.getenv( "BLASTDB" ) == null ) {
             throw new IllegalArgumentException( "No blast database location specified, you must set the BLASTDB environment variable or use setBlastHome()." );
         }
     }
@@ -188,10 +192,10 @@ public class SimpleFastaCmd implements FastaCmd {
                 // check standard error stream for specific error messages
                 String errorMessage = StringUtils.strip( IOUtils.toString( pr.getErrorStream(), StandardCharsets.UTF_8 ) );
                 if ( errorMessage.contains( "Entry or entries not found in BLAST database" ) || errorMessage.contains( "Skipped" ) ) {
-                    log.warn( "There are warnings in " + FASTA_CMD_EXE + " output:\n" + errorMessage );
+                    log.warn( "There are warnings in " + fastaCmdExe + " output:\n" + errorMessage );
                     return parser.getResults();
                 }
-                throw new RuntimeException( FASTA_CMD_EXE + " exit value=" + exitVal + " " + errorMessage );
+                throw new RuntimeException( fastaCmdExe + " exit value=" + exitVal + " " + errorMessage );
             }
             return parser.getResults();
         } catch ( IOException e ) {

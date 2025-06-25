@@ -25,6 +25,8 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -36,19 +38,23 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
  */
 public class SimpleFastaCmdTest {
 
+    // this name should be eventually changed to blastdbCmd.exe, since NCBI BLAST changed the name of the program.
+    public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
+    public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
+
     private static final String TESTBLASTDB = "testblastdb";
-    private static String testBlastDbPath;
+    private static Path testBlastDbPath;
 
     @BeforeClass
     public static void checkFastaCmdExecutableExists() throws URISyntaxException {
-        assumeThatExecutableExists( Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME ) );
-        testBlastDbPath = FileTools.resourceToPath( "/data/loader/genome/blast" );
+        assumeThatExecutableExists( FASTA_CMD_EXE );
+        testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
     }
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
     @Test
     public void testGetMultiple() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
 
         Collection<Integer> input = new ArrayList<>();
@@ -64,7 +70,7 @@ public class SimpleFastaCmdTest {
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
     @Test
     public void testGetMultipleAcc() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
 
         Collection<String> input = new ArrayList<>();
@@ -79,7 +85,7 @@ public class SimpleFastaCmdTest {
 
     @Test
     public void testGetMultipleAccSomeNotFound() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
 
         Collection<String> input = new ArrayList<>();
@@ -97,7 +103,7 @@ public class SimpleFastaCmdTest {
 
     @Test
     public void testGetSingle() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
         BioSequence bs = fastaCmd.getByIdentifier( 1435867, SimpleFastaCmdTest.TESTBLASTDB );
         assertNotNull( bs );
@@ -112,7 +118,7 @@ public class SimpleFastaCmdTest {
 
     @Test
     public void testGetSingleAcc() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
         String accession = "AA000002";
 
@@ -129,7 +135,7 @@ public class SimpleFastaCmdTest {
 
     @Test
     public void testGetSingleAccNotFound() {
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
         fastaCmd.setBlastHome( testBlastDbPath );
 
         BioSequence bs = fastaCmd.getByAccession( "FAKE.1", SimpleFastaCmdTest.TESTBLASTDB );

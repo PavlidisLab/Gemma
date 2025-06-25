@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -73,16 +74,19 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private final BioSequenceService bioSequenceService;
     private final ExternalDatabaseService externalDatabaseService;
     private final Persister persisterHelper;
+    private final String fastaCmdExe;
 
     @Autowired
     public ArrayDesignSequenceProcessingServiceImpl( ArrayDesignReportService arrayDesignReportService,
             ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
-            ExternalDatabaseService externalDatabaseService, Persister persisterHelper ) {
+            ExternalDatabaseService externalDatabaseService, Persister persisterHelper,
+            @Value("${fastaCmd.exe}") String fastaCmdExe ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
         this.externalDatabaseService = externalDatabaseService;
         this.persisterHelper = persisterHelper;
+        this.fastaCmdExe = fastaCmdExe;
     }
 
     @Override
@@ -403,8 +407,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, Taxon taxon, boolean force ) throws IOException {
-        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, taxon, force,
-                null );
+        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, taxon, force );
     }
 
     /*
@@ -430,8 +433,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
          * Fill in sequences from BLAST databases.
          */
         int numSwitched = 0;
-        if ( fc == null )
-            fc = new SimpleFastaCmd();
+        if ( fc == null ) {
+            fc = new SimpleFastaCmd( fastaCmdExe );
+        }
 
         Collection<BioSequence> retrievedSequences = this
                 .searchBlastDbs( databaseNames, notFound, fc );
@@ -517,7 +521,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<String> notFound = accessionsToFetch.keySet();
 
         if ( fc == null )
-            fc = new SimpleFastaCmd();
+            fc = new SimpleFastaCmd( fastaCmdExe );
         Collection<BioSequence> retrievedSequences = this
                 .searchBlastDbs( databaseNames, notFound, fc );
 
@@ -548,7 +552,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public BioSequence processSingleAccession( String sequenceId, String[] databaseNames,
             boolean force ) {
-        BioSequence found = this.searchBlastDbs( databaseNames, sequenceId, new SimpleFastaCmd() );
+        BioSequence found = this.searchBlastDbs( databaseNames, sequenceId, new SimpleFastaCmd( fastaCmdExe ) );
         if ( found == null )
             return null;
         return this.createOrUpdateGenbankSequence( found, force );

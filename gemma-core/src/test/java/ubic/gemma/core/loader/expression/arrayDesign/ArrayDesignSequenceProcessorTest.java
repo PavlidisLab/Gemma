@@ -19,33 +19,34 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.config.Settings;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
  * @author pavlidis
  */
 public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
+
+    public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
+    public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
 
     private Collection<CompositeSequence> designElements = new HashSet<>();
     private InputStream seqFile;
@@ -123,14 +124,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     @Ignore("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
-        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe != null );
-
-        File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
-            return;
-        }
+        assumeThatExecutableExists( FASTA_CMD_EXE );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
@@ -157,8 +151,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
-        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
+        assumeThatExecutableExists( FASTA_CMD_EXE );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 

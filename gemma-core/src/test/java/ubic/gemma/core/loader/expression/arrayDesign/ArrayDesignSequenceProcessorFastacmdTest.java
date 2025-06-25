@@ -21,16 +21,19 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.core.config.Settings;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
  * Test exercises the fastacmd - requires executable.
@@ -38,16 +41,18 @@ import static org.junit.Assert.assertTrue;
  * @author pavlidis
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
+
+    public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
+    public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
+
     @Autowired
     ArrayDesignSequenceProcessingService app;
 
     @Test
     @Category(SlowTest.class)
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
+        assumeThatExecutableExists( FASTA_CMD_EXE );
 
-        if ( !this.fastaCmdExecutableExists() ) {
-            return;
-        }
         if ( ad == null ) {
             log.warn( "Array design configuration failed, skipping test" );
             return;
@@ -55,9 +60,12 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         ad = arrayDesignService.thaw( ad );
         try {
             // finally the real business. There are 243 sequences on the array.
+            SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
+            Path testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
+            fastaCmd.setBlastHome( testBlastDbPath );
             Collection<BioSequence> res = app
                     .processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            false );
+                            false, fastaCmd );
             if ( res != null ) {
                 if ( res.size() == 242 ) {
                     log.warn(
@@ -83,20 +91,5 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
                 throw e;
         }
 
-    }
-
-    private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_CONFIG_NAME );
-        if ( fastacmdExe == null ) {
-            log.warn( "No fastacmd executable is configured, skipping test" );
-            return false;
-        }
-
-        File fi = new File( fastacmdExe );
-        if ( !fi.exists() ) {
-            log.warn( fastacmdExe + " not executable, skipping test" );
-            return false;
-        }
-        return true;
     }
 }
