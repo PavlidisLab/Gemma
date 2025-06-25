@@ -29,12 +29,12 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.BufferedWriter;

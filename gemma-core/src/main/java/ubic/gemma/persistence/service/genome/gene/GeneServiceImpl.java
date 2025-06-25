@@ -26,10 +26,7 @@ import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -447,14 +444,16 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
+    public Collection<GeneValueObject> searchGenes( String query, @Nullable Long taxonId ) throws SearchException {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings ).getByResultObjectType( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService
+                .search( settings )
+                .getByResultObjectType( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

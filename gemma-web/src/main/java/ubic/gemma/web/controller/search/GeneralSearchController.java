@@ -34,10 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
@@ -122,13 +119,13 @@ public class GeneralSearchController {
         StopWatch fillVosTimer = new StopWatch();
         timer.start();
 
-        SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
-                .withHighlighter( new Highlighter( scopeFromVo( settingsValueObject ), request.getLocale() ) );
+        SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject );
+        Highlighter highlighter = new Highlighter( scopeFromVo( settingsValueObject ), request.getLocale() );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
         try {
-            searchResults = searchService.search( searchSettings );
+            searchResults = searchService.search( searchSettings, new SearchContext( highlighter, null ) );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCause( e ) ), e );
         }

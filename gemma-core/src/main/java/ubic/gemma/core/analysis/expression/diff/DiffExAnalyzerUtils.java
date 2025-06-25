@@ -6,6 +6,8 @@ import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
+import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -16,10 +18,7 @@ import ubic.gemma.model.expression.experiment.*;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -400,5 +399,135 @@ public class DiffExAnalyzerUtils {
 
     private static String formatFactorValue( FactorValue fv ) {
         return FactorValueUtils.getSummaryString( fv );
+    }
+
+    /**
+     * Build a design matrix for the given factors and samples.
+     * @param factors            factors
+     * @param samplesUsed        the samples used
+     * @param allowMissingValues whether to allow missing values, if set to true, the returned matrix may contain nulls
+     * @return the experimental design matrix
+     * @throws IllegalStateException if missing values are found and allowMissingValues is false
+     */
+    public static ObjectMatrix<BioMaterial, ExperimentalFactor, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, boolean allowMissingValues ) {
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
+        designMatrix.setColumnNames( factors );
+        designMatrix.setRowNames( samplesUsed );
+        populateDesignMatrix( designMatrix, factors, samplesUsed, BaselineSelection.getBaselineConditions( samplesUsed, factors ), allowMissingValues );
+        return designMatrix;
+    }
+
+    /**
+     * Build an R-friendly design matrix.
+     * <p>
+     * Rows and columns use names derived from {@link #nameForR(BioMaterial)}, {@link #nameForR(ExperimentalFactor)} and
+     * {@link #nameForR(FactorValue, boolean)} such that the resulting matrix can be passed to R for analysis. It is
+     * otherwise identical to {@link #buildDesignMatrix(List, List, boolean)}.
+     */
+    public static ObjectMatrix<String, String, Object> buildRDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, boolean allowMissingValues ) {
+        return buildRDesignMatrix( factors, samplesUsed, BaselineSelection.getBaselineConditions( samplesUsed, factors ), allowMissingValues );
+    }
+
+    /**
+     * A variant of {@link #buildRDesignMatrix(List, List, boolean)} that allows for reusing baselines for repeated
+     * calls. This is used for subset analysis.
+     */
+    public static ObjectMatrix<String, String, Object> buildRDesignMatrix( List<ExperimentalFactor> factors,
+            List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines, boolean allowMissingValues ) {
+        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
+        designMatrix.setColumnNames( factors.stream().map( DiffExAnalyzerUtils::nameForR ).collect( Collectors.toList() ) );
+        designMatrix.setRowNames( samplesUsed.stream().map( DiffExAnalyzerUtils::nameForR ).collect( Collectors.toList() ) );
+        populateDesignMatrix( designMatrix, factors, samplesUsed, baselines, allowMissingValues );
+        return designMatrix;
+    }
+
+    private static void populateDesignMatrix( ObjectMatrix<?, ?, Object> designMatrix, List<ExperimentalFactor> factors, List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines, boolean allowMissingValues ) {
+        for ( int i = 0; i < samplesUsed.size(); i++ ) {
+            BioMaterial samp = samplesUsed.get( i );
+            for ( int j = 0; j < factors.size(); j++ ) {
+                ExperimentalFactor factor = factors.get( j );
+                Object value = DiffExAnalyzerUtils.extractFactorValueForSample( samp, factor, baselines.get( factor ) );
+                // if the value is null, we have to skip this factor, actually, but we do it later.
+                if ( !allowMissingValues && value == null ) {
+                    // FIXME: This error could be worked around when we are doing SampleCoexpression. A legitimate
+                    //        reason is when we have a DEExclude factor and some samples lack any value for one of the
+                    //        other factors. We could detect this but it's kind of complicated, rare, and would only
+                    //        apply for that case.
+                    throw new IllegalStateException( samp + " does not have a value for " + factor + "." );
+                }
+                designMatrix.set( i, j, value );
+            }
+        }
+    }
+
+    /**
+     * Create a name for a sample suitable for R.
+     */
+    public static String nameForR( BioMaterial sample ) {
+        Assert.notNull( sample.getId(), "Sample must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.BIO_MATERIAL_RNAME_PREFIX + sample.getId();
+    }
+
+    /**
+     * Create a name for the factor that is suitable for R.
+     */
+    public static String nameForR( ExperimentalFactor experimentalFactor ) {
+        Assert.notNull( experimentalFactor.getId(), "Factor must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.FACTOR_RNAME_PREFIX + experimentalFactor.getId();
+    }
+
+    /**
+     * Create a name for the factor value that is suitable for R.
+     */
+    public static String nameForR( FactorValue fv, boolean isBaseline ) {
+        Assert.isTrue( fv.getExperimentalFactor().getType() == FactorType.CATEGORICAL || !isBaseline,
+                "Continuous factors cannot have a baseline." );
+        Assert.notNull( fv.getId(), "Factor value must have an ID to have a R-suitable name." );
+        return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? ExperimentalDesignUtils.FACTOR_VALUE_BASELINE_SUFFIX : "" );
+    }
+
+    /**
+     * Extract the "value" of a factor for a sample.
+     *
+     * @param sample   sample
+     * @param factor   factor to extract a value for
+     * @param baseline the baseline to use (iff the factor is categorical)
+     * @return a double for a continuous factor (or null if the measurement is not set), a string for continuous factor
+     * or null if the factor is not set for the given sample
+     * @throws IllegalStateException if there is more than one factor value assigned to a given sample
+     */
+    @Nullable
+    static Object extractFactorValueForSample( BioMaterial sample, ExperimentalFactor factor, @Nullable FactorValue baseline ) {
+        Assert.isTrue( factor.getType().equals( FactorType.CONTINUOUS ) || baseline != null,
+                "There is no baseline defined for " + factor + "." );
+        Set<FactorValue> factorValues = sample.getAllFactorValues().stream()
+                .filter( fv -> fv.getExperimentalFactor().equals( factor ) )
+                .collect( Collectors.toSet() );
+        if ( factorValues.isEmpty() ) {
+            return null;
+        } else if ( factorValues.size() > 1 ) {
+            // not unique
+            throw new IllegalStateException( sample + " had more than one value for " + factor + ": " + factorValues + "." );
+        } else {
+            FactorValue factorValue = factorValues.iterator().next();
+            return extractFactorValue( factorValue, factor.getType().equals( FactorType.CONTINUOUS ), baseline != null && baseline.equals( factorValue ) );
+        }
+    }
+
+    private static Object extractFactorValue( FactorValue factorValue, boolean isContinuous, boolean isBaseline ) {
+        if ( isContinuous ) {
+            if ( factorValue.getMeasurement() == null ) {
+                throw new IllegalStateException( "Measurement is null for continuous factor value " + factorValue + "." );
+            }
+            return MeasurementUtils.measurement2double( factorValue.getMeasurement() );
+        } else {
+            /*
+             * We always use a dummy value. It's not as human-readable but at least we're sure it is unique and
+             * R-compliant. (assuming the fv is persistent!)
+             */
+            return nameForR( factorValue, isBaseline );
+        }
     }
 }

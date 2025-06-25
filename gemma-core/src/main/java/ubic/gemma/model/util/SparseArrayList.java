@@ -1,9 +1,9 @@
-package ubic.gemma.core.datastructure;
+package ubic.gemma.model.util;
 
 import java.util.*;
 
-import static ubic.gemma.core.util.ListUtils.getSparseArrayElement;
-import static ubic.gemma.core.util.ListUtils.validateSparseArray;
+import static ubic.gemma.model.util.SparseListUtils.getSparseArrayElement;
+import static ubic.gemma.model.util.SparseListUtils.validateSparseArray;
 
 /**
  * A sparse array backed by an {@link ArrayList}.

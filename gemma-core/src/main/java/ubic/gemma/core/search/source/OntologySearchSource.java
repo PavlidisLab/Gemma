@@ -3,6 +3,7 @@ package ubic.gemma.core.search.source;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import lombok.var;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -78,7 +80,7 @@ public class OntologySearchSource implements SearchSource {
      * results.
      */
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( final SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( final SearchSettings settings, SearchContext context ) throws SearchException {
         Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>( settings );
 
         StopWatch watch = StopWatch.createStarted();
@@ -94,9 +96,9 @@ public class OntologySearchSource implements SearchSource {
          *
          * But if they put in Parkinson's disease we don't want to do two queries.
          */
-        Set<Set<String>> subclauses = extractTermsDnf( settings, true );
+        Set<Set<String>> subclauses = extractTermsDnf( settings, true, context.getIssueReporter() );
         for ( Set<String> subclause : subclauses ) {
-            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, context, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
                 log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
             }
@@ -119,11 +121,11 @@ public class OntologySearchSource implements SearchSource {
      * Parkinson's
      * AND neuron finds items tagged with both of those terms. The use of OR is handled by the caller.
      *
-     * @param settings search settings
-     * @param clause   a conjunctive clause
+     * @param settings      search settings
+     * @param clause        a conjunctive clause
      * @return SearchResults of Experiments
      */
-    private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, Set<String> clause, long timeoutMs ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, SearchContext context, Set<String> clause, long timeoutMs ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         // we would have to first deal with the separate queries, and then apply the logic.
@@ -134,7 +136,7 @@ public class OntologySearchSource implements SearchSource {
             // at this point, subclauses have already been parsed, so if they contain special characters, those must be
             // escaped, spaces must be quoted
             String subClauseQuery = LuceneQueryUtils.quote( subClause );
-            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), timeoutMs );
+            var subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), context, timeoutMs );
             if ( results.isEmpty() ) {
                 results.addAll( subqueryResults );
             } else {
@@ -162,7 +164,7 @@ public class OntologySearchSource implements SearchSource {
      *
      * @return collection of SearchResults (Experiments)
      */
-    private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings, long timeoutMs ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings, SearchContext context, long timeoutMs ) throws SearchException {
         // overall timer
         StopWatch watch = StopWatch.createStarted();
         long searchMs, childrenMs, retrievedMs;
@@ -175,7 +177,7 @@ public class OntologySearchSource implements SearchSource {
 
         // if the query is a term, find it directly
         searchMs = watch.getTime();
-        URI termUri = prepareTermUriQuery( settings );
+        URI termUri = prepareTermUriQuery( settings, context.getIssueReporter() );
         if ( termUri != null ) {
             OntologyResult resource;
             OntologyTerm r2;
@@ -253,7 +255,7 @@ public class OntologySearchSource implements SearchSource {
         childrenMs = watch.getTime() - childrenMs;
 
         retrievedMs = watch.getTime();
-        findExperimentsByOntologyResults( ontologyResults, settings, results );
+        findExperimentsByOntologyResults( ontologyResults, settings, context, results );
         retrievedMs = watch.getTime() - retrievedMs;
 
         String message = String.format( "Found %d datasets by %d characteristic URIs for '%s' in %d ms (ontology class search: %s ms, ontology inference: %s ms, retrieving matching datasets: %d ms)",
@@ -267,7 +269,7 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    private void findExperimentsByOntologyResults( Collection<OntologyResult> terms, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
+    private void findExperimentsByOntologyResults( Collection<OntologyResult> terms, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
         // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -294,10 +296,10 @@ public class OntologySearchSource implements SearchSource {
             }
         }
 
-        findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, results );
+        findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, context, results );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
+    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
         if ( isFilled( results, settings ) )
             return;
 
@@ -308,27 +310,27 @@ public class OntologySearchSource implements SearchSource {
 
         // collect all direct tags
         if ( hits.containsKey( ExpressionExperiment.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, context.getHighlighter(), results );
         }
 
         // collect experimental design-related terms
         if ( hits.containsKey( ExperimentalDesign.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
         }
 
         // collect samples-related terms
         if ( hits.containsKey( BioMaterial.class ) ) {
-            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, settings, results );
+            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
         }
     }
 
-    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchResultSet<ExpressionExperiment> results ) {
+    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, @Nullable Highlighter highlighter, SearchResultSet<ExpressionExperiment> results ) {
         for ( Map.Entry<String, Set<ExpressionExperiment>> entry : hits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, scoreMultiplier * uri2score.getOrDefault( uri, 0.0 ),
-                        settings.highlightTerm( uri, value, field ),
+                        highlightTerm( highlighter, uri, value, field ),
                         String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
             }
         }
@@ -392,6 +394,19 @@ public class OntologySearchSource implements SearchSource {
                 this.label = resource.getLocalName();
             }
             this.score = score;
+        }
+    }
+
+    /**
+     * Highlight a given ontology term.
+     * @return a highlight, or null if no provider is set or the provider returns null
+     */
+    @Nullable
+    public Map<String, String> highlightTerm( @Nullable Highlighter highlighter, String termUri, String termLabel, String field ) {
+        if ( highlighter instanceof OntologyHighlighter ) {
+            return ( ( OntologyHighlighter ) highlighter ).highlightTerm( termUri, termLabel, field );
+        } else {
+            return null;
         }
     }
 }

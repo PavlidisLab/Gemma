@@ -30,6 +30,7 @@ import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.profiling.StopWatchUtils;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,7 +38,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.*;

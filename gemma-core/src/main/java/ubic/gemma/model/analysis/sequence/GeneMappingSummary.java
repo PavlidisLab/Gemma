@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.analysis.sequence;
+package ubic.gemma.model.analysis.sequence;
 
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;

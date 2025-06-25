@@ -1,4 +1,4 @@
-package ubic.gemma.core.datastructure;
+package ubic.gemma.model.util;
 
 import org.junit.Test;
 

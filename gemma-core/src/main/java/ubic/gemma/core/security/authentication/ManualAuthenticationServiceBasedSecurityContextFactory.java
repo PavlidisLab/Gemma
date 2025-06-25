@@ -1,4 +1,4 @@
-package ubic.gemma.core.security;
+package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import lombok.Setter;

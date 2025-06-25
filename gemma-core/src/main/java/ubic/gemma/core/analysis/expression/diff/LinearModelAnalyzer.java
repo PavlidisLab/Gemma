@@ -295,7 +295,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
                 createBADMap( samplesUsed ) ); // enforce ordering
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
                 .getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
 
@@ -321,7 +321,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
                 .getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
         return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
@@ -472,7 +472,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
                 .getBaselineConditions( samplesInSubset, factors );
         dropIncompleteFactors( samplesInSubset, factors );
 
@@ -603,7 +603,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
                 List<String> interactionFactorNames = new ArrayList<>();
                 for ( ExperimentalFactor factor : interactionTerms ) {
-                    interactionFactorNames.add( ExperimentalDesignUtils.nameForR( factor ) );
+                    interactionFactorNames.add( DiffExAnalyzerUtils.nameForR( factor ) );
                 }
 
                 interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
@@ -671,7 +671,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Build our factor terms, with interactions handled specially
          */
         List<String[]> interactionFactorLists = new ArrayList<>();
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
+        ObjectMatrix<String, String, Object> designMatrix = DiffExAnalyzerUtils
                 .buildRDesignMatrix( factors, samplesUsed, baselineConditions, false );
 
         config.addBaseLineFactorValues( baselineConditions );
@@ -878,10 +878,10 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
     private void dropIncompleteFactors( List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors ) {
         factors.removeIf( f -> {
-            if ( ExperimentalDesignUtils.isComplete( f, samplesUsed ) ) {
+            if ( isComplete( f, samplesUsed ) ) {
                 return false; // keep
             }
-            String samplesWithMissingValues = ExperimentalDesignUtils.getSampleToFactorValuesMap( f, samplesUsed )
+            String samplesWithMissingValues = getSampleToFactorValuesMap( f, samplesUsed )
                     .entrySet().stream().filter( e -> e.getValue().isEmpty() )
                     .map( Map.Entry::getKey )
                     .map( BioMaterial::getName )
@@ -890,6 +890,35 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             LinearModelAnalyzer.log.warn( "Dropping " + f + " due to missing values for samples: " + samplesWithMissingValues + "." );
             return true;
         } );
+    }
+
+    /**
+     * Check if a factor has missing values (samples that lack an assigned value)
+     * @param samplesUsed the samples used
+     * @param factor      the factor
+     * @return false if there are any missing values.
+     */
+    private boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed ) {
+        Assert.isTrue( samplesUsed.size() > 1, "At least one sample must be supplied." );
+        for ( BioMaterial samp : samplesUsed ) {
+            if ( samp.getAllFactorValues().stream()
+                    .noneMatch( fv -> fv.getExperimentalFactor().equals( factor ) ) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Create a sample to factor value mapping.
+     * <p>
+     * Under normal circumstances, there should be only one factor value per sample.
+     */
+    private Map<BioMaterial, Set<FactorValue>> getSampleToFactorValuesMap( ExperimentalFactor factor, Collection<BioMaterial> samplesUsed ) {
+        return samplesUsed.stream()
+                .collect( Collectors.toMap( bm -> bm, bm -> bm.getAllFactorValues().stream()
+                        .filter( fv -> fv.getExperimentalFactor().equals( factor ) )
+                        .collect( Collectors.toSet() ) ) );
     }
 
     /**
@@ -1031,7 +1060,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     private Map<String, Collection<ExperimentalFactor>> getRNames( List<ExperimentalFactor> factors ) {
         final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<>();
         for ( ExperimentalFactor experimentalFactor : factors ) {
-            label2Factors.computeIfAbsent( ExperimentalDesignUtils.nameForR( experimentalFactor ), k -> new HashSet<>() )
+            label2Factors.computeIfAbsent( DiffExAnalyzerUtils.nameForR( experimentalFactor ), k -> new HashSet<>() )
                     .add( experimentalFactor );
         }
         return label2Factors;
@@ -1250,8 +1279,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
                 continue;
             }
-            String factorName = ExperimentalDesignUtils.nameForR( ef );
-            String baselineFactorValue = ExperimentalDesignUtils.nameForR( baselineConditions.get( ef ), true );
+            String factorName = DiffExAnalyzerUtils.nameForR( ef );
+            String baselineFactorValue = DiffExAnalyzerUtils.nameForR( baselineConditions.get( ef ), true );
 
             /*
              * If this is a subset, it is possible the baseline chosen is not eligible for the subset.

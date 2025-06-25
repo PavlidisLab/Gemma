@@ -20,7 +20,7 @@ package ubic.gemma.persistence.service.expression.designElement;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

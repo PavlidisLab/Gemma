@@ -56,8 +56,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.buildRDesignMatrix;
-import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.getBaselineConditions;
+import static ubic.gemma.core.analysis.expression.diff.BaselineSelection.getBaselineConditions;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.buildRDesignMatrix;
 import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToDoubleMatrix;
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
 

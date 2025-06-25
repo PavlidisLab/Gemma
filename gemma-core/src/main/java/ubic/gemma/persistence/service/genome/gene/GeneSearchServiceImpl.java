@@ -360,7 +360,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult<Gene>> geneSearchResults = searchService.search( settings.withMode( SearchSettings.SearchMode.FAST ) ).getByResultObjectType( Gene.class );
+            List<SearchResult<Gene>> geneSearchResults = searchService
+                    .search( settings.withMode( SearchSettings.SearchMode.FAST ) )
+                    .getByResultObjectType( Gene.class );
 
             if ( geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.

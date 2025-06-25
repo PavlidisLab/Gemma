@@ -8,7 +8,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.util.Version;
 import org.hibernate.SessionFactory;
@@ -18,9 +17,7 @@ import org.hibernate.search.Search;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.FieldAwareSearchSource;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
@@ -37,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.parseSafely;
 
 /**
@@ -147,57 +145,60 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, ArrayDesign.class, PLATFORM_FIELDS );
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, ArrayDesign.class, PLATFORM_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, BibliographicReference.class, PUBLICATION_FIELDS );
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, BibliographicReference.class, PUBLICATION_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, BioSequence.class, BIO_SEQUENCE_FIELDS );
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, BioSequence.class, BIO_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, ExpressionExperiment.class, DATASET_FIELDS );
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, ExpressionExperiment.class, DATASET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, Gene.class, GENE_FIELDS );
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, Gene.class, GENE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
-        return searchFor( settings, GeneSet.class, GENE_SET_FIELDS );
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchFor( settings, context, GeneSet.class, GENE_SET_FIELDS );
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws SearchException {
+    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, SearchContext context, Class<T> clazz, String... fields ) throws SearchException {
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
             Analyzer analyzer = analyzers.get( clazz );
             QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
-            Query query = parseSafely( settings, queryParser );
-            Highlighter highlighter;
+            Query query = parseSafely( settings, queryParser, context.getIssueReporter() );
+            LuceneHighlighter luceneHighlighter;
+            org.apache.lucene.search.highlight.Highlighter highlighter;
             String[] projection;
-            if ( settings.getHighlighter() instanceof LuceneHighlighter ) {
-                highlighter = new Highlighter( ( ( LuceneHighlighter ) settings.getHighlighter() ).getFormatter(), new QueryScorer( query ) );
+            if ( context.getHighlighter() instanceof LuceneHighlighter ) {
+                luceneHighlighter = ( LuceneHighlighter ) context.getHighlighter();
+                highlighter = new org.apache.lucene.search.highlight.Highlighter( luceneHighlighter.getFormatter(), new QueryScorer( query ) );
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
             } else {
+                luceneHighlighter = null;
                 highlighter = null;
                 projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
             }
@@ -212,7 +213,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             try {
                 DoubleSummaryStatistics stats = results.stream().mapToDouble( r -> ( Float ) r[1] ).summaryStatistics();
                 return results.stream()
-                        .map( r -> searchResultFromRow( r, settings, highlighter, analyzer, clazz, stats ) )
+                        .map( r -> searchResultFromRow( r, settings, luceneHighlighter, highlighter, analyzer, clazz, stats ) )
                         .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
             } finally {
@@ -226,7 +227,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Nullable
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
+    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable LuceneHighlighter luceneHighlighter, @Nullable org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
         double score;
         if ( stats.getMax() == stats.getMin() ) {
             score = FULL_TEXT_SCORE_PENALTY;
@@ -240,9 +241,14 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
                 // this happens if an entity is still in the cache, but was removed from the database
                 return null;
             }
-            return SearchResult.from( clazz, entity, score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, entity, score, luceneHighlighter != null ? highlightDocument( luceneHighlighter, ( Document ) row[2], requireNonNull( highlighter ), analyzer ) : null, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], score, highlighter != null ? settings.highlightDocument( ( Document ) row[2], highlighter, analyzer ) : null, "hibernateSearch" );
+            return SearchResult.from( clazz, ( Long ) row[0], score, luceneHighlighter != null ? highlightDocument( luceneHighlighter, ( Document ) row[2], requireNonNull( highlighter ), analyzer ) : null, "hibernateSearch" );
         }
+    }
+
+    @Nullable
+    public static Map<String, String> highlightDocument( LuceneHighlighter highlighter, Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
+        return highlighter.highlightDocument( document, luceneHighlighter, analyzer );
     }
 }

@@ -329,24 +329,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         SearchService.SearchResultMap map = mock( SearchService.SearchResultMap.class );
         when( map.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( results );
-        when( searchService.search( any() ) ).thenReturn( map );
+        when( searchService.search( any(), any() ) ).thenReturn( map );
         when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
         assertThat( target( "/datasets" ).queryParam( "query", "cerebellum" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
-        verify( searchService, times( 2 ) ).search( captor.capture() );
-        assertThat( captor.getAllValues() )
-                .hasSize( 2 )
-                .satisfiesExactly( s -> {
-                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
-                    assertThat( s.isFillResults() ).isFalse();
-                    assertThat( s.getHighlighter() ).isNull();
-                }, s -> {
-                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
-                    assertThat( s.isFillResults() ).isFalse();
-                    assertThat( s.getHighlighter() ).isNotNull();
-                } );
+        verify( searchService ).search( argThat( arg -> arg.getQuery().equals( "cerebellum" ) ), argThat( ctx -> ctx.getHighlighter() == null ) );
+        verify( searchService ).search( argThat( arg -> arg.getQuery().equals( "cerebellum" ) ), argThat( ctx -> ctx.getHighlighter() != null ) );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), null );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
@@ -362,23 +352,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         SearchService.SearchResultMap map = mock( SearchService.SearchResultMap.class );
         when( map.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( results );
-        when( searchService.search( any() ) ).thenReturn( map );
+        when( searchService.search( any(), any() ) ).thenReturn( map );
         when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
         assertThat( target( "/datasets" ).queryParam( "query", "cerebellum" ).queryParam( "sort", "-lastUpdated" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
-        verify( searchService, times( 2 ) ).search( captor.capture() );
+        verify( searchService, times( 2 ) ).search( captor.capture(), any() );
         assertThat( captor.getAllValues() )
                 .hasSize( 2 )
                 .satisfiesExactly( s -> {
                     assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
                     assertThat( s.isFillResults() ).isFalse();
-                    assertThat( s.getHighlighter() ).isNull();
                 }, s -> {
                     assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
                     assertThat( s.isFillResults() ).isFalse();
-                    assertThat( s.getHighlighter() ).isNotNull();
                 } );
         verify( expressionExperimentService ).getSort( "lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );

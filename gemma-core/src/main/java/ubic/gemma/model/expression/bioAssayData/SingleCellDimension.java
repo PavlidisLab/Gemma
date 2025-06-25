@@ -6,12 +6,13 @@ import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.util.SparseListUtils;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
 import java.util.*;
 
-import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
+import static ubic.gemma.model.util.SparseListUtils.getSparseRangeArrayElement;
 
 /**
  * Represents a single-cell dimension, holding shared information for a set of {@link SingleCellExpressionDataVector}.
@@ -86,7 +87,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * Obtain the {@link BioAssay} for a given cell position.
      *
      * @param cellIndex the cell position in {@link #cellIds}
-     * @throws IllegalArgumentException  if the sparse range array is invalid as per {@link ubic.gemma.core.util.ListUtils#getSparseRangeArrayElement(List, int[], int, int)}
+     * @throws IllegalArgumentException  if the sparse range array is invalid as per {@link SparseListUtils#getSparseRangeArrayElement(List, int[], int, int)}
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {

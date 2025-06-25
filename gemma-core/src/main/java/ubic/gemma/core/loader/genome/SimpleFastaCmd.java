@@ -21,8 +21,8 @@ package ubic.gemma.core.loader.genome;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ShellUtils;
 
 import javax.annotation.Nullable;
 import java.io.BufferedWriter;

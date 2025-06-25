@@ -169,7 +169,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
         SearchService.SearchResultMap mockedSrMap = mock( SearchService.SearchResultMap.class );
         when( mockedSrMap.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "test object" ) ) );
-        when( searchService.search( any( SearchSettings.class ) ) )
+        when( searchService.search( any( SearchSettings.class ), any() ) )
                 .thenReturn( mockedSrMap );
         when( taxonService.getFilter( eq( "commonName" ), eq( String.class ), eq( Filter.Operator.eq ), any( String.class ) ) )
                 .thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
@@ -195,7 +195,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 10000L );
-        verify( searchService ).search( any( SearchSettings.class ) );
+        verify( searchService ).search( any( SearchSettings.class ), any() );
         verify( taxonService ).getFilter( "commonName", String.class, Filter.Operator.eq, "human" );
         verify( taxonService ).getFilter( "scientificName", String.class, Filter.Operator.eq, "human" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.eq, "1" );

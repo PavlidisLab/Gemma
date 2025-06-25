@@ -1,6 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.core.datastructure.SparseRangeArrayList;
+import ubic.gemma.model.util.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;

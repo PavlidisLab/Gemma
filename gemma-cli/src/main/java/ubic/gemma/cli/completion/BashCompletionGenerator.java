@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.util.ShellUtils.quoteIfNecessary;
+import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
 public class BashCompletionGenerator extends AbstractCompletionGenerator {
 

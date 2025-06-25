@@ -1,7 +1,6 @@
 package ubic.gemma.model.common.search;
 
 import org.junit.Test;
-import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +20,7 @@ public class SearchSettingsTest {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setQuery( "http://example.ca/" );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( prepareTermUriQuery( searchSettings ) ).isNotNull().hasToString( "http://example.ca/" );
+        assertThat( prepareTermUriQuery( searchSettings, null ) ).isNotNull().hasToString( "http://example.ca/" );
     }
 
     @Test
@@ -29,13 +28,6 @@ public class SearchSettingsTest {
         SearchSettings searchSettings = SearchSettings.builder().build();
         searchSettings.setQuery( " http://example.ca/ " );
         assertThat( searchSettings.getQuery() ).isEqualTo( " http://example.ca/ " );
-        assertThat( prepareTermUriQuery( searchSettings ) ).isNotNull().hasToString( "http://example.ca/" );
-    }
-
-    @Test
-    public void testSettingsWithDifferentHighlighterAreEqual() {
-        assertThat( new DefaultHighlighter() ).isNotEqualTo( new DefaultHighlighter() );
-        assertThat( SearchSettings.builder().query( "test" ).highlighter( new DefaultHighlighter() ).build() )
-                .isEqualTo( SearchSettings.builder().query( "test" ).highlighter( new DefaultHighlighter() ).build() );
+        assertThat( prepareTermUriQuery( searchSettings, null ) ).isNotNull().hasToString( "http://example.ca/" );
     }
 }

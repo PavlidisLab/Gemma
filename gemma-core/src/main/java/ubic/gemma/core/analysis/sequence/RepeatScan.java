@@ -24,9 +24,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.loader.genome.FastaParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ShellUtils;
 
 import java.io.BufferedReader;
 import java.io.File;

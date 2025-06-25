@@ -3,7 +3,7 @@ package ubic.gemma.core.datastructure.matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.datastructure.SparseRangeArrayList;
+import ubic.gemma.model.util.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;

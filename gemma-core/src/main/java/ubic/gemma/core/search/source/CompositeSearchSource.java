@@ -3,15 +3,12 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultSet;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -79,70 +76,70 @@ public class CompositeSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchArrayDesign, ArrayDesign.class );
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchArrayDesign( settings1, context ), ArrayDesign.class );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchBibliographicReference, BibliographicReference.class );
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBibliographicReference( settings1, context ), BibliographicReference.class );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchExperimentSet, ExpressionExperimentSet.class );
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchExperimentSet( settings1, context ), ExpressionExperimentSet.class );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchBioSequence, BioSequence.class );
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBioSequence( settings1, context ), BioSequence.class );
     }
 
     @Override
     @Deprecated
-    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, SearchContext context, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
-            results.addAll( source.searchBioSequenceAndGene( settings, previousGeneSearchResults ) );
+            results.addAll( source.searchBioSequenceAndGene( settings, context, previousGeneSearchResults ) );
         }
         return results;
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchCompositeSequence, CompositeSequence.class );
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchCompositeSequence( settings1, context ), CompositeSequence.class );
     }
 
     @Override
     @Deprecated
-    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings, SearchContext context ) throws SearchException {
         // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
-            results.addAll( source.searchCompositeSequenceAndGene( settings ) );
+            results.addAll( source.searchCompositeSequenceAndGene( settings, context ) );
         }
         return results;
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchExpressionExperiment, ExpressionExperiment.class );
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchExpressionExperiment( settings1, context ), ExpressionExperiment.class );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchGene, Gene.class );
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchGene( settings1, context ), Gene.class );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchGeneSet, GeneSet.class );
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchGeneSet( settings1, context ), GeneSet.class );
     }
 
     @Override
-    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings ) throws SearchException {
-        return searchWith( settings, SearchSource::searchBlacklistedEntities, BlacklistedEntity.class );
+    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings, SearchContext context ) throws SearchException {
+        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBlacklistedEntities( settings1, context ), BlacklistedEntity.class );
     }
 
     private interface SearchFunction<T extends Identifiable> {

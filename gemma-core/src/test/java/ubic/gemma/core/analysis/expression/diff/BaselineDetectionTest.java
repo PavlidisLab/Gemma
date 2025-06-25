@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -105,7 +104,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE18162() {
 
-        Map<ExperimentalFactor, FactorValue> baselineLevels = ExperimentalDesignUtils
+        Map<ExperimentalFactor, FactorValue> baselineLevels = BaselineSelection
                 .getBaselineLevels( ee.getExperimentalDesign().getExperimentalFactors() );
 
         assertEquals( 2, baselineLevels.size() ); // the batch DOES get a baseline. IF we change that then we change

@@ -1,4 +1,4 @@
-package ubic.gemma.util;
+package ubic.gemma.core.util;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
