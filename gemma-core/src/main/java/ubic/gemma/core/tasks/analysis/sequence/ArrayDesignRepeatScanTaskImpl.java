@@ -1,6 +1,7 @@
 package ubic.gemma.core.tasks.analysis.sequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
@@ -26,6 +27,9 @@ public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<ArrayDesignRepea
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Value("${repeatMasker.exe}")
+    private String repeatMaskerExe;
+
     @Override
     public TaskResult call() {
 
@@ -34,7 +38,7 @@ public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<ArrayDesignRepea
         ad = arrayDesignService.thaw( ad );
 
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( ad );
-        RepeatScan scanner = new RepeatScan();
+        RepeatScan scanner = new RepeatScan( repeatMaskerExe );
         scanner.repeatScan( sequences );
 
         return newTaskResult( null );

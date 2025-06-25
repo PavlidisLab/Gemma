@@ -44,7 +44,7 @@ public class RepeatScanTest {
         Taxon taxon = Taxon.Factory.newInstance( "human" );
         BioSequence b = BioSequence.Factory.newInstance( "test", taxon );
         b.setSequence( "AAAaaaaAAAAaaa" );
-        RepeatScan r = new RepeatScan();
+        RepeatScan r = new RepeatScan( repeatMaskerExe );
         r.repeatScan( Collections.singleton( b ) );
     }
 
@@ -53,7 +53,7 @@ public class RepeatScanTest {
         Taxon taxon = Taxon.Factory.newInstance( "human" );
         BioSequence b = BioSequence.Factory.newInstance( "test", taxon );
         b.setSequence( "AAAaaaaAAAAaaa" );
-        RepeatScan r = new RepeatScan();
+        RepeatScan r = new RepeatScan( repeatMaskerExe );
         double d = r.computeFractionMasked( b );
         assertEquals( 0.5, d, 0.001 );
     }

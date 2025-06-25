@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
@@ -47,6 +48,9 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     @Nullable
     private Path inputFileName;
+
+    @Value("${repeatMasker.exe}")
+    private String repeatMaskerExe;
 
     @Override
     protected void buildOptions( Options options ) {
@@ -136,7 +140,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( thawed );
 
-        RepeatScan scanner = new RepeatScan();
+        RepeatScan scanner = new RepeatScan( repeatMaskerExe );
         Collection<BioSequence> altered;
         if ( this.inputFileName != null ) {
             altered = scanner.processRepeatMaskerOutput( sequences, inputFileName );

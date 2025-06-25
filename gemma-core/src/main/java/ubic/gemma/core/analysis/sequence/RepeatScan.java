@@ -22,7 +22,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.FastaParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.genome.Taxon;
@@ -49,10 +48,13 @@ import java.util.concurrent.TimeUnit;
 @CommonsLog
 public class RepeatScan {
 
-    private static final String REPEAT_MASKER_CONFIG_PARAM = "repeatMasker.exe";
-    private static final String REPEAT_MASKER = Settings.getString( RepeatScan.REPEAT_MASKER_CONFIG_PARAM );
-
     private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
+
+    private final String repeatMaskerExe;
+
+    public RepeatScan( String repeatMaskerExe ) {
+        this.repeatMaskerExe = repeatMaskerExe;
+    }
 
     /**
      * @param sequences sequences
@@ -163,11 +165,7 @@ public class RepeatScan {
      * @return
      */
     private Path execRepeatMasker( Path querySequenceFile, Taxon taxon ) throws IOException {
-        if ( RepeatScan.REPEAT_MASKER == null ) {
-            throw new IllegalStateException( "RepeatMasker executable could not be found. Make sure you correctly set "
-                    + RepeatScan.REPEAT_MASKER_CONFIG_PARAM );
-        }
-        String[] cmd = new String[] { RepeatScan.REPEAT_MASKER, "-parallel", "8", "-xsmall",
+        String[] cmd = new String[] { repeatMaskerExe, "-parallel", "8", "-xsmall",
                 "-species", taxon.getCommonName(),
                 // FIXME use -dir option to put output where we want; see https://github.com/PavlidisLab/Gemma/issues/53;
                 querySequenceFile.toString() };
