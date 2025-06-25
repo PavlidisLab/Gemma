@@ -1,6 +1,6 @@
 package ubic.gemma.core.security.audit;
 
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -18,7 +18,7 @@ public class AuditLogger {
     /**
      * Date format consistent with the logging.
      */
-    private static final DateFormat dateFormat = new ISO8601DateFormat();
+    private static final DateFormat dateFormat = new StdDateFormat();
 
     /**
      * Log a given audit event.
