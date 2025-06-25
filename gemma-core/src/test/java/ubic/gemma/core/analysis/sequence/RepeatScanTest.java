@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.Taxon;
@@ -37,6 +38,7 @@ public class RepeatScanTest {
     private static final String repeatMaskerExe = Settings.getString( "repeatMasker.exe" );
 
     @Test
+    @Ignore("RepeatMasker appears to be broken, see https://github.com/PavlidisLab/Gemma/issues/53")
     public void testRepeatScan() {
         assumeThatExecutableExists( repeatMaskerExe );
         Taxon taxon = Taxon.Factory.newInstance( "human" );
