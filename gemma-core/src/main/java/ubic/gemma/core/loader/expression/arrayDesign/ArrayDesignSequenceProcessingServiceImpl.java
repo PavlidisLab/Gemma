@@ -44,7 +44,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
@@ -407,7 +406,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, Taxon taxon, boolean force ) throws IOException {
-        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, taxon, force );
+        return this.processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, taxon, force, new SimpleFastaCmd( fastaCmdExe ) );
     }
 
     /*
@@ -433,9 +432,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
          * Fill in sequences from BLAST databases.
          */
         int numSwitched = 0;
-        if ( fc == null ) {
-            fc = new SimpleFastaCmd( fastaCmdExe );
-        }
 
         Collection<BioSequence> retrievedSequences = this
                 .searchBlastDbs( databaseNames, notFound, fc );
@@ -464,7 +460,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 accession = accession.replaceFirst( "\\.\\d+$", "" );
                 notFound.add( accession );
             }
-            assert notFound.size() > 0;
+            assert !notFound.isEmpty();
             /*
              * See if they're already in Gemma. This is good for sequences that are not in genbank but have been loaded
              * previously.
@@ -497,31 +493,28 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             boolean force ) {
-        return this.processArrayDesign( arrayDesign, databaseNames, force, null );
+        return this.processArrayDesign( arrayDesign, databaseNames, force, new SimpleFastaCmd( fastaCmdExe ) );
     }
 
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            boolean force, @Nullable FastaCmd fc ) {
+            boolean force, FastaCmd fc ) {
 
         Map<String, BioSequence> accessionsToFetch = this.initializeFetchList( arrayDesign, force );
 
-        if ( accessionsToFetch.size() == 0 ) {
+        if ( accessionsToFetch.isEmpty() ) {
             ArrayDesignSequenceProcessingServiceImpl.log.info( "No accessions to fetch, no processing will be done" );
             return null;
         }
 
         Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign );
         // not taxon found
-        if ( taxaOnArray.size() == 0 ) {
-            throw new IllegalArgumentException(
-                    taxaOnArray.size() + " taxon found for " + arrayDesign + "please specify which taxon to run" );
+        if ( taxaOnArray.isEmpty() ) {
+            throw new IllegalArgumentException( "No taxon found for " + arrayDesign + ", please specify which taxon to run." );
         }
 
         Collection<String> notFound = accessionsToFetch.keySet();
 
-        if ( fc == null )
-            fc = new SimpleFastaCmd( fastaCmdExe );
         Collection<BioSequence> retrievedSequences = this
                 .searchBlastDbs( databaseNames, notFound, fc );
 
@@ -621,7 +614,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     private void checkForCompositeSequences( ArrayDesign arrayDesign ) {
-        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
+        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().isEmpty();
 
         if ( wasOriginallyLackingCompositeSequences ) {
             throw new IllegalArgumentException(

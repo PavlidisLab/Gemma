@@ -23,10 +23,12 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -34,6 +36,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -83,7 +87,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         parser.parse( designElementStream );
         designElements = parser.getResults();
         for ( CompositeSequence de : designElements ) {
-            assertTrue( de.getBiologicalCharacteristic() != null );
+            assertNotNull( de.getBiologicalCharacteristic() );
         }
     }
 
@@ -112,7 +116,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                     fail( "Shouldn't have found a biological characteristic for this sequence" );
                 }
             } else {
-                assertTrue( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() != null );
+                assertNotNull( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() );
             }
 
         }
@@ -126,6 +130,10 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );
 
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
+        Path testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
+        fastaCmd.setBlastHome( testBlastDbPath );
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
         @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
@@ -138,7 +146,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" ) ) {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, f, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            taxon, true );
+                            taxon, true, fastaCmd );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
@@ -153,6 +161,10 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadWithSequences() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );
 
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
+        Path testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
+        fastaCmd.setBlastHome( testBlastDbPath );
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
         @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
@@ -163,7 +175,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         try {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            false );
+                            false, fastaCmd );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
