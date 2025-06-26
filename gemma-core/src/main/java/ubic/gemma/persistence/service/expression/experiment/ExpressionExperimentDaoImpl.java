@@ -85,6 +85,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 import static ubic.gemma.model.util.SparseListUtils.validateSparseRangeArray;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -3024,6 +3025,7 @@ public class ExpressionExperimentDaoImpl
             Iterator<int[]> it = stream.iterator();
             StopWatch timer = StopWatch.createStarted();
             int done = 0;
+            long bytesRetrieved = 0;
             while ( it.hasNext() ) {
                 int[] row = it.next();
                 // the first sample starts at zero, the use the end as the start of the next one
@@ -3033,8 +3035,13 @@ public class ExpressionExperimentDaoImpl
                     nnzs[i] += end - start;
                     start = end;
                 }
-                if ( ++done % 1000 == 0 ) {
-                    log.info( String.format( "Processed %d/%d vectors at %.2f vectors/sec", done, numVecs, 1000.0 * done / timer.getTime() ) );
+                bytesRetrieved += 4L * row.length;
+                if ( ++done % 100 == 0 ) {
+                    log.info( String.format( "Retrieving data indices of %s in %s [%d/%d] @ %.2f vectors/sec and @ ~%s",
+                            qt.getName(), ee.getShortName(),
+                            done, numVecs,
+                            1000.0 * done / timer.getTime(),
+                            bytePerSecondToDisplaySize( 1000.0 * bytesRetrieved / timer.getTime() ) ) );
                 }
             }
             Map<BioAssay, Long> result = new HashMap<>();

@@ -4,7 +4,9 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
@@ -12,7 +14,10 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
  * Utilities for working with {@link SingleCellExpressionDataVector}.
@@ -236,7 +241,14 @@ public class SingleCellExpressionDataVectorUtils {
         return arr;
     }
 
-    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, int reportFrequency, long numVecs ) {
+    /**
+     * Create a consumer for a {@link java.util.stream.Stream} that will report progress of retrieving single-cell
+     * vectors.
+     * <p>
+     * The logging is similar to that of {@link ubic.gemma.core.util.ProgressReporter}.
+     */
+    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( ExpressionExperiment ee, QuantitationType qt, String logCategory, int reportFrequency, long numVecs ) {
+        String what = "single-cell vectors of " + qt.getName() + " in " + ee.getShortName();
         if ( reportFrequency <= 0 ) {
             return x -> { /* no-op */ };
         }
@@ -244,14 +256,31 @@ public class SingleCellExpressionDataVectorUtils {
         return new Consumer<SingleCellExpressionDataVector>() {
             final StopWatch timer = StopWatch.createStarted();
             final AtomicInteger i = new AtomicInteger();
+            final AtomicLong bytesRetrieved = new AtomicLong();
 
             @Override
             public void accept( SingleCellExpressionDataVector x ) {
                 int done = i.incrementAndGet();
+                long br = bytesRetrieved.addAndGet( estimateSizeInBytes( x ) );
                 if ( done % reportFrequency == 0 ) {
-                    log.info( String.format( "Processed %d/%d vectors (%f.2 vectors/sec)", done, numVecs, 1000.0 * done / timer.getTime() ) );
+                    log.info( String.format( "Retrieving %s [%d/%s] @ %f.2 vectors/sec and @ ~%s",
+                            what,
+                            done, numVecs >= 0 ? numVecs : "?",
+                            1000.0 * done / timer.getTime(),
+                            bytePerSecondToDisplaySize( 1000.0 * br / timer.getTime() ) ) );
                 }
             }
         };
+    }
+
+    private static long estimateSizeInBytes( SingleCellExpressionDataVector x ) {
+        long s = 0;
+        if ( x.getDataIndices() != null ) {
+            s += 8L * x.getDataIndices().length;
+        }
+        if ( x.getData() != null ) {
+            s += x.getData().length;
+        }
+        return s;
     }
 }

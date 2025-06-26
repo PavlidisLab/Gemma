@@ -549,11 +549,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
             try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize ) ) {
-                return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), cs2gene, writer );
+                return matrixWriter.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), cs2gene, writer );
             }
         } else {
             Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
-            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, vectors.size() ) ), cs2gene, writer );
+            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 10, vectors.size() ) ), cs2gene, writer );
         }
     }
 
@@ -614,7 +614,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     if ( scaleType != null && qt.getScale() != scaleType ) {
                         log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
                     }
-                    return writer.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
+                    return writer.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 10, numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
                 }
             } else {
                 SingleCellExpressionDataMatrix<?> matrix = helperService.getSingleCellMatrix( ee, samples, qt, cs2gene );
