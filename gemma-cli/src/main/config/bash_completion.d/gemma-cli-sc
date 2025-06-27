@@ -880,7 +880,7 @@ function __gemma_cli_sc_complete() {
         if ! [[ "$current_option" =~ (--array|--batch-format|--batch-output-file|--batch-report-frequency|--file|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --batch-format --batch-output-file --batch-report-frequency --file --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--batch-output-file|--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -888,7 +888,7 @@ function __gemma_cli_sc_complete() {
         if ! [[ "$current_option" =~ (--array|--batch-format|--batch-output-file|--batch-report-frequency|--file|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --batch-format --batch-output-file --batch-report-frequency --file --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--batch-output-file|--file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
