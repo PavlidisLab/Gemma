@@ -625,7 +625,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return writer.write( matrix, cs2gene, destDir );
             }
         } catch ( Exception e ) {
-            PathUtils.deleteDirectory( destDir );
+            if ( Files.exists( destDir ) ) {
+                PathUtils.deleteDirectory( destDir );
+            }
             throw e;
         }
     }
