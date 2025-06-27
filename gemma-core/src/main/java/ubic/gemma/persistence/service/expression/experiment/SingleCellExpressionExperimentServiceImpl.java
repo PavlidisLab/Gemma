@@ -211,34 +211,34 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
-            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
-            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession )
                     .map( createSlicer( samples ) );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
                 .map( createSlicer( samples ) );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession )
                 .map( createSlicer( samples ) );
     }
 
@@ -262,8 +262,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
-        return expressionExperimentDao.getNumberOfNonZeroesBySample( ee, qt, fetchSize );
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported ) {
+        return expressionExperimentDao.getNumberOfNonZeroesBySample( ee, qt, fetchSize, useCursorFetchIfSupported );
     }
 
     @Override
@@ -433,7 +433,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 throw new IllegalStateException( "There is not single-cell dimension associated to " + preferredQt + "." );
             }
             long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
-            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false, false ) ) {
                 log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
                 applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( ee, preferredQt.get(), SingleCellExpressionExperimentServiceImpl.class.getName(), 100, numVecs ) ) );
             }

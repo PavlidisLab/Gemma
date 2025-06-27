@@ -5,6 +5,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.config.Settings;
 
@@ -31,5 +34,21 @@ public class HibernateUtils {
                     classMetadata.getEntityName(), BATCH_FETCH_SIZE_SETTING ) );
             return Settings.getInt( BATCH_FETCH_SIZE_SETTING, -1 );
         }
+    }
+
+    /**
+     * Determine if a Hibernate type is eagerly retrieved.
+     */
+    public static boolean isEager( Type type, SessionFactory sessionFactory ) {
+        if ( type.isEntityType() ) {
+            Field field = ReflectionUtils.findField( EntityType.class, "eager" );
+            ReflectionUtils.makeAccessible( field );
+            return ( boolean ) ReflectionUtils.getField( field, type );
+        }
+        if ( type.isCollectionType() ) {
+            return !sessionFactory.getCollectionMetadata( ( ( CollectionType ) type ).getRole() ).isLazy();
+        }
+        log.warn( "Cannot tell if " + type + " is eagerly fetched, will assume it is." );
+        return true;
     }
 }

@@ -69,7 +69,6 @@
 				<!-- defaults for fetching/inserting -->
 				<prop key="hibernate.max_fetch_depth">3</prop>
 				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_batch_fetch_size}</prop>
-				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
 				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
 				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
 				<prop key="hibernate.order_inserts">true</prop>

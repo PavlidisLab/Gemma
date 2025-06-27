@@ -701,15 +701,16 @@ public interface ExpressionExperimentDao
     /**
      * Obtain a stream over the vectors for a given QT.
      * <p>
-     * @param fetchSize        number of vectors to fetch at once
-     * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
-     *                         that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
-     *                         object.
-     * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, int)
+     *
+     * @param fetchSize                 number of vectors to fetch at once
+     * @param createNewSession          create a new session held by the stream. If you set this to true, make absolutely sure
+     *                                  that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     *                                  object.
+     * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, Class, int, boolean, boolean)
      */
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession );
 
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
 
     SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement );
 
@@ -728,7 +729,7 @@ public interface ExpressionExperimentDao
      * <p>
      * This is quite costly because the indices of each vector has to be examined.
      */
-    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported );
 
     /**
      * Remove the given single-cell data vectors.
