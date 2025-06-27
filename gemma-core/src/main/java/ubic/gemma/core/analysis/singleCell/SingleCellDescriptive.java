@@ -326,20 +326,25 @@ public class SingleCellDescriptive {
      * @param threshold a threshold value, assumed to be in the {@link ScaleType} of the vector
      */
     public static int[] countAboveThreshold( SingleCellExpressionDataVector vector, double threshold ) {
+        Buffer buffer = vector.getDataAsBuffer();
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:
-                    d[i] = countAboveThreshold( getSampleDataAsFloats( vector, i ), threshold );
+                    assert buffer instanceof FloatBuffer;
+                    d[i] = countAboveThreshold( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), threshold );
                     break;
                 case DOUBLE:
-                    d[i] = countAboveThreshold( getSampleDataAsDoubles( vector, i ), threshold );
+                    assert buffer instanceof DoubleBuffer;
+                    d[i] = countAboveThreshold( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), threshold );
                     break;
                 case INT:
-                    d[i] = countAboveThreshold( getSampleDataAsInts( vector, i ), threshold );
+                    assert buffer instanceof IntBuffer;
+                    d[i] = countAboveThreshold( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), threshold );
                     break;
                 case LONG:
-                    d[i] = countAboveThreshold( getSampleDataAsLongs( vector, i ), threshold );
+                    assert buffer instanceof LongBuffer;
+                    d[i] = countAboveThreshold( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), threshold );
                     break;
                 default:
                     throw new UnsupportedOperationException( "Unsupported representation " + vector.getQuantitationType().getRepresentation() );
@@ -406,9 +411,10 @@ public class SingleCellDescriptive {
 
     private static double[] applyFloatDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
         DoubleArrayList vec = null;
+        FloatBuffer buffer = vector.getDataAsFloatBuffer();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            double[] data = float2double( getSampleDataAsFloats( vector, i ) );
+            double[] data = float2double( getSampleDataAsFloats( vector, buffer, i ) );
             if ( vec == null ) {
                 vec = new DoubleArrayList( data );
             } else {
@@ -452,8 +458,9 @@ public class SingleCellDescriptive {
     private static double[] applyLongDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
         DoubleArrayList vec = null;
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        LongBuffer buffer = vector.getDataAsLongBuffer();
         for ( int i = 0; i < d.length; i++ ) {
-            double[] data = long2double( getSampleDataAsLongs( vector, i ) );
+            double[] data = long2double( getSampleDataAsLongs( vector, buffer, i ) );
             if ( vec == null ) {
                 vec = new DoubleArrayList( data );
             } else {
@@ -512,22 +519,23 @@ public class SingleCellDescriptive {
     }
 
     public static double[] sum( SingleCellExpressionDataVector vector ) {
+        Buffer buffer = vector.getDataAsBuffer();
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( representation ) {
                 case FLOAT:
-                    d[i] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), scaleType );
                     break;
                 case DOUBLE:
-                    d[i] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), scaleType );
                     break;
                 case INT:
-                    d[i] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), scaleType );
                     break;
                 case LONG:
-                    d[i] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), scaleType );
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "sum" );
@@ -602,22 +610,23 @@ public class SingleCellDescriptive {
     }
 
     public static double[] sumUnscaled( SingleCellExpressionDataVector vector ) {
+        Buffer buffer = vector.getDataAsBuffer();
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( representation ) {
                 case FLOAT:
-                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsFloats( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), scaleType );
                     break;
                 case DOUBLE:
-                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsDoubles( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), scaleType );
                     break;
                 case INT:
-                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsInts( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), scaleType );
                     break;
                 case LONG:
-                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsLongs( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), scaleType );
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "sumUnscaled" );
@@ -630,21 +639,26 @@ public class SingleCellDescriptive {
      * Calculate the mean of each assay for a given vector.
      */
     public static double[] mean( SingleCellExpressionDataVector vector ) {
+        Buffer buffer = vector.getDataAsBuffer();
         ScaleType scaleType = vector.getQuantitationType().getScale();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:
-                    d[i] = DataVectorDescriptive.mean( getSampleDataAsFloats( vector, i ), scaleType );
+                    assert buffer instanceof FloatBuffer;
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), scaleType );
                     break;
                 case DOUBLE:
-                    d[i] = DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, i ), scaleType );
+                    assert buffer instanceof DoubleBuffer;
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), scaleType );
                     break;
                 case INT:
-                    d[i] = DataVectorDescriptive.mean( getSampleDataAsInts( vector, i ), scaleType );
+                    assert buffer instanceof IntBuffer;
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), scaleType );
                     break;
                 case LONG:
-                    d[i] = DataVectorDescriptive.mean( getSampleDataAsLongs( vector, i ), scaleType );
+                    assert buffer instanceof LongBuffer;
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), scaleType );
                     break;
                 default:
                     throw unsupportedRepresentation( vector.getQuantitationType().getRepresentation(), "mean" );
@@ -710,6 +724,7 @@ public class SingleCellDescriptive {
     }
 
     public static double[] quantile( SingleCellExpressionDataVector vector, double q ) {
+        Buffer buffer = vector.getDataAsBuffer();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         DoubleArrayList vec = null;
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
@@ -717,16 +732,16 @@ public class SingleCellDescriptive {
             double[] data;
             switch ( representation ) {
                 case FLOAT:
-                    data = float2double( getSampleDataAsFloats( vector, i ) );
+                    data = float2double( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ) );
                     break;
                 case DOUBLE:
-                    data = getSampleDataAsDoubles( vector, i );
+                    data = getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i );
                     break;
                 case INT:
-                    data = int2double( getSampleDataAsInts( vector, i ) );
+                    data = int2double( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ) );
                     break;
                 case LONG:
-                    data = long2double( getSampleDataAsLongs( vector, i ) );
+                    data = long2double( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ) );
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "median" );
@@ -796,22 +811,23 @@ public class SingleCellDescriptive {
     }
 
     public static double[] sampleStandardDeviation( SingleCellExpressionDataVector vector ) {
+        Buffer buffer = vector.getDataAsBuffer();
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( representation ) {
                 case FLOAT:
-                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsFloats( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), scaleType );
                     break;
                 case DOUBLE:
-                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), scaleType );
                     break;
                 case INT:
-                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsInts( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), scaleType );
                     break;
                 case LONG:
-                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsLongs( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), scaleType );
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "sampleStandardDeviation" );
@@ -841,22 +857,23 @@ public class SingleCellDescriptive {
     }
 
     public static double[] sampleVariance( SingleCellExpressionDataVector vector ) {
+        Buffer buffer = vector.getDataAsBuffer();
         ScaleType scaleType = vector.getQuantitationType().getScale();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             switch ( representation ) {
                 case FLOAT:
-                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsFloats( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsFloats( vector, ( FloatBuffer ) buffer, i ), scaleType );
                     break;
                 case DOUBLE:
-                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, ( DoubleBuffer ) buffer, i ), scaleType );
                     break;
                 case INT:
-                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsInts( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsInts( vector, ( IntBuffer ) buffer, i ), scaleType );
                     break;
                 case LONG:
-                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsLongs( vector, i ), scaleType );
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsLongs( vector, ( LongBuffer ) buffer, i ), scaleType );
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "sampleVariance" );

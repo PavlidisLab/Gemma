@@ -109,30 +109,62 @@ public class SingleCellExpressionDataVectorUtils {
      * Obtain the data of a sample.
      */
     public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        return getSampleDataAsFloats( vector, vector.getDataAsFloatBuffer(), sampleIndex );
+    }
+
+    public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, FloatBuffer buffer, int sampleIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        return Arrays.copyOfRange( vector.getDataAsFloats(), start, end );
+        float[] dst = new float[end - start];
+        buffer.position( start );
+        buffer.limit( end );
+        buffer.get( dst );
+        return dst;
     }
 
     /**
      * Obtain the data of a sample.
      */
     public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        return getSampleDataAsDoubles( vector, vector.getDataAsDoubleBuffer(), sampleIndex );
+    }
+
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, DoubleBuffer buffer, int sampleIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        return Arrays.copyOfRange( vector.getDataAsDoubles(), start, end );
+        double[] dst = new double[end - start];
+        buffer.position( start );
+        buffer.limit( end );
+        buffer.get( dst );
+        return dst;
     }
 
     public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        return getSampleDataAsInts( vector, vector.getDataAsIntBuffer(), sampleIndex );
+    }
+
+    public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, IntBuffer buffer, int sampleIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        return Arrays.copyOfRange( vector.getDataAsInts(), start, end );
+        int[] dst = new int[end - start];
+        buffer.position( start );
+        buffer.limit( end );
+        buffer.get( dst );
+        return dst;
     }
 
     public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        return getSampleDataAsLongs( vector, vector.getDataAsLongBuffer(), sampleIndex );
+    }
+
+    public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, LongBuffer buffer, int sampleIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        return Arrays.copyOfRange( vector.getDataAsLongs(), start, end );
+        long[] dst = new long[end - start];
+        buffer.position( start );
+        buffer.limit( end );
+        buffer.get( dst );
+        return dst;
     }
 
     public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
