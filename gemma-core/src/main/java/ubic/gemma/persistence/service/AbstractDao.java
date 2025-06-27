@@ -40,8 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
-import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -313,28 +312,30 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Stream<T> streamAll( boolean createNewSession ) {
-        return QueryUtils.createStream( getSessionFactory(), session -> QueryUtils.stream( session.createCriteria( elementClass ), batchSize ), createNewSession );
+        //noinspection unchecked
+        return QueryUtils.createStream( getSessionFactory(), session -> QueryUtils.stream( session.createCriteria( elementClass ), ( Class<T> ) elementClass, batchSize, DEFAULT_USE_CURSOR_FETCH, false ), createNewSession );
     }
 
     /**
      * Produce a stream over a {@link Query} with a new session if desired.
+     *
      * @param createNewSession if true, a new session is created and will be closed when the stream is closed. Be
      *                         extremely careful with the resulting stream. Use a try-with-resources block to ensure
      *                         the session is closed properly.
-     * @see QueryUtils#stream(Query, int)
+     * @see QueryUtils#stream(Query, Class, int, boolean, boolean)
      */
-    protected <U> Stream<U> streamQuery( Function<Session, Query> queryCreator, boolean createNewSession ) {
+    protected <U> Stream<U> streamQuery( Function<Session, Query> queryCreator, Class<U> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isStateless, boolean createNewSession ) {
         if ( createNewSession ) {
             Session session = openSession();
             try {
-                return QueryUtils.<U>stream( queryCreator.apply( session ), batchSize )
+                return QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless )
                         .onClose( session::close );
             } catch ( Exception e ) {
                 session.close();
                 throw e;
             }
         } else {
-            return QueryUtils.stream( queryCreator.apply( sessionFactory.getCurrentSession() ), batchSize );
+            return QueryUtils.stream( queryCreator.apply( sessionFactory.getCurrentSession() ), resultType, fetchSize, useCursorFetchIfSupported, isStateless );
         }
     }
 

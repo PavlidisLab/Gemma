@@ -115,7 +115,7 @@ class ExpressionDataFileHelperService {
         return matrix;
     }
 
-    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, int fetchSize ) {
+    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, int fetchSize, boolean useCursorFetchIfSupported ) {
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
         if ( numVecs == 0 ) {
             throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
@@ -123,8 +123,8 @@ class ExpressionDataFileHelperService {
         cs2gene.putAll( getCs2Gene( ee, qt ) );
         numVecs1.set( numVecs );
         return samples != null ?
-                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, samples, qt, fetchSize, true ) :
-                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true );
+                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, samples, qt, fetchSize, useCursorFetchIfSupported, true ) :
+                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true );
     }
 
     public Collection<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
@@ -139,7 +139,7 @@ class ExpressionDataFileHelperService {
         return vectors;
     }
 
-    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, Map<BioAssay, Long> nnzBySample, int fetchSize ) {
+    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, Map<BioAssay, Long> nnzBySample, int fetchSize, boolean useCursorFetchIfSupported ) {
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
         if ( numVecs == 0 ) {
             throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
@@ -147,11 +147,11 @@ class ExpressionDataFileHelperService {
         cs2gene.putAll( getCs2Gene( ee, qt ) );
         numVecs1.set( numVecs );
         log.info( "Counting the number of non-zeroes per sample for " + qt + "..." );
-        nnzBySample.putAll( singleCellExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, fetchSize ) );
+        nnzBySample.putAll( singleCellExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, fetchSize, useCursorFetchIfSupported ) );
         log.info( "Streaming vectors for " + qt + " with a fetch size of " + fetchSize + "." );
         return samples != null ?
-                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, samples, qt, fetchSize, true ) :
-                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true );
+                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, samples, qt, fetchSize, useCursorFetchIfSupported, true ) :
+                singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true );
     }
 
     public SingleCellExpressionDataMatrix<?> getSingleCellMatrix( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {

@@ -188,29 +188,30 @@ public interface ExpressionDataFileService {
     /**
      * Write single-cell expression data to a given writer for a given quantitation type in tabular format.
      *
-     * @param ee           the experiment to use
-     * @param qt           the quantitation type to retrieve
-     * @param scaleType    a scale type to use or null to leave the data untransformed
-     * @param fetchSize    retrieve data in a streaming fashion
+     * @param ee                        the experiment to use
+     * @param qt                        the quantitation type to retrieve
+     * @param scaleType                 a scale type to use or null to leave the data untransformed
+     * @param fetchSize                 retrieve data in a streaming fashion
+     * @param useCursorFetchIfSupported
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
 
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
      * @return a path where the vectors were written
-     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, int, Writer, boolean)
+     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, int, boolean, Writer, boolean)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException;
 
     /**
-     * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean)
+     * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)
      * @throws RejectedExecutionException if the queue for creating data files is full
      */
-    Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws RejectedExecutionException;
+    Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
@@ -231,31 +232,32 @@ public interface ExpressionDataFileService {
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
      *
-     * @param ee            the experiment to use
-     * @param qt            the quantitation type to retrieve
-     * @param scaleType     a scale type to use or null to leave the data untransformed
-     * @param useEnsemblIds use Ensembl IDs instead of official gene symbols
-     * @param fetchSize     fetch size to use for streaming, or load everything in memory of zero or less
-     * @param forceWrite    whether to force write and ignore any pre-existing directory
+     * @param ee                        the experiment to use
+     * @param qt                        the quantitation type to retrieve
+     * @param scaleType                 a scale type to use or null to leave the data untransformed
+     * @param useEnsemblIds             use Ensembl IDs instead of official gene symbols
+     * @param fetchSize                 fetch size to use for streaming, or load everything in memory of zero or less
+     * @param useCursorFetchIfSupported
+     * @param forceWrite                whether to force write and ignore any pre-existing directory
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir ) throws IOException;
 
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type.
      * @return a path where the vectors were written
-     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, int, boolean, Path)
+     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, int, boolean, boolean, Path)
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException;
 
     /**
-     * @see #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean)
+     * @see #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)
      * @throws RejectedExecutionException if the queue for creating data files is full
      */
-    Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws RejectedExecutionException;
+    Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Write raw expression data to a given writer for a given quantitation type.

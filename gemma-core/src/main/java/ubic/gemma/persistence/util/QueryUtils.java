@@ -1,15 +1,20 @@
 package ubic.gemma.persistence.util;
 
+import com.mysql.cj.MysqlConnection;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.stream.Streams;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.internal.QueryImpl;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,9 +37,14 @@ public class QueryUtils {
     public static final int MAX_PARAMETER_LIST_SIZE = 2048;
 
     /**
-     * Default fetch size to use when streaming results with {@link #stream(Query, int)}
+     * Default fetch size to use when streaming results with {@link #stream(Query, Class, int, boolean, boolean)}
      */
     public static final int DEFAULT_FETCH_SIZE = 30;
+
+    /**
+     * Use cursor fetch by default when streaming results with {@link #stream(Query, Class, int, boolean, boolean)}.
+     */
+    public static final boolean DEFAULT_USE_CURSOR_FETCH = false;
 
     /**
      * @see Query#list()
@@ -210,22 +220,116 @@ public class QueryUtils {
     /**
      * Stream the result of a query with the given fetch size.
      * <p>
+     * @param useCursorFetchIfSupported if cursor fetching is supported by the JDBC driver, it will be used. This has
+     *                                  implications on performance of the database server because the whole result set
+     *                                  will be loaded in memory
+     * @param isQueryStateless          indicate if the query is stateless. A stateless query does not trigger any
+     *                                  additional SQL statements upon being retrieved. If this is true, streaming will
+     *                                  be enabled if {@code useCursorFetchIfSupported} is set to false.
+     * <p>
      * This uses offset/limit under the hood because MySQL JDBC does not support scrolling with {@link Query#scroll()}.
      */
-    public static <T> Stream<T> stream( Query query, int fetchSize ) {
+    public static <T> Stream<T> stream( Query query, Class<T> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
+        if ( setFetchSizeIfSupported( query, fetchSize, useCursorFetchIfSupported, isQueryStateless ) ) {
+            return stream( query.scroll( ScrollMode.FORWARD_ONLY ), resultType.isArray() );
+        }
         return Streams.of( new QueryOrCriteriaIterator<>( query, fetchSize ) );
     }
 
-    public static <T> Stream<T> stream( Query query ) {
-        return stream( query, DEFAULT_FETCH_SIZE );
+    public static <T> Stream<T> stream( Query query, Class<T> resultType ) {
+        return stream( query, resultType, DEFAULT_FETCH_SIZE, DEFAULT_USE_CURSOR_FETCH, false );
     }
 
-    public static <T> Stream<T> stream( Criteria criteria, int fetchSize ) {
+    public static <T> Stream<T> stream( Criteria criteria, Class<T> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
+        if ( setFetchSizeIfSupported( criteria, fetchSize, useCursorFetchIfSupported, isQueryStateless ) ) {
+            return stream( criteria.scroll( ScrollMode.FORWARD_ONLY ), resultType.isArray() );
+        }
         return Streams.of( new QueryOrCriteriaIterator<>( criteria, fetchSize ) );
     }
 
-    public static <T> Stream<T> stream( Criteria criteria ) {
-        return stream( criteria, DEFAULT_FETCH_SIZE );
+    public static <T> Stream<T> stream( Criteria criteria, Class<T> resultType ) {
+        return stream( criteria, resultType, DEFAULT_FETCH_SIZE, DEFAULT_USE_CURSOR_FETCH, false );
+    }
+
+    private static boolean setFetchSizeIfSupported( Object queryOrCriteria, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
+        SessionImplementor session = getSession( queryOrCriteria );
+        if ( session == null ) {
+            log.warn( "Could not obtain Hibernate session from query or criteria, cannot determine if setFetchSize() is supported." );
+            return false;
+        }
+        try {
+            //noinspection resource
+            MysqlConnection c = session.connection().unwrap( MysqlConnection.class );
+            // MySQL scrolls in two scenario: if fetchSize is 1 (then we need to set it to Integer.MIN_VALUE) or if useCursorFetch is true
+            // https://vladmihalcea.com/how-does-mysql-result-set-streaming-perform-vs-fetching-the-whole-jdbc-resultset-at-once/
+            // https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_useCursorFetch
+            if ( useCursorFetchIfSupported ) {
+                boolean useCursorFetch = c.getPropertySet()
+                        .getBooleanProperty( "useCursorFetch" )
+                        .getValue();
+                if ( useCursorFetch ) {
+                    log.debug( "MySQL is configured to use cursor fetch, setting fetch size to " + fetchSize + "." );
+                } else if ( isStateless( session, queryOrCriteria, isQueryStateless ) ) {
+                    // this only works with stateless sessions (or queries) because the MySQL JDBC driver does not allow
+                    // queries to be issued while a result set is being streamed
+                    log.warn( "MySQL is not configured to use cursor fetch, but a stateless session/query is performed, using the workaround of setting fetch size to Integer.MIN_VALUE. Consider setting 'useCursorFetch' to true in the JDBC connection properties." );
+                } else {
+                    log.warn( "MySQL is not configured to use cursor fetch and no workaround is possible." );
+                    return false;
+                }
+            } else if ( isStateless( session, queryOrCriteria, isQueryStateless ) ) {
+                // this only works with stateless sessions (or queries) because the MySQL JDBC driver does not allow
+                // queries to be issued while a result set is being streamed
+                log.debug( "A stateless session/query is performed, setting fetch size to Integer.MIN_VALUE." );
+                fetchSize = Integer.MIN_VALUE;
+            } else {
+                log.warn( "A stateful session/query is performed, cannot safely set the fetch size to Integer.MIN_VALUE to enable streaming with MySQL." );
+                return false;
+            }
+        } catch ( SQLException e ) {
+            // TODO: check if H2 supports scrolling
+            log.warn( "Could not determine if the JDBC driver supports scrolling, assuming it does not." );
+            return false;
+        }
+        if ( queryOrCriteria instanceof Query ) {
+            ( ( Query ) queryOrCriteria ).setFetchSize( fetchSize );
+        } else {
+            ( ( Criteria ) queryOrCriteria ).setFetchSize( fetchSize );
+        }
+        return true;
+    }
+
+    @Nullable
+    private static SessionImplementor getSession( Object queryOrCriteria ) {
+        if ( queryOrCriteria instanceof QueryImpl ) {
+            // it is package-private, so we have to use reflection to access it
+            Field field = ReflectionUtils.findField( QueryImpl.class, "session" );
+            ReflectionUtils.makeAccessible( field );
+            return ( SessionImplementor ) ReflectionUtils.getField( field, queryOrCriteria );
+        } else if ( queryOrCriteria instanceof CriteriaImpl ) {
+            return ( ( CriteriaImpl ) queryOrCriteria ).getSession();
+        } else {
+            log.warn( "Could not obtain Hibernate session from query or criteria, cannot determine if setFetchSize() is supported." );
+            return null;
+        }
+    }
+
+    private static boolean isStateless( SessionImplementor session, Object queryOrCriteria, boolean isQueryStateless ) {
+        return isQueryStateless
+                || session instanceof StatelessSession
+                || isStateless( queryOrCriteria );
+    }
+
+    /**
+     * TODO: detect if the query or criteria is stateless.
+     */
+    private static boolean isStateless( Object queryOrCriteria ) {
+        return false;
+    }
+
+    private static <T> Stream<T> stream( ScrollableResults results, boolean isArray ) {
+        return Streams.<T>of( new ScrollableResultsIterator<>( results, isArray ) )
+                .onClose( results::close );
     }
 
     private static class QueryOrCriteriaIterator<T> implements Iterator<T> {
@@ -276,6 +380,47 @@ public class QueryUtils {
                             .setFirstResult( offset )
                             .setMaxResults( fetchSize )
                             .list();
+                }
+            }
+        }
+    }
+
+    private static class ScrollableResultsIterator<T> implements Iterator<T> {
+
+        private final ScrollableResults results;
+        private final boolean isArray;
+
+        private T _next;
+
+        private ScrollableResultsIterator( ScrollableResults results, boolean isArray ) {
+            this.results = results;
+            this.isArray = isArray;
+        }
+
+        @Override
+        public boolean hasNext() {
+            fetchNextIfNecessary();
+            return _next != null;
+        }
+
+        @Override
+        public T next() {
+            fetchNextIfNecessary();
+            if ( _next == null ) {
+                throw new NoSuchElementException();
+            }
+            try {
+                return _next;
+            } finally {
+                _next = null;
+            }
+        }
+
+        private void fetchNextIfNecessary() {
+            if ( _next == null ) {
+                if ( results.next() ) {
+                    //noinspection unchecked
+                    _next = isArray ? ( T ) results.get() : ( T ) results.get( 0 );
                 }
             }
         }
