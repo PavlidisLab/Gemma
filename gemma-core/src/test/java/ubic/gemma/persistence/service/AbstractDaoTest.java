@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.Type;
 import org.junit.Before;
 import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
@@ -55,6 +56,7 @@ public class AbstractDaoTest {
         ClassMetadata myEntityClassMetadata = mock( ClassMetadata.class );
         when( myEntityClassMetadata.getIdentifierPropertyName() ).thenReturn( "id" );
         when( myEntityClassMetadata.getMappedClass() ).thenReturn( MyEntity.class );
+        when( myEntityClassMetadata.getPropertyTypes() ).thenReturn( new Type[0] );
         settings = mock( Settings.class );
         when( settings.getDefaultBatchFetchSize() ).thenReturn( -1 );
         when( sessionFactory.getClassMetadata( MyEntity.class ) ).thenReturn( myEntityClassMetadata );
