@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.formatBioAssayFilename;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
 public class MexMatrixWriterTest {
@@ -43,8 +44,9 @@ public class MexMatrixWriterTest {
         List<BioAssay> bas = vectors.iterator().next().getSingleCellDimension().getBioAssays();
         List<String> expectedEntries = new ArrayList<>();
         for ( BioAssay ba : bas ) {
+            String dirName = formatBioAssayFilename( ba );
             expectedEntries.addAll( Arrays.asList(
-                    ba.getId() + "_" + ba.getName() + "/barcodes.tsv", ba.getId() + "_" + ba.getName() + "/features.tsv", ba.getId() + "_" + ba.getName() + "/matrix.mtx"
+                    dirName + "/barcodes.tsv", dirName + "/features.tsv", dirName + "/matrix.mtx"
             ) );
         }
 
@@ -81,18 +83,20 @@ public class MexMatrixWriterTest {
         ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
         Path outDir = Files.createTempDirectory( null ).resolve( "test" );
         try {
+            System.out.println( outDir );
             Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -125,15 +129,16 @@ public class MexMatrixWriterTest {
             Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -167,15 +172,16 @@ public class MexMatrixWriterTest {
             writer.setScaleType( ScaleType.LOG1P );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -208,15 +214,16 @@ public class MexMatrixWriterTest {
             Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isInteger() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -250,15 +257,16 @@ public class MexMatrixWriterTest {
             writer.setScaleType( ScaleType.LOG1P );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -291,15 +299,16 @@ public class MexMatrixWriterTest {
             Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isInteger() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
@@ -333,15 +342,16 @@ public class MexMatrixWriterTest {
             writer.setScaleType( ScaleType.LOG1P );
             writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
             for ( BioAssay ba : ee.getBioAssays() ) {
+                String dirName = formatBioAssayFilename( ba );
                 assertThat( outDir )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
-                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + dirName + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "features.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
-                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "barcodes.tsv.gz" ) ) ) )
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
-                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( dirName ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
                     assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );

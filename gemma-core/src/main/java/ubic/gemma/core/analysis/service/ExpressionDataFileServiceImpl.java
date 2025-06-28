@@ -262,7 +262,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException {
-        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
             if ( type.isDirectory() ) {
                 if ( !Files.exists( lock.getPath() ) ) {
                     return Optional.empty();
@@ -291,7 +291,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
-        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename ), exclusive ) ) {
             // lock will be managed by the LockedFile
             return lock.steal();
         }
@@ -299,7 +299,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
-        try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
+        try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
             // lock will be managed by the LockedFile
             return lock.steal();
         }
@@ -309,7 +309,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
         Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
         Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) );
         return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
     }
 
@@ -322,7 +322,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             reservedMetadataFilenames.add( type.getFileName( ee ) );
         }
         Assert.isTrue( !reservedMetadataFilenames.contains( filename ), filename + " is reserved for metadata files, use a different filename." );
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename );
         return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
     }
 
@@ -376,7 +376,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) );
         try ( LockedPath ignored = fileLockManager.acquirePathLock( destinationFile, true ) ) {
             if ( Files.exists( destinationFile ) ) {
                 log.info( "Deleting metadata file: " + destinationFile + "." );
