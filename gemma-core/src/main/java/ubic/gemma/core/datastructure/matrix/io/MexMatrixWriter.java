@@ -23,10 +23,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -209,7 +206,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
-                matrices[i] = new MatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( getBioAssayDirName( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
+                matrices[i] = new FastMatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( getBioAssayDirName( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
                 MatrixInfo.MatrixField field;
                 if ( scaleType != null ) {
                     // if data is converted, we always produce doubles
@@ -538,6 +535,37 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
             // use the end of the current sample as start for the next one
             start = end;
+        }
+    }
+
+    /**
+     * Avoid the formatting overhead of {@link MatrixVectorWriter} when writing sparse real or integer data.
+     */
+    private static class FastMatrixVectorWriter extends MatrixVectorWriter {
+
+        public FastMatrixVectorWriter( OutputStream out ) {
+            super( out );
+        }
+
+        @Override
+        public void printCoordinate( int[] row, int[] column, int[] data, int offset ) {
+            int size = row.length;
+            if ( size != column.length || size != data.length )
+                throw new IllegalArgumentException(
+                        "All arrays must be of the same size" );
+            for ( int i = 0; i < size; ++i ) {
+                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+            }
+        }
+
+        public void printCoordinate( int[] row, int[] column, double[] data, int offset ) {
+            int size = row.length;
+            if ( size != column.length || size != data.length )
+                throw new IllegalArgumentException(
+                        "All arrays must be of the same size" );
+            for ( int i = 0; i < size; ++i ) {
+                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+            }
         }
     }
 }
