@@ -233,12 +233,12 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
 
             int row = 0;
-            writeFeature( firstVec.getDesignElement(), cs2gene, true, features );
+            writeFeature( firstVec.getDesignElement(), cs2gene, features );
             writeVector( firstVec, row++, matrices );
 
             while ( vecit.hasNext() ) {
                 SingleCellExpressionDataVector vec = vecit.next();
-                writeFeature( vec.getDesignElement(), cs2gene, false, features );
+                writeFeature( vec.getDesignElement(), cs2gene, features );
                 writeVector( vec, row++, matrices );
             }
 
@@ -258,23 +258,20 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private void writeBarcodes( SingleCellDimension dimension, int sampleIndex, OutputStream out ) throws IOException {
-        boolean first = true;
         for ( String cellId : dimension.getCellIdsBySample( sampleIndex ) ) {
-            out.write( ( ( first ? "" : "\n" ) + format( cellId ) ).getBytes( StandardCharsets.UTF_8 ) );
-            first = false;
+            out.write( ( format( cellId ) + "\n" ).getBytes( StandardCharsets.UTF_8 ) );
         }
     }
 
     private void writeFeatures( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
         List<CompositeSequence> designElements = matrix.getDesignElements();
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            CompositeSequence de = designElements.get( i );
-            writeFeature( de, cs2gene, i == 0, out );
+        for ( CompositeSequence de : designElements ) {
+            writeFeature( de, cs2gene, out );
         }
     }
 
-    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, boolean first, OutputStream out ) throws IOException {
-        String f = ( first ? "" : "\n" ) + format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression";
+    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
+        String f = format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression" + "\n";
         out.write( f.getBytes( StandardCharsets.UTF_8 ) );
     }
 
