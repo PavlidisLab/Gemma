@@ -3,6 +3,7 @@ package ubic.gemma.core.analysis.service;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -10,6 +11,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -32,47 +34,72 @@ public class ExpressionDataFileUtils {
      * Obtain a filename for writing the processed data.
      */
     public static String getDataOutputFilename( ExpressionExperiment ee, boolean filtered, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
+        return formatExpressionExperimentFilename( ee ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
     }
 
     public static String getDataOutputFilename( ExpressionExperiment ee, List<BioAssay> assays, boolean filtered, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + formatAssays( assays ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
+        return formatExpressionExperimentFilename( ee ) + "_" + formatBioAssaysFilename( assays ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
     }
 
     /**
      * Obtain the filename for writing a specific QT.
      */
     public static String getDataOutputFilename( ExpressionExperiment ee, QuantitationType type, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + "_expmat.unfilt" + suffix;
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( type, QuantitationType::getName ) + "_expmat.unfilt" + suffix;
     }
 
     /**
      * Obtain the filename for writing a specific QT.
      */
     public static String getDataOutputFilename( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType type, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + "_" + formatAssays( assays ) + "_expmat.unfilt" + suffix;
-    }
-
-    private static String formatAssays( List<BioAssay> assays ) {
-        return assays.stream()
-                .map( ba -> ba.getShortName() != null ? ba.getId() + "_" + FileTools.cleanForFileName( ba.getShortName() ) : ba.getId() + "_" + FileTools.cleanForFileName( ba.getName() ) )
-                .collect( Collectors.joining( "___" ) );
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( type, QuantitationType::getName ) + "_" + formatBioAssaysFilename( assays ) + "_expmat.unfilt" + suffix;
     }
 
     /**
      * Obtain the filename for writing coexpression data.
      */
     public static String getCoexpressionDataFilename( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp" + TABULAR_BULK_DATA_FILE_SUFFIX;
+        return formatExpressionExperimentFilename( ee ) + "_coExp" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     public static String getDesignFileName( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
+        return formatExpressionExperimentFilename( ee ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     public static String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
         BioAssaySet experimentAnalyzed = diff.getExperimentAnalyzed();
+        return formatExperimentAnalyzedFilename( experimentAnalyzed ) + "_diffExpAnalysis"
+                // might be for a non-persistent diff ex. analysis
+                // the name of a diff. ex. analysis is not really meaningful
+                + ( diff.getId() != null ? "_" + diff.getId() : "" )
+                + ".zip";
+    }
 
+    public static String getMeanVarianceRelationFilename( ExpressionExperiment ee ) {
+        return formatIdentifiableFilename( ee, ExpressionExperiment::getShortName ) + "_mvr" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    public static String getEigenGenesFilename( ExpressionExperiment ee ) {
+        return formatIdentifiableFilename( ee, ExpressionExperiment::getShortName ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Forms a folder name where the given experiments metadata will be located (within the {@code ${gemma.appdata.home}/metadata} directory).
+     *
+     * @param ee the experiment to get the folder name for.
+     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
+     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
+     * any reason, the experiments ID will be used.
+     */
+    public static String getExpressionExperimentMetadataDirname( ExpressionExperiment ee ) {
+        String sName = ee.getShortName();
+        if ( StringUtils.isBlank( sName ) ) {
+            return ee.getId().toString();
+        }
+        return sName.replaceAll( "\\.\\d+$", "" );
+    }
+
+    private static String formatExperimentAnalyzedFilename( BioAssaySet experimentAnalyzed ) {
         ExpressionExperiment ee;
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             ee = ( ExpressionExperiment ) experimentAnalyzed;
@@ -82,34 +109,25 @@ public class ExpressionDataFileUtils {
         } else {
             throw new UnsupportedOperationException( "Don't know about " + experimentAnalyzed.getClass().getName() );
         }
+        return formatIdentifiableFilename( experimentAnalyzed, ignored -> ee.getShortName() );
 
-        return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis"
-                // might be for a non-persistent diff ex. analysis
-                + ( diff.getId() != null ? "_" + diff.getId() : "" )
-                + ".zip";
     }
 
-    public static String getMeanVarianceRelationFilename( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_mvr" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    private static String formatExpressionExperimentFilename( ExpressionExperiment ee ) {
+        return formatIdentifiableFilename( ee, ExpressionExperiment::getShortName );
     }
 
-    public static String getEigenGenesFilename( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    private static String formatBioAssaysFilename( List<BioAssay> assays ) {
+        return assays.stream()
+                .map( ExpressionDataFileUtils::formatBioAssayFilename )
+                .collect( Collectors.joining( "___" ) );
     }
 
-    /**
-     * Forms a folder name where the given experiments metadata will be located (within the {@link #metadataDir} directory).
-     *
-     * @param ee the experiment to get the folder name for.
-     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
-     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
-     * any reason, the experiments ID will be used.
-     */
-    public static String getEEFolderName( ExpressionExperiment ee ) {
-        String sName = ee.getShortName();
-        if ( StringUtils.isBlank( sName ) ) {
-            return ee.getId().toString();
-        }
-        return sName.replaceAll( "\\.\\d+$", "" );
+    public static String formatBioAssayFilename( BioAssay ba ) {
+        return formatIdentifiableFilename( ba, ba2 -> ba2.getShortName() != null ? ba2.getShortName() : ba2.getName() );
+    }
+
+    private static <T extends Identifiable> String formatIdentifiableFilename( T identifiable, Function<T, String> nameGetter ) {
+        return ( identifiable.getId() != null ? identifiable.getId() + "_" : "" ) + FileTools.cleanForFileName( nameGetter.apply( identifiable ) );
     }
 }

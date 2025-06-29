@@ -85,7 +85,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
                 .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
         contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
                 .getEntityPersister( ContrastResult.class.getName() );
-        bioAssaySetBatchSize = HibernateUtils.getBatchSize( sessionFactory, sessionFactory.getClassMetadata( BioAssaySet.class ) );
+        bioAssaySetBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( BioAssaySet.class ), sessionFactory );
     }
 
     /**

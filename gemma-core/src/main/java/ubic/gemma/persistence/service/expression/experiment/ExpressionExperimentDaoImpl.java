@@ -2215,7 +2215,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt ) {
-        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+        return getSingleCellDimension( ee, qt, getSessionFactory().getCurrentSession() );
+    }
+
+    private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, Session session ) {
+        return ( SingleCellDimension ) session
                 .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by scedv.singleCellDimension" )
@@ -2896,9 +2900,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
+        }
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
+                .createQuery( createSelectSingleCellDataVectorQuery( true, includeData, includeDataIndices ) + " "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
@@ -2907,30 +2914,68 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        return streamQuery( session -> session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", quantitationType ), createNewSession );
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession ) {
+        return streamQuery( session -> {
+            // prefetch all the entities to make the query effectively stateless
+            log.info( "Prefetching related entities and design elements for " + ee + " and " + quantitationType + "..." );
+            ExpressionExperiment prefetchedEe = ( ExpressionExperiment ) requireNonNull( session.get( ExpressionExperiment.class, ee.getId() ) );
+            QuantitationType prefetchedQt = ( QuantitationType ) requireNonNull( session.get( QuantitationType.class, quantitationType.getId() ) );
+            SingleCellDimension prefetchedDimension = getSingleCellDimension( prefetchedEe, prefetchedQt, session );
+            if ( prefetchedDimension == null ) {
+                throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
+            }
+            prefetchDesignElements( ee, quantitationType, session );
+            log.info( String.format( "Querying single-cell vectors for %s and %s with a fetch size of %d%s...",
+                    ee, quantitationType, fetchSize,
+                    useCursorFetchIfSupported ? " and cursor fetching" : "" ) );
+            return session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
+                            + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                    .setParameter( "ee", ee )
+                    .setParameter( "qt", quantitationType );
+        }, SingleCellExpressionDataVector.class, fetchSize, useCursorFetchIfSupported, true, createNewSession );
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
-        return streamQuery( session ->
-                        session.createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
-                                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
-                                .setParameter( "ee", ee )
-                                .setParameter( "qt", quantitationType )
-                                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) ),
-                createNewSession );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
+        }
+        return streamQuery( session -> {
+                    log.info( "Prefetching design elements for " + ee + " and " + quantitationType + "..." );
+                    prefetchDesignElements( ee, quantitationType, session );
+                    log.info( String.format( "Querying single-cell vectors for %s and %s with a fetch size of %d%s...",
+                            ee, quantitationType, fetchSize,
+                            useCursorFetchIfSupported ? " and cursor fetching" : "" ) );
+                    return session.createQuery( createSelectSingleCellDataVectorQuery( true, includeData, includeDataIndices ) + " "
+                                    + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                            .setParameter( "ee", ee )
+                            .setParameter( "qt", quantitationType )
+                            .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) );
+                },
+                SingleCellExpressionDataVector.class,
+                fetchSize,
+                useCursorFetchIfSupported, true, createNewSession );
+    }
+
+    /**
+     * Prefetch design elements in a given session such that streaming single-cell vectors becomes effectively stateless.
+     */
+    private void prefetchDesignElements( ExpressionExperiment ee, QuantitationType quantitationType, Session session ) {
+        session.createQuery( "select vector.designElement from SingleCellExpressionDataVector vector where vector.expressionExperiment = :ee and vector.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType )
+                .list();
     }
 
     @Override
     public SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement ) {
         SingleCellDimension dimension = getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
+        }
         return ( SingleCellExpressionDataVector ) getSessionFactory().getCurrentSession()
-                .createQuery( createSelectSingleCellDataVector( false, true, true ) + " "
+                .createQuery( createSelectSingleCellDataVectorQuery( false, true, true ) + " "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and scedv.designElement = :de" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
@@ -2939,7 +2984,7 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
-    private String createSelectSingleCellDataVector( boolean includeDesignElement, boolean includeData, boolean includeDataIndices ) {
+    private String createSelectSingleCellDataVectorQuery( boolean includeDesignElement, boolean includeData, boolean includeDataIndices ) {
         return "select scedv.id as id, "
                 + ( includeDesignElement ? "scedv.designElement as designElement, " : "" )
                 + ( includeData ? "scedv.data as data, " : "" )
@@ -3010,24 +3055,26 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported ) {
         SingleCellDimension dimension = getSingleCellDimensionWithoutCellIds( ee, qt );
         if ( dimension == null ) {
             throw new IllegalStateException( qt + " from " + ee + " does not have an associated single-cell dimension." );
         }
         long numVecs = getNumberOfSingleCellDataVectors( ee, qt );
-        try ( Stream<int[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.dataIndices from SingleCellExpressionDataVector scedv "
+        try ( Stream<Object[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
+                // FIXME: there's a bug in Hibernate scroll() ScrollableResults implementation that causes the native
+                //        int[] array to be cast to Object[], so we need to add a dummy column to avoid this.
+                .createQuery( "select scedv.dataIndices, 1 from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
-                .setParameter( "qt", qt ), fetchSize ) ) {
+                .setParameter( "qt", qt ), Object[].class, fetchSize, useCursorFetchIfSupported, true ) ) {
             long[] nnzs = new long[dimension.getBioAssays().size()];
-            Iterator<int[]> it = stream.iterator();
+            Iterator<Object[]> it = stream.iterator();
             StopWatch timer = StopWatch.createStarted();
             int done = 0;
             long bytesRetrieved = 0;
             while ( it.hasNext() ) {
-                int[] row = it.next();
+                int[] row = ( int[] ) it.next()[0];
                 // the first sample starts at zero, the use the end as the start of the next one
                 int start = 0;
                 for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {

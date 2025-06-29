@@ -262,7 +262,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException {
-        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
             if ( type.isDirectory() ) {
                 if ( !Files.exists( lock.getPath() ) ) {
                     return Optional.empty();
@@ -291,7 +291,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
-        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename ), exclusive ) ) {
             // lock will be managed by the LockedFile
             return lock.steal();
         }
@@ -299,7 +299,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
-        try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
+        try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
             // lock will be managed by the LockedFile
             return lock.steal();
         }
@@ -309,7 +309,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
         Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
         Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) );
         return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
     }
 
@@ -322,7 +322,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             reservedMetadataFilenames.add( type.getFileName( ee ) );
         }
         Assert.isTrue( !reservedMetadataFilenames.contains( filename ), filename + " is reserved for metadata files, use a different filename." );
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( filename );
         return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
     }
 
@@ -376,7 +376,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        Path destinationFile = metadataDir.resolve( getExpressionExperimentMetadataDirname( ee ) ).resolve( type.getFileName( ee ) );
         try ( LockedPath ignored = fileLockManager.acquirePathLock( destinationFile, true ) ) {
             if ( Files.exists( destinationFile ) ) {
                 log.info( "Deleting metadata file: " + destinationFile + "." );
@@ -500,26 +500,26 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException {
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, null, qt, scaleType, fetchSize, writer, autoFlush );
+        return writeTabularSingleCellExpressionDataInternal( ee, null, qt, scaleType, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
     }
 
     @Override
-    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException {
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, samples, qt, scaleType, fetchSize, writer, autoFlush );
+        return writeTabularSingleCellExpressionDataInternal( ee, samples, qt, scaleType, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
     }
 
     @Override
-    public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException {
+    public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException {
         try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
             try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, fetchSize, writer, false );
+                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, fetchSize, writer, useCursorFetchIfSupported, false );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
@@ -530,15 +530,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) {
+    public Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) {
         return expressionDataFileTaskExecutor.submit( () -> {
-            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, forceWrite ) ) {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, useCursorFetchIfSupported, forceWrite ) ) {
                 return lockedPath.getPath();
             }
         } );
     }
 
-    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException {
+    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean useCursorFetchIfSupported, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         TabularMatrixWriter matrixWriter = new TabularMatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
@@ -548,7 +548,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
-            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
                 return matrixWriter.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, numVecs.get() ) ), cs2gene, writer );
             }
         } else {
@@ -583,16 +583,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
-        return writeMexSingleCellExpressionDataInternal( ee, null, qt, scaleType, useEnsemblIds, fetchSize, forceWrite, destDir );
+    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, null, qt, scaleType, useEnsemblIds, fetchSize, useCursorFetchIfSupported, forceWrite, destDir );
     }
 
     @Override
-    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
-        return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, fetchSize, forceWrite, destDir );
+    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, fetchSize, useCursorFetchIfSupported, forceWrite, destDir );
     }
 
-    private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
+    private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir ) throws IOException {
         if ( !forceWrite && Files.exists( destDir ) ) {
             throw new IllegalArgumentException( "Output directory " + destDir + " already exists, use forceWrite to overwrite." );
         }
@@ -605,7 +605,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( fetchSize > 0 ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();
-                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, nnzBySample, fetchSize ) ) {
+                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, nnzBySample, fetchSize, useCursorFetchIfSupported ) ) {
                     if ( Files.exists( destDir ) ) {
                         log.info( destDir + " already exists, removing..." );
                         PathUtils.deleteDirectory( destDir );
@@ -633,13 +633,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException {
+    public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException {
         try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
             try ( LockedPath lockedPath = dest.toExclusive() ) {
-                int written = writeMexSingleCellExpressionData( ee, qt, null, false, fetchSize, forceWrite, lockedPath.getPath() );
+                int written = writeMexSingleCellExpressionData( ee, qt, null, false, fetchSize, useCursorFetchIfSupported, forceWrite, lockedPath.getPath() );
                 log.info( "Wrote " + written + " vectors for " + qt + " to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             }
@@ -647,9 +647,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) {
+    public Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) {
         return expressionDataFileTaskExecutor.submit( () -> {
-            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, forceWrite ) ) {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, useCursorFetchIfSupported, forceWrite ) ) {
                 return lockedPath.getPath();
             }
         } );

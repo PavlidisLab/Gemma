@@ -79,6 +79,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private boolean useEnsemblIds;
     private boolean useStreaming;
     private int fetchSize;
+    private boolean useCursorFetchIfSupported;
     private ExpressionDataFileResult result;
 
     @Nullable
@@ -111,8 +112,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         addEnumOption( options, "format", "format", "Format to write the matrix for (defaults to tabular)", MatrixFormat.class );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use when generating data to disk. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output). This is incompatible with -standardLocation/--standard-location." );
-        options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
+        options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
+        options.addOption( "noCursorFetch", "no-cursor-fetch", false, "Disable cursor fetching on the database server and produce results immediately. This is incompatible with -noStreaming." );
 
         addExpressionDataFileOptions( options, "single-cell expression data" );
 
@@ -140,8 +142,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {
             throw new ParseException( "Cannot use -noStreaming/--no-streaming and -fetchSize/--fetch-size at the same time." );
         }
+        if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "noCursorFetch" ) ) {
+            throw new ParseException( "Cannot use -noStreaming/--no-streaming and -noCursorFetch/--no-cursor-fetch at the same time." );
+        }
         this.useStreaming = !commandLine.hasOption( "noStreaming" );
         this.fetchSize = commandLine.getParsedOptionValue( "fetchSize", 30 );
+        this.useCursorFetchIfSupported = !commandLine.hasOption( "noCursorFetch" );
         if ( commandLine.hasOption( "format" ) ) {
             this.format = getEnumOptionValue( commandLine, "format" );
         } else {
@@ -270,9 +276,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
             Stream<SingleCellExpressionDataVector> scVecs;
             if ( assays != null ) {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, true, config );
+                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, useCursorFetchIfSupported, true, config );
             } else {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true, config );
+                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true, config );
             }
             vecs = scVecs
                     .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, numberOfVectors ) )
@@ -313,12 +319,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else if ( result.isStandardOutput() ) {
                     fileName = null;
                     try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX ) );
                     try ( Writer writer = Files.newBufferedWriter( fileName ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 }
             case MEX:
@@ -331,7 +337,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     assert fileName != null;
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), fileName );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName );
                 }
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
@@ -342,24 +348,24 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         switch ( format ) {
             case TABULAR:
                 if ( result.isStandardLocation() ) {
-                    try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
+                    try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce() ) ) {
                         fileName = path.getPath();
                         return 0;
                     }
                 } else if ( result.isStandardOutput() ) {
                     fileName = null;
                     try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX ) );
                     try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 }
             case MEX:
                 if ( result.isStandardLocation() ) {
-                    try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
+                    try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce() ) ) {
                         fileName = path.getPath();
                         return 0;
                     }
@@ -370,7 +376,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     assert fileName != null;
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), fileName );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName );
                 }
             case CELL_IDS:
                 if ( result.isStandardLocation() ) {

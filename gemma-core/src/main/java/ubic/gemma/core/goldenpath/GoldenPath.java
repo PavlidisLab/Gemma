@@ -97,7 +97,6 @@ public abstract class GoldenPath implements AutoCloseable {
     private static JdbcTemplate createJdbcTemplateFromConfig( HikariDataSource dataSource, Taxon taxon ) {
         String databaseName = getDbNameForTaxon( taxon );
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
-        jdbcTemplate.setFetchSize( 50 );
         GoldenPath.log.info( "Connecting to " + databaseName );
         jdbcTemplate.execute( "use " + databaseName );
         return jdbcTemplate;

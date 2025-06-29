@@ -244,7 +244,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
-        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, config ) )
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, false, config ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
                     assertThat( vec.getSingleCellDimension().getCellIds() )
@@ -252,7 +252,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
-        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false ) )
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, false ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
                     assertThat( vec.getSingleCellDimension().getCellIds() ).isNotNull();
@@ -273,11 +273,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
         assertThat( matrix.rows() ).isEqualTo( 10 );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true )
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false )
                 .forEach( System.out::println );
         assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
                 .isEqualTo( 100L ); // 90% sparsity
-        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30 ) )
+        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30, false ) )
                 .containsOnlyKeys( ee.getBioAssays() )
                 .containsValues( 26L, 24L, 23L, 27L );
     }
@@ -296,12 +296,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, true, true ) );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, false, false ) );
 
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, false ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, false, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, true, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, false, false ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, true, false ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, false, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( false, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( false, false, false ) ).collect( Collectors.toList() );
     }
 
     private SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig createConfig( boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {

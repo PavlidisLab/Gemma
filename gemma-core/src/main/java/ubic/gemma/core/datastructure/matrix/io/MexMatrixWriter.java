@@ -9,7 +9,6 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.springframework.util.Assert;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
@@ -39,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.formatBioAssayFilename;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
@@ -88,7 +88,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 BioAssay ba = bioAssays.get( i );
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
                     writeBarcodes( matrix.getSingleCellDimension(), i, baos );
-                    TarArchiveEntry entry = new TarArchiveEntry( getBioAssayDirName( ba ) + "/barcodes.tsv" );
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/barcodes.tsv" );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
                     aos.write( baos.toByteArray() );
@@ -96,14 +96,14 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 }
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
                     writeFeatures( matrix, cs2gene, baos );
-                    TarArchiveEntry entry = new TarArchiveEntry( getBioAssayDirName( ba ) + "/features.tsv" );
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/features.tsv" );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
                     aos.write( baos.toByteArray() );
                     aos.closeArchiveEntry();
                 }
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-                    TarArchiveEntry entry = new TarArchiveEntry( getBioAssayDirName( ba ) + "/matrix.mtx" );
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/matrix.mtx" );
                     writeMatrix( matrix, i, baos );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
@@ -128,7 +128,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         List<BioAssay> bioAssays = matrix.getSingleCellDimension().getBioAssays();
         for ( int i = 0; i < bioAssays.size(); i++ ) {
             BioAssay ba = bioAssays.get( i );
-            Path sampleDir = outputDir.resolve( getBioAssayDirName( ba ) );
+            Path sampleDir = outputDir.resolve( formatBioAssayFilename( ba ) );
             Files.createDirectories( sampleDir );
             int finalI = i;
             completionService.submit( () -> {
@@ -151,7 +151,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         try {
             for ( int i = 0; i < bioAssays.size(); i++ ) {
                 BioAssay ba = completionService.take().get();
-                Path sampleDir = outputDir.resolve( ba.getId() + "_" + FileTools.cleanForFileName( ba.getName() ) );
+                Path sampleDir = outputDir.resolve( formatBioAssayFilename( ba ) );
                 log.info( String.format( "Wrote MEX files for %s to %s (%d/%d).", ba, sampleDir, i + 1, bioAssays.size() ) );
             }
         } catch ( ExecutionException e ) {
@@ -190,7 +190,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             SingleCellDimension dimension = firstVec.getSingleCellDimension();
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
-                Path sampleDir = outputDir.resolve( getBioAssayDirName( ba ) );
+                Path sampleDir = outputDir.resolve( formatBioAssayFilename( ba ) );
                 Files.createDirectories( sampleDir );
                 try ( OutputStream out = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
                     writeBarcodes( dimension, i, out );
@@ -199,17 +199,17 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
             // create a file for the first sample and hard-links for the remaining
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
-            Path ff = outputDir.resolve( getBioAssayDirName( it.next() ) ).resolve( "features.tsv.gz" );
+            Path ff = outputDir.resolve( formatBioAssayFilename( it.next() ) ).resolve( "features.tsv.gz" );
             features = new GZIPOutputStream( Files.newOutputStream( ff ) );
             while ( it.hasNext() ) {
-                Files.createLink( outputDir.resolve( getBioAssayDirName( it.next() ) ).resolve( "features.tsv.gz" ), ff );
+                Files.createLink( outputDir.resolve( formatBioAssayFilename( it.next() ) ).resolve( "features.tsv.gz" ), ff );
             }
 
             matrices = new MatrixVectorWriter[dimension.getBioAssays().size()];
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
-                matrices[i] = new MatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( getBioAssayDirName( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
+                matrices[i] = new FastMatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( formatBioAssayFilename( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
                 MatrixInfo.MatrixField field;
                 if ( scaleType != null ) {
                     // if data is converted, we always produce doubles
@@ -233,12 +233,12 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
 
             int row = 0;
-            writeFeature( firstVec.getDesignElement(), cs2gene, true, features );
+            writeFeature( firstVec.getDesignElement(), cs2gene, features );
             writeVector( firstVec, row++, matrices );
 
             while ( vecit.hasNext() ) {
                 SingleCellExpressionDataVector vec = vecit.next();
-                writeFeature( vec.getDesignElement(), cs2gene, false, features );
+                writeFeature( vec.getDesignElement(), cs2gene, features );
                 writeVector( vec, row++, matrices );
             }
 
@@ -257,28 +257,21 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         }
     }
 
-    private String getBioAssayDirName( BioAssay ba ) {
-        return ba.getId() + "_" + FileTools.cleanForFileName( ba.getShortName() != null ? ba.getShortName() : ba.getName() );
-    }
-
     private void writeBarcodes( SingleCellDimension dimension, int sampleIndex, OutputStream out ) throws IOException {
-        boolean first = true;
         for ( String cellId : dimension.getCellIdsBySample( sampleIndex ) ) {
-            out.write( ( ( first ? "" : "\n" ) + format( cellId ) ).getBytes( StandardCharsets.UTF_8 ) );
-            first = false;
+            out.write( ( format( cellId ) + "\n" ).getBytes( StandardCharsets.UTF_8 ) );
         }
     }
 
     private void writeFeatures( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
         List<CompositeSequence> designElements = matrix.getDesignElements();
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            CompositeSequence de = designElements.get( i );
-            writeFeature( de, cs2gene, i == 0, out );
+        for ( CompositeSequence de : designElements ) {
+            writeFeature( de, cs2gene, out );
         }
     }
 
-    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, boolean first, OutputStream out ) throws IOException {
-        String f = ( first ? "" : "\n" ) + format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression";
+    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
+        String f = format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression" + "\n";
         out.write( f.getBytes( StandardCharsets.UTF_8 ) );
     }
 
@@ -538,6 +531,37 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
             // use the end of the current sample as start for the next one
             start = end;
+        }
+    }
+
+    /**
+     * Avoid the formatting overhead of {@link MatrixVectorWriter} when writing sparse real or integer data.
+     */
+    private static class FastMatrixVectorWriter extends MatrixVectorWriter {
+
+        public FastMatrixVectorWriter( OutputStream out ) {
+            super( out );
+        }
+
+        @Override
+        public void printCoordinate( int[] row, int[] column, int[] data, int offset ) {
+            int size = row.length;
+            if ( size != column.length || size != data.length )
+                throw new IllegalArgumentException(
+                        "All arrays must be of the same size" );
+            for ( int i = 0; i < size; ++i ) {
+                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+            }
+        }
+
+        public void printCoordinate( int[] row, int[] column, double[] data, int offset ) {
+            int size = row.length;
+            if ( size != column.length || size != data.length )
+                throw new IllegalArgumentException(
+                        "All arrays must be of the same size" );
+            for ( int i = 0; i < size; ++i ) {
+                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+            }
         }
     }
 }
