@@ -74,7 +74,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         this.elementClass = elementClass;
         this.sessionFactory = sessionFactory;
         this.classMetadata = classMetadata;
-        this.batchSize = HibernateUtils.getBatchSize( sessionFactory, classMetadata );
+        this.batchSize = HibernateUtils.getBatchSize( classMetadata, sessionFactory );
         this.useCursorFetchIfSupported = false;
         this.isQueryStateless = HibernateUtils.isStateless( classMetadata, sessionFactory );
     }

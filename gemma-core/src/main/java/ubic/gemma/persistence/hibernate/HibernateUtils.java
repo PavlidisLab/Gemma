@@ -23,7 +23,7 @@ public class HibernateUtils {
     /**
      * Obtain the batch fetch size for the given class.
      */
-    public static int getBatchSize( SessionFactory sessionFactory, ClassMetadata classMetadata ) {
+    public static int getBatchSize( ClassMetadata classMetadata, SessionFactory sessionFactory ) {
         if ( classMetadata instanceof AbstractEntityPersister ) {
             Field field = ReflectionUtils.findField( AbstractEntityPersister.class, "batchSize" );
             ReflectionUtils.makeAccessible( field );
