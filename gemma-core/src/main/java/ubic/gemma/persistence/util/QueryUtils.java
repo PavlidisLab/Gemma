@@ -7,7 +7,6 @@ import org.hibernate.*;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.QueryImpl;
-import org.hibernate.type.Type;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.util.ListUtils;
@@ -308,19 +307,9 @@ public class QueryUtils {
                 || isStateless( queryOrCriteria, session.getFactory() );
     }
 
-    /**
-     * TODO: detect if the query or criteria is stateless.
-     */
     private static boolean isStateless( Object queryOrCriteria, SessionFactory sessionFactory ) {
         if ( queryOrCriteria instanceof Query ) {
-            Type[] types = ( ( Query ) queryOrCriteria ).getReturnTypes();
-            for ( int i = 0; i < types.length; i++ ) {
-                if ( types[i].isAssociationType() && HibernateUtils.isEager( types[i], sessionFactory ) ) {
-                    log.warn( ( ( Query ) queryOrCriteria ).getReturnAliases()[i] + " is not stateless." );
-                    return false;
-                }
-            }
-            return true;
+            return HibernateUtils.isStateless( ( Query ) queryOrCriteria, sessionFactory );
         } else {
             log.warn( "Detecting if a criteria is stateless hasn't been implemented, will assume it is not." );
             return false;

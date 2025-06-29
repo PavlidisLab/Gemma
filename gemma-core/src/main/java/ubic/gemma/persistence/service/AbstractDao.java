@@ -76,17 +76,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         this.classMetadata = classMetadata;
         this.batchSize = HibernateUtils.getBatchSize( sessionFactory, classMetadata );
         this.useCursorFetchIfSupported = false;
-        boolean isStateless = true;
-        for ( int i = 0; i < classMetadata.getPropertyTypes().length; i++ ) {
-            if ( classMetadata.getPropertyTypes()[i].isAssociationType() && HibernateUtils.isEager( classMetadata.getPropertyTypes()[i], sessionFactory ) ) {
-                log.debug( classMetadata.getEntityName() + "." + classMetadata.getPropertyNames()[i] + " is eagerly-fetched, streaming will not be stateless." );
-                isStateless = false;
-            }
-        }
-        if ( !isStateless ) {
-            log.debug( "Some properties of " + classMetadata.getEntityName() + " are eagerly-fetched associations, streaming will not assume statelessness." );
-        }
-        this.isQueryStateless = isStateless;
+        this.isQueryStateless = HibernateUtils.isStateless( classMetadata, sessionFactory );
     }
 
     @Override
