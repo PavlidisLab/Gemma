@@ -14,6 +14,7 @@ import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -205,7 +206,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 Files.createLink( outputDir.resolve( formatBioAssayFilename( it.next() ) ).resolve( "features.tsv.gz" ), ff );
             }
 
-            matrices = new MatrixVectorWriter[dimension.getBioAssays().size()];
+            matrices = new FastMatrixVectorWriter[dimension.getBioAssays().size()];
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
@@ -301,17 +302,22 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         if ( mat instanceof SingleCellExpressionDataDoubleMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
             int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
-            writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+            writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out );
         } else if ( mat instanceof SingleCellExpressionDataIntMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
             int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
-            writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+            if ( scaleType != null ) {
+                // conversions always produce double data vectors
+                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out );
+            } else {
+                writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+            }
         } else {
             throw new UnsupportedOperationException( "Unsupported matrix type " + mat.getClass().getName() );
         }
     }
 
-    private void writeDoubleMatrix( CompRowMatrix matrix, int sampleOffset, int numberOfCells, OutputStream out ) {
+    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCells, OutputStream out ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
@@ -346,7 +352,11 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
         }
 
-        try ( MatrixVectorWriter writer = new MatrixVectorWriter( out ) ) {
+        if ( scaleType != null ) {
+            sampleData = ScaleTypeConversionUtils.convertData( sampleData, qt, scaleType );
+        }
+
+        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Real, MatrixInfo.MatrixSymmetry.General ) );
             writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
@@ -388,7 +398,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
         }
 
-        try ( MatrixVectorWriter writer = new MatrixVectorWriter( out ) ) {
+        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Integer, MatrixInfo.MatrixSymmetry.General ) );
             writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
