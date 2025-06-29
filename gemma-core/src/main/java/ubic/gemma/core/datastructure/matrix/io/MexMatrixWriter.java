@@ -550,7 +550,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 throw new IllegalArgumentException(
                         "All arrays must be of the same size" );
             for ( int i = 0; i < size; ++i ) {
-                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+                write( row[i] + " " + column[i] + " " + data[i] + "\n" );
             }
         }
 
@@ -560,7 +560,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 throw new IllegalArgumentException(
                         "All arrays must be of the same size" );
             for ( int i = 0; i < size; ++i ) {
-                write( row[0] + " " + column[1] + " " + data[2] + "\n" );
+                write( row[i] + " " + column[i] + " " + data[i] + "\n" );
             }
         }
     }
