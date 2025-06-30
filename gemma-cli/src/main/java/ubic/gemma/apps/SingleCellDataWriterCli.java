@@ -14,7 +14,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataIntegerMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -66,9 +65,6 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-
-    @Autowired
-    private FileLockManager fileLockManager;
 
     @Autowired
     private BuildInfo buildInfo;
@@ -410,9 +406,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     private OutputStream openOutputFile( Path fileName ) throws IOException {
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new GZIPOutputStream( fileLockManager.newOutputStream( fileName ) );
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
         } else {
-            return fileLockManager.newOutputStream( fileName );
+            return Files.newOutputStream( fileName );
         }
     }
 }

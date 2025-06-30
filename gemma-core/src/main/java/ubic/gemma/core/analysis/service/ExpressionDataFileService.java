@@ -388,28 +388,18 @@ public interface ExpressionDataFileService {
 
     /**
      * Write all the differential expression data files for a given experiment to a particular directory.
-     * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, Path, boolean)
      */
     Collection<Path> writeDiffExAnalysisArchiveFiles( ExpressionExperiment ee, Path outputDir, boolean forceWrite ) throws IOException;
 
     Collection<Path> writeDiffExAnalysisArchiveFiles( Collection<DifferentialExpressionAnalysis> analyses, Path outputDir, boolean forceWrite ) throws IOException;
 
     /**
-     * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, Path, boolean)
-     */
-    void writeDiffExAnalysisArchiveFileById( Long id, Path outputFile, boolean forceWrite ) throws IOException;
-
-    /**
-     * Write a differential expression analysis archive file for a given analysis to a particular file.
-     * @param forceWrite whether to force write and ignore any pre-existing file
-     * @throws IllegalArgumentException if a file already exists and forceWrite is false
-     */
-    void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path file, boolean forceWrite ) throws IOException;
-
-    /**
      * @see #writeDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, OutputStream)
      */
     void writeDiffExAnalysisArchiveFileById( Long id, OutputStream outputStream ) throws IOException;
 
+    /**
+     * Write a differential expression analysis archive file for a given analysis to an output stream.
+     */
     void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, OutputStream outputStream ) throws IOException;
 }

@@ -980,13 +980,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return result;
     }
 
-    @Override
-    public void writeDiffExAnalysisArchiveFileById( Long id, Path outputFile, boolean forceWrite ) throws IOException {
-        writeDiffExAnalysisArchiveFile( helperService.getAnalysisById( id ), outputFile, forceWrite );
-    }
-
-    @Override
-    public void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path file, boolean forceWrite ) throws IOException {
+    private void writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, Path file, boolean forceWrite ) throws IOException {
         if ( !forceWrite && Files.exists( file ) ) {
             throw new IllegalArgumentException( file + " already exists, use forceWrite to overwrite." );
         }
