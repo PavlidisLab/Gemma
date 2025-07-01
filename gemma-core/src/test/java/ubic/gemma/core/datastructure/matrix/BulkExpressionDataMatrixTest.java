@@ -31,6 +31,8 @@ public class BulkExpressionDataMatrixTest {
         assertEquals( 0, matrix.getColumn( 0 ).length );
         assertEquals( 0, matrix.getRawMatrix().length );
         assertEquals( -1, matrix.getRowIndex( new CompositeSequence() ) );
+        Assertions.assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .isEmpty();
     }
 
     @Test
@@ -53,6 +55,8 @@ public class BulkExpressionDataMatrixTest {
                 .isEmpty();
         Assertions.assertThatThrownBy( () -> matrix.getColumnAsDoubles( 0 ) )
                 .isInstanceOf( IndexOutOfBoundsException.class );
+        Assertions.assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .hasSize( 1 );
     }
 
     @Test
@@ -87,6 +91,8 @@ public class BulkExpressionDataMatrixTest {
                         10.036688491881815 );
         Assertions.assertThat( matrix.getColumnAsDoubles( 0 ) )
                 .containsExactly( 8.750564224663629 );
+        Assertions.assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .hasSize( 1 );
     }
 
     @Test
@@ -113,5 +119,7 @@ public class BulkExpressionDataMatrixTest {
         assertEquals( 20, matrix.rows() );
         CompositeSequence de = matrix.getDesignElements().get( 0 );
         Assertions.assertThat( matrix.getRowIndices( de ) ).containsExactly( 0, 10 );
+        Assertions.assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .hasSize( 20 );
     }
 }

@@ -31,7 +31,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -373,59 +372,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         } else {
             matrix.set( row, column, value );
         }
-    }
-
-    /**
-     * @return Convert this to a collection of vectors.
-     */
-    public Collection<ProcessedExpressionDataVector> toProcessedDataVectors() {
-        Collection<ProcessedExpressionDataVector> result = new HashSet<>();
-        QuantitationType qt = this.getQuantitationTypes().iterator().next();
-        if ( this.getQuantitationTypes().size() > 1 ) {
-            throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
-        }
-        BioAssayDimension bad = this.getBioAssayDimension();
-        for ( int i = 0; i < this.rows(); i++ ) {
-            ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
-            v.setBioAssayDimension( bad );
-            v.setDesignElement( this.getRowNames().get( i ) );
-            v.setQuantitationType( qt );
-            v.setDataAsDoubles( getRowAsDoubles( i ) );
-            v.setExpressionExperiment( this.expressionExperiment );
-            // we don't fill in the ranks because we only have the mean value here.
-            result.add( v );
-        }
-        return result;
-    }
-
-    /**
-     * Same as toProcessedDataVectors but uses RawExpressionDataVector
-     *
-     * @return Convert this to a collection of vectors.
-     */
-    public Collection<RawExpressionDataVector> toRawDataVectors() {
-        Collection<RawExpressionDataVector> result = new HashSet<>();
-        QuantitationType qt = this.getQuantitationTypes().iterator().next();
-
-        if ( this.getQuantitationTypes().size() > 1 ) {
-            throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
-        }
-
-        BioAssayDimension bad = this.getBioAssayDimension();
-        for ( int i = 0; i < this.rows(); i++ ) {
-            RawExpressionDataVector v = RawExpressionDataVector.Factory.newInstance();
-            v.setBioAssayDimension( bad );
-            v.setDesignElement( this.getRowNames().get( i ) );
-            v.setQuantitationType( qt );
-            v.setDataAsDoubles( getRowAsDoubles( i ) );
-            v.setExpressionExperiment( this.expressionExperiment );
-            // we don't fill in the ranks because we only have the mean value here.
-            result.add( v );
-        }
-
-        assert result.size() == this.rows();
-
-        return result;
     }
 
     public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {

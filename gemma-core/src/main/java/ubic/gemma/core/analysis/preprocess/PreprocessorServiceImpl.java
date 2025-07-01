@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
@@ -129,7 +130,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
         // Convert to vectors (persist QT)
-        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedData.toProcessedDataVectors(), false );
+        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, BulkExpressionDataMatrixUtils.toVectors( correctedData, ProcessedExpressionDataVector.class ), false );
 
         auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, String.format( "ComBat batch correction, vectors were replaced with %d batch-corrected ones.", replaced ) );
     }

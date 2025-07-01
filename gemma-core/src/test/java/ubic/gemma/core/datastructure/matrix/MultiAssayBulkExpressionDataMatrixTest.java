@@ -73,7 +73,8 @@ public class MultiAssayBulkExpressionDataMatrixTest {
                 .hasSize( 8 );
         assertThat( matrix.columns() ).isEqualTo( 8 );
         assertThat( matrix.rows() ).isEqualTo( 2 );
-        System.out.println( matrix );
+        assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .hasSize( 2 );
     }
 
     @Test
@@ -132,7 +133,8 @@ public class MultiAssayBulkExpressionDataMatrixTest {
                 .hasSize( 16 );
         assertThat( matrix.columns() ).isEqualTo( 8 );
         assertThat( matrix.rows() ).isEqualTo( 2 );
-        System.out.println( matrix );
+        assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
+                .hasSize( 2 );
     }
 
     @Test

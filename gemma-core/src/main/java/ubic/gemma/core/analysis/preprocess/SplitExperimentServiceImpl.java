@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -282,7 +283,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ( ExpressionDataDoubleMatrix ) qt2mat.get( qt ),
                         bms, newBAD );
 
-                Collection<RawExpressionDataVector> rawDataVectors = expressionDataMatrix.toRawDataVectors();
+                Collection<RawExpressionDataVector> rawDataVectors = BulkExpressionDataMatrixUtils.toVectors( expressionDataMatrix, RawExpressionDataVector.class );
                 for ( RawExpressionDataVector v : rawDataVectors ) {
                     v.setQuantitationType( clonedQt );
                     v.setExpressionExperiment( split );

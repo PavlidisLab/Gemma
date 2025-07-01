@@ -28,6 +28,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
@@ -425,7 +426,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
-        return new HashSet<>( matrix.toRawDataVectors() );
+        return new HashSet<>( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) );
     }
 
     private void addToGene( RankMethod method, Map<Gene, Collection<Double>> result, Double rMean, Double rMax,

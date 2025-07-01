@@ -5,10 +5,7 @@ import cern.jet.stat.Descriptive;
 import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -16,8 +13,8 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import java.nio.*;
 import java.util.function.ToDoubleFunction;
 
-import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
-import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingFloatCountValue;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultCountValueAsDouble;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultCountValueAsFloat;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 /**
@@ -77,9 +74,9 @@ public class SingleCellDescriptive {
                 case LONG:
                     return countCount( vector, vector.getDataAsLongs() );
                 case FLOAT:
-                    return countCount( vector, vector.getDataAsFloats(), getMissingFloatCountValue( vector.getQuantitationType() ) );
+                    return countCount( vector, vector.getDataAsFloats(), getDefaultCountValueAsFloat( vector.getQuantitationType() ) );
                 case DOUBLE:
-                    return countCount( vector, vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                    return countCount( vector, vector.getDataAsDoubles(), getDefaultCountValueAsDouble( vector.getQuantitationType() ) );
                 default:
                     throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
             }
@@ -245,7 +242,7 @@ public class SingleCellDescriptive {
      * Quickly count the non-zeroes for each assay.
      * <p>
      * Note: this is not accurate if the single-cell vector contains {@code NaN}s or actual zeroes or missing values as
-     * per {@link DataVectorDescriptive#getMissingCountValue(QuantitationType)}}.
+     * per {@link QuantitationTypeUtils#getDefaultCountValueAsDouble(QuantitationType)}}.
      */
     public static int[] countFast( SingleCellExpressionDataVector vector ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];

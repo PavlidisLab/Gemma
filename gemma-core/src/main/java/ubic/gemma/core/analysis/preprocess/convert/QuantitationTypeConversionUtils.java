@@ -37,7 +37,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -371,31 +370,5 @@ public class QuantitationTypeConversionUtils {
             }
         }
         return ignoredPropertiesList.toArray( new String[0] );
-    }
-
-    /**
-     * Obtain the default to use for a given quantitation type if no value was provided.
-     */
-    @Nonnull
-    public static Object getDefaultValue( QuantitationType quantitationType ) {
-        PrimitiveType pt = quantitationType.getRepresentation();
-        switch ( pt ) {
-            case DOUBLE:
-                return Double.NaN;
-            case FLOAT:
-                return Float.NaN;
-            case STRING:
-                return "";
-            case CHAR:
-                return ( char ) 0;
-            case INT:
-                return 0;
-            case LONG:
-                return 0L;
-            case BOOLEAN:
-                return false;
-            default:
-                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
-        }
     }
 }
