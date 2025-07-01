@@ -74,6 +74,7 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -649,7 +650,11 @@ public class ExpressionExperimentQCController {
             throw new EntityNotFoundException( "No vector for design element with ID " + designElementId + "." );
         }
         // TODO: cpm normalization
-        vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        try {
+            vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new RuntimeException( e );
+        }
         SingleCellDataBoxplot dataset = new SingleCellDataBoxplot( vector );
         dataset.setShowMean( false );
         if ( assayIds != null ) {

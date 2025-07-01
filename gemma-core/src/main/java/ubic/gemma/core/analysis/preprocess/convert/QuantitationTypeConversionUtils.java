@@ -22,7 +22,6 @@ import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
@@ -39,7 +38,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import javax.annotation.CheckReturnValue;
 import java.beans.PropertyDescriptor;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -74,7 +72,7 @@ public class QuantitationTypeConversionUtils {
      *
      * @param dmatrix matrix
      * @return ee data double matrix
-     * @throws QuantitationTypeDetectionException if data cannot be converted to log2 scale
+     * @throws QuantitationTypeConversionException if data cannot be converted to log2 scale
      */
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) throws QuantitationTypeConversionException {
         dmatrix = QuantitationTypeConversionUtils.ensureLog2Scale( dmatrix );
@@ -124,12 +122,13 @@ public class QuantitationTypeConversionUtils {
      */
     @CheckReturnValue
     public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
-        if ( quantitationType == null ) {
+        QuantitationType quantitationType;
+        if ( dmatrix.getQuantitationTypes().size() > 1 ) {
+            quantitationType = QuantitationTypeUtils.mergeQuantitationTypes( dmatrix.getQuantitationTypes() );
+        } else if ( !dmatrix.getQuantitationTypes().isEmpty() ) {
+            quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        } else {
             throw new IllegalArgumentException( "Expression data matrix lacks a quantitation type." );
-        }
-        if ( isHeterogeneous( dmatrix ) ) {
-            throw new IllegalArgumentException( "Transforming a dataset to log2 scale with mixed quantitation types is not supported." );
         }
         if ( quantitationType.getGeneralType() != GeneralType.QUANTITATIVE ) {
             throw new IllegalArgumentException( "Only quantitative data is supported on a log2 scale." );
@@ -231,6 +230,7 @@ public class QuantitationTypeConversionUtils {
                 .peek( qt -> {
                     qt.setType( finalType );
                     qt.setScale( ScaleType.LOG2 );
+                    QuantitationTypeUtils.appendToDescription( qt, "Data was converted from " + quantitationType.getScale() + " to " + ScaleType.LOG2 + "." );
                 } )
                 .collect( Collectors.toList() );
 
@@ -262,69 +262,6 @@ public class QuantitationTypeConversionUtils {
     }
 
     /**
-     * Check if an expression data matrix has heterogeneous quantitations.
-     * <p>
-     * This happens when data from multiple platforms are mixed together. If the data is transformed in the same way,
-     * it's generally okay to mix them together.
-     */
-    private static boolean isHeterogeneous( ExpressionDataDoubleMatrix expressionData ) {
-        QuantitationType firstQt = expressionData.getQuantitationTypes().iterator().next();
-        if ( firstQt == null ) {
-            throw new IllegalArgumentException( "At least one quantitation type is needed." );
-        }
-        for ( QuantitationType qt : expressionData.getQuantitationTypes() ) {
-            if ( qt.getRepresentation() != firstQt.getRepresentation()
-                    || qt.getGeneralType() != firstQt.getGeneralType()
-                    || qt.getType() != firstQt.getType()
-                    || qt.getScale() != firstQt.getScale()
-                    || qt.getIsNormalized() != firstQt.getIsNormalized()
-                    || qt.getIsBackground() != firstQt.getIsBackground()
-                    || qt.getIsBackgroundSubtracted() != firstQt.getIsBackgroundSubtracted()
-                    || qt.getIsBatchCorrected() != firstQt.getIsBatchCorrected() ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Merge a given collection of quantitation types.
-     *
-     * @throws IllegalStateException if the QTs are incompatible
-     */
-    public static QuantitationType mergeQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
-        Assert.isTrue( quantitationTypes.size() > 1, "Two or more quantitation types are needed for merging." );
-        QuantitationType qt = new QuantitationType();
-        qt.setName( "Merged from " + quantitationTypes.size() + " quantitation types" );
-        qt.setDescription( quantitationTypes.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n" ) ) );
-        qt.setGeneralType( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getGeneralType ) );
-        qt.setType( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getType ) );
-        qt.setScale( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getScale ) );
-        qt.setRepresentation( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getRepresentation ) );
-        qt.setIsRatio( getUniqueQuantitationTypeField( quantitationTypes, QuantitationType::getIsRatio ) );
-        qt.setIsRecomputedFromRawData( quantitationTypes.stream().allMatch( QuantitationType::getIsRecomputedFromRawData ) );
-        if ( quantitationTypes.stream().anyMatch( QuantitationType::getIsNormalized ) ) {
-            throw new IllegalStateException( "One more quantitation types were normalized, cannot merge them. Use getQuantitationTypes() instead." );
-        }
-        if ( quantitationTypes.stream().anyMatch( QuantitationType::getIsBatchCorrected ) ) {
-            throw new IllegalStateException( "One more quantitation types were batch-corrected, cannot merge them. Use getQuantitationTypes() instead." );
-        }
-        // TODO: background, backgroundSubtracted?
-        return qt;
-    }
-
-    private static <S> S getUniqueQuantitationTypeField( Collection<QuantitationType> quantitationTypes, Function<QuantitationType, S> a ) {
-        Set<S> uv = quantitationTypes.stream()
-                .map( a )
-                .collect( Collectors.toSet() );
-        if ( uv.size() > 1 ) {
-            throw new IllegalStateException( "There is more than one quantitation type in this matrix, use getQuantitationTypes() instead." );
-        } else {
-            return uv.iterator().next();
-        }
-    }
-
-    /**
      * Convert a collection of vectors.
      *
      * @param createQtFunc a function to create a converted {@link QuantitationType}
@@ -332,7 +269,7 @@ public class QuantitationTypeConversionUtils {
      *                     (second argument)
      * @param vectorType   the type of vector to produce
      */
-    public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, Function<QuantitationType, QuantitationType> createQtFunc, BiConsumer<T, T> doToVector, Class<T> vectorType ) {
+    static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, Function<QuantitationType, QuantitationType> createQtFunc, DoToVectorFunction<T> doToVector, Class<T> vectorType ) throws QuantitationTypeConversionException {
         ArrayList<T> result = new ArrayList<>( vectors.size() );
         Map<QuantitationType, QuantitationType> convertedQts = new HashMap<>();
         String[] ignoredProperties = getDataVectorIgnoredProperties( vectorType );
@@ -343,20 +280,30 @@ public class QuantitationTypeConversionUtils {
         return result;
     }
 
-
     /**
      * Convert a single vector.
      */
-    public static <T extends DataVector> T convertVector( T vector, Function<QuantitationType, QuantitationType> createQtFunc, BiConsumer<T, T> doToVector, Class<T> vectorType ) {
+    static <T extends DataVector> T convertVector( T vector, Function<QuantitationType, QuantitationType> createQtFunc, DoToVectorFunction<T> doToVector, Class<T> vectorType ) throws QuantitationTypeConversionException {
         return createVector( vector, vectorType, createQtFunc.apply( vector.getQuantitationType() ), doToVector, getDataVectorIgnoredProperties( vectorType ) );
     }
 
-    private static <T extends DataVector> T createVector( T vector, Class<T> vectorType, QuantitationType convertedQt, BiConsumer<T, T> doToVector, String[] ignoredProperties ) {
+    private static <T extends DataVector> T createVector( T vector, Class<T> vectorType, QuantitationType convertedQt, DoToVectorFunction<T> doToVector, String[] ignoredProperties ) throws QuantitationTypeConversionException {
         T convertedVector = BeanUtils.instantiate( vectorType );
         BeanUtils.copyProperties( vector, convertedVector, ignoredProperties );
         convertedVector.setQuantitationType( convertedQt );
-        doToVector.accept( convertedVector, vector );
+        doToVector.doToVector( convertedVector, vector );
         return convertedVector;
+    }
+
+    interface DoToVectorFunction<T> {
+
+        /**
+         *
+         * @param convertedVector the new vector being converted with the converted {@link QuantitationType}
+         * @param vector          the original vector
+         * @throws QuantitationTypeConversionException
+         */
+        void doToVector( T convertedVector, T vector ) throws QuantitationTypeConversionException;
     }
 
     /**
@@ -371,4 +318,5 @@ public class QuantitationTypeConversionUtils {
         }
         return ignoredPropertiesList.toArray( new String[0] );
     }
+
 }

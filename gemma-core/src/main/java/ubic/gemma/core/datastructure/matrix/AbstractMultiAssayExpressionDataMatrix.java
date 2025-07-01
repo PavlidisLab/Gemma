@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.mergeQuantitationTypes;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.mergeQuantitationTypes;
 
 /**
  * Base class for ExpressionDataMatrix implementations that can deal with multiple BioAssays per BioMaterial.

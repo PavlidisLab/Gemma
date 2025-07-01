@@ -4,6 +4,7 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -51,11 +52,19 @@ class RandomDataUtils {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
                 double val = logNormalDistribution.sample();
                 ScaleType scale = qt.getScale();
-                return convertData( new double[] { val }, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, scale )[0];
+                try {
+                    return convertData( new double[] { val }, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, scale )[0];
+                } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                    throw new RuntimeException( e );
+                }
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
                 int val = countDistribution.sample();
                 ScaleType scale = qt.getScale();
-                return ScaleTypeConversionUtils.convertData( new int[] { val }, scale )[0];
+                try {
+                    return ScaleTypeConversionUtils.convertData( new int[] { val }, scale )[0];
+                } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                    throw new RuntimeException( e );
+                }
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }
@@ -93,10 +102,18 @@ class RandomDataUtils {
         } else {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
                 double[] val = logNormalDistribution.sample( n );
-                return convertData( val, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, qt.getScale() );
+                try {
+                    return convertData( val, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, qt.getScale() );
+                } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                    throw new RuntimeException( e );
+                }
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
                 int[] val = countDistribution.sample( n );
-                return ScaleTypeConversionUtils.convertData( val, qt.getScale() );
+                try {
+                    return ScaleTypeConversionUtils.convertData( val, qt.getScale() );
+                } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                    throw new RuntimeException( e );
+                }
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }

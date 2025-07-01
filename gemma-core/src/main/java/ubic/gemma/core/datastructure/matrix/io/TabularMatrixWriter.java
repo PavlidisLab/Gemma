@@ -5,6 +5,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
@@ -145,7 +146,11 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         if ( scaleType != null ) {
-            writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+            try {
+                writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+            } catch ( UnsupportedQuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         } else {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:

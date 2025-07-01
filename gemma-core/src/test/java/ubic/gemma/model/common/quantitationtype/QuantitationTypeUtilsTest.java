@@ -1,8 +1,13 @@
 package ubic.gemma.model.common.quantitationtype;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class QuantitationTypeUtilsTest {
 
@@ -35,8 +40,27 @@ public class QuantitationTypeUtilsTest {
         assertEquals( "", QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.OTHER, ScaleType.OTHER, PrimitiveType.STRING ) ) );
     }
 
+    @Test
+    public void testMergeQuantitationTypes() {
+        QuantitationType mergedQt = QuantitationTypeUtils.mergeQuantitationTypes( Arrays.asList(
+                createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ),
+                createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ),
+                createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ),
+                createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE )
+        ) );
+        assertEquals( StandardQuantitationType.COUNT, mergedQt.getType() );
+        Assertions.assertThat( mergedQt.getDescription() )
+                .startsWith( "Data was merged from the following quantitation types:\n" )
+                .hasLineCount( 5 );
+        assertNull( mergedQt.getGeneralType() );
+        assertEquals( StandardQuantitationType.COUNT, mergedQt.getType() );
+        assertEquals( ScaleType.COUNT, mergedQt.getScale() );
+        assertEquals( PrimitiveType.DOUBLE, mergedQt.getRepresentation() );
+    }
+
     private QuantitationType createQt( StandardQuantitationType type, ScaleType scaleType, PrimitiveType representation ) {
         QuantitationType qt = new QuantitationType();
+        qt.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         qt.setType( type );
         qt.setScale( scaleType );
         qt.setRepresentation( representation );

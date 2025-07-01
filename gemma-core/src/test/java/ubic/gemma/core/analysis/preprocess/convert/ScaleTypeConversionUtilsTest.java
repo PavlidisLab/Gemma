@@ -11,7 +11,7 @@ import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUti
 public class ScaleTypeConversionUtilsTest {
 
     @Test
-    public void testConvertCountingData() {
+    public void testConvertCountingData() throws UnsupportedQuantitationScaleConversionException {
         QuantitationType qt = new QuantitationType();
         qt.setScale( ScaleType.COUNT );
         double[] vec = new double[] { 1.0, 2.0, 3.0 };

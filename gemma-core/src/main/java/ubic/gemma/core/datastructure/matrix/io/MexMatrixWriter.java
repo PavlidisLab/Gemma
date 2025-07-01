@@ -10,6 +10,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -364,7 +366,11 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         }
 
         if ( scaleType != null ) {
-            sampleData = ScaleTypeConversionUtils.convertData( sampleData, qt, scaleType );
+            try {
+                sampleData = ScaleTypeConversionUtils.convertData( sampleData, qt, scaleType );
+            } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
 
         try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out, autoFlush ) ) {
@@ -418,7 +424,11 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private void writeVector( SingleCellExpressionDataVector vector, int row, MatrixVectorWriter[] writers ) {
         if ( scaleType != null ) {
-            writeDoubleVector( vector, ScaleTypeConversionUtils.convertData( vector, scaleType ), row, writers );
+            try {
+                writeDoubleVector( vector, ScaleTypeConversionUtils.convertData( vector, scaleType ), row, writers );
+            } catch ( UnsupportedQuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         } else {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:

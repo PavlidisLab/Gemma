@@ -1,9 +1,9 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
@@ -48,7 +48,7 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
      * {@inheritDoc}
      * <p>
      * In the case of multi-assay matrices, more than one quantitation type may be present. When possible, those are
-     * merged with {@link QuantitationTypeConversionUtils#mergeQuantitationTypes(Collection)}.
+     * merged with {@link QuantitationTypeUtils#mergeQuantitationTypes(Collection)}.
      * @throws IllegalStateException if the matrix has more than one quantitation type that cannot be combined
      */
     @Override

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
@@ -301,7 +302,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return new SingleCellExpressionDataIntMatrix( vectors );
         } else {
             log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
-            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            try {
+                return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 
@@ -318,7 +323,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return new SingleCellExpressionDataIntMatrix( vectors );
         } else {
             log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
-            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            try {
+                return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 
