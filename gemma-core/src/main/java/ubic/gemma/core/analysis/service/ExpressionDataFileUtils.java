@@ -1,6 +1,7 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.Identifiable;
@@ -85,18 +86,10 @@ public class ExpressionDataFileUtils {
 
     /**
      * Forms a folder name where the given experiments metadata will be located (within the {@code ${gemma.appdata.home}/metadata} directory).
-     *
-     * @param ee the experiment to get the folder name for.
-     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
-     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
-     * any reason, the experiments ID will be used.
      */
     public static String getExpressionExperimentMetadataDirname( ExpressionExperiment ee ) {
-        String sName = ee.getShortName();
-        if ( StringUtils.isBlank( sName ) ) {
-            return ee.getId().toString();
-        }
-        return sName.replaceAll( "\\.\\d+$", "" );
+        Assert.isTrue( StringUtils.isNotBlank( ee.getShortName() ), "Cannot resolve a directory name for an experiment lacking a shortname." );
+        return FileTools.cleanForFileName( ee.getShortName() );
     }
 
     private static String formatExperimentAnalyzedFilename( BioAssaySet experimentAnalyzed ) {
