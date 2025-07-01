@@ -23,10 +23,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +52,8 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 @CommonsLog
 @Setter
 public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
+
+    private boolean autoFlush;
 
     @Nullable
     private ScaleType scaleType;
@@ -88,24 +87,30 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             for ( int i = 0; i < bioAssays.size(); i++ ) {
                 BioAssay ba = bioAssays.get( i );
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-                    writeBarcodes( matrix.getSingleCellDimension(), i, baos );
-                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/barcodes.tsv" );
+                    try ( Writer writer = newWriter( baos ) ) {
+                        writeBarcodes( matrix.getSingleCellDimension(), i, writer, false );
+                    }
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/barcodes.tsv.gz" );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
                     aos.write( baos.toByteArray() );
                     aos.closeArchiveEntry();
                 }
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-                    writeFeatures( matrix, cs2gene, baos );
-                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/features.tsv" );
+                    try ( Writer writer = newWriter( baos ) ) {
+                        writeFeatures( matrix, cs2gene, writer, false );
+                    }
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/features.tsv.gz" );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
                     aos.write( baos.toByteArray() );
                     aos.closeArchiveEntry();
                 }
                 try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/matrix.mtx" );
-                    writeMatrix( matrix, i, baos );
+                    try ( Writer writer = newWriter( baos ) ) {
+                        writeMatrix( matrix, i, writer, false ); // flushing is pointless when writing to a TAR
+                    }
+                    TarArchiveEntry entry = new TarArchiveEntry( formatBioAssayFilename( ba ) + "/matrix.mtx.gz" );
                     entry.setSize( baos.size() );
                     aos.putArchiveEntry( entry );
                     aos.write( baos.toByteArray() );
@@ -134,14 +139,14 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             int finalI = i;
             completionService.submit( () -> {
                 try {
-                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
-                        writeBarcodes( matrix.getSingleCellDimension(), finalI, baos );
+                    try ( Writer baos = newWriter( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
+                        writeBarcodes( matrix.getSingleCellDimension(), finalI, baos, autoFlush );
                     }
-                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "features.tsv.gz" ) ) ) ) {
-                        writeFeatures( matrix, cs2gene, baos );
+                    try ( Writer baos = newWriter( Files.newOutputStream( sampleDir.resolve( "features.tsv.gz" ) ) ) ) {
+                        writeFeatures( matrix, cs2gene, baos, autoFlush );
                     }
-                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
-                        writeMatrix( matrix, finalI, baos );
+                    try ( Writer baos = newWriter( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
+                        writeMatrix( matrix, finalI, baos, autoFlush );
                     }
                     return ba;
                 } catch ( IOException e ) {
@@ -181,7 +186,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             throw new IllegalArgumentException( "Output directory " + outputDir + " already exists." );
         }
         // lookup the first vector to get the layout
-        OutputStream features = null;
+        Writer features = null;
         MatrixVectorWriter[] matrices = null;
         try {
             Iterator<SingleCellExpressionDataVector> vecit = vectors.iterator();
@@ -193,15 +198,15 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 Path sampleDir = outputDir.resolve( formatBioAssayFilename( ba ) );
                 Files.createDirectories( sampleDir );
-                try ( OutputStream out = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
-                    writeBarcodes( dimension, i, out );
+                try ( Writer out = newWriter( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
+                    writeBarcodes( dimension, i, out, autoFlush );
                 }
             }
 
             // create a file for the first sample and hard-links for the remaining
             Iterator<BioAssay> it = dimension.getBioAssays().iterator();
             Path ff = outputDir.resolve( formatBioAssayFilename( it.next() ) ).resolve( "features.tsv.gz" );
-            features = new GZIPOutputStream( Files.newOutputStream( ff ) );
+            features = newWriter( Files.newOutputStream( ff ) );
             while ( it.hasNext() ) {
                 Files.createLink( outputDir.resolve( formatBioAssayFilename( it.next() ) ).resolve( "features.tsv.gz" ), ff );
             }
@@ -210,7 +215,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
-                matrices[i] = new FastMatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( formatBioAssayFilename( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
+                matrices[i] = new FastMatrixVectorWriter( newWriter( Files.newOutputStream( outputDir.resolve( formatBioAssayFilename( ba ) ).resolve( "matrix.mtx.gz" ) ) ), autoFlush );
                 MatrixInfo.MatrixField field;
                 if ( scaleType != null ) {
                     // if data is converted, we always produce doubles
@@ -234,12 +239,12 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
 
             int row = 0;
-            writeFeature( firstVec.getDesignElement(), cs2gene, features );
+            writeFeature( firstVec.getDesignElement(), cs2gene, features, autoFlush );
             writeVector( firstVec, row++, matrices );
 
             while ( vecit.hasNext() ) {
                 SingleCellExpressionDataVector vec = vecit.next();
-                writeFeature( vec.getDesignElement(), cs2gene, features );
+                writeFeature( vec.getDesignElement(), cs2gene, features, autoFlush );
                 writeVector( vec, row++, matrices );
             }
 
@@ -258,22 +263,28 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         }
     }
 
-    private void writeBarcodes( SingleCellDimension dimension, int sampleIndex, OutputStream out ) throws IOException {
+    private void writeBarcodes( SingleCellDimension dimension, int sampleIndex, Writer out, boolean autoFlush ) throws IOException {
         for ( String cellId : dimension.getCellIdsBySample( sampleIndex ) ) {
-            out.write( ( format( cellId ) + "\n" ).getBytes( StandardCharsets.UTF_8 ) );
+            out.write( ( format( cellId ) + "\n" ) );
+            if ( autoFlush ) {
+                out.flush();
+            }
         }
     }
 
-    private void writeFeatures( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
+    private void writeFeatures( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer out, boolean autoFlush ) throws IOException {
         List<CompositeSequence> designElements = matrix.getDesignElements();
         for ( CompositeSequence de : designElements ) {
-            writeFeature( de, cs2gene, out );
+            writeFeature( de, cs2gene, out, autoFlush );
         }
     }
 
-    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream out ) throws IOException {
+    private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer out, boolean autoFlush ) throws IOException {
         String f = format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression" + "\n";
-        out.write( f.getBytes( StandardCharsets.UTF_8 ) );
+        out.write( f );
+        if ( autoFlush ) {
+            out.flush();
+        }
     }
 
     private String formatGenes( @Nullable Collection<Gene> genes ) {
@@ -298,17 +309,17 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
     }
 
-    private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, OutputStream out ) {
+    private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, Writer out, boolean autoFlush ) {
         if ( mat instanceof SingleCellExpressionDataDoubleMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
             int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
-            writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out );
+            writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
         } else if ( mat instanceof SingleCellExpressionDataIntMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
             int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
             if ( scaleType != null ) {
                 // conversions always produce double data vectors
-                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out );
+                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
             } else {
                 writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
             }
@@ -317,7 +328,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         }
     }
 
-    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCells, OutputStream out ) {
+    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCells, Writer out, boolean autoFlush ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
@@ -356,14 +367,14 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             sampleData = ScaleTypeConversionUtils.convertData( sampleData, qt, scaleType );
         }
 
-        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out ) ) {
+        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out, autoFlush ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Real, MatrixInfo.MatrixSymmetry.General ) );
             writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
         }
     }
 
-    private void writeIntMatrix( CompRowMatrix matrix, int sampleOffset, int numberOfCells, OutputStream out ) {
+    private void writeIntMatrix( CompRowMatrix matrix, int sampleOffset, int numberOfCells, Writer out ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
@@ -398,7 +409,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             }
         }
 
-        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out ) ) {
+        try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out, autoFlush ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Integer, MatrixInfo.MatrixSymmetry.General ) );
             writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
@@ -549,8 +560,8 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
      */
     private static class FastMatrixVectorWriter extends MatrixVectorWriter {
 
-        public FastMatrixVectorWriter( OutputStream out ) {
-            super( out );
+        public FastMatrixVectorWriter( Writer out, boolean autoFlush ) {
+            super( out, autoFlush );
         }
 
         @Override
@@ -573,6 +584,10 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 write( row[i] + " " + column[i] + " " + data[i] + "\n" );
             }
         }
+    }
+
+    private Writer newWriter( OutputStream outputStream ) throws IOException {
+        return new OutputStreamWriter( new GZIPOutputStream( outputStream ), StandardCharsets.UTF_8 );
     }
 }
 

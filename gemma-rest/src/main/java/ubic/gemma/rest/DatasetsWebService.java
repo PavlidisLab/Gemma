@@ -1466,6 +1466,7 @@ public class DatasetsWebService {
                             .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
                             .build();
                 } else {
+                    // no cursor fetching because this requires a lot of memory on the database server
                     expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, 30, false, false );
                     throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
                 }
@@ -1491,7 +1492,7 @@ public class DatasetsWebService {
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
                     // we do not want to use cursor fetch because it requires a lot of memory on the database server
-                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force, false );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {

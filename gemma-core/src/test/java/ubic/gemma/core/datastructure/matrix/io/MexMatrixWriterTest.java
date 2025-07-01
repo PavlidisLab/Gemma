@@ -310,7 +310,7 @@ public class MexMatrixWriterTest {
         for ( BioAssay ba : bas ) {
             String dirName = formatBioAssayFilename( ba );
             expectedEntries.addAll( Arrays.asList(
-                    dirName + "/barcodes.tsv", dirName + "/features.tsv", dirName + "/matrix.mtx"
+                    dirName + "/barcodes.tsv.gz", dirName + "/features.tsv.gz", dirName + "/matrix.mtx.gz"
             ) );
         }
 
@@ -320,11 +320,11 @@ public class MexMatrixWriterTest {
             while ( ( entry = is.getNextEntry() ) != null ) {
                 assertThat( entry.getName() ).isEqualTo( expectedEntries.get( i ) );
                 if ( i % 3 == 0 ) {
-                    assertThat( is ).asString( StandardCharsets.UTF_8 ).hasLineCount( numCellsPerBioAssay );
+                    assertThat( new GZIPInputStream( is ) ).asString( StandardCharsets.UTF_8 ).hasLineCount( numCellsPerBioAssay );
                 } else if ( i % 3 == 1 ) {
-                    assertThat( is ).asString( StandardCharsets.UTF_8 ).hasLineCount( numDesignElements );
+                    assertThat( new GZIPInputStream( is ) ).asString( StandardCharsets.UTF_8 ).hasLineCount( numDesignElements );
                 } else {
-                    try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( is ) ) ) {
+                    try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( is ), StandardCharsets.UTF_8 ) ) ) {
                         MatrixInfo mi = mvr.readMatrixInfo();
                         MatrixSize size = mvr.readMatrixSize( mi );
                         assertThat( size.numRows() ).isEqualTo( numDesignElements );
@@ -356,7 +356,7 @@ public class MexMatrixWriterTest {
         for ( BioAssay ba : bas ) {
             String dirName = formatBioAssayFilename( ba );
             expectedEntries.addAll( Arrays.asList(
-                    dirName + "/barcodes.tsv", dirName + "/features.tsv", dirName + "/matrix.mtx"
+                    dirName + "/barcodes.tsv.gz", dirName + "/features.tsv.gz", dirName + "/matrix.mtx.gz"
             ) );
         }
 
@@ -366,11 +366,11 @@ public class MexMatrixWriterTest {
             while ( ( entry = is.getNextEntry() ) != null ) {
                 assertThat( entry.getName() ).isEqualTo( expectedEntries.get( i ) );
                 if ( i % 3 == 0 ) {
-                    assertThat( is ).asString( StandardCharsets.UTF_8 ).hasLineCount( numCellsPerBioAssay );
+                    assertThat( new GZIPInputStream( is ) ).asString( StandardCharsets.UTF_8 ).hasLineCount( numCellsPerBioAssay );
                 } else if ( i % 3 == 1 ) {
-                    assertThat( is ).asString( StandardCharsets.UTF_8 ).hasLineCount( numDesignElements );
+                    assertThat( new GZIPInputStream( is ) ).asString( StandardCharsets.UTF_8 ).hasLineCount( numDesignElements );
                 } else {
-                    try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( is ) ) ) {
+                    try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( is ), StandardCharsets.UTF_8 ) ) ) {
                         MatrixInfo mi = mvr.readMatrixInfo();
                         MatrixSize size = mvr.readMatrixSize( mi );
                         assertThat( size.numRows() ).isEqualTo( numDesignElements );

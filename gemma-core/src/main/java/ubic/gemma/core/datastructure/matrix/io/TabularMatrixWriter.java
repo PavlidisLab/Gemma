@@ -54,9 +54,6 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
-    /**
-     * Flush every time a complete line is written.
-     */
     private boolean autoFlush;
 
     @Nullable

@@ -67,11 +67,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         this.buildInfo = buildInfo;
     }
 
-    /**
-     * Flush every time a complete line is written.
-     * <p>
-     * This is only applicable to the tabular output.
-     */
+    @Override
     public void setAutoFlush( boolean autoFlush ) {
         this.autoFlush = autoFlush;
     }
