@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -29,6 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -64,9 +66,24 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
-    // TODO: populate these from Hibernate's class metadata
-    Class<?>[] OWNING_CLASS = { BioMaterial.class, ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, GeneSet.class };
-    String[] FOREIGN_KEY = { "BIO_MATERIAL_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
+    @Value
+    private static class OwningEntity {
+        Class<?> owningClass;
+        String tableName;
+        String foreignKey;
+        boolean isForeignKeyInCharacteristicTable;
+    }
+
+    // TODO
+    private static final OwningEntity[] OWNING_ENTITIES = new OwningEntity[] {
+            new OwningEntity( BioMaterial.class, "CHARACTERISTIC", "BIO_MATERIAL_FK", true ),
+            new OwningEntity( ExpressionExperiment.class, "CHARACTERISTIC", "INVESTIGATION_FK", true ),
+            new OwningEntity( ExperimentalDesign.class, "CHARACTERISTIC", "EXPERIMENTAL_DESIGN_FK", true ),
+            new OwningEntity( ExperimentalFactor.class, "EXPERIMENTAL_FACTOR", "CATEGORY_FK", false ),
+            new OwningEntity( FactorValue.class, "CHARACTERISTIC", "FACTOR_VALUE_FK", true ),
+            new OwningEntity( GeneSet.class, "CHARACTERISTIC", "GENE_SET_FK", true )
+            // TODO: new OwningEntity( Gene2GOAssociation.class, "GENE2GO_ASSOCIATION", "ONTOLOGY_ENTRY_FK", false )
+    };
 
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
@@ -284,12 +301,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri , @Nullable Collection<Class<?>> parentClasses ) {
+    public Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri, @Nullable Collection<Class<?>> owningEntityClasses ) {
+        if ( owningEntityClasses != null && owningEntityClasses.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
                         + "where VALUE_URI = :valueUri "
-                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + ( owningEntityClasses != null ? "and " + createOwningEntityConstraint( owningEntityClasses ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
 
                 .addScalar( "V", StandardBasicTypes.STRING )
@@ -301,12 +321,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<?>> parentClasses ) {
+    public Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<?>> owningEntityClasses ) {
+        if ( owningEntityClasses != null && owningEntityClasses.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
                         + "where `VALUE` like :valueLike "
-                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + ( owningEntityClasses != null ? "and " + createOwningEntityConstraint( owningEntityClasses ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
 
                 .addScalar( "V", StandardBasicTypes.STRING )
@@ -318,13 +341,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses ) {
-        if ( uris.isEmpty() )
+    public Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<?>> owningEntityClasses ) {
+        if ( uris.isEmpty() ) {
             return Collections.emptyMap();
+        }
+        if ( owningEntityClasses != null && owningEntityClasses.isEmpty() ) {
+            return Collections.emptyMap();
+        }
         Query q = this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, count(*) as COUNT from CHARACTERISTIC C "
                         + "where VALUE_URI in :uris "
-                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + ( owningEntityClasses != null ? "and " + createOwningEntityConstraint( owningEntityClasses ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
                 .addScalar( "V", StandardBasicTypes.STRING )
                 .addScalar( "COUNT", StandardBasicTypes.LONG );
@@ -362,28 +389,36 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
+    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> owningEntityClass, int maxResults ) {
         if ( characteristics.isEmpty() ) {
             return Collections.emptyMap();
         }
 
-        Set<Long> characteristicIds = characteristics.stream().map( Characteristic::getId ).collect( Collectors.toSet() );
+        if ( owningEntityClass != null && owningEntityClass.isEmpty() ) {
+            return Collections.emptyMap();
+        }
 
-        //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
-        boolean efOK = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( ExperimentalFactor.class ) );
+        Map<Long, Characteristic> charById = IdentifiableUtils.getIdMap( characteristics );
 
+        String s = Arrays.stream( OWNING_ENTITIES )
+                .map( fk -> {
+                    if ( fk.isForeignKeyInCharacteristicTable() ) {
+                        return "C." + fk.getForeignKey();
+                    } else {
+                        return "(select E." + fk.getForeignKey() + " from " + fk.getTableName() + " E where E.ID = C.ID)";
+                    }
+                } )
+                .collect( Collectors.joining( ", " ) );
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select C.ID, C.BIO_MATERIAL_FK, C.INVESTIGATION_FK, C.EXPERIMENTAL_DESIGN_FK, C.FACTOR_VALUE_FK, C.GENE_SET_FK from CHARACTERISTIC C "
+                .createSQLQuery( "select C.ID, " + s + " from CHARACTERISTIC C "
                         + "left join INVESTIGATION I on C.INVESTIGATION_FK = I.ID "
                         + "where C.ID in :ids "
                         + "and (I.class is NULL or I.class = 'ExpressionExperiment')" // for investigations, only retrieve EEs
-                        + ( parentClasses != null ? " and " + createOwningClassConstraint( parentClasses, "C" ) : "" ) )
-                .setParameterList( "ids", optimizeParameterList( characteristicIds ) )
+                        + ( owningEntityClass != null ? " and " + createOwningEntityConstraint( owningEntityClass ) : "" ) )
+                .setParameterList( "ids", optimizeParameterList( charById.keySet() ) )
                 .setMaxResults( maxResults )
                 .list();
-        Set<Characteristic> characteristicsNotFound = new HashSet<>();
-        Map<Long, Characteristic> charById = IdentifiableUtils.getIdMap( characteristics );
         Map<Characteristic, Identifiable> charToParent = new HashMap<>();
         for ( Object[] row : result ) {
             Characteristic c = charById.get( ( ( BigInteger ) row[0] ).longValue() );
@@ -391,18 +426,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 log.warn( "Could not find characteristic with ID " + row[0] + " in the database." );
                 continue;
             }
-            boolean found = false;
-            for ( int i = 0; i < OWNING_CLASS.length; i++ ) {
-                if ( row[i + 1] != null ) {
-                    Identifiable parentObject = ( Identifiable ) getSessionFactory().getCurrentSession().load( OWNING_CLASS[i], ( ( BigInteger ) row[i + 1] ).longValue() );
+            for ( int i = 0; i < OWNING_ENTITIES.length; i++ ) {
+                OwningEntity owningEntity = OWNING_ENTITIES[i];
+                BigInteger entityId = ( BigInteger ) row[i + 1];
+                if ( entityId != null ) {
+                    Identifiable parentObject = ( Identifiable ) getSessionFactory().getCurrentSession()
+                            .load( owningEntity.getOwningClass(), entityId.longValue() );
                     charToParent.put( c, parentObject );
-                    found = true;
                     break;
                 }
-            }
-            if ( !found ) {
-                // none matched in the CHARACTERISTIC table, check one-to-one relations later
-                characteristicsNotFound.add( c );
             }
         }
 
@@ -415,35 +447,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
         }
 
-        if ( !characteristicsNotFound.isEmpty() ) {
-            //noinspection unchecked
-// GO Terms doesn't have a use case
-//            if (gene2GoOk) {
-//                List<Object[]> g2gResults = getSessionFactory().getCurrentSession()
-//                        .createQuery( "select g2g, g2g.ontologyEntry from Gene2GOAssociation g2g where g2g.ontologyEntry in :characteristics" )
-//                        .setParameterList( "characteristics", characteristicsNotFound )
-//                        .list();
-//                for ( Object[] row : g2gResults ) {
-//                    charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
-//                    characteristicsNotFound.remove( ( Characteristic ) row[1] );
-//                }
-//            }
-
-            if ( efOK ) {
-                //noinspection unchecked
-                List<Object[]> efResults = getSessionFactory().getCurrentSession()
-                        .createQuery( "select ef, ef.category from ExperimentalFactor ef where ef.category in :characteristics" )
-                        .setParameterList( "characteristics", optimizeParameterList( characteristicsNotFound ) )
-                        .list();
-
-                for ( Object[] row : efResults ) {
-                    charToParent.put( ( Characteristic ) row[1], ( Identifiable ) row[0] );
-                    characteristicsNotFound.remove( ( Characteristic ) row[1] );
-                }
-            }
-        }
-
-        if ( !characteristicsNotFound.isEmpty() ) {
+        if ( charToParent.size() < charById.size() ) {
+            Set<Characteristic> characteristicsNotFound = new HashSet<>( characteristics );
+            characteristicsNotFound.removeAll( charToParent.keySet() );
             log.warn( String.format( "Could not find parents for the following characteristics: %s.",
                     characteristicsNotFound.stream().map( Characteristic::getId ).map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
         }
@@ -454,29 +460,28 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     /**
      * Create a SQL constrait to ensure that the characteristic is owned by an entity of the given class.
      */
-    private String createOwningClassConstraint( Collection<Class<?>> parentClasses, String tableAlias ) {
-        // ensure that at least one of the parentClass-associated column is non-null
-        Set<String> foreignKeyToRestrictOn = new HashSet<>();
-        for ( Class<?> parentClass : parentClasses ) {
+    private String createOwningEntityConstraint( Collection<Class<?>> owningEntityClasses ) {
+        Assert.isTrue( !owningEntityClasses.isEmpty(), "At least one parent class must be requested." );
+        TreeSet<String> constraints = new TreeSet<>();
+        for ( Class<?> owningEntityClass : owningEntityClasses ) {
             boolean found = false;
-            for ( int i = 0; i < OWNING_CLASS.length; i++ ) {
-                if ( parentClass.isAssignableFrom( OWNING_CLASS[i] ) ) {
-                    foreignKeyToRestrictOn.add( FOREIGN_KEY[i] );
+            for ( OwningEntity owningEntity : OWNING_ENTITIES ) {
+                if ( owningEntity.getOwningClass().isAssignableFrom( owningEntityClass ) ) {
+                    if ( owningEntity.isForeignKeyInCharacteristicTable() ) {
+                        constraints.add( "C." + owningEntity.getForeignKey() + " is not NULL" );
+                    } else {
+                        // use a sub-query
+                        constraints.add( "C.ID in (select E." + owningEntity.getForeignKey() + " from " + owningEntity.getTableName() + " E)" );
+                    }
                     found = true;
+                    break;
                 }
             }
             if ( !found ) {
-                throw new IllegalArgumentException( "No owning class of type " + parentClass + " is configured for Characteristic." );
+                throw new IllegalArgumentException( "Cannot create constraint for " + owningEntityClass.getName() );
             }
         }
-        if ( foreignKeyToRestrictOn.isEmpty() ) {
-            // ensure that all columns are NULL
-            //language=HQL
-            return "(" + Arrays.stream( FOREIGN_KEY ).map( fk -> tableAlias + "." + fk + " is NULL" ).collect( Collectors.joining( " and " ) ) + ")";
-        } else {
-            //language=HQL
-            return "(" + foreignKeyToRestrictOn.stream().map( fk -> tableAlias + "." + fk + " is not NULL" ).collect( Collectors.joining( " or " ) ) + ")";
-        }
+        return "(" + String.join( " or ", constraints ) + ")";
     }
 
     @Override

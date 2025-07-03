@@ -274,8 +274,16 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
         assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( FactorValue.class ), -1 ) )
                 .hasSize( 1 )
                 .containsEntry( c, fv );
-        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Investigation.class ), -1 ) ).isEmpty();
+
+        // this is a special case because we need to filter using INVESTIGATION.class
+        assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Investigation.class ), -1 ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExpressionExperiment.class ), -1 ) ).isEmpty();
+        assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExpressionExperimentSubSet.class ), -1 ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
         // this is a special case since it does not use a foreign key in the CHARACTERISTIC table
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExperimentalFactor.class ), -1 ) ).isEmpty();
         assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Gene2GOAssociation.class ), -1 ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
