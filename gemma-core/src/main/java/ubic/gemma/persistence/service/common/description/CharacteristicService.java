@@ -103,16 +103,16 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String, String, Collection)
      */
-    Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
-    Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
-     * @param characteristics characteristics
-     * @return a map of the specified characteristics to their annotated objects.
+     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
+     * @param thawParents if true, the parents will be initialized if they are proxies
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**
     //     * @param classes constraint

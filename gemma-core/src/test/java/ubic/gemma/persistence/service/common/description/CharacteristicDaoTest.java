@@ -5,6 +5,10 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.Type;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -30,12 +34,16 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtilImpl;
@@ -53,7 +61,7 @@ import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class CharacteristicDaoImplTest extends BaseDatabaseTest {
+public class CharacteristicDaoTest extends BaseDatabaseTest {
 
     @Configuration
     @TestComponent
@@ -136,14 +144,14 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
     @Test
     @Ignore("FIXME: H2 does not appreciate missing aggregator in group by, but I have not yet figured out how to fix it.")
     public void testCountByValueLike() {
-        Map<String, Characteristic> results = characteristicDao.findByValueLikeGroupedByNormalizedValue( "male%", null );
+        Map<String, Characteristic> results = characteristicDao.findByValueLikeGroupedByNormalizedValue( "male%", null, false );
         assertThat( results ).containsKeys( "http://test/T0001".toLowerCase(), "http://test/T0002".toLowerCase(), "male reproductive system (unknown term)" );
     }
 
     @Test
     public void testCountByValueUriIn() {
         Collection<String> uris = Arrays.asList( "http://test/T0006", "http://test/T0002" );
-        Map<String, Long> results = characteristicDao.countByValueUriGroupedByNormalizedValue( uris, null );
+        Map<String, Long> results = characteristicDao.countByValueUriGroupedByNormalizedValue( uris, null, false );
         assertThat( results ).containsKeys( "http://test/T0006".toLowerCase(), "http://test/T0002".toLowerCase() );
     }
 
@@ -257,35 +265,150 @@ public class CharacteristicDaoImplTest extends BaseDatabaseTest {
 
     @Test
     public void testGetParents() {
-        Statement c = createStatement( "test", "test" );
+        Characteristic eeC = createCharacteristic( "test1", "test1" );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getCharacteristics().add( eeC );
+        sessionFactory.getCurrentSession().persist( ee );
+
+        Characteristic subsetC = createCharacteristic( "test1", "test1" );
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.getCharacteristics().add( subsetC );
+        sessionFactory.getCurrentSession().persist( subset );
+
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        Characteristic edC = createCharacteristic( "test11", "testk12" );
+        ed.getTypes().add( edC );
         sessionFactory.getCurrentSession().persist( ed );
+
         ExperimentalFactor ef = new ExperimentalFactor();
         ef.setExperimentalDesign( ed );
         ef.setType( FactorType.CATEGORICAL );
+        Characteristic efC = createCharacteristic( "test11", "testk13" );
+        ef.setCategory( efC );
+        Characteristic efAnnotationC = createCharacteristic( "test1920", "test091203" );
+        ef.getAnnotations().add( efAnnotationC );
         sessionFactory.getCurrentSession().persist( ef );
+
         FactorValue fv = FactorValue.Factory.newInstance( ef );
+        Statement c = createStatement( "test", "test" );
         fv.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( fv );
         sessionFactory.getCurrentSession().flush();
-        assertThat( characteristicDao.getParents( Collections.singleton( c ), null, -1 ) )
-                .hasSize( 1 )
-                .containsEntry( c, fv );
-        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( FactorValue.class ), -1 ) )
-                .hasSize( 1 )
-                .containsEntry( c, fv );
 
-        // this is a special case because we need to filter using INVESTIGATION.class
-        assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Investigation.class ), -1 ) )
+        Characteristic danglingC = createCharacteristic( "test092103", "test01293" );
+        sessionFactory.getCurrentSession().persist( danglingC );
+
+        assertThat( characteristicDao.getParentClasses() ).containsExactlyInAnyOrder(
+                ExpressionExperiment.class,
+                ExpressionExperimentSubSet.class,
+                ExperimentalDesign.class,
+                ExperimentalFactor.class,
+                BibliographicReference.class,
+                FactorValue.class,
+                BioMaterial.class,
+                CellTypeAssignment.class,
+                GenericCellLevelCharacteristics.class,
+                GeneSet.class,
+                Gene2GOAssociation.class );
+
+        // ensure that all declared entities that have a characteristic is handled in getParents()
+        for ( ClassMetadata cm : sessionFactory.getAllClassMetadata().values() ) {
+            for ( int i = 0; i < cm.getPropertyNames().length; i++ ) {
+                String propertyName = cm.getPropertyNames()[i];
+                Type propertyType = cm.getPropertyTypes()[i];
+                if ( cm.hasSubclasses() ) {
+                    continue;
+                }
+                if ( propertyType.isAssociationType() && ( ( AssociationType ) propertyType ).getAssociatedEntityName( ( SessionFactoryImplementor ) sessionFactory ).equals( Characteristic.class.getName() ) ) {
+                    assertThat( characteristicDao.getParentClasses() )
+                            .contains( cm.getMappedClass() );
+                }
+            }
+        }
+
+        assertThatThrownBy( () -> characteristicDao.getParents( Arrays.asList( eeC, subsetC ), Collections.singleton( BioAssaySet.class ), false ) )
                 .isInstanceOf( IllegalArgumentException.class );
-        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExpressionExperiment.class ), -1 ) ).isEmpty();
-        assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExpressionExperimentSubSet.class ), -1 ) )
-                .isInstanceOf( IllegalArgumentException.class );
+        assertThat( characteristicDao.getParents( Arrays.asList( eeC, subsetC ), null, false ) )
+                .hasSize( 2 )
+                .containsEntry( eeC, ee )
+                .containsEntry( subsetC, subset );
+        assertThat( characteristicDao.getParents( Arrays.asList( eeC, subsetC ), Arrays.asList( ExpressionExperiment.class, ExpressionExperimentSubSet.class ), false ) )
+                .hasSize( 2 )
+                .containsEntry( eeC, ee )
+                .containsEntry( subsetC, subset );
+        assertThat( characteristicDao.getParents( Collections.singleton( eeC ), Collections.singleton( ExpressionExperiment.class ), false ) )
+                .containsEntry( eeC, ee );
+        assertThat( characteristicDao.getParents( Collections.singleton( subsetC ), Collections.singleton( ExpressionExperimentSubSet.class ), false ) )
+                .containsEntry( subsetC, subset );
+
+        // this is another special case because it has two source of parents: category and annotations
+        assertThat( characteristicDao.getParents( Collections.singleton( edC ), Collections.singleton( ExperimentalDesign.class ), false ) )
+                .containsEntry( edC, ed );
 
         // this is a special case since it does not use a foreign key in the CHARACTERISTIC table
-        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExperimentalFactor.class ), -1 ) ).isEmpty();
-        assertThatThrownBy( () -> characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Gene2GOAssociation.class ), -1 ) )
-                .isInstanceOf( IllegalArgumentException.class );
+        assertThat( characteristicDao.getParents( Collections.singleton( efC ), Collections.singleton( ExperimentalFactor.class ), false ) )
+                .hasSize( 1 )
+                .containsEntry( efC, ef );
+        assertThat( characteristicDao.getParents( Collections.singleton( efAnnotationC ), Collections.singleton( ExperimentalFactor.class ), false ) )
+                .hasSize( 1 )
+                .containsEntry( efAnnotationC, ef );
+
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), null, false ) )
+                .hasSize( 1 )
+                .containsEntry( c, fv );
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( FactorValue.class ), false ) )
+                .hasSize( 1 )
+                .containsEntry( c, fv );
+
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( CellTypeAssignment.class ), false ) ).isEmpty();
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( GenericCellLevelCharacteristics.class ), false ) ).isEmpty();
+
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( BibliographicReference.class ), false ) )
+                .isEmpty();
+
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( Gene2GOAssociation.class ), false ) )
+                .isEmpty();
+
+        assertThat( characteristicDao.getParents( Collections.singleton( danglingC ), null, true ) )
+                .containsEntry( danglingC, null );
+        assertThat( characteristicDao.getParents( Collections.singleton( danglingC ), Collections.emptyList(), true ) )
+                .containsEntry( danglingC, null );
+        assertThat( characteristicDao.getParents( Arrays.asList( eeC, danglingC ), null, true ) )
+                .hasSize( 2 )
+                .containsEntry( eeC, ee )
+                .containsEntry( danglingC, null );
+        assertThat( characteristicDao.getParents( Arrays.asList( eeC, danglingC ), Collections.singleton( ExpressionExperiment.class ), true ) )
+                .hasSize( 2 )
+                .containsEntry( eeC, ee )
+                .containsEntry( danglingC, null );
+        assertThat( characteristicDao.getParents( Arrays.asList( eeC, edC, danglingC ), Collections.singleton( ExpressionExperiment.class ), true ) )
+                .hasSize( 2 )
+                .containsEntry( eeC, ee )
+                .containsEntry( danglingC, null )
+                .doesNotContainEntry( edC, null );
+    }
+
+    @Test
+    public void testGetParentsForMultiParent() {
+        Characteristic c = createCharacteristic( "test", "test" );
+        sessionFactory.getCurrentSession().persist( c );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+
+        ExperimentalDesign ed = new ExperimentalDesign();
+        ed.getTypes().add( c );
+        sessionFactory.getCurrentSession().persist( ed );
+
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), null, false ) )
+                .isEmpty();
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExpressionExperiment.class ), false ) )
+                .containsEntry( c, ee );
+        assertThat( characteristicDao.getParents( Collections.singleton( c ), Collections.singleton( ExperimentalDesign.class ), false ) )
+                .containsEntry( c, ed );
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {

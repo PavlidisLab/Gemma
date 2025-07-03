@@ -105,7 +105,7 @@ public class CharacteristicBrowserController {
             records = characteristicService.browse( batch.getStart(), batch.getLimit() );
         }
 
-        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( records, null, -1 );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( records, null, true, true );
 
         for ( Characteristic o : records ) {
             Identifiable parent = charToParent.get( o );
@@ -160,7 +160,7 @@ public class CharacteristicBrowserController {
             chars.addAll( characteristicService.findByCategoryUri( queryString ) );
         }
 
-        Collection<Class<?>> parentClasses = new HashSet<>();
+        Collection<Class<? extends Identifiable>> parentClasses = new HashSet<>();
         if ( searchEEs ) {
             parentClasses.add( ExpressionExperiment.class );
         }
@@ -175,7 +175,7 @@ public class CharacteristicBrowserController {
         parentClasses.add( ExperimentalFactor.class );
         // }
 
-        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, MAX_RESULTS );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, searchNos, true );
 
         // from here we only use the characteristics which were returned by getParents, which has the MAX_RESULTS limit.
         for ( Characteristic c : charToParent.keySet() ) {

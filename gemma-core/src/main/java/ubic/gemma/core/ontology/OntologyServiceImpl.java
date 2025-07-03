@@ -47,6 +47,7 @@ import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -98,7 +99,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * When searching terms in the database, only consider characteristics owned by the following entity types.
      */
-    private static final Collection<Class<?>> parentClasses = Arrays.asList(
+    private static final Collection<Class<? extends Identifiable>> parentClasses = Arrays.asList(
             ExpressionExperiment.class,
             ExperimentalDesign.class,
             FactorValue.class,
@@ -178,7 +179,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .map( String::toLowerCase ) // we can merge URIs with the same case
                 .collect( Collectors.toSet() );
 
-        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicService.countByValueUri( uris, parentClasses );
+        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicService.countByValueUri( uris, parentClasses, false );
 
         for ( Map.Entry<String, CharacteristicValueObject> entry : results.entrySet() ) {
             String k = entry.getKey();
@@ -825,7 +826,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueLike( queryString, parentClasses );
+        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueLike( queryString, parentClasses, false );
 
         /*
          * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category

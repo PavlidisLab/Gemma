@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
@@ -108,24 +110,33 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses ) {
+    public Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
         Map<String, Characteristic> results = new HashMap<>();
-        results.putAll( this.characteristicDao.findByValueLikeGroupedByNormalizedValue( escapeLike( search ) + '%', parentClasses ) );
+        results.putAll( this.characteristicDao.findByValueLikeGroupedByNormalizedValue( escapeLike( search ) + '%', parentClasses, includeNoParents ) );
         // will override term found by like with an exact URI match if they have the same normalized value
-        results.putAll( this.characteristicDao.findByValueUriGroupedByNormalizedValue( search, parentClasses ) );
+        results.putAll( this.characteristicDao.findByValueUriGroupedByNormalizedValue( search, parentClasses, includeNoParents ) );
         return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses ) {
-        return this.characteristicDao.countByValueUriGroupedByNormalizedValue( uris, parentClasses );
+    public Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
+        return this.characteristicDao.countByValueUriGroupedByNormalizedValue( uris, parentClasses, includeNoParents );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
-        return characteristicDao.getParents( characteristics, parentClasses, maxResults );
+    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents ) {
+        Map<Characteristic, Identifiable> charToParent = characteristicDao.getParents( characteristics, parentClasses, includeNoParents );
+        // batch-load all the proxies
+        for ( Map.Entry<Characteristic, Identifiable> entry : charToParent.entrySet() ) {
+            Identifiable parent = entry.getValue();
+            Hibernate.initialize( parent );
+            if ( parent instanceof FactorValue ) {
+                Hibernate.initialize( ( ( FactorValue ) parent ).getExperimentalFactor() );
+            }
+        }
+        return charToParent;
     }
 
     @Override
