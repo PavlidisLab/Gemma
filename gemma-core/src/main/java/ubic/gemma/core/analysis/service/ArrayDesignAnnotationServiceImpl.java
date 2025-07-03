@@ -19,11 +19,12 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.collections4.iterators.TransformIterator;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
@@ -42,6 +43,8 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
@@ -60,10 +63,9 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private static final String COMMENT_CHARACTER = "#";
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
 
-    private static File getFileName( String fileBaseName ) {
+    private Path getFileName( String fileBaseName ) {
         String mungedFileName = ArrayDesignAnnotationServiceImpl.mungeFileName( fileBaseName );
-        return new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedFileName
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+        return annotDataDir.resolve( mungedFileName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
     }
 
     /**
@@ -100,30 +102,38 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     @Autowired
     private BuildInfo buildInfo;
 
+    @Value("${gemma.appdata.home}/microAnnots")
+    private Path annotDataDir;
+
+    @Override
+    public Path getAnnotDataDir() {
+        return annotDataDir;
+    }
+
     @Override
     public Map<CompositeSequence, String[]> readAnnotationFile( ArrayDesign arrayDesign ) throws IOException {
         Map<CompositeSequence, String[]> results = new HashMap<>();
-        File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + ArrayDesignAnnotationServiceImpl
+        Path f = annotDataDir.resolve( ArrayDesignAnnotationServiceImpl
                 .mungeFileName( arrayDesign.getShortName() ) + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-        if ( !f.canRead() ) {
+        if ( !Files.isReadable( f ) ) {
             /*
              * Look for more files.
              */
-            f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + ArrayDesignAnnotationServiceImpl
+            f = annotDataDir.resolve( ArrayDesignAnnotationServiceImpl
                     .mungeFileName( arrayDesign.getShortName() ) + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                     + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-            if ( !f.canRead() ) {
-                f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + ArrayDesignAnnotationServiceImpl
+            if ( !Files.isReadable( f ) ) {
+                f = annotDataDir.resolve( ArrayDesignAnnotationServiceImpl
                         .mungeFileName( arrayDesign.getShortName() )
                         + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
                         + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
             }
 
-            if ( !f.canRead() ) {
+            if ( !Files.isReadable( f ) ) {
                 ArrayDesignAnnotationServiceImpl.log
-                        .info( "Gene annotations are not available in " + ArrayDesignAnnotationService.ANNOT_DATA_DIR );
+                        .info( "Gene annotations are not available in " + annotDataDir );
                 return results;
             }
         }
@@ -143,7 +153,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             probeByName.put( cs.getName(), cs );
         }
 
-        try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+        try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.toAbsolutePath().toString() );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Reading annotations from: " + f );
 
@@ -207,13 +217,13 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        File sf = ArrayDesignAnnotationServiceImpl.getFileName( shortFileBaseName );
+        Path sf = getFileName( shortFileBaseName );
         String bioFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        File bf = ArrayDesignAnnotationServiceImpl.getFileName( bioFileBaseName );
+        Path bf = getFileName( bioFileBaseName );
         String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        File af = ArrayDesignAnnotationServiceImpl.getFileName( allParFileBaseName );
+        Path af = getFileName( allParFileBaseName );
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting getting probe specificity" );
@@ -269,24 +279,39 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     public void deleteExistingFiles( ArrayDesign ad ) {
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        File sf = ArrayDesignAnnotationServiceImpl.getFileName( shortFileBaseName );
+        Path sf = getFileName( shortFileBaseName );
         String biocFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        File bf = ArrayDesignAnnotationServiceImpl.getFileName( biocFileBaseName );
+        Path bf = getFileName( biocFileBaseName );
         String allparFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        File af = ArrayDesignAnnotationServiceImpl.getFileName( allparFileBaseName );
+        Path af = getFileName( allparFileBaseName );
 
         int numFilesDeleted = 0;
-        if ( sf.canWrite() && sf.delete() ) {
-            numFilesDeleted++;
+        if ( Files.isWritable( sf ) ) {
+            try {
+                Files.delete( sf );
+                numFilesDeleted++;
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
         }
-        if ( bf.canWrite() && bf.delete() ) {
-            numFilesDeleted++;
+        if ( Files.isWritable( bf ) ) {
+            try {
+                Files.delete( bf );
+                numFilesDeleted++;
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
 
         }
-        if ( af.canWrite() && af.delete() ) {
-            numFilesDeleted++;
+        if ( Files.isWritable( af ) ) {
+            try {
+                Files.delete( af );
+                numFilesDeleted++;
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
 
         }
         ArrayDesignAnnotationServiceImpl.log.info( numFilesDeleted + " old annotation files deleted" );
@@ -507,21 +532,18 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             writer = new PrintWriter( System.out );
         } else {
 
-            File f = ArrayDesignAnnotationServiceImpl.getFileName( fileBaseName );
+            Path f = getFileName( fileBaseName );
 
-            if ( f.exists() ) {
+            if ( Files.deleteIfExists( f ) ) {
                 ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
-                if ( !f.delete() ) {
-                    throw new IOException( "Could not delete file " + f.getPath() );
-                }
             } else {
                 ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
             }
 
             // ensure the parent directory exists
-            FileUtils.forceMkdirParent( f );
+            PathUtils.createParentDirectories( f );
 
-            writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( f ) ) );
+            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ) );
         }
         StringWriter buf = new StringWriter();
         Date timestamp = new Date();

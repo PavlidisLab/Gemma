@@ -181,7 +181,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             OntologyUtils.ensureInitialized( goService );
         }
 
-        log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
+        log.info( "***** Annotation file(s) will be written to " + arrayDesignAnnotationService.getAnnotDataDir()+ " ******" );
 
 //        if ( StringUtils.isNotBlank( geneFileName ) ) {
 //            this.processGeneList();
