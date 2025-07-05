@@ -2864,6 +2864,23 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
+                        + "where scedv.expressionExperiment = :ee "
+                        + "and scedv.quantitationType = :qt "
+                        + "and coalesce(c.categoryUri, c.category) = :c "
+                        + "group by clc" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
+                .list();
+    }
+
+    @Override
     public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()

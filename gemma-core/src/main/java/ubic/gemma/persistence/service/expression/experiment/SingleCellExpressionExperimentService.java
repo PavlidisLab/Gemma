@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Category;
@@ -343,6 +342,12 @@ public interface SingleCellExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
+    /**
+     * Obtain a mask if one is unambiguously defined for the given experiment and quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellLevelCharacteristics> getCellLevelMask( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

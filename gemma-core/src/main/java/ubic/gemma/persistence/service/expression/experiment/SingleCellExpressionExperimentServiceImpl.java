@@ -1025,6 +1025,20 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<CellLevelCharacteristics> getCellLevelMask( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        List<CellLevelCharacteristics> candidates = expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, Categories.MASK );
+        if ( candidates.size() == 1 ) {
+            return Optional.of( candidates.iterator().next() );
+        } else if ( candidates.isEmpty() ) {
+            return Optional.empty();
+        } else {
+            log.warn( expressionExperiment + " " + qt + " has more than one cell-level masks." );
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
         return expressionExperimentDao.getCellTypes( ee );
     }

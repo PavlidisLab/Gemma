@@ -42,6 +42,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             CTA_OPTION = "cta",
             CLC_OPTION = "clc",
             MASK_OPTION = "mask",
+            NO_MASK_OPTION = "noMask",
             FACTOR_OPTION = "factor",
             MAKE_PREFERRED_OPTION = "p",
             SKIP_POST_PROCESSING_OPTION = "nopost",
@@ -76,6 +77,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private Path mappingFile;
     @Nullable
     private String maskIdentifier;
+    private boolean noMask;
     private boolean allowUnmappedCharacteristics;
     private boolean allowUnmappedFactorValues;
     private boolean makePreferred;
@@ -109,7 +111,8 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( CTA_OPTION, "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one). Incompatible with -" + CLC_OPTION + "." );
         addSingleExperimentOption( options, CLC_OPTION, "cell-level-characteristics", true, "Identifier of the cell-level characteristics to use. Incompatible with -" + CTA_OPTION + "." );
-        addSingleExperimentOption( options, MASK_OPTION, "mask", true, "Identifier of the cell-level characteristics to use to mask." );
+        addSingleExperimentOption( options, MASK_OPTION, "mask", true, "Identifier of the cell-level characteristics to use to mask. Defaults to auto-detecting the mask." );
+        addSingleExperimentOption( options, NO_MASK_OPTION, "--no-mask", true, "Do not use a mask if one is auto-detected for aggregating single-cell data. Incompatible with -" + MASK_OPTION + "." );
         options.addOption( FACTOR_OPTION, "factor", true, "Identifier of the factor to use (defaults to the cell type factor)" );
         addSingleExperimentOption( options, Option.builder( MAPPING_FILE_OPTION ).longOpt( "mapping-file" ).hasArg().type( Path.class ).desc( "File containing explicit mapping between cell-level characteristics and factor values" ).build() );
         options.addOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION, "allow-unmapped-characteristics", false, "Allow unmapped characteristics from the cell-level characteristics." );
@@ -131,7 +134,8 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         if ( ctaIdentifier != null && clcIdentifier != null ) {
             throw new ParseException( "Only one of -cta or -clc can be set at a time." );
         }
-        maskIdentifier = commandLine.getOptionValue( MASK_OPTION );
+        maskIdentifier = getOptionValue( commandLine, MASK_OPTION, requires( toBeUnset( NO_MASK_OPTION ) ) );
+        noMask = commandLine.hasOption( NO_MASK_OPTION );
         factorName = commandLine.getOptionValue( FACTOR_OPTION );
         allowUnmappedCharacteristics = commandLine.hasOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION );
         allowUnmappedFactorValues = commandLine.hasOption( ALLOW_UNMAPPED_FACTOR_VALUES_OPTION );
@@ -165,10 +169,14 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         }
 
         CellLevelCharacteristics mask;
-        if ( maskIdentifier != null ) {
+        if ( noMask ) {
+            mask = null;
+        } else if ( maskIdentifier != null ) {
             mask = entityLocator.locateCellLevelCharacteristics( expressionExperiment, qt, maskIdentifier );
         } else {
-            mask = null;
+            log.info( "Auto-detecting the mask for " + expressionExperiment + " and " + qt + "..." );
+            mask = singleCellExpressionExperimentService.getCellLevelMask( expressionExperiment, qt )
+                    .orElse( null );
         }
 
         ExpressionExperiment finalExpressionExperiment1 = expressionExperiment;
