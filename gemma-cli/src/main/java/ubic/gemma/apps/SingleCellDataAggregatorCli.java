@@ -47,6 +47,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             MAKE_PREFERRED_OPTION = "p",
             SKIP_POST_PROCESSING_OPTION = "nopost",
             ADJUST_LIBRARY_SIZES_OPTION = "adjustLibrarySizes",
+            INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION = "includeMaskedCellsInLibrarySize",
             ALLOW_UNMAPPED_CHARACTERISTICS_OPTION = "allowUnmappedCharacteristics",
             ALLOW_UNMAPPED_FACTOR_VALUES_OPTION = "allowUnmappedFactorValues",
             MAPPING_FILE_OPTION = "mappingFile",
@@ -83,6 +84,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private boolean makePreferred;
     private boolean skipPostProcessing;
     private boolean adjustLibrarySizes;
+    private boolean includeMaskedCellsInLibrarySize;
     private boolean redo;
     @Nullable
     private String redoQt;
@@ -119,6 +121,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         options.addOption( ALLOW_UNMAPPED_FACTOR_VALUES_OPTION, "allow-unmapped-factor-values", false, "Allow unmapped factor values from the experimental factor." );
         options.addOption( MAKE_PREFERRED_OPTION, "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment." );
         options.addOption( ADJUST_LIBRARY_SIZES_OPTION, false, "Adjust library sizes for the resulting aggregated assays." );
+        options.addOption( INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION, "include-masked-cells-in-library-size", false, "Include masked cells in the library size calculation. By default they are excluded as if they were simply filtered out." );
         options.addOption( REDO_OPTION, "redo", false, "Redo the aggregation." );
         // a string is fine to use when bulk-processing
         options.addOption( REDO_QT_OPTION, "redo-quantitation-type", true, "Quantitation to re-aggregate, defaults to the preferred one. Requires the -" + REDO_OPTION + " flag. Incompatible with -" + REDO_DIMENSION_OPTION + "." );
@@ -144,6 +147,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         makePreferred = commandLine.hasOption( MAKE_PREFERRED_OPTION );
         skipPostProcessing = commandLine.hasOption( SKIP_POST_PROCESSING_OPTION );
         adjustLibrarySizes = commandLine.hasOption( ADJUST_LIBRARY_SIZES_OPTION );
+        includeMaskedCellsInLibrarySize = commandLine.hasOption( INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION );
         redo = commandLine.hasOption( REDO_OPTION );
         redoQt = getOptionValue( commandLine, REDO_QT_OPTION,
                 requires( allOf( toBeSet( REDO_OPTION ), toBeUnset( REDO_DIMENSION_OPTION ) ) ) );
@@ -198,6 +202,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 .mask( mask )
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
+                .includeMaskedCellsInLibrarySize( includeMaskedCellsInLibrarySize )
                 .build();
 
         QuantitationType newQt;

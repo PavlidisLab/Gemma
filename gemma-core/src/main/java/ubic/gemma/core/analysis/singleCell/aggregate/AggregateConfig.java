@@ -29,4 +29,10 @@ class AggregateConfig {
      * Perform adjustment of library sizes to better reflect the number of reads in the source sample.
      */
     boolean adjustLibrarySizes;
+    /**
+     * Include masked cells in the library size calculation.
+     * <p>
+     * The default is to exclude them as if they were simply filtered out.
+     */
+    boolean includeMaskedCellsInLibrarySize;
 }

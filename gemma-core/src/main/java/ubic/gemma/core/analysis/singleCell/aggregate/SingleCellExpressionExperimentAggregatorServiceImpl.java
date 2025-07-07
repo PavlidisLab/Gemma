@@ -176,7 +176,11 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices, method, config.isAdjustLibrarySizes() );
+            librarySize = computeLibrarySize( vectors, newBad, cellLevelCharacteristics,
+                    // when including masked cells, do not allow the calculation to consider the mask
+                    config.isIncludeMaskedCellsInLibrarySize() ? null : mask,
+                    sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices,
+                    method, config.isAdjustLibrarySizes() );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
