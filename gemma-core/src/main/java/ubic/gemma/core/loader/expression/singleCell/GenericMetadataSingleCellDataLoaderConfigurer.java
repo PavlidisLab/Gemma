@@ -27,7 +27,7 @@ public class GenericMetadataSingleCellDataLoaderConfigurer implements SingleCell
         if ( config.getOtherCellLevelCharacteristicsFile() != null ) {
             log.info( "Loading additional cell-level characteristics from " + config.getOtherCellLevelCharacteristicsFile() );
         }
-        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate.configureLoader( config ), config.getCellTypeAssignmentFile(), config.getOtherCellLevelCharacteristicsFile() );
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate.configureLoader( config ), config.getCellTypeAssignmentFile(), config.getOtherCellLevelCharacteristicsNames(), config.getOtherCellLevelCharacteristicsFile() );
         // this needs to be set so that the delegate can use it
         loader.setBioAssayToSampleNameMapper( bioAssayMapper );
         if ( config.getCellTypeAssignmentName() != null ) {

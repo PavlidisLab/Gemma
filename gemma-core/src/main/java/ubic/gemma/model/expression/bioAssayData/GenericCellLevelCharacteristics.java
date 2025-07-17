@@ -3,7 +3,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.annotations.MayBeUninitialized;
-import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
-public class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
+public class GenericCellLevelCharacteristics extends AbstractDescribable implements CellLevelCharacteristics {
 
     @MayBeUninitialized
     private List<Characteristic> characteristics;
@@ -61,7 +61,8 @@ public class GenericCellLevelCharacteristics extends AbstractIdentifiable implem
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( characteristics, that.characteristics )
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( characteristics, that.characteristics )
                 && Arrays.equals( indices, that.indices );
     }
 

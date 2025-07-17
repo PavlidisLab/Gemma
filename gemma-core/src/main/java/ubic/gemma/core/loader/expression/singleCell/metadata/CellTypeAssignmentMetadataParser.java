@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,13 +29,11 @@ import java.util.List;
  */
 class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellTypeAssignment> {
 
-    private final String cellTypeAssignmentName;
     @Nullable
     private final Protocol cellTypeAssignmentProtocol;
 
     public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol ) {
-        super( singleCellDimension, bioAssayMapper );
-        this.cellTypeAssignmentName = cellTypeAssignmentName;
+        super( singleCellDimension, bioAssayMapper, Collections.singletonList( cellTypeAssignmentName ) );
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }
 
@@ -63,8 +62,10 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
     }
 
     @Override
-    protected CellTypeAssignment createCellLevelCharacteristics( List<Characteristic> characteristics, int[] indices ) {
-        CellTypeAssignment cta = CellTypeAssignment.Factory.newInstance( cellTypeAssignmentName, characteristics, indices );
+    protected CellTypeAssignment createCellLevelCharacteristics( @Nullable String name, @Nullable String description, List<Characteristic> characteristics, int[] indices ) {
+        CellTypeAssignment cta = CellTypeAssignment.Factory.newInstance( name, characteristics, indices );
+        cta.setName( name );
+        cta.setDescription( description );
         cta.setProtocol( cellTypeAssignmentProtocol );
         return cta;
     }

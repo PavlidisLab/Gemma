@@ -15,6 +15,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,6 +40,8 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     private Protocol cellTypeAssignmentProtocol;
 
     @Nullable
+    private final List<String> otherCellLevelCharacteristicsNames;
+    @Nullable
     private final Path otherCellCharacteristicsMetadataFile;
 
     private BioAssayMapper bioAssayToSampleNameMapper;
@@ -51,9 +54,10 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedCellIds;
 
-    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable Path otherCellCharacteristicsMetadataFile ) {
+    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable List<String> otherCellLevelCharacteristicsNames, @Nullable Path otherCellCharacteristicsMetadataFile ) {
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
+        this.otherCellLevelCharacteristicsNames = otherCellLevelCharacteristicsNames;
         this.otherCellCharacteristicsMetadataFile = otherCellCharacteristicsMetadataFile;
     }
 
@@ -105,7 +109,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getOtherCellLevelCharacteristics( dimension );
         }
         Assert.notNull( bioAssayToSampleNameMapper, "A bioAssayToSampleNameMatcher must be set" );
-        GenericCellLevelCharacteristicsMetadataParser parser = new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMapper );
+        GenericCellLevelCharacteristicsMetadataParser parser = new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMapper, otherCellLevelCharacteristicsNames );
         configureParser( parser );
         return parser.parse( otherCellCharacteristicsMetadataFile );
     }

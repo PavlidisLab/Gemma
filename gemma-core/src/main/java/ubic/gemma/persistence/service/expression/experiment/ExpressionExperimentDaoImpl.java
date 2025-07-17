@@ -2885,6 +2885,20 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
+    @Nullable
+    @Override
+    public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
+        return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
+                        + "where scedv.expressionExperiment = :ee and c.name = :clcName "
+                        + "group by clc" )
+                .setParameter( "ee", ee )
+                .setParameter( "clcName", clcName)
+                .uniqueResult();
+    }
+
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         //noinspection unchecked

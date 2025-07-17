@@ -23,7 +23,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
@@ -55,6 +57,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             CELL_TYPE_ASSIGNMENT_NAME_OPTION = "ctaName",
             CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
+            OTHER_CELL_LEVEL_CHARACTERISTICS_NAME = "clcName",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile",
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
             IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
@@ -130,6 +133,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Nullable
     private String cellTypeAssignmentProtocolName;
     private boolean preferredCellTypeAssignment;
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsNames;
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
     private boolean inferSamplesFromCellIdsOverlap;
@@ -224,6 +229,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .desc( "An identifier for a protocol describing the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." )
                 .build() );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one." );
+        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ).longOpt( "cell-level-characteristics-name" )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
+                .build() );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
                 .hasArg().type( Path.class )
@@ -318,6 +328,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         cellTypeAssignmentName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         cellTypeAssignmentProtocolName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         preferredCellTypeAssignment = hasOption( commandLine, PREFERRED_CELL_TYPE_ASSIGNMENT, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
+        if ( commandLine.hasOption( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) {
+            otherCellLevelCharacteristicsNames = Arrays.asList( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) );
+        } else {
+            otherCellLevelCharacteristicsNames = null;
+        }
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
         inferSamplesFromCellIdsOverlap = hasOption( commandLine, INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION,
                 requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
@@ -511,6 +526,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             }
         }
         if ( otherCellLevelCharacteristicsFile != null ) {
+            configBuilder.otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames );
             configBuilder.otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile );
         }
         // infer only on-demand

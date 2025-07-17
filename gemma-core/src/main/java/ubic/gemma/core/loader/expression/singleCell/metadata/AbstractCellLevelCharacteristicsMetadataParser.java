@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -41,6 +40,8 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private final SingleCellDimension singleCellDimension;
     private final BioAssayMapper bioAssayMapper;
+    @Nullable
+    private final List<String> names;
 
     /**
      * If the sample name is missing, use the cell ID to infer it. If the cell ID is ambiguous (i.e. a barcode
@@ -69,13 +70,16 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     private final Map<String, Set<BioAssay>> reverseIndex;
 
     /**
-     * @param singleCellDimension             dimension to use to populate the cell-level characteristics
-     * @param bioAssayMapper                  strategy to use to match sample name from the file to bioassays
+     * @param singleCellDimension dimension to use to populate the cell-level characteristics
+     * @param bioAssayMapper      strategy to use to match sample name from the file to bioassays
+     * @param names               names to use for naming the resulting CLCs, those must match the number and ordering
+     *                            encountered by the parser
      */
-    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper ) {
+    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names ) {
         this.singleCellDimension = singleCellDimension;
         this.bioAssayMapper = bioAssayMapper;
         this.cellIds = singleCellDimension.getCellIds();
+        this.names = names;
         this.bioAssayToIndex = ListUtils.indexOfElements( singleCellDimension.getBioAssays() );
         // we don't need the position in the bioassay
         reverseIndex = createReverseIndex( singleCellDimension ).entrySet()
@@ -88,7 +92,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
         Map<String, BioAssay> bioAssayByName = new HashMap<>();
         Set<BioAssay> assignedBioAssays = new HashSet<>();
 
-        Set<String> categoryIds = new HashSet<>();
+        LinkedHashSet<String> categoryIds = new LinkedHashSet<>();
         Map<String, List<Characteristic>> characteristicsByCategoryId = new HashMap<>();
         Map<String, Map<Characteristic, Integer>> cellTypesToIdByCategoryId = new HashMap<>();
         Map<String, int[]> indicesByCategoryId = new HashMap<>();
@@ -225,6 +229,20 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
             }
         }
 
+        Map<String, String> nameByCategoryId;
+        if ( names != null ) {
+            if ( names.size() != categoryIds.size() ) {
+                throw new IllegalStateException( "The number of names provided (" + names.size() + ") does not match the number of categories found in the metadata file (" + categoryIds.size() + ")." );
+            }
+            nameByCategoryId = new HashMap<>();
+            int i = 0;
+            for ( String cid : categoryIds ) {
+                nameByCategoryId.put( cid, names.get( i++ ) );
+            }
+        } else {
+            nameByCategoryId = null;
+        }
+
         StringBuilder descriptionBuilder = new StringBuilder();
 
         if ( collisions > 0 ) {
@@ -249,7 +267,10 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
         String description = descriptionBuilder.toString();
         Set<T> result = new HashSet<>();
         for ( String categoryId : categoryIds ) {
-            result.add( createCellLevelCharacteristicsWithDescription( characteristicsByCategoryId.get( categoryId ), indicesByCategoryId.get( categoryId ), description ) );
+            String name = nameByCategoryId != null ? nameByCategoryId.get( categoryId ) : null;
+            List<Characteristic> characteristics = characteristicsByCategoryId.get( categoryId );
+            int[] indices = indicesByCategoryId.get( categoryId );
+            result.add( createCellLevelCharacteristics( name, description, characteristics, indices ) );
         }
         return result;
     }
@@ -284,27 +305,9 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     protected abstract String getValueUri( CSVRecord record );
 
     /**
-     * Create a cell-level characteristics object from the parsed data with a description.
-     * <p>
-     * If the description is already filled in, it will be appended to the existing description.
-     */
-    private T createCellLevelCharacteristicsWithDescription( List<Characteristic> characteristics, int[] indices, String description ) {
-        T r = createCellLevelCharacteristics( characteristics, indices );
-        if ( r instanceof AbstractDescribable ) {
-            AbstractDescribable d = ( AbstractDescribable ) r;
-            if ( StringUtils.isBlank( d.getDescription() ) ) {
-                d.setDescription( description );
-            } else {
-                d.setDescription( StringUtils.strip( d.getDescription() ) + "\n\n" + description );
-            }
-        }
-        return r;
-    }
-
-    /**
      * Create a cell-level characteristics object from the parsed data.
      */
-    protected abstract T createCellLevelCharacteristics( List<Characteristic> characteristics, int[] indices );
+    protected abstract T createCellLevelCharacteristics( @Nullable String name, @Nullable String description, List<Characteristic> characteristics, int[] indices );
 
     /**
      * Create a mapper to match sample names from the metadata file to bioassays using cell IDs correspondence.

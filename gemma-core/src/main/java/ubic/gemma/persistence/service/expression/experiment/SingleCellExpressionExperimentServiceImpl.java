@@ -192,7 +192,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             List<Characteristic> c = new ArrayList<>();
             int[] i = new int[csi.length];
             populate( csi, c, i );
-            slicedClcs.add( CellLevelCharacteristics.Factory.newInstance( c, i ) );
+            slicedClcs.add( CellLevelCharacteristics.Factory.newInstance( clc.getName(), clc.getDescription(), c, i ) );
         }
         return slicedClcs;
     }
@@ -990,6 +990,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
         Assert.isNull( clc.getId(), "Cell-level characteristics must be transient." );
+        if ( clc.getName() != null ) {
+            for ( CellLevelCharacteristics e : scd.getCellLevelCharacteristics() ) {
+                if ( clc.getName().equalsIgnoreCase( e.getName() ) ) {
+                    throw new IllegalArgumentException( "There is already a cell-level characteristics named '" + e.getName() + "'." );
+                }
+            }
+        }
         Assert.isTrue( !scd.getCellLevelCharacteristics().contains( clc ), scd + " already has a cell-level characteristics matching " + clc + "." );
         scd.getCellLevelCharacteristics().add( clc );
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
@@ -1037,6 +1044,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Long id ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, id );
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String name ) {
+        return expressionExperimentDao.getCellLevelCharacteristics( ee, qt, name );
     }
 
     @Override

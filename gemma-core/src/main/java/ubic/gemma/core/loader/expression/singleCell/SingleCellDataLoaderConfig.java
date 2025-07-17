@@ -8,6 +8,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Basic configuration for loading single-cell data.
@@ -49,6 +50,14 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      */
     @Nullable
     private Protocol cellTypeAssignmentProtocol;
+
+    /**
+     * Name to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsNames;
 
     /**
      * A location where additional cell-level characteristics can be loaded.

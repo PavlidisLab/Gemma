@@ -650,7 +650,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < 100; i++ ) {
             indices[i] = random.nextInt( characteristics.size() + 1 ) - 1;
         }
-        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
+        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( null, null, characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
@@ -678,6 +678,38 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.GENOTYPE ) )
                 .isEmpty();
+    }
+
+    @Test
+    public void testAddDuplicatedCellLevelCharacteristics() {
+        SingleCellDimension dimension = createSingleCellDimension();
+        int[] indices = new int[100];
+        List<Characteristic> characteristics = new ArrayList<>();
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        Random random = new Random( 123L );
+        for ( int i = 0; i < 100; i++ ) {
+            indices[i] = random.nextInt( characteristics.size() + 1 ) - 1;
+        }
+        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( "foo", null, characteristics, indices );
+        dimension.getCellLevelCharacteristics().add( cellTreatments );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
+
+        int[] indices2 = new int[100];
+        List<Characteristic> characteristics2 = new ArrayList<>();
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        for ( int i = 0; i < 100; i++ ) {
+            indices2[i] = random.nextInt( characteristics2.size() + 1 ) - 1;
+        }
+        CellLevelCharacteristics cellTreatments2 = CellLevelCharacteristics.Factory.newInstance( "foo", null, characteristics2, indices2 );
+
+        assertThatThrownBy( () -> scExpressionExperimentService.addCellLevelCharacteristics( ee, vectors.iterator().next().getSingleCellDimension(), cellTreatments2 ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "There is already a cell-level characteristics named 'foo'." );
     }
 
     @Test
