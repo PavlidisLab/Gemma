@@ -539,7 +539,7 @@ public interface ExpressionExperimentDao
      */
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
      * Obtain the single-cell dimension used by a specific QT.
@@ -554,7 +554,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -601,7 +601,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the category of a cell-level characteristic.
      * <p>
-     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean)}).
+     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean, boolean)}).
      */
     @Nullable
     Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );

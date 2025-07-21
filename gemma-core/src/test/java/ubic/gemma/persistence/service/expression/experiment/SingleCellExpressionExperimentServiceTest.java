@@ -204,7 +204,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( ee ) )
                 .singleElement()
                 .satisfies( t );
-        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) )
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig ) )
                 .satisfies( t )
                 .satisfies( scd2 -> {
                     assertThat( scd2.getCellTypeAssignments() )
@@ -217,7 +225,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                                 assertThat( cta.getProtocol() ).isNull();
                             } );
                 } );
-        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, false, true, true, false ) )
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig2 = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( false )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig2 ) )
                 .satisfies( scd2 -> {
                     assertThat( scd2.getCellTypeAssignments() )
                             .isInstanceOf( UninitializedSet.class );

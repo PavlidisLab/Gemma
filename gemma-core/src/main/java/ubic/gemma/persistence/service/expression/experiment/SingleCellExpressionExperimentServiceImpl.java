@@ -699,8 +699,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -717,8 +717,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override

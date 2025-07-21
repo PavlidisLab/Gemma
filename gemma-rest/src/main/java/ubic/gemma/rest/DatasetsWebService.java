@@ -1148,7 +1148,15 @@ public class DatasetsWebService {
                 boolean includeBioAssays = !excludedFields.contains( "bioAssayIds" );
                 // we can go extra-fast if both are excluded
                 boolean includeIndices = !( excludedFields.contains( "cellTypeAssignments.cellTypeIds" ) && excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) );
-                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, true, true, true, includeIndices );
+                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                        .includeBioAssays( includeBioAssays )
+                        .includeCtas( true )
+                        .includeClcs( true )
+                        .includeProtocol( true )
+                        .includeCharacteristics( true )
+                        .includeIndices( includeIndices )
+                        .build();
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig );
             } else {
                 dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
             }

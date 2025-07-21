@@ -164,8 +164,19 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
+    @Getter
+    @Builder
+    class SingleCellDimensionInitializationConfig {
+        private boolean includeBioAssays;
+        private boolean includeCtas;
+        private boolean includeClcs;
+        private boolean includeProtocol;
+        private boolean includeCharacteristics;
+        private boolean includeIndices;
+    }
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
     /**
      * Obtain a single-cell dimension used for a given dataset and QT.
@@ -184,7 +195,7 @@ public interface SingleCellExpressionExperimentService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
     /**
      * Obtain the preferred single-cell dimension.

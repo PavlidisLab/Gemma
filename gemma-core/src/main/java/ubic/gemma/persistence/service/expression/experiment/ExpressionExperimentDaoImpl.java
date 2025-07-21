@@ -2198,11 +2198,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
-        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true );
+        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true, true );
     }
 
     @Override
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
@@ -2210,7 +2210,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
                 .list();
     }
 
@@ -2231,11 +2231,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true );
+        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true, true );
     }
 
     @Override
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
@@ -2243,7 +2243,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
                 .uniqueResult();
     }
 
@@ -2265,7 +2265,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true, true ) )
                 .uniqueResult();
     }
 
@@ -2275,13 +2275,15 @@ public class ExpressionExperimentDaoImpl
         private final boolean includeBioAssays;
         private final boolean includeCtas;
         private final boolean includeClcs;
+        private final boolean includeProtocol;
         private final boolean includeCharacteristics;
         private final boolean includeIndices;
 
-        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
             this.includeBioAssays = includeBioAssays;
             this.includeCtas = includeCtas;
             this.includeClcs = includeClcs;
+            this.includeProtocol = includeProtocol;
             this.includeCharacteristics = includeCharacteristics;
             this.includeIndices = includeIndices;
         }
@@ -2308,6 +2310,11 @@ public class ExpressionExperimentDaoImpl
                             .createQuery( "select cta from SingleCellDimension scd join scd.cellTypeAssignments cta where scd = :scd" )
                             .setParameter( "scd", result )
                             .list();
+                    if ( includeProtocol ) {
+                        ctas.forEach( cta -> {
+                            Hibernate.initialize( cta.getProtocol() );
+                        } );
+                    }
                     result.setCellTypeAssignments( new HashSet<>( ctas ) );
                 } else {
                     //noinspection unchecked
@@ -2317,7 +2324,7 @@ public class ExpressionExperimentDaoImpl
                                     + "from SingleCellDimension scd "
                                     + "join scd.cellTypeAssignments cta where scd = :scd" )
                             .setParameter( "scd", result )
-                            .setResultTransformer( new CtaInitializer( includeCharacteristics ) )
+                            .setResultTransformer( new CtaInitializer( includeProtocol, includeCharacteristics ) )
                             .list();
                     result.setCellTypeAssignments( new HashSet<>( ctas ) );
                 }
@@ -2358,20 +2365,24 @@ public class ExpressionExperimentDaoImpl
 
     private class CtaInitializer implements TypedResultTransformer<CellTypeAssignment> {
 
+        private final boolean includeProtocol;
         private final boolean includeCharacteristics;
 
-        private CtaInitializer( boolean includeCharacteristics ) {
+        private CtaInitializer( boolean includeProtocol, boolean includeCharacteristics ) {
+            this.includeProtocol = includeProtocol;
             this.includeCharacteristics = includeCharacteristics;
         }
 
         @Override
         public CellTypeAssignment transformTuple( Object[] tuple, String[] aliases ) {
             CellTypeAssignment result = ( CellTypeAssignment ) aliasToBean( CellTypeAssignment.class ).transformTuple( tuple, aliases );
-            Protocol protocol = ( Protocol ) getSessionFactory().getCurrentSession()
-                    .createQuery( "select cta.protocol from CellTypeAssignment cta where cta = :cta" )
-                    .setParameter( "cta", result )
-                    .uniqueResult();
-            result.setProtocol( protocol );
+            if ( includeProtocol ) {
+                Protocol protocol = ( Protocol ) getSessionFactory().getCurrentSession()
+                        .createQuery( "select cta.protocol from CellTypeAssignment cta where cta = :cta" )
+                        .setParameter( "cta", result )
+                        .uniqueResult();
+                result.setProtocol( protocol );
+            }
             if ( includeCharacteristics ) {
                 //noinspection unchecked
                 List<Characteristic> cellTypes = getSessionFactory().getCurrentSession()
@@ -2782,7 +2793,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaId", ctaId )
-                .setResultTransformer( new CtaInitializer( true ) )
+                .setResultTransformer( new CtaInitializer( true, true ) )
                 .uniqueResult();
     }
 
@@ -2811,7 +2822,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaName", ctaName )
-                .setResultTransformer( new CtaInitializer( true ) )
+                .setResultTransformer( new CtaInitializer( true, true ) )
                 .uniqueResult();
     }
 
