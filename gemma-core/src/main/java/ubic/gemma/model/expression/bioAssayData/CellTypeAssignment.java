@@ -121,7 +121,8 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( cellTypes, that.cellTypes )
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( cellTypes, that.cellTypes )
                 && Arrays.equals( cellTypeIndices, that.cellTypeIndices );
     }
 

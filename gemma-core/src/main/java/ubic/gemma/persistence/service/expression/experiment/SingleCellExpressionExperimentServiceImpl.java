@@ -869,6 +869,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     private CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cta ) {
+        for ( CellTypeAssignment e : dimension.getCellTypeAssignments() ) {
+            if ( cta.getName().equalsIgnoreCase( e.getName() ) ) {
+                throw new IllegalArgumentException( "There is already a cell type assignment named '" + cta.getName() + "'." );
+            }
+        }
         Assert.isTrue( !dimension.getCellTypeAssignments().contains( cta ), dimension + " already has a cell type assignment matching " + cta + "." );
         if ( cta.isPreferred() ) {
             for ( CellTypeAssignment a : dimension.getCellTypeAssignments() ) {
