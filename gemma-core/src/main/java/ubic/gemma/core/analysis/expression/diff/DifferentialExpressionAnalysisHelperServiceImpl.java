@@ -28,7 +28,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDao;
 
 /**
  * Transactional methods for dealing with differential expression analyses.
@@ -48,7 +47,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     @Override
     @Transactional
     public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity ) {
-        entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
+        if ( entity.getProtocol() != null ) {
+            entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
+        }
 
         // Sometimes we have made a new EESubSet as part of the analysis.
         if ( ExpressionExperimentSubSet.class.isAssignableFrom( entity.getExperimentAnalyzed().getClass() )

@@ -18,11 +18,13 @@
  */
 package ubic.gemma.model.common;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public abstract class AbstractDescribable extends AbstractIdentifiable implements Describable {
 
     private String name;
+    @Nullable
     private String description;
 
     @Override
@@ -34,12 +36,13 @@ public abstract class AbstractDescribable extends AbstractIdentifiable implement
         this.name = name;
     }
 
+    @Nullable
     @Override
     public String getDescription() {
         return this.description;
     }
 
-    public void setDescription( String description ) {
+    public void setDescription( @Nullable String description ) {
         this.description = description;
     }
 

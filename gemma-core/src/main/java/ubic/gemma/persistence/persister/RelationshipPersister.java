@@ -85,7 +85,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
-        entity.setProtocol( this.persistProtocol( entity.getProtocol() ) );
+        if ( entity.getProtocol() != null ) {
+            entity.setProtocol( this.persistProtocol( entity.getProtocol() ) );
+        }
         if ( entity.getExperimentAnalyzed().getId() == null ) {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
