@@ -655,6 +655,9 @@ public interface ExpressionExperimentDao
     @Nullable
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
+    @Nullable
+    Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolIdentifier );
+
     /**
      * Obtain a cell type assignment by name without loading the indices.
      */

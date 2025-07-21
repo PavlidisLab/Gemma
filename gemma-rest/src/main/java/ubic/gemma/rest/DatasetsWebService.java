@@ -1184,7 +1184,8 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             // TODO: implement CellTypeAssignmentArg
-            @Parameter(description = "The name of of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
             @Context HttpHeaders headers
     ) {
@@ -1201,7 +1202,16 @@ public class DatasetsWebService {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
         CellTypeAssignment cta;
-        if ( ctaName != null ) {
+        if ( protocolName != null ) {
+            Collection<CellTypeAssignment> found = singleCellExpressionExperimentService.getCellTypeAssignmentByProtocol( ee, qt, protocolName );
+            if ( found.isEmpty() ) {
+                throw new NotFoundException( "No cell type assignment with protocol " + protocolName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            } else if ( found.size() > 1 ) {
+                throw new IllegalArgumentException( "There is more than one cell type assignment with protocol " + protocolName + " for " + ee.getShortName() + " and " + qt.getName() + ". Please specify the name of the cell type assignment to retrieve." );
+            } else {
+                cta = found.iterator().next();
+            }
+        } else if ( ctaName != null ) {
             cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
             if ( cta == null ) {
                 throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );

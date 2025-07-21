@@ -310,6 +310,12 @@ public interface SingleCellExpressionExperimentService {
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
     /**
+     * Obtain a cell type assignment by a protocol identifier.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName );
+
+    /**
      * Obtain the preferred cell type labelling from the preferred single-cell vectors.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

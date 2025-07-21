@@ -2811,6 +2811,23 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
+    @Nullable
+    @Override
+    public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {
+        //noinspection unchecked
+        return ( List<CellTypeAssignment> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "join cta.protocol protocol "
+                        + "where scedv.quantitationType = :qt and protocol.name = :protocolName and scedv.expressionExperiment = :ee "
+                        + "group by cta" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setParameter( "protocolName", protocolName )
+                .list();
+    }
+
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
