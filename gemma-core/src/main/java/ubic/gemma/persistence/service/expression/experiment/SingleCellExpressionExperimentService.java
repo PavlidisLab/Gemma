@@ -345,6 +345,12 @@ public interface SingleCellExpressionExperimentService {
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     /**
+     * Obtain a mask if one is unambiguously defined for the given experiment and quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellLevelCharacteristics> getCellLevelMask( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
+    /**
      * Obtain the cell types of a given single-cell dataset.
      * <p>
      * Only the cell types applicable to the preferred single-cell vectors and labelling are returned.

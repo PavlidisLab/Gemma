@@ -681,6 +681,8 @@ public interface ExpressionExperimentDao
 
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category );
+
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
     /**

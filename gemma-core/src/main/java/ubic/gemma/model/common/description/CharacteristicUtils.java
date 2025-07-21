@@ -18,7 +18,11 @@ public class CharacteristicUtils {
     /**
      * Create a new characteristic that represents the category of a given characteristic.
      */
-    public static Characteristic getCategory( Characteristic t ) {
+    public static Category getCategory( Characteristic t ) {
+        return new Category( t.getCategory(), t.getCategoryUri() );
+    }
+
+    public static Characteristic getCategoryAsCharacteristic( Characteristic t ) {
         Characteristic c = new Characteristic();
         c.setCategory( t.getCategory() );
         c.setCategoryUri( t.getCategoryUri() );
@@ -102,4 +106,5 @@ public class CharacteristicUtils {
             return uriCmp;
         }
     }
+
 }
