@@ -230,7 +230,7 @@ public class SingleCellSlicerUtils {
                 System.arraycopy( clc.getIndices(), start, indices, newOffset, end - start );
                 newOffset += end - start;
             }
-            CellLevelCharacteristics newClc = CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
+            CellLevelCharacteristics newClc = CellLevelCharacteristics.Factory.newInstance( clc.getName(), clc.getDescription(), characteristics, indices );
             log.info( "Sliced " + clc + " to " + newClc + "." );
             clcs.add( newClc );
         }

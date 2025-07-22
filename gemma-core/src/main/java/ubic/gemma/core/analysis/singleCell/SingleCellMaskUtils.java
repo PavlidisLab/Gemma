@@ -22,9 +22,9 @@ public class SingleCellMaskUtils {
         for ( int i = 0; i < mask.length; i++ ) {
             maskToIndices[i] = mask[i] ? 1 : 0;
         }
-        return CellLevelCharacteristics.Factory.newInstance( Arrays.asList(
-                Characteristic.Factory.newInstance( Categories.MASK, "false", null ), // index 0
-                Characteristic.Factory.newInstance( Categories.MASK, "true", null )   // index 1
+        return CellLevelCharacteristics.Factory.newInstance( null, null,Arrays.asList(
+                Characteristic.Factory.newInstance(  Categories.MASK, "false", null ), // index 0
+                Characteristic.Factory.newInstance(  Categories.MASK, "true", null )   // index 1
         ), maskToIndices );
     }
 

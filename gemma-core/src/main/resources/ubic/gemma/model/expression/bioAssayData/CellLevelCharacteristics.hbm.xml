@@ -10,6 +10,12 @@
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
         </id>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
+            <column name="DESCRIPTION" not-null="false" sql-type="text"/>
+        </property>
         <property name="indices">
             <column name="INDICES" not-null="true" sql-type="LONGBLOB"/>
             <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
