@@ -306,8 +306,10 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     /**
      * Create a cell-level characteristics object from the parsed data.
+     * @param name                name to use for the cell-level characteristics, or {@code null} if no name is provided
+     * @param descriptionToAppend string to append to the description of the cell-level characteristics
      */
-    protected abstract T createCellLevelCharacteristics( @Nullable String name, @Nullable String description, List<Characteristic> characteristics, int[] indices );
+    protected abstract T createCellLevelCharacteristics( @Nullable String name, String descriptionToAppend, List<Characteristic> characteristics, int[] indices );
 
     /**
      * Create a mapper to match sample names from the metadata file to bioassays using cell IDs correspondence.

@@ -102,16 +102,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
-            QuantitationType qt = getQuantitationType( ee, config );
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
-            applyPreferredCellTypeAssignment( ctas, config );
-            Set<CellTypeAssignment> set = new HashSet<>();
-            for ( CellTypeAssignment cta : ctas ) {
-                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
-                set.add( cellTypeAssignment );
-            }
-            return set;
+            return loadCellTypeAssignments( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -122,19 +113,35 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
-            QuantitationType qt = getQuantitationType( ee, config );
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
-            applyPreferredCellTypeAssignment( ctas, config );
-            Set<CellTypeAssignment> set = new HashSet<>();
-            for ( CellTypeAssignment cta : ctas ) {
-                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
-                set.add( cellTypeAssignment );
-            }
-            return set;
+            return loadCellTypeAssignments( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private Collection<CellTypeAssignment> loadCellTypeAssignments( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
+        QuantitationType qt = getQuantitationType( ee, config );
+        SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
+        Set<String> existingCtaNames = dimension.getCellTypeAssignments().stream()
+                .map( CellTypeAssignment::getName ).filter( Objects::nonNull )
+                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
+        Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
+        applyPreferredCellTypeAssignment( ctas, config );
+        Set<CellTypeAssignment> set = new HashSet<>();
+        for ( CellTypeAssignment cta : ctas ) {
+            if ( cta.getName() != null && existingCtaNames.contains( cta.getName() ) ) {
+                if ( config.isReplaceExistingCellTypeAssignment() ) {
+                    log.info( "There is already a cell type assignment named " + cta.getName() + " in " + ee + ", replacing it..." );
+                    singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, cta.getName() );
+                } else {
+                    log.warn( "Cell type assignment with name " + cta.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingCellTypeAssignment to replace it." );
+                    continue;
+                }
+            }
+            CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
+            set.add( cellTypeAssignment );
+        }
+        return set;
     }
 
     @Override
@@ -143,8 +150,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
+            Set<String> existingClcNames = dimension.getCellLevelCharacteristics().stream()
+                    .map( CellLevelCharacteristics::getName ).filter( Objects::nonNull )
+                    .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
             for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
+                if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
+                    if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
+                        log.info( "There is already a cell-level characteristics named " + clc.getName() + " in " + ee + ", replacing it..." );
+                        singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, clc.getName() );
+                    } else {
+                        log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
+                        continue;
+                    }
+                }
                 created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
             }
             return created;
@@ -344,7 +363,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
         try {
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dim );
-            applyPreferredCellTypeAssignment( dim.getCellTypeAssignments(), config );
+            applyPreferredCellTypeAssignment( ctas, config );
             dim.getCellTypeAssignments().addAll( ctas );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace

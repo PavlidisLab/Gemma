@@ -44,12 +44,31 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private String cellTypeAssignmentName;
 
     /**
+     * A description to use for the cell type assignment.
+     */
+    @Nullable
+    private String cellTypeAssignmentDescription;
+
+    /**
      * A protocol to use for the cell type assignment.
      * <p>
      * If non-null, this must be persistent.
      */
     @Nullable
     private Protocol cellTypeAssignmentProtocol;
+
+    /**
+     * If there is already a cell type assignment with the same name, replace it with the new one.
+     * <p>
+     * Note that CTAs with a {@code null} name cannot be replaced.
+     */
+    private boolean replaceExistingCellTypeAssignment;
+
+    /**
+     * A location where additional cell-level characteristics can be loaded.
+     */
+    @Nullable
+    private Path otherCellLevelCharacteristicsFile;
 
     /**
      * Name to use for the cell-level characteristics.
@@ -60,10 +79,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private List<String> otherCellLevelCharacteristicsNames;
 
     /**
-     * A location where additional cell-level characteristics can be loaded.
+     * If there are already other CLCs with the same names, replace them with the new ones.
+     * <p>
+     * Note that other CLCs with a {@code null} name cannot be replaced.
      */
-    @Nullable
-    private Path otherCellLevelCharacteristicsFile;
+    private boolean replaceExistingOtherCellLevelCharacteristics;
 
     /**
      * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap

@@ -930,6 +930,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         removeCellTypeAssignment( ee, dim, cellTypeAssignment, alsoRemoveFactor );
     }
 
+    @Override
+    @Transactional
+    public void removeCellTypeAssignmentByName( ExpressionExperiment ee,  SingleCellDimension dimension, String name ) {
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            if ( name.equalsIgnoreCase( cta.getName() ) ) {
+                removeCellTypeAssignment( ee,  dimension, cta );
+            }
+        }
+    }
+
     private void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean alsoRemoveFactor ) {
         if ( !dimension.getCellTypeAssignments().remove( cellTypeAssignment ) ) {
             throw new IllegalArgumentException( cellTypeAssignment + " is not associated to " + dimension );
@@ -1031,6 +1041,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
         removeCellLevelCharacteristics( ee, dim, clc );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
+        for ( CellLevelCharacteristics clc : dimension.getCellLevelCharacteristics() ) {
+            if ( name.equalsIgnoreCase( clc.getName() ) ) {
+                removeCellLevelCharacteristics( ee, dimension, clc );
+            }
+        }
     }
 
     @Override

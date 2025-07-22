@@ -68,7 +68,7 @@ class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCha
     }
 
     @Override
-    protected CellLevelCharacteristics createCellLevelCharacteristics( @Nullable String name, @Nullable String description, List<Characteristic> characteristics, int[] indices ) {
-        return CellLevelCharacteristics.Factory.newInstance( name, description, characteristics, indices );
+    protected CellLevelCharacteristics createCellLevelCharacteristics( @Nullable String name, String descriptionToAppend, List<Characteristic> characteristics, int[] indices ) {
+        return CellLevelCharacteristics.Factory.newInstance( name, descriptionToAppend, characteristics, indices );
     }
 }

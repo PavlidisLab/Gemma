@@ -284,6 +284,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
+
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
      */
@@ -346,6 +349,9 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics clc );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
 
     /**
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
