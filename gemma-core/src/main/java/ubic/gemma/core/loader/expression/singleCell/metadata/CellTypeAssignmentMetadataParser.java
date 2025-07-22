@@ -30,10 +30,13 @@ import java.util.List;
 class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellTypeAssignment> {
 
     @Nullable
+    private final String cellTypeAssignmentDescription;
+    @Nullable
     private final Protocol cellTypeAssignmentProtocol;
 
-    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol ) {
+    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, String cellTypeAssignmentName, @Nullable String cellTypeAssignmentDescription, @Nullable Protocol cellTypeAssignmentProtocol ) {
         super( singleCellDimension, bioAssayMapper, Collections.singletonList( cellTypeAssignmentName ) );
+        this.cellTypeAssignmentDescription = cellTypeAssignmentDescription;
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }
 
@@ -62,10 +65,12 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
     }
 
     @Override
-    protected CellTypeAssignment createCellLevelCharacteristics( @Nullable String name, @Nullable String description, List<Characteristic> characteristics, int[] indices ) {
+    protected CellTypeAssignment createCellLevelCharacteristics( @Nullable String name, @Nullable String descriptionToAppend, List<Characteristic> characteristics, int[] indices ) {
         CellTypeAssignment cta = CellTypeAssignment.Factory.newInstance( name, characteristics, indices );
-        cta.setName( name );
-        cta.setDescription( description );
+        if ( cellTypeAssignmentDescription != null ) {
+            descriptionToAppend = StringUtils.strip( cellTypeAssignmentDescription ) + "\n\n" + descriptionToAppend;
+        }
+        cta.setDescription( descriptionToAppend );
         cta.setProtocol( cellTypeAssignmentProtocol );
         return cta;
     }

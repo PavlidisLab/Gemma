@@ -55,8 +55,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
             CELL_TYPE_ASSIGNMENT_NAME_OPTION = "ctaName",
+            CELL_TYPE_ASSIGNMENT_DESCRIPTION_OPTION = "ctaDescription",
             CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
-            PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
+            REPLACE_EXISTING_CELL_TYPE_ASSIGNMENTS_OPTION = "replaceCta",
+            PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_NAME = "clcName",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile",
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
@@ -131,8 +133,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Nullable
     private String cellTypeAssignmentName;
     @Nullable
+    private String cellTypeAssignmentDescription;
+    @Nullable
     private String cellTypeAssignmentProtocolName;
     private boolean preferredCellTypeAssignment;
+    private boolean replaceExistingCellTypeAssignments;
     @Nullable
     private List<String> otherCellLevelCharacteristicsNames;
     @Nullable
@@ -223,17 +228,19 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .desc( "Path to a cell type assignment file. If missing, cell type importing will be delegated to a specific loader. For AnnData, you must supply the -" + ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION + " option." )
                 .build() );
         options.addOption( CELL_TYPE_ASSIGNMENT_NAME_OPTION, "cell-type-assignment-name", true, "Name to use for the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
+        options.addOption( CELL_TYPE_ASSIGNMENT_DESCRIPTION_OPTION, "cell-type-assignment-description", true, "Description to use for the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION )
                 .longOpt( "cell-type-assignment-protocol" ).hasArg()
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PROTOCOL ) ) )
                 .desc( "An identifier for a protocol describing the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." )
                 .build() );
-        options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one." );
+        options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ).longOpt( "cell-level-characteristics-name" )
                 .hasArgs()
                 .valueSeparator( ',' )
                 .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
                 .build() );
+        options.addOption( REPLACE_EXISTING_CELL_TYPE_ASSIGNMENTS_OPTION, "replace-existing-cell-type-assignments", false, "Replace an existing cell type assignment. The " + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " and " + CELL_TYPE_ASSIGNMENT_NAME_OPTION + " options must be set." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
                 .hasArg().type( Path.class )
@@ -326,13 +333,15 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
         cellTypeAssignmentName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
+        cellTypeAssignmentDescription = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_DESCRIPTION_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         cellTypeAssignmentProtocolName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
-        preferredCellTypeAssignment = hasOption( commandLine, PREFERRED_CELL_TYPE_ASSIGNMENT, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
+        preferredCellTypeAssignment = hasOption( commandLine, PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         if ( commandLine.hasOption( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) {
             otherCellLevelCharacteristicsNames = Arrays.asList( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) );
         } else {
             otherCellLevelCharacteristicsNames = null;
         }
+        replaceExistingCellTypeAssignments = commandLine.hasOption( REPLACE_EXISTING_CELL_TYPE_ASSIGNMENTS_OPTION );
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
         inferSamplesFromCellIdsOverlap = hasOption( commandLine, INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION,
                 requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
@@ -515,16 +524,13 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( cellTypeAssignmentFile != null ) {
             configBuilder
                     .cellTypeAssignmentFile( cellTypeAssignmentFile )
+                    .cellTypeAssignmentName( cellTypeAssignmentName )
+                    .cellTypeAssignmentDescription( cellTypeAssignmentDescription )
+                    .cellTypeAssignmentProtocol( cellTypeAssignmentProtocolName != null ? entityLocator.locateProtocol( cellTypeAssignmentProtocolName ) : null )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
-            if ( cellTypeAssignmentName != null ) {
-                configBuilder
-                        .cellTypeAssignmentName( cellTypeAssignmentName );
-            }
-            if ( cellTypeAssignmentProtocolName != null ) {
-                configBuilder
-                        .cellTypeAssignmentProtocol( entityLocator.locateProtocol( cellTypeAssignmentProtocolName ) );
-            }
         }
+
+        configBuilder.replaceExistingCellTypeAssignments( replaceExistingCellTypeAssignments );
         if ( otherCellLevelCharacteristicsFile != null ) {
             configBuilder.otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames );
             configBuilder.otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile );

@@ -33,6 +33,9 @@ public class GenericMetadataSingleCellDataLoaderConfigurer implements SingleCell
         if ( config.getCellTypeAssignmentName() != null ) {
             loader.setCellTypeAssignmentName( config.getCellTypeAssignmentName() );
         }
+        if ( config.getCellTypeAssignmentDescription() != null ) {
+            loader.setCellTypeAssignmentDescription( config.getCellTypeAssignmentDescription() );
+        }
         if ( config.getCellTypeAssignmentProtocol() != null ) {
             loader.setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
         }

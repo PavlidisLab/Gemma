@@ -44,6 +44,19 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private String cellTypeAssignmentName;
 
     /**
+     * A description to use for the cell type assignment.
+     */
+    @Nullable
+    private String cellTypeAssignmentDescription;
+
+    /**
+     * If there are already CTAs with the same names, replace them with the new ones.
+     * <p>
+     * Note that CTAs with a {@code null} name cannot be replaced.
+     */
+    private boolean replaceExistingCellTypeAssignments;
+
+    /**
      * A protocol to use for the cell type assignment.
      * <p>
      * If non-null, this must be persistent.

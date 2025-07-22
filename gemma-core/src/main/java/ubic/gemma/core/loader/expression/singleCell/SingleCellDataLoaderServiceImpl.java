@@ -342,14 +342,40 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+        Set<CellTypeAssignment> ctas;
         try {
-            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dim );
-            applyPreferredCellTypeAssignment( dim.getCellTypeAssignments(), config );
-            dim.getCellTypeAssignments().addAll( ctas );
+            ctas = loader.getCellTypeAssignments( dim );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
+            return;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
+        }
+        Set<String> existingCtaNames = dim.getCellTypeAssignments().stream()
+                .map( CellTypeAssignment::getName )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
+        for ( CellTypeAssignment cta : ctas ) {
+            if ( cta.getName() != null ) {
+                if ( config.isReplaceExistingCellTypeAssignments() ) {
+                    removeExistingCellTypeAssignment( dim, cta.getName() );
+                } else {
+                    // check if there is already a CTA with this name
+                    if ( existingCtaNames.contains( cta.getName() ) ) {
+                        throw new IllegalStateException( "There is already a cell type assignment named " + cta.getName() + ". Use replaceExistingCellTypeAssignment to replace it." );
+                    }
+                }
+            }
+            dim.getCellTypeAssignments().add( cta );
+        }
+        applyPreferredCellTypeAssignment( dim.getCellTypeAssignments(), config );
+    }
+
+    private void removeExistingCellTypeAssignment( SingleCellDimension dim, String ctaNameToRemove ) {
+        boolean anyRemoved = dim.getCellTypeAssignments()
+                .removeIf( cta2 -> ctaNameToRemove.equalsIgnoreCase( cta2.getName() ) );
+        if ( !anyRemoved ) {
+            log.warn( "There is no cell type assignment named " + ctaNameToRemove + " in " + dim + " to be replaced, will simply add a new one." );
         }
     }
 
