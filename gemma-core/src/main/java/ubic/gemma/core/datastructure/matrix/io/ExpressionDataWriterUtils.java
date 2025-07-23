@@ -112,6 +112,10 @@ public class ExpressionDataWriterUtils {
                 + bioAssays.stream().map( ba -> ba.getShortName() != null ? ba.getShortName() : ba.getName() ).sorted().collect( Collectors.joining( "." ) ) );
     }
 
+    public static String constructAssayName( BioAssay ba ) {
+        return constructRCompatibleColumnName( ba.getShortName() != null ? ba.getShortName() : ba.getName() );
+    }
+
     /**
      * Produce a value for representing a factor value.
      * <p>

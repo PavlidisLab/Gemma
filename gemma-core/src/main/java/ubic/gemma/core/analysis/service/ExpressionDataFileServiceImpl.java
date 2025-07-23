@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
-import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
-import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
-import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.*;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -553,6 +550,27 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
         } else {
             Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
+            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, vectors.size() ) ), cs2gene, writer );
+        }
+    }
+
+    @Override
+    public int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
+        Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
+        CellBrowserTabularMatrixWriter matrixWriter = new CellBrowserTabularMatrixWriter();
+        matrixWriter.setUseBioAssayIds( useBioAssayIds );
+        matrixWriter.setAutoFlush( autoFlush );
+        matrixWriter.setScaleType( scaleType );
+        if ( scaleType != null && qt.getScale() != scaleType ) {
+            log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
+        }
+        if ( fetchSize > 0 ) {
+            AtomicLong numVecs = new AtomicLong();
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, null, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
+                return matrixWriter.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, numVecs.get() ) ), cs2gene, writer );
+            }
+        } else {
+            Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, null, qt, cs2gene );
             return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, vectors.size() ) ), cs2gene, writer );
         }
     }

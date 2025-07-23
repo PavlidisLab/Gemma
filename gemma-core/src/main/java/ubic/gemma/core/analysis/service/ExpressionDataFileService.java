@@ -214,6 +214,8 @@ public interface ExpressionDataFileService {
      */
     Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, boolean autoFlush ) throws RejectedExecutionException;
 
+    int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
      * <p>

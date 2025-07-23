@@ -51,6 +51,28 @@ public class QuantitationTypeUtils {
         }
     }
 
+    public static Number getDefaultValueAsNumber( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    return getDefaultCountValueAsDouble( quantitationType );
+                }
+                return Double.NaN;
+            case FLOAT:
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    return getDefaultCountValueAsFloat( quantitationType );
+                }
+                return Float.NaN;
+            case INT:
+                return 0;
+            case LONG:
+                return 0L;
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+        }
+    }
+
     public static double getDefaultValueAsDouble( QuantitationType qt ) {
         Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
                 "Only double representation is supported." );
