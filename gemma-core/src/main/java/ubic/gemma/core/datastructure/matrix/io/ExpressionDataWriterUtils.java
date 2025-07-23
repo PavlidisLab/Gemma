@@ -19,13 +19,14 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -106,14 +107,19 @@ public class ExpressionDataWriterUtils {
      * Construct a BioAssay column name prefixed by the {@link BioMaterial} from which it originates.
      */
     public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
-        return constructRCompatibleColumnName( bioMaterial.getName()
+        // sort for consistency
+        return StringUtil.makeValidForR( bioMaterial.getName()
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
                 // sort for consistency
                 + bioAssays.stream().map( ba -> ba.getShortName() != null ? ba.getShortName() : ba.getName() ).sorted().collect( Collectors.joining( "." ) ) );
     }
 
     public static String constructAssayName( BioAssay ba ) {
-        return constructRCompatibleColumnName( ba.getShortName() != null ? ba.getShortName() : ba.getName() );
+        return StringUtil.makeValidForR( ba.getShortName() != null ? ba.getShortName() : ba.getName() );
+    }
+
+    public static String constructExperimentalFactorName( ExperimentalFactor ef ) {
+        return StringUtil.makeValidForR( ef.getName() );
     }
 
     /**
@@ -156,7 +162,7 @@ public class ExpressionDataWriterUtils {
     @Nullable
     public static String constructSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
         if ( bioMaterial.getExternalAccession() != null ) {
-            return constructRCompatibleColumnName( bioMaterial.getExternalAccession().getAccession() );
+            return StringUtil.makeValidForR( bioMaterial.getExternalAccession().getAccession() );
         } else if ( !bioAssays.isEmpty() ) {
             // use the external IDs of the associated bioassays
             List<String> ids = new ArrayList<>();
@@ -165,19 +171,9 @@ public class ExpressionDataWriterUtils {
                     ids.add( ba.getAccession().getAccession() );
                 }
             }
-            return !ids.isEmpty() ? constructRCompatibleColumnName( StringUtils.join( ids, "/" ) ) : null;
+            return !ids.isEmpty() ? StringUtil.makeValidForR( StringUtils.join( ids, "/" ) ) : null;
         } else {
             return null;
         }
-    }
-
-    private static String constructRCompatibleColumnName( String colName ) {
-        Assert.isTrue( StringUtils.isNotBlank( colName ) );
-        colName = StringUtils.deleteWhitespace( colName );
-        colName = StringUtils.replaceChars( colName, ':', '.' );
-        colName = StringUtils.replaceChars( colName, '\'', '.' );
-        colName = StringUtils.replaceChars( colName, '|', '.' );
-        colName = StringUtils.replaceChars( colName, '-', '.' );
-        return colName;
     }
 }

@@ -21,7 +21,6 @@ package ubic.gemma.core.datastructure.matrix.io;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -34,6 +33,7 @@ import java.io.Writer;
 import java.util.*;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
 
 /**
  * Output compatible with {@link ExperimentalDesignImporterImpl}.
@@ -173,8 +173,7 @@ public class ExperimentalDesignWriter {
         buf.append( "Bioassay\tExternalID" );
 
         for ( ExperimentalFactor ef : factors ) {
-            String efName = StringUtil.makeValidForR( ef.getName() );
-            buf.append( "\t" ).append( efName );
+            buf.append( "\t" ).append( constructExperimentalFactorName( ef ) );
         }
 
         buf.append( "\n" );
