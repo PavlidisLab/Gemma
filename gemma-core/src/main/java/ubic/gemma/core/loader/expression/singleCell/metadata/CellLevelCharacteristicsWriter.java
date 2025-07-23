@@ -3,7 +3,6 @@ package ubic.gemma.core.loader.expression.singleCell.metadata;
 import lombok.Setter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.springframework.util.Assert;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -83,7 +82,7 @@ public class CellLevelCharacteristicsWriter {
             if ( cellType == null ) {
                 continue;
             }
-            String sampleId = useBioAssayId ? dimension.getBioAssay( cellIndex ).getId().toString() : dimension.getBioAssay( cellIndex ).getName();
+            String sampleId = getSampleId( dimension, cellIndex );
             String cellId = dimension.getCellIds().get( cellIndex );
             printer.printRecord( sampleId, cellId, cellType.getValue(), cellType.getValueUri() );
         }
@@ -96,13 +95,24 @@ public class CellLevelCharacteristicsWriter {
             if ( c == null ) {
                 continue;
             }
-            String sampleId = useBioAssayId ? dimension.getBioAssay( cellIndex ).getId().toString() : dimension.getBioAssay( cellIndex ).getName();
+            String sampleId = getSampleId( dimension, cellIndex );
             String cellId = dimension.getCellIds().get( cellIndex );
             if ( categoryId != null ) {
                 printer.printRecord( sampleId, cellId, c.getCategory(), c.getCategoryUri(), categoryId, c.getValue(), c.getValueUri() );
             } else {
                 printer.printRecord( sampleId, cellId, c.getCategory(), c.getCategoryUri(), c.getValue(), c.getValueUri() );
             }
+        }
+    }
+
+    private String getSampleId( SingleCellDimension dimension, int cellIndex ) {
+        BioAssay bioAssay = dimension.getBioAssay( cellIndex );
+        if ( useBioAssayId ) {
+            return String.valueOf( bioAssay.getId() );
+        } else if ( bioAssay.getShortName() != null ) {
+            return bioAssay.getShortName();
+        } else {
+            return bioAssay.getName();
         }
     }
 }
