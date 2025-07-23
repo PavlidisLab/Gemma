@@ -2811,6 +2811,14 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
+    @Override
+    public Collection<Protocol> getCellTypeAssignmentProtocols() {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct cta.protocol from CellTypeAssignment cta" )
+                .list();
+    }
+
     @Nullable
     @Override
     public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {

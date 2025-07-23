@@ -968,6 +968,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Protocol> getCellTypeAssignmentProtocols() {
+        return expressionExperimentDao.getCellTypeAssignmentProtocols();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {
         return expressionExperimentDao.getCellTypeAssignmentByProtocol( ee, qt, protocolName );
     }

@@ -535,3 +535,9 @@ a.tooltip:hover .tooltiptext {
 .text-center {
 	text-align: center;
 }
+
+.text-ellipsis {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
