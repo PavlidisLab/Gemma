@@ -1111,7 +1111,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
-            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayIds,
             @Context HttpHeaders headers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -1133,7 +1133,7 @@ public class DatasetsWebService {
             }
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayId( useBioAssayId );
+                writer.setUseBioAssayIds( useBioAssayIds );
                 writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {
@@ -1224,7 +1224,7 @@ public class DatasetsWebService {
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayId( useBioAssayId );
+                writer.setUseBioAssayIds( useBioAssayId );
                 writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {

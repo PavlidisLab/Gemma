@@ -24,7 +24,7 @@ public class CellLevelCharacteristicsWriter {
     /**
      * Use the {@link BioAssay} numerical ID instead of its name.
      */
-    private boolean useBioAssayId;
+    private boolean useBioAssayIds;
 
     public void write( SingleCellDimension dimension, Writer writer ) throws IOException {
         int i = 1;
@@ -107,7 +107,7 @@ public class CellLevelCharacteristicsWriter {
 
     private String getSampleId( SingleCellDimension dimension, int cellIndex ) {
         BioAssay bioAssay = dimension.getBioAssay( cellIndex );
-        if ( useBioAssayId ) {
+        if ( useBioAssayIds ) {
             return String.valueOf( bioAssay.getId() );
         } else if ( bioAssay.getShortName() != null ) {
             return bioAssay.getShortName();
