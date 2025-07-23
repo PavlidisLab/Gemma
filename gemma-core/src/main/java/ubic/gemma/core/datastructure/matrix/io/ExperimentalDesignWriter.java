@@ -18,19 +18,23 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
@@ -113,7 +117,7 @@ public class ExperimentalDesignWriter {
             writer.append( "\t" );
 
             /* column 1 */
-            String externalId = ExpressionDataWriterUtils.constructSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
+            String externalId = getSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
             if ( externalId != null ) {
                 writer.append( externalId );
             } else {
@@ -127,8 +131,7 @@ public class ExperimentalDesignWriter {
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = ExpressionDataWriterUtils
-                                .constructFactorValueName( candidateFactorValue );
+                        String matchedFactorValue = constructFactorValueName( candidateFactorValue );
                         writer.append( matchedFactorValue );
                         break;
                     }
@@ -179,4 +182,59 @@ public class ExperimentalDesignWriter {
         buf.append( "\n" );
     }
 
+
+    /**
+     * @param bioAssays   BAs
+     * @param bioMaterial BM
+     * @return string representing the external identifier of the biomaterial. This will usually be a GEO or
+     * ArrayExpress accession, or {@code null} if no such identifier is available.
+     */
+    @Nullable
+    private String getSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
+        if ( bioMaterial.getExternalAccession() != null ) {
+            return bioMaterial.getExternalAccession().getAccession();
+        } else if ( !bioAssays.isEmpty() ) {
+            // use the external IDs of the associated bioassays
+            List<String> ids = new ArrayList<>();
+            for ( BioAssay ba : bioAssays ) {
+                if ( ba.getAccession() != null ) {
+                    ids.add( ba.getAccession().getAccession() );
+                }
+            }
+            return !ids.isEmpty() ? StringUtils.join( ids, TsvUtils.SUB_DELIMITER ) : null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Produce a value for representing a factor value.
+     * <p>
+     * In the context of the design file, this is focusing on the value (i.e. subjects or measurement value) itself and
+     * not its metadata which are instead exposed in the file header.
+     * <p>
+     * Replaces spaces and hyphens with underscores.
+     * @param factorValue FV
+     * @return replaced string
+     */
+    private String constructFactorValueName( FactorValue factorValue ) {
+        String v;
+        if ( factorValue.getMeasurement() != null ) {
+            // FIXME: have a special encoding for missing values instead of 'null'
+            v = String.valueOf( factorValue.getMeasurement().getValue() );
+        } else {
+            String valueFromStatements = factorValue.getCharacteristics().stream()
+                    .map( Statement::getSubject )
+                    .collect( Collectors.joining( " | " ) );
+            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
+                v = valueFromStatements;
+            } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
+                v = factorValue.getValue();
+            } else {
+                v = ""; // this is treated as NaN in most scenarios
+            }
+        }
+        return v.replace( '-', '_' )
+                .replaceAll( "\\s+", "_" );
+    }
 }
