@@ -1,11 +1,13 @@
 package ubic.gemma.core.loader.expression.sra;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
+import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -15,11 +17,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @CommonsLog
 public class SraFetcher {
+
+    private static final int BATCH_SIZE = 30;
+    private static final SraExperimentPackageSet EMPTY_PACKAGE_SET = new SraExperimentPackageSet() {{
+        setExperimentPackages( Collections.emptyList() );
+    }};
 
     private final SimpleRetry<IOException> retryTemplate;
     @Nullable
@@ -67,23 +76,35 @@ public class SraFetcher {
             }
         }, ncbiApiKey ), uidUrl );
         if ( uid == null ) {
-            return new SraExperimentPackageSet() {{
-                setExperimentPackages( Collections.emptyList() );
-            }};
+            return EMPTY_PACKAGE_SET;
         }
         URL linkUrl = EntrezUtils.linkById( "sra", "gds", uid, "neighbor", EntrezRetmode.XML, null );
         log.debug( "Fetching associated SRA entries for " + geoAccession + " from " + linkUrl + "..." );
-        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+        Collection<String> linkIds = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
             try ( InputStream is = linkUrl.openStream() ) {
                 Document doc = EntrezXmlUtils.parse( is );
-                return fetch( EntrezXmlUtils.extractLinkIds( doc, "gds", "sra" ) );
+                return EntrezXmlUtils.extractLinkIds( doc, "gds", "sra" );
             }
         }, ncbiApiKey ), linkUrl );
+        if ( linkIds.isEmpty() ) {
+            log.warn( "No SRA entries found for " + geoAccession + ", returning empty package set." );
+            return EMPTY_PACKAGE_SET;
+        } else if ( linkIds.size() <= BATCH_SIZE ) {
+            return fetch( linkIds );
+        } else {
+            // if there are too many links, we need to fetch them in batches
+            log.info( geoAccession + " has " + linkIds.size() + " SRA entries, fetching in batches of " + BATCH_SIZE + "..." );
+            List<SraExperimentPackage> ep = new ArrayList<>();
+            for ( List<String> batch : ListUtils.partition( new ArrayList<>( linkIds ), BATCH_SIZE ) ) {
+                ep.addAll( fetch( batch ).getExperimentPackages() );
+                log.info( "Fetched " + ep.size() + "/" + linkIds.size() + " SRA entries so far for " + geoAccession + "." );
+            }
+            SraExperimentPackageSet result = new SraExperimentPackageSet();
+            result.setExperimentPackages( ep );
+            return result;
+        }
     }
 
-    /**
-     * TODO: batch retrieval
-     */
     private SraExperimentPackageSet fetch( Collection<String> accessions ) throws IOException {
         URL fetchUrl = EntrezUtils.fetchById( "sra", String.join( ",", accessions ), EntrezRetmode.XML, "full", ncbiApiKey );
         log.debug( "Fetching XML metadata for " + String.join( ",", accessions ) + " from " + fetchUrl + "..." );
