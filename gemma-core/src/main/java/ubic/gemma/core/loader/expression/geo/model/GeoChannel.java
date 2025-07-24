@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import ubic.gemma.core.util.StringUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.Collection;
@@ -65,11 +66,11 @@ public class GeoChannel {
     }
 
     public void addToExtractProtocol( String s ) {
-        this.extractProtocol = this.extractProtocol + " " + s;
+        this.extractProtocol = StringUtils.appendWithDelimiter( this.extractProtocol, s );
     }
 
     public void addToGrowthProtocol( String s ) {
-        this.growthProtocol = this.growthProtocol + " " + s;
+        this.growthProtocol = StringUtils.appendWithDelimiter( this.growthProtocol, s );
     }
 
     public void addCharacteristic( String characteristic ) {
@@ -77,7 +78,7 @@ public class GeoChannel {
     }
 
     public void addToTreatmentProtocol( String s ) {
-        this.treatmentProtocol = this.treatmentProtocol + " " + s;
+        this.treatmentProtocol = StringUtils.appendWithDelimiter( this.treatmentProtocol, s );
     }
 
     /**

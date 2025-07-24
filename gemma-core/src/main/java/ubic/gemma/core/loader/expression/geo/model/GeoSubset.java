@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo.model;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
+import ubic.gemma.core.util.StringUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,7 +40,7 @@ public class GeoSubset extends GeoData {
     private VariableType type;
 
     public void addToDescription( String s ) {
-        this.description = this.description + " " + s;
+        this.description = StringUtils.appendWithDelimiter( this.description, s );
     }
 
     /**

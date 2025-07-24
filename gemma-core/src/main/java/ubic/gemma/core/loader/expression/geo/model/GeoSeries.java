@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.core.util.StringUtils;
 
 import java.util.*;
 
@@ -105,7 +106,7 @@ public class GeoSeries extends GeoData {
      * @param text to add onto the summary. A space is added to the end of the previous summary first.
      */
     public void addToSummary( String text ) {
-        this.summary = this.summary + " " + text;
+        this.summary = StringUtils.appendWithDelimiter( this.summary, text );
     }
 
     public void addToVariables( Integer number, GeoVariable variable ) {

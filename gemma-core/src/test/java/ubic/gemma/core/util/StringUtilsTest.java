@@ -32,4 +32,14 @@ public class StringUtilsTest {
         assertEquals( "tes… suffix", abbreviateWithSuffix( "test12313", " suffix", "…", 13, true, StandardCharsets.UTF_8 ) );
         assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffix( "test12313", " suffix", "…", 5, true, StandardCharsets.UTF_8 ) );
     }
+
+    @Test
+    public void testAppendWithDelimiter() {
+        assertEquals( "foo bar", StringUtils.appendWithDelimiter( "foo", "bar" ) );
+        assertEquals( "foo bar", StringUtils.appendWithDelimiter( "foo ", "bar" ) );
+        assertEquals( "foo  bar", StringUtils.appendWithDelimiter( "foo  ", "bar" ) );
+        assertEquals( "bar", StringUtils.appendWithDelimiter( "", "bar" ) );
+        assertEquals( " bar", StringUtils.appendWithDelimiter( " ", "bar" ) );
+        assertEquals( "bar", StringUtils.appendWithDelimiter( null, "bar" ) );
+    }
 }

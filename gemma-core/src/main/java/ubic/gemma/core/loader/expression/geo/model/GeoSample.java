@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
 import ubic.gemma.core.loader.expression.geo.GeoSampleType;
+import ubic.gemma.core.util.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -117,11 +118,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     public void addToDataProcessing( String s ) {
-        this.dataProcessing = this.dataProcessing + " " + s;
+        this.dataProcessing = StringUtils.appendWithDelimiter( this.dataProcessing, s );
     }
 
     public void addToDescription( String s ) {
-        this.description = this.description + " " + s;
+        this.description = StringUtils.appendWithDelimiter( this.description, s );
         this.isGenePix = description.contains( "GenePix" );
 
         if ( isGenePix && !this.warnedAboutGenePix ) {
@@ -133,11 +134,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     public void addToHybProtocol( String s ) {
-        this.hybProtocol = this.hybProtocol + " " + s;
+        this.hybProtocol = StringUtils.appendWithDelimiter( this.hybProtocol, s );
     }
 
     public void addToScanProtocol( String s ) {
-        this.scanProtocol = this.scanProtocol + " " + s;
+        this.scanProtocol = StringUtils.appendWithDelimiter( this.scanProtocol, s );
     }
 
     public void addVariable( GeoVariable variable ) {

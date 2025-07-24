@@ -1802,7 +1802,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         GeoSubset subset = results.getSubsetMap().get( accession );
         if ( subset == null )
             throw new IllegalArgumentException( "Unknown subset " + accession );
-        ( ( BiConsumer<GeoSubset, String> ) GeoSubset::addToDescription ).accept( subset, value );
+        subset.addToDescription( value );
     }
 
     private <T> void subsetSet( String accession, BiConsumer<GeoSubset, T> property, T value ) {

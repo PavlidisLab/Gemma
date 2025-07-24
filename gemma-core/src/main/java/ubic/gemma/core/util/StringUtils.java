@@ -1,5 +1,7 @@
 package ubic.gemma.core.util;
 
+import org.springframework.util.Assert;
+
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -130,6 +132,26 @@ public class StringUtils {
             return 2 * s.length();
         } else {
             throw new UnsupportedOperationException( "Unsupported charset for maximum size calculation: " + charset );
+        }
+    }
+
+    public static String appendWithDelimiter( @Nullable String s, String suffix ) {
+        return appendWithDelimiter( s, suffix, " " );
+    }
+
+    /**
+     * Append a suffix to a string, with a delimiter if the string is not empty.
+     * <p>
+     * If the string already ends with the delimiter, the suffix is appended directly.
+     */
+    public static String appendWithDelimiter( @Nullable String s, String suffix, String delimiter ) {
+        Assert.notNull( suffix );
+        if ( s == null || s.isEmpty() ) {
+            return suffix;
+        } else if ( s.endsWith( delimiter ) ) {
+            return s + suffix;
+        } else {
+            return s + delimiter + suffix;
         }
     }
 }
