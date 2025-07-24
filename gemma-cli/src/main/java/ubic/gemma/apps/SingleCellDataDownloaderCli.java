@@ -493,10 +493,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             return null;
         }
         CSVFormat.Builder csvFormatBuilder = CSVFormat.TDF.builder();
-        if ( !resume ) {
-            csvFormatBuilder.setHeader( SUMMARY_HEADER );
+        if ( resume ) {
+            return csvFormatBuilder.get()
+                    .print( Files.newBufferedWriter( summaryOutputFile, StandardOpenOption.APPEND ) );
+        } else {
+            return csvFormatBuilder.setHeader( SUMMARY_HEADER )
+                    .get()
+                    .print( Files.newBufferedWriter( summaryOutputFile ) );
         }
-        return csvFormatBuilder.get().print( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ) );
     }
 
     @Nullable
