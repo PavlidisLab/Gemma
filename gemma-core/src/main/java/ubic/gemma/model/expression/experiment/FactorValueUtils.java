@@ -3,11 +3,38 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.measurement.Measurement;
 
+import javax.annotation.Nullable;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 public class FactorValueUtils {
+
+    /**
+     * Produce a value for representing a factor value.
+     * <p>
+     * For continuous factors, this will return the value of the measurement. For categorical factors, this will be the
+     * subject (or |-delimited concatenation of subjects) of the statements. If there are no statements,
+     * {@link FactorValue#getValue()} will be used as a fallback.
+     */
+    @Nullable
+    public static String getValue( FactorValue fv ) {
+        if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else {
+            String valueFromStatements = fv.getCharacteristics().stream()
+                    .map( Statement::getSubject )
+                    .collect( Collectors.joining( "|" ) );
+            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
+                return valueFromStatements;
+            } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+                return fv.getValue();
+            } else {
+                return null;
+            }
+        }
+    }
 
     /**
      * Produce a summary string for this factor value.

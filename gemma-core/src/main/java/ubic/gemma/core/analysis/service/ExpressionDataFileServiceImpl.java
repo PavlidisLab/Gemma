@@ -696,12 +696,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException {
+    public void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( "No experimental design for " + ee );
         }
-        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo ).write( writer, ee, true );
+        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush ).write( ee, true, writer );
     }
 
     @Override
@@ -862,7 +862,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = f.toExclusive();
                     Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, writer );
+                writeDesignMatrix( ee, writer, false );
                 return Optional.of( lockedPath.toShared() );
             } catch ( Exception e ) {
                 Files.deleteIfExists( f.getPath() );
@@ -884,7 +884,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
                     Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, writer );
+                writeDesignMatrix( ee, writer, false );
                 return Optional.of( lockedPath.toShared() );
             } catch ( Exception e ) {
                 Files.deleteIfExists( f.getPath() );

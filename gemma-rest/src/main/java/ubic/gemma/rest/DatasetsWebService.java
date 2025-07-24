@@ -1573,7 +1573,7 @@ public class DatasetsWebService {
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
             String filename = getDesignFileName( ee );
-            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();

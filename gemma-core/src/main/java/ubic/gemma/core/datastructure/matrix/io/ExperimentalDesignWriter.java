@@ -34,10 +34,10 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Output compatible with {@link ExperimentalDesignImporterImpl}.
@@ -53,22 +53,22 @@ public class ExperimentalDesignWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
+    private final boolean autoFlush ;
 
-    public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
+    public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo, boolean autoFlush ) {
         this.entityUrlBuilder = entityUrlBuilder;
         this.buildInfo = buildInfo;
+        this.autoFlush = autoFlush;
     }
 
     /**
-     * @param writer      writer
      * @param ee          ee
      * @param writeHeader writer header
+     * @param writer      writer
      * @throws IOException when the write failed
      */
-    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader ) throws IOException {
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        this.write( writer, ee, bioAssays, writeHeader, writeHeader );
+    public void write( ExpressionExperiment ee, boolean writeHeader, Writer writer ) throws IOException {
+        write( writer, ee, ee.getBioAssays(), writeHeader, writeHeader );
     }
 
     /**
@@ -118,11 +118,7 @@ public class ExperimentalDesignWriter {
 
             /* column 1 */
             String externalId = getSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
-            if ( externalId != null ) {
-                writer.append( externalId );
-            } else {
-                writer.append( "" );
-            }
+            writer.append( format( externalId ) );
 
             /* columns 2 ... n where n+1 is the number of factors */
             Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
@@ -131,8 +127,8 @@ public class ExperimentalDesignWriter {
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = constructFactorValueName( candidateFactorValue );
-                        writer.append( matchedFactorValue );
+                        String matchedFactorValue = FactorValueUtils.getValue( candidateFactorValue );
+                        writer.append( format( matchedFactorValue ) );
                         break;
                     }
                     log.debug( candidateFactorValue.getExperimentalFactor()
@@ -140,9 +136,10 @@ public class ExperimentalDesignWriter {
                 }
             }
             writer.append( "\n" );
+            if ( autoFlush ) {
+                writer.flush();
+            }
         }
-
-        writer.flush();
     }
 
     /**
@@ -154,11 +151,14 @@ public class ExperimentalDesignWriter {
         if ( writeBaseHeader ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString();
             appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, buf );
+            if ( autoFlush ) {
+                buf.flush();
+            }
         }
 
         for ( ExperimentalFactor ef : factors ) {
             buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
-            buf.append( ef.getName().replaceAll( "\\s", "." ) ).append( " :" );
+            buf.append( constructExperimentalFactorName( ef ) ).append( " :" );
             if ( ef.getCategory() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
@@ -171,6 +171,9 @@ public class ExperimentalDesignWriter {
             }
 
             buf.append( "\n" );
+            if ( autoFlush ) {
+                buf.flush();
+            }
         }
 
         buf.append( "Bioassay\tExternalID" );
@@ -180,6 +183,9 @@ public class ExperimentalDesignWriter {
         }
 
         buf.append( "\n" );
+        if ( autoFlush ) {
+            buf.flush();
+        }
     }
 
 
@@ -205,36 +211,5 @@ public class ExperimentalDesignWriter {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Produce a value for representing a factor value.
-     * <p>
-     * In the context of the design file, this is focusing on the value (i.e. subjects or measurement value) itself and
-     * not its metadata which are instead exposed in the file header.
-     * <p>
-     * Replaces spaces and hyphens with underscores.
-     * @param factorValue FV
-     * @return replaced string
-     */
-    private String constructFactorValueName( FactorValue factorValue ) {
-        String v;
-        if ( factorValue.getMeasurement() != null ) {
-            // FIXME: have a special encoding for missing values instead of 'null'
-            v = String.valueOf( factorValue.getMeasurement().getValue() );
-        } else {
-            String valueFromStatements = factorValue.getCharacteristics().stream()
-                    .map( Statement::getSubject )
-                    .collect( Collectors.joining( " | " ) );
-            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
-                v = valueFromStatements;
-            } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
-                v = factorValue.getValue();
-            } else {
-                v = ""; // this is treated as NaN in most scenarios
-            }
-        }
-        return v.replace( '-', '_' )
-                .replaceAll( "\\s+", "_" );
     }
 }

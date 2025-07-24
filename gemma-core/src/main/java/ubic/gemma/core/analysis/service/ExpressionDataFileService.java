@@ -299,7 +299,7 @@ public interface ExpressionDataFileService {
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
      * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
-    void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException;
+    void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -345,7 +345,7 @@ public interface ExpressionDataFileService {
      * @param ee         the experiment
      * @param forceWrite force re-write even if file already exists and is up to date
      * @return a file or empty if the experiment does not have a design
-     * @see #writeDesignMatrix(ExpressionExperiment, Writer)
+     * @see #writeDesignMatrix(ExpressionExperiment, Writer, boolean)
      */
     Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 

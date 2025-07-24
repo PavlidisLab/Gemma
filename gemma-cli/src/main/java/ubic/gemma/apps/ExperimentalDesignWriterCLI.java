@@ -85,10 +85,9 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                 addErrorObject( ee, e );
             }
         } else {
-            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
+            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
             try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
-                edWriter.write( writer, ee, true );
-                writer.flush();
+                edWriter.write( ee, true, writer );
             } catch ( IOException e ) {
                 addErrorObject( ee, e );
             }
