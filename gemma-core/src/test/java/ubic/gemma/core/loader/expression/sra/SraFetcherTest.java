@@ -2,11 +2,14 @@ package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.loader.expression.sra.model.SraRun;
+import ubic.gemma.core.loader.expression.sra.model.SraRunSet;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -46,6 +49,21 @@ public class SraFetcherTest {
         SraRuninfoParser parser = new SraRuninfoParser();
         SraExperimentPackageSet result = parser.parse( new StringReader( runinfo ) );
         checkExperiment( result );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE230440() throws IOException {
+        SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE231774" );
+        assertThat( result.getExperimentPackages() )
+                .flatExtracting( SraExperimentPackage::getRunSets )
+                .flatExtracting( SraRunSet::getRuns )
+                .extracting( SraRun::getStatistics )
+                .satisfiesOnlyOnce( stats -> {
+                    assertThat( stats.getNumberOfReads() ).isEqualTo( "variable" );
+                    assertThat( stats.getNumberOfSpots() ).isNull();
+                    assertThat( stats.getReadStatistics() ).isNull();
+                } );
     }
 
     private void checkExperiment( SraExperimentPackageSet seps ) {
