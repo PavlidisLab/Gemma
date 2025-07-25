@@ -88,7 +88,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
                 .hasLineCount( 26 )
                 .contains( "#$strain : Category=strain Type=Categorical\n" )
                 .contains( "#$age : Category=age Type=Categorical\n" )
-                .contains( "Bioassay\tExternalID\tstrain\tage\n" )
-                .contains( "GSE1611_Biomat_1___Pool.Ts1Cje_P30_hyb1\tGSM27482\tTs1Cje\tP30\n" );
+                .contains( "Bioassay\tExternalID\tage\tstrain\n" )
+                .contains( "GSE1611_Biomat_1___Pool.Ts1Cje_P30_hyb1\tGSM27482\tP30\tTs1Cje\n" );
     }
 }

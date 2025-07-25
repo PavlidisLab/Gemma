@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
@@ -53,7 +54,7 @@ public class ExperimentalDesignWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
-    private final boolean autoFlush ;
+    private final boolean autoFlush;
 
     public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo, boolean autoFlush ) {
         this.entityUrlBuilder = entityUrlBuilder;
@@ -90,7 +91,7 @@ public class ExperimentalDesignWriter {
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<>();
+        SortedMap<BioMaterial, Collection<BioAssay>> bioMaterials = new TreeMap<>( Comparator.comparing( BioMaterial::getName ) );
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
@@ -99,9 +100,10 @@ public class ExperimentalDesignWriter {
             bioMaterials.get( bm ).add( bioAssay );
         }
 
-        Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
-
-        List<ExperimentalFactor> orderedFactors = new ArrayList<>( efs );
+        List<ExperimentalFactor> orderedFactors = ed.getExperimentalFactors()
+                .stream()
+                .sorted( Comparator.comparing( ExperimentalFactor::getName ) )
+                .collect( Collectors.toList() );
 
         if ( writeHeader ) {
             this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
@@ -124,15 +126,20 @@ public class ExperimentalDesignWriter {
             Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
                 writer.append( "\t" );
+                boolean matched = false;
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
                         String matchedFactorValue = FactorValueUtils.getValue( candidateFactorValue );
                         writer.append( format( matchedFactorValue ) );
+                        matched = true;
                         break;
                     }
                     log.debug( candidateFactorValue.getExperimentalFactor()
                             + " didn't match ... trying the next factor." );
+                }
+                if ( !matched ) {
+                    log.warn( bioMaterial + " does not have a value for factor " + ef + "." );
                 }
             }
             writer.append( "\n" );
@@ -145,7 +152,7 @@ public class ExperimentalDesignWriter {
     /**
      * Write an (R-friendly) header
      */
-    private void writeHeader( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors,
+    private void writeHeader( ExpressionExperiment expressionExperiment, List<ExperimentalFactor> factors,
             boolean writeBaseHeader, Writer buf ) throws IOException {
 
         if ( writeBaseHeader ) {
@@ -201,7 +208,7 @@ public class ExperimentalDesignWriter {
             return bioMaterial.getExternalAccession().getAccession();
         } else if ( !bioAssays.isEmpty() ) {
             // use the external IDs of the associated bioassays
-            List<String> ids = new ArrayList<>();
+            SortedSet<String> ids = new TreeSet<>();
             for ( BioAssay ba : bioAssays ) {
                 if ( ba.getAccession() != null ) {
                     ids.add( ba.getAccession().getAccession() );
