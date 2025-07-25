@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructAssayName;
-
 /**
  * Generate a tabular matrix format compatible with <a href="https://cellbrowser.readthedocs.io/en/master/tabsep.html">Cell Browser</a>.
  * @author poirigui
@@ -80,9 +78,8 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
         writer.append( "gene" );
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
             BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
-            String sampleId = getSampleId( bioAssay );
             for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
-                writer.append( "\t" ).append( sampleId ).append( "_" ).append( cellId );
+                writer.append( "\t" ).append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds ) );
             }
         }
         writer.append( "\n" );
@@ -164,14 +161,6 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
                     writer.append( "|" ).append( gene.getOfficialSymbol() );
                 }
             }
-        }
-    }
-
-    private String getSampleId( BioAssay bioAssay ) {
-        if ( useBioAssayIds ) {
-            return String.valueOf( bioAssay.getId() );
-        } else {
-            return constructAssayName( bioAssay );
         }
     }
 }

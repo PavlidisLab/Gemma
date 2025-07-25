@@ -699,6 +699,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionWithAssaysAndCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension scd = expressionExperimentDao.getSingleCellDimension( ee, qt );
+        if ( scd == null ) {
+            throw new IllegalStateException( qt + " does not have an associated single-cell dimension." );
+        }
+        scd.getBioAssays().forEach( Thaws::thawBioAssay );
+        Thaws.thawSingleCellDimension( scd );
+        return scd;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
         return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }

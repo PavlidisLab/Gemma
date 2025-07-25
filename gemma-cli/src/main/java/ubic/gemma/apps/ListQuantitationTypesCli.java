@@ -45,7 +45,7 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         getCliContext().getOutputStream().println( formatExperiment( expressionExperiment ) );
         super.processExpressionExperiment( expressionExperiment );
         getCliContext().getOutputStream().println();
