@@ -1,4 +1,4 @@
-package ubic.gemma.core.datastructure.matrix.io;
+package ubic.gemma.core.visualization.cellbrowser;
 
 import org.junit.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
