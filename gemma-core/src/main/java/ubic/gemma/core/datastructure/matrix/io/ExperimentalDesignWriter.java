@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +37,8 @@ import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorNames;
 import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
@@ -54,6 +56,12 @@ public class ExperimentalDesignWriter {
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
     private final boolean autoFlush;
+
+    /**
+     * If true, use column names as they appear in the database.
+     */
+    @Setter
+    private boolean useRawColumnNames = false;
 
     public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo, boolean autoFlush ) {
         this.entityUrlBuilder = entityUrlBuilder;
@@ -162,9 +170,20 @@ public class ExperimentalDesignWriter {
             }
         }
 
-        for ( ExperimentalFactor ef : factors ) {
+        String[] factorColumnNames;
+        if ( useRawColumnNames ) {
+            factorColumnNames = factors.stream()
+                    .map( ExperimentalFactor::getName )
+                    .toArray( String[]::new );
+            factorColumnNames = ubic.gemma.core.util.StringUtils.makeUnique( factorColumnNames );
+        } else {
+            factorColumnNames = constructExperimentalFactorNames( factors );
+        }
+
+        for ( int i = 0; i < factors.size(); i++ ) {
+            ExperimentalFactor ef = factors.get( i );
             buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
-            buf.append( constructExperimentalFactorName( ef ) ).append( " :" );
+            buf.append( factorColumnNames[i] ).append( " :" );
             if ( ef.getCategory() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
@@ -184,8 +203,8 @@ public class ExperimentalDesignWriter {
 
         buf.append( "Bioassay\tExternalID" );
 
-        for ( String columnName : constructExperimentalFactorNames( factors ) ) {
-            buf.append( "\t" ).append( columnName );
+        for ( String columnName : factorColumnNames ) {
+            buf.append( "\t" ).append( format( columnName ) );
         }
 
         buf.append( "\n" );
