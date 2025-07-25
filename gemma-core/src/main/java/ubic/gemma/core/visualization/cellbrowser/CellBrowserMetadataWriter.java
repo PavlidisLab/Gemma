@@ -35,7 +35,7 @@ public class CellBrowserMetadataWriter {
      * If true, use column names as they appear in the database.
      */
     @Setter
-    private boolean useRawColumnNames = true;
+    private boolean useRawColumnNames = false;
     @Setter
     private boolean autoFlush = false;
 
