@@ -3,11 +3,12 @@ package ubic.gemma.core.visualization.cellbrowser;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
+import ubic.gemma.core.util.StringUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,16 +43,19 @@ public class CellBrowserMetadataWriter {
         List<ExperimentalFactor> factors;
         if ( ee.getExperimentalDesign() != null ) {
             factors = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                    .sorted( Comparator.comparing( ExperimentalFactor::getName ) )
+                    .sorted( ExperimentalFactor.COMPARATOR )
                     .collect( Collectors.toList() );
         } else {
             log.warn( ee + " does not have an experimental design, no factors will be written." );
             factors = Collections.emptyList();
         }
-        List<CellLevelCharacteristics> clcs = new ArrayList<>();
-        // TODO: sort these
-        clcs.addAll( singleCellDimension.getCellTypeAssignments() );
-        clcs.addAll( singleCellDimension.getCellLevelCharacteristics() );
+        List<CellLevelCharacteristics> clcs = new ArrayList<>( singleCellDimension.getCellTypeAssignments().size() + singleCellDimension.getCellLevelCharacteristics().size() );
+        singleCellDimension.getCellTypeAssignments().stream()
+                .sorted( CellTypeAssignment.COMPARATOR )
+                .forEach( clcs::add );
+        singleCellDimension.getCellLevelCharacteristics().stream()
+                .sorted( CellLevelCharacteristics.COMPARATOR )
+                .forEach( clcs::add );
         writeHeader( factors, clcs, writer );
         int cellIndex = 0;
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
@@ -64,22 +67,34 @@ public class CellBrowserMetadataWriter {
     }
 
     private void writeHeader( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        writer.append( "cellId" );
+        String[] columnNames = new String[1 + factors.size() + clcs.size()];
+        int i = 0;
+        columnNames[i++] = "cellId";
         for ( ExperimentalFactor factor : factors ) {
-            writer.append( "\t" );
-            writer.append( useRawColumnNames ? factor.getName() : ExpressionDataWriterUtils.constructExperimentalFactorName( factor ) );
+            columnNames[i++] = factor.getName();
         }
         for ( CellLevelCharacteristics clc : clcs ) {
-            writer.append( "\t" );
             if ( clc.getName() != null ) {
-                writer.append( useRawColumnNames ? clc.getName() : StringUtil.makeValidForR( clc.getName() ) );
+                columnNames[i++] = clc.getName();
             } else if ( !clc.getCharacteristics().isEmpty() ) {
                 // If the name is null, we can use the first characteristic's category as a fallback
                 Characteristic c = clc.getCharacteristics().iterator().next();
-                writer.append( useRawColumnNames ? c.getCategory() : StringUtil.makeValidForR( c.getCategory() ) );
+                columnNames[i++] = c.getCategory();
             } else {
                 throw new IllegalStateException( clc + " has no name nor characteristics, cannot write header." );
             }
+        }
+        if ( useRawColumnNames ) {
+            columnNames = StringUtils.makeUnique( columnNames );
+        } else {
+            columnNames = StringUtil.makeValidForR( columnNames );
+        }
+        for ( int j = 0; j < columnNames.length; j++ ) {
+            String colName = columnNames[j];
+            if ( j > 0 ) {
+                writer.append( "\t" );
+            }
+            writer.append( TsvUtils.format( colName ) );
         }
         writer.append( "\n" );
         if ( autoFlush ) {

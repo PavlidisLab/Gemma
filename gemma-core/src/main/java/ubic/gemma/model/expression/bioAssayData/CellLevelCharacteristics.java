@@ -5,6 +5,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -14,6 +15,11 @@ import java.util.List;
  * @see GenericCellLevelCharacteristics
  */
 public interface CellLevelCharacteristics extends Describable {
+
+    Comparator<CellLevelCharacteristics> COMPARATOR = Comparator
+            .comparing( CellLevelCharacteristics::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( clc -> !clc.getCharacteristics().isEmpty() ? clc.getCharacteristics().iterator().next() : null, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( CellLevelCharacteristics::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     /**
      * Indicator for an unknown characteristic.

@@ -5,6 +5,8 @@ import org.springframework.util.Assert;
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Various utilities for manipulating strings.
@@ -153,5 +155,22 @@ public class StringUtils {
         } else {
             return s + delimiter + suffix;
         }
+    }
+
+    public static String[] makeUnique( String[] strings ) {
+        Map<String, Integer> counts = new HashMap<>();
+        String[] result = new String[strings.length];
+        for ( int i = 0; i < strings.length; i++ ) {
+            String cn = strings[i];
+            if ( counts.containsKey( cn ) ) {
+                int count = counts.get( cn );
+                result[i] = cn + "." + count;
+                counts.put( cn, count + 1 );
+            } else {
+                result[i] = cn;
+                counts.put( cn, 1 );
+            }
+        }
+        return result;
     }
 }

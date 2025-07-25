@@ -7,10 +7,7 @@ import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -21,6 +18,11 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class CellTypeAssignment extends Analysis implements CellLevelCharacteristics {
+
+    public static final Comparator<CellTypeAssignment> COMPARATOR = Comparator
+            .comparing( CellTypeAssignment::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( clc -> clc.getProtocol() != null ? clc.getProtocol().getName() : null, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( CellTypeAssignment::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     /**
      * A special indicator for {@link #cellTypeIndices} when the cell type is unknown.

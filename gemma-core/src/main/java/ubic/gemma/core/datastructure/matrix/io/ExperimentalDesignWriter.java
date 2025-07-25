@@ -36,8 +36,7 @@ import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
 import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
@@ -102,7 +101,7 @@ public class ExperimentalDesignWriter {
 
         List<ExperimentalFactor> orderedFactors = ed.getExperimentalFactors()
                 .stream()
-                .sorted( Comparator.comparing( ExperimentalFactor::getName ) )
+                .sorted( ExperimentalFactor.COMPARATOR )
                 .collect( Collectors.toList() );
 
         if ( writeHeader ) {
@@ -185,8 +184,8 @@ public class ExperimentalDesignWriter {
 
         buf.append( "Bioassay\tExternalID" );
 
-        for ( ExperimentalFactor ef : factors ) {
-            buf.append( "\t" ).append( constructExperimentalFactorName( ef ) );
+        for ( String columnName : constructExperimentalFactorNames( factors ) ) {
+            buf.append( "\t" ).append( columnName );
         }
 
         buf.append( "\n" );

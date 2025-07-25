@@ -34,6 +34,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.TsvUtils.format;
@@ -126,8 +127,20 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct an ExperimentalFactor column name.
+     * @see StringUtil#makeValidForR(String)
      */
     public static String constructExperimentalFactorName( ExperimentalFactor ef ) {
         return StringUtil.makeValidForR( ef.getName() );
+    }
+
+    /**
+     * Construct an ExperimentalFactor column names for a list of factors.
+     * @see StringUtil#makeValidForR(String[])
+     */
+    public static String[] constructExperimentalFactorNames( List<ExperimentalFactor> factors ) {
+        String[] colNames = factors.stream()
+                .map( ExperimentalFactor::getName )
+                .toArray( String[]::new );
+        return StringUtil.makeValidForR( colNames );
     }
 }

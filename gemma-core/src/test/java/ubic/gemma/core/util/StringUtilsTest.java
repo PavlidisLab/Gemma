@@ -42,4 +42,10 @@ public class StringUtilsTest {
         assertEquals( " bar", StringUtils.appendWithDelimiter( " ", "bar" ) );
         assertEquals( "bar", StringUtils.appendWithDelimiter( null, "bar" ) );
     }
+
+    @Test
+    public void testMakeUnique() {
+        assertArrayEquals( new String[] { "foo", "foo.1" }, StringUtils.makeUnique( new String[] { "foo", "foo" } ) );
+        assertArrayEquals( new String[] { "foo", "bar", "foo.1", "foo.2" }, StringUtils.makeUnique( new String[] { "foo", "bar", "foo", "foo" } ) );
+    }
 }
