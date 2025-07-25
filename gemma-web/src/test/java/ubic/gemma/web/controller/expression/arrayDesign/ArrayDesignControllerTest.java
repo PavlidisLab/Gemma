@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import org.apache.commons.io.file.PathUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,10 +32,16 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.util.BaseWebTest;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -48,6 +56,11 @@ public class ArrayDesignControllerTest extends BaseWebTest {
     @Configuration
     @TestComponent
     static class CC extends BaseWebTest.BaseWebTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "tomcat.sendfile.enabled=false", "gemma.support.email=pavlab-support@msl.ubc.ca" );
+        }
 
         @Bean
         public ArrayDesignController arrayDesignController() {
@@ -88,6 +101,11 @@ public class ArrayDesignControllerTest extends BaseWebTest {
         public ArrayDesignAnnotationService annotationFileService() {
             return mock();
         }
+
+        @Bean
+        public DownloadUtil downloadUtil() {
+            return new DownloadUtil();
+        }
     }
 
     @Autowired
@@ -95,6 +113,19 @@ public class ArrayDesignControllerTest extends BaseWebTest {
 
     @Autowired
     private ArrayDesignAnnotationService annotationFileService;
+
+    private Path annotationDir;
+
+    @Before
+    public void setUp() throws IOException {
+        annotationDir = Files.createTempDirectory( "annotationDirectory" );
+        when( annotationFileService.getAnnotDataDir() ).thenReturn( annotationDir );
+    }
+
+    @After
+    public void removeAnnotationDir() throws IOException {
+        PathUtils.deleteDirectory( annotationDir );
+    }
 
     @After
     public void resetMocks() {
