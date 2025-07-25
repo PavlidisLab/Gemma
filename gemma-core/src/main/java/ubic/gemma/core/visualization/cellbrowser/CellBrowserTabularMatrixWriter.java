@@ -1,9 +1,10 @@
-package ubic.gemma.core.datastructure.matrix.io;
+package ubic.gemma.core.visualization.cellbrowser;
 
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.io.SingleCellExpressionDataMatrixWriter;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
