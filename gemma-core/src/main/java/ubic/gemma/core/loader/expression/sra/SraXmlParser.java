@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.sra;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -19,6 +20,7 @@ import java.io.InputStream;
  * Parses SRA XML format.
  * @author poirigui
  */
+@CommonsLog
 public class SraXmlParser {
 
     public SraExperimentPackageSet parse( InputStream in ) throws IOException {
@@ -38,6 +40,10 @@ public class SraXmlParser {
 
     private void fillPlatforms( SraExperimentPackageSet result, Document doc ) {
         NodeList ln = doc.getElementsByTagName( "PLATFORM" );
+        if ( ln.getLength() != result.getExperimentPackages().size() ) {
+            log.warn( "Number of platforms does not match number of experiment packages." );
+            return;
+        }
         int i = 0;
         for ( SraExperimentPackage ps : result.getExperimentPackages() ) {
             fillPlatform( ps.getExperiment().getPlatform(), ln.item( i++ ) );
@@ -51,6 +57,10 @@ public class SraXmlParser {
 
     private void fillContacts( SraExperimentPackageSet result, Document doc ) {
         NodeList c = doc.getElementsByTagName( "Contact" );
+        if ( c.getLength() != result.getExperimentPackages().size() ) {
+            log.warn( "Number of contacts does not match number of experiment packages." );
+            return;
+        }
         int j = 0;
         for ( SraExperimentPackage ps : result.getExperimentPackages() ) {
             fillContact( ps.getOrganization().getContact(), c.item( j++ ) );
