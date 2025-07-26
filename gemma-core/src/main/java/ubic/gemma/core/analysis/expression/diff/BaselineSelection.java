@@ -280,7 +280,7 @@ public class BaselineSelection {
 
                     // There's no need to log this for batch factors, they are inherently arbitrary and only used
                     // during batch correction.
-                    if ( !ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+                    if ( !ExperimentFactorUtils.isBatchFactor( factor ) ) {
                         BaselineSelection.log.info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     }
                     result.put( factor, arbitraryBaselineFV );

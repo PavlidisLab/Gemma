@@ -26,10 +26,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -110,7 +107,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
         assertEquals( 2, baselineLevels.size() ); // the batch DOES get a baseline. IF we change that then we change
         // this test.
         for ( ExperimentalFactor ef : baselineLevels.keySet() ) {
-            if ( ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) )
+            if ( ef.getName().equals( ExperimentFactorUtils.BATCH_FACTOR_NAME ) )
                 continue;
             FactorValue fv = baselineLevels.get( ef );
             assertEquals( "Control_group", fv.getValue() );

@@ -44,7 +44,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -55,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.expression.diff.BaselineSelection.getBaselineConditions;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.buildRDesignMatrix;
@@ -372,7 +372,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             return null;
         }
 
-        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
+        List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
 
         /*
          * Using ordered samples isn't necessary, it doesn't matter so long as the design matrix is in the same order.

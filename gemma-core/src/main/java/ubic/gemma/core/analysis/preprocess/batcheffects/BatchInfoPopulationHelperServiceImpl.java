@@ -922,7 +922,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setType( FactorType.CATEGORICAL );
         ef.setCategory( this.getBatchFactorCategory() );
         ef.setExperimentalDesign( ed );
-        ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        ef.setName( ExperimentFactorUtils.BATCH_FACTOR_NAME );
         ef.setDescription( "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
 
         ef = this.persistFactor( ee, ef );

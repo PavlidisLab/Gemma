@@ -112,7 +112,7 @@ public class DifferentialExpressionSearchController {
         Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<>();
         for ( DifferentialExpressionValueObject analysis : analyses ) {
             for ( ExperimentalFactorValueObject factor : analysis.getExperimentalFactors() ) {
-                if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+                if ( ExperimentFactorUtils.isBatchFactor( factor ) ) {
                     toRemove.add( analysis );
                 }
             }

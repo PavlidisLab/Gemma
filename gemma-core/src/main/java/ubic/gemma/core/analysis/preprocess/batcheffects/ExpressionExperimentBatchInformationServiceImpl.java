@@ -10,10 +10,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -218,7 +215,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
                 .stream()
-                .filter( ExperimentalDesignUtils::isBatchFactor )
+                .filter( ExperimentFactorUtils::isBatchFactor )
                 .findFirst()
                 .orElse( null );
 
@@ -307,7 +304,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         ee = expressionExperimentService.thawLiter( ee );
         if ( ee.getExperimentalDesign() != null ) {
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+                if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                     return true;
                 }
             }

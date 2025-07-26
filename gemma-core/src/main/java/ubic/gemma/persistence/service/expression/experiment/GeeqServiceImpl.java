@@ -591,7 +591,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatchFactor( ef )
+                if ( ExperimentFactorUtils.isBatchFactor( ef )
                         || fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( DE_EXCLUDE::equalsIgnoreCase )
                         || ef.getType().equals( FactorType.CONTINUOUS ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values

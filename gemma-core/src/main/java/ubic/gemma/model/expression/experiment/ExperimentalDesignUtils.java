@@ -15,16 +15,10 @@
 package ubic.gemma.model.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.common.description.Categories;
-import ubic.gemma.model.common.description.Category;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -35,60 +29,54 @@ import java.util.stream.Collectors;
 public class ExperimentalDesignUtils {
 
     /**
-     * A list of all categories considered to be batch.
-     */
-    public static final List<Category> BATCH_FACTOR_CATEGORIES = Collections.singletonList( Categories.BLOCK );
-    /**
-     * Name used by a batch factor.
+     * Create a mapping of samples to factor values for all factors in the experimental design.
      * <p>
-     * This is used only if the factor lacks a category.
+     * The resulting map will be populated for every factor in the design and every provided sample. If a sample is
+     * lacking a particular value is missing, a {@code null} will be used. If a sample has more than one value, a
+     * {@link IllegalStateException} will be raised.
+     * @throws IllegalStateException if a sample has more than one value any factor in the design
      */
-    public static final String BATCH_FACTOR_NAME = "batch";
-
-    public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
-    public static final String FACTOR_RNAME_PREFIX = "fact.";
-    public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
-    public static final String FACTOR_VALUE_BASELINE_SUFFIX = "_base";
-
-    /**
-     * Check if a factor is a batch factor.
-     */
-    public static boolean isBatchFactor( ExperimentalFactor ef ) {
-        if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
-            return false;
-        }
-        Characteristic category = ef.getCategory();
-        if ( category != null ) {
-            return BATCH_FACTOR_CATEGORIES.stream()
-                    .anyMatch( c -> CharacteristicUtils.hasCategory( category, c ) );
-        }
-        return ExperimentalDesignUtils.BATCH_FACTOR_NAME.equalsIgnoreCase( ef.getName() );
+    public static Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> getFactorValueMap( ExperimentalDesign experimentalDesign, Collection<BioMaterial> samples ) {
+        return getFactorValueMap( experimentalDesign.getExperimentalFactors(), samples );
     }
 
-    /**
-     * Check if a given factor VO is a batch factor.
-     */
-    public static boolean isBatchFactor( ExperimentalFactorValueObject ef ) {
-        if ( ef.getType().equals( FactorType.CONTINUOUS.name() ) ) {
-            return false;
+    public static Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> getFactorValueMap( Collection<ExperimentalFactor> factors, Collection<BioMaterial> samples ) {
+        int numSamples = samples.size();
+        int numFactors = factors.size();
+        Map<BioMaterial, Map<ExperimentalFactor, Set<FactorValue>>> factorValueIndex = new HashMap<>( numSamples );
+        for ( BioMaterial sample : samples ) {
+            for ( FactorValue fv : sample.getAllFactorValues() ) {
+                factorValueIndex
+                        .computeIfAbsent( sample, k -> new HashMap<>( numFactors ) )
+                        .computeIfAbsent( fv.getExperimentalFactor(), k -> new HashSet<>( 1 ) )
+                        .add( fv );
+            }
         }
-        String category = ef.getCategory();
-        String categoryUri = ef.getCategoryUri();
-        if ( category != null ) {
-            return BATCH_FACTOR_CATEGORIES.stream()
-                    .anyMatch( c -> CharacteristicUtils.equals( category, categoryUri, c.getCategory(), c.getCategoryUri() ) );
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> result = new HashMap<>( factors.size() );
+        for ( ExperimentalFactor factor : factors ) {
+            for ( BioMaterial sample : samples ) {
+                Map<ExperimentalFactor, Set<FactorValue>> fvm = factorValueIndex.get( sample );
+                FactorValue value;
+                if ( fvm != null ) {
+                    Set<FactorValue> values = fvm.get( factor );
+                    if ( values == null ) {
+                        log.warn( sample + " has no value for " + factor + ", using null for " + factor + "." );
+                        value = null;
+                    } else if ( values.size() == 1 ) {
+                        value = values.iterator().next();
+                    } else {
+                        throw new IllegalStateException( String.format( "%s has more than one value for %s:\n\t%s",
+                                sample, factor,
+                                values.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+                    }
+                } else {
+                    log.warn( sample + " has no factor values, using null for " + factor + "." );
+                    value = null;
+                }
+                result.computeIfAbsent( factor, k -> new HashMap<>() )
+                        .put( sample, value );
+            }
         }
-        return ExperimentalDesignUtils.BATCH_FACTOR_NAME.equalsIgnoreCase( ef.getName() );
-    }
-
-    /**
-     * Sort factors in a consistent way.
-     * <p>
-     * For this to work, the factors must be persistent as the order will be based on the numerical ID.
-     */
-    public static List<ExperimentalFactor> getOrderedFactors( Collection<ExperimentalFactor> factors ) {
-        return factors.stream()
-                .sorted( Comparator.comparing( ExperimentalFactor::getId ) )
-                .collect( Collectors.toList() );
+        return result;
     }
 }

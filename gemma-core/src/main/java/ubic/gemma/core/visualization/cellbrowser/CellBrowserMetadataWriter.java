@@ -10,16 +10,15 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.*;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +48,10 @@ public class CellBrowserMetadataWriter {
             log.warn( ee + " does not have an experimental design, no factors will be written." );
             factors = Collections.emptyList();
         }
+        List<BioMaterial> samples = singleCellDimension.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toList() );
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ee.getExperimentalDesign(), samples );
         List<CellLevelCharacteristics> clcs = new ArrayList<>( singleCellDimension.getCellTypeAssignments().size() + singleCellDimension.getCellLevelCharacteristics().size() );
         singleCellDimension.getCellTypeAssignments().stream()
                 .sorted( CellTypeAssignment.COMPARATOR )
@@ -61,7 +64,7 @@ public class CellBrowserMetadataWriter {
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
             BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
             for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
-                writeCell( bioAssay, cellId, cellIndex++, factors, clcs, writer );
+                writeCell( bioAssay, cellId, cellIndex++, factors, factorValueMap, clcs, writer );
             }
         }
     }
@@ -102,15 +105,15 @@ public class CellBrowserMetadataWriter {
         }
     }
 
-    public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
+    public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
         writer.append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds ) );
         for ( ExperimentalFactor factor : factors ) {
+            FactorValue value = factorValueMap.get( factor ).get( bioAssay.getSampleUsed() );
             writer.append( "\t" );
-            for ( FactorValue fv : bioAssay.getSampleUsed().getAllFactorValues() ) {
-                if ( fv.getExperimentalFactor().equals( factor ) ) {
-                    writer.append( TsvUtils.format( FactorValueUtils.getValue( fv, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
-                    break;
-                }
+            if ( value != null ) {
+                writer.append( TsvUtils.format( FactorValueUtils.getValue( value, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
+            } else {
+                writer.append( TsvUtils.format( ( String ) null ) );
             }
         }
         for ( CellLevelCharacteristics clc : clcs ) {

@@ -1427,7 +1427,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameterList( "ids", optimizeParameterList( ids ) ) // Set ids
                 .setParameter( "category", Categories.BLOCK.getCategory() ) // Set batch category
                 .setParameter( "categoryUri", Categories.BLOCK.getCategoryUri() ) // Set batch category
-                .setParameter( "name", ExperimentalDesignUtils.BATCH_FACTOR_NAME ) // set batch name
+                .setParameter( "name", ExperimentFactorUtils.BATCH_FACTOR_NAME ) // set batch name
                 .list();
 
         for ( Object[] ro : res ) {

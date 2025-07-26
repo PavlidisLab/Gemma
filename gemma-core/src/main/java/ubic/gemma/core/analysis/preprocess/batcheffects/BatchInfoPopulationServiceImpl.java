@@ -31,10 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminati
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -388,7 +385,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 toRemove = ef;
                 break;
                 /*

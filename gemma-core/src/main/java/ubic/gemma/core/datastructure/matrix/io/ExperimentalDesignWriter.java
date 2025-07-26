@@ -116,6 +116,8 @@ public class ExperimentalDesignWriter {
             this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
         }
 
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ed, bioMaterials.keySet() );
+
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
 
             /* column 0 of the design matrix */
@@ -130,23 +132,13 @@ public class ExperimentalDesignWriter {
             writer.append( format( externalId ) );
 
             /* columns 2 ... n where n+1 is the number of factors */
-            Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
                 writer.append( "\t" );
-                boolean matched = false;
-                for ( FactorValue candidateFactorValue : candidateFactorValues ) {
-                    if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
-                        log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = FactorValueUtils.getValue( candidateFactorValue, String.valueOf( TsvUtils.SUB_DELIMITER ) );
-                        writer.append( format( matchedFactorValue ) );
-                        matched = true;
-                        break;
-                    }
-                    log.debug( candidateFactorValue.getExperimentalFactor()
-                            + " didn't match ... trying the next factor." );
-                }
-                if ( !matched ) {
-                    log.warn( bioMaterial + " does not have a value for factor " + ef + "." );
+                FactorValue value = factorValueMap.get( ef ).get( bioMaterial );
+                if ( value != null ) {
+                    writer.append( format( FactorValueUtils.getValue( value, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
+                } else {
+                    writer.append( format( ( String ) null ) );
                 }
             }
             writer.append( "\n" );

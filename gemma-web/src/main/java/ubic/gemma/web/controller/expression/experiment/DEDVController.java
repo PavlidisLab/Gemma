@@ -1381,7 +1381,7 @@ public class DEDVController {
              */
             log.debug( "Experiment has continuous factor." );
             facValsStr = valueOrId.toString();
-        } else if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+        } else if ( ExperimentFactorUtils.isBatchFactor( factor ) ) {
             /*
              * FIXME for batch, also treat like they are continuous. There can be many so we tend to run out of
              * colors.

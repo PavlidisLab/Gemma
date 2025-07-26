@@ -32,7 +32,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -248,7 +248,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             Collection<ExperimentalFactor> factorsToUse = new HashSet<>( experimentalFactors );
 
             if ( this.ignoreBatch ) {
-                factorsToUse.removeIf( ExperimentalDesignUtils::isBatchFactor );
+                factorsToUse.removeIf( ExperimentFactorUtils::isBatchFactor );
             }
 
             if ( factorsToUse.isEmpty() ) {
@@ -339,7 +339,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         for ( String factorId : factorIdentifiers ) {
             ExperimentalFactor factor = locateExperimentalFactor( factorId, factorsById, factorsByName );
-            if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+            if ( ignoreBatch && ExperimentFactorUtils.isBatchFactor( factor ) ) {
                 log.warn( "Selected factor looks like a batch, skipping. Pass -usebatch to include."
                         + factor );
                 continue;
@@ -359,7 +359,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private ExperimentalFactor getSubsetFactor( Map<Long, ExperimentalFactor> factorById, Map<String, Set<ExperimentalFactor>> factorByName ) {
         if ( this.subsetFactorIdentifier != null ) {
             ExperimentalFactor factor = locateExperimentalFactor( this.subsetFactorIdentifier, factorById, factorByName );
-            if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+            if ( ignoreBatch && ExperimentFactorUtils.isBatchFactor( factor ) ) {
                 throw new IllegalArgumentException( "Subset factor appears to be a batch, pass -usebatch to use." );
             }
             return factor;

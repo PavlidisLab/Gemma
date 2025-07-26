@@ -285,7 +285,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         /*
          * Initialize our matrix and factor lists...
          */
-        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
+        List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
 
         /*
          * FIXME this is the place to strip put the outliers.
@@ -318,7 +320,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Assert.isTrue( !subsets.isEmpty(), "No subsets provided" );
         Assert.isTrue( config.getSubsetFactor().getFactorValues().containsAll( subsets.keySet() ), "Subsets must use factor values from " + config.getSubsetFactor() + "." );
         Assert.isTrue( subsets.values().stream().allMatch( ss -> ss.getSourceExperiment().equals( ee ) ), "Subsets must use " + ee + " as source experiment." );
-        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
+        List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
         Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
@@ -469,7 +473,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
                 createBADMap( samplesInSubset ) );
 
-        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
+        List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
         Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
@@ -1175,7 +1181,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          */
         contrast.setLogFoldChange( this.nan2Null( coefficient ) );
 
-        if ( term.contains( ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX ) ) {
+        if ( term.contains( DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX ) ) {
             // otherwise, it's continuous, and
             // we don't put in a
             // factorvalue.
@@ -1197,7 +1203,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             try {
                 factorValueId = Long.parseLong(
-                        firstTerm.replace( factorNames[0] + ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                        firstTerm.replace( factorNames[0] + DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( "Failed to parse: " + firstTerm + " into a factorvalue id" );
             }
@@ -1219,7 +1225,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
                 try {
                     factorValueId = Long.parseLong( secondTerm
-                            .replace( factorNames[1] + ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                            .replace( factorNames[1] + DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
                 } catch ( NumberFormatException e ) {
                     throw new RuntimeException( "Failed to parse: " + secondTerm + " into a factorvalue id" );
                 }

@@ -24,6 +24,11 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class DiffExAnalyzerUtils {
 
+    public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
+    public static final String FACTOR_RNAME_PREFIX = "fact.";
+    public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
+    public static final String FACTOR_VALUE_BASELINE_SUFFIX = "_base";
+
     /**
      * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
      *
@@ -269,7 +274,7 @@ public class DiffExAnalyzerUtils {
 
                         return null;
                     }
-                    if ( ExperimentalDesignUtils.isBatchFactor( f ) ) {
+                    if ( ExperimentFactorUtils.isBatchFactor( f ) ) {
                         log.info( "One of the two factors is 'batch', not using it for an interaction" );
                         okForInteraction = false;
                     }
@@ -444,11 +449,12 @@ public class DiffExAnalyzerUtils {
     }
 
     private static void populateDesignMatrix( ObjectMatrix<?, ?, Object> designMatrix, List<ExperimentalFactor> factors, List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines, boolean allowMissingValues ) {
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( factors, samplesUsed );
         for ( int i = 0; i < samplesUsed.size(); i++ ) {
             BioMaterial samp = samplesUsed.get( i );
             for ( int j = 0; j < factors.size(); j++ ) {
                 ExperimentalFactor factor = factors.get( j );
-                Object value = DiffExAnalyzerUtils.extractFactorValueForSample( samp, factor, baselines.get( factor ) );
+                Object value = DiffExAnalyzerUtils.extractFactorValueForSample( samp, factor, factorValueMap, baselines.get( factor ) );
                 // if the value is null, we have to skip this factor, actually, but we do it later.
                 if ( !allowMissingValues && value == null ) {
                     // FIXME: This error could be worked around when we are doing SampleCoexpression. A legitimate
@@ -463,32 +469,6 @@ public class DiffExAnalyzerUtils {
     }
 
     /**
-     * Create a name for a sample suitable for R.
-     */
-    public static String nameForR( BioMaterial sample ) {
-        Assert.notNull( sample.getId(), "Sample must have an ID to have a R-suitable name." );
-        return ExperimentalDesignUtils.BIO_MATERIAL_RNAME_PREFIX + sample.getId();
-    }
-
-    /**
-     * Create a name for the factor that is suitable for R.
-     */
-    public static String nameForR( ExperimentalFactor experimentalFactor ) {
-        Assert.notNull( experimentalFactor.getId(), "Factor must have an ID to have a R-suitable name." );
-        return ExperimentalDesignUtils.FACTOR_RNAME_PREFIX + experimentalFactor.getId();
-    }
-
-    /**
-     * Create a name for the factor value that is suitable for R.
-     */
-    public static String nameForR( FactorValue fv, boolean isBaseline ) {
-        Assert.isTrue( fv.getExperimentalFactor().getType() == FactorType.CATEGORICAL || !isBaseline,
-                "Continuous factors cannot have a baseline." );
-        Assert.notNull( fv.getId(), "Factor value must have an ID to have a R-suitable name." );
-        return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? ExperimentalDesignUtils.FACTOR_VALUE_BASELINE_SUFFIX : "" );
-    }
-
-    /**
      * Extract the "value" of a factor for a sample.
      *
      * @param sample   sample
@@ -499,21 +479,14 @@ public class DiffExAnalyzerUtils {
      * @throws IllegalStateException if there is more than one factor value assigned to a given sample
      */
     @Nullable
-    static Object extractFactorValueForSample( BioMaterial sample, ExperimentalFactor factor, @Nullable FactorValue baseline ) {
+    private static Object extractFactorValueForSample( BioMaterial sample, ExperimentalFactor factor, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, @Nullable FactorValue baseline ) {
         Assert.isTrue( factor.getType().equals( FactorType.CONTINUOUS ) || baseline != null,
                 "There is no baseline defined for " + factor + "." );
-        Set<FactorValue> factorValues = sample.getAllFactorValues().stream()
-                .filter( fv -> fv.getExperimentalFactor().equals( factor ) )
-                .collect( Collectors.toSet() );
-        if ( factorValues.isEmpty() ) {
+        FactorValue factorValue = factorValueMap.get( factor ).get( sample );
+        if ( factorValue == null ) {
             return null;
-        } else if ( factorValues.size() > 1 ) {
-            // not unique
-            throw new IllegalStateException( sample + " had more than one value for " + factor + ": " + factorValues + "." );
-        } else {
-            FactorValue factorValue = factorValues.iterator().next();
-            return extractFactorValue( factorValue, factor.getType().equals( FactorType.CONTINUOUS ), baseline != null && baseline.equals( factorValue ) );
         }
+        return extractFactorValue( factorValue, factor.getType().equals( FactorType.CONTINUOUS ), baseline != null && baseline.equals( factorValue ) );
     }
 
     private static Object extractFactorValue( FactorValue factorValue, boolean isContinuous, boolean isBaseline ) {
@@ -529,5 +502,31 @@ public class DiffExAnalyzerUtils {
              */
             return nameForR( factorValue, isBaseline );
         }
+    }
+
+    /**
+     * Create a name for a sample suitable for R.
+     */
+    public static String nameForR( BioMaterial sample ) {
+        Assert.notNull( sample.getId(), "Sample must have an ID to have a R-suitable name." );
+        return BIO_MATERIAL_RNAME_PREFIX + sample.getId();
+    }
+
+    /**
+     * Create a name for the factor that is suitable for R.
+     */
+    public static String nameForR( ExperimentalFactor experimentalFactor ) {
+        Assert.notNull( experimentalFactor.getId(), "Factor must have an ID to have a R-suitable name." );
+        return FACTOR_RNAME_PREFIX + experimentalFactor.getId();
+    }
+
+    /**
+     * Create a name for the factor value that is suitable for R.
+     */
+    public static String nameForR( FactorValue fv, boolean isBaseline ) {
+        Assert.isTrue( fv.getExperimentalFactor().getType() == FactorType.CATEGORICAL || !isBaseline,
+                "Continuous factors cannot have a baseline." );
+        Assert.notNull( fv.getId(), "Factor value must have an ID to have a R-suitable name." );
+        return FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? FACTOR_VALUE_BASELINE_SUFFIX : "" );
     }
 }

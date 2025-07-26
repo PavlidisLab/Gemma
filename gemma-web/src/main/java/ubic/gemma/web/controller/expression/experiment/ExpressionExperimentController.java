@@ -414,7 +414,7 @@ public class ExpressionExperimentController {
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            if ( !ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( !ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 descriptive.append( ef.getName() ).append( " (" ).append( ef.getDescription() ).append( "), " );
             }
         }
@@ -443,7 +443,7 @@ public class ExpressionExperimentController {
                 .getExperimentalDesign()
                 .getExperimentalFactors()
                 .stream()
-                .filter( factor -> !ExperimentalDesignUtils.isBatchFactor( factor )
+                .filter( factor -> !ExperimentFactorUtils.isBatchFactor( factor )
                         && factor.getType() != FactorType.CONTINUOUS
                         && ee.getBioAssays().stream()
                         .map( BioAssay::getSampleUsed )

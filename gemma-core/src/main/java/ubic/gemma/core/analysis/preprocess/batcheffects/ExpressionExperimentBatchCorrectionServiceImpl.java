@@ -260,7 +260,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 batch = ef;
                 break;
             }

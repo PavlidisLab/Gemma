@@ -108,7 +108,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             throw new IllegalArgumentException( "Cannot split experiments that are on more than one platform" );
         }
 
-        if ( ExperimentalDesignUtils.isBatchFactor( splitOn ) ) {
+        if ( ExperimentFactorUtils.isBatchFactor( splitOn ) ) {
             throw new IllegalArgumentException( "Do not split experiments on 'batch'" );
         }
 
