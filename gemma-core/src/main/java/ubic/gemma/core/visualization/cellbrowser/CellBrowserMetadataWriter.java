@@ -88,7 +88,7 @@ public class CellBrowserMetadataWriter {
             }
         }
         if ( useRawColumnNames ) {
-            columnNames = StringUtils.makeUnique( columnNames );
+            columnNames = StringUtil.makeUnique( columnNames );
         } else {
             columnNames = StringUtil.makeValidForR( columnNames );
         }

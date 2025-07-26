@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
@@ -167,7 +168,7 @@ public class ExperimentalDesignWriter {
             factorColumnNames = factors.stream()
                     .map( ExperimentalFactor::getName )
                     .toArray( String[]::new );
-            factorColumnNames = ubic.gemma.core.util.StringUtils.makeUnique( factorColumnNames );
+            factorColumnNames = StringUtil.makeUnique( factorColumnNames );
         } else {
             factorColumnNames = constructExperimentalFactorNames( factors );
         }

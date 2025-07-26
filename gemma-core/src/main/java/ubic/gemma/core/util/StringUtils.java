@@ -156,21 +156,4 @@ public class StringUtils {
             return s + delimiter + suffix;
         }
     }
-
-    public static String[] makeUnique( String[] strings ) {
-        Map<String, Integer> counts = new HashMap<>();
-        String[] result = new String[strings.length];
-        for ( int i = 0; i < strings.length; i++ ) {
-            String cn = strings[i];
-            if ( counts.containsKey( cn ) ) {
-                int count = counts.get( cn );
-                result[i] = cn + "." + count;
-                counts.put( cn, count + 1 );
-            } else {
-                result[i] = cn;
-                counts.put( cn, 1 );
-            }
-        }
-        return result;
-    }
 }
