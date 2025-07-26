@@ -108,7 +108,7 @@ public class ExpressionDataWriterUtils {
      */
     public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
         // sort for consistency
-        return StringUtil.makeValidForR( bioMaterial.getName()
+        return StringUtil.makeNames( bioMaterial.getName()
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
                 // sort for consistency
                 + bioAssays.stream().map( ExpressionDataWriterUtils::getBioAssayName ).sorted().collect( Collectors.joining( "." ) ) );
@@ -118,7 +118,7 @@ public class ExpressionDataWriterUtils {
      * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
      */
     public static String constructAssayName( BioAssay ba ) {
-        return StringUtil.makeValidForR( getBioAssayName( ba ) );
+        return StringUtil.makeNames( getBioAssayName( ba ) );
     }
 
     private static String getBioAssayName( BioAssay ba ) {
@@ -127,20 +127,20 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct an ExperimentalFactor column name.
-     * @see StringUtil#makeValidForR(String)
+     * @see StringUtil#makeNames(String)
      */
     public static String constructExperimentalFactorName( ExperimentalFactor ef ) {
-        return StringUtil.makeValidForR( ef.getName() );
+        return StringUtil.makeNames( ef.getName() );
     }
 
     /**
      * Construct an ExperimentalFactor column names for a list of factors.
-     * @see StringUtil#makeValidForR(String[])
+     * @see StringUtil#makeNames(String[], boolean)
      */
     public static String[] constructExperimentalFactorNames( List<ExperimentalFactor> factors ) {
         String[] colNames = factors.stream()
                 .map( ExperimentalFactor::getName )
                 .toArray( String[]::new );
-        return StringUtil.makeValidForR( colNames );
+        return StringUtil.makeNames( colNames, true );
     }
 }

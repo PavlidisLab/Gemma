@@ -3,7 +3,6 @@ package ubic.gemma.core.visualization.cellbrowser;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.util.StringUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -90,7 +89,7 @@ public class CellBrowserMetadataWriter {
         if ( useRawColumnNames ) {
             columnNames = StringUtil.makeUnique( columnNames );
         } else {
-            columnNames = StringUtil.makeValidForR( columnNames );
+            columnNames = StringUtil.makeNames( columnNames, true );
         }
         for ( int j = 0; j < columnNames.length; j++ ) {
             String colName = columnNames[j];
