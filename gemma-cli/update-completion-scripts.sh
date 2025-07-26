@@ -11,8 +11,7 @@ fi
 project_dir=$(dirname "$0")
 gemma_cli_bin="$project_dir"/target/appassembler/bin/gemma-cli
 
-# TODO: remove gemma-cli-sc once merged in development
-gemma_cli_aliases="gemma-cli gemma-cli-staging gemma-cli-sc"
+gemma_cli_aliases="gemma-cli gemma-cli-staging"
 
 if [ ! -f "$gemma_cli_bin"  ]; then
   echo "The $gemma_cli_bin executable does not exist. Building..."
