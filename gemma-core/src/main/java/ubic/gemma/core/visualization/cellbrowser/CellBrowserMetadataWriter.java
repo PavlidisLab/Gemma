@@ -108,7 +108,7 @@ public class CellBrowserMetadataWriter {
             writer.append( "\t" );
             for ( FactorValue fv : bioAssay.getSampleUsed().getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( factor ) ) {
-                    writer.append( TsvUtils.format( FactorValueUtils.getValue( fv ) ) );
+                    writer.append( TsvUtils.format( FactorValueUtils.getValue( fv, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
                     break;
                 }
             }

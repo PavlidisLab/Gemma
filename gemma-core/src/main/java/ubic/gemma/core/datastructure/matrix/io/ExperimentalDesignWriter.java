@@ -98,7 +98,7 @@ public class ExperimentalDesignWriter {
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        SortedMap<BioMaterial, Collection<BioAssay>> bioMaterials = new TreeMap<>( Comparator.comparing( BioMaterial::getName ) );
+        SortedMap<BioMaterial, Collection<BioAssay>> bioMaterials = new TreeMap<>( BioMaterial.COMPARATOR );
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
@@ -137,7 +137,7 @@ public class ExperimentalDesignWriter {
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = FactorValueUtils.getValue( candidateFactorValue );
+                        String matchedFactorValue = FactorValueUtils.getValue( candidateFactorValue, String.valueOf( TsvUtils.SUB_DELIMITER ) );
                         writer.append( format( matchedFactorValue ) );
                         matched = true;
                         break;
