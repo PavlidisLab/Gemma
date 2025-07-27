@@ -482,7 +482,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .map( s -> ", " + s )
                 .collect( Collectors.joining() );
         if ( includeNoParents ) {
-            selectOwningEntities += ", cast(NULL as BIGINT)";
+            selectOwningEntities += ", 0";
         }
         return selectOwningEntities;
     }
