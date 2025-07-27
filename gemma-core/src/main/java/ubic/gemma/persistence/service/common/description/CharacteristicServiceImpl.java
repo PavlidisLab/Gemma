@@ -85,8 +85,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByUri( String searchString ) {
-        return this.characteristicDao.findByUri( searchString );
+    public Collection<Characteristic> findByUri( String searchString, @Nullable String category, int maxResults ) {
+        return this.characteristicDao.findByUri( searchString, category, maxResults );
     }
 
     @Nullable
@@ -98,14 +98,14 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByValueStartingWith( String search ) {
-        return this.characteristicDao.findByValueLike( escapeLike( search ) + '%' );
+    public Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, int maxResults ) {
+        return this.characteristicDao.findByValueLike( escapeLike( search ) + '%', category, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByValueLike( String search ) {
-        return this.characteristicDao.findByValueLike( search );
+    public Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults ) {
+        return this.characteristicDao.findByValueLike( search, category, maxResults );
     }
 
     @Override
@@ -141,14 +141,14 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByCategoryStartingWith( String query ) {
-        return this.characteristicDao.findByCategoryLike( escapeLike( query ) + "%" );
+    public Collection<Characteristic> findByCategoryStartingWith( String query, int maxResults ) {
+        return this.characteristicDao.findByCategoryLike( escapeLike( query ) + "%", maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByCategoryUri( String query ) {
-        return this.characteristicDao.findByCategoryUri( query );
+    public Collection<Characteristic> findByCategoryUri( String query, int maxResults ) {
+        return this.characteristicDao.findByCategoryUri( query, maxResults );
     }
 
     @Override
@@ -167,8 +167,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     public Collection<? extends Characteristic> findByAnyValueStartingWith( String value ) {
         Collection<Characteristic> results = new HashSet<>();
         String query = escapeLike( value ) + "%";
-        results.addAll( this.characteristicDao.findByCategoryLike( query ) );
-        results.addAll( this.characteristicDao.findByValueLike( query ) );
+        results.addAll( this.characteristicDao.findByCategoryLike( query, -1 ) );
+        results.addAll( this.characteristicDao.findByValueLike( query, null, -1 ) );
         results.addAll( this.statementDao.findByPredicateLike( query ) );
         results.addAll( this.statementDao.findByObjectLike( query ) );
         return results;
@@ -178,8 +178,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByAnyUri( String uri ) {
         Collection<Characteristic> results = new HashSet<>();
-        results.addAll( this.characteristicDao.findByCategoryUri( uri ) );
-        results.addAll( this.characteristicDao.findByUri( uri ) );
+        results.addAll( this.characteristicDao.findByCategoryUri( uri, -1 ) );
+        results.addAll( this.characteristicDao.findByUri( uri, null, -1 ) );
         results.addAll( this.statementDao.findByPredicateUri( uri ) );
         results.addAll( this.statementDao.findByObjectUri( uri ) );
         return results;

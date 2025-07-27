@@ -65,9 +65,9 @@ public interface CharacteristicDao
 
     Collection<Characteristic> findByCategory( String value );
 
-    Collection<Characteristic> findByCategoryLike( String query );
+    Collection<Characteristic> findByCategoryLike( String query, int maxResults );
 
-    Collection<Characteristic> findByCategoryUri( String uri );
+    Collection<Characteristic> findByCategoryUri( String uri, int maxResults );
 
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order.
@@ -100,7 +100,7 @@ public interface CharacteristicDao
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 
-    Collection<Characteristic> findByUri( String searchString );
+    Collection<Characteristic> findByUri( String searchString, @Nullable String category, int maxResults );
 
     /**
      * Return the characteristic with the most frequently used non-null value by URI.
@@ -139,11 +139,9 @@ public interface CharacteristicDao
 
     /**
      * Finds all Characteristics whose value match the given search term
-     *
-     * @param  search search
-     * @return characteristics
+     * @param category constraint the category of the characteristic, or null to ignore
      */
-    Collection<Characteristic> findByValueLike( String search );
+    Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults );
 
     /**
      * Obtain the classes of entities can can own a {@link Characteristic}.

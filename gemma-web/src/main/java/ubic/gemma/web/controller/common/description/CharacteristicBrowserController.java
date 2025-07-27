@@ -19,8 +19,6 @@
 package ubic.gemma.web.controller.common.description;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -56,10 +54,6 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  */
 @Controller
 public class CharacteristicBrowserController {
-
-    private static final Log log = LogFactory.getLog( CharacteristicBrowserController.class.getName() );
-
-    private static final int MAX_RESULTS = 2000;
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -132,15 +126,21 @@ public class CharacteristicBrowserController {
     /**
      * @param searchFVs        Search factor values that lack characteristics -- that is, search the factorValue.value.
      * @param searchCategories Should the Category be searched, not just the Value?
+     * @param searchFVVs       search using {@link FactorValue}'s value
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String queryString, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs,
             boolean searchCategories, String categoryConstraint ) {
+        int maxResults = 2000;
 
         // FIXME: make this optional
         // boolean searchEfs = true;
 
         queryString = queryString.trim();
+
+        if ( StringUtils.isBlank( categoryConstraint ) ) {
+            categoryConstraint = null;
+        }
 
         List<AnnotationValueObject> results = new ArrayList<>();
         if ( StringUtils.isBlank( queryString ) ) {
@@ -150,14 +150,19 @@ public class CharacteristicBrowserController {
         Collection<Characteristic> chars;
         //noinspection HttpUrlsUsage
         if ( queryString.startsWith( "http://" ) ) {
-            chars = characteristicService.findByUri( queryString );
+            chars = characteristicService.findByUri( queryString, categoryConstraint, maxResults );
         } else {
-            chars = characteristicService.findByValueStartingWith( queryString );
+            chars = characteristicService.findByValueStartingWith( queryString, categoryConstraint, maxResults );
         }
 
         if ( searchCategories ) {
-            chars.addAll( characteristicService.findByCategoryStartingWith( queryString ) );
-            chars.addAll( characteristicService.findByCategoryUri( queryString ) );
+            if ( chars.size() < maxResults ) {
+                if ( queryString.startsWith( "http://" ) ) {
+                    chars.addAll( characteristicService.findByCategoryUri( queryString, maxResults - chars.size() ) );
+                } else {
+                    chars.addAll( characteristicService.findByCategoryStartingWith( queryString, maxResults - chars.size() ) );
+                }
+            }
         }
 
         Collection<Class<? extends Identifiable>> parentClasses = new HashSet<>();
@@ -177,13 +182,8 @@ public class CharacteristicBrowserController {
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, searchNos, true );
 
-        // from here we only use the characteristics which were returned by getParents, which has the MAX_RESULTS limit.
+        // from here we only use the characteristics which were returned by getParents, which has the maxResults limit.
         for ( Characteristic c : charToParent.keySet() ) {
-
-            if ( StringUtils.isNotBlank( categoryConstraint ) && ( c.getCategory() == null || !c.getCategory().equalsIgnoreCase( categoryConstraint ) ) ) {
-                continue;
-            }
-
             Identifiable parent = charToParent.get( c );
             if ( parent == null && !searchNos ) {
                 continue;
@@ -192,14 +192,12 @@ public class CharacteristicBrowserController {
             if ( parent != null ) {
                 populateParentInformation( avo, parent );
             }
-
-
             results.add( avo );
         }
 
         // This might not do anything
-        if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
-            Collection<FactorValue> factorValues = factorValueService.findByValue( queryString );
+        if ( results.size() < maxResults && searchFVVs ) { // non-characteristics.
+            Collection<FactorValue> factorValues = factorValueService.findByValue( queryString, maxResults - results.size() );
             for ( FactorValue factorValue : factorValues ) {
                 if ( !factorValue.getCharacteristics().isEmpty() )
                     continue;
@@ -215,9 +213,7 @@ public class CharacteristicBrowserController {
 
         }
 
-        log.info( "Characteristic search for: '" + queryString + "*': " + results.size() + " results, returning up to "
-                + MAX_RESULTS );
-        return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
+        return results;
     }
 
     @RequestMapping(value = "/characteristicBrowser.html", method = { RequestMethod.GET, RequestMethod.HEAD })

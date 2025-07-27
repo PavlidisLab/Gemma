@@ -28,7 +28,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -76,10 +75,13 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public Collection<FactorValue> findByValue( String valuePrefix ) {
+    public Collection<FactorValue> findByValue( String valuePrefix, int maxResults ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from FactorValue where value like :q" )
-                .setParameter( "q", valuePrefix + "%" ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from FactorValue where value like :q" )
+                .setParameter( "q", valuePrefix + "%" )
+                .setMaxResults( maxResults )
+                .list();
     }
 
     @Override

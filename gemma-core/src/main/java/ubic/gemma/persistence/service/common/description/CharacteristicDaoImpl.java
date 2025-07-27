@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.description;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -45,6 +46,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -136,20 +138,22 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByCategoryLike( String query ) {
+    public Collection<Characteristic> findByCategoryLike( String query, int maxResults ) {
         //noinspection unchecked
         return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.category like :search" )
                 .setParameter( "search", query )
+                .setMaxResults( maxResults )
                 .list();
     }
 
     @Override
-    public Collection<Characteristic> findByCategoryUri( String uri ) {
+    public Collection<Characteristic> findByCategoryUri( String uri, int maxResults ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.categoryUri = :uri" )
                 .setParameter( "uri", uri )
+                .setMaxResults( maxResults )
                 .list();
     }
 
@@ -293,13 +297,18 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByUri( String uri ) {
+    public Collection<Characteristic> findByUri( String uri, @Nullable String category, int maxResults ) {
         if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.valueUri = :uri"
+                        + ( category != null ? " and char.category = :category" : "" ) )
+                .setParameter( "uri", uri );
+        if ( category != null ) {
+            q.setParameter( "category", category );
+        }
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where  char.valueUri = :uri" )
-                .setParameter( "uri", uri ).list();
+        return q.setMaxResults( maxResults ).list();
     }
 
     @Override
@@ -395,11 +404,16 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByValueLike( String search ) {
+    public Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults ) {
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.value like :search"
+                        + ( category != null ? " and char.category = :category" : "" ) )
+                .setParameter( "search", search );
+        if ( category != null ) {
+            q.setParameter( "category", category );
+        }
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where char.value like :search " )
-                .setParameter( "search", search )
+        return q.setMaxResults( maxResults )
                 .list();
     }
 
@@ -422,13 +436,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .filter( fk -> parentClasses == null || parentClasses.contains( fk.getOwningClass() ) )
                 .collect( Collectors.toList() );
 
-        //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
+        SQLQuery query = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select C.ID" + createOwningEntitySelect( oe, includeNoParents ) + " from CHARACTERISTIC C "
                         + "where C.ID in :ids"
-                        + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) )
-                .setParameterList( "ids", optimizeParameterList( charById.keySet() ) )
-                .list();
+                        + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) );
+
+        List<Object[]> result = QueryUtils.listByBatch( query, "ids", charById.keySet(), MAX_PARAMETER_LIST_SIZE );
         Map<Characteristic, Identifiable> charToParent = new HashMap<>();
         for ( Object[] row : result ) {
             BigInteger charId = ( BigInteger ) row[0];

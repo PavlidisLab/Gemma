@@ -76,10 +76,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * Looks for an exact match of the give string to a valueUri in the characteristic database
      *
-     * @param  searchString search string
+     * @param searchString       search string
+     * @param category
      * @return characteristics
      */
-    Collection<Characteristic> findByUri( String searchString );
+    Collection<Characteristic> findByUri( String searchString, @Nullable String category, int maxResults );
 
     /**
      * Find the best possible characteristic for a given URI.
@@ -91,14 +92,14 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      * Returns a collection of characteristics that have a value starting with the given string.
      * <p>
      * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use
-     * {@link #findByValueLike(String)} to do wildcard searches instead.
+     * {@link #findByValueLike(String, String, int)} to do wildcard searches instead.
      */
-    Collection<Characteristic> findByValueStartingWith( String search );
+    Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, int maxResults );
 
     /**
      * Returns a collection of characteristics that have a value matching the given SQL {@code LIKE} pattern.
      */
-    Collection<Characteristic> findByValueLike( String search );
+    Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults );
 
     /**
      * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String, String, Collection)
@@ -121,9 +122,9 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     //     */
     //    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
-    Collection<Characteristic> findByCategoryStartingWith( String queryPrefix );
+    Collection<Characteristic> findByCategoryStartingWith( String queryPrefix, int maxResults );
 
-    Collection<Characteristic> findByCategoryUri( String query );
+    Collection<Characteristic> findByCategoryUri( String query, int maxResults );
 
     /**
      * Find a characteristic by any value it contains including its category, value, predicates and objects.
