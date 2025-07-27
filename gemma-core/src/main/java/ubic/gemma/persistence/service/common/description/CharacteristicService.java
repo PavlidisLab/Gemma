@@ -112,7 +112,9 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      * @see CharacteristicDao#getParents(Collection, Collection, boolean)
      * @param thawParents if true, the parents will be initialized if they are proxies
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    @Secured({ "GROUP_ADMIN" })
+    // FIXME: this is too slow when large number of results are returned
+    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**
