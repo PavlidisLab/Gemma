@@ -31,11 +31,16 @@ import java.util.stream.Stream;
 public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
     private boolean autoFlush = false;
     private ScaleType scaleType = null;
 
     public void setUseBioAssayIds( boolean useBioAssayIds ) {
         this.useBioAssayIds = useBioAssayIds;
+    }
+
+    public void setUseRawColumnNames( boolean useRawColumnNames ) {
+        this.useRawColumnNames = useRawColumnNames;
     }
 
     @Override
@@ -79,7 +84,7 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
             BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
             for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
-                writer.append( "\t" ).append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds ) );
+                writer.append( "\t" ).append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
             }
         }
         writer.append( "\n" );

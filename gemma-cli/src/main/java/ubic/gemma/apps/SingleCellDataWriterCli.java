@@ -74,6 +74,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     @Nullable
     private ScaleType scaleType;
     private boolean useBioAssayIds;
+    private boolean useRawColumnNames;
     private boolean useEnsemblIds;
     private boolean useStreaming;
     private int fetchSize;
@@ -110,6 +111,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         addEnumOption( options, "format", "format", "Format to write the matrix for (defaults to tabular)", MatrixFormat.class );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use when generating data to disk. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
         options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names (only for CELL_BROWSER output)." );
+        options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw column names instead of R-friendly ones (only for CELL_BROWSER output)." );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output). This is incompatible with -standardLocation/--standard-location." );
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
@@ -162,6 +164,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 throw new ParseException( "Cannot use -useBioAssayIds with other formats than CELL_BROWSER." );
             }
             this.useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
+        }
+        if ( commandLine.hasOption( "useRawColumnNames" ) ) {
+            if ( this.format != MatrixFormat.CELL_BROWSER ) {
+                throw new ParseException( "Cannot use -useRawColumnNames with other formats than CELL_BROWSER." );
+            }
+            this.useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
         }
         if ( commandLine.hasOption( "scaleType" ) ) {
             this.scaleType = getEnumOptionValue( commandLine, "scaleType" );
@@ -379,12 +387,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else if ( result.isStandardOutput() ) {
                     fileName = null;
                     try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
+                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useRawColumnNames, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.CELL_BROWSER_SC_DATA_SUFFIX ) );
                     try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
+                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useRawColumnNames, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, true );
                     }
                 }
             case MEX:

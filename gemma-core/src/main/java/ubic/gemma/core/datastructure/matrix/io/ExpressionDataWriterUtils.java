@@ -121,6 +121,13 @@ public class ExpressionDataWriterUtils {
         return StringUtil.makeNames( getBioAssayName( ba ) );
     }
 
+    /**
+     * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
+     */
+    public static String constructCellIdName( BioAssay ba, String cellId ) {
+        return StringUtil.makeNames( getBioAssayName( ba ) + "_" + cellId );
+    }
+
     private static String getBioAssayName( BioAssay ba ) {
         return ba.getShortName() != null ? ba.getShortName() : ba.getName();
     }

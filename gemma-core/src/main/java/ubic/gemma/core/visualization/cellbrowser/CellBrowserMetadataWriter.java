@@ -105,7 +105,7 @@ public class CellBrowserMetadataWriter {
     }
 
     public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        writer.append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds ) );
+        writer.append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
         for ( ExperimentalFactor factor : factors ) {
             FactorValue value = factorValueMap.get( factor ).get( bioAssay.getSampleUsed() );
             writer.append( "\t" );

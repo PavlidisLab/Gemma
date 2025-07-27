@@ -31,7 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.core.datastructure.matrix.io.*;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -556,10 +559,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
+    public int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         CellBrowserTabularMatrixWriter matrixWriter = new CellBrowserTabularMatrixWriter();
         matrixWriter.setUseBioAssayIds( useBioAssayIds );
+        matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
         if ( scaleType != null && qt.getScale() != scaleType ) {
