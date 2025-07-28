@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
+import ubic.gemma.core.loader.entrez.EntrezQuery;
 import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
@@ -43,7 +44,33 @@ public class SraFetcher {
      * Fetch an SRA experiment.
      */
     public SraExperimentPackageSet fetch( String accession ) throws IOException {
-        return fetch( Collections.singletonList( accession ) );
+        if ( accession.startsWith( "SRX" ) ) {
+            return fetch( Collections.singletonList( accession ) );
+        } else {
+            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            log.debug( "There are non-SRX accessions, performing a search with " + searchUrl + " to resolve their IDs..." );
+            EntrezQuery query = retryTemplate.execute( ( ctx ) -> {
+                try ( InputStream in = searchUrl.openStream() ) {
+                    return EntrezXmlUtils.getQuery( EntrezXmlUtils.parse( in ) );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            }, "fetching " + searchUrl );
+            List<SraExperimentPackage> experimentPackages = new ArrayList<>();
+            for ( int i = 0; i < query.getTotalRecords(); i += BATCH_SIZE ) {
+                URL fetchUrl = EntrezUtils.fetch( "sra", query, EntrezRetmode.XML, "full", i, BATCH_SIZE, ncbiApiKey );
+                log.debug( "Fetching XML metadata for " + String.join( ",", accession ) + " from " + fetchUrl + "..." );
+                SraExperimentPackageSet r = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+                    try ( InputStream in = fetchUrl.openStream() ) {
+                        return new SraXmlParser().parse( in );
+                    }
+                }, ncbiApiKey ), "fetching " + fetchUrl );
+                experimentPackages.addAll( r.getExperimentPackages() );
+            }
+            SraExperimentPackageSet result = new SraExperimentPackageSet();
+            result.setExperimentPackages( experimentPackages );
+            return result;
+        }
     }
 
     /**
@@ -60,7 +87,7 @@ public class SraFetcher {
         } else {
             throw new IllegalArgumentException( "Unrecognized GEO accession: " + geoAccession );
         }
-        URL uidUrl = EntrezUtils.search( "gds", geoAccession + "[accn]" + filter + " [filter]", EntrezRetmode.XML, ncbiApiKey );
+        URL uidUrl = EntrezUtils.search( "gds", geoAccession + "[accn]" + " " + filter + "[filter]", EntrezRetmode.XML, ncbiApiKey );
         log.debug( "Fetching UID for " + geoAccession + " from " + uidUrl + "..." );
         String uid = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
             try ( InputStream is = uidUrl.openStream() ) {
@@ -119,9 +146,37 @@ public class SraFetcher {
      * Fetch an SRA experiment in the runinfo format.
      */
     public String fetchRunInfo( String accession ) throws IOException {
-        URL fetchUrl = EntrezUtils.fetchById( "sra", accession, EntrezRetmode.TEXT, "runinfo", ncbiApiKey );
-        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
-            return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
-        }, ncbiApiKey ), "fetching " + fetchUrl );
+        if ( accession.startsWith( "SRX" ) ) {
+            URL fetchUrl = EntrezUtils.fetchById( "sra", accession, EntrezRetmode.TEXT, "runinfo", ncbiApiKey );
+            return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+                return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
+            }, ncbiApiKey ), "fetching " + fetchUrl );
+        } else {
+            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            log.debug( "Requesting a non-SRX accession, performing a search with " + searchUrl + " to resolve its ID..." );
+            EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+                try ( InputStream in = searchUrl.openStream() ) {
+                    return EntrezXmlUtils.getQuery( EntrezXmlUtils.parse( in ) );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            }, ncbiApiKey ), "fetching " + searchUrl );
+            StringBuilder result = new StringBuilder();
+            for ( int i = 0; i < query.getTotalRecords(); i += BATCH_SIZE ) {
+                URL fetchUrl = EntrezUtils.fetch( "sra", query, EntrezRetmode.TEXT, "runinfo", i, BATCH_SIZE, ncbiApiKey );
+                String s = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+                    return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
+                }, ncbiApiKey ), "fetching " + fetchUrl );
+                String[] headerAndRecords = s.split( "\n", 2 );
+                // append header only once
+                if ( i == 0 ) {
+                    result.append( headerAndRecords[0] ).append( "\n" );
+                }
+                if ( headerAndRecords.length == 2 ) {
+                    result.append( headerAndRecords[1] );
+                }
+            }
+            return result.toString();
+        }
     }
 }

@@ -602,10 +602,8 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         // update the description, so we keep some kind of record.
         if ( !toSkip.isEmpty() ) {
-            series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
-                    + " samples from this series, which appear in other Expression Experiments in Gemma, "
-                    + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                    .join( toSkip, "," ) );
+            series.addToSummaries( String.format( "Note: %d samples from this series, which appear in other Expression Experiments in Gemma, were not imported from the GEO source. The following samples were removed: %s",
+                    toSkip.size(), StringUtils.join( toSkip, "," ) ) );
         }
 
         if ( series.getSamples().isEmpty() ) {
@@ -877,13 +875,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
              * Copy basic information
              */
             superSeries.getKeyWords().addAll( subSeries.getKeyWords() );
-            superSeries.getContributers().addAll( subSeries.getContributers() );
+            superSeries.getContributors().addAll( subSeries.getContributors() );
             superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
-            String seriesSummary = superSeries.getSummaries();
-            seriesSummary = seriesSummary + ( StringUtils.isBlank( seriesSummary ) ? "" : "\n" ) + "Summary from subseries "
-                    + subSeries.getGeoAccession() + ": " + subSeries
-                    .getSummaries();
-            superSeries.setSummaries( seriesSummary );
+            for ( String subSeriesSummary : subSeries.getSummaries() ) {
+                superSeries.addToSummaries( "Summary from subseries " + subSeries.getGeoAccession() + ":\n"
+                        + subSeriesSummary );
+            }
         }
     }
 

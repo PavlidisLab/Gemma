@@ -418,8 +418,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             }
                         }
                         Collection<String> sraAccessions = new ArrayList<>();
-                        if ( detector.hasSingleCellDataInSra( series, sraAccessions ) ) {
+                        Collection<String> otherDataInSra = new ArrayList<>();
+                        if ( detector.hasSingleCellDataInSra( series, sraAccessions, otherDataInSra ) ) {
                             dataInSra = String.join( "|", sraAccessions );
+                        } else if ( !otherDataInSra.isEmpty() ) {
+                            dataInSra = String.join( "|", otherDataInSra );
+                            comment = "Data found in SRA might not be single-cell data.";
+                        } else {
+                            log.warn( "No data found in SRA for " + geoAccession + "." );
                         }
                     } catch ( Exception e ) {
                         addErrorObject( geoAccession, e );

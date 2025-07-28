@@ -659,7 +659,7 @@ public class GeoConverterImpl implements GeoConverter {
          * Basically copy over most of the information
          */
         platformSpecific.setContact( series.getContact() );
-        platformSpecific.setContributers( series.getContributers() );
+        platformSpecific.setContributors( series.getContributors() );
         platformSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
         platformSpecific.setKeyWords( series.getKeyWords() );
         platformSpecific.setOverallDesign( series.getOverallDesign() );
@@ -889,10 +889,10 @@ public class GeoConverterImpl implements GeoConverter {
      * @param expExp ee
      */
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
-        if ( series.getContributers().size() > 0 ) {
+        if ( series.getContributors().size() > 0 ) {
             expExp.setDescription( expExp.getDescription() + "\nContributors: " );
             List<String> names = new ArrayList<>();
-            for ( GeoContact contributer : series.getContributers() ) {
+            for ( GeoContact contributer : series.getContributors() ) {
                 names.add( contributer.getName() );
             }
             expExp.setDescription( expExp.getDescription() + StringUtils.join( "; ", names ) );
@@ -1805,11 +1805,9 @@ public class GeoConverterImpl implements GeoConverter {
 
         this.convertSeriesTypes( series, expExp );
 
-        expExp.setDescription( "" );
-
-        expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
+        expExp.setDescription( String.join( "\n\n", series.getSummaries() ) );
         if ( series.getLastUpdateDate() != null ) {
-            expExp.setDescription( expExp.getDescription() + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() + "\n" );
+            expExp.setDescription( expExp.getDescription() + "\n\n" + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() );
         }
 
         // note that if this was part of a split, makeTitle will already have been called, but that's okay
@@ -2097,7 +2095,7 @@ public class GeoConverterImpl implements GeoConverter {
          * Basically copy over most of the information
          */
         speciesSpecific.setContact( series.getContact() );
-        speciesSpecific.setContributers( series.getContributers() );
+        speciesSpecific.setContributors( series.getContributors() );
         speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
         speciesSpecific.setKeyWords( series.getKeyWords() );
         speciesSpecific.setOverallDesign( series.getOverallDesign() );
@@ -2142,7 +2140,7 @@ public class GeoConverterImpl implements GeoConverter {
          * Basically copy over most of the information
          */
         speciesSpecific.setContact( series.getContact() );
-        speciesSpecific.setContributers( series.getContributers() );
+        speciesSpecific.setContributors( series.getContributors() );
         speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
         speciesSpecific.setKeyWords( series.getKeyWords() );
         speciesSpecific.setOverallDesign( series.getOverallDesign() );
