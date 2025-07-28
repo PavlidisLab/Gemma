@@ -648,6 +648,24 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     /**
+     * Check if a GEO series has single-cell data at the series-level.
+     */
+    public boolean hasSingleCellDataInSeries( GeoSeries series, SingleCellDataType dataType ) {
+        switch ( dataType ) {
+            case ANNDATA:
+                return annDataDetector.hasSingleCellData( series );
+            case SEURAT_DISK:
+                return seuratDiskDetector.hasSingleCellData( series );
+            case MEX:
+                return mexDetector.hasSingleCellData( series );
+            case LOOM:
+                return loomDetector.hasSingleCellData( series );
+            default:
+                throw new IllegalArgumentException( "Unknown single-cell data type: " + dataType );
+        }
+    }
+
+    /**
      * Check if a GEO series has single-cell data in SRA.
      */
     public boolean hasSingleCellDataInSra( GeoSeries series ) {

@@ -385,6 +385,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                             if ( skipDownload ) {
+                                // emulate the behavior of the MEX downloader, which is to raise an unsupported
+                                // exception if MEX data is found at the series-level
+                                if ( detectedDataType.equalsIgnoreCase( "MEX" ) ) {
+                                    if ( detector.hasSingleCellDataInSeries( series, SingleCellDataType.MEX ) ) {
+                                        throw new UnsupportedOperationException( "MEX files were found, but single-cell data is not supported at the series level." );
+                                    }
+                                }
                                 addSuccessObject( geoAccession, "Download was skipped." );
                             } else {
                                 if ( dataType != null && supplementaryFile != null ) {
