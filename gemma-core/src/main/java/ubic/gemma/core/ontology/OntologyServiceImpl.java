@@ -218,7 +218,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         String wildcardQuery = LuceneQueryUtils.prepareDatabaseQuery( searchQuery, true );
         if ( wildcardQuery != null ) {
             Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
-                    .characteristic2CharacteristicVO( this.characteristicService.findByValueLike( wildcardQuery, null, maxResults ) );
+                    .characteristic2CharacteristicVO( this.characteristicService.findByValueLike( wildcardQuery, null, Collections.singleton( ExpressionExperiment.class ), false, maxResults ) );
             for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
                 // flag to let know that it was found in the database
                 characteristicInDatabase.setAlreadyPresentInDatabase( true );
@@ -826,7 +826,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueLike( queryString, parentClasses, false );
+        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueStartingWith( queryString, parentClasses, false );
 
         /*
          * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category

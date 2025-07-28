@@ -52,7 +52,7 @@ Ext.onReady( function() {
       var searchFVs = fvCheckBox.getValue();
       var searchNos = noCheckBox.getValue();
       var searchCats = catsCheckBox.getValue();
-      var searchFactorsValueValues = fvvCheckBox.getValue();
+      var searchFactorsValueValues = false; // fvvCheckBox.getValue();
       var categoryConstraint = categoryCombo.getValue();
       browsergrid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues,
          searchCats, constrainToCategoryCheck.getValue() ? categoryConstraint : '' ] );
@@ -284,19 +284,19 @@ Ext.onReady( function() {
     */
 
    var eeCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Expression Experiments',
+      boxLabel : 'Datasets',
       checked : true,
       name : 'searchEEs',
       width : 'auto'
    } );
    var bmCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'BioMaterials',
+      boxLabel : 'Samples',
       checked : true,
       name : 'searchBMs',
       width : 'auto'
    } );
    var fvCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Factor Values',
+      boxLabel : 'Factors',
       checked : true,
       name : 'searchFVs',
       width : 'auto'
@@ -309,13 +309,12 @@ Ext.onReady( function() {
    //    width : 'auto'
    // } );
 
-   var fvvCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Uncharacterized factor Values',
-      checked : true,
-      tooltip : 'Factor values that lack proper characteristics',
-      name : 'searchFVVs',
-      width : 'auto'
-   } );
+   // var fvvCheckBox = new Ext.form.Checkbox( {
+   //    boxLabel : 'Factors (via their values)',
+   //    checked : true,
+   //    name : 'searchFVVs',
+   //    width : 'auto'
+   // } );
 
    var noCheckBox = new Ext.form.Checkbox( {
       boxLabel : 'No parent', // careful, these might just be hidden due to
@@ -336,7 +335,7 @@ Ext.onReady( function() {
       renderTo : browsergrid.tbar
    } );
    secondToolbar.addSpacer();
-   secondToolbar.addText( "Find characteristics from" );
+   secondToolbar.addText( "Find characteristics from:" );
    secondToolbar.addSpacer();
    secondToolbar.addField( eeCheckBox );
    secondToolbar.addSpacer();
@@ -344,11 +343,11 @@ Ext.onReady( function() {
    secondToolbar.addSpacer();
    secondToolbar.addField( fvCheckBox );
    secondToolbar.addSpacer();
+   secondToolbar.addField( noCheckBox );
+   // secondToolbar.addSpacer();
    // secondToolbar.addField( paCheckBox );
    // secondToolbar.addSpacer();
-   secondToolbar.addField( noCheckBox );
-   secondToolbar.addSpacer();
-   secondToolbar.addField( fvvCheckBox );
+   // secondToolbar.addField( fvvCheckBox );
    secondToolbar.addSpacer();
    secondToolbar.addField( catsCheckBox );
    secondToolbar.doLayout();

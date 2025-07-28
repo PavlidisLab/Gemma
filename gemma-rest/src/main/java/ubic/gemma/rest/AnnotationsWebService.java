@@ -441,7 +441,7 @@ public class AnnotationsWebService {
             URI uri = LuceneQueryUtils.prepareTermUriQuery( query );
             if ( uri != null ) {
                 this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
-                        .findByUri( StringUtils.strip( query ), null, -1 ) ) );
+                        .findByUri( StringUtils.strip( query ), null, null, true, -1 ) ) );
             } else {
                 this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, 100, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }

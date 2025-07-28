@@ -62,9 +62,7 @@ import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
@@ -103,11 +101,11 @@ public class ExpressionExperimentDaoImpl
         implements ExpressionExperimentDao {
 
     private static final String
-            CHARACTERISTIC_ALIAS = CharacteristicDao.OBJECT_ALIAS,
+            CHARACTERISTIC_ALIAS = "ch",
             BIO_MATERIAL_CHARACTERISTIC_ALIAS = "bmc",
             FACTOR_VALUE_CHARACTERISTIC_ALIAS = "fvc",
             ALL_CHARACTERISTIC_ALIAS = "ac",
-            BIO_ASSAY_ALIAS = BioAssayDao.OBJECT_ALIAS,
+            BIO_ASSAY_ALIAS = "ba",
             TAXON_ALIAS = TaxonDao.OBJECT_ALIAS,
             ARRAY_DESIGN_ALIAS = ArrayDesignDao.OBJECT_ALIAS,
             EXTERNAL_DATABASE_ALIAS = "ED";

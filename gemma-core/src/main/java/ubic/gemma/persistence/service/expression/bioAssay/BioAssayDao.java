@@ -36,8 +36,6 @@ import java.util.Map;
  */
 public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayValueObject> {
 
-    String OBJECT_ALIAS = "ba";
-
     @Nullable
     BioAssay findByShortName( String shortName );
 

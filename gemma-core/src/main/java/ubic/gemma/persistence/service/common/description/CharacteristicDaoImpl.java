@@ -138,20 +138,24 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByCategoryLike( String query, int maxResults ) {
+    public Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         //noinspection unchecked
         return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where char.category like :search" )
+                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY like :search"
+                        + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
+                .addEntity( "C", Characteristic.class )
                 .setParameter( "search", query )
                 .setMaxResults( maxResults )
                 .list();
     }
 
     @Override
-    public Collection<Characteristic> findByCategoryUri( String uri, int maxResults ) {
+    public Collection<Characteristic> findByCategoryUri( String uri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where char.categoryUri = :uri" )
+                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY_URI = :uri"
+                        + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
+                .addEntity( "C", Characteristic.class )
                 .setParameter( "uri", uri )
                 .setMaxResults( maxResults )
                 .list();
@@ -274,35 +278,14 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByUri( Collection<String> uris ) {
-        Collection<Characteristic> results = new HashSet<>();
-
-        if ( uris.isEmpty() )
-            return results;
-
-        List<String> uniqueUris = uris.stream()
-                .distinct()
-                .sorted()
-                .collect( Collectors.toList() );
-
-        for ( Collection<String> batch : batchParameterList( uniqueUris, getBatchSize() ) ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "from Characteristic where valueUri in (:uris)" )
-                    .setParameterList( "uris", batch )
-                    .list() );
-        }
-
-        return results;
-    }
-
-    @Override
-    public Collection<Characteristic> findByUri( String uri, @Nullable String category, int maxResults ) {
+    public Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
         Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where char.valueUri = :uri"
-                        + ( category != null ? " and char.category = :category" : "" ) )
+                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.VALUE_URI = :uri"
+                        + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
+                        + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
+                .addEntity( "C", Characteristic.class )
                 .setParameter( "uri", uri );
         if ( category != null ) {
             q.setParameter( "category", category );
@@ -331,11 +314,10 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
+                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC C "
                         + "where VALUE_URI = :valueUri "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
-
                 .addScalar( "V", StandardBasicTypes.STRING )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "valueUri", valueUri )
@@ -355,7 +337,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "where `VALUE` like :valueLike "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
-
                 .addScalar( "V", StandardBasicTypes.STRING )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "valueLike", valueLike )
@@ -384,17 +365,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public String normalizeByValue( Characteristic characteristic ) {
-        if ( characteristic.getValueUri() != null ) {
-            return characteristic.getValueUri().toLowerCase();
-        } else if ( characteristic.getValue() != null ) {
-            return characteristic.getValue().toLowerCase();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
     public Collection<Characteristic> findByValue( String value ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
@@ -404,10 +374,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults ) {
+    public Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from Characteristic as char where char.value like :search"
-                        + ( category != null ? " and char.category = :category" : "" ) )
+                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.`VALUE` like :search"
+                        + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
+                        + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
+                .addEntity( "C", Characteristic.class )
                 .setParameter( "search", search );
         if ( category != null ) {
             q.setParameter( "category", category );
@@ -547,6 +519,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
         }
         return constraints;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private String createCategoryConstraint( String alias, String paramName, String category ) {
+        return alias + "." + ( category.startsWith( "http://" ) ? "CATEGORY_URI" : "CATEGORY" ) + " = :" + paramName;
     }
 
     @Override

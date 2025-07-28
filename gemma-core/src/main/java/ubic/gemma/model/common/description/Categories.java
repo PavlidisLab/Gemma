@@ -17,6 +17,8 @@ public final class Categories {
     public static final Category ASSAY = new Category( "assay", "http://purl.obolibrary.org/obo/OBI_0000070" );
     public static final Category TIMEPOINT = new Category( "timepoint", "http://www.ebi.ac.uk/efo/EFO_0000724" );
     public static final Category BLOCK = new Category( "block", "http://www.ebi.ac.uk/efo/EFO_0005067" );
+    public static final Category BIOLOGICAL_SEX = new Category( "biological sex", "http://purl.obolibrary.org/obo/PATO_0000047" );
+    public static final Category ORGANISM_PART = new Category( "organism part", "http://www.ebi.ac.uk/efo/EFO_0000635" );
 
     /**
      * Represent a mask for a set of data.

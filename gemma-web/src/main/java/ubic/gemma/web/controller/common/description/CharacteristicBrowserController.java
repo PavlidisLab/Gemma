@@ -124,45 +124,22 @@ public class CharacteristicBrowserController {
     }
 
     /**
-     * @param searchFVs        Search factor values that lack characteristics -- that is, search the factorValue.value.
+     * @param searchEEs        search datasets
+     * @param searchBMs        search samples
+     * @param searchFVs        search experimental factors and factor values
      * @param searchCategories Should the Category be searched, not just the Value?
-     * @param searchFVVs       search using {@link FactorValue}'s value
+     * @param searchFVVs       search using {@link FactorValue}'s value (deprecated)
+     * @param searchNos        search for characteristics that have no parents
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String queryString, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs,
             boolean searchCategories, String categoryConstraint ) {
         int maxResults = 2000;
 
-        // FIXME: make this optional
-        // boolean searchEfs = true;
-
         queryString = queryString.trim();
 
         if ( StringUtils.isBlank( categoryConstraint ) ) {
             categoryConstraint = null;
-        }
-
-        List<AnnotationValueObject> results = new ArrayList<>();
-        if ( StringUtils.isBlank( queryString ) ) {
-            return results;
-        }
-
-        Collection<Characteristic> chars;
-        //noinspection HttpUrlsUsage
-        if ( queryString.startsWith( "http://" ) ) {
-            chars = characteristicService.findByUri( queryString, categoryConstraint, maxResults );
-        } else {
-            chars = characteristicService.findByValueStartingWith( queryString, categoryConstraint, maxResults );
-        }
-
-        if ( searchCategories ) {
-            if ( chars.size() < maxResults ) {
-                if ( queryString.startsWith( "http://" ) ) {
-                    chars.addAll( characteristicService.findByCategoryUri( queryString, maxResults - chars.size() ) );
-                } else {
-                    chars.addAll( characteristicService.findByCategoryStartingWith( queryString, maxResults - chars.size() ) );
-                }
-            }
         }
 
         Collection<Class<? extends Identifiable>> parentClasses = new HashSet<>();
@@ -173,12 +150,32 @@ public class CharacteristicBrowserController {
             parentClasses.add( BioMaterial.class );
         }
         if ( searchFVs ) {
+            parentClasses.add( ExperimentalFactor.class );
             parentClasses.add( FactorValue.class );
         }
 
-        // if ( searchEfs ) {
-        parentClasses.add( ExperimentalFactor.class );
-        // }
+        List<AnnotationValueObject> results = new ArrayList<>();
+        if ( StringUtils.isBlank( queryString ) ) {
+            return results;
+        }
+
+        Collection<Characteristic> chars;
+        //noinspection HttpUrlsUsage
+        if ( queryString.startsWith( "http://" ) ) {
+            chars = characteristicService.findByUri( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
+        } else {
+            chars = characteristicService.findByValueStartingWith( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
+        }
+
+        if ( searchCategories ) {
+            if ( chars.size() < maxResults ) {
+                if ( queryString.startsWith( "http://" ) ) {
+                    chars.addAll( characteristicService.findByCategoryUri( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
+                } else {
+                    chars.addAll( characteristicService.findByCategoryStartingWith( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
+                }
+            }
+        }
 
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, searchNos, true );
 

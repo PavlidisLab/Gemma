@@ -36,8 +36,7 @@ import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -125,20 +124,50 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
     public void setUp() throws Exception {
         // TODO
         characteristics = Arrays.asList(
-                createCharacteristic( "http://test/T0001", "male" ),
-                createCharacteristic( "http://test/T0001", "male" ),
-                createCharacteristic( "http://test/T0002", "male reproductive system" ),
-                createCharacteristic( null, "male reproductive system (unknown term)" ),
-                createCharacteristic( "http://test/T0003", "female" ),
-                createCharacteristic( "http://test/T0004", "untreated" ),
-                createCharacteristic( "http://test/T0005", "treated" ),
-                createCharacteristic( "http://test/T0006", "treated with sodium chloride" ) );
+                createCharacteristic( Categories.BIOLOGICAL_SEX, "http://test/T0001", "male" ),
+                createCharacteristic( Categories.BIOLOGICAL_SEX, "http://test/T0001", "male" ),
+                createCharacteristic( Categories.ORGANISM_PART, "http://test/T0002", "male reproductive system" ),
+                createCharacteristic( Categories.ORGANISM_PART, null, "male reproductive system (unknown term)" ),
+                createCharacteristic( Categories.BIOLOGICAL_SEX, "http://test/T0003", "female" ),
+                createCharacteristic( Categories.TREATMENT, "http://test/T0004", "untreated" ),
+                createCharacteristic( Categories.TREATMENT, "http://test/T0005", "treated" ),
+                createCharacteristic( Categories.TREATMENT, "http://test/T0006", "treated with sodium chloride" ) );
         characteristics = characteristicDao.create( characteristics );
     }
 
     @After
     public void tearDown() {
         characteristicDao.remove( characteristics );
+    }
+
+    @Test
+    public void testFindByUri() {
+        assertThat( characteristicDao.findByUri( "http://test/T0001", null, null, true, -1 ) )
+                .hasSize( 2 );
+        assertThat( characteristicDao.findByUri( "http://test/T0001", null, Collections.singleton( ExpressionExperiment.class ), true, -1 ) )
+                .hasSize( 2 );
+        assertThat( characteristicDao.findByUri( "http://test/T0001", null, null, false, -1 ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testFindByValueLike() {
+        assertThat( characteristicDao.findByValueLike( "male%", null, null, true, -1 ) )
+                .hasSize( 4 );
+        assertThat( characteristicDao.findByValueLike( "male%", null, Collections.singleton( ExpressionExperiment.class ), true, -1 ) )
+                .hasSize( 4 );
+        assertThat( characteristicDao.findByValueLike( "male%", null, null, false, -1 ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testFindByCategoryLike() {
+        assertThat( characteristicDao.findByCategoryLike( "biological%", null, true, -1 ) )
+                .hasSize( 3 );
+        assertThat( characteristicDao.findByCategoryLike( "biological%", Collections.singleton( ExpressionExperiment.class ), true, -1 ) )
+                .hasSize( 3 );
+        assertThat( characteristicDao.findByCategoryLike( "biological%", null, false, -1 ) )
+                .isEmpty();
     }
 
     @Test
@@ -157,11 +186,11 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testNormalizeByValue() {
-        assertThat( characteristicDao.normalizeByValue( createCharacteristic( null, "test" ) ) )
+        assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( null, "test" ) ) )
                 .isEqualTo( "test" );
-        assertThat( characteristicDao.normalizeByValue( createCharacteristic( "", "test" ) ) )
+        assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "", "test" ) ) )
                 .isEqualTo( "" );
-        assertThat( characteristicDao.normalizeByValue( createCharacteristic( "https://EXAMPLE.COM", "test" ) ) )
+        assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "https://EXAMPLE.COM", "test" ) ) )
                 .isEqualTo( "https://example.com" );
     }
 
@@ -290,7 +319,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( ef );
 
         FactorValue fv = FactorValue.Factory.newInstance( ef );
-        Statement c = createStatement( "test", "test" );
+        Statement c = createStatement( Categories.UNCATEGORIZED, "test", "test" );
         fv.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( fv );
         sessionFactory.getCurrentSession().flush();
@@ -412,16 +441,20 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {
+        return createCharacteristic( Categories.UNCATEGORIZED, valueUri, value );
+    }
+
+    private Characteristic createCharacteristic( Category category, @Nullable String valueUri, String value ) {
         Characteristic c = new Characteristic();
-        c.setValueUri( valueUri );
+        c.setCategory( category.getCategory() );
+        c.setCategoryUri( category.getCategoryUri() );
         c.setValue( value );
+        c.setValueUri( valueUri );
         return c;
     }
 
-    private Statement createStatement( @Nullable String valueUri, String value ) {
-        Statement c = new Statement();
-        c.setValueUri( valueUri );
-        c.setValue( value );
-        return c;
+    @SuppressWarnings("SameParameterValue")
+    private Statement createStatement( Category category, @Nullable String subjectUri, String subject ) {
+        return Statement.Factory.newInstance( category, subject, subjectUri );
     }
 }

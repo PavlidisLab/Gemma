@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -38,8 +39,6 @@ import java.util.Set;
  */
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
-
-    String OBJECT_ALIAS = "ch";
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -65,9 +64,9 @@ public interface CharacteristicDao
 
     Collection<Characteristic> findByCategory( String value );
 
-    Collection<Characteristic> findByCategoryLike( String query, int maxResults );
+    Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
-    Collection<Characteristic> findByCategoryUri( String uri, int maxResults );
+    Collection<Characteristic> findByCategoryUri( String uri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order.
@@ -98,9 +97,15 @@ public interface CharacteristicDao
      */
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
-    Collection<Characteristic> findByUri( Collection<String> uris );
-
-    Collection<Characteristic> findByUri( String searchString, @Nullable String category, int maxResults );
+    /**
+     * Find characteristics with the given URI.
+     *
+     * @param category         restrict the category of the characteristic, or null to ignore
+     * @param parentClasses    only return characteristics that have parents of these classes, or null to ignore
+     * @param includeNoParents include characteristics that have no parents
+     * @param maxResults       maximum number of results to return, or -1 for no limit
+     */
+    Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Return the characteristic with the most frequently used non-null value by URI.
@@ -110,38 +115,32 @@ public interface CharacteristicDao
     /**
      * Find characteristics by URI.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
     Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
      * Find characteristics by value matching the provided LIKE pattern.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
     Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
      * Count characteristics matching the provided value URIs.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
     Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
-
-    /**
-     * Normalize a characteristic by value.
-     * <p>
-     * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
-     */
-    String normalizeByValue( Characteristic characteristic );
 
     Collection<Characteristic> findByValue( String search );
 
     /**
      * Finds all Characteristics whose value match the given search term
-     * @param category constraint the category of the characteristic, or null to ignore
+     *
+     * @param category      constraint the category of the characteristic, or null to ignore
      */
-    Collection<Characteristic> findByValueLike( String search, @Nullable String category, int maxResults );
+    Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Obtain the classes of entities can can own a {@link Characteristic}.
