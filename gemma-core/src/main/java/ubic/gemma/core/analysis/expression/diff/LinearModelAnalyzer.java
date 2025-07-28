@@ -105,6 +105,15 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
+    /**
+     * This keeps factor ordered the same way that they appear in the design matrix.
+     */
+    private static final Comparator<ExperimentalFactor> FACTOR_COMPARATOR =
+            Comparator.comparing( DiffExAnalyzerUtils::nameForR, Comparator.naturalOrder() );
+
+    private static final Comparator<BioMaterial> SAMPLE_COMPARATOR =
+            Comparator.comparing( DiffExAnalyzerUtils::nameForR, Comparator.naturalOrder() );
+
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
@@ -286,7 +295,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Initialize our matrix and factor lists...
          */
         List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
-                .sorted( ExperimentalFactor.COMPARATOR )
+                .sorted( FACTOR_COMPARATOR )
                 .collect( Collectors.toList() );
 
         /*
@@ -321,7 +330,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Assert.isTrue( config.getSubsetFactor().getFactorValues().containsAll( subsets.keySet() ), "Subsets must use factor values from " + config.getSubsetFactor() + "." );
         Assert.isTrue( subsets.values().stream().allMatch( ss -> ss.getSourceExperiment().equals( ee ) ), "Subsets must use " + ee + " as source experiment." );
         List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
-                .sorted( ExperimentalFactor.COMPARATOR )
+                .sorted( FACTOR_COMPARATOR )
                 .collect( Collectors.toList() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
@@ -458,7 +467,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         List<BioMaterial> samplesInSubset = subset.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
-                .sorted( Comparator.comparing( BioMaterial::getId ) )
+                .sorted( SAMPLE_COMPARATOR )
                 .collect( Collectors.toList() );
 
         FactorValue subsetFactorValue = config.getSubsetFactorValue();
@@ -474,7 +483,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 createBADMap( samplesInSubset ) );
 
         List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
-                .sorted( ExperimentalFactor.COMPARATOR )
+                .sorted( FACTOR_COMPARATOR )
                 .collect( Collectors.toList() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
