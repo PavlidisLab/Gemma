@@ -800,17 +800,22 @@ public class DatasetsWebService {
     }
 
     @GET
-    @Path("/{dataset}/reference")
+    @Path("/{dataset}/publication")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve associated paper of a dataset", responses = {
+    @Operation(summary = "Retrieve the primary publication of a dataset", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist or lacks a primary publication.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<BibliographicReference> getDatasetReference(
+    public ResponseDataObject<BibliographicReferenceValueObject> getDatasetReference(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ){
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        return respond(ee.getPrimaryPublication());
+        Long eeId = datasetArgService.getEntityId( datasetArg );
+        ExpressionExperiment ee = expressionExperimentService.loadWithPrimaryPublication( eeId );
+        BibliographicReference ref = ee.getPrimaryPublication();
+        if (ref == null) {
+//            throw new NotFoundException(ee.getShortName() + " does not have a primary publication.");
+        }
+         return respond( new BibliographicReferenceValueObject(ref) );
     }
 
     /**
