@@ -30,6 +30,8 @@ public class EntrezXmlUtils {
      * A document builder with {@link NcbiEntityResolver} as entity resolver.
      * <p>
      * This will work for most of not all XML files from NCBI Entrez and related services.
+     * <p>
+     * Important note: the DocumentBuilder API is not thread-safe, so any usage should be synchronized.
      */
     private static final DocumentBuilder documentBuilder = XMLUtils.createDocumentBuilder( new NcbiEntityResolver() );
 
@@ -40,9 +42,11 @@ public class EntrezXmlUtils {
      */
     public static Document parse( InputStream is ) throws IOException {
         try {
-            Document doc = documentBuilder.parse( is );
-            checkForErrors( doc );
-            return doc;
+            synchronized ( documentBuilder ) {
+                Document doc = documentBuilder.parse( is );
+                checkForErrors( doc );
+                return doc;
+            }
         } catch ( SAXException e ) {
             throw new RuntimeException( e );
         }
@@ -56,11 +60,13 @@ public class EntrezXmlUtils {
      */
     public static Document parse( InputStream is, String encoding ) throws IOException {
         try {
-            InputSource inputSource = new InputSource( is );
-            inputSource.setEncoding( encoding );
-            Document doc = documentBuilder.parse( inputSource );
-            checkForErrors( doc );
-            return doc;
+            synchronized ( documentBuilder ) {
+                InputSource inputSource = new InputSource( is );
+                inputSource.setEncoding( encoding );
+                Document doc = documentBuilder.parse( inputSource );
+                checkForErrors( doc );
+                return doc;
+            }
         } catch ( SAXException e ) {
             throw new RuntimeException( e );
         }
