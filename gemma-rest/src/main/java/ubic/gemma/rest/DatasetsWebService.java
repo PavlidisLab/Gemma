@@ -63,6 +63,7 @@ import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -813,7 +814,7 @@ public class DatasetsWebService {
         ExpressionExperiment ee = expressionExperimentService.loadWithPrimaryPublication( eeId );
         BibliographicReference ref = ee.getPrimaryPublication();
         if (ref == null) {
-//            throw new NotFoundException(ee.getShortName() + " does not have a primary publication.");
+            throw new NotFoundException(ee.getShortName() + " does not have a primary publication.");
         }
          return respond( new BibliographicReferenceValueObject(ref) );
     }
