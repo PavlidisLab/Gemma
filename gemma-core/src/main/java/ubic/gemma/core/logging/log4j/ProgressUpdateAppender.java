@@ -132,7 +132,11 @@ public class ProgressUpdateAppender extends AbstractAppender {
 
         @Override
         public void close() {
-            ThreadContext.put( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY, previousKey );
+            if ( previousKey != null ) {
+                ThreadContext.put( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY, previousKey );
+            } else {
+                ThreadContext.remove( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY );
+            }
             contextMap.remove( key, this );
         }
     }
