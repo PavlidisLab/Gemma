@@ -79,6 +79,12 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable  String category, int maxResults ) {
+        return this.characteristicDao.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         return this.characteristicDao.findByUri( uri, category, parentClasses, includeNoParents, maxResults );
     }

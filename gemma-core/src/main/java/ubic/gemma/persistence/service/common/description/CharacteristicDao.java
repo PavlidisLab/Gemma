@@ -62,6 +62,8 @@ public interface CharacteristicDao
     @Override
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
+    Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
+
     Collection<Characteristic> findByCategory( String value );
 
     Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );

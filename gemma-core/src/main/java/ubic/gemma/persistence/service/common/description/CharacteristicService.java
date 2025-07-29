@@ -65,6 +65,12 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
+     * Find characteristics that have a particular parent class or lack thereof.
+     * @throws IllegalArgumentException if parentClasses is
+     */
+    Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
+
+    /**
      * Looks for an exact match of the give string to a valueUri in the characteristic database
      */
     Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );

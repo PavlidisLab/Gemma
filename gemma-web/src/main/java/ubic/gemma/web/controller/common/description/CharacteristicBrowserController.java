@@ -154,25 +154,25 @@ public class CharacteristicBrowserController {
             parentClasses.add( FactorValue.class );
         }
 
-        List<AnnotationValueObject> results = new ArrayList<>();
-        if ( StringUtils.isBlank( queryString ) ) {
-            return results;
-        }
 
         Collection<Characteristic> chars;
-        //noinspection HttpUrlsUsage
-        if ( queryString.startsWith( "http://" ) ) {
-            chars = characteristicService.findByUri( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
+        if ( StringUtils.isBlank( queryString ) ) {
+            chars = characteristicService.findByParentClasses( parentClasses, searchNos, categoryConstraint, maxResults );
         } else {
-            chars = characteristicService.findByValueStartingWith( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
-        }
+            //noinspection HttpUrlsUsage
+            if ( queryString.startsWith( "http://" ) ) {
+                chars = characteristicService.findByUri( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
+            } else {
+                chars = characteristicService.findByValueStartingWith( queryString, categoryConstraint, parentClasses, searchNos, maxResults );
+            }
 
-        if ( searchCategories ) {
-            if ( chars.size() < maxResults ) {
-                if ( queryString.startsWith( "http://" ) ) {
-                    chars.addAll( characteristicService.findByCategoryUri( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
-                } else {
-                    chars.addAll( characteristicService.findByCategoryStartingWith( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
+            if ( searchCategories ) {
+                if ( chars.size() < maxResults ) {
+                    if ( queryString.startsWith( "http://" ) ) {
+                        chars.addAll( characteristicService.findByCategoryUri( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
+                    } else {
+                        chars.addAll( characteristicService.findByCategoryStartingWith( queryString, parentClasses, searchNos, maxResults - chars.size() ) );
+                    }
                 }
             }
         }
@@ -180,6 +180,7 @@ public class CharacteristicBrowserController {
         Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( chars, parentClasses, searchNos, true );
 
         // from here we only use the characteristics which were returned by getParents, which has the maxResults limit.
+        List<AnnotationValueObject> results = new ArrayList<>();
         for ( Characteristic c : charToParent.keySet() ) {
             Identifiable parent = charToParent.get( c );
             if ( parent == null && !searchNos ) {

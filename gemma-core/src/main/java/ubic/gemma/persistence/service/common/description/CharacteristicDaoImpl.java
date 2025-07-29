@@ -129,6 +129,21 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C "
+                        + "where " + createOwningEntityConstraint( parentClasses, includeNoParents )
+                        + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" ) )
+                .addEntity( "C", Characteristic.class )
+                .setMaxResults( maxResults );
+        if ( category != null ) {
+            q.setParameter( "category", category );
+        }
+        //noinspection unchecked
+        return ( Collection<Characteristic> ) q.list();
+    }
+
+    @Override
     public Collection<Characteristic> findByCategory( String value ) {
         //noinspection unchecked
         return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
