@@ -1,11 +1,11 @@
-package ubic.gemma.model.analysis;
+package ubic.gemma.model.expression.bioAssayData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
+import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;

@@ -1,6 +1,12 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
+const NUMBER_FORMATTER = Intl.NumberFormat();
+
+function formatNumber( n ) {
+    return NUMBER_FORMATTER.format( n );
+}
+
 /**
  *
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
@@ -33,10 +39,10 @@ Gemma.ExpressionExperimentDetails = Ext
              * @memberOf Gemma.ExpressionExperimentDetails
              */
             renderArrayDesigns: function (ee) {
-                var arrayDesigns = ee.arrayDesigns;
-                var result = '';
-                for (var i = 0; i < arrayDesigns.length; i++) {
-                    var ad = arrayDesigns[i];
+                const arrayDesigns = ee.arrayDesigns;
+                let result = '';
+                for ( let i = 0; i < arrayDesigns.length; i++ ) {
+                    const ad = arrayDesigns[i];
                     result = result + '<a href="' + Gemma.CONTEXT_PATH + '/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
                         + '</a> - ' + ad.name;
 
@@ -59,9 +65,9 @@ Gemma.ExpressionExperimentDetails = Ext
 
                     if (ee.originalPlatforms.length > 0) {
 	                     result = result + "<br/>As originally submitted: ";
-	                     for (var j = 0; j < ee.originalPlatforms.length; j++) {
-	                         var op = ee.originalPlatforms[j];
-		                     result = result + '<a href="' + Gemma.CONTEXT_PATH + '/arrays/showArrayDesign.html?id=' + op.id + '"?">' + op.shortName + '</a> - ' + op.name;
+                        for ( let j = 0; j < ee.originalPlatforms.length; j++ ) {
+                            const op = ee.originalPlatforms[j];
+                            result = result + '<a href="' + Gemma.CONTEXT_PATH + '/arrays/showArrayDesign.html?id=' + op.id + '>' + op.shortName + '</a> - ' + op.name;
 		                     if (j < ee.originalPlatforms.length - 1) {
 		                         result = result + ', '
                              }
@@ -82,37 +88,30 @@ Gemma.ExpressionExperimentDetails = Ext
                     return "Unavailable"; // analysis not run.
                 }
 
-                var downloadCoExpressionDataLink = String.format(
+                const downloadCoExpressionDataLink = String.format(
                     "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
                     + "onClick='Gemma.ExpressionExperimentDataFetch.fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
                     ee.id);
-                var count;
 
                 return "Available" + downloadCoExpressionDataLink;
-
             },
 
             renderSourceDatabaseEntry: function (ee) {
-                var result = '';
+                if ( ee.externalDatabase === 'GEO' ) {
+                    let acc = ee.accession;
+                    acc = acc.replace( /\.[1-9]$/, '' );
+                    // in case of multi-species.
+                    const logo = Gemma.CONTEXT_PATH + '/images/logo/geoTiny.png';
+                    return '<a target="_blank" href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
+                       + '"><img src="' + logo + '" alt="GEO logo"/></a>';
 
-                var logo = '';
-                if (ee.externalDatabase == 'GEO') {
-                    var acc = ee.accession;
-                    acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/geoTiny.png';
-                    result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
-                        + '"><img src="' + logo + '"/></a>';
-
-                } else if (ee.externalDatabase == 'ArrayExpress') {
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/arrayExpressTiny.png';
-                    result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
-                        + ee.accession + '"><img src="' + logo + '"/></a>';
+                } else if ( ee.externalDatabase === 'ArrayExpress' ) {
+                    const logo = Gemma.CONTEXT_PATH + '/images/logo/arrayExpressTiny.png';
+                    return '<a target="_blank" href="https://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
+                       + ee.accession + '"><img src="' + logo + '" alt="ArrayExpress logo"/></a>';
                 } else {
-                    result = "Direct upload";
+                    return "Direct upload";
                 }
-
-                return result;
-
             },
 
             /**
@@ -120,22 +119,61 @@ Gemma.ExpressionExperimentDetails = Ext
              *
              */
             renderSamples: function (ee) {
-                var result = ee.bioAssayCount;
+                let result = formatNumber( ee.bioAssayCount );
                 if (this.editable) {
                     result = result
                         + '&nbsp;&nbsp<a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
-                        + ee.id
-                        + '"><img ext:qtip="View the details of the samples" src="' + Gemma.CONTEXT_PATH + '/images/icons/magnifier.png"/></a>';
+                       + ee.id
+                       + '"><img ext:qtip="View the details of the samples" src="' + Gemma.CONTEXT_PATH + '/images/icons/magnifier.png" alt="Loupe icon"/></a>';
                 }
                 return '' + result; // hack for possible problem with extjs 3.1 - bare
                 // number not displayed, coerce to string.
             },
 
+            renderSingleCellMetadata : function( ee ) {
+                let result = '';
+                if ( ee.singleCellDimension !== null ) {
+                    result += '<b>Number of cells:</b> ' + formatNumber( ee.singleCellDimension.numberOfCells );
+                    if ( ee.singleCellDimension.cellTypeAssignments.length > 0 ) {
+                        result += '<br/>'
+                        result += '<ul>'
+                        for ( let cta of ee.singleCellDimension.cellTypeAssignments ) {
+                            result += '<li>'
+                            if ( cta.name !== null ) {
+                                result += '<b>' + cta.name + '</b>: '
+                            }
+                            result += ' <span ext:qtip="' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '">' + cta.cellTypes.length + ' cells types</span>';
+                            // result += '<span>' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '</span>';
+                            // if ( cta.protocol !== null ) {
+                            //     result += ' <b>Protocol:</b> ' + cta.protocol.name;
+                            // }
+                            if ( cta.preferred ) {
+                                result += ' <b ext:qtip="This cell type annotation is marked as preferred and will be used for creating pseudo-bulks.">[Preferred]</b>';
+                            }
+                            result += '</li>';
+                        }
+                        result += '</ul>'
+                    }
+                    if ( ee.singleCellDimension.cellLevelCharacteristics.length > 0 ) {
+                        result += '<br/>'
+                        result += '<ul>'
+                        for ( let clc of ee.singleCellDimension.cellLevelCharacteristics ) {
+                            result += '<li>' + clc.name + '</li>';
+                        }
+                        result += '</ul>'
+                    }
+                }
+                if ( ee.hasCellBrowser ) {
+                    result += '<a href="' + ee.cellBrowserUrl + '" target="_blank">View in Cell Browser</a>'
+                }
+                return result;
+            },
+
             renderStatus: function (ee) {
 
-                var result = '';
+                let result = '';
 
-                var isUserLoggedIn = (Ext.get('hasUser') && Ext.get('hasUser').getValue() === 'true') ? true : false;
+                const isUserLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true');
 
                 if (isUserLoggedIn) {
                     result = result
@@ -183,62 +221,62 @@ Gemma.ExpressionExperimentDetails = Ext
             },
 
             linkAnalysisRenderer: function (ee) {
-                var id = ee.id;
-                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                    + id
-                    + '-eemanager\').doLinks('
-                    + id
-                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
+                const id = ee.id;
+                const runUrl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                   + id
+                   + '-eemanager\').doLinks('
+                   + id
+                   + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
                 if (ee.dateLinkAnalysis) {
-                    var type = ee.linkAnalysisEventType;
-                    var color = "#000";
-                    var suggestRun = true;
-                    var qtip = 'ext:qtip="OK"';
-                    if (type == 'FailedLinkAnalysisEvent') {
+                    const type = ee.linkAnalysisEventType;
+                    let color = "#000";
+                    let suggestRun = true;
+                    let qtip = 'ext:qtip="OK"';
+                    if ( type === 'FailedLinkAnalysisEvent' ) {
                         color = 'red';
                         qtip = 'ext:qtip="Failed"';
-                    } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
+                    } else if ( type === 'TooSmallDatasetLinkAnalysisEvent' ) {
                         color = '#CCC';
                         qtip = 'ext:qtip="Too small"';
                         suggestRun = false;
                     }
 
                     return '<span style="color:' + color + ';" ' + qtip + '>'
-                        + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis) + '&nbsp;' + (suggestRun ? runurl : '');
+                       + Gemma.Renderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runUrl : '');
                 } else {
-                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runUrl;
                 }
 
             },
 
             missingValueAnalysisRenderer: function (ee) {
-                var id = ee.id;
-                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                    + id
-                    + '-eemanager\').doMissingValues('
-                    + id
-                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
+                const id = ee.id;
+                const runUrl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                   + id
+                   + '-eemanager\').doMissingValues('
+                   + id
+                   + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
                 /*
                  * Offer missing value analysis if it's possible (this might need tweaking).
                  */
-                if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity) {
+                if ( ee.technologyType !== 'ONE COLOR' && ee.technologyType !== 'NONE' && ee.hasEitherIntensity ) {
 
                     if (ee.dateMissingValueAnalysis) {
-                        var type = ee.missingValueAnalysisEventType;
-                        var color = "#000";
-                        var suggestRun = true;
-                        var qtip = 'ext:qtip="OK"';
-                        if (type == 'FailedMissingValueAnalysisEvent') {
+                        const type = ee.missingValueAnalysisEventType;
+                        let color = "#000";
+                        const suggestRun = true;
+                        let qtip = 'ext:qtip="OK"';
+                        if ( type === 'FailedMissingValueAnalysisEvent' ) {
                             color = 'red';
                             qtip = 'ext:qtip="Failed"';
                         }
 
                         return '<span style="color:' + color + ';" ' + qtip + '>'
                             + Gemma.Renderers.dateRenderer(ee.dateMissingValueAnalysis) + '&nbsp;'
-                            + (suggestRun ? runurl : '');
+                           + (suggestRun ? runUrl : '');
                     } else {
-                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runUrl;
                     }
 
                 } else {
@@ -247,34 +285,34 @@ Gemma.ExpressionExperimentDetails = Ext
             },
 
             processedVectorCreateRenderer: function (ee) {
-                var id = ee.id;
-                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                    + id
-                    + '-eemanager\').doProcessedVectors('
-                    + id
-                    + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="preprocess" title="preprocess"/></span>';
+                const id = ee.id;
+                const runUrl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                   + id
+                   + '-eemanager\').doProcessedVectors('
+                   + id
+                   + ')"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/control_play_blue.png" alt="preprocess" title="preprocess"/></span>';
 
                 if (ee.dateProcessedDataVectorComputation) {
-                    var type = ee.processedDataVectorComputationEventType;
-                    var color = "#000";
+                    const type = ee.processedDataVectorComputationEventType;
+                    let color = "#000";
 
-                    var suggestRun = true;
-                    var qtip = 'ext:qtip="OK"';
-                    if (type == 'FailedProcessedVectorComputationEvent') {
+                    const suggestRun = true;
+                    let qtip = 'ext:qtip="OK"';
+                    if ( type === 'FailedProcessedVectorComputationEvent' ) {
                         color = 'red';
                         qtip = 'ext:qtip="Failed"';
                     }
 
                     return '<span style="color:' + color + ';" ' + qtip + '>'
                         + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
-                        + (suggestRun ? runurl : '');
+                       + (suggestRun ? runUrl : '');
                 } else {
-                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runUrl;
                 }
             },
             diagnosticsRenderer: function (ee) {
-               var id = ee.id;
-               var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                const id = ee.id;
+                const runUrl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
                    + id
                    + '-eemanager\').doDiagnostics('
                    + id
@@ -295,25 +333,24 @@ Gemma.ExpressionExperimentDetails = Ext
 //                       + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
 //                       + (suggestRun ? runurl : '');
 //               } else {
-                   return '<span style="color:#3A3;">Create/Update</span>&nbsp;' + runurl;
+                return '<span style="color:#3A3;">Create/Update</span>&nbsp;' + runUrl;
              //  }
            },
             renderProcessedExpressionVectorCount: function (e) {
-                return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
+                return e.processedExpressionVectorCount ? formatNumber( e.processedExpressionVectorCount ) : '[count not available]';
             },
             renderEESets: function (eeSets) {
                 eeSets.sort(function (a, b) {
-                    var A = a.name.toLowerCase();
-                    var B = b.name.toLowerCase();
+                    const A = a.name.toLowerCase();
+                    const B = b.name.toLowerCase();
                     if (A < B)
                         return -1;
                     if (A > B)
                         return 1;
                     return 0;
                 });
-                var eeSetLinks = [];
-                var i;
-                for (i = 0; i < eeSets.length; i++) {
+                const eeSetLinks = [];
+                for ( let i = 0; i < eeSets.length; i++ ) {
                     if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
                         eeSetLinks
                             .push(' <a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
@@ -326,16 +363,12 @@ Gemma.ExpressionExperimentDetails = Ext
                 return eeSetLinks;
             },
 
-            /**
-             *
-             * @param otherParts IDs
-             */
             renderOtherParts: function (e) {
-                var h = "";
+                let h = "";
 
                 if (e.otherParts && e.otherParts.length > 0) {
-                    for(var i = 0; i < e.otherParts.length; i++) {
-                        var s = e.otherParts[i];
+                    for ( let i = 0; i < e.otherParts.length; i++ ) {
+                        const s = e.otherParts[i];
                         h = h + ' <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id='
                             + s.id + '">' + s.shortName +'</a>'
                     }
@@ -347,7 +380,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     border: false,
                     html: h,
                     listeners: {
-                        'afterrender': function (c) {
+                        'afterrender' : function() {
                             window.jQuery('#otherPartsHelp').qtip({
                                 content: "If this experiment was originally part of a larger study, other parts that are retained in the system are listed here.",
                                 style: {
@@ -367,22 +400,21 @@ Gemma.ExpressionExperimentDetails = Ext
 
                 // this.editable && this.admin may also have been set in component configs
 
-                var panelId = this.getId();
-                var e = this.experimentDetails;
-                var currentDescription = e.description;
-                var currentName = e.name;
-                var currentShortName = e.shortName;
-                var currentPubMedId = (e.primaryCitation) ? e.primaryCitation.pubmedAccession : '';
-                var currentPrimaryCitation = e.primaryCitation;
-                var manager = new Gemma.EEManager({
-                    editable: this.editable,
-                    id: e.id + '-eemanager'
-                });
+                const e = this.experimentDetails;
+                let currentDescription = e.description;
+                let currentName = e.name;
+                let currentShortName = e.shortName;
+                let currentPubMedId = (e.primaryCitation) ? e.primaryCitation.pubmedAccession : '';
+                let currentPrimaryCitation = e.primaryCitation;
+                const manager = new Gemma.EEManager( {
+                    editable : this.editable,
+                    id : e.id + '-eemanager'
+                } );
                 this.manager = manager;
 
                 /* PUB MED REGION */
 
-                var pubMedDisplay = new Ext.Panel({
+                const pubMedDisplay = new Ext.Panel( {
                     xtype: 'panel',
                     fieldLabel: 'Publication',
                     baseCls: 'x-plain-panel',
@@ -400,7 +432,7 @@ Gemma.ExpressionExperimentDetails = Ext
                         }
                     }
                 });
-                var pubMedIdField = new Ext.form.NumberField({
+                const pubMedIdField = new Ext.form.NumberField( {
                     xtype: 'numberfield',
                     allowDecimals: false,
                     minLength: 1,
@@ -412,7 +444,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     enableKeyEvents: true,
                     bubbleEvents: ['changeMade'],
                     listeners: {
-                        'keyup': function (field, event) {
+                        'keyup' : function( field ) {
                             if (field.isDirty()) {
                                 field.fireEvent('changeMade', field.isValid());
                             }
@@ -421,7 +453,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
                     }
                 });
-                var pubMedDelete = {
+                const pubMedDelete = {
                     xtype: 'button',
                     text: 'Clear',
                     icon: Gemma.CONTEXT_PATH + '/images/icons/cross.png',
@@ -433,7 +465,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     },
                     scope: this
                 };
-                var pubMedForm = new Ext.Panel({
+                const pubMedForm = new Ext.Panel( {
                     fieldLabel: 'Publication',
                     xtype: 'panel',
                     layout: 'hbox',
@@ -453,16 +485,16 @@ Gemma.ExpressionExperimentDetails = Ext
                  */
                 new Gemma.CategoryCombo({});
 
-                var taggerurl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id + "-eemanager')" +
-                    ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
-                    "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
+                const taggerUrl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id + "-eemanager')" +
+                   ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
+                   "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
 
-                var tagView = new Gemma.AnnotationDataView({
-                    readParams: [{
-                        id: e.id,
-                        classDelegatingFor: "ExpressionExperiment"
-                    }]
-                });
+                const tagView = new Gemma.AnnotationDataView( {
+                    readParams : [ {
+                        id : e.id,
+                        classDelegatingFor : "ExpressionExperiment"
+                    } ]
+                } );
 
                 manager.on('tagsUpdated', function () {
                     tagView.store.reload();
@@ -476,8 +508,8 @@ Gemma.ExpressionExperimentDetails = Ext
                 });
 
                 manager.on('reportUpdated', function (data) {
-                    var ob = data[0];
-                    var k = Ext.get('coexpressionLinkCount-region');
+                    const ob = data[0];
+                    let k = Ext.get( 'coexpressionLinkCount-region' );
                     Ext.DomHelper.overwrite(k, {
                         html: ob.coexpressionLinkCount
                     });
@@ -493,56 +525,56 @@ Gemma.ExpressionExperimentDetails = Ext
                     window.location.reload(true);
                 });
 
-                var save = function () {
-                    if (!this.saveMask) {
-                        this.saveMask = new Ext.LoadMask(this.getEl(), {
-                            msg: "Saving ..."
-                        });
+                const save = function() {
+                    if ( !this.saveMask ) {
+                        this.saveMask = new Ext.LoadMask( this.getEl(), {
+                            msg : "Saving ..."
+                        } );
                     }
                     this.saveMask.show();
-                    var shortName = shortNameField.getValue();
-                    var description = descriptionArea.getValue();
-                    var name = nameArea.getValue();
-                    var newPubMedId = pubMedIdField.getValue();
+                    const shortName = shortNameField.getValue();
+                    const description = descriptionArea.getValue();
+                    const name = nameArea.getValue();
+                    const newPubMedId = pubMedIdField.getValue();
 
-                    var entity = {
-                        entityId: e.id
+                    const entity = {
+                        entityId : e.id
                     };
 
-                    if (shortName != currentShortName) {
+                    if ( shortName !== currentShortName ) {
                         entity.shortName = shortName;
                     }
 
-                    if (description != currentDescription) {
+                    if ( description !== currentDescription ) {
                         entity.description = description;
                     }
 
-                    if (name != currentName) {
+                    if ( name !== currentName ) {
                         entity.name = name;
                     }
 
-                    if (!newPubMedId) {
+                    if ( !newPubMedId ) {
                         entity.pubMedId = currentPubMedId;
                         entity.removePrimaryPublication = true;
-                    } else if (newPubMedId !== currentPubMedId) {
+                    } else if ( newPubMedId !== currentPubMedId ) {
                         entity.pubMedId = newPubMedId;
                         entity.removePrimaryPublication = false;
                     } else {
                         entity.removePrimaryPublication = false;
                     }
                     // returns ee details object
-                    ExpressionExperimentController.updateBasics(entity, function (data) {
+                    ExpressionExperimentController.updateBasics( entity, function( data ) {
 
-                        shortNameField.setValue(data.shortName);
-                        nameArea.setValue(data.name);
-                        descriptionArea.setValue(data.description);
-                        pubMedIdField.setValue(data.pubmedId);
-                        pubMedDisplay.update({
-                            pubAvailable: (data.pubmedId) ? 'true' : 'false',
-                            primaryCitation: (data.primaryCitation) ? data.primaryCitation.citation : '',
-                            pubmedURL: (data.primaryCitation) ? data.primaryCitation.pubmedURL : '',
-                            PMID: (data.primaryCitation) ? currentPrimaryCitation.pubmedAccession : ''
-                        });
+                        shortNameField.setValue( data.shortName );
+                        nameArea.setValue( data.name );
+                        descriptionArea.setValue( data.description );
+                        pubMedIdField.setValue( data.pubmedId );
+                        pubMedDisplay.update( {
+                            pubAvailable : (data.pubmedId) ? 'true' : 'false',
+                            primaryCitation : (data.primaryCitation) ? data.primaryCitation.citation : '',
+                            pubmedURL : (data.primaryCitation) ? data.primaryCitation.pubmedURL : '',
+                            PMID : (data.primaryCitation) ? currentPrimaryCitation.pubmedAccession : ''
+                        } );
 
                         currentShortName = data.shortName;
                         currentName = data.name;
@@ -553,11 +585,11 @@ Gemma.ExpressionExperimentDetails = Ext
                         this.dirtyForm = false;
                         this.saveMask.hide();
 
-                    }.createDelegate(this));
+                    }.createDelegate( this ) );
 
-                }.createDelegate(this);
+                }.createDelegate( this );
 
-                var descriptionArea = new Ext.form.TextArea({
+                const descriptionArea = new Ext.form.TextArea( {
                     allowBlank: true,
                     resizable: true,
                     readOnly: true,
@@ -572,7 +604,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     enableKeyEvents: true,
                     bubbleEvents: ['changeMade'],
                     listeners: {
-                        'keyup': function (field, e) {
+                        'keyup' : function( field ) {
                             if (field.isDirty()) {
                                 field.fireEvent('changeMade', field.isValid());
                             }
@@ -590,7 +622,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     value: currentDescription
                 });
 
-                var shortNameField = new Ext.form.TextField({
+                const shortNameField = new Ext.form.TextField( {
                     enableKeyEvents: true,
                     allowBlank: false,
                     grow: true,
@@ -600,7 +632,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     style: 'font-weight: bold; font-size:1.4em; height:1.5em; color:black',
                     bubbleEvents: ['changeMade'],
                     listeners: {
-                        'keyup': function (field, e) {
+                        'keyup' : function( field ) {
                             if (field.isDirty()) {
                                 field.fireEvent('changeMade', field.isValid());
                             }
@@ -618,7 +650,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     value: currentShortName
                 });
 
-                var nameArea = new Ext.form.TextArea({
+                const nameArea = new Ext.form.TextArea( {
                     allowBlank: false,
                     grow: true,
                     // growMin: 22,
@@ -630,7 +662,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     bubbleEvents: ['changeMade'],
                     editOn: false,
                     listeners: {
-                        'keyup': function (field, e) {
+                        'keyup' : function( field ) {
                             if (field.isDirty()) {
                                 field.fireEvent('changeMade', field.isValid());
                             }
@@ -654,7 +686,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     value: currentName
                 });
 
-                var resetEditableFields = function () {
+                const resetEditableFields = function() {
                     shortNameField.setValue(currentShortName);
                     nameArea.setValue(currentName);
                     descriptionArea.setValue(currentDescription);
@@ -663,17 +695,17 @@ Gemma.ExpressionExperimentDetails = Ext
                     cancelBtn.disable();
                 };
 
-                var editBtn = new Ext.Button({
+                const editBtn = new Ext.Button( {
                     // would like to use on/off slider or swtich type control here
                     text: 'Start editing',
                     editOn: false,
                     disabled: !this.editable,
-                    handler: function (button, event) {
+                    handler : function() {
                         this.fireEvent('toggleEditMode', true);
                     },
                     scope: this
                 });
-                var cancelBtn = new Ext.Button({
+                const cancelBtn = new Ext.Button( {
                     text: 'Cancel',
                     disabled: true,
                     toolTip: 'Reset all fields to saved values',
@@ -683,7 +715,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     scope: this
                 });
 
-                var saveBtn = new Ext.Button({
+                const saveBtn = new Ext.Button( {
                     text: 'Save',
                     disabled: true,
                     handler: function () {
@@ -692,7 +724,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     },
                     scope: this
                 });
-                var editEEButton = new Ext.Button({
+                const editEEButton = new Ext.Button( {
                     text: 'More edit options',
                     icon: Gemma.CONTEXT_PATH + '/images/icons/wrench.png',
                     toolTip: 'Go to editor page for this experiment',
@@ -703,7 +735,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     },
                     scope: this
                 });
-                var deleteEEButton = new Ext.Button({
+                const deleteEEButton = new Ext.Button( {
                     text: 'Delete Experiment',
                     icon: Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                     toolTip: 'Delete the experiment from the system',
@@ -740,7 +772,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     this.dirtyForm = true;
 
                 });
-                var basics = new Ext.Panel(
+                const basics = new Ext.Panel(
                     {
                         ref: 'fieldPanel',
                         collapsible: false,
@@ -776,7 +808,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: e.taxon
                                     },
                                     {
-                                        fieldLabel: 'Tags&nbsp;' + taggerurl,
+                                        fieldLabel : 'Tags&nbsp;' + taggerUrl,
                                         items: [tagView]
                                     },
                                     {
@@ -787,6 +819,11 @@ Gemma.ExpressionExperimentDetails = Ext
                                         fieldLabel: 'Samples',
                                         html: this.renderSamples(e),
                                         width: 60
+                                    },
+                                    {
+                                        fieldLabel : 'Single Cell Metadata',
+                                        html : this.renderSingleCellMetadata( e ),
+                                        hidden : !e.isSingleCell
                                     },
                                     {
                                         fieldLabel: 'Profiles',
@@ -804,7 +841,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         + '</div>',
                                         width: 400,
                                         listeners: {
-                                            'afterrender': function (c) {
+                                            'afterrender' : function() {
                                                 window.jQuery('#downloads').find('i')
                                                     .qtip(
                                                         {
@@ -876,8 +913,8 @@ Gemma.ExpressionExperimentDetails = Ext
                 this.add(basics);
 
                 // adjust when user logs in or out
-                Gemma.Application.currentUser.on("logIn", function (userName, isAdmin) {
-                    var appScope = this;
+                Gemma.Application.currentUser.on( "logIn", function() {
+                    const appScope = this;
                     ExpressionExperimentController.canCurrentUserEditExperiment(this.experimentDetails.id, {
                         callback: function (editable) {
                             // console.log(this);

@@ -4,18 +4,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.util.ModelUtils;
-import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -59,13 +58,13 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
      * All the cell type assignments.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<CellTypeAssignmentValueObject> cellTypeAssignments;
+    private List<CellTypeAssignmentValueObject> cellTypeAssignments;
 
     /**
      * All the other cell-level characteristics.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
+    private List<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
 
     public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension, boolean excludeBioAssayIds, boolean excludeCellTypeIds, boolean excludeCharacteristicIds ) {
         super( singleCellDimension );
@@ -87,13 +86,15 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
         }
         if ( ModelUtils.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
             this.cellTypeAssignments = singleCellDimension.getCellTypeAssignments().stream()
+                    .sorted( Comparator.comparing( CellTypeAssignment::isPreferred, Comparator.reverseOrder() ).thenComparing( CellTypeAssignment.COMPARATOR ) )
                     .map( cellTypeAssignment -> new CellTypeAssignmentValueObject( cellTypeAssignment, excludeCellTypeIds ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toList() );
         }
         if ( ModelUtils.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
             this.cellLevelCharacteristics = singleCellDimension.getCellLevelCharacteristics().stream()
+                    .sorted( CellLevelCharacteristics.COMPARATOR )
                     .map( ( CellLevelCharacteristics clc ) -> new CellLevelCharacteristicsValueObject( clc, excludeCharacteristicIds ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toList() );
         }
     }
 }

@@ -759,6 +759,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee ) {
         return getPreferredSingleCellDimension( ee )
                 .map( scd -> {

@@ -60,6 +60,7 @@ import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.core.visualization.cellbrowser.CellBrowserService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -201,6 +202,8 @@ public class ExpressionExperimentController {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private CellBrowserService cellBrowserService;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -702,6 +705,26 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setSuitableForDEA( expressionExperimentService.isSuitableForDEA( ee ) );
+
+        if ( expressionExperimentService.isSingleCell( ee ) ) {
+            finalResult.setIsSingleCell( true );
+            SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig config = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                    .includeBioAssays( false )
+                    .includeCtas( true )
+                    .includeClcs( true )
+                    .includeCharacteristics( true )
+                    .includeIndices( false )
+                    .includeProtocol( true )
+                    .build();
+            singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee, config )
+                    .ifPresent( scd -> {
+                        finalResult.setSingleCellDimension( new SingleCellDimensionValueObject( scd, true, true, true ) );
+                    } );
+            if ( cellBrowserService.hasBrowser( ee ) ) {
+                finalResult.setHasCellBrowser( true );
+                finalResult.setCellBrowserUrl( cellBrowserService.getBrowserUrl( ee ) );
+            }
+        }
 
         return finalResult;
     }

@@ -569,6 +569,9 @@ public interface ExpressionExperimentDao
     @Nullable
     SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Create a single-cell dimension for a given experiment.
      * @throws IllegalArgumentException if the single-cell dimension is invalid
@@ -701,6 +704,11 @@ public interface ExpressionExperimentDao
      * Obtain a list of single-cell QTs.
      */
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    /**
+     * Indicate if the given experiment has single-cell quantitation types.
+     */
+    boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee );
 
     /**
      * Obtain a set of single-cell data vectors for the given quantitation type.

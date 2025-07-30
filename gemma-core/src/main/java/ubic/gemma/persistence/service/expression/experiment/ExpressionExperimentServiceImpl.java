@@ -35,7 +35,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -1574,6 +1573,13 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
         return this.expressionExperimentDao.getTaxon( bioAssaySet );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isSingleCell( ExpressionExperiment ee ) {
+        // TODO: check for assay annotations, etc.
+        return expressionExperimentDao.hasSingleCellQuantitationTypes( ee );
     }
 
     @Override

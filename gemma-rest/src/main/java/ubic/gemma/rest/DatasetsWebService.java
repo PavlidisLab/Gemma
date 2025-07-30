@@ -59,7 +59,6 @@ import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
-import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;

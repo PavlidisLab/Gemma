@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DescribableValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -18,7 +18,11 @@ import static java.util.Objects.requireNonNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @CommonsLog
-public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject<CellLevelCharacteristics> {
+public class CellLevelCharacteristicsValueObject extends DescribableValueObject<CellLevelCharacteristics> {
+
+    private String name;
+
+    private String description;
 
     private Set<CharacteristicValueObject> characteristics;
 
@@ -32,6 +36,7 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
     private Integer numberOfAssignedCells;
 
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
+        super( cellLevelCharacteristics );
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
                 .stream().map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );
