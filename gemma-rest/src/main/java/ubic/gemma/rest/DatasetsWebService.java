@@ -801,13 +801,13 @@ public class DatasetsWebService {
     }
 
     @GET
-    @Path("/{dataset}/publication")
+    @Path("/{dataset}/primaryPublication")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the primary publication of a dataset", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist or lacks a primary publication.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<BibliographicReferenceValueObject> getDatasetReference(
+    public ResponseDataObject<BibliographicReferenceValueObject> getDatasetPrimaryPublication(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ){
         Long eeId = datasetArgService.getEntityId( datasetArg );
@@ -817,6 +817,32 @@ public class DatasetsWebService {
             throw new NotFoundException(ee.getShortName() + " does not have a primary publication.");
         }
          return respond( new BibliographicReferenceValueObject(ref) );
+    }
+
+    @GET
+    @Path("/{dataset}/allPublications")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist or lacks associated publications.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
+            @PathParam( "dataset" ) DatasetArg<?> datasetArg
+    ){
+        Long eeId = datasetArgService.getEntityId( datasetArg );
+        ExpressionExperiment ee = expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
+        BibliographicReference prim_ref = ee.getPrimaryPublication();
+        Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
+        List<BibliographicReferenceValueObject> out = new ArrayList<>();
+        if (prim_ref != null){
+            out.add(  new BibliographicReferenceValueObject(prim_ref) );
+        }
+        for (BibliographicReference ref : other_refs) {
+            out.add( new BibliographicReferenceValueObject(ref));
+        }
+
+        return respond(out);
+
     }
 
     /**
