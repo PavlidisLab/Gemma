@@ -150,6 +150,7 @@ Gemma.ExpressionExperimentDetails = Ext
                             if ( cta.preferred ) {
                                 result += ' <b ext:qtip="This cell type annotation is marked as preferred and will be used for creating pseudo-bulks.">[Preferred]</b>';
                             }
+                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellTypeAssignment?cellTypeAssignment=' + cta.id + '&download=true">Download</a>';
                             result += '</li>';
                         }
                         result += '</ul>'

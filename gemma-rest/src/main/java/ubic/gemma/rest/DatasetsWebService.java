@@ -42,6 +42,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
@@ -96,6 +97,7 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.IOException;
@@ -1111,6 +1113,7 @@ public class DatasetsWebService {
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayIds,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Context HttpHeaders headers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -1166,7 +1169,7 @@ public class DatasetsWebService {
         }
     }
 
-    @GZIP
+    @GZIP(mediaTypes = { MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
@@ -1183,10 +1186,12 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             // TODO: implement CellTypeAssignmentArg
-            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaIdentifier,
             @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
-            @Context HttpHeaders headers
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Context HttpHeaders headers,
+            @Context HttpServletResponse response
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
@@ -1210,24 +1215,45 @@ public class DatasetsWebService {
             } else {
                 cta = found.iterator().next();
             }
-        } else if ( ctaName != null ) {
-            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
-            if ( cta == null ) {
-                throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        } else if ( ctaIdentifier != null ) {
+            CellTypeAssignment cta2;
+            try {
+                Long ctaId = Long.parseLong( ctaIdentifier );
+                cta2 = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaId );
+                if ( cta2 == null ) {
+                    throw new NotFoundException( "No cell type assignment with ID " + ctaIdentifier + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+                }
+            } catch ( NumberFormatException e ) {
+                cta2 = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaIdentifier );
+                if ( cta2 == null ) {
+                    throw new NotFoundException( "No cell type assignment with name " + ctaIdentifier + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+                }
             }
+            cta = cta2;
         } else {
             cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
                     .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-            return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayIds( useBioAssayId );
-                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+        if ( download ) {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.setUseBioAssayIds( useBioAssayId );
+                        writer.write( cta, dimension, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + cta.getId() + "_" + ( cta.getName() != null ? FileTools.cleanForFileName( cta.getName() ) : "cell_type" ) + ".tsv.gz\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
         } else {
-            return respond( new CellTypeAssignmentValueObject( cta, false ) );
+            MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+            if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+                return ( StreamingOutput ) output -> {
+                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                    writer.setUseBioAssayIds( useBioAssayId );
+                    writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                };
+            } else {
+                return respond( new CellTypeAssignmentValueObject( cta, false ) );
+            }
         }
     }
 
