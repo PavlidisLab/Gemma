@@ -49,13 +49,13 @@ public class SraFetcher {
         } else {
             URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
             log.debug( "There are non-SRX accessions, performing a search with " + searchUrl + " to resolve their IDs..." );
-            EntrezQuery query = retryTemplate.execute( ( ctx ) -> {
+            EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream in = searchUrl.openStream() ) {
                     return EntrezXmlUtils.getQuery( EntrezXmlUtils.parse( in ) );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
-            }, "fetching " + searchUrl );
+            }, ncbiApiKey ), "fetching " + searchUrl );
             List<SraExperimentPackage> experimentPackages = new ArrayList<>();
             for ( int i = 0; i < query.getTotalRecords(); i += BATCH_SIZE ) {
                 URL fetchUrl = EntrezUtils.fetch( "sra", query, EntrezRetmode.XML, "full", i, BATCH_SIZE, ncbiApiKey );
