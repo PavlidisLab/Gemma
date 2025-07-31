@@ -820,6 +820,10 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its data processing section indicate it is single-cell." );
                 return true;
             }
+            if ( sample.getChannels().stream().anyMatch( channel -> StringUtils.containsAnyIgnoreCase( channel.getExtractProtocol(), SINGLE_CELL_KEYWORDS ) ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its extraction protocol indicate it is single-cell." );
+                return true;
+            }
             // don't allow archive lookups because that would be too slow
             if ( mexDetector.hasSingleCellData( sample, false ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but has MEX data in its supplementary material." );
