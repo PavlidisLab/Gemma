@@ -2,6 +2,8 @@ package ubic.gemma.core.visualization.cellbrowser;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 public interface CellBrowserService {
 
     /**
@@ -13,4 +15,6 @@ public interface CellBrowserService {
      * Check if a particular {@link ExpressionExperiment} has a Cell Browser dataset configured.
      */
     boolean hasBrowser( ExpressionExperiment ee );
+
+    Collection<CellBrowserMapping> getCellBrowserMapping( ExpressionExperiment ee, boolean useRawColumnNames );
 }

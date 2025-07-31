@@ -12,9 +12,11 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatc
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.core.visualization.cellbrowser.CellBrowserMapping;
 import ubic.gemma.core.visualization.cellbrowser.CellBrowserService;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -121,6 +123,9 @@ public class ExpressionExperimentControllerHelperService {
                     .includeIndices( false )
                     .includeProtocol( true )
                     .build();
+            singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ).ifPresent( qt -> {
+                finalResult.setSingleCellQuantitationType( new QuantitationTypeValueObject( qt ) );
+            } );
             singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee, config )
                     .ifPresent( scd -> {
                         finalResult.setSingleCellDimension( new SingleCellDimensionValueObject( scd, true, true, true ) );
@@ -128,6 +133,26 @@ public class ExpressionExperimentControllerHelperService {
             if ( cellBrowserService.hasBrowser( ee ) ) {
                 finalResult.setHasCellBrowser( true );
                 finalResult.setCellBrowserUrl( cellBrowserService.getBrowserUrl( ee ) );
+                Collection<CellBrowserMapping> mapping = cellBrowserService.getCellBrowserMapping( ee, true );
+                Map<Long, String> f2m = new HashMap<>();
+                Map<Long, String> cta2m = new HashMap<>();
+                Map<Long, String> clc2m = new HashMap<>();
+                for ( CellBrowserMapping m : mapping ) {
+                    switch ( m.getType() ) {
+                        case FACTOR:
+                            f2m.put( m.getIdentifier(), m.getMetaColumnId() );
+                            break;
+                        case CELL_TYPE_ASSIGNMENT:
+                            cta2m.put( m.getIdentifier(), m.getMetaColumnId() );
+                            break;
+                        case CELL_LEVEL_CHARACTERISTICS:
+                            clc2m.put( m.getIdentifier(), m.getMetaColumnId() );
+                            break;
+                    }
+                }
+                finalResult.setCellBrowserFactorMetaNamesMap( f2m );
+                finalResult.setCellBrowserCellTypeAssignmentMetaNamesMap( cta2m );
+                finalResult.setCellBrowserCellLevelCharacteristicsMetaNamesMap( clc2m );
             }
         }
 

@@ -3,6 +3,8 @@ Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 const NUMBER_FORMATTER = Intl.NumberFormat();
 
+let htmlEncode = Ext.util.Format.htmlEncode;
+
 function formatNumber( n ) {
     return NUMBER_FORMATTER.format( n );
 }
@@ -130,44 +132,68 @@ Gemma.ExpressionExperimentDetails = Ext
                 // number not displayed, coerce to string.
             },
 
+            /**
+             *
+             * @param {ExpressionExperimentDetailsValueObject} ee
+             * @returns {string}
+             */
             renderSingleCellMetadata : function( ee ) {
                 let result = '';
                 if ( ee.singleCellDimension !== null ) {
-                    result += '<b>Number of cells:</b> ' + formatNumber( ee.singleCellDimension.numberOfCells );
+                    result += '<b>Number of cells:</b> ' + formatNumber( ee.singleCellDimension.numberOfCells ) + '<br/>';
                     if ( ee.singleCellDimension.cellTypeAssignments.length > 0 ) {
-                        result += '<br/>'
-                        result += '<b>Cell Type Assignments:</b>';
+                        result += '<b>Cell type assignments:</b>';
                         result += '<ul style="padding-left: 20px;">'
                         for ( let cta of ee.singleCellDimension.cellTypeAssignments ) {
                             result += '<li>'
-                            if ( cta.name !== null ) {
-                                result += '<b>' + cta.name + '</b>: '
+                            const name = cta.name || cta.protocol?.name || 'Unnamed';
+                            if ( ee.hasCellBrowser && cta.id in ee.cellBrowserCellTypeAssignmentMetaNamesMap ) {
+                                const metaId = ee.cellBrowserCellTypeAssignmentMetaNamesMap[cta.id]
+                                result += ' <a href="' + ee.cellBrowserUrl + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank" ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">' + htmlEncode( name ) + '</a>' + ':';
+                            } else {
+                                result += '<b>' + htmlEncode( name ) + ':</b> '
                             }
-                            result += ' <span ext:qtip="' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '">' + cta.cellTypes.length + ' cell types</span>';
+                            result += ' <span ext:qtip="Possible values: ' + htmlEncode( cta.cellTypes.map( ct => ct.value ).join( ', ' ) ) + '.">' + cta.cellTypes.length + ' cell types</span>';
                             // result += '<span>' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '</span>';
                             // if ( cta.protocol !== null ) {
                             //     result += ' <b>Protocol:</b> ' + cta.protocol.name;
                             // }
+                            if ( cta.numberOfAssignedCells < ee.singleCellDimension.numberOfCells ) {
+                                result += '; ' + formatNumber( cta.numberOfAssignedCells ) + ' cells are assigned a value';
+                            }
                             if ( cta.preferred ) {
                                 result += ' <b ext:qtip="This cell type annotation is marked as preferred and will be used for creating pseudo-bulks.">[Preferred]</b>';
                             }
-                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellTypeAssignment?cellTypeAssignment=' + cta.id + '&download=true" ext:qtip="Download cell type assignment in a tab-delimited format.">Download</a>';
+                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellTypeAssignment?quantitationType=' + ee.singleCellQuantitationType.id + '&cellTypeAssignment=' + cta.id + '&download=true" ext:qtip="Download ' + htmlEncode( name ) + ' in a tab-delimited format.">Download</a>';
                             result += '</li>';
                         }
                         result += '</ul>'
                     }
                     if ( ee.singleCellDimension.cellLevelCharacteristics.length > 0 ) {
-                        result += '<br/>'
-                        result += '<b>Cell-level Characteristics:</b>';
-                        result += '<ul>'
+                        result += '<b>Cell-level characteristics:</b>';
+                        result += '<ul style="padding-left: 20px;">'
                         for ( let clc of ee.singleCellDimension.cellLevelCharacteristics ) {
-                            result += '<li>' + clc.name + '</li>';
+                            result += '<li>'
+                            const name = clc.name || clc.category || 'Unnamed';
+                            result += '<b>' + htmlEncode( name ) + ':</b>';
+                            result += ' ' + '<span ext:qtip="Possible values: ' + htmlEncode( clc.characteristics.map( ct => ct.value ).join( ', ' ) ) + '.">' + formatNumber( clc.characteristics.length ) + ' values</span>';
+                            if ( clc.numberOfAssignedCells < ee.singleCellDimension.numberOfCells ) {
+                                result += '; ' + formatNumber( clc.numberOfAssignedCells ) + ' cells are assigned a value';
+                            }
+                            if ( ee.hasCellBrowser && clc.id in ee.cellBrowserCellLevelCharacteristicsMetaNamesMap ) {
+                                const metaId = ee.cellBrowserCellLevelCharacteristicsMetaNamesMap[clc.id]
+                                result += ' <a href="' + ee.cellBrowserUrl + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank"  ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">View</a>';
+                            }
+                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellLevelCharacteristics?quantitationType=' + ee.singleCellQuantitationType.id + '&cellLevelCharacteristics=' + clc.id + '&download=true" ext:qtip="Download ' + htmlEncode( name ) + ' in a tab-delimited format.">Download</a>';
+                            result += '</li>';
                         }
                         result += '</ul>'
                     }
-                }
-                if ( ee.hasCellBrowser ) {
-                    result += '<a href="' + ee.cellBrowserUrl + '" target="_blank">View in Cell Browser</a>'
+                    if ( ee.hasCellBrowser ) {
+                        result += '<a href="' + ee.cellBrowserUrl + '" target="_blank" ext:qtip="View ' + ee.shortName + ' in Cell Browser.">View in Cell Browser</a>'
+                        result += ' '
+                    }
+                    result += '<a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/singleCellDimension' + '?quantitationType=' + ee.singleCellQuantitationType.id + '&download=true" target="_blank" ext:qtip="Download all single-cell annotations for ' + htmlEncode( ee.shortName ) + ' in a tab-delimited format. This include all cell-type assignments and cell-level characteristics.">Download all single-cell annotations</a>'
                 }
                 return result;
             },

@@ -5,12 +5,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.analysis.AnalysisValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -26,7 +26,7 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     /**
      * A set of cell types that are assigned to individual cells.
      */
-    private Set<CharacteristicValueObject> cellTypes;
+    private List<CharacteristicValueObject> cellTypes;
 
     /**
      * A list of IDs, one-per-cell, that refers to one of the cell type labels in {@link #cellTypes}.
@@ -50,8 +50,9 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     public CellTypeAssignmentValueObject( CellTypeAssignment cellTypeAssignment, boolean excludeCellTypeIds ) {
         super( cellTypeAssignment );
         cellTypes = cellTypeAssignment.getCellTypes().stream()
+                .sorted( Characteristic.getComparator() )
                 .map( CharacteristicValueObject::new )
-                .collect( Collectors.toSet() );
+                .collect( Collectors.toList() );
         if ( !excludeCellTypeIds ) {
             try {
                 cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )

@@ -42,7 +42,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
@@ -53,6 +52,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
@@ -1098,7 +1098,7 @@ public class DatasetsWebService {
     /**
      * Retrieve the single-cell dimension for a given quantitation type.
      */
-    @GZIP
+    @GZIP(mediaTypes = { MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
@@ -1125,7 +1125,7 @@ public class DatasetsWebService {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+        if ( download ) {
             if ( excludeArg != null ) {
                 throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
             }
@@ -1133,11 +1133,30 @@ public class DatasetsWebService {
             if ( dimension == null ) {
                 throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
             }
-            return ( StreamingOutput ) output -> {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.setUseBioAssayIds( useBioAssayIds );
+                        writer.write( dimension, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt ) + "\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
+        } else if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
+            SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return Response.ok( ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
                 writer.setUseBioAssayIds( useBioAssayIds );
                 writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt ) ) + "\"" )
+                    .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .build();
         } else {
             SingleCellDimension dimension;
             Set<String> excludedFields;
@@ -1240,17 +1259,20 @@ public class DatasetsWebService {
                         writer.setUseBioAssayIds( useBioAssayId );
                         writer.write( cta, dimension, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
                     } )
-                    .header( "Content-Disposition", "attachment; filename=\"" + cta.getId() + "_" + ( cta.getName() != null ? FileTools.cleanForFileName( cta.getName() ) : "cell_type" ) + ".tsv.gz\"" )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, cta ) + "\"" )
                     .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
                     .build();
         } else {
             MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
             if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-                return ( StreamingOutput ) output -> {
-                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                    writer.setUseBioAssayIds( useBioAssayId );
-                    writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-                };
+                return Response.ok( ( StreamingOutput ) output -> {
+                            CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                            writer.setUseBioAssayIds( useBioAssayId );
+                            writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                        } )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, cta ) ) + "\"" )
+                        .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                        .build();
             } else {
                 return respond( new CellTypeAssignmentValueObject( cta, false ) );
             }
@@ -1270,7 +1292,9 @@ public class DatasetsWebService {
     public Object getDatasetCellLevelCharacteristics(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
-            @Context HttpHeaders headers
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Context HttpHeaders headers,
+            @Context HttpServletResponse response
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
@@ -1284,16 +1308,29 @@ public class DatasetsWebService {
         if ( dimension == null ) {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-            return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+        if ( download ) {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, dimension.getCellLevelCharacteristics() ) + "\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
         } else {
-            return respond( dimension.getCellLevelCharacteristics().stream()
-                    .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
-                    .collect( Collectors.toList() ) );
+            MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+            if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+                return Response.ok( ( StreamingOutput ) output -> {
+                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                            writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                        } )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, dimension.getCellLevelCharacteristics() ) ) + "\"" )
+                        .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                        .build();
+            } else {
+                return respond( dimension.getCellLevelCharacteristics().stream()
+                        .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
+                        .collect( Collectors.toList() ) );
+            }
         }
     }
 

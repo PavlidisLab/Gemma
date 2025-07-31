@@ -26,6 +26,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
 
@@ -33,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
@@ -134,14 +136,45 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * Indicate if this experiment is a single-cell experiment.
      */
     private boolean isSingleCell;
+    /**
+     * Featured single-cell quantitation type, if this is a single-cell experiment.
+     * <p>
+     * This is preferably set to the preferred single-cell quantitation type.
+     */
+    private QuantitationTypeValueObject singleCellQuantitationType;
+    /**
+     * The single-cell dimension associated with this experiment, if it is a single-cell experiment.
+     * <p>
+     * This is preferably set to the preferred single-cell dimension (i.e. the one associated to the preferred set of
+     * single-cell vectors).
+     */
     @Nullable
     private SingleCellDimensionValueObject singleCellDimension;
     /**
      * Indicate if this experiment has a Cell Browser associated with it.
      */
     private boolean hasCellBrowser;
+    /**
+     * URL for the Cell Browser, if available.
+     */
     @Nullable
     private String cellBrowserUrl;
+    private String cellBrowserDatasetName;
+    /**
+     * Mapping of experimental factor IDs to names for the Cell Browser.
+     */
+    @Nullable
+    private Map<Long, String> cellBrowserFactorMetaNamesMap;
+    /**
+     * Mapping of cell type assignment IDs to names for the Cell Browser.
+     */
+    @Nullable
+    private Map<Long, String> cellBrowserCellTypeAssignmentMetaNamesMap;
+    /**
+     * Mapping of cell-level characteristics IDs to names for the Cell Browser.
+     */
+    @Nullable
+    private Map<Long, String> cellBrowserCellLevelCharacteristicsMetaNamesMap;
 
     /**
      * Required when using the class as a spring bean.
@@ -154,9 +187,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         super( ee );
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
             AclSid sid ) {
         super( ee, aoi, sid );

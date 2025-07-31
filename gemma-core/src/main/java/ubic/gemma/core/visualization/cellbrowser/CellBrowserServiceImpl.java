@@ -1,19 +1,28 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static ubic.gemma.core.visualization.cellbrowser.CellBrowserUtils.constructDatasetName;
 
 @Service
 public class CellBrowserServiceImpl implements CellBrowserService {
-
-    private static final String UNALLOWED_CHARS = "[^A-Za-z0-9-_]";
 
     @Value("${gemma.cellBrowser.baseUrl}")
     private String baseUrl;
@@ -23,19 +32,42 @@ public class CellBrowserServiceImpl implements CellBrowserService {
 
     @Override
     public String getBrowserUrl( ExpressionExperiment ee ) {
-        return baseUrl + "?ds=" + urlEncode( getDatasetName( ee ) );
+        return baseUrl + "?ds=" + urlEncode( constructDatasetName( ee ) );
     }
 
     @Override
     public boolean hasBrowser( ExpressionExperiment ee ) {
-        return Files.exists( cellBrowserDir.resolve( getDatasetName( ee ) ) );
+        return Files.exists( cellBrowserDir.resolve( constructDatasetName( ee ) ) );
     }
 
-    private String getDatasetName( ExpressionExperiment ee ) {
-        return ee.getShortName().replaceAll( UNALLOWED_CHARS, "_" );
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CellBrowserMapping> getCellBrowserMapping( ExpressionExperiment ee, boolean useRawColumnNames ) {
+        Assert.isTrue( hasBrowser( ee ), ee + " does not have a Cell Browser." );
+        List<ExperimentalFactor> factors = CellBrowserUtils.getFactors( ee );
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig config = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeCtas( true )
+                .includeClcs( true )
+                .build();
+        SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee, config )
+                .orElseThrow( () -> new IllegalArgumentException( ee + " does not have a preferred single-cell dimension." ) );
+        if ( scd == null ) {
+            throw new IllegalArgumentException( "No SingleCellDimension found for " + ee + "." );
+        }
+        List<CellLevelCharacteristics> clcs = CellBrowserUtils.getCellLevelCharacteristics( scd );
+        return CellBrowserUtils.createMetadataMapping( factors, clcs, useRawColumnNames ).stream()
+                .filter( m -> hasMetaField( ee, m.getMetaColumnId() ) )
+                .collect( Collectors.toList() );
     }
 
-    private static String urlEncode( String s ) {
+    private boolean hasMetaField( ExpressionExperiment ee, String fieldName ) {
+        return Files.exists( cellBrowserDir.resolve( constructDatasetName( ee ) ).resolve( "metaFields" ).resolve( fieldName + ".bin.gz" ) );
+    }
+
+    private String urlEncode( String s ) {
         try {
             return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
         } catch ( UnsupportedEncodingException e ) {
