@@ -801,7 +801,7 @@ public class DatasetsWebService {
     }
 
     @GET
-    @Path("/{dataset}/primaryPublication")
+    @Path("/{dataset}/publications/primary")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the primary publication of a dataset", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -820,7 +820,7 @@ public class DatasetsWebService {
     }
 
     @GET
-    @Path("/{dataset}/allPublications")
+    @Path("/{dataset}/publications")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
