@@ -832,6 +832,17 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         assertThat( sraND ).isEmpty();
     }
 
+    @Test
+    public void testGSE169285() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE169285" );
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .isEmpty();
+        for ( GeoSample sample : series.getSamples() ) {
+            assertThat( detector.isSingleCell( sample, false ) ).isTrue();
+            assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                    .hasSize( 1 );
+        }
+    }
 
     @Test
     public void testHasSingleCellDataInSra() throws IOException {

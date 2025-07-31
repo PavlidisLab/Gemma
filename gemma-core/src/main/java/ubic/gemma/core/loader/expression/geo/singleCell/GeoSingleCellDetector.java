@@ -70,7 +70,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     private static final String[] SINGLE_CELL_KEYWORDS = ArrayUtils.addAll( SINGLE_NUCLEI_KEYWORDS, "single-cell", "single cell", "scRNA" );
 
-    private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
+    private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger", "cell ranger", "scanpy", "seurat" };
 
     private static final BioAssayMapper GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER = new GeoBioAssayMapper();
 
