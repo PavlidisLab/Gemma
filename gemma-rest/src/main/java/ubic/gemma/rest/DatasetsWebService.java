@@ -838,7 +838,7 @@ public class DatasetsWebService {
             out.add(  new BibliographicReferenceValueObject(prim_ref) );
         }
         for (BibliographicReference ref : other_refs) {
-            if (ref.getId() == prim_ref.getId()){
+            if ( Objects.equals( ref.getId(), prim_ref.getId() ) ){
                 continue;
             }
             out.add( new BibliographicReferenceValueObject(ref));
