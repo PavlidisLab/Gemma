@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.common.description.DescribableValueObject;
+import ubic.gemma.model.common.DescribableValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;

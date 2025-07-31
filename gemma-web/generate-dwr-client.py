@@ -29,7 +29,6 @@ else:
 
 with requests.Session() as session:
     session.auth = (username, password)
-    print(gemma_host_url)
     res = session.get(gemma_host_url + '/dwr/index.html')
     res.raise_for_status()
     s = BeautifulSoup(res.text, features='html.parser')

@@ -2,7 +2,7 @@ package ubic.gemma.model.analysis;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.common.description.DescribableValueObject;
+import ubic.gemma.model.common.DescribableValueObject;
 import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;

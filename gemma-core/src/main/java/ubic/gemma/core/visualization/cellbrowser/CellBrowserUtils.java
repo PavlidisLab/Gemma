@@ -2,7 +2,6 @@ package ubic.gemma.core.visualization.cellbrowser;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 public class CellBrowserUtils {
 

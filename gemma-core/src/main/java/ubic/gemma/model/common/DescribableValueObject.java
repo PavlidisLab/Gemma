@@ -1,9 +1,7 @@
-package ubic.gemma.model.common.description;
+package ubic.gemma.model.common;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.IdentifiableValueObject;
 
 import javax.annotation.Nullable;
 
@@ -27,5 +25,10 @@ public abstract class DescribableValueObject<T extends Describable> extends Iden
         super( entity );
         this.name = entity.getName();
         this.description = entity.getDescription();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ( name != null ? " Name=" + name : "" );
     }
 }
