@@ -184,7 +184,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                 const metaId = ee.cellBrowserCellLevelCharacteristicsMetaNamesMap[clc.id]
                                 result += ' <a href="' + ee.cellBrowserUrl + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank"  ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">View</a>';
                             }
-                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellLevelCharacteristics?quantitationType=' + ee.singleCellQuantitationType.id + '&cellLevelCharacteristics=' + clc.id + '&download=true" ext:qtip="Download ' + htmlEncode( name ) + ' in a tab-delimited format.">Download</a>';
+                            // TODO: result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellLevelCharacteristics?quantitationType=' + ee.singleCellQuantitationType.id + '&cellLevelCharacteristics=' + clc.id + '&download=true" ext:qtip="Download ' + htmlEncode( name ) + ' in a tab-delimited format.">Download</a>';
                             result += '</li>';
                         }
                         result += '</ul>'
