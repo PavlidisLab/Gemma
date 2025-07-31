@@ -89,8 +89,8 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 const downloadCoExpressionDataLink = String.format(
-                    "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
-                    + "onClick='Gemma.ExpressionExperimentDataFetch.fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
+                   "<span style='cursor:pointer'  ext:qtip='Download all co-expression  data in a tab-delimited format.'  "
+                   + "onClick='Gemma.ExpressionExperimentDataFetch.fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
                     ee.id);
 
                 return "Available" + downloadCoExpressionDataLink;
@@ -136,13 +136,14 @@ Gemma.ExpressionExperimentDetails = Ext
                     result += '<b>Number of cells:</b> ' + formatNumber( ee.singleCellDimension.numberOfCells );
                     if ( ee.singleCellDimension.cellTypeAssignments.length > 0 ) {
                         result += '<br/>'
-                        result += '<ul>'
+                        result += '<b>Cell Type Assignments:</b>';
+                        result += '<ul style="padding-left: 20px;">'
                         for ( let cta of ee.singleCellDimension.cellTypeAssignments ) {
                             result += '<li>'
                             if ( cta.name !== null ) {
                                 result += '<b>' + cta.name + '</b>: '
                             }
-                            result += ' <span ext:qtip="' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '">' + cta.cellTypes.length + ' cells types</span>';
+                            result += ' <span ext:qtip="' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '">' + cta.cellTypes.length + ' cell types</span>';
                             // result += '<span>' + cta.cellTypes.map( ct => ct.value ).join( ', ' ) + '</span>';
                             // if ( cta.protocol !== null ) {
                             //     result += ' <b>Protocol:</b> ' + cta.protocol.name;
@@ -150,13 +151,14 @@ Gemma.ExpressionExperimentDetails = Ext
                             if ( cta.preferred ) {
                                 result += ' <b ext:qtip="This cell type annotation is marked as preferred and will be used for creating pseudo-bulks.">[Preferred]</b>';
                             }
-                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellTypeAssignment?cellTypeAssignment=' + cta.id + '&download=true">Download</a>';
+                            result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellTypeAssignment?cellTypeAssignment=' + cta.id + '&download=true" ext:qtip="Download cell type assignment in a tab-delimited format.">Download</a>';
                             result += '</li>';
                         }
                         result += '</ul>'
                     }
                     if ( ee.singleCellDimension.cellLevelCharacteristics.length > 0 ) {
                         result += '<br/>'
+                        result += '<b>Cell-level Characteristics:</b>';
                         result += '<ul>'
                         for ( let clc of ee.singleCellDimension.cellLevelCharacteristics ) {
                             result += '<li>' + clc.name + '</li>';
@@ -832,10 +834,10 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: '<div id="downloads"> '
                                         + this.renderProcessedExpressionVectorCount(e)
                                         + '&nbsp;&nbsp;'
-                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
+                                           + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the filtered data in a tab-delimited format." onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
                                         + e.id
                                         + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
+                                           + '<span class="link" ext:qtip="Download the unfiltered data in a tab-delimited format." onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
                                         + e.id
                                         + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
                                         + '<i class="qtp fa fa-question-circle fa-fw"></i>'
