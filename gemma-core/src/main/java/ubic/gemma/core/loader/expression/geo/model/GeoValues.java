@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
@@ -441,7 +442,8 @@ public class GeoValues implements Serializable {
      * @param quantitationType quantitation type
      * @return integer array
      */
-    public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, Integer quantitationType ) {
+    @Nullable
+    public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, int quantitationType ) {
 
         if ( !platform.useDataFromGeo() ) {
             return null;

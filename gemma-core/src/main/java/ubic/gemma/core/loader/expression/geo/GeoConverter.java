@@ -14,10 +14,10 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import ubic.gemma.core.loader.expression.geo.model.GeoData;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.converter.Converter;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -27,23 +27,33 @@ import java.util.Collection;
 /**
  * @author paul
  */
-@SuppressWarnings("unused") // Possible external use
-public interface GeoConverter extends Converter<GeoData, Object> {
+public interface GeoConverter extends Converter<GeoData, Identifiable> {
 
     /**
-     * Remove old results. Call this prior to starting conversion of a full dataset.
+     * Clear the state of the converter.
+     * <p>
+     * Call this prior to starting conversion of a full dataset.
      */
     void clear();
 
     @Override
-    Collection<Object> convert( Collection<? extends GeoData> geoObjects );
+    Collection<Identifiable> convert( Collection<? extends GeoData> geoObjects );
 
-    Collection<Object> convert( Collection<? extends GeoData> geoObjects, boolean skipDataVectors );
+    /**
+     * Convert a collection of GeoData objects, retaining only elements of the specified data type.
+     */
+    <T extends Identifiable> Collection<T> convert( Collection<? extends GeoData> geoObjects, Class<T> dataType );
 
     @Override
-    Object convert( GeoData geoObject );
+    Identifiable convert( GeoData geoObject );
 
-    Object convert( GeoData geoObject, boolean skipDataVectors );
+    ArrayDesign convert( GeoPlatform geoPlatform );
+
+    Collection<ExpressionExperiment> convert( GeoSeries geoSeries );
+
+    Collection<ExpressionExperiment> convert( GeoSeries geoSeries, boolean skipDataVectors );
+
+    ExpressionExperiment convert( GeoDataset geoDataset, boolean skipDataVectors );
 
     /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
@@ -54,6 +64,7 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      */
     void convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet );
 
+    @Nullable
     Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
             throws IllegalArgumentException;
 
@@ -63,13 +74,6 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      *        overridden if the series uses more than one species, in which case it is always split up.
      */
     void setSplitByPlatform( boolean splitByPlatform );
-
-    /**
-     * Convert a vector of data to a vector of the appropriate type for the quantitation type.
-     * @return null if all the data is missing
-     */
-    @Nullable
-    Object[] convertData( String[] vector, QuantitationType qt );
 
     /**
      * @param forceConvertElements Set the behaviour when a platform that normally would not be loaded in detail is
@@ -82,5 +86,4 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      * @param i this is here for tests only. The default value should be okay otherwise.
      */
     void setElementLimitForStrictness( int i );
-
 }

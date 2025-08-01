@@ -34,6 +34,7 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -56,6 +57,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 
@@ -130,7 +132,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
         geoConverter.setForceConvertElements( true );
-        Collection<Object> arrayDesigns = geoConverter.convert( platforms );
+        Collection<Identifiable> arrayDesigns = geoConverter.convert( platforms );
 
         Collection<CompositeSequence> els = ( ( ArrayDesign ) arrayDesigns.iterator().next() ).getCompositeSequences();
 
@@ -203,7 +205,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 }
             }
 
-            Collection<Object> arrayDesigns = geoConverter.convert( platforms );
+            Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
             return persisterHelper.persist( arrayDesigns );
         }
 
@@ -260,8 +262,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         geoConverter.clear();
         geoConverter.setSplitByPlatform( splitByPlatform );
 
-        //noinspection unchecked
-        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
+        Collection<ExpressionExperiment> result = geoConverter.convert( series );
 
         this.check( result );
 
@@ -329,8 +330,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         Object obj = parseResult.iterator().next();
         GeoSeries series = ( GeoSeries ) obj;
-        //noinspection unchecked
-        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series, true );
+        Collection<ExpressionExperiment> result = geoConverter.convert( series, true );
 
         /*
          * We're never splitting by platform, so we should have only one result.
@@ -486,7 +486,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
     }
 
-    private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
+    private void checkForExisting( @Nullable Collection<DatabaseEntry> projectedAccessions ) {
         if ( projectedAccessions == null || projectedAccessions.isEmpty() ) {
             return; // that's okay, it might have been a GPL.
         }
@@ -890,7 +890,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
 
         // do a partial conversion. We will throw this away;
-        ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
+        ArrayDesign geoArrayDesign = geoConverter.convert( rawGEOPlatform );
 
         if ( geoArrayDesign == null ) {
             if ( !rawGEOPlatform.useDataFromGeo() ) {
