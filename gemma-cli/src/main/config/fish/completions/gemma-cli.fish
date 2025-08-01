@@ -1948,12 +1948,14 @@ complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -s h -l help -f --description 'Print this message'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -s n -l name -r -f
-complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -s t -l type -r -f
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -s d -l description -r -f
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseAdderCli' -s t -l type -r -a '(echo -e "ONTOLOGY\tOntology\nSEQUENCE\tSequence\nLITERATURE\tLiterature\nEXPRESSION\tExpression\nGENOME\tGenome\nOTHER\tOther\nPROTEIN\tProtein" 2>/dev/null)' -f --description 'Type of external database to create. Possible values are: ONTOLOGY, SEQUENCE, LITERATURE, EXPRESSION, GENOME, OTHER, PROTEIN.'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a addExternalDatabase --description 'Add a new external database.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -s h -l help -f --description 'Print this message'
 complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -s n -l name -r -f
-complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -s t -l type -r -f
+complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -s d -l description -r -f
+complete -c gemma-cli -n '__fish_seen_subcommand_from addExternalDatabase' -s t -l type -r -a '(echo -e "ONTOLOGY\tOntology\nSEQUENCE\tSequence\nLITERATURE\tLiterature\nEXPRESSION\tExpression\nGENOME\tGenome\nOTHER\tOther\nPROTEIN\tProtein" 2>/dev/null)' -f --description 'Type of external database to create. Possible values are: ONTOLOGY, SEQUENCE, LITERATURE, EXPRESSION, GENOME, OTHER, PROTEIN.'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.NcbiGeneLoaderCLI --description 'Load/update gene information from NCBI'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.NcbiGeneLoaderCLI' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.NcbiGeneLoaderCLI' -s h -l help -f --description 'Print this message'

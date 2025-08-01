@@ -1037,13 +1037,13 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExternalDatabaseAdderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--name|--type|-n|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --type -h -n -t" -- "$2")
+        if ! [[ "$current_option" =~ (--description|--name|--type|-d|-n|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--description --help --name --type -d -h -n -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' addExternalDatabase ' ]]; then
-        if ! [[ "$current_option" =~ (--name|--type|-n|-t) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --type -h -n -t" -- "$2")
+        if ! [[ "$current_option" =~ (--description|--name|--type|-d|-n|-t) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--description --help --name --type -d -h -n -t" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.NcbiGeneLoaderCLI ' ]]; then

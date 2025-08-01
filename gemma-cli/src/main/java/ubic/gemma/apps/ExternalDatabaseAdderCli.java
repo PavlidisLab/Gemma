@@ -22,12 +22,18 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.CLI;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+
+import javax.annotation.Nullable;
+
+import static ubic.gemma.cli.util.OptionsUtils.getEnumOptionValue;
 
 /**
  * Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.
@@ -40,6 +46,8 @@ public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
     private ExternalDatabaseService externalDatabaseService;
 
     private String name;
+    @Nullable
+    private String description;
     private DatabaseType type;
 
     @Override
@@ -60,18 +68,24 @@ public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "n" ).longOpt( "name" ).hasArg().required().build() );
-        options.addOption( Option.builder( "t" ).longOpt( "type" ).hasArg().required().build() );
+        options.addOption( Option.builder( "d" ).longOpt( "description" ).hasArg().build() );
+        OptionsUtils.addEnumOption( options, "t", "type", "Type of external database to create.", DatabaseType.class );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         this.name = commandLine.getOptionValue( "n" );
-        this.type = DatabaseType.valueOf( commandLine.getOptionValue( "t" ).toUpperCase() );
+        this.description = commandLine.getOptionValue( "d" );
+        this.type = getEnumOptionValue( commandLine, "t" );
     }
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
-        ExternalDatabase created = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( name, type ) );
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance( name, type );
+        if ( description != null ) {
+            ed.setDescription( description );
+        }
+        ExternalDatabase created = externalDatabaseService.create( ed );
         log.info( "Created " + created );
     }
 }
