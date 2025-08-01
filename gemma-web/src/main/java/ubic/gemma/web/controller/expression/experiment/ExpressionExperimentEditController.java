@@ -417,7 +417,7 @@ public class ExpressionExperimentEditController {
         form.setShortName( expressionExperiment.getShortName() );
         form.setName( expressionExperiment.getName() );
         form.setDescription( expressionExperiment.getDescription() );
-        form.setBioAssays( BioAssayValueObject.convert2ValueObjects( expressionExperiment.getBioAssays() ) );
+        form.setBioAssays( convert2ValueObjects( expressionExperiment.getBioAssays() ) );
         SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
                 .includeCtas( true )
                 .includeClcs( true )
@@ -426,6 +426,14 @@ public class ExpressionExperimentEditController {
                 .build();
         List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
         form.setSingleCellDimensions( scds.stream().map( SingleCellDimensionEditForm::new ).collect( Collectors.toList() ) );
+    }
+
+    private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
+        Collection<BioAssayValueObject> result = new HashSet<>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            result.add( new BioAssayValueObject( bioAssay, false ) );
+        }
+        return result;
     }
 
     /**

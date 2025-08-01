@@ -20,7 +20,7 @@
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="isOutlier" type="java.lang.Boolean">
-         <column name="IS_OUTLIER" not-null="false" unique="false" sql-type="TINYINT"/>
+         <column name="IS_OUTLIER" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="metadata" type="org.hibernate.type.MaterializedClobType">
          <column name="METADATA" not-null="false" unique="false" sql-type="text"/>

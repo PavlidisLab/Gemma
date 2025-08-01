@@ -1439,7 +1439,7 @@ public class ExpressionExperimentController {
 
         ee = expressionExperimentService.thawLite( ee );
         for ( BioAssay assay : ee.getBioAssays() ) {
-            if ( assay.getIsOutlier() != null && assay.getIsOutlier() ) {
+            if ( assay.getIsOutlier() ) {
                 count++;
             }
 

@@ -7,3 +7,7 @@ alter table CELL_LEVEL_CHARACTERISTICS
     add column DESCRIPTION text after NAME;
 -- do not allow more than one CLC with the same name for a given SCD, unless the name is null
 create unique index CELL_LEVEL_CHARACTERISTICS_NAME on CELL_LEVEL_CHARACTERISTICS (SINGLE_CELL_DIMENSION_FK, NAME);
+
+update BIO_ASSAY set IS_OUTLIER = false where IS_OUTLIER is null;
+alter table BIO_ASSAY
+    modify column IS_OUTLIER TINYINT not null default false;
