@@ -32,8 +32,7 @@ import java.util.stream.Stream;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
-import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 /**
  * Write a set of single-cell vectors to a simple tabular format.
@@ -200,16 +199,16 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     cellIds[w] = format( dimension.getCellIds().get( indices[j] ) );
                     switch ( representation ) {
                         case FLOAT:
-                            vals[w] = format( ( ( float[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( float[] ) vec )[j] );
                             break;
                         case DOUBLE:
-                            vals[w] = format( ( ( double[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( double[] ) vec )[j] );
                             break;
                         case INT:
-                            vals[w] = format( ( ( int[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( int[] ) vec )[j] );
                             break;
                         case LONG:
-                            vals[w] = format( ( ( long[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( long[] ) vec )[j] );
                             break;
                         default:
                             throw new UnsupportedOperationException( "Unsupported representation " + representation + " for writing tabular data." );

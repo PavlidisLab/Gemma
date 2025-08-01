@@ -51,6 +51,7 @@ public class QuantitationTypeUtils {
         }
     }
 
+    @Nonnull
     public static Number getDefaultValueAsNumber( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {

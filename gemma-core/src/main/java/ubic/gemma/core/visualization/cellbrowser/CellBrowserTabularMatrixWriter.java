@@ -5,9 +5,7 @@ import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleC
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.io.SingleCellExpressionDataMatrixWriter;
-import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -23,6 +21,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static ubic.gemma.core.util.TsvUtils.formatFast;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultValueAsNumber;
 
 /**
  * Generate a tabular matrix format compatible with <a href="https://cellbrowser.readthedocs.io/en/master/tabsep.html">Cell Browser</a>.
@@ -97,8 +98,8 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
         if ( scaleType != null ) {
             String valueIfMissing;
             try {
-                Number val = QuantitationTypeUtils.getDefaultValueAsNumber( vector.getQuantitationType() );
-                valueIfMissing = TsvUtils.format( ScaleTypeConversionUtils.convertScalar( val, vector.getQuantitationType(), scaleType ) );
+                Number val = getDefaultValueAsNumber( vector.getQuantitationType() );
+                valueIfMissing = formatFast( ScaleTypeConversionUtils.convertScalar( val, vector.getQuantitationType(), scaleType ) );
             } catch ( UnsupportedQuantitationScaleConversionException e ) {
                 throw new RuntimeException( e );
             }
@@ -108,19 +109,18 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
                 throw new RuntimeException( e );
             }
         } else {
-            String valueIfMissing = TsvUtils.format( QuantitationTypeUtils.getDefaultValueAsNumber( vector.getQuantitationType() ) );
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case DOUBLE:
-                    writeVector( vector, vector.getDataAsDoubles(), PrimitiveType.DOUBLE, cs2gene, valueIfMissing, writer );
+                    writeVector( vector, vector.getDataAsDoubles(), PrimitiveType.DOUBLE, cs2gene, formatFast( ( Double ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
                     break;
                 case FLOAT:
-                    writeVector( vector, vector.getDataAsFloats(), PrimitiveType.FLOAT, cs2gene, valueIfMissing, writer );
+                    writeVector( vector, vector.getDataAsFloats(), PrimitiveType.FLOAT, cs2gene, formatFast( ( Float ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
                     break;
                 case LONG:
-                    writeVector( vector, vector.getDataAsLongs(), PrimitiveType.LONG, cs2gene, valueIfMissing, writer );
+                    writeVector( vector, vector.getDataAsLongs(), PrimitiveType.LONG, cs2gene, formatFast( ( Long ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
                     break;
                 case INT:
-                    writeVector( vector, vector.getDataAsInts(), PrimitiveType.INT, cs2gene, valueIfMissing, writer );
+                    writeVector( vector, vector.getDataAsInts(), PrimitiveType.INT, cs2gene, formatFast( ( Integer ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
                     break;
             }
         }
@@ -138,16 +138,16 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
             if ( k < vector.getDataIndices().length && i == vector.getDataIndices()[k] ) {
                 switch ( representation ) {
                     case DOUBLE:
-                        writer.append( TsvUtils.format( ( ( double[] ) data )[k] ) );
+                        writer.append( formatFast( ( ( double[] ) data )[k] ) );
                         break;
                     case FLOAT:
-                        writer.append( TsvUtils.format( ( ( float[] ) data )[k] ) );
+                        writer.append( formatFast( ( ( float[] ) data )[k] ) );
                         break;
                     case LONG:
-                        writer.append( TsvUtils.format( ( ( long[] ) data )[k] ) );
+                        writer.append( formatFast( ( ( long[] ) data )[k] ) );
                         break;
                     case INT:
-                        writer.append( TsvUtils.format( ( ( int[] ) data )[k] ) );
+                        writer.append( formatFast( ( ( int[] ) data )[k] ) );
                         break;
                 }
                 k++;
