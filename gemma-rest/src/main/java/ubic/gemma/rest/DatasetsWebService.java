@@ -805,26 +805,13 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist or lacks associated publications.",
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
             @PathParam( "dataset" ) DatasetArg<?> datasetArg
     ){
-        Long eeId = datasetArgService.getEntityId( datasetArg );
-        ExpressionExperiment ee = expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
-        BibliographicReference prim_ref = ee.getPrimaryPublication();
-        Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
-        List<BibliographicReferenceValueObject> out = new ArrayList<>();
-        if (prim_ref != null){
-            out.add(  new BibliographicReferenceValueObject(prim_ref) );
-        }
-        for (BibliographicReference ref : other_refs) {
-            if ( Objects.equals( ref.getId(), prim_ref.getId() ) ){
-                continue;
-            }
-            out.add( new BibliographicReferenceValueObject(ref));
-        }
 
+        List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
         return respond(out);
 
     }
