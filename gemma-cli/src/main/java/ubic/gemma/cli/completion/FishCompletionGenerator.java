@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.main.GemmaCLI;
 import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.cli.util.EnumeratedConverter;
@@ -33,6 +34,7 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
     private final Locale locale;
 
     public FishCompletionGenerator( String executableName, Set<String> allSubcommands, MessageSource messageSource, Locale locale ) {
+        Assert.isTrue( StringUtils.isNotBlank( executableName ), "Executable name cannot be blank." );
         this.executableName = executableName;
         this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).sorted().collect( Collectors.joining( " " ) );
         this.messageSource = messageSource;

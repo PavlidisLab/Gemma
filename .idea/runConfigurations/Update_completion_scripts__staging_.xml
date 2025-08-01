@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Update completion scripts" type="ShConfigurationType">
+  <configuration default="false" name="Update completion scripts (staging)" type="ShConfigurationType">
     <option name="SCRIPT_TEXT" value="" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="$PROJECT_DIR$/gemma-cli/update-completion-scripts.sh" />
@@ -11,7 +11,9 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="EXECUTE_IN_TERMINAL" value="true" />
     <option name="EXECUTE_SCRIPT_FILE" value="true" />
-    <envs />
+    <envs>
+      <env name="GEMMA_CLI_ALIAS" value="gemma-cli-staging" />
+    </envs>
     <method v="2">
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="clean package -pl gemma-cli -am -DskipTests" />
     </method>
