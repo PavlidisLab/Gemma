@@ -430,7 +430,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     /*
      * NPE in converter, not reproduced here.
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testConvertGSE235534() throws Exception {
         InputStream is = new GZIPInputStream(
@@ -445,8 +444,37 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        assertEquals( 1, ees.size() );
-        assertEquals( 18, ees.iterator().next().getBioAssays().size() );
+        Assertions.assertThat( ees ).singleElement()
+                .satisfies( ee -> {
+                    Assertions.assertThat( ee.getBioAssays() )
+                            .hasSize( 23 )
+                            .extracting( BioAssay::getName )
+                            .containsExactlyInAnyOrder(
+                                    "BRG1KD_ESC_RNAseq_rep1",
+                                    "BRG1KD_ESC_RNAseq_rep2",
+                                    "BRG1KD_ESC_RNAseq_rep3",
+                                    "Control_ESC_RNAseq_rep1",
+                                    "Control_ESC_RNAseq_rep2",
+                                    "Control_ESC_RNAseq_rep3",
+                                    "BRG1KD_NPC_day3_scRNAseq_rep1",
+                                    "BRG1KD_NPC_day3_scRNAseq_rep2",
+                                    "BRG1KD_NPC_day6_scRNAseq_rep1",
+                                    "BRG1KD_NPC_day6_scRNAseq_rep2",
+                                    "BRG1KD_NPC_day9_scRNAseq_rep1",
+                                    "BRG1KD_NPC_day9_scRNAseq_rep2",
+                                    "Control_NPC_day3_scRNAseq_rep1",
+                                    "Control_NPC_day3_scRNAseq_rep2",
+                                    "Control_NPC_day6_scRNAseq_rep1",
+                                    "Control_NPC_day6_scRNAseq_rep2",
+                                    "Control_NPC_day9_scRNAseq_rep1",
+                                    "Control_NPC_day9_scRNAseq_rep2",
+                                    "Control_ESC_K27ac",
+                                    "PROTAC_ESC_K27ac",
+                                    "Control_d3NPC_K27ac",
+                                    "PROTAC_d3NPC_K27ac",
+                                    "BRG1KD_d3NPC_K27ac"
+                            );
+                } );
     }
 
 
