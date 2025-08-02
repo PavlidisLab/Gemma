@@ -1510,7 +1510,7 @@ public class DatasetsWebService {
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
                     // we do not want to use cursor fetch because it requires a lot of memory on the database server
-                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force, false );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {

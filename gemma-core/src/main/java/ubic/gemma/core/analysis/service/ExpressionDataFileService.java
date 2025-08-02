@@ -212,7 +212,7 @@ public interface ExpressionDataFileService {
      * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)
      * @throws RejectedExecutionException if the queue for creating data files is full
      */
-    Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, boolean autoFlush ) throws RejectedExecutionException;
+    Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws RejectedExecutionException;
 
     int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
 
@@ -242,6 +242,10 @@ public interface ExpressionDataFileService {
      * @param fetchSize                 fetch size to use for streaming, or load everything in memory of zero or less
      * @param useCursorFetchIfSupported use cursor fetching if supported by the database. It is not recommended to use
      *                                  this for public-facing operations because it may require a lot of memory
+     * @param destDir                   the destination directory to write the data to. It is now allowed to write under
+     *                                  the {@code ${gemma.appdata.home}/dateFiles} directory using this method, use
+     *                                  {@link #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)}
+     *                                  instead.
      * @param forceWrite                whether to force write and ignore any pre-existing directory
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
@@ -354,7 +358,7 @@ public interface ExpressionDataFileService {
     /**
      * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)
      */
-    Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
+    Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws FilteringException, IOException;
 
     /**
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)

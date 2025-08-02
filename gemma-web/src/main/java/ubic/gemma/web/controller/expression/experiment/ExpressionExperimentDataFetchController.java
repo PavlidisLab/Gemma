@@ -343,7 +343,7 @@ public class ExpressionExperimentDataFetchController {
                     }
                 } else {
                     ExpressionExperiment finalEe2 = ee;
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, filtered, false )
                             .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) ) ) {
                         f = lockedPath.getPath();
                     } catch ( FilteringException e ) {

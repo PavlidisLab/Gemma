@@ -223,6 +223,7 @@ public interface ExpressionExperimentDao
 
     Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
+    @Nullable
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
     /**
