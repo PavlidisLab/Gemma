@@ -267,7 +267,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private void writeBarcodes( SingleCellDimension dimension, int sampleIndex, Writer out, boolean autoFlush ) throws IOException {
         for ( String cellId : dimension.getCellIdsBySample( sampleIndex ) ) {
-            out.write( ( format( cellId ) + "\n" ) );
+            out.write( format( cellId ) + "\n" );
             if ( autoFlush ) {
                 out.flush();
             }

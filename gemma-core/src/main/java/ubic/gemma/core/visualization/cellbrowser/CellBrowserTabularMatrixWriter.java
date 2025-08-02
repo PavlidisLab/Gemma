@@ -81,14 +81,15 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
     }
 
     private void writeHeader( SingleCellDimension singleCellDimension, Writer writer ) throws IOException {
-        writer.append( "gene" );
+        writer.write( "gene" );
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
             BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
             for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
-                writer.append( "\t" ).append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
+                writer.write( "\t" );
+                writer.write( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
             }
         }
-        writer.append( "\n" );
+        writer.write( "\n" );
         if ( autoFlush ) {
             writer.flush();
         }
@@ -134,36 +135,37 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
         int numCells = vector.getSingleCellDimension().getNumberOfCells();
         int k = 0;
         for ( int i = 0; i < numCells; i++ ) {
-            writer.append( "\t" );
+            writer.write( "\t" );
             if ( k < vector.getDataIndices().length && i == vector.getDataIndices()[k] ) {
                 switch ( representation ) {
                     case DOUBLE:
-                        writer.append( formatFast( ( ( double[] ) data )[k] ) );
+                        writer.write( formatFast( ( ( double[] ) data )[k] ) );
                         break;
                     case FLOAT:
-                        writer.append( formatFast( ( ( float[] ) data )[k] ) );
+                        writer.write( formatFast( ( ( float[] ) data )[k] ) );
                         break;
                     case LONG:
-                        writer.append( formatFast( ( ( long[] ) data )[k] ) );
+                        writer.write( formatFast( ( ( long[] ) data )[k] ) );
                         break;
                     case INT:
-                        writer.append( formatFast( ( ( int[] ) data )[k] ) );
+                        writer.write( formatFast( ( ( int[] ) data )[k] ) );
                         break;
                 }
                 k++;
             } else {
-                writer.append( valueIfMissing );
+                writer.write( valueIfMissing );
             }
         }
-        writer.append( "\n" );
+        writer.write( "\n" );
     }
 
     private void writeDesignElement( CompositeSequence designElement, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
-        writer.append( designElement.getName() );
+        writer.write( designElement.getName() );
         if ( cs2gene != null && cs2gene.containsKey( designElement ) ) {
             for ( Gene gene : cs2gene.get( designElement ) ) {
                 if ( gene.getOfficialSymbol() != null ) {
-                    writer.append( "|" ).append( gene.getOfficialSymbol() );
+                    writer.write( "|" );
+                    writer.write( gene.getOfficialSymbol() );
                 }
             }
         }
