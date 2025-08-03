@@ -1,5 +1,15 @@
 ## Updates
 
+### Update 2.9.1
+
+Add a `protocol` parameter to `getDatasetsCellTypeAssignment` endpoint to locate a cell type assignment by the name of
+its protocol. The list of available protocols is not publicly available, but some values can be discovered by looking up
+the response of the API endpoint. The most common protocol is `author-submitted` which allow one to retrieve
+author-submitted cell types.
+
+The response of `getAnnotationsParents` and `getAnnotationsChildren` are now nested in a `data` object. This occurred
+in the 1.32.1 release of Gemma, but the REST API did not have an update reflecting this breaking change.
+
 ### Update 2.9.0
 
 #### Single-cell data in Gemma
