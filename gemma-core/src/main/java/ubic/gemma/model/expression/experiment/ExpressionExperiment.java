@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
+import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -52,8 +53,16 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public static final int MAX_NAME_LENGTH = 255;
 
+    /**
+     * Primary accession for this experiment, usually from GEO.
+     */
     @Nullable
     private DatabaseEntry accession;
+
+    /**
+     * Other accessions associated with this experiment.
+     */
+    private Set<DatabaseEntry> otherAccessions = new HashSet<>();
 
     /**
      * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
@@ -141,6 +150,21 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
+    }
+
+    @IndexedEmbedded
+    public Set<DatabaseEntry> getOtherAccessions() {
+        return otherAccessions;
+    }
+
+    @Transient
+    public Set<DatabaseEntry> getAllAccessions() {
+        Set<DatabaseEntry> allAccessions = new HashSet<>();
+        if ( this.accession != null ) {
+            allAccessions.add( this.accession );
+        }
+        allAccessions.addAll( this.otherAccessions );
+        return allAccessions;
     }
 
     @Override
@@ -258,6 +282,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setAccession( @Nullable DatabaseEntry accession ) {
         this.accession = accession;
+    }
+
+    public void setOtherAccessions( Set<DatabaseEntry> otherAccessions ) {
+        this.otherAccessions = otherAccessions;
     }
 
     public void setBatchConfound( @Nullable String batchConfound ) { // FIXME don't use a string for this
