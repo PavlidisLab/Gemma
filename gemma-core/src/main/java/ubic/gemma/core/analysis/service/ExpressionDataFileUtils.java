@@ -25,7 +25,9 @@ public class ExpressionDataFileUtils {
     private static final String SC_DATA_SUFFIX = ".scdata";
     public static final String MEX_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".mex";
     public static final String TABULAR_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".tsv.gz";
-    public static final String CELL_BROWSER_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".cellbrowser.tsv.gz";
+    private static final String SC_METADATA_SUFFIX = ".scmetadata";
+    public static final String TABULAR_SC_METADATA_SUFFIX = SC_METADATA_SUFFIX + ".tsv.gz";
+    public static final String CELL_BROWSER_SC_DATA_SUFFIX = SC_METADATA_SUFFIX + ".cellbrowser.tsv.gz";
 
     // for single-cell metadata
     private static final String SC_METADATA_SUFFIX = ".scmetadata";
