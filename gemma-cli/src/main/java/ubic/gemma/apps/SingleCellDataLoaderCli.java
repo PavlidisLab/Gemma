@@ -61,7 +61,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_NAME = "clcName",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile",
-            REPLACE_CELL_LEVEL_CHARACTERISTICS_OPTION = "replaceClc",
+            REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION = "replaceClc",
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
             IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
 
@@ -143,7 +143,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Path otherCellLevelCharacteristicsFile;
     @Nullable
     private List<String> otherCellLevelCharacteristicsNames;
-    private boolean replaceExistingCellLevelCharacteristics;
+    private boolean replaceExistingOtherCellLevelCharacteristics;
     private boolean inferSamplesFromCellIdsOverlap;
     private boolean ignoreUnmatchedCellIds;
     @Nullable
@@ -248,7 +248,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .valueSeparator( ',' )
                 .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
                 .build() );
-        options.addOption( REPLACE_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics", false,
+        options.addOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics", false,
                 String.format( "Replace existing cell-level characteristics with the same names. The %s and %s options must be set.", formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) );
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
         options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
@@ -350,7 +350,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             otherCellLevelCharacteristicsNames = null;
         }
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
-        replaceExistingCellLevelCharacteristics = hasOption( commandLine, REPLACE_CELL_LEVEL_CHARACTERISTICS_OPTION,
+        replaceExistingOtherCellLevelCharacteristics = hasOption( commandLine, REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION,
                 requires( allOf( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) ) );
 
         // applies to both cell type assignments and other cell-level characteristics
@@ -547,7 +547,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder
                     .otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile )
                     .otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames )
-                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingCellTypeAssignments );
+                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics );
         }
         // infer only on-demand
         configBuilder.inferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );
