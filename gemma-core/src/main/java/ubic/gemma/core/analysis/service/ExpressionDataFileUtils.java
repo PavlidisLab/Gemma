@@ -27,6 +27,10 @@ public class ExpressionDataFileUtils {
     public static final String TABULAR_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".tsv.gz";
     public static final String CELL_BROWSER_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".cellbrowser.tsv.gz";
 
+    // for single-cell metadata
+    private static final String SC_METADATA_SUFFIX = ".scmetadata";
+    public static final String CELL_BROWSER_SC_METADATA_SUFFIX = SC_METADATA_SUFFIX + ".cellbrowser.tsv.gz";
+
     // for bulk (raw or processed vectors)
     private static final String BULK_DATA_SUFFIX = ".data";
     public static final String TABULAR_BULK_DATA_FILE_SUFFIX = BULK_DATA_SUFFIX + ".txt.gz";
@@ -55,6 +59,10 @@ public class ExpressionDataFileUtils {
      */
     public static String getDataOutputFilename( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType type, String suffix ) {
         return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( type, QuantitationType::getName ) + "_" + formatBioAssaysFilename( assays ) + "_expmat.unfilt" + suffix;
+    }
+
+    public static String getMetadataOutputFilename( ExpressionExperiment ee, QuantitationType qt, String suffix ) {
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( qt, QuantitationType::getName ) + suffix;
     }
 
     /**

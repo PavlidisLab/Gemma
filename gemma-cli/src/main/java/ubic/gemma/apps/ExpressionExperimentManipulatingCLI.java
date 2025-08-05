@@ -30,7 +30,6 @@ import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
 import ubic.gemma.cli.util.OptionsUtils;
-import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -208,8 +207,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      *
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
+     * @param allowStandardLocation if true, the standard location option will be added
      */
-    protected void addExpressionDataFileOptions( Options options, String what ) {
+    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
         OptionGroup og = new OptionGroup();
         addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
                 .longOpt( "output-file" ).hasArg().type( Path.class )
@@ -217,13 +217,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         og.addOption( Option.builder( OUTPUT_DIR_OPTION )
                 .longOpt( "output-dir" ).hasArg().type( Path.class )
                 .desc( "Write " + what + " inside the given directory." ).build() );
-        og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
-                .longOpt( "standard-location" )
-                .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
-                .build() );
+        if ( allowStandardLocation ) {
+            og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
+                    .longOpt( "standard-location" )
+                    .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
+                    .build() );
+        }
         addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
                 .longOpt( "stdout" )
-                .desc( "Write " + what + " to standard output. This option is incompatible with -outputFile, -outputDir and -standardLocation." )
+                .desc( "Write " + what + " to standard output." + ( !allowStandardLocation ? " This is the default if no other destination is selected." : "" ) )
                 .build() );
         options.addOptionGroup( og );
     }
@@ -273,10 +275,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         }
     }
 
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine ) throws ParseException {
+    /**
+     * Obtain the result of the expression data file options added by {@link #addExpressionDataFileOptions(Options, String, boolean)}.
+     * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
+     *                              other destination is selected. Otherwise, standard output will be used as a default.
+     */
+    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
         if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
-            log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
-            return new ExpressionDataFileResult( true, false, null, null );
+            if ( allowStandardLocation ) {
+                log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
+                return new ExpressionDataFileResult( true, false, null, null );
+            } else {
+                log.debug( "No expression data file options provided, defaulting to -standardOutput/--standard-output." );
+                return new ExpressionDataFileResult( false, true, null, null );
+            }
         }
         return new ExpressionDataFileResult(
                 commandLine.hasOption( STANDARD_LOCATION_OPTION ),

@@ -119,7 +119,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( "noCursorFetch", "no-cursor-fetch", false, "Disable cursor fetching on the database server and produce results immediately. This is incompatible with -noStreaming." );
         options.addOption( "noAutoFlush", "no-auto-flush", false, "Do not flush the output stream after writing each vector." );
 
-        addExpressionDataFileOptions( options, "single-cell expression data" );
+        addExpressionDataFileOptions( options, "single-cell expression data", true );
 
         // slicing individual samples
         addSingleExperimentOption( options, Option.builder( "samples" )
@@ -177,7 +177,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( commandLine.hasOption( "scaleType" ) ) {
             this.scaleType = getEnumOptionValue( commandLine, "scaleType" );
         }
-        this.result = getExpressionDataFileResult( commandLine );
+        this.result = getExpressionDataFileResult( commandLine, true );
         if ( this.result.isStandardLocation() && scaleType != null ) {
             throw new ParseException( "Cannot use -standardLocation/--standard-location and -scaleType/--scale-type at the same time." );
         }
@@ -358,7 +358,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     assert fileName != null;
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName, true );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName, autoFlush );
                 }
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
@@ -428,10 +428,10 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ".cellIds.txt.gz" ) );
-                    try ( PrintStream printStream = new PrintStream( openOutputFile( fileName ), true, StandardCharsets.UTF_8.name() );
+                    try ( PrintStream printStream = new PrintStream( openOutputFile( fileName ), autoFlush, StandardCharsets.UTF_8.name() );
                             Stream<String> stream = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                         if ( stream != null ) {
-                            stream.forEach( getCliContext().getOutputStream()::println );
+                            stream.forEach( printStream::println );
                             return 0;
                         } else {
                             throw new RuntimeException( "Could not find cell IDs for " + qt + "." );

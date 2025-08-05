@@ -47,7 +47,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "differential expression data" );
+        addExpressionDataFileOptions( options, "differential expression data", true );
         addSingleExperimentOption( options, "a", "analysis", true, "Identifier for an analysis." );
         addForceOption( options );
     }
@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         analysisIdentifier = commandLine.getOptionValue( "a" );
-        result = getExpressionDataFileResult( commandLine );
+        result = getExpressionDataFileResult( commandLine, true );
     }
 
     @Override

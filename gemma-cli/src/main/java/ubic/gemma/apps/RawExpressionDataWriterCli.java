@@ -61,7 +61,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        addExpressionDataFileOptions( options, "raw data" );
+        addExpressionDataFileOptions( options, "raw data", true );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation/--standard-location." ).build() );
         OptionsUtils.addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the data. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
         addForceOption( options );
@@ -69,7 +69,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        this.result = getExpressionDataFileResult( commandLine );
+        this.result = getExpressionDataFileResult( commandLine, true );
         this.samples = commandLine.getOptionValues( "samples" );
         this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
         if ( this.result.isStandardLocation() && this.samples != null ) {

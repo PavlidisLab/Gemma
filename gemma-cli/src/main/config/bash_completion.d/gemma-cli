@@ -359,13 +359,19 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.CellLevelMetadataWriterCli ' ]]; then
-        if ! [[ "$current_option" =~ (--experiment|--quantitation-type|-e|-qt) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --quantitation-type --use-bioassay-ids --use-raw-column-names -e -h -qt -useBioAssayIds -useRawColumnNames" -- "$2")
+        if ! [[ "$current_option" =~ (--experiment|--output-dir|--output-file|--quantitation-type|-d|-e|-o|-qt) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--output-dir|--output-file|-d|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' getSingleCellMetadata ' ]]; then
-        if ! [[ "$current_option" =~ (--experiment|--quantitation-type|-e|-qt) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --quantitation-type --use-bioassay-ids --use-raw-column-names -e -h -qt -useBioAssayIds -useRawColumnNames" -- "$2")
+        if ! [[ "$current_option" =~ (--experiment|--output-dir|--output-file|--quantitation-type|-d|-e|-o|-qt) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--output-dir|--output-file|-d|-o) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExperimentalDesignImportCli ' ]]; then
