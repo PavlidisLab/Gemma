@@ -3,9 +3,13 @@ package ubic.gemma.core.datastructure.matrix;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -24,6 +28,25 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
             for ( int j = 0; j < row.length; j++ ) {
                 matrix.setQuick( i, j, row[j] );
                 hmv |= Double.isNaN( row[j] );
+            }
+        }
+        this.hasMissingValues = hmv;
+    }
+
+    private BulkExpressionDataDoubleMatrix( @Nullable ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, QuantitationType quantitationType, List<CompositeSequence> designElements, DoubleMatrix2D matrix ) {
+        super( expressionExperiment, bioAssayDimension, quantitationType, designElements );
+        Assert.isTrue( bioAssayDimension.getBioAssays().size() == matrix.columns(),
+                "Number of bioassays must match the number of columns in the matrix." );
+        Assert.isTrue( designElements.size() == matrix.rows(),
+                "Number of design elements must match the number of rows in the matrix." );
+        this.matrix = matrix;
+        boolean hmv = false;
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                if ( Double.isNaN( matrix.getQuick( i, j ) ) ) {
+                    hmv = true;
+                    break;
+                }
             }
         }
         this.hasMissingValues = hmv;
@@ -56,6 +79,21 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     @Override
     public Double[] getRow( int index ) {
         return ArrayUtils.toObject( getRowAsDoubles( index ) );
+    }
+
+    @Override
+    public ExpressionDataMatrix<Double> sliceRows( List<CompositeSequence> designElements ) {
+        int[] rows = new int[designElements.size()];
+        for ( int i = 0; i < designElements.size(); i++ ) {
+            CompositeSequence de = designElements.get( i );
+            int rowIndex = getRowIndex( de );
+            if ( rowIndex == -1 ) {
+                throw new IllegalArgumentException( de + " is not found in the matrix." );
+            }
+            rows[i] = rowIndex;
+        }
+        return new BulkExpressionDataDoubleMatrix( getExpressionExperiment(), getBioAssayDimension(),
+                getQuantitationType(), designElements, matrix.viewSelection( rows, null ) );
     }
 
     @Override

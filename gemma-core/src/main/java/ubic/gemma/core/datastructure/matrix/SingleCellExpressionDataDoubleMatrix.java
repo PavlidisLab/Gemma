@@ -222,6 +222,11 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
     }
 
     @Override
+    public ExpressionDataMatrix<Double> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing single-cell integer matrices is not supported." );
+    }
+
+    @Override
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         if ( rowElements == null ) {
             List<ExpressionDataMatrixRowElement> re = new ArrayList<>( designElements.size() );

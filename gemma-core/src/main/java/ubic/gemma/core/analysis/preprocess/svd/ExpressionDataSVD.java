@@ -32,8 +32,7 @@ import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linalg.SingularValueDecomposition;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;
-import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter.Method;
+import ubic.gemma.core.analysis.preprocess.filter.LowVarianceFilter;
 import ubic.gemma.core.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -101,10 +100,9 @@ public class ExpressionDataSVD {
         /*
          * Remove rows with no variance
          */
-        RowLevelFilter rlf = new RowLevelFilter();
-        rlf.setMethod( Method.VAR );
-        rlf.setLowCut( 0.01, false ); // the colt SVD method fails to converge? I tried removing just Constant.SMALL but
+        // the colt SVD method fails to converge? I tried removing just Constant.SMALL but
         // it wasn't enough?
+        LowVarianceFilter rlf = new LowVarianceFilter( 0.01 );
         this.expressionData = rlf.filter( this.expressionData );
 
         if ( this.expressionData.rows() == 0 ) {
@@ -180,7 +178,7 @@ public class ExpressionDataSVD {
 
     /**
      * @param  i which eigengene
-     * @return   the ith eigengene (column of V)
+     * @return the ith eigengene (column of V)
      */
     public Double[] getEigenGene( int i ) {
         return this.getV().getColObj( i );
@@ -188,7 +186,7 @@ public class ExpressionDataSVD {
 
     /**
      * @param  i which eigensample
-     * @return   the ith eigensample (column of U)
+     * @return the ith eigensample (column of U)
      */
     public Double[] getEigenSample( int i ) {
         return this.getU().getColObj( i );
@@ -270,7 +268,7 @@ public class ExpressionDataSVD {
      * variable is known.
      *
      * @param  numComponentsToRemove The number of components to remove, starting from the largest eigenvalue.
-     * @return                       the reconstructed matrix; values that were missing before are re-masked.
+     * @return the reconstructed matrix; values that were missing before are re-masked.
      */
     public ExpressionDataDoubleMatrix removeHighestComponents( int numComponentsToRemove ) {
         DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
@@ -347,7 +345,7 @@ public class ExpressionDataSVD {
      * of his book)
      *
      * @param  thresholdQuantile Enter 0.5 for median. Value must be &gt; 0 and &lt; 1.
-     * @return                   a filtered matrix
+     * @return a filtered matrix
      */
     public ExpressionDataDoubleMatrix winnow( double thresholdQuantile ) {
 
@@ -422,7 +420,7 @@ public class ExpressionDataSVD {
         }
 
         // remove genes which are near the origin in SVD space. FIXME: make sure the missing values are still masked.
-        return new ExpressionDataDoubleMatrix( this.expressionData, keepers );
+        return this.expressionData.sliceRows( keepers );
 
     }
 

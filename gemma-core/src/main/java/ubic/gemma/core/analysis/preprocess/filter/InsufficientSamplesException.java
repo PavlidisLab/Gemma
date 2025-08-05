@@ -18,17 +18,15 @@
  */
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
+ * Exception indicating that there are insufficient samples (columns) in the dataset to perform a particular filter.
  * @author Paul
  */
 public class InsufficientSamplesException extends InsufficientDataException {
 
     private static final long serialVersionUID = 1L;
 
-    public InsufficientSamplesException( ExpressionExperiment ee, String message ) {
-        super( ee, message );
+    public InsufficientSamplesException( String message ) {
+        super( message );
     }
-
 }

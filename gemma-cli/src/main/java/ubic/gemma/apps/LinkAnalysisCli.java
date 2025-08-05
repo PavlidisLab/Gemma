@@ -75,8 +75,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @Autowired
     private TaxonService taxonService;
     @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-    @Autowired
     private ArrayDesignService arrayDesignService;
 
     private final FilterConfig filterConfig = new FilterConfig();
@@ -251,7 +249,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "logTransform" ) ) {
-            this.filterConfig.setLogTransform( true );
+            this.linkAnalysisConfig.setLogTransform( true );
         }
 
         if ( commandLine.hasOption( 'c' ) ) {

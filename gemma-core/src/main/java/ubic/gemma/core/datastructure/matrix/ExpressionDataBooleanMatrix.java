@@ -96,6 +96,11 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
+    public ExpressionDataMatrix<Boolean> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing rows is not supported for multi-assay boolean matrices." );
+    }
+
+    @Override
     public boolean hasMissingValues() {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
