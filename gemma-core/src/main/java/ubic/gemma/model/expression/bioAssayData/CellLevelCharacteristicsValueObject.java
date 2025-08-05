@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.DescribableValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -18,9 +18,13 @@ import static java.util.Objects.requireNonNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @CommonsLog
-public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject<CellLevelCharacteristics> {
+public class CellLevelCharacteristicsValueObject extends DescribableValueObject<CellLevelCharacteristics> {
 
-    private Set<CharacteristicValueObject> characteristics;
+    private String category;
+    @Nullable
+    private String categoryUri;
+
+    private List<CharacteristicValueObject> characteristics;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Long> characteristicIds;
@@ -32,9 +36,17 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
     private Integer numberOfAssignedCells;
 
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
+        super( cellLevelCharacteristics );
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
-                .stream().map( CharacteristicValueObject::new )
-                .collect( Collectors.toSet() );
+                .stream()
+                .sorted( Characteristic.getComparator() )
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toList() );
+        if ( !cellLevelCharacteristics.getCharacteristics().isEmpty() ) {
+            Characteristic firstCharacteristic = cellLevelCharacteristics.getCharacteristics().iterator().next();
+            this.category = firstCharacteristic.getCategory();
+            this.categoryUri = firstCharacteristic.getCategoryUri();
+        }
         if ( !excludeCharacteristicIds ) {
             try {
                 this.characteristicIds = Arrays.stream( cellLevelCharacteristics.getIndices() )

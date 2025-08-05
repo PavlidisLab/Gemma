@@ -52,6 +52,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
@@ -59,7 +60,6 @@ import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
-import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -97,6 +97,7 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.IOException;
@@ -1097,7 +1098,7 @@ public class DatasetsWebService {
     /**
      * Retrieve the single-cell dimension for a given quantitation type.
      */
-    @GZIP
+    @GZIP(mediaTypes = { MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
@@ -1112,6 +1113,7 @@ public class DatasetsWebService {
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayIds,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Context HttpHeaders headers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -1123,7 +1125,7 @@ public class DatasetsWebService {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+        if ( download ) {
             if ( excludeArg != null ) {
                 throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
             }
@@ -1131,11 +1133,30 @@ public class DatasetsWebService {
             if ( dimension == null ) {
                 throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
             }
-            return ( StreamingOutput ) output -> {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.setUseBioAssayIds( useBioAssayIds );
+                        writer.write( dimension, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt ) + "\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
+        } else if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
+            SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return Response.ok( ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
                 writer.setUseBioAssayIds( useBioAssayIds );
                 writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt ) ) + "\"" )
+                    .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .build();
         } else {
             SingleCellDimension dimension;
             Set<String> excludedFields;
@@ -1167,7 +1188,7 @@ public class DatasetsWebService {
         }
     }
 
-    @GZIP
+    @GZIP(mediaTypes = { MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
@@ -1184,10 +1205,12 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             // TODO: implement CellTypeAssignmentArg
-            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaIdentifier,
             @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
-            @Context HttpHeaders headers
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Context HttpHeaders headers,
+            @Context HttpServletResponse response
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
@@ -1211,24 +1234,48 @@ public class DatasetsWebService {
             } else {
                 cta = found.iterator().next();
             }
-        } else if ( ctaName != null ) {
-            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
-            if ( cta == null ) {
-                throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        } else if ( ctaIdentifier != null ) {
+            CellTypeAssignment cta2;
+            try {
+                Long ctaId = Long.parseLong( ctaIdentifier );
+                cta2 = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaId );
+                if ( cta2 == null ) {
+                    throw new NotFoundException( "No cell type assignment with ID " + ctaIdentifier + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+                }
+            } catch ( NumberFormatException e ) {
+                cta2 = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaIdentifier );
+                if ( cta2 == null ) {
+                    throw new NotFoundException( "No cell type assignment with name " + ctaIdentifier + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+                }
             }
+            cta = cta2;
         } else {
             cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
                     .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-            return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayIds( useBioAssayId );
-                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+        if ( download ) {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.setUseBioAssayIds( useBioAssayId );
+                        writer.write( cta, dimension, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, cta ) + "\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
         } else {
-            return respond( new CellTypeAssignmentValueObject( cta, false ) );
+            MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+            if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+                return Response.ok( ( StreamingOutput ) output -> {
+                            CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                            writer.setUseBioAssayIds( useBioAssayId );
+                            writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                        } )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, cta ) ) + "\"" )
+                        .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                        .build();
+            } else {
+                return respond( new CellTypeAssignmentValueObject( cta, false ) );
+            }
         }
     }
 
@@ -1245,7 +1292,9 @@ public class DatasetsWebService {
     public Object getDatasetCellLevelCharacteristics(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
-            @Context HttpHeaders headers
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Context HttpHeaders headers,
+            @Context HttpServletResponse response
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
@@ -1259,16 +1308,29 @@ public class DatasetsWebService {
         if ( dimension == null ) {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
-        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-            return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
-            };
+        if ( download ) {
+            return Response.ok( ( StreamingOutput ) output -> {
+                        CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                        writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                    } )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, dimension.getCellLevelCharacteristics() ) + "\"" )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .build();
         } else {
-            return respond( dimension.getCellLevelCharacteristics().stream()
-                    .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
-                    .collect( Collectors.toList() ) );
+            MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+            if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+                return Response.ok( ( StreamingOutput ) output -> {
+                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                            writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                        } )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getSingleCellMetadataFilename( ee, qt, dimension.getCellLevelCharacteristics() ) ) + "\"" )
+                        .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                        .build();
+            } else {
+                return respond( dimension.getCellLevelCharacteristics().stream()
+                        .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
+                        .collect( Collectors.toList() ) );
+            }
         }
     }
 

@@ -7,10 +7,13 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class ExpressionDataFileUtils {
 
     // for single-cell metadata
     private static final String SC_METADATA_SUFFIX = ".scmetadata";
+    private static final String TABULAR_SC_METADATA_FILE_SUFFIX = SC_METADATA_SUFFIX + ".tsv.gz";
     public static final String CELL_BROWSER_SC_METADATA_SUFFIX = SC_METADATA_SUFFIX + ".cellbrowser.tsv.gz";
 
     // for bulk (raw or processed vectors)
@@ -91,6 +95,43 @@ public class ExpressionDataFileUtils {
 
     public static String getEigenGenesFilename( ExpressionExperiment ee ) {
         return formatIdentifiableFilename( ee, ExpressionExperiment::getShortName ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt ) {
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( qt, QuantitationType::getName ) + TABULAR_SC_METADATA_FILE_SUFFIX;
+    }
+
+    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment ) {
+        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
+                formatIdentifiableFilename( qt, QuantitationType::getName ),
+                formatIdentifiableFilename( cellTypeAssignment, ExpressionDataFileUtils::getCellLevelCharacteristicsName ),
+                TABULAR_SC_METADATA_FILE_SUFFIX );
+    }
+
+    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, Collection<CellLevelCharacteristics> cellLevelCharacteristics ) {
+        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
+                formatIdentifiableFilename( qt, QuantitationType::getName ),
+                cellLevelCharacteristics.stream()
+                        .map( clc -> formatIdentifiableFilename( clc, ExpressionDataFileUtils::getCellLevelCharacteristicsName ) )
+                        .collect( Collectors.joining( "_" ) ),
+                TABULAR_SC_METADATA_FILE_SUFFIX );
+    }
+
+    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics cellLevelCharacteristics ) {
+        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
+                formatIdentifiableFilename( qt, QuantitationType::getName ),
+                formatIdentifiableFilename( cellLevelCharacteristics, ExpressionDataFileUtils::getCellLevelCharacteristicsName ),
+                TABULAR_SC_METADATA_FILE_SUFFIX );
+    }
+
+    private static String getCellLevelCharacteristicsName( CellLevelCharacteristics clc ) {
+        if ( clc.getName() != null ) {
+            return clc.getName();
+        } else if ( clc instanceof CellTypeAssignment ) {
+            return "cell_type";
+        } else {
+            return clc.getCharacteristics().iterator().next().getCategory();
+        }
     }
 
     /**

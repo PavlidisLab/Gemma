@@ -1,11 +1,15 @@
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.common.IdentifiableValueObject;
+import lombok.Getter;
+import lombok.Setter;
+import ubic.gemma.model.common.DescribableValueObject;
 import ubic.gemma.model.util.ModelUtils;
 
-public abstract class AnalysisValueObject<T extends Analysis> extends IdentifiableValueObject<T> {
+import javax.annotation.Nullable;
 
-    private String name;
+@Getter
+@Setter
+public abstract class AnalysisValueObject<T extends Analysis> extends DescribableValueObject<T> {
 
     private ProtocolValueObject protocol;
 
@@ -15,25 +19,14 @@ public abstract class AnalysisValueObject<T extends Analysis> extends Identifiab
 
     protected AnalysisValueObject( T analysis ) {
         super( analysis );
-        this.name = analysis.getName();
         if ( analysis.getProtocol() != null && ModelUtils.isInitialized( analysis.getProtocol() ) ) {
             this.protocol = new ProtocolValueObject( analysis.getProtocol() );
         }
     }
 
+    @Nullable
+    @Override
     public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public ProtocolValueObject getProtocol() {
-        return protocol;
-    }
-
-    public void setProtocol( ProtocolValueObject protocol ) {
-        this.protocol = protocol;
+        return super.getName();
     }
 }

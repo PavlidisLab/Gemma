@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Setter
 public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment> implements BioAssaySetValueObject {
 
-    private static final long serialVersionUID = -6861385216096602508L;
     protected Integer numberOfBioAssays;
     protected String description;
     protected String name;

@@ -12,6 +12,65 @@ if ( typeof gtag !== 'undefined' ) {
    }
 }
 
+/* DWR only generate models for parameters, not return values */
+if ( typeof ExpressionExperimentDetailsValueObject != "function" ) {
+   function ExpressionExperimentDetailsValueObject() {
+      this.isSingleCell = false;
+      this.singleCellQuantitationType = null;
+      this.singleCellDimension = null;
+      this.hasCellBrowser = false;
+      this.cellBrowserUrl = null;
+      this.cellBrowserFactorMetaNamesMap = {};
+      this.cellBrowserCellTypeAssignmentMetaNamesMap = {};
+      this.cellBrowserCellLevelCharacteristicsMetaNamesMap = {};
+   }
+
+   ExpressionExperimentDetailsValueObject.prototype = new ExpressionExperimentValueObject();
+   ExpressionExperimentDetailsValueObject.prototype.constructor = ExpressionExperimentValueObject;
+}
+
+if ( typeof SingleCellDimensionValueObject != "function" ) {
+   function SingleCellDimensionValueObject() {
+      this.id = null;
+      this.numberOfCells = 0;
+      this.cellTypeAssignments = [];
+      this.cellLevelCharacteristics = [];
+   }
+}
+
+if ( typeof CellTypeAssignmentValueObject != "function" ) {
+   function CellTypeAssignmentValueObject() {
+      this.id = null;
+      this.name = null;
+      this.description = null;
+      this.numberOfCellTypes = 0;
+      this.cellTypes = [];
+      this.preferred = false;
+      /**
+       * @type {ProtocolValueObject}
+       */
+      this.protocol = null;
+   }
+}
+
+if ( typeof ProtocolValueObject != "function" ) {
+   function ProtocolValueObject() {
+      this.id = null;
+      this.name = null;
+      this.description = null;
+   }
+}
+
+if ( typeof CellLevelCharacteristicValueObject != "function" ) {
+   function CellLevelCharacteristicValueObject() {
+      this.id = null;
+      this.name = null;
+      this.description = null;
+      this.numberOfCharacteristics = 0;
+      this.characteristics = [];
+   }
+}
+
 /*
  * Set up inheritance structures for value objects see
  * http://directwebremoting.org/dwr/documentation/server/configuration/dwrxml/converters/bean.html#interfacesAndAbstractClasses

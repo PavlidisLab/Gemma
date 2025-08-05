@@ -1,15 +1,22 @@
 package ubic.gemma.model.common;
 
+import javax.annotation.Nullable;
+
+/**
+ * Interface for objects that have a human-readable name and description.
+ * @see AbstractDescribable
+ * @see DescribableValueObject
+ */
 public interface Describable extends Identifiable {
 
     /**
-     * Obtain a human-readable description of the object
-     */
-    String getDescription();
-
-    /**
-     * Obtain the name of an object is a possibly ambiguous human-readable identifier that need not be an external
-     * database reference.
+     * Obtain a short, human-readable name of the object.
      */
     String getName();
+
+    /**
+     * Obtain a human-readable description of the object.
+     */
+    @Nullable
+    String getDescription();
 }

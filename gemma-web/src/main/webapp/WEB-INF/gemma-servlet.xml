@@ -873,6 +873,13 @@
                      class="ubic.gemma.web.controller.analysis.expression.diff.DifferentialExpressionAnalyzerInfo"/>
 
         <dwr:convert type="bean"
+                     class="ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject"/>
+        <dwr:convert type="bean"
+                     class="ubic.gemma.model.expression.bioAssayData.CellTypeAssignmentValueObject"/>
+        <dwr:convert type="bean"
+                     class="ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristicsValueObject"/>
+
+        <dwr:convert type="bean"
                      class="ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.util.view.JsonReaderResponse"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.util.EntityDelegator"/>
