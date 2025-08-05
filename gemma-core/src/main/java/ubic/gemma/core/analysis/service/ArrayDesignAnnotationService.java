@@ -14,14 +14,13 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
@@ -46,6 +45,7 @@ import java.util.Map;
  * @author paul
  */
 public interface ArrayDesignAnnotationService {
+
     public enum OutputType {
         BIOPROCESS, LONG, SHORT
     }
@@ -57,8 +57,11 @@ public interface ArrayDesignAnnotationService {
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
     String STANDARD_FILE_SUFFIX = "";
-    String ANNOTATION_FILE_DIRECTORY_NAME = "microAnnots";
-    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + ANNOTATION_FILE_DIRECTORY_NAME + File.separatorChar;
+
+    /**
+     * Obtain the directory where platform annotations are located.
+     */
+    Path getAnnotDataDir();
 
     void deleteExistingFiles( ArrayDesign arrayDesign );
 

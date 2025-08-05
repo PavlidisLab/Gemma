@@ -31,10 +31,6 @@ import java.util.Set;
 @Indexed
 public class GeneProduct extends ChromosomeFeature {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8414732389521430535L;
     private String ncbiGi;
     private Set<DatabaseEntry> accessions = new java.util.HashSet<>();
     /**

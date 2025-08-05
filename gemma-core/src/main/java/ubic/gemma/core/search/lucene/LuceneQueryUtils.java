@@ -68,8 +68,8 @@ public class LuceneQueryUtils {
      * Safely parse the given search settings into a Lucene query, falling back on a query with special characters
      * escaped if necessary.
      */
-    public static Query parseSafely( SearchSettings settings, QueryParser queryParser ) throws SearchException {
-        return parseSafely( settings.getQuery(), queryParser, settings.getIssueReporter() );
+    public static Query parseSafely( SearchSettings settings, QueryParser queryParser, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        return parseSafely( settings.getQuery(), queryParser, issueReporter );
     }
 
     /**
@@ -77,7 +77,7 @@ public class LuceneQueryUtils {
      * escaped if necessary.
      * @param report a consumer for potential {@link ParseException} when attempting to parse the query, ignored if null
      */
-    public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<? super ParseException> report ) throws SearchException {
+    public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<Throwable> report ) throws SearchException {
         try {
             return queryParser.parse( query );
         } catch ( ParseException e ) {
@@ -114,9 +114,9 @@ public class LuceneQueryUtils {
      * <p>
      * Prohibited terms are excluded.
      */
-    public static Set<String> extractTerms( SearchSettings settings ) throws SearchException {
+    public static Set<String> extractTerms( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
         Set<String> terms = new LinkedHashSet<>();
-        extractTerms( parseSafely( settings, createQueryParser() ), terms );
+        extractTerms( parseSafely( settings, createQueryParser(), issueReporter ), terms );
         return terms;
     }
 
@@ -132,8 +132,8 @@ public class LuceneQueryUtils {
         }
     }
 
-    public static Set<Set<String>> extractTermsDnf( SearchSettings settings ) throws SearchException {
-        return extractTermsDnf( settings, false );
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        return extractTermsDnf( settings, false, issueReporter );
     }
 
     /**
@@ -145,8 +145,8 @@ public class LuceneQueryUtils {
      * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
      * @param allowWildcards allow {@link PrefixQuery} and {@link WildcardQuery} clauses
      */
-    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards ) throws SearchException {
-        Query q = parseSafely( settings, createQueryParser() );
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        Query q = parseSafely( settings, createQueryParser(), issueReporter );
         Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {
             Set<Set<String>> ds = new LinkedHashSet<>();
@@ -223,11 +223,11 @@ public class LuceneQueryUtils {
 
     /**
      * Escape the query for a database match.
-     * @see #prepareDatabaseQuery(SearchSettings, boolean)
+     * @see #prepareDatabaseQuery(SearchSettings, boolean, Consumer)
      */
     @Nullable
-    public static String prepareDatabaseQuery( SearchSettings settings ) throws SearchException {
-        return prepareDatabaseQuery( settings, false );
+    public static String prepareDatabaseQuery( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        return prepareDatabaseQuery( settings, false, issueReporter );
     }
 
     /**
@@ -244,8 +244,8 @@ public class LuceneQueryUtils {
      * @return the first suitable term in the query, or null if none of them are applicable for a database query
      */
     @Nullable
-    public static String prepareDatabaseQuery( SearchSettings settings, boolean allowWildcards ) throws SearchException {
-        return prepareDatabaseQueryInternal( parseSafely( settings, createQueryParser() ), allowWildcards );
+    public static String prepareDatabaseQuery( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        return prepareDatabaseQueryInternal( parseSafely( settings, createQueryParser(), issueReporter ), allowWildcards );
     }
 
     @Nullable
@@ -292,8 +292,8 @@ public class LuceneQueryUtils {
     }
 
     @Nullable
-    public static URI prepareTermUriQuery( SearchSettings settings ) throws SearchException {
-        Query query = parseSafely( settings, createQueryParser() );
+    public static URI prepareTermUriQuery( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        Query query = parseSafely( settings, createQueryParser(), issueReporter );
         if ( query instanceof TermQuery ) {
             Term term = ( ( TermQuery ) query ).getTerm();
             return tryParseUri( term );

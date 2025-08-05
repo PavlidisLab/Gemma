@@ -29,10 +29,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
@@ -74,7 +71,7 @@ public class DifferentialExpressionAnalysisController {
         }
 
         Collection<ExperimentalFactor> factorsWithoutBatch = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                .filter( f -> !ExperimentalDesignUtils.isBatchFactor( f ) )
+                .filter( f -> !ExperimentFactorUtils.isBatchFactor( f ) )
                 .collect( Collectors.toSet() );
 
         AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( ee, factorsWithoutBatch, null /* subset */, true /* include interactions */ );
@@ -165,7 +162,7 @@ public class DifferentialExpressionAnalysisController {
         cmd.setUseWeights( rnaSeq );
         cmd.setFactors(
                 ee.getExperimentalDesign().getExperimentalFactors().stream()
-                        .filter( f -> !ExperimentalDesignUtils.isBatchFactor( f ) )
+                        .filter( f -> !ExperimentFactorUtils.isBatchFactor( f ) )
                         .collect( Collectors.toSet() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
@@ -232,7 +229,7 @@ public class DifferentialExpressionAnalysisController {
         cmd.setSubsetFactor( subsetFactor );
 
         for ( ExperimentalFactor ef : factors ) {
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 /*
                  * This is a policy and I am pretty sure it makes sense!
                  */

@@ -52,7 +52,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     @Autowired
     protected Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( Gene2GOAssociation.class, sessionFactory );
-        this.geneBatchSize = HibernateUtils.getBatchSize( sessionFactory, sessionFactory.getClassMetadata( Gene.class ) );
+        this.geneBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( Gene.class ), sessionFactory );
     }
 
     @Override

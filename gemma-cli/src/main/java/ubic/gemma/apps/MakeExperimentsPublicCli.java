@@ -17,7 +17,7 @@ package ubic.gemma.apps;
 import gemma.gsec.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Make data sets public. You must be the owner of the experiment to do this.
@@ -40,7 +40,7 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void processBioAssaySet( BioAssaySet ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         securityService.makePublic( ee );
         this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
     }

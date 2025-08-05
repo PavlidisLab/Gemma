@@ -48,7 +48,7 @@ public class BibliographicReferenceDaoImpl
     @Autowired
     public BibliographicReferenceDaoImpl( SessionFactory sessionFactory ) {
         super( BibliographicReference.class, sessionFactory );
-        this.eeBatchSize = HibernateUtils.getBatchSize( sessionFactory, sessionFactory.getClassMetadata( ExpressionExperiment.class ) );
+        this.eeBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( ExpressionExperiment.class ), sessionFactory );
     }
 
     @Override

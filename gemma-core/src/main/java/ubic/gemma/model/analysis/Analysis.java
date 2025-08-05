@@ -22,6 +22,8 @@ package ubic.gemma.model.analysis;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.protocol.Protocol;
 
+import javax.annotation.Nullable;
+
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and
  * Description associations. Analyses which use more than one Investigation are meta-analyses.
@@ -30,6 +32,7 @@ import ubic.gemma.model.common.protocol.Protocol;
  */
 public abstract class Analysis extends AbstractDescribable {
 
+    @Nullable
     private Protocol protocol;
 
     /**
@@ -38,12 +41,28 @@ public abstract class Analysis extends AbstractDescribable {
     public Analysis() {
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Some analysis do not fill in the name, so this may be null.
+     */
+    @Nullable
+    @Override
+    public String getName() {
+        return super.getName();
+    }
+
+    @Override
+    public void setName( @Nullable String name ) {
+        super.setName( name );
+    }
+
+    @Nullable
     public Protocol getProtocol() {
         return this.protocol;
     }
 
-    public void setProtocol( Protocol protocol ) {
+    public void setProtocol( @Nullable Protocol protocol ) {
         this.protocol = protocol;
     }
-
 }

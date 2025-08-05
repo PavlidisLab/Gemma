@@ -112,24 +112,33 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
 
     Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
-    long getCompositeSequenceCountById( Long id );
+    /**
+     * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequenceCount(Gene, boolean)
+     */
+    long getCompositeSequenceCount( Gene gene, boolean includeDummyProducts );
 
     /**
-     * Returns a list of compositeSequences associated with the given gene and array design
-     *
-     * @param gene        gene
-     * @param arrayDesign platform
-     * @return composite sequences
+     * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequenceCountById(long, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
+    long getCompositeSequenceCountById( Long id, boolean includeDummyProducts );
 
     /**
-     * @param id Gemma gene id
-     * @return Return probes for a given gene id.
+     * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequences(Gene, ArrayDesign, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    Collection<CompositeSequence> getCompositeSequencesById( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
+    Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign, boolean includeDummyProducts );
+
+    /**
+     * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequencesById(long, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
+    Collection<CompositeSequence> getCompositeSequences( Gene gene, boolean includeDummyProducts );
+
+    /**
+     * @see ubic.gemma.persistence.service.genome.GeneDao#getCompositeSequencesById(long, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
+    Collection<CompositeSequence> getCompositeSequencesById( Long geneId, boolean includeDummyProducts );
 
     List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
@@ -187,7 +196,7 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
 
     Gene thawLiter( Gene gene );
 
-    Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException;
+    Collection<GeneValueObject> searchGenes( String query, @Nullable Long taxonId ) throws SearchException;
 
     @Secured({ "GROUP_ADMIN" })
     int removeAll();

@@ -185,7 +185,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetCategoriesWithUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
-                .containsEntry( CharacteristicUtils.getCategory( c ), 1L );
+                .containsEntry( CharacteristicUtils.getCategoryAsCharacteristic( c ), 1L );
     }
 
     @Test

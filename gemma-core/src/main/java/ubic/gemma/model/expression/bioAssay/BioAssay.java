@@ -78,7 +78,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
      * The audit trail for the owning {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} tracks when
      * this was done.
      */
-    private Boolean isOutlier = false;
+    private boolean isOutlier = false;
 
     /**
      * Indicates the date that the assay was processed in the original study. This would correspond to "batch" in the
@@ -214,11 +214,11 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
         this.arrayDesignUsed = arrayDesignUsed;
     }
 
-    public Boolean getIsOutlier() {
+    public boolean getIsOutlier() {
         return this.isOutlier;
     }
 
-    public void setIsOutlier( Boolean isOutlier ) {
+    public void setIsOutlier( boolean isOutlier ) {
         this.isOutlier = isOutlier;
     }
 

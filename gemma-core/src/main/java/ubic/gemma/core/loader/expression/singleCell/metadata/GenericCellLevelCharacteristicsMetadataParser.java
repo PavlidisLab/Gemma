@@ -8,6 +8,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -28,8 +29,8 @@ import java.util.List;
  */
 class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
 
-    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper ) {
-        super( singleCellDimension, bioAssayMapper );
+    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names ) {
+        super( singleCellDimension, bioAssayMapper, names );
     }
 
     protected Category getCategory( CSVRecord record ) {
@@ -67,7 +68,7 @@ class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCha
     }
 
     @Override
-    protected CellLevelCharacteristics createCellLevelCharacteristics( List<Characteristic> characteristics, int[] indices ) {
-        return CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
+    protected CellLevelCharacteristics createCellLevelCharacteristics( @Nullable String name, String descriptionToAppend, List<Characteristic> characteristics, int[] indices ) {
+        return CellLevelCharacteristics.Factory.newInstance( name, descriptionToAppend, characteristics, indices );
     }
 }

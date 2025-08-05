@@ -35,10 +35,11 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      * Locate based on string value of the value.
      *
      * @param valuePrefix value prefix
+     * @param maxResults
      * @return collection of factor values
      */
     @Deprecated
-    Collection<FactorValue> findByValue( String valuePrefix );
+    Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
 
     @Deprecated
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );

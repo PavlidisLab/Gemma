@@ -1,0 +1,173 @@
+package ubic.gemma.core.visualization.cellbrowser;
+
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.io.SingleCellExpressionDataMatrixWriter;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static ubic.gemma.core.util.TsvUtils.formatFast;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultValueAsNumber;
+
+/**
+ * Generate a tabular matrix format compatible with <a href="https://cellbrowser.readthedocs.io/en/master/tabsep.html">Cell Browser</a>.
+ * @author poirigui
+ */
+public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
+
+    private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
+    private boolean autoFlush = false;
+    private ScaleType scaleType = null;
+
+    public void setUseBioAssayIds( boolean useBioAssayIds ) {
+        this.useBioAssayIds = useBioAssayIds;
+    }
+
+    public void setUseRawColumnNames( boolean useRawColumnNames ) {
+        this.useRawColumnNames = useRawColumnNames;
+    }
+
+    @Override
+    public void setAutoFlush( boolean autoFlush ) {
+        this.autoFlush = autoFlush;
+    }
+
+    @Override
+    public void setScaleType( @Nullable ScaleType scaleType ) {
+        this.scaleType = scaleType;
+    }
+
+    @Override
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException {
+        throw new UnsupportedOperationException( "Writing single-cell matrices is not supported." );
+    }
+
+    public int write( Stream<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        return write( vectors.iterator(), cs2gene, writer );
+    }
+
+    public int write( Collection<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        return write( vectors.iterator(), cs2gene, writer );
+    }
+
+    private int write( Iterator<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        SingleCellExpressionDataVector firstVec = vectors.next();
+        writeHeader( firstVec.getSingleCellDimension(), writer );
+        int written = 0;
+        writeVector( firstVec, cs2gene, writer );
+        written++;
+        while ( vectors.hasNext() ) {
+            writeVector( vectors.next(), cs2gene, writer );
+            written++;
+        }
+        return written;
+    }
+
+    private void writeHeader( SingleCellDimension singleCellDimension, Writer writer ) throws IOException {
+        writer.write( "gene" );
+        for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
+            BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
+            for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
+                writer.write( "\t" );
+                writer.write( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
+            }
+        }
+        writer.write( "\n" );
+        if ( autoFlush ) {
+            writer.flush();
+        }
+    }
+
+    private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        if ( scaleType != null ) {
+            String valueIfMissing;
+            try {
+                Number val = getDefaultValueAsNumber( vector.getQuantitationType() );
+                valueIfMissing = formatFast( ScaleTypeConversionUtils.convertScalar( val, vector.getQuantitationType(), scaleType ) );
+            } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                throw new RuntimeException( e );
+            }
+            try {
+                writeVector( vector, ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, cs2gene, valueIfMissing, writer );
+            } catch ( UnsupportedQuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case DOUBLE:
+                    writeVector( vector, vector.getDataAsDoubles(), PrimitiveType.DOUBLE, cs2gene, formatFast( ( Double ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
+                    break;
+                case FLOAT:
+                    writeVector( vector, vector.getDataAsFloats(), PrimitiveType.FLOAT, cs2gene, formatFast( ( Float ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
+                    break;
+                case LONG:
+                    writeVector( vector, vector.getDataAsLongs(), PrimitiveType.LONG, cs2gene, formatFast( ( Long ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
+                    break;
+                case INT:
+                    writeVector( vector, vector.getDataAsInts(), PrimitiveType.INT, cs2gene, formatFast( ( Integer ) getDefaultValueAsNumber( vector.getQuantitationType() ) ), writer );
+                    break;
+            }
+        }
+        if ( autoFlush ) {
+            writer.flush();
+        }
+    }
+
+    private void writeVector( SingleCellExpressionDataVector vector, Object data, PrimitiveType representation, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, String valueIfMissing, Writer writer ) throws IOException {
+        writeDesignElement( vector.getDesignElement(), cs2gene, writer );
+        int numCells = vector.getSingleCellDimension().getNumberOfCells();
+        int k = 0;
+        for ( int i = 0; i < numCells; i++ ) {
+            writer.write( "\t" );
+            if ( k < vector.getDataIndices().length && i == vector.getDataIndices()[k] ) {
+                switch ( representation ) {
+                    case DOUBLE:
+                        writer.write( formatFast( ( ( double[] ) data )[k] ) );
+                        break;
+                    case FLOAT:
+                        writer.write( formatFast( ( ( float[] ) data )[k] ) );
+                        break;
+                    case LONG:
+                        writer.write( formatFast( ( ( long[] ) data )[k] ) );
+                        break;
+                    case INT:
+                        writer.write( formatFast( ( ( int[] ) data )[k] ) );
+                        break;
+                }
+                k++;
+            } else {
+                writer.write( valueIfMissing );
+            }
+        }
+        writer.write( "\n" );
+    }
+
+    private void writeDesignElement( CompositeSequence designElement, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        writer.write( designElement.getName() );
+        if ( cs2gene != null && cs2gene.containsKey( designElement ) ) {
+            for ( Gene gene : cs2gene.get( designElement ) ) {
+                if ( gene.getOfficialSymbol() != null ) {
+                    writer.write( "|" );
+                    writer.write( gene.getOfficialSymbol() );
+                }
+            }
+        }
+    }
+}

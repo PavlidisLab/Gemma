@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -58,6 +57,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.ListBatchCommand;
@@ -66,8 +66,11 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -106,6 +109,8 @@ public class ArrayDesignController {
     private ArrayDesignAnnotationService annotationFileService;
     @Autowired
     private WebEntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private DownloadUtil downloadUtil;
     @Autowired
     private ServletContext servletContext;
 
@@ -167,7 +172,10 @@ public class ArrayDesignController {
     }
 
     @RequestMapping(value = "/downloadAnnotationFile.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse response ) throws IOException {
+    public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId,
+            @RequestParam(value = "fileType", required = false) String fileType,
+            HttpServletRequest request,
+            HttpServletResponse response ) throws IOException {
         if ( fileType == null || fileType.equalsIgnoreCase( "allParents" ) ) {
             fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         } else if ( fileType.equalsIgnoreCase( "noParents" ) ) {
@@ -184,30 +192,26 @@ public class ArrayDesignController {
 
         String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
         String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+        Path f = annotationFileService.getAnnotDataDir().resolve( fileName );
 
-        if ( !f.exists() || !f.canRead() ) {
+        if ( !Files.exists( f ) || !Files.isReadable( f ) ) {
             // Experimental. Ideally make a background process. But usually these files should be available anyway...
-            log.info( String.format( "Annotation file %s not found, creating for %s...", f.getPath(), arrayDesign ) );
+            log.info( String.format( "Annotation file %s not found, creating for %s...", f, arrayDesign ) );
             try {
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default ... but this might be changed.
                 //also, don't delete associated files, as this takes a while and since this on-demand generation is just to handle the case of the file being missing, not annotations changing.
             } catch ( Exception e ) {
-                log.error( String.format( "Failed to create annotation file %s for %s.", f.getPath(), arrayDesign ), e );
+                log.error( String.format( "Failed to create annotation file %s for %s.", f, arrayDesign ), e );
             }
         }
 
-        try ( InputStream is = new FileInputStream( f ) ) {
-            response.setContentType( MediaType.APPLICATION_OCTET_STREAM_VALUE );
-            response.setHeader( "Content-Disposition", "attachment; filename=\"" + fileName + "\"" );
-            // response.setContentType( "application/x-gzip" ); // see Bug4206
-            response.setContentLength( ( int ) f.length() );
-            IOUtils.copy( is, response.getOutputStream() );
-        } catch ( FileNotFoundException e ) {
+        if ( !Files.exists( f ) ) {
             throw new EntityNotFoundException(
                     String.format( "The annotation file could not be found for %s. Please contact %s for assistance.",
-                            arrayDesign.getShortName(), supportEmail ), e );
+                            arrayDesign.getShortName(), supportEmail ) );
         }
+
+        downloadUtil.download( f, fileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
     }
 
     @RequestMapping(value = "/filterArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })

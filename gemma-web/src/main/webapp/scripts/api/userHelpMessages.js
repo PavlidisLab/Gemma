@@ -443,7 +443,7 @@ Gemma.HelpText.WidgetDefaults = {
 		profileDownloadTT: 'Tab-delimited data file for this experiment. '
 			+ 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements',
 		dataReprocessed: "Reprocessed from raw data by Gemma.",
-		dataExternal: "Data are from external source.",
+		dataExternal: "Processed data are from external source, not reprocessed from raw by Gemma",
 		noBatchInfo: "Information on sample batching was not available",
 		noBatchesSingletons: "Gemma was unable to form a reasonable batching structure due to batch(es) with one sample",
 		noBatchesBadHeaders: "Information on sample batching was not extractable from the available data",

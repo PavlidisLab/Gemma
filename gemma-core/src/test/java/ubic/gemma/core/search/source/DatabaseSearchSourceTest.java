@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.core.util.test.BaseTest;
@@ -97,46 +97,47 @@ public class DatabaseSearchSourceTest extends BaseTest {
 
     @Test
     public void test_whenQueryContainsQuote_thenStripThem() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "\"BRCA1\"", null ) );
+        databaseSearchSource.searchGene( geneSearch( "\"BRCA1\"", null ), new SearchContext( null, null ) );
         verify( geneService ).findByAccession( "BRCA1", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA1%" );
     }
 
     @Test
     public void test_whenQueryContainsLikePatterns_thenEscape() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "BRCA%", null ) );
+        databaseSearchSource.searchGene( geneSearch( "BRCA%", null ), new SearchContext( null, null ) );
         verify( geneService ).findByAccession( "BRCA%", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA\\%%" );
     }
 
     @Test
     public void test_whenQueryContainsAsterisk_thenSubstituteForPercent() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "BRCA?*", null ) );
+        databaseSearchSource.searchGene( geneSearch( "BRCA?*", null ), new SearchContext( null, null ) );
         verify( geneService ).findByOfficialSymbolInexact( "brca_%" );
     }
 
     @Test
     public void test_quotedTerms() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "\"BRCA1 BRCA2\"", null ) );
+        databaseSearchSource.searchGene( geneSearch( "\"BRCA1 BRCA2\"", null ), new SearchContext( null, null ) );
         verify( geneService ).findByOfficialSymbol( "BRCA1 BRCA2" );
     }
 
     @Test
     public void testSearchGeneByUri() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/1234", null ) );
+        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/1234", null ), new SearchContext( null, null ) )
+        ;
         verify( geneService ).findByNCBIId( 1234 );
         verify( geneService ).findByOfficialSymbol( "http://purl.org/commons/record/ncbi_gene/1234" );
     }
 
     @Test
     public void testSearchGeneByUriInexact() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/123?", null ) );
+        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/123?", null ), new SearchContext( null, null ) );
         verify( geneService ).findByOfficialSymbolInexact( "http://purl.org/commons/record/ncbi\\_gene/123_" );
     }
 
     @Test
     public void testSearchGeneByOfficialName_whenQueryContainsUnquotedSpaces_thenAttemptItAsItIs() throws SearchException {
-        databaseSearchSource.searchGene( geneSearch( "metabolic process", null ) );
+        databaseSearchSource.searchGene( geneSearch( "metabolic process", null ), new SearchContext( null, null ) );
         verify( geneService ).findByOfficialName( "metabolic process" );
     }
 }

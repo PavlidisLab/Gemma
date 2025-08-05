@@ -125,3 +125,5 @@ alter table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
     add constraint EE2AD_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade;
 alter table EXPRESSION_EXPERIMENT2ARRAY_DESIGN
     add constraint EE2AD_ARRAY_DESIGN_FKC foreign key (ARRAY_DESIGN_FK) references ARRAY_DESIGN (ID) on update cascade on delete cascade;
+
+create unique index CELL_LEVEL_CHARACTERISTICS_NAME on CELL_LEVEL_CHARACTERISTICS (SINGLE_CELL_DIMENSION_FK, NAME);

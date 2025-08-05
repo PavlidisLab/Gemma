@@ -64,7 +64,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Taxon tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );
 
-        Collection<BioAssaySet> ees = new HashSet<>();
+        Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.add( ee );
 
         eeSet = ExpressionExperimentSet.Factory.newInstance();

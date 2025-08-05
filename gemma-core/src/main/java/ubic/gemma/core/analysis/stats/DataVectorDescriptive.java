@@ -6,10 +6,12 @@ import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
+
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultCountValueAsDouble;
 
 /**
  * Compute descriptive statistics for {@link ubic.gemma.model.expression.bioAssayData.DataVector}.
@@ -33,9 +35,9 @@ public class DataVectorDescriptive {
                 case LONG:
                     return countCount( vector.getDataAsLongs() );
                 case FLOAT:
-                    return countCount( vector.getDataAsFloats(), getMissingFloatCountValue( vector.getQuantitationType() ) );
+                    return countCount( vector.getDataAsFloats(), QuantitationTypeUtils.getDefaultCountValueAsFloat( vector.getQuantitationType() ) );
                 case DOUBLE:
-                    return countCount( vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                    return countCount( vector.getDataAsDoubles(), getDefaultCountValueAsDouble( vector.getQuantitationType() ) );
                 default:
                     throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
             }
@@ -110,7 +112,7 @@ public class DataVectorDescriptive {
                 case LONG:
                     return countCountMissing( vector.getDataAsLongs() );
                 case DOUBLE:
-                    return countCountMissing( vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                    return countCountMissing( vector.getDataAsDoubles(), getDefaultCountValueAsDouble( vector.getQuantitationType() ) );
                 default:
                     throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
             }
@@ -485,46 +487,6 @@ public class DataVectorDescriptive {
         DoubleArrayList d = new DoubleArrayList( long2double( data ) );
         // no need to use DescriptiveWithMissing for long data
         return Descriptive.sampleVariance( d, Descriptive.mean( d ) );
-    }
-
-    /**
-     * Obtain the value that indicates a missing value for counting data.
-     */
-    public static float getMissingFloatCountValue( QuantitationType quantitationType ) {
-        Assert.isTrue( quantitationType.getType() == StandardQuantitationType.COUNT,
-                "Only counting data can be supplied." );
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.FLOAT,
-                "Only float representation is supported." );
-        switch ( quantitationType.getScale() ) {
-            case LOG2:
-            case LN:
-            case LOG10:
-            case LOGBASEUNKNOWN:
-                return Float.NEGATIVE_INFINITY;
-            case LOG1P: // in log1p, 0 is mapped back to 0
-            default:
-                return 0;
-        }
-    }
-
-    /**
-     * Obtain the value that indicates a missing value for counting data.
-     */
-    public static double getMissingCountValue( QuantitationType quantitationType ) {
-        Assert.isTrue( quantitationType.getType() == StandardQuantitationType.COUNT,
-                "Only counting data can be supplied." );
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,
-                "Only double representation is supported." );
-        switch ( quantitationType.getScale() ) {
-            case LOG2:
-            case LN:
-            case LOG10:
-            case LOGBASEUNKNOWN:
-                return Double.NEGATIVE_INFINITY;
-            case LOG1P: // in log1p, 0 is mapped back to 0
-            default:
-                return 0;
-        }
     }
 
     private static double[] float2double( float[] data ) {

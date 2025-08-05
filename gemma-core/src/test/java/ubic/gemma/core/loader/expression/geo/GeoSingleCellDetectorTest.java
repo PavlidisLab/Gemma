@@ -807,6 +807,55 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    public void testGSE274772() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE274772" );
+        Collection<String> sraData = new ArrayList<>();
+        Collection<String> sraND = new ArrayList<>();
+        assertThat( detector.hasSingleCellDataInSra( series, sraData, sraND ) )
+                .isTrue();
+        assertThat( sraData ).containsExactly( "SRX25148764" );
+        assertThat( sraND ).isEmpty();
+    }
+
+    /**
+     * The SRA metadata does not use the "TRANSCRIPTOMIC SINGLE CELL" library source, but keywords in the protocol
+     * indicate it is single-cell.
+     */
+    @Test
+    public void testGSE165635() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE165635" );
+        Collection<String> sraData = new ArrayList<>();
+        Collection<String> sraND = new ArrayList<>();
+        assertThat( detector.hasSingleCellDataInSra( series, sraData, sraND ) )
+                .isTrue();
+        assertThat( sraData ).containsExactly( "SRX9960970", "SRX9960969", "SRX9960968" );
+        assertThat( sraND ).isEmpty();
+    }
+
+    @Test
+    public void testGSE169285() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE169285" );
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .isEmpty();
+        for ( GeoSample sample : series.getSamples() ) {
+            assertThat( detector.isSingleCell( sample, false ) ).isTrue();
+            assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                    .hasSize( 1 );
+        }
+    }
+
+    @Test
+    public void testGSE256105() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE256105" );
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        for ( GeoSample sample : series.getSamples() ) {
+            assertThat( detector.isSingleCell( sample, false ) ).isTrue();
+            assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                    .hasSize( 1 );
+        }
+    }
+
+    @Test
     public void testHasSingleCellDataInSra() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE278619" );
         assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();

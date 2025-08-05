@@ -48,7 +48,7 @@ pipeline {
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     buildHash = env.GIT_COMMIT
-                    def productionBuild = env.BRNACH_NAME == 'master'
+                    def productionBuild = env.BRANCH_NAME == 'master'
                     def supportBuild = env.BRANCH_NAME.startsWith('support-')
                     def stagingBuild = env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*'
                     if (productionBuild) {

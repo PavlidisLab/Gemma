@@ -7,6 +7,22 @@ import javax.annotation.Nullable;
 public class CharacteristicUtils {
 
     /**
+     * Normalize a characteristic by value.
+     * <p>
+     * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
+     */
+    @Nullable
+    public static String getNormalizedValue( Characteristic characteristic ) {
+        if ( characteristic.getValueUri() != null ) {
+            return characteristic.getValueUri().toLowerCase();
+        } else if ( characteristic.getValue() != null ) {
+            return characteristic.getValue().toLowerCase();
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Check if a given characteristics has a specific category.
      * <p>
      * Comparisons are performed as per {@link #equals(String, String, String, String)}.
@@ -18,7 +34,11 @@ public class CharacteristicUtils {
     /**
      * Create a new characteristic that represents the category of a given characteristic.
      */
-    public static Characteristic getCategory( Characteristic t ) {
+    public static Category getCategory( Characteristic t ) {
+        return new Category( t.getCategory(), t.getCategoryUri() );
+    }
+
+    public static Characteristic getCategoryAsCharacteristic( Characteristic t ) {
         Characteristic c = new Characteristic();
         c.setCategory( t.getCategory() );
         c.setCategoryUri( t.getCategoryUri() );
@@ -102,4 +122,5 @@ public class CharacteristicUtils {
             return uriCmp;
         }
     }
+
 }

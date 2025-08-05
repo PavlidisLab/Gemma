@@ -14,7 +14,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataIntegerMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -54,6 +53,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     enum MatrixFormat {
         TABULAR,
+        CELL_BROWSER,
         MEX,
         CELL_IDS
     }
@@ -68,17 +68,18 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private FileLockManager fileLockManager;
-
-    @Autowired
     private BuildInfo buildInfo;
 
     private MatrixFormat format;
     @Nullable
     private ScaleType scaleType;
+    private boolean useBioAssayIds;
+    private boolean useRawColumnNames;
     private boolean useEnsemblIds;
     private boolean useStreaming;
     private int fetchSize;
+    private boolean useCursorFetchIfSupported;
+    private boolean autoFlush;
     private ExpressionDataFileResult result;
 
     @Nullable
@@ -110,11 +111,15 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     protected void buildExperimentVectorsOptions( Options options ) {
         addEnumOption( options, "format", "format", "Format to write the matrix for (defaults to tabular)", MatrixFormat.class );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use when generating data to disk. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
+        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names (only for CELL_BROWSER output)." );
+        options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw column names instead of R-friendly ones (only for CELL_BROWSER output)." );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output). This is incompatible with -standardLocation/--standard-location." );
-        options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
+        options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
+        options.addOption( "noCursorFetch", "no-cursor-fetch", false, "Disable cursor fetching on the database server and produce results immediately. This is incompatible with -noStreaming." );
+        options.addOption( "noAutoFlush", "no-auto-flush", false, "Do not flush the output stream after writing each vector." );
 
-        addExpressionDataFileOptions( options, "single-cell expression data" );
+        addExpressionDataFileOptions( options, "single-cell expression data", true );
 
         // slicing individual samples
         addSingleExperimentOption( options, Option.builder( "samples" )
@@ -136,21 +141,43 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        this.useEnsemblIds = commandLine.hasOption( "useEnsemblIds" );
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {
             throw new ParseException( "Cannot use -noStreaming/--no-streaming and -fetchSize/--fetch-size at the same time." );
         }
+        if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "noCursorFetch" ) ) {
+            throw new ParseException( "Cannot use -noStreaming/--no-streaming and -noCursorFetch/--no-cursor-fetch at the same time." );
+        }
         this.useStreaming = !commandLine.hasOption( "noStreaming" );
         this.fetchSize = commandLine.getParsedOptionValue( "fetchSize", 30 );
+        this.useCursorFetchIfSupported = !commandLine.hasOption( "noCursorFetch" );
+        this.autoFlush = !commandLine.hasOption( "noAutoFlush" );
         if ( commandLine.hasOption( "format" ) ) {
             this.format = getEnumOptionValue( commandLine, "format" );
         } else {
             this.format = MatrixFormat.TABULAR;
         }
+        if ( commandLine.hasOption( "useEnsemblIds" ) ) {
+            if ( this.format != MatrixFormat.MEX ) {
+                throw new ParseException( "Cannot use -useEnsemblIds with other formats than MEX." );
+            }
+            this.useEnsemblIds = true;
+        }
+        if ( commandLine.hasOption( "useBioAssayIds" ) ) {
+            if ( this.format != MatrixFormat.CELL_BROWSER ) {
+                throw new ParseException( "Cannot use -useBioAssayIds with other formats than CELL_BROWSER." );
+            }
+            this.useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
+        }
+        if ( commandLine.hasOption( "useRawColumnNames" ) ) {
+            if ( this.format != MatrixFormat.CELL_BROWSER ) {
+                throw new ParseException( "Cannot use -useRawColumnNames with other formats than CELL_BROWSER." );
+            }
+            this.useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
+        }
         if ( commandLine.hasOption( "scaleType" ) ) {
             this.scaleType = getEnumOptionValue( commandLine, "scaleType" );
         }
-        this.result = getExpressionDataFileResult( commandLine );
+        this.result = getExpressionDataFileResult( commandLine, true );
         if ( this.result.isStandardLocation() && scaleType != null ) {
             throw new ParseException( "Cannot use -standardLocation/--standard-location and -scaleType/--scale-type at the same time." );
         }
@@ -270,12 +297,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
             Stream<SingleCellExpressionDataVector> scVecs;
             if ( assays != null ) {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, true, config );
+                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, useCursorFetchIfSupported, true, config );
             } else {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, true, config );
+                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true, config );
             }
             vecs = scVecs
-                    .peek( createStreamMonitor( getClass().getName(), 100, numberOfVectors ) )
+                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, numberOfVectors ) )
                     .map( createAggregator( aggregationMethod, cellLevelCharacteristics, aggregateUnknownCharacteristics ) )
                     .collect( Collectors.toList() );
         } else {
@@ -295,7 +322,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             matrix = new ExpressionDataDoubleMatrix( vecs );
         }
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
-        matrixWriter.setAutoFlush( true );
+        matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
         return matrixWriter.write( matrix, writer );
     }
@@ -313,12 +340,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else if ( result.isStandardOutput() ) {
                     fileName = null;
                     try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX ) );
                     try ( Writer writer = Files.newBufferedWriter( fileName ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
                     }
                 }
             case MEX:
@@ -331,7 +358,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     assert fileName != null;
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), fileName );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName, autoFlush );
                 }
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
@@ -342,24 +369,38 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         switch ( format ) {
             case TABULAR:
                 if ( result.isStandardLocation() ) {
-                    try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
+                    try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce() ) ) {
                         fileName = path.getPath();
                         return 0;
                     }
                 } else if ( result.isStandardOutput() ) {
                     fileName = null;
                     try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX ) );
                     try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
-                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
+                    }
+                }
+            case CELL_BROWSER:
+                if ( result.isStandardLocation() ) {
+                    throw new UnsupportedOperationException( "Writing Cell Browser-compatible data to the standard location is not supported." );
+                } else if ( result.isStandardOutput() ) {
+                    fileName = null;
+                    try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useRawColumnNames, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
+                    }
+                } else {
+                    fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.CELL_BROWSER_SC_DATA_SUFFIX ) );
+                    try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName ), StandardCharsets.UTF_8 ) ) {
+                        return expressionDataFileService.writeCellBrowserSingleCellExpressionData( ee, qt, scaleType, useBioAssayIds, useRawColumnNames, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, writer, autoFlush );
                     }
                 }
             case MEX:
                 if ( result.isStandardLocation() ) {
-                    try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
+                    try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce() ) ) {
                         fileName = path.getPath();
                         return 0;
                     }
@@ -370,7 +411,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX ) );
                     assert fileName != null;
-                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), fileName );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, isForce(), fileName, autoFlush );
                 }
             case CELL_IDS:
                 if ( result.isStandardLocation() ) {
@@ -387,10 +428,10 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     }
                 } else {
                     fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ".cellIds.txt.gz" ) );
-                    try ( PrintStream printStream = new PrintStream( openOutputFile( fileName ), true, StandardCharsets.UTF_8.name() );
+                    try ( PrintStream printStream = new PrintStream( openOutputFile( fileName ), autoFlush, StandardCharsets.UTF_8.name() );
                             Stream<String> stream = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                         if ( stream != null ) {
-                            stream.forEach( getCliContext().getOutputStream()::println );
+                            stream.forEach( printStream::println );
                             return 0;
                         } else {
                             throw new RuntimeException( "Could not find cell IDs for " + qt + "." );
@@ -404,9 +445,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     private OutputStream openOutputFile( Path fileName ) throws IOException {
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new GZIPOutputStream( fileLockManager.newOutputStream( fileName ) );
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
         } else {
-            return fileLockManager.newOutputStream( fileName );
+            return Files.newOutputStream( fileName );
         }
     }
 }

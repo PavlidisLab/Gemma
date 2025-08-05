@@ -83,7 +83,7 @@ public class BatchConfoundUtils {
         // FV -> index
         Map<FactorValue, Integer> batchIndexes = new HashMap<>();
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 batchFactor = ef;
 
                 Map<Long, FactorValue> factorValueById = IdentifiableUtils.getIdMap( ef.getFactorValues() );

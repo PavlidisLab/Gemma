@@ -18,7 +18,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.cli.util.ShellUtils.quoteIfNecessary;
+import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
 /**
  * Generates fish completion script.

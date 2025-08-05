@@ -5,6 +5,7 @@
    http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <util:properties id="dataSourceProps">
+        <prop key="useCursorFetch">true</prop>
         <prop key="rewriteBatchedStatements">true</prop>
         <!-- Default timezone for storage of DATETIME that are mapped to exact moments (i.e. java.util.Date) -->
         <prop key="connectionTimeZone">America/Vancouver</prop>
@@ -25,10 +26,12 @@
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
             <property name="minimumIdle" value="${gemma.db.minimumIdle}"/>
         </bean>
+        <!-- dummy bean for production/dev, in a test environment this will initialize the database  -->
+        <bean id="dataSourceInitializer" class="java.lang.Object"/>
         <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
         <!-- This is lazily initialized because we only need it for scheduled jobs -->
         <bean id="groupAgentSecurityContext"
-              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              class="ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory"
               lazy-init="true">
             <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
             <property name="userName" value="${gemma.agent.userName}"/>
@@ -47,7 +50,7 @@
             <property name="minimumIdle" value="${gemma.testdb.minimumIdle}"/>
         </bean>
         <bean id="groupAgentSecurityContext"
-              class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
+              class="ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory"
               lazy-init="true">
             <property name="manualAuthenticationService" ref="manualAuthenticationService"/>
             <property name="userName" value="${gemma.testdb.agent.userName}"/>

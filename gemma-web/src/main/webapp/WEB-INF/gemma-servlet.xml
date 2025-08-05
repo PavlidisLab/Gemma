@@ -745,7 +745,7 @@
         <dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.core.job.progress.ProgressData"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.core.analysis.sequence.GeneMappingSummary">
+        <dwr:convert type="bean" class="ubic.gemma.model.analysis.sequence.GeneMappingSummary">
             <dwr:exclude method="geneProductMap"/>
             <dwr:exclude method="geneProducts"/>
         </dwr:convert>

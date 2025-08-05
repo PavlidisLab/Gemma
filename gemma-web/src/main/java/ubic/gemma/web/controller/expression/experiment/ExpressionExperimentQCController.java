@@ -74,6 +74,7 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -116,7 +117,11 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -212,7 +217,7 @@ public class ExpressionExperimentQCController {
         StringWriter writer = new StringWriter();
         appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
@@ -251,7 +256,7 @@ public class ExpressionExperimentQCController {
         StringWriter writer = new StringWriter();
         appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
@@ -649,7 +654,11 @@ public class ExpressionExperimentQCController {
             throw new EntityNotFoundException( "No vector for design element with ID " + designElementId + "." );
         }
         // TODO: cpm normalization
-        vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        try {
+            vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new RuntimeException( e );
+        }
         SingleCellDataBoxplot dataset = new SingleCellDataBoxplot( vector );
         dataset.setShowMean( false );
         if ( assayIds != null ) {
@@ -761,14 +770,14 @@ public class ExpressionExperimentQCController {
      */
     private XYSeries getCorrelHistFromFile( ExpressionExperiment ee ) throws IOException {
 
-        File file = this.locateProbeCorrFile( ee );
+        Path file = this.locateProbeCorrFile( ee );
 
         // Current format is to have just one file for each analysis.
-        if ( !file.canRead() ) {
+        if ( !Files.isReadable( file ) ) {
             return null;
         }
 
-        try ( BufferedReader in = new BufferedReader( new FileReader( file ) ) ) {
+        try ( BufferedReader in = Files.newBufferedReader( file ) ) {
             XYSeries series = new XYSeries( ee.getId(), true, true );
             DoubleArrayList counts = new DoubleArrayList();
 
@@ -887,16 +896,16 @@ public class ExpressionExperimentQCController {
     /**
      * For backwards compatibility only; remove when no longer needed.
      */
-    private File locateProbeCorrFile( ExpressionExperiment ee ) {
+    private Path locateProbeCorrFile( ExpressionExperiment ee ) {
         String shortName = ee.getShortName();
         String suffix = ".correlDist.txt";
-        return analysisStoragePath.resolve( shortName + suffix ).toFile();
+        return analysisStoragePath.resolve( shortName + suffix );
     }
 
     /**
      * For conversion from legacy system.
      */
-    private void corrDistFileToPersistent( File file, ExpressionExperiment ee, DoubleArrayList counts ) {
+    private void corrDistFileToPersistent( Path file, ExpressionExperiment ee, DoubleArrayList counts ) {
         log.info( "Converting from pvalue distribution file to persistent stored version" );
 
         CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
@@ -906,7 +915,7 @@ public class ExpressionExperimentQCController {
         try {
             coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
 
-            if ( file.delete() ) {
+            if ( Files.deleteIfExists( file ) ) {
                 log.info( "Old file deleted" );
             } else {
                 log.info( "Old file could not be deleted" );

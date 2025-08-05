@@ -10,6 +10,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -222,6 +223,7 @@ public interface ExpressionExperimentDao
 
     Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
+    @Nullable
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
     /**
@@ -539,7 +541,7 @@ public interface ExpressionExperimentDao
      */
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
      * Obtain the single-cell dimension used by a specific QT.
@@ -554,7 +556,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -601,7 +603,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the category of a cell-level characteristic.
      * <p>
-     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean)}).
+     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean, boolean)}).
      */
     @Nullable
     Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );
@@ -656,6 +658,14 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
     /**
+     * Obtain all cell type assignment protocols currently used.
+     */
+    Collection<Protocol> getCellTypeAssignmentProtocols();
+
+    @Nullable
+    Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolIdentifier );
+
+    /**
      * Obtain a cell type assignment by name without loading the indices.
      */
     @Nullable
@@ -679,7 +689,12 @@ public interface ExpressionExperimentDao
     @Nullable
     CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, Long clcId );
 
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String clcName );
+
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
@@ -701,15 +716,16 @@ public interface ExpressionExperimentDao
     /**
      * Obtain a stream over the vectors for a given QT.
      * <p>
-     * @param fetchSize        number of vectors to fetch at once
-     * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
-     *                         that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
-     *                         object.
-     * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, int)
+     *
+     * @param fetchSize                 number of vectors to fetch at once
+     * @param createNewSession          create a new session held by the stream. If you set this to true, make absolutely sure
+     *                                  that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     *                                  object.
+     * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, Class, int, boolean, boolean)
      */
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession );
 
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
 
     SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement );
 
@@ -728,7 +744,7 @@ public interface ExpressionExperimentDao
      * <p>
      * This is quite costly because the indices of each vector has to be examined.
      */
-    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported );
 
     /**
      * Remove the given single-cell data vectors.

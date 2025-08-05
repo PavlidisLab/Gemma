@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
@@ -77,14 +79,14 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByUri( Collection<String> uris ) {
-        return this.characteristicDao.findByUri( uris );
+    public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable  String category, int maxResults ) {
+        return this.characteristicDao.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByUri( String searchString ) {
-        return this.characteristicDao.findByUri( searchString );
+    public Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findByUri( uri, category, parentClasses, includeNoParents, maxResults );
     }
 
     @Nullable
@@ -96,48 +98,59 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByValueStartingWith( String search ) {
-        return this.characteristicDao.findByValueLike( escapeLike( search ) + '%' );
+    public Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findByValueLike( escapeLike( search ) + '%', category, parentClasses, includeNoParents, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByValueLike( String search ) {
-        return this.characteristicDao.findByValueLike( search );
+    public Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findByValueLike( search, category, parentClasses, includeNoParents, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses ) {
+    public Map<String, Characteristic> findByValueUriOrValueStartingWith( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
         Map<String, Characteristic> results = new HashMap<>();
-        results.putAll( this.characteristicDao.findByValueLikeGroupedByNormalizedValue( escapeLike( search ) + '%', parentClasses ) );
+        results.putAll( this.characteristicDao.findByValueLikeGroupedByNormalizedValue( escapeLike( search ) + '%', parentClasses, includeNoParents ) );
         // will override term found by like with an exact URI match if they have the same normalized value
-        results.putAll( this.characteristicDao.findByValueUriGroupedByNormalizedValue( search, parentClasses ) );
+        results.putAll( this.characteristicDao.findByValueUriGroupedByNormalizedValue( search, parentClasses, includeNoParents ) );
         return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses ) {
-        return this.characteristicDao.countByValueUriGroupedByNormalizedValue( uris, parentClasses );
+    public Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
+        return this.characteristicDao.countByValueUriGroupedByNormalizedValue( uris, parentClasses, includeNoParents );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults ) {
-        return characteristicDao.getParents( characteristics, parentClasses, maxResults );
+    public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents ) {
+        Map<Characteristic, Identifiable> charToParent = characteristicDao.getParents( characteristics, parentClasses, includeNoParents );
+        if ( thawParents ) {
+            // batch-load all the proxies
+            for ( Map.Entry<Characteristic, Identifiable> entry : charToParent.entrySet() ) {
+                Identifiable parent = entry.getValue();
+                Hibernate.initialize( parent );
+                if ( parent instanceof FactorValue ) {
+                    Hibernate.initialize( ( ( FactorValue ) parent ).getExperimentalFactor() );
+                }
+            }
+        }
+        return charToParent;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByCategoryStartingWith( String query ) {
-        return this.characteristicDao.findByCategoryLike( escapeLike( query ) + "%" );
+    public Collection<Characteristic> findByCategoryStartingWith( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findByCategoryLike( escapeLike( query ) + "%", parentClasses, includeNoParents, maxResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Characteristic> findByCategoryUri( String query ) {
-        return this.characteristicDao.findByCategoryUri( query );
+    public Collection<Characteristic> findByCategoryUri( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findByCategoryUri( query, parentClasses, includeNoParents, maxResults );
     }
 
     @Override
@@ -156,8 +169,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     public Collection<? extends Characteristic> findByAnyValueStartingWith( String value ) {
         Collection<Characteristic> results = new HashSet<>();
         String query = escapeLike( value ) + "%";
-        results.addAll( this.characteristicDao.findByCategoryLike( query ) );
-        results.addAll( this.characteristicDao.findByValueLike( query ) );
+        results.addAll( this.characteristicDao.findByCategoryLike( query, null, true, -1 ) );
+        results.addAll( this.characteristicDao.findByValueLike( query, null, null, true, -1 ) );
         results.addAll( this.statementDao.findByPredicateLike( query ) );
         results.addAll( this.statementDao.findByObjectLike( query ) );
         return results;
@@ -167,8 +180,8 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByAnyUri( String uri ) {
         Collection<Characteristic> results = new HashSet<>();
-        results.addAll( this.characteristicDao.findByCategoryUri( uri ) );
-        results.addAll( this.characteristicDao.findByUri( uri ) );
+        results.addAll( this.characteristicDao.findByCategoryUri( uri, null, true, -1 ) );
+        results.addAll( this.characteristicDao.findByUri( uri, null, null, true, -1 ) );
         results.addAll( this.statementDao.findByPredicateUri( uri ) );
         results.addAll( this.statementDao.findByObjectUri( uri ) );
         return results;

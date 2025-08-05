@@ -19,6 +19,29 @@ import static org.junit.Assume.assumeTrue;
 public class Assumptions {
 
     /**
+     * Check if an executable exists and is executable.
+     * <p>
+     * If the executable is a path, it will be checked directly, otherwise it will be searched in the $PATH.
+     */
+    public static void assumeThatExecutableExists( String executable ) {
+        if ( executable.contains( "/" ) ) {
+            assumeTrue( Files.isExecutable( Paths.get( executable ) ) );
+        } else {
+            boolean found = false;
+            String pathEnv = System.getenv( "PATH" );
+            if ( pathEnv != null ) {
+                for ( String p : pathEnv.split( ":" ) ) {
+                    if ( Files.isExecutable( Paths.get( p, executable ) ) ) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            assumeTrue( "Executable " + executable + " not found in $PATH " + pathEnv + "", found );
+        }
+    }
+
+    /**
      * Assume that a certain amount of memory is available.
      * @param jvm whether to consider the free JVM memory or the system free memory
      */

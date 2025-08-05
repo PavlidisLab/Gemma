@@ -33,12 +33,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeNotNull;
 
@@ -83,26 +81,14 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void testGSE1611() throws Exception {
         assumeNotNull( ee, "Could not find experiment GSE1611." );
-
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
-
-        File f = File.createTempFile( "test_writer_" + "GSE1611" + ".", ".txt" );
-        try ( PrintWriter writer = new PrintWriter( f ) ) {
-
-            edWriter.write( writer, ee, true );
-        }
-
-        log.info( f );
-        try ( FileReader fr = new FileReader( f ) ) {
-
-            char[] b = new char[( int ) f.length()];
-            //noinspection ResultOfMethodCallIgnored // We are using the buffer char array
-            fr.read( b );
-            String in = new String( b );
-
-            assertTrue( in.contains( "PoolTs1Cje_P0_hyb1" ) );
-            assertTrue( in.contains( "#$strain : Category=strain Type=Categorical" ) );
-        }
-
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
+        StringWriter writer = new StringWriter();
+        edWriter.write( ee, true, writer );
+        assertThat( writer.toString() )
+                .hasLineCount( 26 )
+                .contains( "#$strain : Category=strain Type=Categorical\n" )
+                .contains( "#$age : Category=age Type=Categorical\n" )
+                .contains( "Bioassay\tExternalID\tage\tstrain\n" )
+                .contains( "GSE1611_Biomat_1___Pool.Ts1Cje_P30_hyb1\tGSM27482\tP30\tTs1Cje\n" );
     }
 }

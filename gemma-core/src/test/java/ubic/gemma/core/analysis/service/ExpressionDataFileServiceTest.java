@@ -178,12 +178,12 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         ee.setShortName( "test.1" );
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
-                .hasValue( reportFile );
+                .hasValue( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
 
         ee.setShortName( "test.1.2" );
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
-                .hasValue( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
+                .hasValue( appdataHome.resolve( "metadata/test.1.2/MultiQCReports/multiqc_report.html" ) );
     }
 
     @Test

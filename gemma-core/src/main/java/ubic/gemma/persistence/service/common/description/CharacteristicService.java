@@ -65,21 +65,15 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
-     * given a collection of strings that represent URI's will find all the characteristics that are used in the system
-     * with URI's matching anyone in the given collection
-     *
-     * @param  uris uris
-     * @return characteristics
+     * Find characteristics that have a particular parent class or lack thereof.
+     * @throws IllegalArgumentException if parentClasses is
      */
-    Collection<Characteristic> findByUri( Collection<String> uris );
+    Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
 
     /**
      * Looks for an exact match of the give string to a valueUri in the characteristic database
-     *
-     * @param  searchString search string
-     * @return characteristics
      */
-    Collection<Characteristic> findByUri( String searchString );
+    Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Find the best possible characteristic for a given URI.
@@ -91,28 +85,34 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      * Returns a collection of characteristics that have a value starting with the given string.
      * <p>
      * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use
-     * {@link #findByValueLike(String)} to do wildcard searches instead.
+     * {@link #findByValueLike(String, String, Collection, boolean, int)} to do wildcard searches instead.
      */
-    Collection<Characteristic> findByValueStartingWith( String search );
+    Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Returns a collection of characteristics that have a value matching the given SQL {@code LIKE} pattern.
      */
-    Collection<Characteristic> findByValueLike( String search );
+    Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
-     * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String, String, Collection)
+     * Find characteristics that have a value (prefix) or value URI (exact match) matching the given string.
+     * @see CharacteristicDao#findByValueLikeGroupedByNormalizedValue(String, Collection, boolean)
+     * @see CharacteristicDao#findByValueUriGroupedByNormalizedValue(String, Collection, boolean)
+     * @param parentClasses if not null, restrict to characteristics that have parents of the given classes.
+     * @param includeNoParents if true, include characteristics that have no parents.
      */
-    Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Characteristic> findByValueUriOrValueStartingWith( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
-    Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
-     * @param characteristics characteristics
-     * @return a map of the specified characteristics to their annotated objects.
+     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
+     * @param thawParents if true, the parents will be initialized if they are proxies
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
+    @Secured({ "GROUP_ADMIN" })
+    // FIXME: this is too slow when large number of results are returned
+    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**
     //     * @param classes constraint
@@ -121,9 +121,9 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     //     */
     //    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
-    Collection<Characteristic> findByCategoryStartingWith( String queryPrefix );
+    Collection<Characteristic> findByCategoryStartingWith( String queryPrefix, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
-    Collection<Characteristic> findByCategoryUri( String query );
+    Collection<Characteristic> findByCategoryUri( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Find a characteristic by any value it contains including its category, value, predicates and objects.

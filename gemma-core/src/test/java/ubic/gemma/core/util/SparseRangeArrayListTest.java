@@ -1,7 +1,7 @@
 package ubic.gemma.core.util;
 
 import org.junit.Test;
-import ubic.gemma.core.datastructure.SparseRangeArrayList;
+import ubic.gemma.model.util.SparseRangeArrayList;
 
 import java.util.Arrays;
 

@@ -106,6 +106,8 @@
                 level="ERROR"/>
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
         <Logger name="org.hibernate.search.impl.SimpleIndexingProgressMonitor" level="INFO"/>
+        <Logger name="org.hibernate.SQL" level="WARN"/>
+        <Logger name="org.hibernate.stat" level="WARN"/>
 
         <Logger name="org.springframework" level="WARN"/>
         <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>

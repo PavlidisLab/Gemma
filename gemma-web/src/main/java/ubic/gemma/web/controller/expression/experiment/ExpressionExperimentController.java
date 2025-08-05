@@ -414,7 +414,7 @@ public class ExpressionExperimentController {
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            if ( !ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( !ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 descriptive.append( ef.getName() ).append( " (" ).append( ef.getDescription() ).append( "), " );
             }
         }
@@ -443,10 +443,14 @@ public class ExpressionExperimentController {
                 .getExperimentalDesign()
                 .getExperimentalFactors()
                 .stream()
-                .filter( factor -> !ExperimentalDesignUtils.isBatchFactor( factor )
+                .filter( factor -> !ExperimentFactorUtils.isBatchFactor( factor )
                         && factor.getType() != FactorType.CONTINUOUS
-                        // cell type factors apply to sub-biomaterials, so they don't make sense to display
-                        && ( factor.getCategory() == null || !CharacteristicUtils.hasCategory( factor.getCategory(), Categories.CELL_TYPE ) ) )
+                        && ee.getBioAssays().stream()
+                        .map( BioAssay::getSampleUsed )
+                        .map( BioMaterial::getFactorValues )
+                        .flatMap( Collection::stream )
+                        .map( FactorValue::getExperimentalFactor )
+                        .anyMatch( factor::equals ) )
                 .collect( Collectors.toSet() );
 
         CountingMap<FactorValueVector> assayCount = new CountingMap<>();
@@ -1435,7 +1439,7 @@ public class ExpressionExperimentController {
 
         ee = expressionExperimentService.thawLite( ee );
         for ( BioAssay assay : ee.getBioAssays() ) {
-            if ( assay.getIsOutlier() != null && assay.getIsOutlier() ) {
+            if ( assay.getIsOutlier() ) {
                 count++;
             }
 

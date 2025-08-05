@@ -17,8 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -176,12 +176,11 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
-                .highlighter( new Highlighter() )
                 .build();
 
         List<SearchResult<?>> searchResults;
         try {
-            searchResults = searchService.search( searchSettings ).toList();
+            searchResults = searchService.search( searchSettings, new SearchContext( new Highlighter(), null ) ).toList();
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {

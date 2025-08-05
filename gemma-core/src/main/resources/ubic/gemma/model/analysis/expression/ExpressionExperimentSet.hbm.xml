@@ -22,15 +22,19 @@
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
+        <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
+                     lazy="proxy" fetch="select" foreign-key="EXPRESSION_EXPERIMENT_SET_ACCESSION_FKC">
+            <column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
         <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
             <column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <set name="experiments" table="EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS" lazy="true" fetch="select"
         >
-            <key foreign-key="BIO_ASSAY_SET_EXPRESSION_EXPERIMENT_SETS_FKC">
+            <key foreign-key="EXPRESSION_EXPERIMENTS_EXPRESSION_EXPERIMENT_SETS_FKC">
                 <column name="EXPRESSION_EXPERIMENT_SETS_FK" sql-type="BIGINT"/>
             </key>
-            <many-to-many class="ubic.gemma.model.expression.experiment.BioAssaySet">
+            <many-to-many class="ubic.gemma.model.expression.experiment.ExpressionExperiment">
                 <column name="EXPERIMENTS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </set>

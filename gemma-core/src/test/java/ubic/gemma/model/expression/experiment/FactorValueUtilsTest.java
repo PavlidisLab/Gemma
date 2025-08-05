@@ -1,6 +1,5 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.junit.Assert;
 import org.junit.Test;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -18,15 +17,27 @@ public class FactorValueUtilsTest {
 
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", "delivered at dose", "650 mg/kg" ) );
-        Assert.assertEquals( "methoxyacetic acid delivered at dose 650 mg/kg", FactorValueUtils.getSummaryString( fv ) );
+        assertEquals( "methoxyacetic acid", FactorValueUtils.getValue( fv, "|" ) );
+        assertEquals( "methoxyacetic acid delivered at dose 650 mg/kg", FactorValueUtils.getSummaryString( fv ) );
 
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", "delivered at dose", "650 mg/kg", "for duration", "4h" ) );
+        assertEquals( "methoxyacetic acid", FactorValueUtils.getValue( fv, "|" ) );
         assertEquals( "methoxyacetic acid delivered at dose 650 mg/kg and for duration 4h", FactorValueUtils.getSummaryString( fv ) );
 
         fv = new FactorValue();
         fv.getCharacteristics().add( createStatement( "methoxyacetic acid", null, null, "for duration", "4h" ) );
+        assertEquals( "methoxyacetic acid", FactorValueUtils.getValue( fv, "|" ) );
         assertEquals( "methoxyacetic acid for duration 4h", FactorValueUtils.getSummaryString( fv ) );
+    }
+
+    @Test
+    public void testMultipleStatements() {
+        FactorValue fv = new FactorValue();
+        fv.getCharacteristics().add( createStatement( "methoxyacetic acid", "delivered at dose", "650 mg/kg" ) );
+        fv.getCharacteristics().add( createStatement( "doxycycline", "delivered at dose", "10 mg/kg" ) );
+        assertEquals( "doxycycline|methoxyacetic acid", FactorValueUtils.getValue( fv, "|" ) );
+        assertEquals( "doxycycline delivered at dose 10 mg/kg, methoxyacetic acid delivered at dose 650 mg/kg", FactorValueUtils.getSummaryString( fv ) );
     }
 
     @Test
@@ -36,6 +47,7 @@ public class FactorValueUtilsTest {
         Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
         m.setUnit( Unit.Factory.newInstance( "mg" ) );
         fv.setMeasurement( m );
+        assertEquals( "5.0", FactorValueUtils.getValue( fv, "|" ) );
         assertEquals( "5.0 mg", FactorValueUtils.getSummaryString( fv ) );
     }
 
@@ -46,6 +58,7 @@ public class FactorValueUtilsTest {
         Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
         m.setUnit( Unit.Factory.newInstance( "years" ) );
         fv.setMeasurement( m );
+        assertEquals( "5.0", FactorValueUtils.getValue( fv, "|" ) );
         assertEquals( "5.0 years", FactorValueUtils.getSummaryString( fv ) );
     }
 
@@ -60,6 +73,7 @@ public class FactorValueUtilsTest {
         Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "5.0", PrimitiveType.DOUBLE );
         m.setUnit( Unit.Factory.newInstance( "years" ) );
         fv.setMeasurement( m );
+        assertEquals( "5.0", FactorValueUtils.getValue( fv, "|" ) );
         assertEquals( "age: 5.0 years", FactorValueUtils.getSummaryString( fv ) );
     }
 

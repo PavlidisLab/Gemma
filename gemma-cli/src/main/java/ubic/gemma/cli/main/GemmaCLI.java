@@ -33,6 +33,7 @@ import ubic.gemma.cli.logging.log4j.Log4jConfigurer;
 import ubic.gemma.cli.util.*;
 import ubic.gemma.core.context.SpringContextUtils;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import javax.annotation.Nullable;

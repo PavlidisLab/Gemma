@@ -4,8 +4,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
 import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
 import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
 import static ubic.gemma.core.util.TsvUtils.format;
@@ -209,11 +210,9 @@ public class DiffExAnalysisResultSetWriter {
         }
 
         // Generate a description of the factors involved "factor1_factor2", trying to be R-friendly
-        StringBuilder factorColumnNameBuilder = new StringBuilder();
-        for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-            factorColumnNameBuilder.append( ef.getName().replaceAll( "\\s+", "_" ) ).append( "_" );
-        }
-        String factorColumnName = StringUtil.makeValidForR( StringUtils.removeEnd( factorColumnNameBuilder.toString(), "_" ) );
+        String factorColumnName = ears.getExperimentalFactors().stream()
+                .map( ExpressionDataWriterUtils::constructExperimentalFactorName )
+                .collect( Collectors.joining( "_" ) );
 
         // Generate headers
         buf.append( "\tQValue_" ).append( factorColumnName );
@@ -351,8 +350,8 @@ public class DiffExAnalysisResultSetWriter {
         if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
             buf
-                    .append( "\tCoefficient_" ).append( StringUtil.makeValidForR( ef.getName() ) )
-                    .append( "\tPValue_" ).append( StringUtil.makeValidForR( ef.getName() ) )
+                    .append( "\tCoefficient_" ).append( constructExperimentalFactorName( ef ) )
+                    .append( "\tPValue_" ).append( constructExperimentalFactorName( ef ) )
                     .append( "\n" );
 
             for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {

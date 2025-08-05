@@ -38,13 +38,4 @@ public interface FastaCmd {
     Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database );
 
     Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database );
-
-    BioSequence getByAccession( String accession, String database, String blastHome );
-
-    BioSequence getByIdentifier( int identifier, String database, String blastHome );
-
-    Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database, String blastHome );
-
-    Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database, String blastHome );
-
 }

@@ -202,6 +202,9 @@ public class FileLockManagerImpl implements FileLockManager {
         Path lockPath = resolveLockPath( path );
         try {
             PathUtils.createParentDirectories( lockPath );
+            if ( !Files.isWritable( lockPath.getParent() ) ) {
+                throw new IOException( "The directory " + lockPath.getParent() + " is not writable, cannot create a lockfile within it" );
+            }
             // delete on close only if the lock file is not the same as the path
             return ReadWriteFileLock.open( lockPath, !lockPath.equals( path ) );
         } catch ( IOException e ) {

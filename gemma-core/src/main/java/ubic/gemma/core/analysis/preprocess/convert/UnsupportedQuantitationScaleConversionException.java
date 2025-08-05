@@ -26,7 +26,7 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
  *
  * @author ptan
  */
-public class UnsupportedQuantitationScaleConversionException extends QuantitationTypeConversionException {
+public class UnsupportedQuantitationScaleConversionException extends UnsupportedQuantitationTypeConversionException {
 
     public UnsupportedQuantitationScaleConversionException( ScaleType sourceScaleType, ScaleType targetScaleType ) {
         super( String.format( "Cannot transform data from %s to %s scale.", sourceScaleType, targetScaleType ) );

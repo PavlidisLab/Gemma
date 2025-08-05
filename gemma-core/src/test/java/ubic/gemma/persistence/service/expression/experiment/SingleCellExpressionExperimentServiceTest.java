@@ -204,7 +204,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( ee ) )
                 .singleElement()
                 .satisfies( t );
-        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) )
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig ) )
                 .satisfies( t )
                 .satisfies( scd2 -> {
                     assertThat( scd2.getCellTypeAssignments() )
@@ -217,7 +225,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                                 assertThat( cta.getProtocol() ).isNull();
                             } );
                 } );
-        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, false, true, true, false ) )
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig2 = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( false )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig2 ) )
                 .satisfies( scd2 -> {
                     assertThat( scd2.getCellTypeAssignments() )
                             .isInstanceOf( UninitializedSet.class );
@@ -244,7 +260,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
-        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, config ) )
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, false, config ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
                     assertThat( vec.getSingleCellDimension().getCellIds() )
@@ -252,7 +268,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
-        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false ) )
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, false ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
                     assertThat( vec.getSingleCellDimension().getCellIds() ).isNotNull();
@@ -273,11 +289,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
         assertThat( matrix.rows() ).isEqualTo( 10 );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true )
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false )
                 .forEach( System.out::println );
         assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
                 .isEqualTo( 100L ); // 90% sparsity
-        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30 ) )
+        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30, false ) )
                 .containsOnlyKeys( ee.getBioAssays() )
                 .containsValues( 26L, 24L, 23L, 27L );
     }
@@ -296,12 +312,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, true, true ) );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, false, false ) );
 
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, false ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, false, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, true, true ) ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, false, false ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, true, false ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( true, false, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( false, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, createConfig( false, false, false ) ).collect( Collectors.toList() );
     }
 
     private SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig createConfig( boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
@@ -634,7 +650,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < 100; i++ ) {
             indices[i] = random.nextInt( characteristics.size() + 1 ) - 1;
         }
-        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
+        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( null, null, characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
@@ -662,6 +678,38 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.GENOTYPE ) )
                 .isEmpty();
+    }
+
+    @Test
+    public void testAddDuplicatedCellLevelCharacteristics() {
+        SingleCellDimension dimension = createSingleCellDimension();
+        int[] indices = new int[100];
+        List<Characteristic> characteristics = new ArrayList<>();
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        Random random = new Random( 123L );
+        for ( int i = 0; i < 100; i++ ) {
+            indices[i] = random.nextInt( characteristics.size() + 1 ) - 1;
+        }
+        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( "foo", null, characteristics, indices );
+        dimension.getCellLevelCharacteristics().add( cellTreatments );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
+
+        int[] indices2 = new int[100];
+        List<Characteristic> characteristics2 = new ArrayList<>();
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
+        characteristics2.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        for ( int i = 0; i < 100; i++ ) {
+            indices2[i] = random.nextInt( characteristics2.size() + 1 ) - 1;
+        }
+        CellLevelCharacteristics cellTreatments2 = CellLevelCharacteristics.Factory.newInstance( "foo", null, characteristics2, indices2 );
+
+        assertThatThrownBy( () -> scExpressionExperimentService.addCellLevelCharacteristics( ee, vectors.iterator().next().getSingleCellDimension(), cellTreatments2 ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "There is already a cell-level characteristics named 'foo'." );
     }
 
     @Test

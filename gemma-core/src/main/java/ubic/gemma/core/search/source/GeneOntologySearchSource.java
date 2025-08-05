@@ -59,7 +59,7 @@ public class GeneOntologySearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
         Collection<OntologySearchResult<OntologyTerm>> terms = findTerms( quote( settings.getQuery() ) );
         if ( !terms.isEmpty() ) {
             SearchResultSet<Gene> results = new SearchResultSet<>( settings );
@@ -68,7 +68,7 @@ public class GeneOntologySearchSource implements SearchSource {
         }
 
         SearchResultSet<Gene> results = new SearchResultSet<>( settings );
-        Set<Set<String>> dnf = extractTermsDnf( settings );
+        Set<Set<String>> dnf = extractTermsDnf( settings, context.getIssueReporter() );
         for ( Set<String> clause : dnf ) {
             SearchResultSet<Gene> clauseResults = new SearchResultSet<>( settings );
             for ( String term : clause ) {

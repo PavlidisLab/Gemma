@@ -41,10 +41,13 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private static final String
             CTA_OPTION = "cta",
             CLC_OPTION = "clc",
+            MASK_OPTION = "mask",
+            NO_MASK_OPTION = "noMask",
             FACTOR_OPTION = "factor",
             MAKE_PREFERRED_OPTION = "p",
             SKIP_POST_PROCESSING_OPTION = "nopost",
             ADJUST_LIBRARY_SIZES_OPTION = "adjustLibrarySizes",
+            INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION = "includeMaskedCellsInLibrarySize",
             ALLOW_UNMAPPED_CHARACTERISTICS_OPTION = "allowUnmappedCharacteristics",
             ALLOW_UNMAPPED_FACTOR_VALUES_OPTION = "allowUnmappedFactorValues",
             MAPPING_FILE_OPTION = "mappingFile",
@@ -73,11 +76,15 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private String factorName;
     @Nullable
     private Path mappingFile;
+    @Nullable
+    private String maskIdentifier;
+    private boolean noMask;
     private boolean allowUnmappedCharacteristics;
     private boolean allowUnmappedFactorValues;
     private boolean makePreferred;
     private boolean skipPostProcessing;
     private boolean adjustLibrarySizes;
+    private boolean includeMaskedCellsInLibrarySize;
     private boolean redo;
     @Nullable
     private String redoQt;
@@ -106,12 +113,15 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( CTA_OPTION, "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one). Incompatible with -" + CLC_OPTION + "." );
         addSingleExperimentOption( options, CLC_OPTION, "cell-level-characteristics", true, "Identifier of the cell-level characteristics to use. Incompatible with -" + CTA_OPTION + "." );
+        addSingleExperimentOption( options, MASK_OPTION, "mask", true, "Identifier of the cell-level characteristics to use to mask. Defaults to auto-detecting the mask." );
+        addSingleExperimentOption( options, NO_MASK_OPTION, "--no-mask", true, "Do not use a mask if one is auto-detected for aggregating single-cell data. Incompatible with -" + MASK_OPTION + "." );
         options.addOption( FACTOR_OPTION, "factor", true, "Identifier of the factor to use (defaults to the cell type factor)" );
         addSingleExperimentOption( options, Option.builder( MAPPING_FILE_OPTION ).longOpt( "mapping-file" ).hasArg().type( Path.class ).desc( "File containing explicit mapping between cell-level characteristics and factor values" ).build() );
         options.addOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION, "allow-unmapped-characteristics", false, "Allow unmapped characteristics from the cell-level characteristics." );
         options.addOption( ALLOW_UNMAPPED_FACTOR_VALUES_OPTION, "allow-unmapped-factor-values", false, "Allow unmapped factor values from the experimental factor." );
         options.addOption( MAKE_PREFERRED_OPTION, "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment." );
         options.addOption( ADJUST_LIBRARY_SIZES_OPTION, false, "Adjust library sizes for the resulting aggregated assays." );
+        options.addOption( INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION, "include-masked-cells-in-library-size", false, "Include masked cells in the library size calculation. By default they are excluded as if they were simply filtered out." );
         options.addOption( REDO_OPTION, "redo", false, "Redo the aggregation." );
         // a string is fine to use when bulk-processing
         options.addOption( REDO_QT_OPTION, "redo-quantitation-type", true, "Quantitation to re-aggregate, defaults to the preferred one. Requires the -" + REDO_OPTION + " flag. Incompatible with -" + REDO_DIMENSION_OPTION + "." );
@@ -127,6 +137,8 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         if ( ctaIdentifier != null && clcIdentifier != null ) {
             throw new ParseException( "Only one of -cta or -clc can be set at a time." );
         }
+        maskIdentifier = getOptionValue( commandLine, MASK_OPTION, requires( toBeUnset( NO_MASK_OPTION ) ) );
+        noMask = commandLine.hasOption( NO_MASK_OPTION );
         factorName = commandLine.getOptionValue( FACTOR_OPTION );
         allowUnmappedCharacteristics = commandLine.hasOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION );
         allowUnmappedFactorValues = commandLine.hasOption( ALLOW_UNMAPPED_FACTOR_VALUES_OPTION );
@@ -135,6 +147,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         makePreferred = commandLine.hasOption( MAKE_PREFERRED_OPTION );
         skipPostProcessing = commandLine.hasOption( SKIP_POST_PROCESSING_OPTION );
         adjustLibrarySizes = commandLine.hasOption( ADJUST_LIBRARY_SIZES_OPTION );
+        includeMaskedCellsInLibrarySize = commandLine.hasOption( INCLUDE_MASKED_CELLS_IN_LIBRARY_SIZE_OPTION );
         redo = commandLine.hasOption( REDO_OPTION );
         redoQt = getOptionValue( commandLine, REDO_QT_OPTION,
                 requires( allOf( toBeSet( REDO_OPTION ), toBeUnset( REDO_DIMENSION_OPTION ) ) ) );
@@ -159,6 +172,17 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                     .orElseThrow( () -> new IllegalStateException( finalExpressionExperiment + " does not have a preferred cell-type assignment for " + qt + "." ) );
         }
 
+        CellLevelCharacteristics mask;
+        if ( noMask ) {
+            mask = null;
+        } else if ( maskIdentifier != null ) {
+            mask = entityLocator.locateCellLevelCharacteristics( expressionExperiment, qt, maskIdentifier );
+        } else {
+            log.info( "Auto-detecting the mask for " + expressionExperiment + " and " + qt + "..." );
+            mask = singleCellExpressionExperimentService.getCellLevelMask( expressionExperiment, qt )
+                    .orElse( null );
+        }
+
         ExpressionExperiment finalExpressionExperiment1 = expressionExperiment;
 
         ExperimentalFactor cellTypeFactor;
@@ -175,8 +199,10 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 .build();
 
         AggregateConfig config = AggregateConfig.builder()
+                .mask( mask )
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
+                .includeMaskedCellsInLibrarySize( includeMaskedCellsInLibrarySize )
                 .build();
 
         QuantitationType newQt;

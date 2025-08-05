@@ -23,6 +23,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -107,7 +108,7 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
 
     @Override
     protected BlatResultValueObject doLoadValueObject( BlatResult entity ) {
-        return new BlatResultValueObject( entity );
+        return new BlatResultValueObject( entity, BlatAssociationScorer.score( entity ), BlatAssociationScorer.identity( entity ) );
     }
 
 }

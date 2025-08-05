@@ -26,7 +26,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -118,7 +118,7 @@ public class DifferentialExpressionAnalysisTaskImpl
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
             for ( ExperimentalFactor ef : factors ) {
-                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+                if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                     log.warn( "Batch is included in the interaction!" );
                 }
             }

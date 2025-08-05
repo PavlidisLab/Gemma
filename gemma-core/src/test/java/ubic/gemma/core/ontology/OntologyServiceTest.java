@@ -144,7 +144,7 @@ public class OntologyServiceTest extends BaseTest {
         when( searchService.search( any() ) ).thenReturn( srm );
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000, null, 5000, TimeUnit.MILLISECONDS );
-        verify( characteristicService ).findByValueUriOrValueLike( eq( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" ), eq( Arrays.asList( ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, BioMaterial.class ) ) );
+        verify( characteristicService ).findByValueUriOrValueStartingWith( eq( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" ), eq( Arrays.asList( ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, BioMaterial.class ) ), eq( false ) );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
         verify( searchService ).search( captor.capture() );
         SearchSettings settings = captor.getValue();

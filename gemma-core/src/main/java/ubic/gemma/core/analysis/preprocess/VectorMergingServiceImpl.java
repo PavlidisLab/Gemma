@@ -43,7 +43,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getDefaultValue;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultValue;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study

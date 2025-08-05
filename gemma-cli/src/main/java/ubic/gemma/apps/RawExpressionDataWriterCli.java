@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
-import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -33,9 +33,6 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-
-    @Autowired
-    private FileLockManager fileLockManager;
 
     @Nullable
     private String[] samples;
@@ -64,7 +61,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        addExpressionDataFileOptions( options, "raw data" );
+        addExpressionDataFileOptions( options, "raw data", true );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation/--standard-location." ).build() );
         OptionsUtils.addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the data. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
         addForceOption( options );
@@ -72,7 +69,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        this.result = getExpressionDataFileResult( commandLine );
+        this.result = getExpressionDataFileResult( commandLine, true );
         this.samples = commandLine.getOptionValues( "samples" );
         this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
         if ( this.result.isStandardLocation() && this.samples != null ) {
@@ -142,9 +139,9 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     private Writer openOutputFile( Path fileName ) throws IOException {
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new OutputStreamWriter( new GZIPOutputStream( fileLockManager.newOutputStream( fileName ) ), StandardCharsets.UTF_8 );
+            return new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( fileName ) ), StandardCharsets.UTF_8 );
         } else {
-            return fileLockManager.newBufferedWriter( fileName );
+            return Files.newBufferedWriter( fileName );
         }
     }
 }

@@ -22,10 +22,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,13 +60,10 @@ public class CompositeSequenceGeneMapperService {
             log.debug( "official symbol: " + officialSymbol );
             Collection<Gene> genes = genesMap.get( officialSymbol );
             for ( Gene g : genes ) {
-                Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
+                Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequences( g, true );
                 for ( CompositeSequence sequence : compositeSequences ) {
                     if ( arrayDesigns.contains( sequence.getArrayDesign() ) ) {
-                        if ( compositeSequencesForGeneMap.get( g ) == null ) {
-                            compositeSequencesForGeneMap.put( g, new HashSet<CompositeSequence>() );
-                        }
-                        compositeSequencesForGeneMap.get( g ).add( sequence );
+                        compositeSequencesForGeneMap.computeIfAbsent( g, k -> new HashSet<>() ).add( sequence );
                     }
                 }
             }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
@@ -191,7 +192,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             List<Characteristic> c = new ArrayList<>();
             int[] i = new int[csi.length];
             populate( csi, c, i );
-            slicedClcs.add( CellLevelCharacteristics.Factory.newInstance( c, i ) );
+            slicedClcs.add( CellLevelCharacteristics.Factory.newInstance( clc.getName(), clc.getDescription(), c, i ) );
         }
         return slicedClcs;
     }
@@ -211,34 +212,34 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
-            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
-            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession )
                     .map( createSlicer( samples ) );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
                 .map( createSlicer( samples ) );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession )
                 .map( createSlicer( samples ) );
     }
 
@@ -262,8 +263,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
-        return expressionExperimentDao.getNumberOfNonZeroesBySample( ee, qt, fetchSize );
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported ) {
+        return expressionExperimentDao.getNumberOfNonZeroesBySample( ee, qt, fetchSize, useCursorFetchIfSupported );
     }
 
     @Override
@@ -301,7 +302,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return new SingleCellExpressionDataIntMatrix( vectors );
         } else {
             log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
-            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            try {
+                return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 
@@ -318,7 +323,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return new SingleCellExpressionDataIntMatrix( vectors );
         } else {
             log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
-            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            try {
+                return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 
@@ -433,9 +442,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 throw new IllegalStateException( "There is not single-cell dimension associated to " + preferredQt + "." );
             }
             long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
-            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false, false ) ) {
                 log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
-                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), 10, numVecs ) ) );
+                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( ee, preferredQt.get(), SingleCellExpressionExperimentServiceImpl.class.getName(), 100, numVecs ) ) );
             }
         } else {
             // reset the metrics to null since there is no preferred vectors
@@ -690,8 +699,20 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public SingleCellDimension getSingleCellDimensionWithAssaysAndCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension scd = expressionExperimentDao.getSingleCellDimension( ee, qt );
+        if ( scd == null ) {
+            throw new IllegalStateException( qt + " does not have an associated single-cell dimension." );
+        }
+        scd.getBioAssays().forEach( Thaws::thawBioAssay );
+        Thaws.thawSingleCellDimension( scd );
+        return scd;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -708,8 +729,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -860,6 +881,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     private CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cta ) {
+        if ( cta.getName() != null ) {
+            for ( CellTypeAssignment e : dimension.getCellTypeAssignments() ) {
+                if ( cta.getName().equalsIgnoreCase( e.getName() ) ) {
+                    throw new IllegalArgumentException( "There is already a cell type assignment named '" + cta.getName() + "'." );
+                }
+            }
+        }
         Assert.isTrue( !dimension.getCellTypeAssignments().contains( cta ), dimension + " already has a cell type assignment matching " + cta + "." );
         if ( cta.isPreferred() ) {
             for ( CellTypeAssignment a : dimension.getCellTypeAssignments() ) {
@@ -914,6 +942,17 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         removeCellTypeAssignment( ee, dim, cellTypeAssignment, alsoRemoveFactor );
     }
 
+    @Override
+    @Transactional
+    public void removeCellTypeAssignmentByName( ExpressionExperiment ee,  SingleCellDimension dimension, String name ) {
+        List<CellTypeAssignment> toRemove = dimension.getCellTypeAssignments().stream()
+                .filter( cta -> name.equalsIgnoreCase( cta.getName() ) )
+                .collect( Collectors.toList() );
+        for ( CellTypeAssignment cta : toRemove ) {
+            removeCellTypeAssignment( ee, dimension, cta );
+        }
+    }
+
     private void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean alsoRemoveFactor ) {
         if ( !dimension.getCellTypeAssignments().remove( cellTypeAssignment ) ) {
             throw new IllegalArgumentException( cellTypeAssignment + " is not associated to " + dimension );
@@ -952,6 +991,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Protocol> getCellTypeAssignmentProtocols() {
+        return expressionExperimentDao.getCellTypeAssignmentProtocols();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {
+        return expressionExperimentDao.getCellTypeAssignmentByProtocol( ee, qt, protocolName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
         return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee ) );
     }
@@ -968,6 +1019,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
         Assert.isNull( clc.getId(), "Cell-level characteristics must be transient." );
+        if ( clc.getName() != null ) {
+            for ( CellLevelCharacteristics e : scd.getCellLevelCharacteristics() ) {
+                if ( clc.getName().equalsIgnoreCase( e.getName() ) ) {
+                    throw new IllegalArgumentException( "There is already a cell-level characteristics named '" + e.getName() + "'." );
+                }
+            }
+        }
         Assert.isTrue( !scd.getCellLevelCharacteristics().contains( clc ), scd + " already has a cell-level characteristics matching " + clc + "." );
         scd.getCellLevelCharacteristics().add( clc );
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
@@ -999,6 +1057,17 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional
+    public void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
+        List<CellLevelCharacteristics> toRemove = dimension.getCellLevelCharacteristics().stream()
+                .filter( clc -> name.equalsIgnoreCase( clc.getName() ) )
+                .collect( Collectors.toList() );
+        for ( CellLevelCharacteristics clc : toRemove ) {
+            removeCellLevelCharacteristics( ee, dimension, clc );
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
         return expressionExperimentDao.getCellLevelCharacteristics( ee );
@@ -1017,10 +1086,31 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, id );
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String name ) {
+        return expressionExperimentDao.getCellLevelCharacteristics( ee, qt, name );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CellLevelCharacteristics> getCellLevelMask( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        List<CellLevelCharacteristics> candidates = expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, Categories.MASK );
+        if ( candidates.size() == 1 ) {
+            return Optional.of( candidates.iterator().next() );
+        } else if ( candidates.isEmpty() ) {
+            return Optional.empty();
+        } else {
+            log.warn( expressionExperiment + " " + qt + " has more than one cell-level masks." );
+            return Optional.empty();
+        }
     }
 
     @Override

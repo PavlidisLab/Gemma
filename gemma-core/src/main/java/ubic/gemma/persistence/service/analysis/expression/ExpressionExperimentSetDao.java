@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
@@ -42,6 +43,10 @@ public interface ExpressionExperimentSetDao
     Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
     Collection<ExpressionExperimentSet> findByName( String name );
+
+    Collection<ExpressionExperimentSet> findByAccession( String accession );
+
+    Collection<ExpressionExperimentSet> findByAccession( String accession, ExternalDatabase externalDatabase );
 
     /**
      * @param id id

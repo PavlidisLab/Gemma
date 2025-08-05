@@ -185,8 +185,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         analysis.setExperimentAnalyzed( ee );
         analysis.setName( ee.getShortName() + " link analysis" );
-        analysis.getProtocol().setDescription(
-                analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
+        if ( analysis.getProtocol() != null ) {
+            analysis.getProtocol().setDescription(
+                    analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
+        } else {
+            log.warn( analysis + " has no protocol object associated, cannot append the filter configuration." );
+        }
 
         la.setAnalysisObj( analysis );
     }

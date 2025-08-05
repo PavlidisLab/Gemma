@@ -19,7 +19,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.getEEFolderName;
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.getExpressionExperimentMetadataDirname;
 
 @Service
 @CommonsLog
@@ -74,6 +74,6 @@ public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMet
     }
 
     private Path getChangelogFile( ExpressionExperiment expressionExperiment ) {
-        return metadataDir.resolve( getEEFolderName( expressionExperiment ) ).resolve( "CHANGELOG.md" );
+        return metadataDir.resolve( getExpressionExperimentMetadataDirname( expressionExperiment ) ).resolve( "CHANGELOG.md" );
     }
 }

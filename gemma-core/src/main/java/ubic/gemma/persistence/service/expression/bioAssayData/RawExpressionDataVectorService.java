@@ -28,13 +28,13 @@ import java.util.Collection;
 /**
  * @author Paul
  */
-public interface RawExpressionDataVectorService extends DesignElementDataVectorService<RawExpressionDataVector> {
+public interface RawExpressionDataVectorService extends BulkExpressionDataVectorService<RawExpressionDataVector> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
     RawExpressionDataVector load( Long id );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
 
 }

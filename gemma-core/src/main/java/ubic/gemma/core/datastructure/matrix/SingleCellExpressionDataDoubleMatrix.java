@@ -3,21 +3,20 @@ package ubic.gemma.core.datastructure.matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.datastructure.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.util.SparseRangeArrayList;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.getDefaultValueAsDouble;
 
 /**
  * @author poirigui
@@ -35,14 +34,12 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
     private final List<BioAssay> bioAssays;
 
     /**
-     * Indicate if this matrix is a count matrix.
+     * Default value for a missing value.
+     * <p>
+     * The {@link CompRowMatrix} implementation used returns 0 for missing values, so this value is used as replacement
+     * when a value is truly missing.
      */
-    private final boolean isCount;
-    /**
-     * Default value for a missing (or zero) count. This is only used if the matrix is a count matrix as indicated by
-     * {@link #isCount}.
-     */
-    private final double defaultCountValue;
+    private final double defaultValue;
 
     /**
      * Row elements, only computed on-demand.
@@ -82,13 +79,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
             }
             i++;
         }
-        if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
-            isCount = true;
-            defaultCountValue = getMissingCountValue( quantitationType );
-        } else {
-            isCount = false;
-            defaultCountValue = 0;
-        }
+        defaultValue = getDefaultValueAsDouble( quantitationType );
         bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
     }
 
@@ -117,10 +108,11 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
     @Override
     public double getAsDouble( int row, int column ) {
         double result = matrix.get( row, column );
-        if ( result == 0 && isCount && defaultCountValue != 0 ) {
+        // CompRowMatrix.get() returns 0 for missing values, so we need to check if the value is actually missing
+        if ( result == 0 && defaultValue != 0 ) {
             int j = Arrays.binarySearch( matrix.getColumnIndices(), matrix.getRowPointers()[row], matrix.getRowPointers()[row + 1], column );
             if ( j < 0 ) {
-                result = defaultCountValue;
+                result = defaultValue;
             }
         }
         return result;
@@ -197,7 +189,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
     @Override
     public double[] getRowAsDoubles( int index ) {
         double[] vec = new double[matrix.numColumns()];
-        Arrays.fill( vec, defaultCountValue );
+        Arrays.fill( vec, defaultValue );
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();

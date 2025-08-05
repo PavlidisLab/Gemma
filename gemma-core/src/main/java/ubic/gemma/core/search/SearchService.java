@@ -14,8 +14,8 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.Collection;
@@ -61,9 +61,12 @@ public interface SearchService {
      * <li>BibliographicReferences (articles)
      * </ul>
      *
-     * @param  settings settings
+     * @param settings settings
+     * @param context
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
+    SearchResultMap search( SearchSettings settings, SearchContext context ) throws SearchException;
+
     SearchResultMap search( SearchSettings settings ) throws SearchException;
 
     /**

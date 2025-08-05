@@ -21,7 +21,7 @@ public class RepresentationConversionUtilsTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws QuantitationTypeConversionException {
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );

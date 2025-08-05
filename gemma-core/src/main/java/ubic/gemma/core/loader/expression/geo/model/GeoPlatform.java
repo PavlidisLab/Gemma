@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
+import ubic.gemma.core.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -259,7 +260,7 @@ public class GeoPlatform extends GeoData {
      * @param s description
      */
     public void addToDescription( String s ) {
-        this.description = this.description + " " + s;
+        this.description = StringUtils.appendWithDelimiter( this.description, s );
     }
 
     /**

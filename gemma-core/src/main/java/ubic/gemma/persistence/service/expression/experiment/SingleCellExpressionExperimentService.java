@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Category;
@@ -81,16 +80,16 @@ public interface SingleCellExpressionExperimentService {
      * Obtain a stream over single-cell vectors for a given quantitation type.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, SingleCellVectorInitializationConfig config );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession );
 
     /**
      * Obtain a single single-cell vector without initializing cell IDs.
@@ -110,7 +109,7 @@ public interface SingleCellExpressionExperimentService {
     long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported );
 
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.
@@ -165,8 +164,19 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
+    @Getter
+    @Builder
+    class SingleCellDimensionInitializationConfig {
+        private boolean includeBioAssays;
+        private boolean includeCtas;
+        private boolean includeClcs;
+        private boolean includeProtocol;
+        private boolean includeCharacteristics;
+        private boolean includeIndices;
+    }
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
     /**
      * Obtain a single-cell dimension used for a given dataset and QT.
@@ -179,13 +189,23 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
 
+    /**
+     * Retrieve a single-cell dimension with its bioassays and cell-level  characteristics initialized.
+     * @param ee
+     * @param qt
+     * @return
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimensionWithAssaysAndCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
+
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
     /**
      * Obtain the preferred single-cell dimension.
@@ -274,6 +294,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
+
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
      */
@@ -298,6 +321,17 @@ public interface SingleCellExpressionExperimentService {
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
+
+    /**
+     * Obtain a collection of protocols used to assign cell types to single-cell vectors.
+     */
+    Collection<Protocol> getCellTypeAssignmentProtocols();
+
+    /**
+     * Obtain a cell type assignment by a protocol identifier.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName );
 
     /**
      * Obtain the preferred cell type labelling from the preferred single-cell vectors.
@@ -326,6 +360,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics clc );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
+
     /**
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
      */
@@ -342,8 +379,21 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Long id );
 
+    /**
+     * Obtain a CLC by name.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String name );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
+    /**
+     * Obtain a mask if one is unambiguously defined for the given experiment and quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellLevelCharacteristics> getCellLevelMask( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

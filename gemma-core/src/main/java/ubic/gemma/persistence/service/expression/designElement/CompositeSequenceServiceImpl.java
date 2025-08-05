@@ -18,8 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -231,7 +232,7 @@ public class CompositeSequenceServiceImpl
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {
                 BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-                blatResult = new BlatResultValueObject( blatResultService.thaw( blatAssociation.getBlatResult() ) );
+                blatResult = new BlatResultValueObject( blatResultService.thaw( blatAssociation.getBlatResult() ), BlatAssociationScorer.score( blatAssociation.getBlatResult() ), BlatAssociationScorer.identity( blatAssociation.getBlatResult() ) );
             } else if ( bs2gp instanceof AnnotationAssociation ) {
                 /*
                  * Make a dummy blat result

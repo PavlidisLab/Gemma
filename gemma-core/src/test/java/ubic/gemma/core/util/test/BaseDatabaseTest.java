@@ -65,7 +65,6 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             props.setProperty( "hibernate.max_fetch_depth", "3" );
             props.setProperty( "hibernate.default_batch_fetch_size", "128" );
-            props.setProperty( "hibernate.jdbc.fetch_size", "128" );
             props.setProperty( "hibernate.jdbc.batch_size", "32" );
             props.setProperty( "hibernate.jdbc.batch_versioned_data", "true" );
             props.setProperty( "hibernate.order_inserts", "true" );

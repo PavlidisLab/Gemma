@@ -17,6 +17,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 
 public class OptionsUtils {
@@ -110,15 +111,23 @@ public class OptionsUtils {
      * Use {@link #getAutoOptionValue(CommandLine, String, String)} to retrieve its value later on.
      */
     public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
-        options.addOption( optionName, longOptionName, false, description + " This option is incompatible with -" + noOptionName + "/--" + longNoOptionName + ". Default is to auto-detect." );
-        options.addOption( noOptionName, longNoOptionName, false, noDescription + " This option is incompatible with -" + optionName + "/--" + longOptionName + ". Default is to auto-detect." );
+        options.addOption( optionName, longOptionName, false, description + " This option is incompatible with " + formatOption( noOptionName, longNoOptionName ) + ". Default is to auto-detect." );
+        options.addOption( noOptionName, longNoOptionName, false, noDescription + " This option is incompatible with " + formatOption( optionName, longOptionName ) + ". Default is to auto-detect." );
+    }
+
+    /**
+     * Format an option for display.
+     */
+    public static String formatOption( Options options, String optionName ) {
+        return formatOption( requireNonNull( options.getOption( optionName ),
+                () -> "No option with name " + optionName + " exists. Is it possible it hasn't been declared yet?" ) );
     }
 
     @Nullable
     public static Boolean getAutoOptionValue( CommandLine commandLine, String optionName, String noOptionName ) throws org.apache.commons.cli.ParseException {
         if ( commandLine.hasOption( optionName ) && commandLine.hasOption( noOptionName ) ) {
-            throw new org.apache.commons.cli.ParseException( String.format( "Cannot specify -%s and -%s at the same time.",
-                    optionName, noOptionName ) );
+            throw new org.apache.commons.cli.ParseException( String.format( "Cannot specify %s and %s at the same time.",
+                    formatOption( commandLine, optionName ), formatOption( commandLine, noOptionName ) ) );
         }
         if ( commandLine.hasOption( optionName ) ) {
             return true;
@@ -207,8 +216,7 @@ public class OptionsUtils {
      * @see #getOptionValue(CommandLine, String, Predicate)
      */
     @Nullable
-    public static <T> T
-    getParsedOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws
+    public static <T> T getParsedOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws
             org.apache.commons.cli.ParseException {
         if ( hasOption( commandLine, optionName, predicate ) ) {
             return commandLine.getParsedOptionValue( optionName );
@@ -303,9 +311,16 @@ public class OptionsUtils {
         return Arrays.stream( cl.getOptions() )
                 .filter( o -> o.getOpt().equals( optionName ) )
                 .findFirst()
-                .map( Option::getLongOpt )
-                .map( longOpt -> "-" + optionName + "/" + "--" + longOpt )
+                .map( OptionsUtils::formatOption )
                 .orElse( "-" + optionName );
+    }
+
+    private static String formatOption( Option opt ) {
+        return formatOption( opt.getOpt(), opt.getLongOpt() );
+    }
+
+    private static String formatOption( String opt, @Nullable String longOpt ) {
+        return "-" + opt + ( longOpt != null ? ",--" + longOpt : "" );
     }
 
     private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w,

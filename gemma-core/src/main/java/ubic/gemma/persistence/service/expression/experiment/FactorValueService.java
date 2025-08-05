@@ -38,7 +38,7 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
 
     @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<FactorValue> findByValue( String valuePrefix );
+    Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })

@@ -1,9 +1,9 @@
 package ubic.gemma.core.search;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,19 +27,19 @@ public interface SearchSource {
      */
     boolean accepts( SearchSettings settings );
 
-    default Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
@@ -49,18 +49,18 @@ public interface SearchSource {
      * I wanted to remove this, but there's some logic with indirect gene hit penalty that we might want to keep around.
      *
      * @return a mixture of {@link BioSequence} and {@link Gene} matching the search settings.
-     * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
+     * @deprecated use {@link #searchBioSequence(SearchSettings, SearchContext)} (SearchSettings)} instead
      */
     @Deprecated
     default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
-            @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+            SearchContext context, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         Collection<SearchResult<?>> results = new HashSet<>();
-        results.addAll( this.searchBioSequence( settings ) );
-        results.addAll( this.searchGene( settings ) );
+        results.addAll( this.searchBioSequence( settings, context ) );
+        results.addAll( this.searchGene( settings, context ) );
         return results;
     }
 
-    default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
@@ -70,29 +70,29 @@ public interface SearchSource {
      * FIXME: this should solely return {@link CompositeSequence}
      *
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
-     * @deprecated use {@link #searchCompositeSequence(SearchSettings)} instead
+     * @deprecated use {@link #searchCompositeSequence(SearchSettings, SearchContext)} instead
      */
     @Deprecated
-    default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings, SearchContext context ) throws SearchException {
         Collection<SearchResult<?>> results = new HashSet<>();
-        results.addAll( this.searchCompositeSequence( settings ) );
-        results.addAll( this.searchGene( settings ) );
+        results.addAll( this.searchCompositeSequence( settings, context ) );
+        results.addAll( this.searchGene( settings, context ) );
         return results;
     }
 
-    default Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 
-    default Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings ) throws SearchException {
+    default Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings, SearchContext context ) throws SearchException {
         return Collections.emptyList();
     }
 }

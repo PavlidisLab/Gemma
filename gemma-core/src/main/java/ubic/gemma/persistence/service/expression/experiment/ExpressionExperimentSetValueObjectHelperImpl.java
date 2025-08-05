@@ -96,7 +96,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
         newSet.setName( eesvo.getName() );
         newSet.setDescription( eesvo.getDescription() );
 
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.load(
+        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService.load(
                 eesvo.getExpressionExperimentIds() );
 
         newSet.getExperiments().addAll( datasetsAnalyzed );
@@ -205,7 +205,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
         }
 
         assert newExperiments.size() == eeIds.size();
-        Collection<BioAssaySet> basColl = new HashSet<>();
+        Collection<ExpressionExperiment> basColl = new HashSet<>();
         for ( ExpressionExperiment experiment : newExperiments ) {
             Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
 
@@ -259,7 +259,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
                     "The value object must have some experiments associated before it can be converted and persisted" );
         }
 
-        Set<BioAssaySet> bas = new HashSet<BioAssaySet>( experiments );
+        Set<ExpressionExperiment> bas = new HashSet<>( experiments );
         entity.setExperiments( bas );
         entity.setName( setVO.getName() );
 

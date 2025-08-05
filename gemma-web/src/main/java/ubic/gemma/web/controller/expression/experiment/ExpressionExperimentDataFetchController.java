@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,13 +43,12 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.DownloadUtil;
 
-import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -79,12 +77,11 @@ public class ExpressionExperimentDataFetchController {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private ServletContext servletContext;
+    @Autowired
+    private DownloadUtil downloadUtil;
 
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
-
-    @Value("${tomcat.sendfile.enabled}")
-    private boolean enableTomcatSendfile;
 
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
@@ -105,7 +102,7 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
+            downloadUtil.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
         }
     }
 
@@ -123,7 +120,7 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
+            downloadUtil.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
                     type != ExpressionExperimentMetaFileType.MULTIQC_REPORT );
         }
     }
@@ -182,49 +179,6 @@ public class ExpressionExperimentDataFetchController {
         tc.setAnalysisId( analysisId );
         DiffExpressionDataWriterTask job = new DiffExpressionDataWriterTask( tc );
         return taskRunningService.submitTask( job );
-    }
-
-    /**
-     * @param f            the file to download from
-     * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
-     *                     of the file will be used.
-     * @param response     the http response to download to.
-     * @throws IOException if the file in the given path can not be read.
-     */
-    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletRequest request, HttpServletResponse response, boolean downloadAsAttachment ) throws IOException {
-        if ( StringUtils.isBlank( downloadName ) ) {
-            downloadName = f.getFileName().toString();
-        }
-        response.setContentType( contentType );
-        response.setContentLengthLong( Files.size( f ) );
-        if ( downloadAsAttachment ) {
-            response.addHeader( "Content-Disposition", "attachment; filename=\"" + downloadName + "\"" );
-        }
-        if ( enableTomcatSendfile ) {
-            if ( Boolean.TRUE.equals( request.getAttribute( "org.apache.tomcat.sendfile.support" ) ) ) {
-                downloadViaSendfile( f, request, response );
-                return;
-            } else {
-                log.warn( "Tomcat sendfile is not supported for this request. Falling back to stream download." );
-            }
-        }
-        downloadViaStream( f, response );
-    }
-
-    /**
-     * Uses Tomcat sendfile to download the file.
-     */
-    private void downloadViaSendfile( Path f, HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        request.setAttribute( "org.apache.tomcat.sendfile.filename", f.toString() );
-        request.setAttribute( "org.apache.tomcat.sendfile.start", 0L );
-        request.setAttribute( "org.apache.tomcat.sendfile.end", Files.size( f ) );
-    }
-
-    private void downloadViaStream( Path f, HttpServletResponse response ) throws IOException {
-        try ( InputStream in = Files.newInputStream( f ) ) {
-            FileCopyUtils.copy( in, response.getOutputStream() );
-            response.flushBuffer();
-        }
     }
 
     private ExpressionExperimentMetaFileType getType( int id ) {
@@ -389,7 +343,7 @@ public class ExpressionExperimentDataFetchController {
                     }
                 } else {
                     ExpressionExperiment finalEe2 = ee;
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, filtered, false )
                             .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) ) ) {
                         f = lockedPath.getPath();
                     } catch ( FilteringException e ) {

@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -41,7 +40,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
@@ -51,6 +49,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
@@ -448,10 +448,10 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertTrue( !geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
         assertNotNull( g );
-        long count = geneService.getCompositeSequenceCountById( g.getId() );
+        long count = geneService.getCompositeSequenceCount( g, true );
         assertTrue( count != 0 );
 
-        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
+        Collection<CompositeSequence> compSequences = geneService.getCompositeSequences( g, true );
         assertTrue( compSequences.size() != 0 );
 
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
