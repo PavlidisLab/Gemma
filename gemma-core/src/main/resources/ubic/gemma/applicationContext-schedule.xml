@@ -179,7 +179,6 @@
                 <property name="arguments">
                     <set>
                         <value>ubic.gemma.model.expression.experiment.ExpressionExperiment</value>
-                        <value>ubic.gemma.model.common.description.BibliographicReference</value>
                     </set>
                 </property>
                 <property name="concurrent" value="false"/>
