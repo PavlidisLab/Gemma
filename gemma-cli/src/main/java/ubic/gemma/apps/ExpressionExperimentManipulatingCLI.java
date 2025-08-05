@@ -38,9 +38,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -209,8 +207,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      *
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
+     * @param allowStandardLocation if true, the standard location option will be added
      */
-    protected void addExpressionDataFileOptions( Options options, String what ) {
+    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
         OptionGroup og = new OptionGroup();
         addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
                 .longOpt( "output-file" ).hasArg().type( Path.class )
@@ -218,13 +217,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         og.addOption( Option.builder( OUTPUT_DIR_OPTION )
                 .longOpt( "output-dir" ).hasArg().type( Path.class )
                 .desc( "Write " + what + " inside the given directory." ).build() );
-        og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
-                .longOpt( "standard-location" )
-                .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
-                .build() );
+        if ( allowStandardLocation ) {
+            og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
+                    .longOpt( "standard-location" )
+                    .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
+                    .build() );
+        }
         addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
                 .longOpt( "stdout" )
-                .desc( "Write " + what + " to standard output. This option is incompatible with -outputFile, -outputDir and -standardLocation." )
+                .desc( "Write " + what + " to standard output." + ( !allowStandardLocation ? " This is the default if no other destination is selected." : "" ) )
                 .build() );
         options.addOptionGroup( og );
     }
@@ -274,10 +275,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         }
     }
 
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine ) throws ParseException {
+    /**
+     * Obtain the result of the expression data file options added by {@link #addExpressionDataFileOptions(Options, String, boolean)}.
+     * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
+     *                              other destination is selected. Otherwise, standard output will be used as a default.
+     */
+    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
         if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
-            log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
-            return new ExpressionDataFileResult( true, false, null, null );
+            if ( allowStandardLocation ) {
+                log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
+                return new ExpressionDataFileResult( true, false, null, null );
+            } else {
+                log.debug( "No expression data file options provided, defaulting to -standardOutput/--standard-output." );
+                return new ExpressionDataFileResult( false, true, null, null );
+            }
         }
         return new ExpressionDataFileResult(
                 commandLine.hasOption( STANDARD_LOCATION_OPTION ),
@@ -365,7 +376,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
-        Collection<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<ExpressionExperiment> expressionExperiments = new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) );
 
         if ( all ) {
             if ( useReferencesIfPossible ) {
@@ -426,68 +437,53 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             this.removeTroubledExperiments( expressionExperiments );
         }
 
-        expressionExperiments = preprocessBioAssaySets( expressionExperiments );
+        expressionExperiments = preprocessExpressionExperiments( expressionExperiments );
 
         if ( expressionExperiments.isEmpty() ) {
             throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
-            BioAssaySet ee = expressionExperiments.iterator().next();
+            ExpressionExperiment ee = expressionExperiments.iterator().next();
             log.info( "Final dataset: " + formatExperiment( ee ) );
-            processBioAssaySet( expressionExperiments.iterator().next() );
+            ExpressionExperiment bas = expressionExperiments.iterator().next();
+            Assert.notNull( bas, "Cannot process a null ExpressionExperiment." );
+            processExpressionExperiment( bas );
         } else {
             if ( !singleExperimentOptionsUsed.isEmpty() ) {
                 throw new IllegalStateException( String.format( "There are single-experiment options used: %s, but more than one experiments was found.",
                         singleExperimentOptionsUsed.stream().map( o -> "-" + o ).collect( Collectors.joining( ", " ) ) ) );
             }
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
-            processBioAssaySets( expressionExperiments );
+            processExpressionExperiments( expressionExperiments );
         }
     }
 
     /**
-     * Preprocess the set of {@link BioAssaySet} before invoking {@link #processBioAssaySets(Collection)} or
-     * {@link #processBioAssaySet(BioAssaySet)}.
+     * Preprocess the set of {@link ExpressionExperiment} before invoking {@link #processExpressionExperiments(Collection)} or
+     * {@link #processExpressionExperiment(ExpressionExperiment)}.
      * <p>
      * This can be an opportunity to filter or modify the set of experiments.
      */
-    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected Collection<ExpressionExperiment> preprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         return expressionExperiments;
     }
 
     /**
-     * Process multiple {@link BioAssaySet}.
+     * Process multiple {@link ExpressionExperiment}.
      * <p>
      * This only called if more than one experiment was found.
      */
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         setEstimatedMaxTasks( expressionExperiments.size() );
-        for ( BioAssaySet bas : expressionExperiments ) {
+        for ( ExpressionExperiment ee : expressionExperiments ) {
             try {
-                processBioAssaySet( bas );
+                Assert.notNull( ee, "Cannot process a null ExpressionExperiment." );
+                processExpressionExperiment( ee );
             } catch ( Exception e ) {
-                addErrorObject( toBatchObject( bas ), e );
+                addErrorObject( toBatchObject( ee ), e );
                 if ( abortOnError ) {
                     throw new RuntimeException( "Aborted processing due to error.", e );
                 }
             }
-        }
-    }
-
-    /**
-     * Process a BioAssaySet.
-     * <p>
-     * This method delegates to one of {@link #processExpressionExperiment(ExpressionExperiment)},
-     * {@link #processExpressionExperimentSubSet(ExpressionExperimentSubSet)} or {@link #processOtherBioAssaySet(BioAssaySet)}.
-     * @throws Exception if an error occurs, it will be collected via {@link #addErrorObject(Serializable, String, Throwable)}
-     */
-    protected void processBioAssaySet( BioAssaySet bas ) throws Exception {
-        Assert.notNull( bas, "Cannot process a null BioAssaySet." );
-        if ( bas instanceof ExpressionExperiment ) {
-            processExpressionExperiment( ( ExpressionExperiment ) bas );
-        } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            processExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) bas );
-        } else {
-            processOtherBioAssaySet( bas );
         }
     }
 
@@ -498,43 +494,18 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         throw new UnsupportedOperationException( "This command line does support experiments." );
     }
 
-    /**
-     * Process an {@link ExpressionExperimentSubSet}.
-     */
-    protected void processExpressionExperimentSubSet( @SuppressWarnings("unused") ExpressionExperimentSubSet expressionExperimentSubSet ) throws Exception {
-        throw new UnsupportedOperationException( "This command line does support experiment subsets." );
-    }
-
-    /**
-     * Process other kinds of {@link BioAssaySet} that are neither experiment nor subset.
-     */
-    protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) throws Exception {
-        throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
-    }
-
-    @Override
     protected final Serializable toBatchObject( @Nullable ExpressionExperiment object ) {
-        return toBatchObject( ( BioAssaySet ) object );
-    }
-
-    protected final Serializable toBatchObject( @Nullable BioAssaySet object ) {
         if ( object == null ) {
             return null;
         }
-        if ( object instanceof ExpressionExperiment ) {
-            if ( Hibernate.isInitialized( object ) ) {
-                return ( ( ExpressionExperiment ) object ).getShortName();
-            } else {
-                return "ExpressionExperiment Id=" + object.getId();
-            }
-        } else if ( object instanceof ExpressionExperimentSubSet ) {
-            return "ExpressionExperimentSubSet Id=" + object.getId();
+        if ( Hibernate.isInitialized( object ) ) {
+            return object.getShortName();
         } else {
-            return "BioAssaySet Id=" + object.getId();
+            return "ExpressionExperiment Id=" + object.getId();
         }
     }
 
-    private void excludeFromFile( Collection<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
+    private void excludeFromFile( Collection<ExpressionExperiment> expressionExperiments, Path excludeEeFileName ) throws IOException {
         assert !expressionExperiments.isEmpty();
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
@@ -553,7 +524,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         return ees;
     }
 
-    private Set<BioAssaySet> experimentsFromEeSet( String optionValue ) {
+    private Set<ExpressionExperiment> experimentsFromEeSet( String optionValue ) {
         Assert.isTrue( StringUtils.isNotBlank( optionValue ), "Please provide an eeset name" );
         ExpressionExperimentSet eeSet;
         try {
@@ -640,7 +611,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     /**
      * Obtain EEs that are troubled.
      */
-    private void removeTroubledExperiments( Collection<BioAssaySet> expressionExperiments ) {
+    private void removeTroubledExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( expressionExperiments.isEmpty() ) {
             log.warn( "No experiments to remove troubled from" );
             return;
@@ -653,14 +624,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         AtomicInteger removedTroubledExperiments = new AtomicInteger();
         expressionExperiments.removeIf( ee -> {
             // for subsets, check source experiment troubled flag
-            if ( ee instanceof ExpressionExperimentSubSet ) {
-                if ( troubledIds.contains( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() ) ) {
-                    removedTroubledExperiments.incrementAndGet();
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if ( troubledIds.contains( ee.getId() ) ) {
+            if ( troubledIds.contains( ee.getId() ) ) {
                 removedTroubledExperiments.incrementAndGet();
                 return true;
             } else {
@@ -750,15 +714,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * <p>
      * Use this for printing datasets if {@link #useReferencesIfPossible} is set to prevent {@link org.hibernate.LazyInitializationException}.
      */
-    protected String formatExperiment( BioAssaySet bas ) {
+    protected String formatExperiment( ExpressionExperiment bas ) {
         if ( Hibernate.isInitialized( bas ) ) {
             return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
-        } else if ( bas instanceof ExpressionExperiment ) {
-            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
-        } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            return "ExpressionExperimentSubSet Id=" + bas.getId() + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperimentSubSet ) bas ).web().toUriString();
         } else {
-            return "BioAssaySet Id=" + bas.getId();
+            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
         }
     }
 

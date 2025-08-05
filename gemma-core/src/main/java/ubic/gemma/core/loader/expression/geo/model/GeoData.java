@@ -18,83 +18,44 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Abstract class from which other GEO objects are descended.
  *
  * @author pavlidis
  */
+@Getter
+@Setter
 public abstract class GeoData implements Serializable {
 
-    private final List<String> columnNames = new ArrayList<>();
-    private final List<String> columnDescriptions = new ArrayList<>();
-    private GeoContact contact = new GeoContact();
     @Nullable
     private String geoAccession;
     private String title = "";
-
-    public void addColumnName( String columnName ) {
-        assert columnName != null;
-        this.columnNames.add( columnName );
-    }
-
-    /**
-     * @return Returns the columnDescriptions.
-     */
-    public List<String> getColumnDescriptions() {
-        return this.columnDescriptions;
-    }
+    private GeoContact contact = new GeoContact();
+    private Map<String, Collection<String>> relations = new HashMap<>();
 
     /**
      * The column names mean different things in different subclasses. For samples, the column names are the
      * "quantitation types". For platforms, they are descriptor names.
-     *
-     * @return Returns the columnNames.
      */
-    public List<String> getColumnNames() {
-        return this.columnNames;
+    private final List<String> columnNames = new ArrayList<>();
+    private final List<String> columnDescriptions = new ArrayList<>();
+
+    public void addRelation( String key, String value ) {
+        this.relations
+                .computeIfAbsent( key, k -> new HashSet<>() )
+                .add( value );
     }
 
-    public GeoContact getContact() {
-        return this.contact;
-    }
-
-    public void setContact( GeoContact contact ) {
-        this.contact = contact;
-    }
-
-    /**
-     * @return Returns the geoAccesssion.
-     */
-    @Nullable
-    public String getGeoAccession() {
-        return this.geoAccession;
-    }
-
-    /**
-     * @param geoAccesssion The geoAccesssion to set.
-     */
-    public void setGeoAccession( @Nullable String geoAccesssion ) {
-        this.geoAccession = geoAccesssion;
-    }
-
-    /**
-     * @return Returns the title.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
-     * @param title The title to set.
-     */
-    public void setTitle( String title ) {
-        this.title = title;
+    public void addColumnName( String columnName ) {
+        assert columnName != null;
+        this.columnNames.add( columnName );
     }
 
     @Override

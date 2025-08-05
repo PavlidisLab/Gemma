@@ -11,6 +11,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -69,7 +70,7 @@ public class GeneOntologySearchSourceTest extends BaseTest {
     @Test
     public void test() throws SearchException, OntologySearchException {
         SearchSettings settings = SearchSettings.geneSearch( "GO:000001", null );
-        geneOntologySearchSource.searchGene( settings );
+        geneOntologySearchSource.searchGene( settings, new SearchContext( null, null ) );
         verify( geneOntologyService ).findTerm( "GO:000001", 2000 );
         verify( geneOntologyService ).getGenes( "GO:000001", null );
         verifyNoMoreInteractions( geneOntologyService );
@@ -80,7 +81,7 @@ public class GeneOntologySearchSourceTest extends BaseTest {
         when( geneOntologyService.getTerm( "http://purl.obolibrary.org/obo/GO:000001" ) )
                 .thenReturn( mock() );
         SearchSettings settings = SearchSettings.geneSearch( "http://purl.obolibrary.org/obo/GO:000001", null );
-        geneOntologySearchSource.searchGene( settings );
+        geneOntologySearchSource.searchGene( settings, new SearchContext( null, null ) );
         verify( geneOntologyService ).findTerm( "http://purl.obolibrary.org/obo/GO:000001", 2000 );
         verify( geneOntologyService ).getGenes( eq( "http://purl.obolibrary.org/obo/GO:000001" ), isNull() );
         verifyNoMoreInteractions( geneOntologyService );
@@ -93,7 +94,7 @@ public class GeneOntologySearchSourceTest extends BaseTest {
         when( geneOntologyService.findTerm( eq( "\"synaptic transmission\"" ), anyInt() ) )
                 .thenReturn( Collections.emptyList() );
         SearchSettings settings = SearchSettings.geneSearch( "synaptic transmission", null );
-        geneOntologySearchSource.searchGene( settings );
+        geneOntologySearchSource.searchGene( settings, new SearchContext( null, null ) );
         verify( geneOntologyService ).findTerm( "\"synaptic transmission\"", 2000 );
         verify( geneOntologyService ).findTerm( "synaptic", 2000 );
         verify( geneOntologyService ).findTerm( "transmission", 2000 );

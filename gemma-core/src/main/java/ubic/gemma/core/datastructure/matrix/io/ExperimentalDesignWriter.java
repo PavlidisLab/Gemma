@@ -18,22 +18,29 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorNames;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Output compatible with {@link ExperimentalDesignImporterImpl}.
@@ -49,22 +56,28 @@ public class ExperimentalDesignWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
+    private final boolean autoFlush;
 
-    public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
+    /**
+     * If true, use column names as they appear in the database.
+     */
+    @Setter
+    private boolean useRawColumnNames = false;
+
+    public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo, boolean autoFlush ) {
         this.entityUrlBuilder = entityUrlBuilder;
         this.buildInfo = buildInfo;
+        this.autoFlush = autoFlush;
     }
 
     /**
-     * @param writer      writer
      * @param ee          ee
      * @param writeHeader writer header
+     * @param writer      writer
      * @throws IOException when the write failed
      */
-    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader ) throws IOException {
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        this.write( writer, ee, bioAssays, writeHeader, writeHeader );
+    public void write( ExpressionExperiment ee, boolean writeHeader, Writer writer ) throws IOException {
+        write( writer, ee, ee.getBioAssays(), writeHeader, writeHeader );
     }
 
     /**
@@ -86,7 +99,7 @@ public class ExperimentalDesignWriter {
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<>();
+        SortedMap<BioMaterial, Collection<BioAssay>> bioMaterials = new TreeMap<>( BioMaterial.COMPARATOR );
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
@@ -95,13 +108,16 @@ public class ExperimentalDesignWriter {
             bioMaterials.get( bm ).add( bioAssay );
         }
 
-        Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
-
-        List<ExperimentalFactor> orderedFactors = new ArrayList<>( efs );
+        List<ExperimentalFactor> orderedFactors = ed.getExperimentalFactors()
+                .stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
 
         if ( writeHeader ) {
             this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
         }
+
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ed, bioMaterials.keySet() );
 
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
 
@@ -113,49 +129,54 @@ public class ExperimentalDesignWriter {
             writer.append( "\t" );
 
             /* column 1 */
-            String externalId = ExpressionDataWriterUtils.constructSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
-            if ( externalId != null ) {
-                writer.append( externalId );
-            } else {
-                writer.append( "" );
-            }
+            String externalId = getSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
+            writer.append( format( externalId ) );
 
             /* columns 2 ... n where n+1 is the number of factors */
-            Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
                 writer.append( "\t" );
-                for ( FactorValue candidateFactorValue : candidateFactorValues ) {
-                    if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
-                        log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = ExpressionDataWriterUtils
-                                .constructFactorValueName( candidateFactorValue );
-                        writer.append( matchedFactorValue );
-                        break;
-                    }
-                    log.debug( candidateFactorValue.getExperimentalFactor()
-                            + " didn't match ... trying the next factor." );
+                FactorValue value = factorValueMap.get( ef ).get( bioMaterial );
+                if ( value != null ) {
+                    writer.append( format( FactorValueUtils.getValue( value, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
+                } else {
+                    writer.append( format( ( String ) null ) );
                 }
             }
             writer.append( "\n" );
+            if ( autoFlush ) {
+                writer.flush();
+            }
         }
-
-        writer.flush();
     }
 
     /**
      * Write an (R-friendly) header
      */
-    private void writeHeader( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors,
+    private void writeHeader( ExpressionExperiment expressionExperiment, List<ExperimentalFactor> factors,
             boolean writeBaseHeader, Writer buf ) throws IOException {
 
         if ( writeBaseHeader ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString();
             appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, buf );
+            if ( autoFlush ) {
+                buf.flush();
+            }
         }
 
-        for ( ExperimentalFactor ef : factors ) {
+        String[] factorColumnNames;
+        if ( useRawColumnNames ) {
+            factorColumnNames = factors.stream()
+                    .map( ExperimentalFactor::getName )
+                    .toArray( String[]::new );
+            factorColumnNames = StringUtil.makeUnique( factorColumnNames );
+        } else {
+            factorColumnNames = constructExperimentalFactorNames( factors );
+        }
+
+        for ( int i = 0; i < factors.size(); i++ ) {
+            ExperimentalFactor ef = factors.get( i );
             buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
-            buf.append( ef.getName().replaceAll( "\\s", "." ) ).append( " :" );
+            buf.append( factorColumnNames[i] ).append( " :" );
             if ( ef.getCategory() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
@@ -168,16 +189,45 @@ public class ExperimentalDesignWriter {
             }
 
             buf.append( "\n" );
+            if ( autoFlush ) {
+                buf.flush();
+            }
         }
 
         buf.append( "Bioassay\tExternalID" );
 
-        for ( ExperimentalFactor ef : factors ) {
-            String efName = StringUtil.makeValidForR( ef.getName() );
-            buf.append( "\t" ).append( efName );
+        for ( String columnName : factorColumnNames ) {
+            buf.append( "\t" ).append( format( columnName ) );
         }
 
         buf.append( "\n" );
+        if ( autoFlush ) {
+            buf.flush();
+        }
     }
 
+
+    /**
+     * @param bioAssays   BAs
+     * @param bioMaterial BM
+     * @return string representing the external identifier of the biomaterial. This will usually be a GEO or
+     * ArrayExpress accession, or {@code null} if no such identifier is available.
+     */
+    @Nullable
+    private String getSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
+        if ( bioMaterial.getExternalAccession() != null ) {
+            return bioMaterial.getExternalAccession().getAccession();
+        } else if ( !bioAssays.isEmpty() ) {
+            // use the external IDs of the associated bioassays
+            SortedSet<String> ids = new TreeSet<>();
+            for ( BioAssay ba : bioAssays ) {
+                if ( ba.getAccession() != null ) {
+                    ids.add( ba.getAccession().getAccession() );
+                }
+            }
+            return !ids.isEmpty() ? StringUtils.join( ids, TsvUtils.SUB_DELIMITER ) : null;
+        } else {
+            return null;
+        }
+    }
 }

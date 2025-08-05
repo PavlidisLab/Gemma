@@ -42,18 +42,18 @@ Ext.onReady( function() {
    var doQuery = function() {
       Ext.DomHelper.overwrite( "messages", "" );
       var query = queryField.getValue();
-      if ( !query ) {
-         Ext.DomHelper.overwrite( "messages", "Please enter a query" );
-         return;
-      }
       browsergrid.loadMask.msg = "Updating ...";
       var searchEEs = eeCheckBox.getValue();
       var searchBMs = bmCheckBox.getValue();
       var searchFVs = fvCheckBox.getValue();
       var searchNos = noCheckBox.getValue();
       var searchCats = catsCheckBox.getValue();
-      var searchFactorsValueValues = fvvCheckBox.getValue();
+      var searchFactorsValueValues = false; // fvvCheckBox.getValue();
       var categoryConstraint = categoryCombo.getValue();
+      if ( !searchEEs && !searchBMs && !searchFVs && !searchNos ) {
+         Ext.DomHelper.overwrite( "messages", "Please specify at least one source of characteristics." );
+         return;
+      }
       browsergrid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues,
          searchCats, constrainToCategoryCheck.getValue() ? categoryConstraint : '' ] );
    };
@@ -254,6 +254,13 @@ Ext.onReady( function() {
       }
    } );
 
+   var catsCheckBox = new Ext.form.Checkbox( {
+      boxLabel : 'Search categories',
+      checked : false,
+      name : 'searchCats',
+      width : 'auto'
+   } );
+
    var toolbar = browsergrid.getTopToolbar();
 
    toolbar.addField( queryField );
@@ -277,6 +284,8 @@ Ext.onReady( function() {
    toolbar.addField( categoryCombo );
    toolbar.addSeparator();
    toolbar.addField(constrainToCategoryCheck);
+   toolbar.addSeparator();
+   toolbar.addField( catsCheckBox );
    toolbar.addFill();
 
    /*
@@ -284,19 +293,19 @@ Ext.onReady( function() {
     */
 
    var eeCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Expression Experiments',
+      boxLabel : 'Datasets',
       checked : true,
       name : 'searchEEs',
       width : 'auto'
    } );
    var bmCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'BioMaterials',
+      boxLabel : 'Samples',
       checked : true,
       name : 'searchBMs',
       width : 'auto'
    } );
    var fvCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Factor Values',
+      boxLabel : 'Factors',
       checked : true,
       name : 'searchFVs',
       width : 'auto'
@@ -309,13 +318,12 @@ Ext.onReady( function() {
    //    width : 'auto'
    // } );
 
-   var fvvCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Uncharacterized factor Values',
-      checked : true,
-      tooltip : 'Factor values that lack proper characteristics',
-      name : 'searchFVVs',
-      width : 'auto'
-   } );
+   // var fvvCheckBox = new Ext.form.Checkbox( {
+   //    boxLabel : 'Factors (via their values)',
+   //    checked : true,
+   //    name : 'searchFVVs',
+   //    width : 'auto'
+   // } );
 
    var noCheckBox = new Ext.form.Checkbox( {
       boxLabel : 'No parent', // careful, these might just be hidden due to
@@ -325,18 +333,11 @@ Ext.onReady( function() {
       width : 'auto'
    } );
 
-   var catsCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Categories',
-      checked : false,
-      name : 'searchCats',
-      width : 'auto'
-   } );
-
    var secondToolbar = new Ext.Toolbar( {
       renderTo : browsergrid.tbar
    } );
    secondToolbar.addSpacer();
-   secondToolbar.addText( "Find characteristics from" );
+   secondToolbar.addText( "Find characteristics with the following parents:" );
    secondToolbar.addSpacer();
    secondToolbar.addField( eeCheckBox );
    secondToolbar.addSpacer();
@@ -344,13 +345,11 @@ Ext.onReady( function() {
    secondToolbar.addSpacer();
    secondToolbar.addField( fvCheckBox );
    secondToolbar.addSpacer();
+   secondToolbar.addField( noCheckBox );
+   // secondToolbar.addSpacer();
    // secondToolbar.addField( paCheckBox );
    // secondToolbar.addSpacer();
-   secondToolbar.addField( noCheckBox );
-   secondToolbar.addSpacer();
-   secondToolbar.addField( fvvCheckBox );
-   secondToolbar.addSpacer();
-   secondToolbar.addField( catsCheckBox );
+   // secondToolbar.addField( fvvCheckBox );
    secondToolbar.doLayout();
    browsergrid.doLayout();
 

@@ -43,8 +43,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.buildDesignMatrix;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
-import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.buildDesignMatrix;
 
 /**
  * Methods for correcting batch effects.
@@ -260,7 +260,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 batch = ef;
                 break;
             }

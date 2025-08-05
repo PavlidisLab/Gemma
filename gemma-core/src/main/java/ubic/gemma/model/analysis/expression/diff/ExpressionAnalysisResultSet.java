@@ -35,7 +35,6 @@ import java.util.Set;
  */
 public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> implements SecuredChild {
 
-    private static final long serialVersionUID = 7226901182513177574L;
     private Integer numberOfProbesTested;
     private Integer numberOfGenesTested;
     @Nullable

@@ -30,10 +30,6 @@ import java.util.Set;
  */
 public class UserGroup extends AbstractAuditable implements gemma.gsec.model.UserGroup {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5795744069086222179L;
     private Set<User> groupMembers = new HashSet<>();
     private Set<GroupAuthority> authorities = new HashSet<>();
 

@@ -14,14 +14,14 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -31,10 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminati
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -43,8 +40,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -53,6 +51,7 @@ import java.util.*;
  * @author paul
  */
 @Service
+@CommonsLog
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**
@@ -66,12 +65,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     /**
      * we have files named like GSE1234.fastq-headers-table.txt; specified in our RNA-seq pipelineF
      */
-    private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
-    /**
-     *
-     */
-    private static final String GEMMA_FASTQ_HEADERS_DIR_CONFIG = "gemma.fastq.headers.dir";
-    private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
+    static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
 
     @Autowired
     private AuditEventService auditEventService;
@@ -87,6 +81,10 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private ExpressionExperimentService expressionExperimentService = null;
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
+
+    @Setter
+    @Value("${gemma.fastq.headers.dir}")
+    private Path fastqHeadersDir;
 
     @Override
     @Transactional
@@ -131,38 +129,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                 }
             }
         }
-    }
-
-    /**
-     * Exposed for testing
-     *
-     * @param  accession             GEO accession
-     * @return map of GEO id to headers, including the platform ID
-     */
-    Map<String, String> readFastqHeaders( String accession ) throws IOException {
-        Map<String, String> result = new HashMap<>();
-        File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
-                + accession + FASTQHEADERSFILE_SUFFIX );
-        try ( BufferedReader br = new BufferedReader( new FileReader( headerFile ) ) ) {
-            String line;
-            while ( ( line = br.readLine() ) != null ) {
-
-                String[] fields = StringUtils.split( line, "\t" );
-
-                if ( fields.length < 5 ) {
-                    continue;
-                }
-
-                String geoID = fields[0];
-                String geoPlatformID = fields[2]; // we may use this if the headers are not usable.
-                String headers = fields[4]; // this may be FAILURE (possibly more than once)
-
-                result.put( geoID, geoPlatformID + MULTIFASTQHEADER_DELIMITER + headers );
-            }
-
-        }
-
-        return result;
     }
 
     /**
@@ -291,12 +257,10 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
             ba.setFastqHeaders( h );
 
-            /*
-             * TODO we could use this as an opportunity to update the "original platform" if it is not populated
-             */
-            if ( ba.getOriginalPlatform() == null ) {
-
-            }
+            //  TODO we could use this as an opportunity to update the "original platform" if it is not populated
+            // if ( ba.getOriginalPlatform() == null ) {
+            //
+            // }
 
             // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.
             // The difference for RNAseq is that we want to store the entire header, which includes parts that are not needed for the batch information.
@@ -305,19 +269,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
 
         return headers;
-    }
-
-    /**
-     */
-    private File locateFASTQheadersForBatchInfo( String accession ) {
-        String fhd = Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG );
-
-        if ( StringUtils.isBlank( fhd ) ) {
-            throw new IllegalStateException( "You must configure the path to extracted headers directory (" + GEMMA_FASTQ_HEADERS_DIR_CONFIG + ")" );
-        }
-
-        return new File( fhd + File.separator
-                + accession + FASTQHEADERSFILE_SUFFIX );
     }
 
     /**
@@ -378,14 +329,43 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
         String accession = Objects.requireNonNull( ee.getAccession(), String.format( "%s does not have an accession", ee ) )
                 .getAccession();
-        File headerFile = locateFASTQheadersForBatchInfo( accession );
+        Path headerFile = fastqHeadersDir.resolve( accession + FASTQHEADERSFILE_SUFFIX );
 
-        if ( !headerFile.canRead() ) {
+        if ( !Files.isReadable( headerFile ) ) {
             throw new IOException( "No header file for " + ee );
         }
 
-        return readFastqHeaders( accession );
+        return readFastqHeaders( headerFile );
+    }
 
+    /**
+     * Exposed for testing
+     *
+     * @param  headerFile path to the header file to parse
+     * @return map of GEO id to headers, including the platform ID
+     */
+    static Map<String, String> readFastqHeaders( Path headerFile ) throws IOException {
+        Map<String, String> result = new HashMap<>();
+        try ( BufferedReader br = Files.newBufferedReader( headerFile ) ) {
+            String line;
+            while ( ( line = br.readLine() ) != null ) {
+
+                String[] fields = StringUtils.split( line, "\t" );
+
+                if ( fields.length < 5 ) {
+                    continue;
+                }
+
+                String geoID = fields[0];
+                String geoPlatformID = fields[2]; // we may use this if the headers are not usable.
+                String headers = fields[4]; // this may be FAILURE (possibly more than once)
+
+                result.put( geoID, geoPlatformID + MULTIFASTQHEADER_DELIMITER + headers );
+            }
+
+        }
+
+        return result;
     }
 
     /**
@@ -396,11 +376,16 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private void removeExistingBatchFactor( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
+        if ( ed == null ) {
+            log.warn( ee + " does not have an experimental design, cannot remove batch factor." );
+            return;
+        }
+
         ExperimentalFactor toRemove = null;
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
-            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 toRemove = ef;
                 break;
                 /*

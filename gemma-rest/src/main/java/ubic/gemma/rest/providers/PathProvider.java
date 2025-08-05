@@ -1,7 +1,6 @@
 package ubic.gemma.rest.providers;
 
 import org.glassfish.jersey.message.internal.FileProvider;
-import ubic.gemma.core.util.locking.FileLockManager;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;

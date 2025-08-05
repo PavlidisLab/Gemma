@@ -20,6 +20,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -67,11 +68,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         this.buildInfo = buildInfo;
     }
 
-    /**
-     * Flush every time a complete line is written.
-     * <p>
-     * This is only applicable to the tabular output.
-     */
+    @Override
     public void setAutoFlush( boolean autoFlush ) {
         this.autoFlush = autoFlush;
     }
@@ -360,7 +357,11 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     private void writeValue( Object val, QuantitationType qt, Writer buf ) throws IOException {
         if ( scaleType != null ) {
-            buf.write( format( convertScalar( ( Number ) val, qt, scaleType ) ) );
+            try {
+                buf.write( format( convertScalar( ( Number ) val, qt, scaleType ) ) );
+            } catch ( UnsupportedQuantitationScaleConversionException e ) {
+                throw new RuntimeException( e );
+            }
         } else {
             buf.write( format( val ) );
         }

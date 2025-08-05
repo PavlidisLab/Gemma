@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -42,13 +43,11 @@ import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.Persister;
@@ -116,6 +115,7 @@ public class ExpressionExperimentEditController {
          * {@link #quantitationTypes}, organized by the type of data vector they apply to and in the same order.
          */
         private Map<Class<? extends DataVector>, List<QuantitationTypeEditForm>> quantitationTypesByVectorType;
+        private List<SingleCellDimensionEditForm> singleCellDimensions;
         private Collection<BioAssayValueObject> bioAssays;
         @Nullable
         private String assayToMaterialMap;
@@ -128,6 +128,68 @@ public class ExpressionExperimentEditController {
     }
 
     @Data
+    public static class SingleCellDimensionEditForm {
+        private Long id;
+        private List<CellTypeAssignmentEditForm> cellTypeAssignments;
+        private List<CellLevelCharacteristicsEditForm> cellLevelCharacteristics;
+
+        public SingleCellDimensionEditForm( SingleCellDimension scd ) {
+            this.id = scd.getId();
+            this.cellTypeAssignments = scd.getCellTypeAssignments().stream().map( CellTypeAssignmentEditForm::new ).collect( Collectors.toList() );
+            this.cellLevelCharacteristics = scd.getCellLevelCharacteristics().stream().map( CellLevelCharacteristicsEditForm::new ).collect( Collectors.toList() );
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class CellTypeAssignmentEditForm {
+        private Long id;
+        private String name;
+        private String description;
+        private Long protocolId;
+        private boolean isPreferred;
+        private List<String> values;
+
+        public CellTypeAssignmentEditForm( CellTypeAssignment cta ) {
+            setId( cta.getId() );
+            setName( cta.getName() );
+            setDescription( cta.getDescription() );
+            if ( cta.getProtocol() != null ) {
+                setProtocolId( cta.getProtocol().getId() );
+            }
+            setIsPreferred( cta.isPreferred() );
+            setValues( cta.getCellTypes().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() ) );
+        }
+
+        public boolean getIsPreferred() {
+            return isPreferred;
+        }
+
+        public void setIsPreferred( boolean isPreferred ) {
+            this.isPreferred = isPreferred;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class CellLevelCharacteristicsEditForm {
+        private Long id;
+        private String name;
+        private String description;
+        private String category;
+        private List<String> values;
+
+        public CellLevelCharacteristicsEditForm( CellLevelCharacteristics clc ) {
+            this.id = clc.getId();
+            this.name = clc.getName();
+            this.description = clc.getDescription();
+            clc.getCharacteristics().stream().findFirst().ifPresent( c -> setCategory( c.getCategory() ) );
+            this.values = clc.getCharacteristics().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() );
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
     public static class QuantitationTypeEditForm {
         private Long id;
         private String name;
@@ -154,6 +216,26 @@ public class ExpressionExperimentEditController {
         private boolean isBatchCorrected;
         private boolean isRatio;
         private boolean isRecomputedFromRawData;
+
+        public QuantitationTypeEditForm( QuantitationType qt ) {
+            setId( qt.getId() );
+            setName( qt.getName() );
+            setDescription( qt.getDescription() );
+            setGeneralType( qt.getGeneralType().name() );
+            setType( qt.getType().name() );
+            setScale( qt.getScale().name() );
+            setRepresentation( qt.getRepresentation().name() );
+            setIsPreferred( qt.getIsPreferred() );
+            //noinspection deprecation
+            setIsMaskedPreferred( qt.getIsMaskedPreferred() );
+            setIsSingleCellPreferred( qt.getIsSingleCellPreferred() );
+            setIsBackground( qt.getIsBackground() );
+            setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
+            setIsNormalized( qt.getIsNormalized() );
+            setIsBatchCorrected( qt.getIsBatchCorrected() );
+            setIsRatio( qt.getIsRatio() );
+            setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
+        }
 
         public boolean getIsBackground() {
             return isBackground;
@@ -335,7 +417,23 @@ public class ExpressionExperimentEditController {
         form.setShortName( expressionExperiment.getShortName() );
         form.setName( expressionExperiment.getName() );
         form.setDescription( expressionExperiment.getDescription() );
-        form.setBioAssays( BioAssayValueObject.convert2ValueObjects( expressionExperiment.getBioAssays() ) );
+        form.setBioAssays( convert2ValueObjects( expressionExperiment.getBioAssays() ) );
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .build();
+        List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
+        form.setSingleCellDimensions( scds.stream().map( SingleCellDimensionEditForm::new ).collect( Collectors.toList() ) );
+    }
+
+    private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
+        Collection<BioAssayValueObject> result = new HashSet<>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            result.add( new BioAssayValueObject( bioAssay, false ) );
+        }
+        return result;
     }
 
     /**
@@ -346,30 +444,9 @@ public class ExpressionExperimentEditController {
         return expressionExperimentService.getQuantitationTypesByVectorType( ee ).entrySet().stream()
                 .sorted( Map.Entry.comparingByKey( Comparator.comparing( Class::getSimpleName, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
                 .collect( Collectors.toMap( Entry::getKey,
-                        v -> v.getValue().stream().sorted( Comparator.comparing( QuantitationType::getName ) ).map( this::quantitationTypeToEditForm ).collect( Collectors.toList() ),
+                        v -> v.getValue().stream().sorted( Comparator.comparing( QuantitationType::getName ) ).map( QuantitationTypeEditForm::new ).collect( Collectors.toList() ),
                         ( a, b ) -> b,
                         LinkedHashMap::new ) );
-    }
-
-    private QuantitationTypeEditForm quantitationTypeToEditForm( QuantitationType qt ) {
-        QuantitationTypeEditForm form = new QuantitationTypeEditForm();
-        form.setId( qt.getId() );
-        form.setName( qt.getName() );
-        form.setDescription( qt.getDescription() );
-        form.setGeneralType( qt.getGeneralType().name() );
-        form.setType( qt.getType().name() );
-        form.setScale( qt.getScale().name() );
-        form.setRepresentation( qt.getRepresentation().name() );
-        form.setIsPreferred( qt.getIsPreferred() );
-        form.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
-        form.setIsSingleCellPreferred( qt.getIsSingleCellPreferred() );
-        form.setIsBackground( qt.getIsBackground() );
-        form.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
-        form.setIsNormalized( qt.getIsNormalized() );
-        form.setIsBatchCorrected( qt.getIsBatchCorrected() );
-        form.setIsRatio( qt.getIsRatio() );
-        form.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
-        return form;
     }
 
     private Map<String, ?> getReferenceData() {
@@ -378,6 +455,7 @@ public class ExpressionExperimentEditController {
         referenceData.put( "scaleTypes", new ArrayList<>( SCALE_TYPES ) );
         referenceData.put( "generalQuantitationTypes", new ArrayList<>( GENERAL_QUANTITATION_TYPES ) );
         referenceData.put( "representations", new ArrayList<>( REPRESENTATIONS ) );
+        referenceData.put( "cellTypeAssignmentProtocols", singleCellExpressionExperimentService.getCellTypeAssignmentProtocols() );
         return referenceData;
     }
 

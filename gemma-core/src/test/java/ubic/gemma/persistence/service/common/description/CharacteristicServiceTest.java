@@ -106,7 +106,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetParents() {
         Map<Characteristic, Identifiable> charToParent;
-        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ), null, -1 );
+        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ), null, false, true );
         assertEquals( ee, charToParent.get( eeChar1 ) );
         assertNull( charToParent.get( eeChar2 ) );
     }

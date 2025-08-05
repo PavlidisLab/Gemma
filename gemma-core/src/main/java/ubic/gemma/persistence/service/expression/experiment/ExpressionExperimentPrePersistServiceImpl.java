@@ -19,19 +19,18 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
-import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -58,6 +57,9 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
+    @Value("${gemma.allow.new.probes.onexisting.platforms}")
+    private boolean allowNewProbesOnExistingPlatforms;
+
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
         return this.prepare( ee, new ArrayDesignsForExperimentCache() );
@@ -67,7 +69,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
 
         Map<ArrayDesign, Collection<CompositeSequence>> newprobes = new HashMap<>();
-        Collection<DesignElementDataVector> dataVectorsThatNeedNewProbes = new HashSet<>();
+        Collection<RawExpressionDataVector> dataVectorsThatNeedNewProbes = new HashSet<>();
 
         /*
          * First time through.
@@ -81,7 +83,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             this.prepareWithoutData( ee, cache );
         }
 
-        for ( DesignElementDataVector dataVector : vectors ) {
+        for ( RawExpressionDataVector dataVector : vectors ) {
             CompositeSequence probe = dataVector.getDesignElement();
 
             assert probe != null;
@@ -95,7 +97,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
             if ( cachedProbe == null ) {
                 if ( !newprobes.containsKey( arrayDesign ) ) {
-                    newprobes.put( arrayDesign, new HashSet<CompositeSequence>() );
+                    newprobes.put( arrayDesign, new HashSet<>() );
                 }
                 newprobes.get( arrayDesign ).add( probe );
                 dataVectorsThatNeedNewProbes.add( dataVector );
@@ -110,7 +112,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          */
         if ( !dataVectorsThatNeedNewProbes.isEmpty() ) {
 
-            if ( !Settings.getBoolean( "gemma.allow.new.probes.onexisting.platforms", false ) ) {
+            if ( !allowNewProbesOnExistingPlatforms ) {
                 // then these vectors have to be removed, we can't load them. 
 
                 log.warn( dataVectorsThatNeedNewProbes.size()
@@ -138,7 +140,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
                 }
 
                 // associate with vectors. This repeats code from above, needs refactoring...
-                for ( DesignElementDataVector v : dataVectorsThatNeedNewProbes ) {
+                for ( RawExpressionDataVector v : dataVectorsThatNeedNewProbes ) {
                     CompositeSequence probe = v.getDesignElement();
 
                     probe = cache.getFromCache( probe );
@@ -208,7 +210,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         for ( ArrayDesign ad : toAdd.keySet() ) {
 
             assert ad.getId() != null;
-            result.put( ad, new HashSet<CompositeSequence>() );
+            result.put( ad, new HashSet<>() );
             Collection<CompositeSequence> newprobes = new HashSet<>();
 
             Collection<CompositeSequence> probesToAdd = toAdd.get( ad );
@@ -244,9 +246,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
      */
     private ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign,
             ArrayDesignsForExperimentCache cache ) {
-
-        assert arrayDesign != null;
-
         if ( StringUtils.isBlank( arrayDesign.getShortName() ) ) {
             throw new IllegalArgumentException( "Array design must have a 'short name'" );
         }

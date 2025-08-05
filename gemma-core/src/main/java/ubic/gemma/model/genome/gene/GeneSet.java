@@ -36,7 +36,6 @@ import java.util.Set;
 @Indexed
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
-    private static final long serialVersionUID = 4357218100681569138L;
     private Set<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry sourceAccession;
     private Set<BibliographicReference> literatureSources = new HashSet<>();

@@ -127,6 +127,107 @@
             </c:forEach>
         </table>
 
+        <c:if test="${!expressionExperiment.singleCellDimensions.isEmpty()}">
+        <hr class="normal">
+        <h3>Single-Cell Metadata</h3>
+            <p>The values here cannot be modified for now.</p>
+        </c:if>
+
+        <c:forEach items="${expressionExperiment.singleCellDimensions}" var="scd" varStatus="scdIndex">
+            <spring:nestedPath path="singleCellDimensions[${scdIndex.index}]">
+                <form:hidden path="id" />
+                <c:if test="${!scd.cellTypeAssignments.isEmpty()}">
+                    <h4>Cell Type Assignments</h4>
+                    <table>
+                        <tr>
+                            <th style="min-width: 50px;">ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Protocol</th>
+                            <th class="text-center">Preferred?</th>
+                            <th>Values</th>
+                        </tr>
+                        <c:forEach items="${scd.cellTypeAssignments}" var="cta" varStatus="ctaIndex">
+                            <spring:nestedPath
+                                    path="cellTypeAssignments[${ctaIndex.index}]">
+                                <tr>
+                                    <td>
+                                            ${cta.id}
+                                        <form:hidden path="id" />
+                                    </td>
+                                    <td>
+                                        <form:input path="name" size="20" cssErrorClass="error" disabled="true" />
+                                        <form:errors path="name" cssClass="error" />
+                                    </td>
+                                    <td>
+                                        <form:input path="description" size="35" cssErrorClass="error"
+                                                disabled="true" />
+                                        <form:errors path="description" cssClass="error" />
+                                    </td>
+                                    <td>
+                                        <form:select path="protocolId" disabled="true">
+                                            <form:options items="${cellTypeAssignmentProtocols}" itemValue="id"
+                                                    itemLabel="name" />
+                                        </form:select>
+                                    </td>
+                                    <td class="text-center">
+                                        <form:checkbox path="isPreferred" cssErrorClass="error" disabled="true" />
+                                        <form:errors path="isPreferred" cssClass="error" />
+                                    </td>
+                                    <td class="text-ellipsis" style="width: 100%; max-width: 0;">
+                                        <c:forEach items="${cta.values}" var="value" varStatus="valueI">
+                                            ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
+                                        </c:forEach>
+                                    </td>
+                                </tr>
+                            </spring:nestedPath>
+                        </c:forEach>
+                    </table>
+                </c:if>
+
+                <c:if test="${!scd.cellLevelCharacteristics.isEmpty()}">
+                    <h4>Cell-level Characteristics</h4>
+                    <table>
+                        <tr>
+                            <th style="min-width: 50px">ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Values</th>
+                        </tr>
+                        <c:forEach items="${scd.cellLevelCharacteristics}" var="clc" varStatus="clcIndex">
+                            <spring:nestedPath
+                                    path="cellLevelCharacteristics[${clcIndex.index}]">
+                                <tr>
+                                    <td>
+                                            ${clc.id}
+                                        <form:hidden path="id" />
+                                    </td>
+                                    <td>
+                                        <form:input path="name" size="20" cssErrorClass="error" disabled="true" />
+                                        <form:errors path="name" cssClass="error" />
+                                    </td>
+                                    <td>
+                                        <form:input path="description" size="20" cssErrorClass="error"
+                                                disabled="true" />
+                                        <form:errors path="description" size="35" cssClass="error" />
+                                    </td>
+                                    <td>
+                                            ${fn:escapeXml(clc.category)}
+                                    </td>
+                                    <td style="width: 100%; max-width: 0; white-space: nowrap;  overflow: hidden; text-overflow: ellipsis;">
+                                        <c:forEach items="${clc.values}" var="value" varStatus="valueI">
+                                            ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
+                                        </c:forEach>
+                                    </td>
+                                </tr>
+                            </spring:nestedPath>
+                        </c:forEach>
+                    </table>
+                </c:if>
+            </spring:nestedPath>
+        </c:forEach>
+
         <hr class="normal">
 
         <h3>Biomaterials and Assays</h3>

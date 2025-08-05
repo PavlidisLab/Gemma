@@ -22,7 +22,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
@@ -113,12 +112,12 @@ public class TableMaintenanceUtilTest extends BaseTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         reset( externalDatabaseService, sessionFactory, session, query );
-        File f = gene2csInfoPath.toFile();
-        if ( f.exists() ) {
-            assertThat( f.delete() ).isTrue();
-            assertThat( f.getParentFile().delete() ).isTrue();
+        Path f = gene2csInfoPath;
+        if ( Files.exists( f ) ) {
+            Files.delete( f );
+            Files.delete( f.getParent() );
         }
     }
 
@@ -139,8 +138,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
     public void testUpdateWhenTableIsFresh() throws IOException {
         Gene2CsStatus status = new Gene2CsStatus();
         status.setLastUpdate( new Date() ); // now! so nothing can be newer
-        File statusFile = gene2csInfoPath.toFile();
-        try ( ObjectOutputStream out = new ObjectOutputStream( Files.newOutputStream( statusFile.toPath() ) ) ) {
+        try ( ObjectOutputStream out = new ObjectOutputStream( Files.newOutputStream( gene2csInfoPath ) ) ) {
             out.writeObject( status );
         }
         tableMaintenanceUtil.updateGene2CsEntries();

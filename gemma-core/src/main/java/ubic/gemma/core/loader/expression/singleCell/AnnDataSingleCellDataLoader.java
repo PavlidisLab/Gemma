@@ -483,7 +483,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         indices[i] = CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC;
                     }
                 }
-                results.add( CellLevelCharacteristics.Factory.newInstance( characteristics, indices ) );
+                results.add( CellLevelCharacteristics.Factory.newInstance( factorName, "Extracted from " + factorName + " from " + file.getFileName() + ".", characteristics, indices ) );
             }
         }
         return results;

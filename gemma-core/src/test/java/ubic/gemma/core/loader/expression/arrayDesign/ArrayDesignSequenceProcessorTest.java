@@ -19,12 +19,12 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -34,19 +34,23 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.config.Settings;
 
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
  * @author pavlidis
  */
 public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
+
+    public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
+    public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
 
     private Collection<CompositeSequence> designElements = new HashSet<>();
     private InputStream seqFile;
@@ -83,7 +87,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         parser.parse( designElementStream );
         designElements = parser.getResults();
         for ( CompositeSequence de : designElements ) {
-            assertTrue( de.getBiologicalCharacteristic() != null );
+            assertNotNull( de.getBiologicalCharacteristic() );
         }
     }
 
@@ -112,7 +116,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                     fail( "Shouldn't have found a biological characteristic for this sequence" );
                 }
             } else {
-                assertTrue( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() != null );
+                assertNotNull( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() );
             }
 
         }
@@ -124,14 +128,11 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     @Ignore("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe != null );
+        assumeThatExecutableExists( FASTA_CMD_EXE );
 
-        File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
-            return;
-        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
+        Path testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
+        fastaCmd.setBlastHome( testBlastDbPath );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
@@ -145,7 +146,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" ) ) {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, f, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
+                            taxon, true, fastaCmd );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
@@ -158,8 +159,11 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
-        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
+        assumeThatExecutableExists( FASTA_CMD_EXE );
+
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd( FASTA_CMD_EXE );
+        Path testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
+        fastaCmd.setBlastHome( testBlastDbPath );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
@@ -171,7 +175,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         try {
             Collection<BioSequence> res = app
                     .processArrayDesign( result, new String[] { "testblastdb", "testblastdbPartTwo" },
-                            FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
+                            false, fastaCmd );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );

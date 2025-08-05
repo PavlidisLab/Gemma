@@ -31,7 +31,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -85,12 +84,12 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( StringUtils.isNotBlank( aptFile ) ) {
             throw new IllegalArgumentException(
                     "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
         }
-        super.processBioAssaySets( expressionExperiments );
+        super.processExpressionExperiments( expressionExperiments );
     }
 
     @Override
@@ -179,8 +178,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    private boolean checkForAlreadyDone( BioAssaySet ee ) {
-        for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
+    private boolean checkForAlreadyDone( ExpressionExperiment ee ) {
+        for ( QuantitationType qt : eeService.getQuantitationTypes( ee ) ) {
             if ( qt.getIsRecomputedFromRawData() ) {
                 return true;
             }

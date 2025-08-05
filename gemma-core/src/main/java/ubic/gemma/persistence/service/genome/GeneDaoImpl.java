@@ -219,41 +219,66 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .setParameter( "location", location ).list();
     }
 
+    @Override
+    public long getCompositeSequenceCount( Gene gene, boolean includeDummyProducts ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from GeneProduct gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + AclQueryUtils.formAclRestrictionClause( "cs.arrayDesign.id" ) + " "
+                        + "and gp = bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and gp.gene = :gene"
+                        + ( includeDummyProducts ? "" : " and gp.dummy = false" ) )
+                .setParameter( "gene", gene );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        return ( Long ) query.uniqueResult();
+    }
+
     /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
      *
      * @return Collection
      */
     @Override
-    public long getCompositeSequenceCountById( long id ) {
-        //language=HQL
-        final String queryString =
-                "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        return ( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameter( "id", id )
-                .uniqueResult();
+    public long getCompositeSequenceCountById( long id, boolean includeDummyProducts ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct cs) from GeneProduct gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + AclQueryUtils.formAclRestrictionClause( "cs.arrayDesign.id" ) + " "
+                        + "and gp = bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and gp.gene.id = :id"
+                        + ( includeDummyProducts ? "" : " and gp.dummy = false" ) )
+                .setParameter( "id", id );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        return ( Long ) query.uniqueResult();
     }
 
     @Override
-    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
-        //language=HQL
-        final String queryString = "select cs from Gene as gene "
-                + "inner join gene.products gp, "
-                + "BioSequence2GeneProduct as bs2gp, "
-                + "CompositeSequence as cs "
-                + "where gp=bs2gp.geneProduct "
-                + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                + "and gene = :gene "
-                + "and cs.arrayDesign = :arrayDesign "
-                + "group by cs";
-
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign, boolean includeDummyProducts ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+                .createQuery( "select cs from GeneProduct as gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + "where gp = bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and cs.arrayDesign = :arrayDesign "
+                        + "and gp.gene = :gene "
+                        + ( !includeDummyProducts ? " and gp.dummy = false " : "" )
+                        + "group by cs" )
                 .setParameter( "arrayDesign", arrayDesign )
+                .setParameter( "gene", gene )
+                .list();
+    }
+
+    @Override
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, boolean includeDummyProducts ) {
+        //noinspection unchecked
+        return ( List<CompositeSequence> ) this.getSessionFactory().getCurrentSession()
+                // important note:
+                .createQuery( "select cs from GeneProduct as gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + "where gp = bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic = bs2gp.bioSequence "
+                        + "and gp.gene = :gene "
+                        + ( !includeDummyProducts ? " and gp.dummy = false " : "" )
+                        + "group by cs" )
                 .setParameter( "gene", gene )
                 .list();
     }
@@ -264,18 +289,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
      * @return Collection
      */
     @Override
-    public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
-        //language=HQL
-        final String queryString =
-                "select cs from Gene as gene inner join gene.products as gp, "
-                        + "BioSequence2GeneProduct as bs2gp, "
-                        + "CompositeSequence as cs "
-                        + "where gp=bs2gp.geneProduct "
-                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                        + "and gene.id = :id "
-                        + "group by cs";
+    public Collection<CompositeSequence> getCompositeSequencesById( long id, boolean includeDummyProducts ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        return ( List<CompositeSequence> ) this.getSessionFactory().getCurrentSession()
+                // important note:
+                .createQuery( "select cs from GeneProduct as gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + "where gp = bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic = bs2gp.bioSequence "
+                        + "and gp.gene.id = :id "
+                        + ( !includeDummyProducts ? " and gp.dummy = false " : "" )
+                        + "group by cs" )
                 .setParameter( "id", id )
                 .list();
     }
@@ -290,16 +313,17 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public int getPlatformCountById( Long id ) {
+    public long getPlatformCountById( Long id, boolean includeDummyProducts ) {
         //language=HQL
         final String queryString =
-                "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        return ( ( Long ) this.getSessionFactory().getCurrentSession()
+                "select count(distinct cs.arrayDesign) from GeneProduct gp, BioSequence2GeneProduct as bs2gp, CompositeSequence as cs "
+                        + "where gp=bs2gp.geneProduct "
+                        + "and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + "and gp.gene.id = :id ";
+        return ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
                 .setParameter( "id", id )
-                .uniqueResult() ).intValue();
+                .uniqueResult();
     }
 
     @Override

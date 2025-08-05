@@ -32,6 +32,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import static ubic.gemma.cli.util.OptionsUtils.formatOption;
+
 /**
  * Writes out the experimental design for a given experiment. This can be directly read into R.
  *
@@ -41,7 +43,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     private static final String
             STANDARD_LOCATION_OPTION = "standardLocation",
-            OUT_FILE_PREFIX_OPTION = "o";
+            OUT_FILE_PREFIX_OPTION = "o",
+            USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames";
 
     @Autowired
     private BuildInfo buildInfo;
@@ -50,6 +53,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private ExpressionDataFileService expressionDataFileService;
 
     private boolean standardLocation;
+    private boolean useRawColumnNames;
     @Nullable
     private String outFileName;
 
@@ -66,7 +70,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @Override
     protected void buildExperimentOptions( Options options ) {
         options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
-        options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended)" );
+        options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
         addForceOption( options );
     }
 
@@ -74,10 +79,12 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
         outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
+        useRawColumnNames = commandLine.hasOption( USE_RAW_COLUMN_NAMES_OPTION );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = eeService.thawLite( ee );
         if ( standardLocation ) {
             try {
                 expressionDataFileService.writeOrLocateDesignFile( ee, isForce() );
@@ -85,10 +92,10 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                 addErrorObject( ee, e );
             }
         } else {
-            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
-            try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
-                edWriter.write( writer, ee, true );
-                writer.flush();
+            try ( PrintWriter writer = new PrintWriter( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+                ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
+                edWriter.setUseRawColumnNames( useRawColumnNames );
+                edWriter.write( ee, true, writer );
             } catch ( IOException e ) {
                 addErrorObject( ee, e );
             }

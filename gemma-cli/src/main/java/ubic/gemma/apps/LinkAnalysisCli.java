@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -391,11 +390,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected Collection<ExpressionExperiment> preprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         /*
          * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
          */
-        List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
+        List<ExpressionExperiment> sees = new ArrayList<>( expressionExperiments );
 
         if ( expressionExperiments.size() > 1 ) {
             log.info( "Sorting data sets by number of samples, doing large data sets first." );

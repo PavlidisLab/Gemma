@@ -86,7 +86,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
         SVDResult svdResult = mock();
         when( svdResult.getDatePVals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
-        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentFactorUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
         Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
@@ -106,7 +106,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
 
     @Test
     public void testGetBatchConfounds() {
-        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentFactorUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
         Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.util.converter;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -31,5 +32,4 @@ public interface Converter<S, T> {
     Collection<T> convert( Collection<? extends S> sourceDomainObjects );
 
     T convert( S sourceDomainObject );
-
 }

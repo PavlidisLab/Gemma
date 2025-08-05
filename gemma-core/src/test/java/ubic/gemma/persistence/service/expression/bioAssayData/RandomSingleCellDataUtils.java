@@ -59,6 +59,15 @@ public class RandomSingleCellDataUtils {
     }
 
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, ScaleType scaleType ) {
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( scaleType );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        return randomSingleCellVectors( numDesignElements, numSamples, numCellsPerBioAssay, sparsity, qt );
+    }
+
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, QuantitationType qt ) {
         ArrayDesign arrayDesign = new ArrayDesign();
         for ( int i = 0; i < numDesignElements; i++ ) {
             arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, arrayDesign ) );
@@ -70,12 +79,7 @@ public class RandomSingleCellDataUtils {
             bm.getBioAssaysUsedIn().add( ba );
             ee.getBioAssays().add( ba );
         }
-        QuantitationType qt = new QuantitationType();
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.COUNT );
-        qt.setScale( scaleType );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        return randomSingleCellVectors( ee, arrayDesign, qt, numCellsPerBioAssay, sparsity );
+        return randomSingleCellVectors( ee, arrayDesign, qt );
     }
 
     /**

@@ -29,7 +29,6 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -99,7 +98,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         assertNotNull( analysis );
 
-        Map<ExperimentalFactor, FactorValue> baselineLevels = ExperimentalDesignUtils
+        Map<ExperimentalFactor, FactorValue> baselineLevels = BaselineSelection
                 .getBaselineLevels( ee.getExperimentalDesign().getExperimentalFactors() );
 
         assertEquals( 1, baselineLevels.size() );

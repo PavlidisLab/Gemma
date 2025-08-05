@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -38,8 +39,6 @@ import java.util.Set;
  */
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
-
-    String OBJECT_ALIAS = "ch";
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -63,11 +62,13 @@ public interface CharacteristicDao
     @Override
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
+    Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
+
     Collection<Characteristic> findByCategory( String value );
 
-    Collection<Characteristic> findByCategoryLike( String query );
+    Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
-    Collection<Characteristic> findByCategoryUri( String uri );
+    Collection<Characteristic> findByCategoryUri( String uri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order.
@@ -98,9 +99,15 @@ public interface CharacteristicDao
      */
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
-    Collection<Characteristic> findByUri( Collection<String> uris );
-
-    Collection<Characteristic> findByUri( String searchString );
+    /**
+     * Find characteristics with the given URI.
+     *
+     * @param category         restrict the category of the characteristic, or null to ignore
+     * @param parentClasses    only return characteristics that have parents of these classes, or null to ignore
+     * @param includeNoParents include characteristics that have no parents
+     * @param maxResults       maximum number of results to return, or -1 for no limit
+     */
+    Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
      * Return the characteristic with the most frequently used non-null value by URI.
@@ -110,45 +117,48 @@ public interface CharacteristicDao
     /**
      * Find characteristics by URI.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
-    Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
      * Find characteristics by value matching the provided LIKE pattern.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
-    Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<?>> parentClasses );
+    Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
      * Count characteristics matching the provided value URIs.
      * <p>
-     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
+     * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.
      */
-    Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses );
-
-    /**
-     * Normalize a characteristic by value.
-     * <p>
-     * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
-     */
-    String normalizeByValue( Characteristic characteristic );
+    Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     Collection<Characteristic> findByValue( String search );
 
     /**
      * Finds all Characteristics whose value match the given search term
      *
-     * @param  search search
-     * @return characteristics
+     * @param category      constraint the category of the characteristic, or null to ignore
      */
-    Collection<Characteristic> findByValueLike( String search );
+    Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
+
+    /**
+     * Obtain the classes of entities can can own a {@link Characteristic}.
+     */
+    Collection<Class<? extends Identifiable>> getParentClasses();
 
     /**
      * Obtain the parents (i.e. owners) of the given characteristics.
-     * <p>
-     * If a characteristic lacks a parent, its entry will be missing from the returned map.
+     *
+     * @param characteristics  characteristics to find parents for
+     * @param parentClasses    restrict the parents to these classes, all parents are returned if null. If supplied, at
+     *                         least one parent must be provided unless includeNoParents is true.
+     * @param includeNoParents include characteristics that have no parents, those will be mapped explicitly to
+     *                         {@code null}.
+     * @return the supplied characteristics mapped to their parents, or {@code null} if the characteristic has no parent
+     * and includeNoParents is true. A characteristic may not have multiple parents.
      */
-    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<?>> parentClasses, int maxResults );
+    Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 }

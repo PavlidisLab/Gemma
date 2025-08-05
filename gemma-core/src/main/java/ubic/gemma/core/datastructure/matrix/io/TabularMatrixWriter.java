@@ -5,6 +5,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
@@ -31,8 +32,7 @@ import java.util.stream.Stream;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
-import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 /**
  * Write a set of single-cell vectors to a simple tabular format.
@@ -54,9 +54,6 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
-    /**
-     * Flush every time a complete line is written.
-     */
     private boolean autoFlush;
 
     @Nullable
@@ -148,7 +145,11 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         if ( scaleType != null ) {
-            writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+            try {
+                writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+            } catch ( UnsupportedQuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         } else {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:
@@ -198,16 +199,16 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     cellIds[w] = format( dimension.getCellIds().get( indices[j] ) );
                     switch ( representation ) {
                         case FLOAT:
-                            vals[w] = format( ( ( float[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( float[] ) vec )[j] );
                             break;
                         case DOUBLE:
-                            vals[w] = format( ( ( double[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( double[] ) vec )[j] );
                             break;
                         case INT:
-                            vals[w] = format( ( ( int[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( int[] ) vec )[j] );
                             break;
                         case LONG:
-                            vals[w] = format( ( ( long[] ) vec )[j] );
+                            vals[w] = formatFast( ( ( long[] ) vec )[j] );
                             break;
                         default:
                             throw new UnsupportedOperationException( "Unsupported representation " + representation + " for writing tabular data." );

@@ -50,7 +50,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
@@ -288,7 +287,7 @@ public class PlatformsWebService {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        java.nio.file.Path file = Paths.get( ArrayDesignAnnotationService.ANNOT_DATA_DIR ).resolve( fileName );
+        java.nio.file.Path file = annotationFileService.getAnnotDataDir().resolve( fileName );
         if ( !force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404

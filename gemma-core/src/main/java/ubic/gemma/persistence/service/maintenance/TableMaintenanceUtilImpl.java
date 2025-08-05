@@ -20,7 +20,7 @@
 package ubic.gemma.persistence.service.maintenance;
 
 import io.micrometer.core.annotation.Timed;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -177,7 +176,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateGene2CsEntries( boolean force ) {
-        Gene2CsStatus updatedStatus = null;
         try {
             String annotation;
             if ( ( annotation = needsToRefreshGene2Cs( force ) ) == null ) {
@@ -190,20 +188,18 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 annotation += "\n\n" + "Updated " + updated + " entries.";
             }
             TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
-            updatedStatus = this.writeUpdateStatus( annotation, null );
+            Gene2CsStatus updatedStatus;
+            updatedStatus = createUpdateStatus( annotation, null );
+            updateGene2csExternalDatabaseLastUpdated( updatedStatus );
+            writeGene2CsUpdateStatusToDisk( updatedStatus );
+            sendGene2CsUpdateStatusAdminEmail( updatedStatus );
             return updated;
         } catch ( Exception e ) {
-            updatedStatus = this.writeUpdateStatus( "An error occurred while attempting to update the GENE2CS table.", e );
+            Gene2CsStatus updatedStatus;
+            updatedStatus = createUpdateStatus( "An error occurred while attempting to update the GENE2CS table.", e );
+            writeGene2CsUpdateStatusToDisk( updatedStatus );
+            sendGene2CsUpdateStatusAdminEmail( updatedStatus );
             throw e;
-        } finally {
-            if ( updatedStatus != null ) {
-                if ( sendEmail ) {
-                    mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
-                }
-                if ( updatedStatus.getError() == null ) {
-                    this.updateGene2csExternalDatabaseLastUpdated( updatedStatus );
-                }
-            }
         }
     }
 
@@ -396,33 +392,50 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         }
     }
 
-    /**
-     * @param annotation extra text that describes the status
-     */
-    private Gene2CsStatus writeUpdateStatus( String annotation, @Nullable Exception e ) {
+    private Gene2CsStatus createUpdateStatus( String annotation, @Nullable Exception e ) {
         Gene2CsStatus status = new Gene2CsStatus();
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         status.setLastUpdate( date );
         status.setError( e );
         status.setAnnotation( annotation );
+        return status;
+    }
+
+    /**
+     * Update the last updated date of the GENE2CS {@link ExternalDatabase}.
+     */
+    private void updateGene2csExternalDatabaseLastUpdated( Gene2CsStatus status ) {
+        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS );
+        if ( ed == null ) {
+            log.error( String.format( "External database with name %s is missing, no audit event will be recorded.", ExternalDatabases.GENE2CS ) );
+            return;
+        }
+        externalDatabaseService.updateReleaseLastUpdated( ed, status.getAnnotation(), status.getLastUpdate() );
+    }
+
+    /**
+     * Write a GENE2CS update status to disk.
+     */
+    private void writeGene2CsUpdateStatusToDisk( Gene2CsStatus status ) {
         try {
-            FileUtils.forceMkdirParent( gene2CsInfoPath.toFile() );
+            PathUtils.createParentDirectories( gene2CsInfoPath );
             try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( gene2CsInfoPath ) ) ) {
                 oos.writeObject( status );
             }
         } catch ( IOException e2 ) {
-            throw new RuntimeException( "Failed to update gene2cs update status.", e2 );
+            log.error( "Failed to update gene2cs update status.", e2 );
+            // not rethrowing, or else the update itself would be rolled back
         }
-        return status;
     }
 
-    private void updateGene2csExternalDatabaseLastUpdated( Gene2CsStatus status ) {
-        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS );
-        if ( ed != null ) {
-            externalDatabaseService.updateReleaseLastUpdated( ed, status.getAnnotation(), status.getLastUpdate() );
-        } else {
-            log.warn( String.format( "External database with name %s is missing, no audit event will be recorded.", ExternalDatabases.GENE2CS ) );
+    /**
+     * Send an email to the admin with the status of the GENE2CS update.
+     */
+    private void sendGene2CsUpdateStatusAdminEmail( Gene2CsStatus updatedStatus ) {
+        if ( !sendEmail ) {
+            return;
         }
+        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
     }
 }

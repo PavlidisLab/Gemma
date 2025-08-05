@@ -64,6 +64,7 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTerms;
@@ -168,7 +169,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
     @Override
     @Transactional(readOnly = true)
-    public SearchResultMap search( SearchSettings settings ) throws SearchException {
+    public SearchResultMap search( SearchSettings settings, SearchContext context ) throws SearchException {
         if ( !supportedResultTypes.keySet().containsAll( settings.getResultTypes() ) ) {
             throw new IllegalArgumentException( "The search settings contains unsupported result types:" + SetUtils.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
         }
@@ -177,7 +178,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // attempt to infer a taxon from the query if missing
         if ( settings.getTaxonConstraint() == null ) {
-            settings = settings.withTaxonConstraint( inferTaxon( settings ) );
+            settings = settings.withTaxonConstraint( inferTaxon( settings, context.getIssueReporter() ) );
         }
 
         // If nothing to search return nothing.
@@ -189,31 +190,31 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         SearchResultMapImpl results = new SearchResultMapImpl();
         // do gene first before we munge the query too much.
         if ( settings.hasResultType( Gene.class ) ) {
-            results.addAll( this.geneSearch( settings ) );
+            results.addAll( this.geneSearch( settings, context ) );
         }
         if ( settings.hasResultType( ExpressionExperiment.class ) ) {
-            results.addAll( this.expressionExperimentSearch( settings ) );
+            results.addAll( this.expressionExperimentSearch( settings, context ) );
         }
         if ( settings.hasResultType( CompositeSequence.class ) ) {
-            results.addAll( this.compositeSequenceSearch( settings ) );
+            results.addAll( this.compositeSequenceSearch( settings, context ) );
         }
         if ( settings.hasResultType( ArrayDesign.class ) ) {
-            results.addAll( searchSource.searchArrayDesign( settings ) );
+            results.addAll( searchSource.searchArrayDesign( settings, context ) );
         }
         if ( settings.hasResultType( BioSequence.class ) ) {
-            results.addAll( searchSource.searchBioSequence( settings ) );
+            results.addAll( searchSource.searchBioSequence( settings, context ) );
         }
         if ( settings.hasResultType( BibliographicReference.class ) ) {
-            results.addAll( searchSource.searchBibliographicReference( settings ) );
+            results.addAll( searchSource.searchBibliographicReference( settings, context ) );
         }
         if ( settings.hasResultType( GeneSet.class ) ) {
-            results.addAll( searchSource.searchGeneSet( settings ) );
+            results.addAll( searchSource.searchGeneSet( settings, context ) );
         }
         if ( settings.hasResultType( ExpressionExperimentSet.class ) ) {
-            results.addAll( searchSource.searchExperimentSet( settings ) );
+            results.addAll( searchSource.searchExperimentSet( settings, context ) );
         }
         if ( settings.hasResultType( BlacklistedEntity.class ) ) {
-            results.addAll( searchSource.searchBlacklistedEntities( settings ) );
+            results.addAll( searchSource.searchBlacklistedEntities( settings, context ) );
         }
 
         if ( !settings.isFillResults() ) {
@@ -225,6 +226,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
 
         return results;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SearchResultMap search( SearchSettings settings ) throws SearchException {
+        return search( settings, new SearchContext( null, null ) );
     }
 
     /*
@@ -373,7 +380,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * Search by name of the composite sequence as well as gene.
      */
-    private SearchResultSet<CompositeSequence> compositeSequenceSearch( SearchSettings settings ) throws SearchException {
+    private SearchResultSet<CompositeSequence> compositeSequenceSearch( SearchSettings settings, SearchContext context ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
 
@@ -383,7 +390,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
          */
 
         // Skip compass searching of composite sequences because it only bloats the results.
-        Collection<SearchResult<?>> compositeSequenceResults = this.searchSource.searchCompositeSequenceAndGene( settings );
+        Collection<SearchResult<?>> compositeSequenceResults = this.searchSource.searchCompositeSequenceAndGene( settings, context );
 
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
@@ -412,11 +419,11 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * If the search matches a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
      * free-text indices and ontology annotations.
      *
-     * @param settings object; the maximum results can be set here but also has a default value defined by
-     *                 SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
+     * @param settings      object; the maximum results can be set here but also has a default value defined by
+     *                      SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
      * @return {@link Collection} of SearchResults
      */
-    private SearchResultSet<ExpressionExperiment> expressionExperimentSearch( final SearchSettings settings ) throws SearchException {
+    private SearchResultSet<ExpressionExperiment> expressionExperimentSearch( final SearchSettings settings, SearchContext context ) throws SearchException {
 
         StopWatch totalTime = StopWatch.createStarted();
         StopWatch watch = StopWatch.createStarted();
@@ -426,7 +433,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
         // searches for GEO names, etc - "exact" matches.
-        results.addAll( searchSource.searchExpressionExperiment( settings ) );
+        results.addAll( searchSource.searchExpressionExperiment( settings, context ) );
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log.warn( String.format( "Expression Experiment database search for %s took %d ms, %d hits.",
                     settings, watch.getTime(), results.size() ) );
@@ -445,13 +452,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         // special case: search for experiments associated with genes
         // this is achieved by crafting a URI with the NCBI gene id
         if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) || SecurityUtil.isUserAdmin() ) {
-            SearchResultSet<Gene> geneHits = this.geneSearch( settings.withMode( SearchSettings.SearchMode.FAST ) );
+            SearchResultSet<Gene> geneHits = this.geneSearch( settings.withMode( SearchSettings.SearchMode.FAST ), context );
             for ( SearchResult<Gene> gh : geneHits ) {
                 Gene g = gh.getResultObject();
                 if ( g == null || g.getNcbiGeneId() == null ) {
                     continue;
                 }
-                results.addAll( ontologySearchSource.searchExpressionExperiment( settings.withQuery( NCBI_GENE_ID_URI_PREFIX + g.getNcbiGeneId() ) ) );
+                results.addAll( ontologySearchSource.searchExpressionExperiment( settings.withQuery( NCBI_GENE_ID_URI_PREFIX + g.getNcbiGeneId() ), context ) );
             }
         }
 
@@ -498,7 +505,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) || SecurityUtil.isUserAdmin() ) {
             watch.reset();
             watch.start();
-            Collection<SearchResult<ArrayDesign>> matchingPlatforms = searchSource.searchArrayDesign( settings );
+            Collection<SearchResult<ArrayDesign>> matchingPlatforms = searchSource.searchArrayDesign( settings, context );
             for ( SearchResult<ArrayDesign> adRes : matchingPlatforms ) {
                 ArrayDesign ad = adRes.getResultObject();
                 if ( ad != null ) {
@@ -529,13 +536,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Combines compass style search, the db style search, and the compositeSequence search and returns 1 combined list
      * with no duplicates.
      */
-    private SearchResultSet<Gene> geneSearch( final SearchSettings settings ) throws SearchException {
+    private SearchResultSet<Gene> geneSearch( final SearchSettings settings, SearchContext context ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
 
         SearchResultSet<Gene> combinedGeneList = new SearchResultSet<>( settings );
 
-        combinedGeneList.addAll( this.searchSource.searchGene( settings ) );
+        combinedGeneList.addAll( this.searchSource.searchGene( settings, context ) );
 
         // stop here in the fast search mode
         if ( settings.getMode() == SearchSettings.SearchMode.FAST ) {
@@ -544,7 +551,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // expand the search by including probes-associated genes
         if ( combinedGeneList.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
-            Collection<SearchResult<?>> geneCsList = this.searchSource.searchCompositeSequenceAndGene( settings );
+            Collection<SearchResult<?>> geneCsList = this.searchSource.searchCompositeSequenceAndGene( settings, context );
             for ( SearchResult<?> res : geneCsList ) {
                 if ( Gene.class.equals( res.getResultType() ) )
                     //noinspection unchecked
@@ -575,8 +582,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         // Doing this is a separate loop so that these names take lower precedence when matching than the full terms in
         // the generated keySet.
         for ( Taxon taxon : taxonCollection ) {
-            this.addTerms( taxon, taxon.getCommonName() );
-            this.addTerms( taxon, taxon.getScientificName() );
+            if ( taxon.getCommonName() != null ) {
+                this.addTerms( taxon, taxon.getCommonName() );
+            }
+            if ( taxon.getScientificName() != null ) {
+                this.addTerms( taxon, taxon.getScientificName() );
+            }
         }
 
     }
@@ -600,10 +611,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Infer a {@link Taxon} from the search settings.
      */
     @Nullable
-    private Taxon inferTaxon( SearchSettings settings ) throws SearchException {
+    private Taxon inferTaxon( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
         // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
         // remove quotes and other characters tha can interfere with the exact match
-        Set<String> searchTerms = extractTerms( settings );
+        Set<String> searchTerms = extractTerms( settings, issueReporter );
 
         for ( String term : searchTerms ) {
             if ( nameToTaxonMap.containsKey( term ) ) {

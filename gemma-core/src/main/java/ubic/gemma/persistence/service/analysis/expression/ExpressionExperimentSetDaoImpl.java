@@ -26,6 +26,7 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
@@ -67,6 +68,26 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentSet> findByName( final String name ) {
         return this.findByProperty( "name", name );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSet> findByAccession( String accession ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ees from ExpressionExperimentSet ees join ees.accession accession where accession.accession = :accession" )
+                .setParameter( "accession", accession )
+                .list();
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSet> findByAccession( String accession, ExternalDatabase externalDatabase ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ees from ExpressionExperimentSet ees join ees.accession accession "
+                        + "where accession.accession = :accession and accession.externalDatabase = :ed" )
+                .setParameter( "accession", accession )
+                .setParameter( "ed", externalDatabase )
+                .list();
     }
 
     @Override

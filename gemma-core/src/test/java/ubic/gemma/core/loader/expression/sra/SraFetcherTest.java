@@ -2,11 +2,11 @@ package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
-import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
-import ubic.gemma.core.loader.expression.sra.model.SraRun;
+import ubic.gemma.core.loader.expression.sra.model.*;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -36,6 +36,45 @@ public class SraFetcherTest {
     }
 
     @Test
+    public void testFetchProject() throws IOException {
+        SraExperimentPackageSet result = sraFetcher.fetch( "SRP313710" );
+        assertThat( result.getExperimentPackages() )
+                .hasSize( 29 )
+                .extracting( SraExperimentPackage::getExperiment )
+                .extracting( SraExperiment::getAccession )
+                .containsExactlyInAnyOrder(
+                        "SRX10528674",
+                        "SRX10528673",
+                        "SRX10528672",
+                        "SRX10528671",
+                        "SRX10528670",
+                        "SRX10528669",
+                        "SRX10528668",
+                        "SRX10528667",
+                        "SRX10528666",
+                        "SRX10528665",
+                        "SRX10528664",
+                        "SRX10528663",
+                        "SRX10528662",
+                        "SRX10528661",
+                        "SRX10528660",
+                        "SRX10528659",
+                        "SRX10528658",
+                        "SRX10528657",
+                        "SRX10528656",
+                        "SRX10528655",
+                        "SRX10528654",
+                        "SRX10528653",
+                        "SRX10528652",
+                        "SRX10528651",
+                        "SRX10528650",
+                        "SRX10528649",
+                        "SRX10528648",
+                        "SRX10528647",
+                        "SRX10528646" );
+    }
+
+    @Test
     public void testFetchRunInfo() throws IOException {
         assumeThatResourceIsAvailable( EntrezUtils.EFETCH + "?db=sra&id=SRX12015965" );
         String runinfo = sraFetcher.fetchRunInfo( "SRX12015965" );
@@ -46,6 +85,65 @@ public class SraFetcherTest {
         SraRuninfoParser parser = new SraRuninfoParser();
         SraExperimentPackageSet result = parser.parse( new StringReader( runinfo ) );
         checkExperiment( result );
+    }
+
+    @Test
+    public void testFetchProjectRunInfo() throws IOException {
+        String result = sraFetcher.fetchRunInfo( "SRP313710" );
+        assertThat( result )
+                // this has more lines because some SRX have multiple runs
+                .hasLineCount( 33 )
+                .contains(
+                        "SRX10528674",
+                        "SRX10528673",
+                        "SRX10528672",
+                        "SRX10528671",
+                        "SRX10528670",
+                        "SRX10528669",
+                        "SRX10528668",
+                        "SRX10528667",
+                        "SRX10528666",
+                        "SRX10528665",
+                        "SRX10528664",
+                        "SRX10528663",
+                        "SRX10528662",
+                        "SRX10528661",
+                        "SRX10528660",
+                        "SRX10528659",
+                        "SRX10528658",
+                        "SRX10528657",
+                        "SRX10528656",
+                        "SRX10528655",
+                        "SRX10528654",
+                        "SRX10528653",
+                        "SRX10528652",
+                        "SRX10528651",
+                        "SRX10528650",
+                        "SRX10528649",
+                        "SRX10528648",
+                        "SRX10528647",
+                        "SRX10528646" );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE230440() throws IOException {
+        SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE231774" );
+        assertThat( result.getExperimentPackages() )
+                .flatExtracting( SraExperimentPackage::getRunSets )
+                .flatExtracting( SraRunSet::getRuns )
+                .extracting( SraRun::getStatistics )
+                .satisfiesOnlyOnce( stats -> {
+                    assertThat( stats.getNumberOfReads() ).isEqualTo( "variable" );
+                    assertThat( stats.getNumberOfSpots() ).isNull();
+                    assertThat( stats.getReadStatistics() ).isNull();
+                } );
+    }
+
+    @Test
+    public void testGSE165635() throws IOException {
+        SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE165635" );
+        assertThat( result.getExperimentPackages() ).hasSize( 3 );
     }
 
     private void checkExperiment( SraExperimentPackageSet seps ) {

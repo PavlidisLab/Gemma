@@ -133,7 +133,7 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest {
         ExpressionExperimentManipulatingCLI cli = new ExpressionExperimentManipulatingCLI() {
             @Override
             protected void buildExperimentOptions( Options options ) {
-                addExpressionDataFileOptions( options, "test data" );
+                addExpressionDataFileOptions( options, "test data", true );
             }
         };
         assertThat( cli )

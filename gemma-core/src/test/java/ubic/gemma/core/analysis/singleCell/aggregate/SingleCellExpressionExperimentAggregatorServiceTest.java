@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
@@ -18,10 +19,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -660,6 +658,60 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
+    @Test
+    public void testAggregateWithMask() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+
+        // randomly assign cell types
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
+                .thenReturn( vectors );
+
+        // randomly mask 10% of the cells
+        CellLevelCharacteristics mask = createMask( dimension, 0.1 );
+
+        AggregateConfig config = AggregateConfig.builder()
+                .mask( mask )
+                .build();
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( ee, cellBAs, config );
+
+        ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
+        assertThat( capt.getValue() )
+                .hasSameSizeAs( ad.getCompositeSequences() )
+                .satisfies( vecs -> {
+                    // make sure the data is log2cpm
+                    double total = 0;
+                    for ( RawExpressionDataVector vec : vecs ) {
+                        total += Math.pow( 2, vec.getDataAsDoubles()[0] );
+                    }
+                    // because the numerator (librarySize + 1) and numerical error from log/exp transformation, the
+                    // offset will be pretty large. This is attenuated by large library sizes.
+                    assertThat( total ).isEqualTo( 1e6, Offset.offset( 1e5 ) );
+                } )
+                .anySatisfy( rawVec -> {
+                    assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
+                    assertThat( rawVec.getBioAssayDimension().getBioAssays() )
+                            .hasSize( 4 * 4 );
+                    assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
+                    assertThat( rawVec.getDataAsDoubles() )
+                            .hasSize( 16 )
+                            .containsExactly( 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927826167638358, 19.927826167638358, 19.927826167638358, 19.927826167638358 );
+                } );
+    }
+
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
         CellTypeAssignment cta = new CellTypeAssignment();
         int[] indices = new int[dimension.getNumberOfCells()];
@@ -674,5 +726,13 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         cta.setNumberOfAssignedCells( indices.length );
         cta.setPreferred( true );
         return cta;
+    }
+
+    private CellLevelCharacteristics createMask( SingleCellDimension dimension, double fractionMasked ) {
+        boolean[] mask = new boolean[dimension.getNumberOfCells()];
+        for ( int i = 0; i < mask.length; i++ ) {
+            mask[i] = random.nextDouble() < fractionMasked;
+        }
+        return SingleCellMaskUtils.createMask( mask );
     }
 }

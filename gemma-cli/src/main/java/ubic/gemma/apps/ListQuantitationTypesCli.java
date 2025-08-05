@@ -45,7 +45,7 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         getCliContext().getOutputStream().println( formatExperiment( expressionExperiment ) );
         super.processExpressionExperiment( expressionExperiment );
         getCliContext().getOutputStream().println();
@@ -67,9 +67,17 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
         }
         BioAssayDimension dimension;
         SingleCellDimension scd;
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
         if ( ( dimension = eeService.getBioAssayDimension( ee, qt ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + dimension );
-        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) ) != null ) {
+        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + scd );
             try ( Stream<String> cellIds = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                 if ( cellIds != null ) {

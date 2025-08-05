@@ -53,7 +53,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
+import static ubic.gemma.model.common.measurement.MeasurementUtils.measurement2double;
 
 /**
  * Tools for visualizing experimental designs. The idea is to generate an overview of the design that can be put over

@@ -33,6 +33,7 @@ http://purl.obolibrary.org/obo/GO_0008150	biological process
 http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
 # OK for EEtag only
 http://www.ebi.ac.uk/efo/EFO_0001426	study design
+http://purl.obolibrary.org/obo/OBI_0000070	assay
 # too rarely used to be useful
 #http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
 #http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure

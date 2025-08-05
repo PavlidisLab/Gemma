@@ -67,7 +67,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private static final String FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR = "FAILURE";
 
     @Autowired
-    private BioMaterialService bioMaterialService = null;
+    private BioMaterialService bioMaterialService;
 
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
@@ -86,7 +86,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<String, Collection<String>> batchIdToHeaders;
         try {
-            batchIdToHeaders = this.convertHeadersToBatches( ee, headers.values() );
+            batchIdToHeaders = convertHeadersToBatches( ee, headers.values() );
         } catch ( FASTQHeadersPresentButNotUsableException e ) {
             log.info( "Batches unable to be determined from headers: " + ee );
             this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined", "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
@@ -283,7 +283,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * batch. It will be empty if batches
      * couldn't be determined.
      */
-    private Map<String, Collection<String>> convertHeadersToBatches( ExpressionExperiment ee, Collection<String> headers ) throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
+    private static Map<String, Collection<String>> convertHeadersToBatches( ExpressionExperiment ee, Collection<String> headers ) throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
         Map<FastqHeaderData, Collection<String>> goodHeaderSampleInfos = new HashMap<>();
@@ -402,7 +402,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     /**
      * For tests only.
      */
-    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers ) {
+    static Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers ) {
         return convertHeadersToBatches( ExpressionExperiment.Factory.newInstance(), headers );
     }
 
@@ -420,7 +420,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @return Map of batches (represented by the appropriate FastqHeaderData) to samples that are in the
      *                    batch.
      */
-    private Map<FastqHeaderData, Collection<String>> batch( ExpressionExperiment ee, Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
+    private static Map<FastqHeaderData, Collection<String>> batch( ExpressionExperiment ee, Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
 
         int numBatches = batchInfos.size();
 
@@ -466,7 +466,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * RNAseq: Update the batch info with a lower resolution. This is only effective if we have a usable header for all
      * samples.
      */
-    private Map<FastqHeaderData, Collection<String>> dropResolution( Map<FastqHeaderData, Collection<String>> batchInfos ) {
+    private static Map<FastqHeaderData, Collection<String>> dropResolution( Map<FastqHeaderData, Collection<String>> batchInfos ) {
 
         Map<FastqHeaderData, Collection<String>> result = new HashMap<>();
         for ( FastqHeaderData fhd : batchInfos.keySet() ) {
@@ -513,7 +513,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @param  header FASTQ header (can be multi-headers for cases where there is more than on FASTQ file)
      * @return representation of the batch info, which is going to be a portion of the header string
      */
-    FastqHeaderData parseFASTQHeaderForBatch( String header ) {
+    static FastqHeaderData parseFASTQHeaderForBatch( String header ) {
 
         if ( !header.contains( BatchInfoPopulationServiceImpl.MULTIFASTQHEADER_DELIMITER ) ) {
             throw new UnsupportedOperationException( "Header does not appear to be in the expected format: " + header );
@@ -608,7 +608,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         return currentBatch;
     }
 
-    class FastqHeaderData {
+    static class FastqHeaderData {
 
         private String unusableHeader = null;
 
@@ -773,15 +773,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             this.hadUsableHeader = true;
         }
 
-        private BatchInfoPopulationHelperServiceImpl getOuterType() {
-            return BatchInfoPopulationHelperServiceImpl.this;
-        }
-
         @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + getOuterType().hashCode();
             //    result = prime * result + ( ( this.gplId == null ) ? 0 : gplId.hashCode() );
             // result = prime * result + ( ( this.unusableHeader == null ) ? 0 : unusableHeader.hashCode() );
             result = prime * result + ( ( device == null ) ? 0 : device.hashCode() );
@@ -803,9 +798,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 return false;
             }
             FastqHeaderData other = ( FastqHeaderData ) obj;
-            if ( !getOuterType().equals( other.getOuterType() ) ) {
-                return false;
-            }
 
             if ( device == null ) {
                 if ( other.device != null ) {
@@ -930,7 +922,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setType( FactorType.CATEGORICAL );
         ef.setCategory( this.getBatchFactorCategory() );
         ef.setExperimentalDesign( ed );
-        ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        ef.setName( ExperimentFactorUtils.BATCH_FACTOR_NAME );
         ef.setDescription( "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
 
         ef = this.persistFactor( ee, ef );

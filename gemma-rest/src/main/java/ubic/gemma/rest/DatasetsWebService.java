@@ -1111,7 +1111,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
-            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayIds,
             @Context HttpHeaders headers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -1133,7 +1133,7 @@ public class DatasetsWebService {
             }
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayId( useBioAssayId );
+                writer.setUseBioAssayIds( useBioAssayIds );
                 writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {
@@ -1148,7 +1148,15 @@ public class DatasetsWebService {
                 boolean includeBioAssays = !excludedFields.contains( "bioAssayIds" );
                 // we can go extra-fast if both are excluded
                 boolean includeIndices = !( excludedFields.contains( "cellTypeAssignments.cellTypeIds" ) && excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) );
-                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, true, true, true, includeIndices );
+                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initializationConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                        .includeBioAssays( includeBioAssays )
+                        .includeCtas( true )
+                        .includeClcs( true )
+                        .includeProtocol( true )
+                        .includeCharacteristics( true )
+                        .includeIndices( includeIndices )
+                        .build();
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, initializationConfig );
             } else {
                 dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
             }
@@ -1176,7 +1184,8 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             // TODO: implement CellTypeAssignmentArg
-            @Parameter(description = "The name of of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
             @Context HttpHeaders headers
     ) {
@@ -1193,7 +1202,16 @@ public class DatasetsWebService {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
         CellTypeAssignment cta;
-        if ( ctaName != null ) {
+        if ( protocolName != null ) {
+            Collection<CellTypeAssignment> found = singleCellExpressionExperimentService.getCellTypeAssignmentByProtocol( ee, qt, protocolName );
+            if ( found.isEmpty() ) {
+                throw new NotFoundException( "No cell type assignment with protocol " + protocolName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            } else if ( found.size() > 1 ) {
+                throw new IllegalArgumentException( "There is more than one cell type assignment with protocol " + protocolName + " for " + ee.getShortName() + " and " + qt.getName() + ". Please specify the name of the cell type assignment to retrieve." );
+            } else {
+                cta = found.iterator().next();
+            }
+        } else if ( ctaName != null ) {
             cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
             if ( cta == null ) {
                 throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
@@ -1206,7 +1224,7 @@ public class DatasetsWebService {
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayId( useBioAssayId );
+                writer.setUseBioAssayIds( useBioAssayId );
                 writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {
@@ -1466,7 +1484,8 @@ public class DatasetsWebService {
                             .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
                             .build();
                 } else {
-                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, 30, false );
+                    // no cursor fetching because this requires a lot of memory on the database server
+                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, 30, false, false );
                     throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
                 }
             } catch ( TimeoutException e ) {
@@ -1490,7 +1509,8 @@ public class DatasetsWebService {
                     // generate the file in the background and stream it
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, force );
+                    // we do not want to use cursor fetch because it requires a lot of memory on the database server
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {
@@ -1511,7 +1531,7 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
@@ -1553,7 +1573,7 @@ public class DatasetsWebService {
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
             String filename = getDesignFileName( ee );
-            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();

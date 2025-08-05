@@ -24,12 +24,10 @@ import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -210,7 +208,7 @@ public class ExpressionDataMatrixColumnSort {
             /*
              * Always push 'batch' down the list
              */
-            if ( factors.size() > 1 && ExperimentalDesignUtils.isBatchFactor( ef ) ) {
+            if ( factors.size() > 1 && ExperimentFactorUtils.isBatchFactor( ef ) ) {
                 continue;
             }
 
@@ -566,6 +564,6 @@ public class ExpressionDataMatrixColumnSort {
      */
     private static void sortByMeasurement( List<FactorValue> factorValues ) {
         ExpressionDataMatrixColumnSort.log.debug( "Sorting measurements" );
-        factorValues.sort( Comparator.comparing( FactorValue::getMeasurement, Comparator.nullsLast( Comparator.comparingDouble( ExperimentalDesignUtils::measurement2double ) ) ) );
+        factorValues.sort( Comparator.comparing( FactorValue::getMeasurement, Comparator.nullsLast( Comparator.comparingDouble( MeasurementUtils::measurement2double ) ) ) );
     }
 }

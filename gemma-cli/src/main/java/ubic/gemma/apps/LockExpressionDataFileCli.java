@@ -4,7 +4,6 @@ import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.util.locking.FileLockInfoUtils;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -15,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.getExpressionExperimentMetadataDirname;
 
 /**
  * This CLI allows one to lock an experiment data or metadata file.
@@ -96,7 +97,7 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
         Path p;
         if ( metadata ) {
             p = metadataDir
-                    .resolve( ExpressionDataFileUtils.getEEFolderName( ee ) )
+                    .resolve( getExpressionExperimentMetadataDirname( ee ) )
                     .resolve( filename );
         } else {
             p = dataDir.resolve( filename );

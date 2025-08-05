@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -39,6 +40,10 @@ import java.util.Set;
  */
 @Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild {
+
+    public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
+            .thenComparing( ExperimentalFactor::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     private FactorType type;
     @Nullable

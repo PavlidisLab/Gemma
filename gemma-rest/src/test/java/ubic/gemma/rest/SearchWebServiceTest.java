@@ -15,13 +15,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
@@ -31,8 +31,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyTest;
@@ -150,7 +150,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
         when( srm.toList() ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, null, "test object" ) ) );
-        when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( srm );
+        when( searchService.search( searchSettingsArgumentCaptor.capture(), any() ) ).thenReturn( srm );
         when( searchService.loadValueObjects( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             Collection<SearchResult<Gene>> searchResult = args.getArgument( 0, Collection.class );
@@ -184,7 +184,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     public void testSearchByTaxon() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
         when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, null, "test object" ) ) );
-        when( searchService.search( any() ) ).thenReturn( srm );
+        when( searchService.search( any(), any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
@@ -202,7 +202,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     public void testSearchByArrayDesign() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
         when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, null, "test object" ) ) );
-        when( searchService.search( any() ) ).thenReturn( srm );
+        when( searchService.search( any(), any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
             SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
@@ -243,7 +243,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
 
     @Test
     public void testSearchWithInvalidQuery() throws SearchException {
-        when( searchService.search( any() ) ).thenAnswer( a -> {
+        when( searchService.search( any(), any() ) ).thenAnswer( a -> {
             try {
                 new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) )
                         .parse( a.getArgument( 0, SearchSettings.class ).getQuery() );

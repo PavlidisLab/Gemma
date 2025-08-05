@@ -168,4 +168,8 @@ public class Settings {
     public static String getString( String key, String defaultValue ) {
         return Settings.config.getString( key, defaultValue );
     }
+
+    public static String[] getStringArray( String key ) {
+        return Settings.config.getStringArray( key );
+    }
 }

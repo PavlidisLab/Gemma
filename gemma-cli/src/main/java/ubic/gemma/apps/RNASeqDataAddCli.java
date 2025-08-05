@@ -29,7 +29,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
@@ -161,11 +160,11 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> bas ) {
+    protected void processExpressionExperiments( Collection<ExpressionExperiment> bas ) {
         if ( !justbackfillLog2cpm ) {
             throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool, unless -log2cpm is used." );
         }
-        super.processBioAssaySets( bas );
+        super.processExpressionExperiments( bas );
     }
 
     @Override

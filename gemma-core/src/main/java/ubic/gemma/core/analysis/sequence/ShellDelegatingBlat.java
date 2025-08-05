@@ -18,40 +18,52 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
-import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import java.io.*;
+import javax.annotation.Nullable;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class to manage the gfServer and run BLAT searches. Delegates to the command-line shell to run blat.
  *
  * @author pavlidis
  */
-@SuppressWarnings("unused") // Possible external use
+@Getter
+@CommonsLog
 public class ShellDelegatingBlat implements Blat {
 
+    /**
+     * Interval in milliseconds to report on BLAT progress by peeking at its output file.
+     */
     private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
-    private static final Log log = LogFactory.getLog( ShellDelegatingBlat.class );
     /**
      * Minimum alignment length for retention.
      */
@@ -60,43 +72,59 @@ public class ShellDelegatingBlat implements Blat {
      * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
      */
     private static final int POLY_AT_THRESHOLD = 5;
-    private static final String os = System.getProperty( "os.name" ).toLowerCase();
-    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
-    private boolean doShutdown = true;
+
+    private static final int STEPSIZE = 7;
+
     // typical values.
-    private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
-    private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
-    private String host = "localhost";
-    private int humanSensitiveServerPort;
-    private String humanSeqFiles;
-    private int humanServerPort;
-    private int mouseSensitiveServerPort;
-    private String mouseSeqFiles;
-    private int mouseServerPort;
-    private int ratSensitiveServerPort;
-    private String ratSeqFiles;
-    private int ratServerPort;
-    private String seqDir = "/";
+    private final String gfClientExe;
+    private final String gfServerExe;
+    private final String host;
+    private final int humanSensitiveServerPort;
+    private final String[] humanSeqFiles;
+    private final int humanServerPort;
+    private final int mouseSensitiveServerPort;
+    private final String[] mouseSeqFiles;
+    private final int mouseServerPort;
+    private final int ratSensitiveServerPort;
+    private final String[] ratSeqFiles;
+    private final int ratServerPort;
+    private final Path seqDir;
+    private final Path tmpDir;
+
+    @Setter
+    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
+
+    @Nullable
     private Process serverProcess;
+    private String serverHost;
+    private int serverPort;
 
     /**
      * Create a blat object with settings read from the config file.
      */
     public ShellDelegatingBlat() {
-        try {
-            this.init();
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Could not load configuration", e );
+        ShellDelegatingBlat.log.debug( "Reading global config" );
+        this.humanServerPort = Settings.getInt( "gfClient.humanServerPort" );
+        this.mouseServerPort = Settings.getInt( "gfClient.mouseServerPort" );
+        this.ratServerPort = Settings.getInt( "gfClient.ratServerPort" );
+        this.humanSensitiveServerPort = Settings.getInt( "gfClient.sensitive.humanServerPort" );
+        this.mouseSensitiveServerPort = Settings.getInt( "gfClient.sensitive.mouseServerPort" );
+        this.ratSensitiveServerPort = Settings.getInt( "gfClient.sensitive.ratServerPort" );
+        this.host = Settings.getString( "gfClient.host" );
+        this.seqDir = Paths.get( Settings.getString( "gfClient.seqDir" ) );
+        this.tmpDir = Paths.get( Settings.getDownloadPath() );
+        this.mouseSeqFiles = Settings.getStringArray( "gfClient.mouse.seqFiles" );
+        this.ratSeqFiles = Settings.getStringArray( "gfClient.rat.seqFiles" );
+        this.humanSeqFiles = Settings.getStringArray( "gfClient.human.seqFiles" );
+        this.gfClientExe = Settings.getString( "gfClient.exe" );
+        this.gfServerExe = Settings.getString( "gfServer.exe" );
+        if ( gfServerExe == null ) {
+            /*
+             * This won't ever really work -- it's left over from earlier iterations.
+             */
+            ShellDelegatingBlat.log
+                    .warn( "You will not be able to start the server: gfServer.exe is not set in config" );
         }
-    }
-
-    public ShellDelegatingBlat( String host, int humanServerPort, String seqDir ) {
-
-        if ( host == null || humanServerPort <= 0 || seqDir == null )
-            throw new IllegalArgumentException( "All values must be non-null" );
-        this.host = host;
-        this.humanServerPort = humanServerPort;
-        this.seqDir = seqDir;
     }
 
     public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
@@ -109,14 +137,12 @@ public class ShellDelegatingBlat implements Blat {
 
     private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
         assert taxon != null;
-
         BlattableGenome bg;
-
-        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
+        if ( Objects.equals( taxon.getNcbiId(), 10090 ) || Objects.equals( taxon.getCommonName(), "mouse" ) ) {
             bg = BlattableGenome.MOUSE;
-        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
+        } else if ( Objects.equals( taxon.getNcbiId(), 10116 ) || Objects.equals( taxon.getCommonName(), "rat" ) ) {
             bg = BlattableGenome.RAT;
-        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
+        } else if ( Objects.equals( taxon.getNcbiId(), 9606 ) || Objects.equals( taxon.getCommonName(), "human" ) ) {
             bg = BlattableGenome.HUMAN;
         } else {
             throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
@@ -139,18 +165,18 @@ public class ShellDelegatingBlat implements Blat {
         assert seqDir != null;
         // write the sequence to a temporary file.
         String seqName = b.getName().replaceAll( " ", "_" );
-        File querySequenceFile = File.createTempFile( seqName, ".fa" );
+        Path querySequenceFile = Files.createTempFile( seqName, ".fa" );
 
-        try ( BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) ) ) {
+        try ( BufferedWriter out = Files.newBufferedWriter( querySequenceFile ) ) {
             String trimmed = SequenceManipulation
                     .stripPolyAorT( b.getSequence(), ShellDelegatingBlat.POLY_AT_THRESHOLD );
             out.write( ">" + seqName + "\n" + trimmed );
-            ShellDelegatingBlat.log.info( "Wrote sequence to " + querySequenceFile.getPath() );
+            ShellDelegatingBlat.log.info( "Wrote sequence to " + querySequenceFile );
         }
-        String outputPath = this.getTmpPslFilePath( seqName );
+        Path outputPath = this.getTmpPslFilePath( seqName );
 
-        List<BlatResult> results = this
-                .gfClient( querySequenceFile, outputPath, this.choosePortForQuery( taxon, sensitive ) );
+        int portToUse = this.choosePortForQuery( taxon, sensitive );
+        List<BlatResult> results = execGfClient( querySequenceFile, outputPath, portToUse, taxon );
 
         ExternalDatabase searchedDatabase = ShellDelegatingBlat.getSearchedGenome( taxon );
         for ( BlatResult result : results ) {
@@ -167,26 +193,18 @@ public class ShellDelegatingBlat implements Blat {
             Taxon taxon ) throws IOException {
         Map<BioSequence, List<BlatResult>> results = new HashMap<>();
 
-        File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
-        int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
+        Path querySequenceFile = Files.createTempFile( "sequences-for-blat", ".fa" );
+        int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile.toFile() );
         if ( count == 0 ) {
-            if ( !querySequenceFile.delete() ) {
-                throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
-            }
+            Files.delete( querySequenceFile );
             throw new IllegalArgumentException( "No sequences!" );
         }
 
-        String outputPath = this.getTmpPslFilePath( "blat-output" );
+        Path outputPath = this.getTmpPslFilePath( "blat-output" );
 
-        Integer port = this.choosePortForQuery( taxon, sensitive );
+        int port = this.choosePortForQuery( taxon, sensitive );
 
-        if ( port == null ) {
-            throw new IllegalStateException(
-                    "Could not locate port for BLAT with settings taxon=" + taxon + ", sensitive=" + sensitive
-                            + ", check your configuration." );
-        }
-
-        Collection<BlatResult> rawResults = this.gfClient( querySequenceFile, outputPath, port );
+        Collection<BlatResult> rawResults = execGfClient( querySequenceFile, outputPath, port, taxon );
 
         ShellDelegatingBlat.log.info( "Got " + rawResults.size() + " raw blat results" );
 
@@ -203,9 +221,7 @@ public class ShellDelegatingBlat implements Blat {
 
             results.get( query ).add( blatResult );
         }
-        if ( !querySequenceFile.delete() ) {
-            throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
-        }
+        Files.delete( querySequenceFile );
         return results;
     }
 
@@ -215,67 +231,13 @@ public class ShellDelegatingBlat implements Blat {
         return this.blatQuery( sequences, false, taxon );
     }
 
-    @Override
-    public double getBlatScoreThreshold() {
-        return this.blatScoreThreshold;
-    }
-
-    @Override
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
-    }
-
-    @Override
-    public String getGfClientExe() {
-        return this.gfClientExe;
-    }
-
-    @Override
-    public String getGfServerExe() {
-        return this.gfServerExe;
-    }
-
-    @Override
-    public String getHost() {
-        return this.host;
-    }
-
-    @Override
-    public int getHumanServerPort() {
-        return this.humanServerPort;
-    }
-
-    @Override
-    public int getMouseServerPort() {
-        return this.mouseServerPort;
-    }
-
-    @Override
-    public int getRatServerPort() {
-        return this.ratServerPort;
-    }
-
-    @Override
-    public String getSeqDir() {
-        return this.seqDir;
-    }
-
-    @Override
-    public String getSeqFiles( BlattableGenome genome ) {
-        switch ( genome ) {
-            case HUMAN:
-                return this.humanSeqFiles;
-            case MOUSE:
-                return this.mouseSeqFiles;
-            case RAT:
-                return this.ratSeqFiles;
-            default:
-                return this.humanSeqFiles;
-
-        }
-    }
-
-    @Override
+    /**
+     * Process the output of a BLAT search in psl format.
+     * @param inputStream to the Blat output file in psl format
+     * @param taxon       taxon
+     * @return processed results.
+     * @throws IOException when there are IO problems.
+     */
     public List<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
 
         if ( inputStream.available() == 0 ) {
@@ -293,61 +255,135 @@ public class ShellDelegatingBlat implements Blat {
         return brp.getResults();
     }
 
-    @Override
-    public void startServer( BlattableGenome genome, int port ) throws IOException {
-        try ( Socket socket = new Socket( host, port ) ) {
-            ShellDelegatingBlat.log.info( "There is already a server on port " + port );
-            this.doShutdown = false;
-        } catch ( UnknownHostException e ) {
-            throw new RuntimeException( "Unknown host " + host, e );
+    /**
+     * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
+     *
+     * @param genome genome
+     * @param waitForFullInitialization if true, wait for the server to be fully initialized before returning, otherwise
+     *                                  return immediately after starting the server.
+     * @throws IOException when there are IO problems.
+     */
+    public synchronized void startServer( BlattableGenome genome, boolean sensitive, boolean waitForFullInitialization ) throws IOException {
+        Assert.state( serverProcess == null || !serverProcess.isAlive() );
+        if ( sensitive ) {
+            // TODO: implement sensitive searches
+            throw new UnsupportedOperationException( "Sensitive BLAT searches are not supported by this implementation." );
+        }
+        int port = getPort( genome, sensitive );
+        // check if a server is already running
+        try ( Socket ignored = new Socket( host, port ) ) {
+            throw new RuntimeException( "There is already a gfServer listening on " + host + ":" + port + "." );
         } catch ( IOException e ) {
-            String cmd =
-                    this.getGfServerExe() + " -canStop -stepSize=" + Blat.STEPSIZE + " start " + this.getHost() + " "
-                            + port + " " + this.getSeqFiles( genome );
-            ShellDelegatingBlat.log.info( "Starting gfServer with command " + cmd );
-            this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
-
-            try {
-                Thread.sleep( 100 );
-                int exit = serverProcess.exitValue();
-                if ( exit != 0 ) {
-                    throw new IOException( "Could not start server" );
-                }
-            } catch ( InterruptedException e1 ) {
-                Thread.currentThread().interrupt();
-                ShellDelegatingBlat.log.info( "Server seems to have started" );
-            } catch ( IllegalThreadStateException e1 ) {
-                ShellDelegatingBlat.log.info( "Server seems to have started" );
-            }
-
+            // ignore all other errors, the blat server is probably not running
         }
-    }
+        String[] cmd = ArrayUtils.addAll( new String[] {
+                gfServerExe, "-stepSize=" + STEPSIZE, "start", this.host, String.valueOf( port ) }, this.getSeqFiles( genome ) );
+        ShellDelegatingBlat.log.info( "Starting gfServer with command: " + ShellUtils.join( cmd ) );
+        this.serverProcess = new ProcessBuilder( cmd )
+                .directory( seqDir.toFile() )
+                .redirectOutput( ProcessBuilder.Redirect.INHERIT )
+                .redirectError( ProcessBuilder.Redirect.PIPE )
+                .start();
+        this.serverHost = host;
+        this.serverPort = port;
 
-    @Override
-    public void stopServer( int port ) {
-        if ( !doShutdown ) {
-            return;
-        }
-        ShellDelegatingBlat.log.info( "Shutting down gfServer" );
-
-        if ( serverProcess == null )
-            return;
-        // serverProcess.destroy();
+        // wait a little bit to see if the server fails early (i.e. incorrect parameters)
         try {
-            // this doesn't work unless the server was invoked with the option "-canStop"
-            Process server = Runtime.getRuntime()
-                    .exec( this.getGfServerExe() + " stop " + this.getHost() + " " + port );
-            server.waitFor();
-            int exit = server.exitValue();
-            ShellDelegatingBlat.log.info( "Server on port " + port + " shut down with exit value " + exit );
-        } catch ( InterruptedException | IOException e ) {
-            ShellDelegatingBlat.log.error( e, e );
+            if ( serverProcess.waitFor( 100, TimeUnit.MILLISECONDS ) ) {
+                String errorMessage = StringUtils.strip( IOUtils.toString( serverProcess.getErrorStream(), StandardCharsets.UTF_8 ) );
+                throw new RuntimeException( "Could not start gfServer (exit value=" + serverProcess.exitValue() + "):\n" + errorMessage );
+            }
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
         }
 
+        if ( waitForFullInitialization ) {
+            log.info( "Waiting for gfServer to be fully initialized on " + serverHost + ":" + serverPort + "..." );
+            while ( true ) {
+                if ( isServerReachable( serverHost, serverPort ) ) {
+                    log.info( "gfServer is listening on " + serverHost + ":" + serverPort + "." );
+                    break;
+                }
+            }
+        }
     }
 
-    private Integer choosePortForQuery( Taxon taxon, boolean sensitive ) {
+    /**
+     * Check if the gfServer is running.
+     */
+    public boolean isServerRunning() {
+        return serverProcess != null && serverProcess.isAlive() && isServerReachable( serverHost, serverPort );
+    }
+
+    /**
+     * Check if the gfServer for a given genome is reachable.
+     */
+    public boolean isServerReachable( BlattableGenome genome, boolean sensitive ) {
+        return isServerReachable( host, getPort( genome, sensitive ) );
+    }
+
+    /**
+     * Check if a gfServer is reachable.
+     */
+    private boolean isServerReachable( String host, int port ) {
+        // try to connect to the server to ensure it is running
+        try ( Socket ignored = new Socket( host, port ) ) {
+            return true;
+        } catch ( IOException e ) {
+            return false;
+            // ignore all other errors, the blat server is probably not running
+        }
+    }
+
+    /**
+     * Stop the gfServer, if it was started by this.
+     */
+    public synchronized void stopServer() {
+        if ( serverProcess == null ) {
+            log.warn( "gfServer was not started, nothing to stop." );
+            return;
+        } else if ( !serverProcess.isAlive() ) {
+            log.info( "gfServer is not running, nothing to stop." );
+            return;
+        }
+
+        ShellDelegatingBlat.log.info( "Shutting down gfServer at " + serverHost + ":" + serverPort + "..." );
+
+        try {
+            // gracefully stop the server
+            serverProcess.destroy();
+            // give the server 30 seconds to shut down
+            if ( serverProcess.waitFor( 30, TimeUnit.SECONDS ) ) {
+                int serverExitCode = serverProcess.exitValue();
+                // 143 is the exit code for SIGTERM, which is what destroy() sends
+                if ( serverExitCode == 0 || serverExitCode == 143 ) {
+                    ShellDelegatingBlat.log.info( "gfServer on port " + serverPort + " shut down with exit value " + serverExitCode );
+                } else {
+                    String errorMessage;
+                    try {
+                        errorMessage = IOUtils.toString( serverProcess.getErrorStream(), StandardCharsets.UTF_8 );
+                    } catch ( IOException e ) {
+                        errorMessage = "Could not read error stream from gfServer process.";
+                    }
+                    ShellDelegatingBlat.log.info( "gfServer on port " + serverPort + " shut down with exit value " + serverExitCode + "\n" + errorMessage );
+                }
+            } else {
+                log.warn( "gfServer did not shut down in time, killing it..." );
+                serverProcess.destroyForcibly();
+            }
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        }
+    }
+
+    private int choosePortForQuery( Taxon taxon, boolean sensitive ) {
         BlattableGenome genome = ShellDelegatingBlat.inferBlatDatabase( taxon );
+        return getPort( genome, sensitive );
+    }
+
+    private int getPort( BlattableGenome genome, boolean sensitive ) {
         switch ( genome ) {
             case MOUSE:
                 return sensitive ? mouseSensitiveServerPort : mouseServerPort;
@@ -356,13 +392,29 @@ public class ShellDelegatingBlat implements Blat {
             case HUMAN:
             default:
                 return sensitive ? humanSensitiveServerPort : humanServerPort;
+        }
+    }
+
+    private String[] getSeqFiles( BlattableGenome genome ) {
+        switch ( genome ) {
+            case HUMAN:
+                return this.humanSeqFiles;
+            case MOUSE:
+                return this.mouseSeqFiles;
+            case RAT:
+                return this.ratSeqFiles;
+            default:
+                return this.humanSeqFiles;
 
         }
     }
 
-    private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
-        if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
-            ShellDelegatingBlat.log.warn( "Could not clean up temporary files." );
+    private void cleanUpTmpFiles( Path querySequenceFile, Path outputPath ) {
+        try {
+            Files.deleteIfExists( querySequenceFile );
+            Files.deleteIfExists( outputPath );
+        } catch ( IOException e ) {
+            ShellDelegatingBlat.log.warn( "Could not clean up temporary files.", e );
         }
     }
 
@@ -373,54 +425,55 @@ public class ShellDelegatingBlat implements Blat {
      * @param outputPath        output path
      * @return collection of blat results
      */
-    private List<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
+    private List<BlatResult> execGfClient( Path querySequenceFile, Path outputPath, int portToUse, Taxon taxon )
             throws IOException {
-        final String cmd =
-                gfClientExe + " -nohead -minScore=" + ShellDelegatingBlat.MIN_SCORE + " " + host + " " + portToUse + " "
-                        + seqDir + " " + querySequenceFile.getAbsolutePath() + " " + outputPath;
-        ShellDelegatingBlat.log.info( cmd );
+        StopWatch overallWatch = StopWatch.createStarted();
 
-        final Process run = Runtime.getRuntime().exec( cmd );
-
-        // to ensure that we aren't left waiting for these streams
-        GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
-        GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
-        gscErr.start();
-        gscIn.start();
-
+        final String[] cmd = new String[] {
+                gfClientExe, "-nohead", "-minScore=" + ShellDelegatingBlat.MIN_SCORE, host, String.valueOf( portToUse ),
+                seqDir.toString(), querySequenceFile.toString(), outputPath.toString() };
+        ShellDelegatingBlat.log.info( ShellUtils.join( cmd ) );
+        final Process run = new ProcessBuilder( cmd )
+                // to ensure that we aren't left waiting for these streams
+                // TODO: switch to Redirect.DISCARD for Java 9+
+                .redirectOutput( ProcessBuilder.Redirect.appendTo( new File( "/dev/null" ) ) )
+                .redirectError( ProcessBuilder.Redirect.PIPE )
+                .start();
+        // wait...
         try {
-
-            int exitVal = Integer.MIN_VALUE;
-
-            // wait...
-            StopWatch overallWatch = new StopWatch();
-            overallWatch.start();
-
-            while ( exitVal == Integer.MIN_VALUE ) {
-                try {
-                    exitVal = run.exitValue();
-                } catch ( IllegalThreadStateException e ) {
-                    // okay, still
-                    // waiting.
-                }
-                Thread.sleep( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS );
+            while ( !run.waitFor( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS, TimeUnit.MILLISECONDS ) ) {
                 // I hope this is okay...
-                this.outputFile( outputPath, overallWatch );
+                this.checkOutputFile( outputPath, overallWatch );
             }
-
-            overallWatch.stop();
-            String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
-            ShellDelegatingBlat.log.info( "Blat took a total of " + minutes + " minutes" );
-
-            // int exitVal = run.waitFor();
-
-            ShellDelegatingBlat.log.debug( "blat exit value=" + exitVal );
         } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         }
-        ShellDelegatingBlat.log.debug( "GfClient Success" );
 
-        return this.processPsl( outputPath, null );
+        int exitVal = run.exitValue();
+        if ( exitVal != 0 ) {
+            String errorMessage = StringUtils.strip( IOUtils.toString( run.getErrorStream(), StandardCharsets.UTF_8 ) );
+            throw new RuntimeException( "gfClient exited with " + exitVal + ":\n" + errorMessage );
+        }
+
+        overallWatch.stop();
+        ShellDelegatingBlat.log.info( "Blat query took a total of " + overallWatch );
+        ShellDelegatingBlat.log.debug( "GfClient Success" );
+        return this.processPsl( outputPath, taxon );
+    }
+
+
+    private synchronized void checkOutputFile( final Path outputPath, StopWatch overallWatch ) {
+        try {
+            long size = Files.size( outputPath );
+            NumberFormat nf = new DecimalFormat();
+            nf.setMaximumFractionDigits( 2 );
+            String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
+            ShellDelegatingBlat.log
+                    .info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes + " minutes elapsed)" );
+        } catch ( IOException e ) {
+            ShellDelegatingBlat.log.warn( "Failed to check BLAT output file: " + outputPath, e );
+        }
     }
 
     /**
@@ -428,119 +481,8 @@ public class ShellDelegatingBlat implements Blat {
      *
      * @throws IOException if there is an IO problem while accessing the file
      */
-    private String getTmpPslFilePath( String base ) throws IOException {
-        File tmpDir = new File( Settings.getDownloadPath() );
-        if ( StringUtils.isBlank( base ) ) {
-            return File.createTempFile( "blat-output", ".psl", tmpDir ).getPath();
-        }
-        return File.createTempFile( base, ".psl", tmpDir ).getPath();
-    }
-
-    /**
-     * @param querySequenceFile query sequence file
-     * @param outputPath        output path
-     * @return processed results.
-     * @throws IOException if there is an IO problem while accessing the file
-     */
-    private List<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
-            throws IOException {
-        // if ( hasNativeLibrary ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
-
-        return this.execGfClient( querySequenceFile, outputPath, portToUse );
-    }
-
-    private native void GfClientCall( String h, String p, String dir, String input, String output );
-
-    private void init() throws ConfigurationException {
-
-        ShellDelegatingBlat.log.debug( "Reading global config" );
-        this.humanServerPort = Settings.getInt( "gfClient.humanServerPort" );
-        this.mouseServerPort = Settings.getInt( "gfClient.mouseServerPort" );
-        this.ratServerPort = Settings.getInt( "gfClient.ratServerPort" );
-
-        this.humanSensitiveServerPort = Settings.getInt( "gfClient.sensitive.humanServerPort" );
-        this.mouseSensitiveServerPort = Settings.getInt( "gfClient.sensitive.mouseServerPort" );
-        this.ratSensitiveServerPort = Settings.getInt( "gfClient.sensitive.ratServerPort" );
-        this.host = Settings.getString( "gfClient.host" );
-        this.seqDir = Settings.getString( "gfClient.seqDir" );
-        this.mouseSeqFiles = Settings.getString( "gfClient.mouse.seqFiles" );
-        this.ratSeqFiles = Settings.getString( "gfClient.rat.seqFiles" );
-        this.humanSeqFiles = Settings.getString( "gfClient.human.seqFiles" );
-        this.gfClientExe = Settings.getString( "gfClient.exe" );
-        this.gfServerExe = Settings.getString( "gfServer.exe" );
-
-        if ( gfServerExe == null ) {
-            /*
-             * This won't ever really work -- it's left over from earlier iterations.
-             */
-            ShellDelegatingBlat.log
-                    .warn( "You will not be able to start the server: gfServer.exe is not set in config" );
-        }
-
-        if ( gfClientExe == null && ShellDelegatingBlat.os.startsWith( "windows" ) ) {
-            throw new ConfigurationException( "BLAT client calls will not work under windows." );
-        }
-
-    }
-
-    /**
-     * @param querySequenceFile query sequence file
-     * @param outputPath        output path
-     * @return processed results.
-     */
-    private Collection<BlatResult> jniGfClientCall( final File querySequenceFile, final String outputPath,
-            final int portToUse ) throws IOException {
-        try {
-            ShellDelegatingBlat.log.debug( "Starting blat run" );
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            Future<?> future = executor.submit( () -> {
-                ShellDelegatingBlat.this
-                        .GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(),
-                                outputPath );
-            } );
-            executor.shutdown();
-
-            // wait...
-            StopWatch overallWatch = new StopWatch();
-            overallWatch.start();
-
-            while ( !future.isDone() ) {
-                try {
-                    future.get( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS, java.util.concurrent.TimeUnit.MILLISECONDS );
-                } catch ( TimeoutException e ) {
-                    log.info( "Waiting for blat to finish..." );
-                    continue;
-                } catch ( InterruptedException ie ) {
-                    future.cancel( true );
-                    throw new RuntimeException( ie );
-                } catch ( ExecutionException e ) {
-                    throw new RuntimeException( e );
-                }
-                this.outputFile( outputPath, overallWatch );
-            }
-
-            overallWatch.stop();
-            String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
-            ShellDelegatingBlat.log.info( "Blat took a total of " + minutes + " minutes" );
-
-        } catch ( UnsatisfiedLinkError e ) {
-            ShellDelegatingBlat.log.error( e, e );
-            ShellDelegatingBlat.log.info( "Falling back on exec()" );
-            this.execGfClient( querySequenceFile, outputPath, portToUse );
-        }
-        return this.processPsl( outputPath, null );
-    }
-
-    private synchronized void outputFile( final String outputPath, StopWatch overallWatch ) {
-        File outputFile = new File( outputPath );
-        Long size = outputFile.length();
-        NumberFormat nf = new DecimalFormat();
-        nf.setMaximumFractionDigits( 2 );
-        String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
-        ShellDelegatingBlat.log
-                .info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes + " minutes elapsed)" );
-
+    private Path getTmpPslFilePath( String base ) throws IOException {
+        return Files.createTempFile( tmpDir, StringUtils.isBlank( base ) ? "blat-output" : base, ".psl" );
     }
 
     /**
@@ -548,17 +490,16 @@ public class ShellDelegatingBlat implements Blat {
      * @param taxon    taxon (optional, can be null)
      * @return processed results.
      */
-    private List<BlatResult> processPsl( String filePath, Taxon taxon ) throws IOException {
+    private List<BlatResult> processPsl( Path filePath, Taxon taxon ) throws IOException {
         ShellDelegatingBlat.log.debug( "Processing " + filePath );
         BlatResultParser brp = new BlatResultParser();
         brp.setTaxon( taxon );
         brp.setScoreThreshold( this.blatScoreThreshold );
-        brp.parse( filePath );
+        brp.parse( filePath.toFile() );
         return brp.getResults();
     }
 
     public enum BlattableGenome {
         HUMAN, MOUSE, RAT
     }
-
 }

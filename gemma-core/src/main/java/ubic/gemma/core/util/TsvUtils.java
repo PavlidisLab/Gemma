@@ -194,6 +194,29 @@ public class TsvUtils {
     }
 
     /**
+     * Quickly format a double value.
+     * <p>
+     * If writing a large number of doubles, {@link #format(double)} is usually way too slow. This method will use
+     * Java's native number formatting instead.
+     */
+    public static String formatFast( double value ) {
+        return String.valueOf( value );
+    }
+
+    public static String formatFast( float value ) {
+        return String.valueOf( value );
+    }
+
+    public static String formatFast( long value ) {
+        return String.valueOf( value );
+    }
+
+    public static String formatFast( int value ) {
+        return String.valueOf( value );
+    }
+
+
+    /**
      * Format a string as a TSV comment.
      * <p>
      * This will prepend a {@link #COMMENT} on each line that do not start with the character.

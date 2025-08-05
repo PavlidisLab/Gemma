@@ -45,10 +45,10 @@ import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -154,15 +154,15 @@ class ComBat<R, C> {
             ghtheoryT.fill( n );
         }
         XYSeries ghtheory = ghtheoryT.plot();
-        File tmpfile;
+        Path tmpfile;
         try {
-            tmpfile = File.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
+            tmpfile = Files.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
             ComBat.log.info( tmpfile );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
-        try ( OutputStream os = new FileOutputStream( tmpfile ) ) {
+        try ( OutputStream os = Files.newOutputStream( tmpfile ) ) {
             this.writePlot( os, ghplot, ghtheory );
 
             /*
@@ -181,10 +181,10 @@ class ComBat<R, C> {
             }
             XYSeries dhtheory = deltaHatT.plot();
 
-            tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
+            tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
             ComBat.log.info( tmpfile );
 
-            try ( OutputStream os2 = new FileOutputStream( tmpfile ) ) {
+            try ( OutputStream os2 = Files.newOutputStream( tmpfile ) ) {
                 this.writePlot( os2, dhplot, dhtheory );
             }
         } catch ( IOException e ) {
@@ -586,9 +586,9 @@ class ComBat<R, C> {
     private DoubleMatrix2D getBatchDesign( String batchId ) {
         Collection<C> sampleNames = batches.get( batchId );
 
-        DoubleMatrix2D result = new DenseDoubleMatrix2D( sampleNames.size(), batches.keySet().size() );
+        DoubleMatrix2D result = new DenseDoubleMatrix2D( sampleNames.size(), batches.size() );
 
-        for ( int j = 0; j < batches.keySet().size(); j++ ) {
+        for ( int j = 0; j < batches.size(); j++ ) {
             int i = 0;
 
             for ( C sname : sampleNames ) {
@@ -669,7 +669,7 @@ class ComBat<R, C> {
             }
         }
 
-        numBatches = batches.keySet().size();
+        numBatches = batches.size();
         numProbes = y.rows();
     }
 

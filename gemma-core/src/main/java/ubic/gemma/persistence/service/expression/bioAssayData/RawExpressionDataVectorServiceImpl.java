@@ -27,7 +27,7 @@ import java.util.Collection;
  * Provides methods that can be applied to both RawExpressionDataVector and ProcessedExpressionDataVector
  */
 @Service
-public class RawExpressionDataVectorServiceImpl extends AbstractDesignElementDataVectorService<RawExpressionDataVector>
+public class RawExpressionDataVectorServiceImpl extends AbstractBulkExpressionDataVectorService<RawExpressionDataVector>
         implements RawExpressionDataVectorService {
 
     private final RawExpressionDataVectorDao mainDao;

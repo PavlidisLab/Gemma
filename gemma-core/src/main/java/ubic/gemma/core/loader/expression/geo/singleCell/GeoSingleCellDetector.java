@@ -5,7 +5,9 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.entrez.EntrezException;
 import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
+import ubic.gemma.core.loader.expression.geo.model.GeoData;
 import ubic.gemma.core.loader.expression.geo.model.GeoLibraryStrategy;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -26,7 +28,10 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
@@ -65,7 +70,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     private static final String[] SINGLE_CELL_KEYWORDS = ArrayUtils.addAll( SINGLE_NUCLEI_KEYWORDS, "single-cell", "single cell", "scRNA" );
 
-    private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
+    private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger", "cell ranger", "scanpy", "seurat" };
 
     private static final BioAssayMapper GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER = new GeoBioAssayMapper();
 
@@ -643,46 +648,77 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     /**
+     * Check if a GEO series has single-cell data at the series-level.
+     */
+    public boolean hasSingleCellDataInSeries( GeoSeries series, SingleCellDataType dataType ) {
+        switch ( dataType ) {
+            case ANNDATA:
+                return annDataDetector.hasSingleCellData( series );
+            case SEURAT_DISK:
+                return seuratDiskDetector.hasSingleCellData( series );
+            case MEX:
+                return mexDetector.hasSingleCellData( series );
+            case LOOM:
+                return loomDetector.hasSingleCellData( series );
+            default:
+                throw new IllegalArgumentException( "Unknown single-cell data type: " + dataType );
+        }
+    }
+
+    /**
      * Check if a GEO series has single-cell data in SRA.
      */
     public boolean hasSingleCellDataInSra( GeoSeries series ) {
-        if ( series.getGeoAccession() == null ) {
-            log.warn( series + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
-            return false;
-        }
-        return hasSingleCellDataInSra( series.getGeoAccession(), null );
+        return hasSingleCellDataInSra( ( GeoData ) series, null, null );
     }
 
-    public boolean hasSingleCellDataInSra( GeoSeries series, Collection<String> sraAccessions ) {
-        if ( series.getGeoAccession() == null ) {
-            log.warn( series + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
-            return false;
+    public boolean hasSingleCellDataInSra( GeoSeries series, Collection<String> sraAccessions, Collection<String> sraAccessionsWithOtherDataTypes ) {
+        if ( hasSingleCellDataInSra( ( GeoData ) series, sraAccessions, sraAccessionsWithOtherDataTypes ) ) {
+            return true;
+        } else {
+            log.warn( series.getGeoAccession() + ": No single-cell data found in SRA, checking individual samples..." );
+            boolean anySampleWithDataInSra = false;
+            for ( GeoSample sample : series.getSamples() ) {
+                anySampleWithDataInSra |= hasSingleCellDataInSra( sample, sraAccessions, sraAccessionsWithOtherDataTypes );
+            }
+            return anySampleWithDataInSra;
         }
-        return hasSingleCellDataInSra( series.getGeoAccession(), sraAccessions );
     }
 
     /**
      * Check if a GEO sample has single-cell data in SRA.
      */
     public boolean hasSingleCellDataInSra( GeoSample sample ) {
-        if ( sample.getGeoAccession() == null ) {
-            log.warn( sample + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
-            return false;
-        }
-        return hasSingleCellDataInSra( sample.getGeoAccession(), null );
+        return hasSingleCellDataInSra( sample, null, null );
     }
 
-    private boolean hasSingleCellDataInSra( String geoAccession, @Nullable Collection<String> sraAccessions ) {
+    private boolean hasSingleCellDataInSra( GeoData geoData,
+            @Nullable Collection<String> sraAccessions, @Nullable Collection<String> sraAccessionsWithOtherDataTypes ) {
         Assert.notNull( sraFetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
         try {
-            SraExperimentPackageSet sraMeta = sraFetcher.fetchByGeoAccession( geoAccession );
-            List<SraExperiment> e = sraMeta.getExperimentPackages()
-                    .stream()
-                    .map( SraExperimentPackage::getExperiment )
-                    .filter( this::isSingleCell )
-                    .collect( Collectors.toList() );
+            SraExperimentPackageSet sraMeta;
+            String accession;
+            if ( ( accession = getSraAccession( geoData ) ) != null ) {
+                sraMeta = sraFetcher.fetch( accession );
+            } else if ( geoData.getGeoAccession() != null ) {
+                accession = geoData.getGeoAccession();
+                sraMeta = sraFetcher.fetchByGeoAccession( accession );
+            } else {
+                log.warn( geoData + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
+                return false;
+            }
+            List<SraExperiment> e = new ArrayList<>();
+            List<SraExperiment> ne = new ArrayList<>();
+            for ( SraExperimentPackage experimentPackage : sraMeta.getExperimentPackages() ) {
+                SraExperiment experiment = experimentPackage.getExperiment();
+                if ( isSingleCell( experiment ) ) {
+                    e.add( experiment );
+                } else {
+                    ne.add( experiment );
+                }
+            }
             if ( !e.isEmpty() ) {
-                log.info( "Found single-cell data in SRA for " + geoAccession + ": " + e.stream()
+                log.info( accession + ": " + "Found single-cell data in SRA: " + e.stream()
                         .map( SraExperiment::getAccession )
                         .collect( Collectors.joining( ", " ) ) );
                 if ( sraAccessions != null ) {
@@ -690,7 +726,26 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                             .map( SraExperiment::getAccession )
                             .forEach( sraAccessions::add );
                 }
-                return true;
+            }
+            if ( !ne.isEmpty() ) {
+                log.info( accession + ": Found potentially non-single-cell data in SRA: " + ne.stream()
+                        .map( SraExperiment::getAccession )
+                        .collect( Collectors.joining( ", " ) ) );
+                if ( sraAccessionsWithOtherDataTypes != null ) {
+                    ne.stream()
+                            .map( SraExperiment::getAccession )
+                            .forEach( sraAccessionsWithOtherDataTypes::add );
+                }
+            }
+            return !e.isEmpty();
+        } catch ( EntrezException e ) {
+            if ( e.getMessage().contains( "is not public" ) ) {
+                log.warn( geoData + " appears to have private data in SRA, cannot determine if it is single-cell however." );
+                // if this is a private SRA experiment, make sure we record its SRX accession
+                String sraAccession;
+                if ( sraAccessionsWithOtherDataTypes != null && ( sraAccession = getSraAccession( geoData ) ) != null && sraAccession.startsWith( "SRX" ) ) {
+                    sraAccessionsWithOtherDataTypes.add( sraAccession );
+                }
             }
             return false;
         } catch ( IOException e ) {
@@ -699,11 +754,33 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         }
     }
 
+    private static final String SRA_URL_PREFIX = "https://www.ncbi.nlm.nih.gov/sra?term=";
+
+    private String getSraAccession( GeoData sample ) {
+        if ( !sample.getRelations().containsKey( "SRA" ) ) {
+            return null;
+        }
+        String sraUrl = sample.getRelations().get( "SRA" ).iterator().next();
+        if ( sraUrl.startsWith( SRA_URL_PREFIX ) ) {
+            return sraUrl.substring( SRA_URL_PREFIX.length() );
+        } else {
+            log.warn( "Failed to extract SRA accession from " + sraUrl + " for " + sample + "." );
+            return null;
+        }
+    }
+
     /**
      * Check if an SRA experiment is single-cell.
      */
     private boolean isSingleCell( SraExperiment ep ) {
-        return Objects.equals( ep.getDesign().getLibraryDescriptor().getSource(), "TRANSCRIPTOMIC SINGLE CELL" );
+        if ( Objects.equals( ep.getDesign().getLibraryDescriptor().getSource(), "TRANSCRIPTOMIC SINGLE CELL" ) ) {
+            return true;
+        }
+        if ( StringUtils.containsAnyIgnoreCase( ep.getDesign().getLibraryDescriptor().getConstructionProtocol(), SINGLE_CELL_KEYWORDS ) ) {
+            log.warn( ep.getAccession() + ": does not use the 'TRANSCRIPTOMIC SINGLE CELL' library source, but keywords in its construction protocol indicate it is single-cell." );
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -741,6 +818,10 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
             }
             if ( StringUtils.containsAnyIgnoreCase( sample.getDataProcessing(), SINGLE_CELL_DATA_PROCESSING_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its data processing section indicate it is single-cell." );
+                return true;
+            }
+            if ( sample.getChannels().stream().anyMatch( channel -> StringUtils.containsAnyIgnoreCase( channel.getExtractProtocol(), SINGLE_CELL_KEYWORDS ) ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its extraction protocol indicate it is single-cell." );
                 return true;
             }
             // don't allow archive lookups because that would be too slow

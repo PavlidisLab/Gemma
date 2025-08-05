@@ -21,53 +21,31 @@ class MockFastaCmd implements FastaCmd {
 
     @Override
     public BioSequence getByAccession( String accession, String database ) {
-        return this.getSingle( accession, database, null );
+        return this.getSingle( accession, database );
     }
 
     @Override
     public BioSequence getByIdentifier( int identifier, String database ) {
-        return this.getSingle( identifier, database, null );
+        return this.getSingle( identifier, database );
     }
 
     @Override
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
-        return this.getMultiple( accessions, database, null );
+        return this.getMultiple( accessions, database );
     }
 
     @Override
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
-        return this.getMultiple( identifiers, database, null );
-    }
-
-    @Override
-    public BioSequence getByAccession( String accession, String database, String blastHome ) {
-        return this.getSingle( accession, database, blastHome );
-    }
-
-    @Override
-    public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
-        return this.getSingle( identifier, database, blastHome );
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database,
-            String blastHome ) {
-        return this.getMultiple( accessions, database, blastHome );
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
-            String blastHome ) {
-        return this.getMultiple( identifiers, database, blastHome );
+        return this.getMultiple( identifiers, database );
     }
 
     @SuppressWarnings("unused")
-    private BioSequence getSingle( Object accession, String database, String blastHome ) {
+    private BioSequence getSingle( Object accession, String database ) {
         return this.makeSequence( accession );
     }
 
     @SuppressWarnings("unused")
-    private Collection<BioSequence> getMultiple( Collection<?> accessions, String database, String blastHome ) {
+    private Collection<BioSequence> getMultiple( Collection<?> accessions, String database ) {
         Collection<BioSequence> results = new HashSet<>();
         for ( Object object : accessions ) {
             BioSequence result = this.makeSequence( object );

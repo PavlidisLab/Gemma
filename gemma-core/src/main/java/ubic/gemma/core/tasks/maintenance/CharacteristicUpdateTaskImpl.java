@@ -15,7 +15,6 @@
 package ubic.gemma.core.tasks.maintenance;
 
 import gemma.gsec.SecurityService;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -24,10 +23,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -180,13 +180,16 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
             return newTaskResult( false );
         }
 
-        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, true, true );
         for ( Characteristic cFromClient : asChars ) {
             Characteristic cFromDatabase = characteristicService.loadOrFail( cFromClient.getId() );
-            Object parent = charToParent.get( cFromDatabase );
-            removeFromParent( cFromDatabase, parent );
+            Identifiable parent = charToParent.get( cFromDatabase );
+            if ( parent != null ) {
+                removeFromParent( cFromDatabase, parent );
+            }
             characteristicService.remove( cFromDatabase );
-            log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
+            log.info( String.format( "Characteristic deleted: %s %s", cFromDatabase,
+                    parent != null ? "(associated with " + parent + ")" : " (dangling)" ) );
         }
         return newTaskResult( true );
 
@@ -223,7 +226,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
         if ( asChars.isEmpty() )
             return newTaskResult( true );
 
-        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, -1 );
+        Map<Characteristic, Identifiable> charToParent = characteristicService.getParents( asChars, null, true, true );
 
         for ( Characteristic cFromClient : asChars ) {
             Long characteristicId = cFromClient.getId();
@@ -237,13 +240,12 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
                 continue;
             }
 
-            Object parent = charToParent.get( cFromDatabase );
+            Identifiable parent = charToParent.get( cFromDatabase );
 
             /*
              * Check needed because Characteristics are not securable.
              */
-            if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() ) && !securityService
-                    .isEditableByCurrentUser( ( Securable ) parent ) ) {
+            if ( parent instanceof Securable && !securityService.isEditableByCurrentUser( ( Securable ) parent ) ) {
                 throw new AccessDeniedException( "Access is denied" );
             }
 
@@ -292,7 +294,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
 
     }
 
-    private void removeFromParent( Characteristic c, Object parent ) {
+    private void removeFromParent( Characteristic c, Identifiable parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             ee = expressionExperimentService.thawLite( ee );

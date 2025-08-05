@@ -385,6 +385,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                             if ( skipDownload ) {
+                                // emulate the behavior of the MEX downloader, which is to raise an unsupported
+                                // exception if MEX data is found at the series-level
+                                if ( detectedDataType.equalsIgnoreCase( "MEX" ) ) {
+                                    if ( detector.hasSingleCellDataInSeries( series, SingleCellDataType.MEX ) ) {
+                                        throw new UnsupportedOperationException( "MEX files were found, but single-cell data is not supported at the series level." );
+                                    }
+                                }
                                 addSuccessObject( geoAccession, "Download was skipped." );
                             } else {
                                 if ( dataType != null && supplementaryFile != null ) {
@@ -418,8 +425,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             }
                         }
                         Collection<String> sraAccessions = new ArrayList<>();
-                        if ( detector.hasSingleCellDataInSra( series, sraAccessions ) ) {
+                        Collection<String> otherDataInSra = new ArrayList<>();
+                        if ( detector.hasSingleCellDataInSra( series, sraAccessions, otherDataInSra ) ) {
                             dataInSra = String.join( "|", sraAccessions );
+                        } else if ( !otherDataInSra.isEmpty() ) {
+                            dataInSra = String.join( "|", otherDataInSra );
+                            comment = "Data found in SRA might not be single-cell data.";
+                        } else {
+                            log.warn( "No data found in SRA for " + geoAccession + "." );
                         }
                     } catch ( Exception e ) {
                         addErrorObject( geoAccession, e );
@@ -493,10 +506,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             return null;
         }
         CSVFormat.Builder csvFormatBuilder = CSVFormat.TDF.builder();
-        if ( !resume ) {
-            csvFormatBuilder.setHeader( SUMMARY_HEADER );
+        if ( resume ) {
+            return csvFormatBuilder.get()
+                    .print( Files.newBufferedWriter( summaryOutputFile, StandardOpenOption.APPEND ) );
+        } else {
+            return csvFormatBuilder.setHeader( SUMMARY_HEADER )
+                    .get()
+                    .print( Files.newBufferedWriter( summaryOutputFile ) );
         }
-        return csvFormatBuilder.get().print( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ) );
     }
 
     @Nullable

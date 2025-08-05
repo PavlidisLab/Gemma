@@ -121,11 +121,10 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             SearchSettings settings = SearchSettings.builder()
                     .query( query.getValue() )
                     .resultType( ExpressionExperiment.class )
-                    .highlighter( highlighter )
-                    .issueReporter( queryWarnings != null ? queryWarnings::add : null )
                     .fillResults( false )
                     .build();
-            return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
+            return searchService.search( settings, new SearchContext( highlighter, queryWarnings != null ? queryWarnings::add : null ) )
+                    .getByResultObjectType( ExpressionExperiment.class );
         } catch ( ParseSearchException e ) {
             throw new MalformedArgException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {

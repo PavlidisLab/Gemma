@@ -11,7 +11,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.OntologySearchSource;
@@ -102,7 +101,7 @@ public class SearchServiceTest extends BaseTest {
                 .build();
         searchService.search( settings );
         verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
-        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
     }
 
     @Test
@@ -142,7 +141,7 @@ public class SearchServiceTest extends BaseTest {
                         Collections.singletonMap( "test", Collections.singleton( ee ) ) ) );
         SearchService.SearchResultMap results = searchService.search( settings );
         verify( databaseSearchSource ).accepts( settings );
-        verify( databaseSearchSource ).searchExpressionExperiment( settings );
+        verify( databaseSearchSource ).searchExpressionExperiment( settings, new SearchContext( null, null ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false, false );
         assertNull( results.getByResultObjectType( ExpressionExperiment.class ).iterator().next().getResultObject() );
         // since EE is a proxy, only its ID should be accessed

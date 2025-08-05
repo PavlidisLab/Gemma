@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
@@ -47,6 +48,10 @@ public class Statement extends Characteristic {
             entity.setSubject( subject );
             entity.setSubjectUri( stripToNull( subjectUri ) );
             return entity;
+        }
+
+        public static Statement newInstance( Category category, String subject, String subjectUri ) {
+            return newInstance( category.getCategory(), category.getCategoryUri(), subject, subjectUri );
         }
 
         public static Statement newInstance( Characteristic subject ) {

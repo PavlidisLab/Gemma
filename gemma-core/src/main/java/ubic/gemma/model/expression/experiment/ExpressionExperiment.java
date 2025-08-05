@@ -48,8 +48,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         }
     }
 
-    private static final long serialVersionUID = -1342753625018841735L;
-
     public static final int MAX_NAME_LENGTH = 255;
 
     @Nullable

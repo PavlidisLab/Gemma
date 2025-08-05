@@ -18,7 +18,6 @@ import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
@@ -53,9 +52,9 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected Collection<ExpressionExperiment> preprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         log.info( "Checking folders for existing experiments in " + fastqRootDir );
-        return super.preprocessBioAssaySets( expressionExperiments );
+        return super.preprocessExpressionExperiments( expressionExperiments );
     }
 
     @Override

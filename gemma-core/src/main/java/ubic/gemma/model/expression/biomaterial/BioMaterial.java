@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,6 +51,10 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
 public class BioMaterial extends AbstractDescribable implements SecuredChild {
 
     public static final int MAX_NAME_LENGTH = 255;
+
+    public static Comparator<BioMaterial> COMPARATOR = Comparator
+            .comparing( BioMaterial::getName )
+            .thenComparing( BioMaterial::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     @Nullable
     private BioMaterial sourceBioMaterial;

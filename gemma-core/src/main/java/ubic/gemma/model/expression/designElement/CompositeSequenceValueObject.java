@@ -19,7 +19,7 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 

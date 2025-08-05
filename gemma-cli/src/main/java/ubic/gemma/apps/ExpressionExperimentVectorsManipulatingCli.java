@@ -97,7 +97,7 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         Collection<QuantitationType> qts;
         if ( qtIdentifier != null ) {
             qts = Collections.singleton( entityLocator.locateQuantitationType( expressionExperiment, qtIdentifier, quantitationTypeService.getMappedDataVectorType( dataVectorType ) ) );
@@ -126,7 +126,7 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
     /**
      * Process a set of vectors identified by a {@link QuantitationType}.
      */
-    protected abstract void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt );
+    protected abstract void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) throws Exception;
 
     private QuantitationType locatePreferredQuantitationType( ExpressionExperiment expressionExperiment, Class<? extends DataVector> dataVectorType ) {
         if ( RawExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {

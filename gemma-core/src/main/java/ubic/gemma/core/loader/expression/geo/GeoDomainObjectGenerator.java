@@ -30,6 +30,7 @@ import ubic.gemma.core.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -116,6 +117,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @param geoAccession geo accession
      * @return database entries
      */
+    @Nullable
     public Collection<DatabaseEntry> getProjectedAccessions( String geoAccession ) {
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GEO" );

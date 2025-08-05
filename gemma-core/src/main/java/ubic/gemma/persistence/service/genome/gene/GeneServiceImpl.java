@@ -26,14 +26,10 @@ import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -207,20 +203,32 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
-    public long getCompositeSequenceCountById( final Long id ) {
-        return this.geneDao.getCompositeSequenceCountById( id );
+    public long getCompositeSequenceCount( Gene gene, boolean includeDummyProducts ) {
+        return this.geneDao.getCompositeSequenceCount( gene, includeDummyProducts );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
-        return this.geneDao.getCompositeSequences( gene, arrayDesign );
+    public long getCompositeSequenceCountById( final Long id, boolean includeDummyProducts ) {
+        return this.geneDao.getCompositeSequenceCountById( id, includeDummyProducts );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
-        return this.geneDao.getCompositeSequencesById( id );
+    public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign, boolean includeDummyProducts ) {
+        return this.geneDao.getCompositeSequences( gene, arrayDesign, includeDummyProducts );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequence> getCompositeSequences( final Gene gene, boolean includeDummyProducts ) {
+        return this.geneDao.getCompositeSequences( gene, includeDummyProducts );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequence> getCompositeSequencesById( Long geneId, boolean includeDummyProducts ) {
+        return this.geneDao.getCompositeSequencesById( geneId, includeDummyProducts );
     }
 
     @Override
@@ -306,11 +314,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             gvo.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
         }
 
-        Long compositeSequenceCount = this.getCompositeSequenceCountById( id );
-        gvo.setCompositeSequenceCount( compositeSequenceCount.intValue() );
+        long compositeSequenceCount = this.getCompositeSequenceCountById( id, true );
+        gvo.setCompositeSequenceCount( ( int ) compositeSequenceCount );
 
-        Integer platformCount = this.geneDao.getPlatformCountById( id );
-        gvo.setPlatformCount( platformCount );
+        long platformCount = this.geneDao.getPlatformCountById( id, true );
+        gvo.setPlatformCount( ( int ) platformCount );
 
         Collection<GeneSet> geneSets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsVos = new ArrayList<>();
@@ -436,14 +444,16 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
+    public Collection<GeneValueObject> searchGenes( String query, @Nullable Long taxonId ) throws SearchException {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings ).getByResultObjectType( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService
+                .search( settings )
+                .getByResultObjectType( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

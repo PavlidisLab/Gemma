@@ -1,12 +1,12 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
 import java.util.Collection;
 
+import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.appendToDescription;
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
@@ -18,25 +18,18 @@ public class RepresentationConversionUtils {
     /**
      * Convert a collection of vectors to a desired representation.
      */
-    public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, PrimitiveType toRepresentation, Class<T> vectorType ) {
+    public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, PrimitiveType toRepresentation, Class<T> vectorType ) throws QuantitationTypeConversionException {
         return QuantitationTypeConversionUtils.convertVectors( vectors, qt -> getConvertedQuantitationType( qt, toRepresentation ), ( vec, origVec ) -> vec.setData( convertData( origVec, toRepresentation ) ), vectorType );
     }
 
     private static QuantitationType getConvertedQuantitationType( QuantitationType qt, PrimitiveType toRepresentation ) {
         QuantitationType quantitationType = QuantitationType.Factory.newInstance( qt );
-        String description;
-        if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
-            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
-        } else {
-            description = "";
-        }
-        description += "Data was converted from " + qt.getRepresentation() + " to " + toRepresentation + ".";
-        quantitationType.setDescription( description );
+        appendToDescription( quantitationType, "Data was converted from " + qt.getRepresentation() + " to " + toRepresentation + "." );
         quantitationType.setRepresentation( toRepresentation );
         return quantitationType;
     }
 
-    private static byte[] convertData( DataVector vector, PrimitiveType to ) {
+    private static byte[] convertData( DataVector vector, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
         PrimitiveType from = vector.getQuantitationType().getRepresentation();
         if ( from == to ) {
             return vector.getData();
@@ -57,15 +50,15 @@ public class RepresentationConversionUtils {
             case STRING:
                 return convertFromString( vector.getDataAsStrings(), to );
             default:
-                throw unsupportedConversion( from, to );
+                throw new UnsupportedQuantitationRepresentationConversionException( from, to );
         }
     }
 
-    private static byte[] convertFromDouble( double[] dataAsDoubles, PrimitiveType to ) {
-        throw unsupportedConversion( PrimitiveType.DOUBLE, to );
+    private static byte[] convertFromDouble( double[] dataAsDoubles, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.DOUBLE, to );
     }
 
-    private static byte[] convertFromFloat( float[] dataAsFloats, PrimitiveType to ) {
+    private static byte[] convertFromFloat( float[] dataAsFloats, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
         if ( to == PrimitiveType.DOUBLE ) {
             double[] result = new double[dataAsFloats.length];
             for ( int i = 0; i < dataAsFloats.length; i++ ) {
@@ -73,10 +66,10 @@ public class RepresentationConversionUtils {
             }
             return doubleArrayToBytes( result );
         }
-        throw unsupportedConversion( PrimitiveType.FLOAT, to );
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.FLOAT, to );
     }
 
-    private static byte[] convertFromLong( long[] dataAsLongs, PrimitiveType to ) {
+    private static byte[] convertFromLong( long[] dataAsLongs, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
         if ( to == PrimitiveType.DOUBLE ) {
             double[] result = new double[dataAsLongs.length];
             for ( int i = 0; i < dataAsLongs.length; i++ ) {
@@ -84,10 +77,10 @@ public class RepresentationConversionUtils {
             }
             return doubleArrayToBytes( result );
         }
-        throw unsupportedConversion( PrimitiveType.LONG, to );
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.LONG, to );
     }
 
-    private static byte[] convertFromInt( int[] dataAsInts, PrimitiveType to ) {
+    private static byte[] convertFromInt( int[] dataAsInts, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
         if ( to == PrimitiveType.DOUBLE ) {
             double[] result = new double[dataAsInts.length];
             for ( int i = 0; i < dataAsInts.length; i++ ) {
@@ -95,18 +88,18 @@ public class RepresentationConversionUtils {
             }
             return doubleArrayToBytes( result );
         }
-        throw unsupportedConversion( PrimitiveType.INT, to );
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.INT, to );
     }
 
-    private static byte[] convertFromBoolean( boolean[] dataAsBooleans, PrimitiveType to ) {
-        throw unsupportedConversion( PrimitiveType.BOOLEAN, to );
+    private static byte[] convertFromBoolean( boolean[] dataAsBooleans, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.BOOLEAN, to );
     }
 
-    private static byte[] convertFromChar( char[] dataAsChars, PrimitiveType to ) {
-        throw unsupportedConversion( PrimitiveType.CHAR, to );
+    private static byte[] convertFromChar( char[] dataAsChars, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.CHAR, to );
     }
 
-    private static byte[] convertFromString( String[] dataAsStrings, PrimitiveType to ) {
+    private static byte[] convertFromString( String[] dataAsStrings, PrimitiveType to ) throws UnsupportedQuantitationRepresentationConversionException {
         if ( to == PrimitiveType.DOUBLE ) {
             double[] resultAsDoubles = new double[dataAsStrings.length];
             for ( int i = 0; i < dataAsStrings.length; i++ ) {
@@ -118,10 +111,6 @@ public class RepresentationConversionUtils {
             }
             return doubleArrayToBytes( resultAsDoubles );
         }
-        throw unsupportedConversion( PrimitiveType.STRING, to );
-    }
-
-    private static UnsupportedOperationException unsupportedConversion( PrimitiveType from, PrimitiveType to ) {
-        throw new UnsupportedOperationException( "Converting data from " + from + " to " + to + " is not supported." );
+        throw new UnsupportedQuantitationRepresentationConversionException( PrimitiveType.STRING, to );
     }
 }

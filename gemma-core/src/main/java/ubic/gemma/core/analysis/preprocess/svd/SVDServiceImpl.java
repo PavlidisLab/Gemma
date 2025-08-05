@@ -47,7 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
+import static ubic.gemma.model.common.measurement.MeasurementUtils.measurement2double;
 
 /**
  * Perform SVD on expression data and store the results.

@@ -12,6 +12,11 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Writes differential expression analysis files to disk.
@@ -42,7 +47,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "differential expression data" );
+        addExpressionDataFileOptions( options, "differential expression data", true );
         addSingleExperimentOption( options, "a", "analysis", true, "Identifier for an analysis." );
         addForceOption( options );
     }
@@ -50,7 +55,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         analysisIdentifier = commandLine.getOptionValue( "a" );
-        result = getExpressionDataFileResult( commandLine );
+        result = getExpressionDataFileResult( commandLine, true );
     }
 
     @Override
@@ -64,7 +69,9 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
             } else if ( result.isStandardOutput() ) {
                 expressionDataFileService.writeDiffExAnalysisArchiveFileById( analysis.getId(), getCliContext().getOutputStream() );
             } else {
-                expressionDataFileService.writeDiffExAnalysisArchiveFileById( analysis.getId(), result.getOutputFile( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) ), isForce() );
+                try ( OutputStream out = openOutputFile( result.getOutputFile( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) ) ) ) {
+                    expressionDataFileService.writeDiffExAnalysisArchiveFileById( analysis.getId(), out );
+                }
             }
         } else {
             if ( result.isStandardLocation() ) {
@@ -74,6 +81,14 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
             } else {
                 throw new IllegalArgumentException( "Cannot write multiple diff. ex. archive files to an output file or standard output." );
             }
+        }
+    }
+
+    private OutputStream openOutputFile( Path fileName ) throws IOException {
+        if ( fileName.toString().endsWith( ".gz" ) ) {
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+        } else {
+            return Files.newOutputStream( fileName );
         }
     }
 }

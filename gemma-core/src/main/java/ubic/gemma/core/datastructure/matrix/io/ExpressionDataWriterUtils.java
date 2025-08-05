@@ -18,22 +18,23 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.Statement;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.TsvUtils.format;
@@ -106,74 +107,47 @@ public class ExpressionDataWriterUtils {
      * Construct a BioAssay column name prefixed by the {@link BioMaterial} from which it originates.
      */
     public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
-        return constructRCompatibleColumnName( bioMaterial.getName()
+        // sort for consistency
+        return StringUtil.makeNames( bioMaterial.getName()
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
                 // sort for consistency
-                + bioAssays.stream().map( ba -> ba.getShortName() != null ? ba.getShortName() : ba.getName() ).sorted().collect( Collectors.joining( "." ) ) );
+                + bioAssays.stream().map( ExpressionDataWriterUtils::getBioAssayName ).sorted().collect( Collectors.joining( "." ) ) );
     }
 
     /**
-     * Produce a value for representing a factor value.
-     * <p>
-     * In the context of the design file, this is focusing on the value (i.e. subjects or measurement value) itself and
-     * not its metadata which are instead exposed in the file header.
-     * <p>
-     * Replaces spaces and hyphens with underscores.
-     * @param factorValue FV
-     * @return replaced string
+     * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
      */
-    public static String constructFactorValueName( FactorValue factorValue ) {
-        String v;
-        if ( factorValue.getMeasurement() != null ) {
-            // FIXME: have a special encoding for missing values instead of 'null'
-            v = String.valueOf( factorValue.getMeasurement().getValue() );
-        } else {
-            String valueFromStatements = factorValue.getCharacteristics().stream()
-                    .map( Statement::getSubject )
-                    .collect( Collectors.joining( " | " ) );
-            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
-                v = valueFromStatements;
-            } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
-                v = factorValue.getValue();
-            } else {
-                v = ""; // this is treated as NaN in most scenarios
-            }
-        }
-        return v.replace( '-', '_' )
-                .replaceAll( "\\s+", "_" );
+    public static String constructAssayName( BioAssay ba ) {
+        return StringUtil.makeNames( getBioAssayName( ba ) );
     }
 
     /**
-     * @param bioAssays   BAs
-     * @param bioMaterial BM
-     * @return string representing the external identifier of the biomaterial. This will usually be a GEO or
-     * ArrayExpress accession, or {@code null} if no such identifier is available.
+     * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
      */
-    @Nullable
-    public static String constructSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
-        if ( bioMaterial.getExternalAccession() != null ) {
-            return constructRCompatibleColumnName( bioMaterial.getExternalAccession().getAccession() );
-        } else if ( !bioAssays.isEmpty() ) {
-            // use the external IDs of the associated bioassays
-            List<String> ids = new ArrayList<>();
-            for ( BioAssay ba : bioAssays ) {
-                if ( ba.getAccession() != null ) {
-                    ids.add( ba.getAccession().getAccession() );
-                }
-            }
-            return !ids.isEmpty() ? constructRCompatibleColumnName( StringUtils.join( ids, "/" ) ) : null;
-        } else {
-            return null;
-        }
+    public static String constructCellIdName( BioAssay ba, String cellId ) {
+        return StringUtil.makeNames( getBioAssayName( ba ) + "_" + cellId );
     }
 
-    private static String constructRCompatibleColumnName( String colName ) {
-        Assert.isTrue( StringUtils.isNotBlank( colName ) );
-        colName = StringUtils.deleteWhitespace( colName );
-        colName = StringUtils.replaceChars( colName, ':', '.' );
-        colName = StringUtils.replaceChars( colName, '\'', '.' );
-        colName = StringUtils.replaceChars( colName, '|', '.' );
-        colName = StringUtils.replaceChars( colName, '-', '.' );
-        return colName;
+    private static String getBioAssayName( BioAssay ba ) {
+        return ba.getShortName() != null ? ba.getShortName() : ba.getName();
+    }
+
+    /**
+     * Construct an ExperimentalFactor column name.
+     * @see StringUtil#makeNames(String)
+     */
+    public static String constructExperimentalFactorName( ExperimentalFactor ef ) {
+        return StringUtil.makeNames( ef.getName() );
+    }
+
+    /**
+     * Construct an ExperimentalFactor column names for a list of factors.
+     * @see StringUtil#makeNames(String[], boolean)
+     */
+    public static String[] constructExperimentalFactorNames( List<ExperimentalFactor> factors ) {
+        String[] colNames = factors.stream()
+                .map( ExperimentalFactor::getName )
+                .toArray( String[]::new );
+        return StringUtil.makeNames( colNames, true );
     }
 }

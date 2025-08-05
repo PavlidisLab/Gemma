@@ -27,7 +27,6 @@ import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
-import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -57,9 +57,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Autowired
     private ExpressionDataFileService fs;
-
-    @Autowired
-    private FileLockManager fileLockManager;
 
     @Nullable
     private String[] samples;
@@ -80,7 +77,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "processed data" );
+        addExpressionDataFileOptions( options, "processed data", true );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
@@ -89,7 +86,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        result = getExpressionDataFileResult( commandLine );
+        result = getExpressionDataFileResult( commandLine, true );
         samples = commandLine.getOptionValues( "samples" );
         if ( result.isStandardLocation() && samples != null ) {
             throw new ParseException( "Cannot specify samples when writing to standard location." );
@@ -144,9 +141,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     private Writer openOutputFile( Path fileName ) throws IOException {
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new OutputStreamWriter( new GZIPOutputStream( fileLockManager.newOutputStream( fileName ) ), StandardCharsets.UTF_8 );
+            return new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( fileName ) ), StandardCharsets.UTF_8 );
         } else {
-            return fileLockManager.newBufferedWriter( fileName );
+            return Files.newBufferedWriter( fileName );
         }
     }
 }

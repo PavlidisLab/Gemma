@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
@@ -69,7 +68,7 @@ import static org.junit.Assert.*;
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
     private final String arrayAccession = "GPL96";
-    private final Blat blat = new ShellDelegatingBlat();
+    private final ShellDelegatingBlat blat = new ShellDelegatingBlat();
     private final String csName = "117_at";// "218120_s_at";
     private final String geneOfficialSymbol = "HSPA6";// "HMOX2";
     private ArrayDesign ad = null;
@@ -150,7 +149,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Gene g = genes.iterator().next();
 
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequences( g, true );
 
         assertNotNull( compositeSequences );
         assertEquals( compositeSequences.size(), 1 );

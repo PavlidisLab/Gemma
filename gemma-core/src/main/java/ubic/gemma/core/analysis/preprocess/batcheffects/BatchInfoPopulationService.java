@@ -16,6 +16,8 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.nio.file.Path;
+
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
  *
@@ -35,4 +37,10 @@ public interface BatchInfoPopulationService {
      */
     void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException;
 
+    /**
+     * Set the path to use to resolve FASTQ headers.
+     * <p>
+     * Exposed for testing, do not use in production code.
+     */
+    void setFastqHeadersDir( Path fastqHeadersDir );
 }

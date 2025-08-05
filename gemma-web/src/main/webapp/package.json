@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "webpack --mode production",
+    "watch": "webpack watch --mode development",
     "devbuild": "webpack --mode development",
     "serve": "webpack serve --mode development"
   },

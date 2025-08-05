@@ -32,10 +32,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
-import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -130,7 +131,7 @@ public class CompositeSequenceController {
             throw new IllegalArgumentException( "Gene ID must not be null" );
         }
 
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId );
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId, true );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences );
 
         if ( rawSummaries == null || rawSummaries.isEmpty() ) {

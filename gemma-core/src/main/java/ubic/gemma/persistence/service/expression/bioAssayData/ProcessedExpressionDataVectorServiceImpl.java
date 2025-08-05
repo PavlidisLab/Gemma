@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @CommonsLog
 public class ProcessedExpressionDataVectorServiceImpl
-        extends AbstractDesignElementDataVectorService<ProcessedExpressionDataVector>
+        extends AbstractBulkExpressionDataVectorService<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorService {
 
     private static final int DIFFEX_MIN_NUMBER_OF_RESULTS = 50;

@@ -6,16 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.OntologyHighlighter;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -83,8 +79,9 @@ public class OntologySearchSourceTest extends BaseTest {
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
-        Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new OntologyHighlighter() {
+        Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment(
+                SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" ),
+                new SearchContext( new OntologyHighlighter() {
                     @Override
                     public Map<String, String> highlight( String value, String field ) {
                         return Collections.singletonMap( field, value );
@@ -94,7 +91,7 @@ public class OntologySearchSourceTest extends BaseTest {
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
-                } ) );
+                }, null ) );
         verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 1 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ), longThat( l -> l > 0 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
@@ -114,8 +111,10 @@ public class OntologySearchSourceTest extends BaseTest {
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
-        Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" )
-                .withHighlighter( new OntologyHighlighter() {
+        Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment(
+                SearchSettings.expressionExperimentSearch( "http://purl.obolibrary.org/obo/CL_0000129" ),
+                new SearchContext( new OntologyHighlighter() {
+
                     @Override
                     public Map<String, String> highlight( String value, String field ) {
                         return Collections.singletonMap( field, value );
@@ -125,7 +124,7 @@ public class OntologySearchSourceTest extends BaseTest {
                     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
-                } ) );
+                }, null ) );
         verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
@@ -141,7 +140,7 @@ public class OntologySearchSourceTest extends BaseTest {
 
     @Test
     public void testSearchExpressionExperimentWithBooleanQuery() throws SearchException, TimeoutException {
-        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d OR \"a quoted string containing an escaped quote \\\"\" OR test*" ) );
+        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d OR \"a quoted string containing an escaped quote \\\"\" OR test*" ), new SearchContext( null, null ) );
         verify( ontologyService ).findTerms( eq( "a" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).findTerms( eq( "b" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         // b returns no result, so c should not be queried
@@ -155,7 +154,7 @@ public class OntologySearchSourceTest extends BaseTest {
     public void setInvalidSearchSyntax() throws SearchException {
         when( ontologyService.findTerms( eq( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), anyInt(), anyLong(), any() ) )
                 .thenThrow( LuceneParseSearchException.class );
-        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ) );
+        ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), new SearchContext( null, null ) );
         verify( ontologyService ).findTerms( eq( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         // fallback to an escaped query
         verify( ontologyService ).findTerms( eq(  "1\\-\\[\\(2S\\)\\-butan\\-2\\-yl\\]\\-N\\-\\[\\(4,6\\-dimethyl\\-2\\-oxo\\-1H\\-pyridin\\-3\\-yl\\)methyl\\]\\-3\\-methyl\\-6\\-\\[6\\-\\(1\\-piperazinyl\\)\\-3\\-pyridinyl\\]\\-4\\-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );

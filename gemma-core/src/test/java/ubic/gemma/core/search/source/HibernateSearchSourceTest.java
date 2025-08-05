@@ -7,14 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,21 +37,21 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
 
     @Test
     public void test() throws SearchException {
-        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchArrayDesign( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchArrayDesign( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchGene( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchGene( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchGeneSet( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchGeneSet( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchBioSequence( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchBioSequence( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchBibliographicReference( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchBibliographicReference( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchExperimentSet( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchExperimentSet( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
-        assertThat( hibernateSearchSource.searchCompositeSequence( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchCompositeSequence( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
     }
 
@@ -58,7 +59,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     public void testSearchExpressionExperiment() throws SearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
 
-        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ) ) )
+        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" ), new SearchContext( null, null ) ) )
                 .isEmpty();
 
         Taxon taxon = new Taxon();
@@ -74,8 +75,9 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         fts.persist( ee );
         fts.flushToIndexes();
 
-        assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "hello" )
-                .withHighlighter( new DefaultHighlighter() ) ) )
+        assertThat( hibernateSearchSource.searchExpressionExperiment(
+                SearchSettings.expressionExperimentSearch( "hello" ),
+                new SearchContext( new DefaultHighlighter(), null ) ) )
                 .anySatisfy( result -> {
                     assertThat( result.getResultObject() ).isEqualTo( ee );
                     assertThat( result.getHighlights() )
@@ -107,19 +109,19 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         fts.flushToIndexes();
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
                 .query( "BRCA1" )
-                .build() ) )
+                .build(), new SearchContext( null, null ) ) )
                 .anySatisfy( r -> {
                     assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
                 .query( "Overexpression" )
-                .build() ) )
+                .build(), new SearchContext( null, null ) ) )
                 .anySatisfy( r -> {
                     assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
                 .query( "BRCA1 Overexpression" )
-                .build() ) )
+                .build(), new SearchContext( null, null ) ) )
                 .anySatisfy( r -> {
                     assertThat( r.getResultObject() ).isEqualTo( ee );
                 } );
@@ -127,6 +129,6 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
 
     @Test
     public void testSearchWithInvalidQuerySyntax() throws SearchException {
-        hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder().query( "\"" ).build() );
+        hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder().query( "\"" ).build(), new SearchContext( null, null ) );
     }
 }

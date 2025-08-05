@@ -14,7 +14,14 @@ import java.nio.charset.StandardCharsets;
  * Base interface for writing {@link ExpressionDataMatrix}.
  * @author poirigui
  */
-public interface ExpressionDataMatrixWriter {
+public interface ExpressionDataMatrixWriter<T extends ExpressionDataMatrix<?>> {
+
+    /**
+     * Flush every time a complete line is written.
+     * <p>
+     * This is not very efficient, but it can be used to view the output of a matrix as it is being written.
+     */
+    void setAutoFlush( boolean autoFlush );
 
     /**
      * Set the scale type to use when writing the matrix.
@@ -23,9 +30,19 @@ public interface ExpressionDataMatrixWriter {
      */
     void setScaleType( @Nullable ScaleType scaleType );
 
-    int write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException;
+    /**
+     * Write the matrix to the given writer.
+     * @return the number of vectors written
+     * @throws UnsupportedOperationException if the matrix cannot be written to a text output (i.e. if this is a binary
+     * format).
+     */
+    int write( T matrix, Writer writer ) throws IOException, UnsupportedOperationException;
 
-    default int write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+    /**
+     * Write the matrix to the given output stream.
+     * @return the number of vectors written
+     */
+    default int write( T matrix, OutputStream stream ) throws IOException {
         return write( matrix, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) );
     }
 }

@@ -14,7 +14,7 @@ public class SraReadStatistics {
     @XmlAttribute
     private int count;
     @XmlAttribute
-    private int average;
+    private double average;
     @XmlAttribute
     private double stdev;
 }

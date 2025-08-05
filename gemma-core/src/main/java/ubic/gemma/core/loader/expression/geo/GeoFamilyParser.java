@@ -658,11 +658,11 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
 
     private void initMaps( GeoPlatform platformForSample ) {
         if ( !quantitationTypeKey.containsKey( platformForSample ) ) {
-            quantitationTypeKey.put( platformForSample, new HashMap<String, Integer>() );
+            quantitationTypeKey.put( platformForSample, new HashMap<>() );
 
         }
         if ( !quantitationTypeTargetColumn.containsKey( platformForSample ) ) {
-            quantitationTypeTargetColumn.put( platformForSample, new HashMap<Integer, Integer>() );
+            quantitationTypeTargetColumn.put( platformForSample, new HashMap<>() );
         }
     }
 
@@ -1377,9 +1377,15 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else if ( this.startsWithIgnoreCase( line, "!Sample_taxid_ch" ) ) {
             // noop.
         } else if ( this.startsWithIgnoreCase( line, "!Sample_relation" ) ) {
-            // noop, for now. Example is "!Sample_relation = Reanalyzed by: GSE26971" in GSE12093
+            // Example is "!Sample_relation = Reanalyzed by: GSE26971" in GSE12093
             // also SRA: http://www.ncbi.nlm.nih.gov/sra?term=SRX119472; or BioSample:
             // http://www.ncbi.nlm.nih.gov/biosample/SAMN00788643
+            String[] parts = value.split( ": ", 2 );
+            if ( parts.length == 2 ) {
+                this.sampleRelationAddTo( currentSampleAccession, parts[0], parts[1] );
+            } else {
+                GeoFamilyParser.log.warn( "Unexpected sample relation format: " + line );
+            }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_instrument_model" ) ) {
             // e.g. Illumina HiSeq 2000
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
@@ -1499,7 +1505,12 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else if ( this.startsWithIgnoreCase( line, "!Series_overall_design" ) ) {
             this.seriesSet( currentSeriesAccession, GeoSeries::setOverallDesign, value );
         } else if ( this.startsWithIgnoreCase( line, "!Series_relation" ) ) {
-
+            String[] parts = value.split( ": ", 2 );
+            if ( parts.length == 2 ) {
+                this.seriesRelationAddTo( currentSeriesAccession, parts[0], parts[1] );
+            } else {
+                GeoFamilyParser.log.warn( "Unexpected series relation format: " + line );
+            }
             if ( value.toLowerCase().startsWith( "superseries" ) ) {
                 GeoFamilyParser.log.debug( " ** SuperSeries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSuperSeries, true );
@@ -1507,7 +1518,6 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 GeoFamilyParser.log.debug( " ** Subseries detected **" );
                 this.seriesSet( currentSeriesAccession, GeoSeries::setIsSubSeries, true );
             }
-
         } else if ( this.startsWithIgnoreCase( line, "!Series_summary" ) ) {
 
             if ( value.toLowerCase().startsWith( "this superseries" ) ) {
@@ -1524,7 +1534,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 String keyword = this.extractValue( value );
                 this.seriesAddTo( currentSeriesAccession, GeoSeries::addToKeyWords, keyword );
             } else {
-                this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSummary, value );
+                this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSummaries, value );
             }
         } else if ( this.startsWithIgnoreCase( line, "!Series_type" ) ) {
             // currently there is no spec for what values Series_type can take
@@ -1537,7 +1547,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             GeoContact contributer = new GeoContact();
             String[] nameFields = StringUtils.split( value, "," );
             contributer.setName( StringUtils.join( nameFields, " " ) );
-            results.getSeriesMap().get( currentSeriesAccession ).addContributer( contributer );
+            results.getSeriesMap().get( currentSeriesAccession ).addContributor( contributer );
         } else if ( this.startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
             this.addSeriesSample( value );
         } else if ( this.startsWithIgnoreCase( line, "!Series_contact_name" ) ) {
@@ -1736,6 +1746,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         property.accept( sample, value );
     }
 
+    private void sampleRelationAddTo( String sampleAccession, String key, String value ) {
+        GeoSample sample = results.getSampleMap().get( sampleAccession );
+        if ( sample == null ) {
+            throw new IllegalArgumentException( "Unknown sample " + sampleAccession );
+        }
+        sample.addRelation( key, value );
+    }
+
     private void sampleChannelAddTo( String sampleAccession, BiConsumer<GeoChannel, String> property, int channel, String value ) {
         GeoSample sample = results.getSampleMap().get( sampleAccession );
         if ( sample == null ) {
@@ -1793,6 +1811,13 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         property.accept( series, value );
     }
 
+    private void seriesRelationAddTo( String accession, String key, String value ) {
+        GeoSeries series = results.getSeriesMap().get( accession );
+        if ( series == null )
+            throw new IllegalArgumentException( "Unknown series " + accession );
+        series.addRelation( key, value );
+    }
+
     private boolean startsWithIgnoreCase( String string, String pattern ) {
         // it will never be the same string.
         return string.regionMatches( true, 0, pattern, 0, pattern.length() );
@@ -1802,7 +1827,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         GeoSubset subset = results.getSubsetMap().get( accession );
         if ( subset == null )
             throw new IllegalArgumentException( "Unknown subset " + accession );
-        ( ( BiConsumer<GeoSubset, String> ) GeoSubset::addToDescription ).accept( subset, value );
+        subset.addToDescription( value );
     }
 
     private <T> void subsetSet( String accession, BiConsumer<GeoSubset, T> property, T value ) {

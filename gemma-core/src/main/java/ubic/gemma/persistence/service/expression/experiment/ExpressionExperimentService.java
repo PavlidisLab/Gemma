@@ -628,6 +628,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return the date of the last time any of the array designs associated with this experiment
      * were updated.
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Date getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment );
 

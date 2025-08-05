@@ -7,10 +7,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultSet;
-import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
@@ -33,6 +30,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.isWildcard;
@@ -120,9 +118,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
      * on access control list (ACL) permissions.
      */
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
-        String query = prepareDatabaseQuery( settings );
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( query == null ) {
             return Collections.emptySet();
         }
@@ -170,8 +168,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
-        String query = prepareDatabaseQuery( settings );
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( query == null ) {
             return Collections.emptySet();
         }
@@ -182,10 +180,10 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
      * A database search for biosequences. Biosequence names are already indexed by compass...
      */
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        String searchString = prepareDatabaseQuery( settings );
+        String searchString = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( searchString == null ) {
             return Collections.emptySet();
         }
@@ -204,32 +202,32 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
-        return new HashSet<>( this.searchBioSequence( settings ) );
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, SearchContext context, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+        return new HashSet<>( this.searchBioSequence( settings, context ) );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
-        return this.searchCompositeSequenceAndPopulateGenes( settings, Collections.emptySet() );
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+        return this.searchCompositeSequenceAndPopulateGenes( settings, context, Collections.emptySet() );
     }
 
     /**
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings, SearchContext context ) throws SearchException {
         Set<SearchResult<Gene>> geneSet = new SearchResultSet<>( settings );
-        Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
+        Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, context, geneSet );
         Collection<SearchResult<?>> combinedResults = new HashSet<>();
         combinedResults.addAll( geneSet );
         combinedResults.addAll( matchedCs );
         return combinedResults;
     }
 
-    private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<SearchResult<Gene>> geneSet ) throws SearchException {
+    private Collection<SearchResult<CompositeSequence>> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, SearchContext context, Set<SearchResult<Gene>> geneSet ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        String searchString = prepareDatabaseQuery( settings );
+        String searchString = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( searchString == null ) {
             return Collections.emptySet();
         }
@@ -259,7 +257,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         /*
          * In case the query _is_ a gene
          */
-        Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings );
+        Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings, context );
         for ( SearchResult<Gene> searchResult : rawGeneResults ) {
             if ( searchResult.getResultObject() != null ) {
                 geneSet.add( searchResult );
@@ -303,10 +301,10 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        String query = prepareDatabaseQuery( settings );
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( query == null ) {
             return Collections.emptySet();
         }
@@ -365,12 +363,12 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
      * tables
      */
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         Set<SearchResult<Gene>> results = new SearchResultSet<>( settings );
 
-        String searchString = prepareDatabaseQuery( settings );
+        String searchString = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( searchString != null ) {
             // then we can get the NCBI ID, maybe.
             if ( searchString.startsWith( NCBI_GENE_ID_URI_PREFIX ) ) {
@@ -398,7 +396,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         // attempt to do an inexact search if no results were yielded
         if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
-            searchGeneExpanded( settings, results );
+            searchGeneExpanded( settings, context.getIssueReporter(), results );
         }
 
         // filter by taxon
@@ -417,8 +415,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     /**
      * Expanded gene search used when a simple search does not yield results.
      */
-    private void searchGeneExpanded( SearchSettings settings, Set<SearchResult<Gene>> results ) throws SearchException {
-        String inexactString = prepareDatabaseQuery( settings, true );
+    private void searchGeneExpanded( SearchSettings settings, Consumer<Throwable> issueReporter, Set<SearchResult<Gene>> results ) throws SearchException {
+        String inexactString = prepareDatabaseQuery( settings, true, issueReporter );
         if ( inexactString == null ) {
             return;
         }
@@ -481,8 +479,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
-        String query = prepareDatabaseQuery( settings );
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( query == null ) {
             return Collections.emptySet();
         }
@@ -494,9 +492,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings, SearchContext context ) throws SearchException {
         Collection<SearchResult<BlacklistedEntity>> blacklistedResults = new SearchResultSet<>( settings );
-        String query = prepareDatabaseQuery( settings );
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
 
         if ( query == null ) {
             return Collections.emptySet();
