@@ -19,9 +19,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.doublealgo.Formatter;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.stat.Descriptive;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -80,6 +77,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.MeanVarianceWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.core.visualization.SingleCellDataBoxplot;
@@ -378,10 +376,9 @@ public class ExpressionExperimentQCController {
      * @param id of experiment
      * @param sizeFactor Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
-     * @return ModelAndView object if text is true, otherwise null
      */
     @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView visualizeMeanVariance(
+    public void visualizeMeanVariance(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", required = false) Double sizeFactor,
             @RequestParam(value = "text", required = false) Boolean text,
@@ -391,33 +388,26 @@ public class ExpressionExperimentQCController {
             throw new EntityNotFoundException( "Could not load experiment with id " + id );
         }
 
+        QuantitationType quantitationType = expressionExperimentService.getProcessedQuantitationType( ee )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have processed data vectors." ) );
+
         MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
 
         if ( mvr == null ) {
             log.warn( "EE " + id + " does not have a mean-variance relation." );
-            return null;
+            return;
         }
 
         if ( text != null && text ) {
-            double[] means = mvr.getMeans();
-            double[] variances = mvr.getVariances();
-
-            DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
-            matrix.viewColumn( 0 ).assign( means );
-            matrix.viewColumn( 1 ).assign( variances );
-
-            String matrixString = new Formatter( "%1.2G" )
-                    .toTitleString( matrix, null, new String[] { "mean", "variance" }, null, null, null, null );
-            TextView tv = new TextView( "tab-separated-values" );
-            tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
-            return new ModelAndView( tv )
-                    .addObject( TextView.TEXT_PARAM, matrixString );
+            MeanVarianceWriter writer = new MeanVarianceWriter( buildInfo, entityUrlBuilder );
+            response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
+            writer.write( ee, quantitationType, response.getWriter() );
+        } else {
+            // FIXME might be something better to do
+            response.setContentType( MediaType.IMAGE_PNG_VALUE );
+            writeMeanVariance( mvr, sizeFactor != null ? sizeFactor : 1.0, response );
         }
-
-        // FIXME might be something better to do
-        response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        writeMeanVariance( mvr, sizeFactor != null ? sizeFactor : 1.0, response );
-        return null;
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })

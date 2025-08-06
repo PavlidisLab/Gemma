@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
-import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -86,7 +85,7 @@ public class ExpressionDataWriterUtils {
      */
     public static void appendBaseHeader( ExpressionExperiment experiment, QuantitationType quantitationType, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
         appendBaseHeader( experiment, fileTypeStr, null, buildInfo, buf );
-        buf.append( "# Quantitation type: " ).append( quantitationType.getName() );
+        buf.append( "# Quantitation type: " ).append( quantitationType.getName() ).append( "\n" );
     }
 
     /**
