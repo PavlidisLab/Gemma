@@ -238,9 +238,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         }
         for ( QuantitationType qt : qts ) {
             writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
-            if ( autoFlush ) {
-                writer.flush();
-            }
+        }
+
+        if ( autoFlush ) {
+            writer.flush();
         }
 
         writer.append( "Probe\tSequence" );

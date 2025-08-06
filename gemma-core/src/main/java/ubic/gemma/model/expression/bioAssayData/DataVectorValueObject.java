@@ -39,6 +39,7 @@ import java.util.Objects;
 @Data
 public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> {
 
+    @Nullable
     private BioAssaySetValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;
     private QuantitationTypeValueObject quantitationType;

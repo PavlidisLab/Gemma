@@ -18,11 +18,13 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.Constants;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.formatComment;
 
 /**
  * @author keshav
@@ -66,16 +69,24 @@ public class ExpressionDataWriterUtils {
      * @param buf         buffer
      * @param fileTypeStr file type str
      * @param experiment  ee
-     * @param experimentUrl an URL for the expriment, or null to ommit
+     * @param experimentUrl an URL for the expriment, or null to commit
      */
     public static void appendBaseHeader( ExpressionExperiment experiment, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
         appendBaseHeader( fileTypeStr, buildInfo, buf );
         buf.append( "#\n" );
-        buf.append( "# shortName=" ).append( experiment.getShortName() ).append( "\n" );
-        buf.append( "# name=" ).append( experiment.getName() ).append( "\n" );
+        buf.append( "# Short name: " ).append( formatComment( experiment.getShortName() ) ).append( "\n" );
+        buf.append( "# Name: " ).append( formatComment( experiment.getName() ) ).append( "\n" );
         if ( experimentUrl != null ) {
             buf.append( "# Experiment details: " ).append( experimentUrl ).append( "\n" );
         }
+    }
+
+    /**
+     * Append base header information (about the experiment) to a file with some information about the quantitation type.
+     */
+    public static void appendBaseHeader( ExpressionExperiment experiment, QuantitationType quantitationType, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
+        appendBaseHeader( experiment, fileTypeStr, null, buildInfo, buf );
+        buf.append( "# Quantitation type: " ).append( quantitationType.getName() );
     }
 
     /**

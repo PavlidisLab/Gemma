@@ -19,17 +19,18 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.Versioned;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
@@ -154,6 +155,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     /**
      * Main external reference.
      */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<DatabaseEntryValueObject> externalReferences;
 
     public ArrayDesignValueObject() {
