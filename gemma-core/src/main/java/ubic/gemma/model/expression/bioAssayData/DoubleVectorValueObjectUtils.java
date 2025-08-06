@@ -79,6 +79,7 @@ public class DoubleVectorValueObjectUtils {
         } else if ( basSetVo instanceof ExpressionExperimentSubsetValueObject ) {
             ExpressionExperiment ee = new ExpressionExperiment();
             ee.setId( ( ( ExpressionExperimentSubsetValueObject ) basSetVo ).getSourceExperimentId() );
+            ee.setShortName( ( ( ExpressionExperimentSubsetValueObject ) basSetVo ).getSourceExperimentShortName() );
             return ee;
         } else {
             throw new UnsupportedOperationException( "Unsupported BioAssaySet VO type: " + basSetVo.getClass().getName() );
