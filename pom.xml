@@ -815,8 +815,6 @@
 		<hdf5.version>1.12.1</hdf5.version>
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
-		<!-- full path to the HDF5 JAR -->
-		<hdf5.jarPath>/usr/lib/java/hdf5.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.107</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
