@@ -39,8 +39,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SuppressWarnings("unchecked")
 @ContextConfiguration
@@ -149,6 +148,7 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
     public void testVisualizeCorrelationMatrix() throws Exception {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
+        ee.setShortName( "GSE01019" );
         when( expressionExperimentService.loadOrFail( eq( 1L ), any( Function.class ) ) )
                 .thenReturn( ee );
         when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
@@ -167,6 +167,7 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
                 .param( "size", "10" )
                 .param( "text", "true" ) )
                 .andExpect( status().isOk() )
+                .andExpect( header().string( "Content-Disposition", "attachment; filename=\"1_GSE01019_coExp.data.txt.gz\"" ) )
                 .andExpect( content().contentType( "text/tab-separated-values" ) );
     }
 
