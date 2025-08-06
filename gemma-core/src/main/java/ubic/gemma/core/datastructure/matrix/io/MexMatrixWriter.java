@@ -71,13 +71,13 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     private Executor executorService;
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer stream ) throws IOException {
         throw new UnsupportedOperationException( "MEX is a binary format as it bundles the files in a TAR archive." );
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        return write( matrix, null, stream );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, OutputStream stream ) throws IOException {
+        return write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, stream );
     }
 
     /**

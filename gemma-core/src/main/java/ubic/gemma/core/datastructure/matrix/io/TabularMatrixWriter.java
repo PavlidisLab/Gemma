@@ -14,6 +14,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -64,8 +65,8 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
-        return write( matrix, null, writer );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer writer ) throws IOException {
+        return write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, writer );
     }
 
     public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {

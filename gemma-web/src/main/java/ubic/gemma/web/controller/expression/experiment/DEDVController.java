@@ -43,6 +43,7 @@ import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObjectUtils;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -674,7 +675,7 @@ public class DEDVController {
         Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( mat.getDesignElements() );
         MatrixWriter writer = new MatrixWriter( entityUrlBuilder, buildInfo );
         try ( StringWriter buf = new StringWriter() ) {
-            writer.write( mat, cs2gene, buf );
+            writer.write( mat, ProcessedExpressionDataVector.class, cs2gene, buf );
             return buf.toString();
         } catch ( IOException e ) {
             throw new RuntimeException( e );

@@ -55,7 +55,7 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer writer ) throws IOException, UnsupportedOperationException {
         throw new UnsupportedOperationException( "Writing single-cell matrices is not supported." );
     }
 

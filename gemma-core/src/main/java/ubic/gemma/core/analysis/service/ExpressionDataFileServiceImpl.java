@@ -43,9 +43,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -704,7 +702,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
-        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, RawExpressionDataVector.class, geneAnnotations );
     }
 
     @Override
@@ -733,7 +731,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
-        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, ProcessedExpressionDataVector.class, geneAnnotations );
     }
 
     @Override

@@ -35,7 +35,7 @@ public class TabularMatrixWriterTest {
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-            writer.write( matrix, baos );
+            writer.write( matrix, SingleCellExpressionDataVector.class, baos );
             blob = baos.toByteArray();
         }
         assertThat( blob ).asString( StandardCharsets.UTF_8 )

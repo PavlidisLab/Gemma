@@ -14,7 +14,9 @@ import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -302,7 +304,7 @@ public class MexMatrixWriterTest {
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-            writer.write( matrix, null, baos );
+            writer.write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, baos );
             blob = baos.toByteArray();
         }
         List<BioAssay> bas = vectors.iterator().next().getSingleCellDimension().getBioAssays();
@@ -348,7 +350,7 @@ public class MexMatrixWriterTest {
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-            writer.write( matrix, null, baos );
+            writer.write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, baos );
             blob = baos.toByteArray();
         }
         List<BioAssay> bas = vectors.iterator().next().getSingleCellDimension().getBioAssays();

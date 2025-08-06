@@ -46,6 +46,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -588,7 +589,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
-            mw.write( dmatrix, writer );
+            mw.write( dmatrix, ProcessedExpressionDataVector.class, writer );
 
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
                     out );

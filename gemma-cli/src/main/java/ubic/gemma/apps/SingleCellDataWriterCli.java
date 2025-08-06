@@ -324,7 +324,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
-        return matrixWriter.write( matrix, writer );
+        return matrixWriter.write( matrix, RawExpressionDataVector.class, writer );
     }
 
     private int slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
