@@ -47,9 +47,6 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     private final OutlierDetectionService outlierDetectionService;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
     public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         super( service );
         this.searchService = searchService;
@@ -266,7 +263,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if (eeId == null) {
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
         }
-        ExpressionExperiment ee = expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
+        ExpressionExperiment ee = service.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
         if (ee == null){
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
         }
