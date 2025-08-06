@@ -28,6 +28,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,11 +40,15 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.clearScalarConversionThreadLocalStorage;
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.formatQuantitationType;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 
@@ -230,14 +235,13 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             appendBaseHeader( "Expression data", buildInfo, writer );
         }
 
-        Collection<QuantitationType> qts;
         if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
-            qts = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getQuantitationTypes();
+            Collection<QuantitationType> qts = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getQuantitationTypes();
+            for ( QuantitationType qt : qts ) {
+                writer.append( "# Quantitation type: " ).append( formatQuantitationType( qt, BulkExpressionDataVector.class ) ).append( "\n" );
+            }
         } else {
-            qts = Collections.singleton( matrix.getQuantitationType() );
-        }
-        for ( QuantitationType qt : qts ) {
-            writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
+            writer.append( "# Quantitation type: " ).append( formatQuantitationType( matrix.getQuantitationType(), BulkExpressionDataVector.class ) ).append( "\n" );
         }
 
         if ( autoFlush ) {

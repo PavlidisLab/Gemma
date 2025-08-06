@@ -25,6 +25,10 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +43,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.TsvUtils.format;
-import static ubic.gemma.core.util.TsvUtils.formatComment;
 
 /**
  * @author keshav
@@ -73,8 +76,8 @@ public class ExpressionDataWriterUtils {
     public static void appendBaseHeader( ExpressionExperiment experiment, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
         appendBaseHeader( fileTypeStr, buildInfo, buf );
         buf.append( "#\n" );
-        buf.append( "# Short name: " ).append( formatComment( experiment.getShortName() ) ).append( "\n" );
-        buf.append( "# Name: " ).append( formatComment( experiment.getName() ) ).append( "\n" );
+        buf.append( "# Short name: " ).append( format( experiment.getShortName() ) ).append( "\n" );
+        buf.append( "# Name: " ).append( format( experiment.getName() ) ).append( "\n" );
         if ( experimentUrl != null ) {
             buf.append( "# Experiment details: " ).append( experimentUrl ).append( "\n" );
         }
@@ -83,9 +86,52 @@ public class ExpressionDataWriterUtils {
     /**
      * Append base header information (about the experiment) to a file with some information about the quantitation type.
      */
-    public static void appendBaseHeader( ExpressionExperiment experiment, QuantitationType quantitationType, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
+    public static void appendBaseHeader( ExpressionExperiment experiment, QuantitationType quantitationType, Class<? extends DataVector> dataVectorType, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, Writer buf ) throws IOException {
         appendBaseHeader( experiment, fileTypeStr, null, buildInfo, buf );
-        buf.append( "# Quantitation type: " ).append( quantitationType.getName() ).append( "\n" );
+        buf.append( "# Quantitation type: " ).append( formatQuantitationType( quantitationType, dataVectorType ) ).append( "\n" );
+    }
+
+    public static String formatQuantitationType( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( quantitationType.getName() );
+        if ( ProcessedExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {
+            sb.append( " [Data Type=Processed]" );
+            sb.append( " [Preferred]" );
+        } else if ( RawExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {
+            sb.append( " [Data Type=Raw]" );
+            if ( quantitationType.getIsPreferred() ) {
+                sb.append( " [Preferred]" );
+            }
+        } else if ( SingleCellExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {
+            sb.append( " [Data Type=Single-cell]" );
+            if ( quantitationType.getIsSingleCellPreferred() ) {
+                sb.append( " [Preferred]" );
+            }
+        } else {
+            throw new UnsupportedOperationException( "Unsupported data vector type: " + dataVectorType.getName() );
+        }
+        sb.append( " [General Type=" ).append( quantitationType.getGeneralType() ).append( "]" );
+        sb.append( " [Type=" ).append( quantitationType.getType() ).append( "]" );
+        sb.append( " [Scale=" ).append( quantitationType.getScale() ).append( "]" );
+        sb.append( " [Representation=" ).append( quantitationType.getRepresentation() ).append( "]" );
+        if ( quantitationType.getIsRatio() ) {
+            sb.append( " [Ratio]" );
+        }
+        if ( quantitationType.getIsBackground() ) {
+            sb.append( " [Background]" );
+        }
+        if ( quantitationType.getIsBackgroundSubtracted() ) {
+            sb.append( " [Background-subtracted]" );
+        }
+        if ( ProcessedExpressionDataVector.class.isAssignableFrom( dataVectorType ) && quantitationType.getIsNormalized() ) {
+            sb.append( " [Quantile-normalized]" );
+        } else if ( quantitationType.getIsNormalized() ) {
+            sb.append( " [Normalized]" );
+        }
+        if ( quantitationType.getIsBatchCorrected() ) {
+            sb.append( " [Batch-corrected]" );
+        }
+        return sb.toString();
     }
 
     /**

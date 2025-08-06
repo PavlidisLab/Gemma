@@ -30,8 +30,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
 import static ubic.gemma.core.util.TsvUtils.*;
 
 /**
@@ -125,7 +124,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, pwriter );
         pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
         pwriter.append( "# Single-cell dimension: " ).append( format( scd ) ).append( "\n" );
-        pwriter.append( "# Quantitation type: " ).append( format( qt ) ).append( "\n" );
+        pwriter.append( "# Quantitation type: " ).append( formatQuantitationType( qt, SingleCellExpressionDataVector.class ) ).append( "\n" );
         pwriter.append( "# Samples: " ).append( scd.getBioAssays().stream().map( TsvUtils::format ).collect( Collectors.joining( ", " ) ) ).append( "\n" );
         pwriter.append( "probe_id\tprobe_name" );
         if ( cs2gene != null ) {

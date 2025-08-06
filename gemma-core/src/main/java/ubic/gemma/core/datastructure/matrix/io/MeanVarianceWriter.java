@@ -5,6 +5,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
@@ -31,7 +32,7 @@ public class MeanVarianceWriter {
      */
     public void write( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException {
         Assert.notNull( ee.getMeanVarianceRelation(), ee + " has no mean-variance relation." );
-        ExpressionDataWriterUtils.appendBaseHeader( ee, qt, "Mean-variance relation",
+        ExpressionDataWriterUtils.appendBaseHeader( ee, qt, ProcessedExpressionDataVector.class, "Mean-variance relation",
                 entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, writer );
         MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
         writer.write( "mean\tvariance\n" );
