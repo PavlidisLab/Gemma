@@ -20,7 +20,6 @@ public final class Categories {
     public static final Category BIOLOGICAL_SEX = new Category( "biological sex", "http://purl.obolibrary.org/obo/PATO_0000047" );
     public static final Category ORGANISM_PART = new Category( "organism part", "http://www.ebi.ac.uk/efo/EFO_0000635" );
 
-    // other categories
     /**
      * Represent a mask for a set of data.
      */
