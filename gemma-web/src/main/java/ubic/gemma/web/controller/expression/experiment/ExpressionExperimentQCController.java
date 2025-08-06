@@ -78,6 +78,7 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
@@ -339,6 +340,7 @@ public class ExpressionExperimentQCController {
             mw.writeMatrix( matrix, true );
             // This does not solve the root issue, but I wasted too much time on it
             response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + ExpressionDataFileUtils.getCoexpressionDataFilename( ee ) + "\"" );
             response.getOutputStream().write( s.toString().replace( "\uFFFD", "\t" ).getBytes() );
             return;
         }
