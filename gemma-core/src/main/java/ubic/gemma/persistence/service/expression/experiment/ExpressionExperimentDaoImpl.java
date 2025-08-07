@@ -2713,7 +2713,40 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Long clmId ) {
-        return ( CellLevelMeasurements ) getSessionFactory().getCurrentSession().createQuery( "select clm from SingleCellDimension dim join dim.cellLevelMeasurements clm where dim = :dim and clm.id = :clmId" )
+        return ( CellLevelMeasurements ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clm from SingleCellDimension dim join dim.cellLevelMeasurements clm where dim = :dim and clm.id = :clmId" )
+                .setParameter( "dim", dim )
+                .setParameter( "clmId", clmId )
+                .uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, String clmName ) {
+        return ( CellLevelMeasurements ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clm from SingleCellDimension dim join dim.cellLevelMeasurements clm where dim = :dim and clm.name = :clmName" )
+                .setParameter( "dim", dim )
+                .setParameter( "clmName", clmName )
+                .uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public List<CellLevelMeasurements> getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Category category ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select clm from SingleCellDimension dim join dim.cellLevelMeasurements clm join clm.category c where dim = :dim and coalesce(c.categoryUri, c.category) = :c" )
+                .setParameter( "dim", dim )
+                .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
+                .list();
+    }
+
+    @Override
+    public CellLevelMeasurements getCellLevelMeasurementsWithoutData( ExpressionExperiment ee, SingleCellDimension dim, Long clmId ) {
+        return ( CellLevelMeasurements ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clm.id as id, clm.kindCV as kindCV, clm.otherKind as otherKind, clm.representation as representation, clm.type as type from SingleCellDimension scd"
+                        + " join scd.cellLevelMeasurements clm where scd = :dim and clm.id = :clmId" )
+                .setResultTransformer( new ClmInitializer() )
                 .setParameter( "dim", dim )
                 .setParameter( "clmId", clmId )
                 .uniqueResult();

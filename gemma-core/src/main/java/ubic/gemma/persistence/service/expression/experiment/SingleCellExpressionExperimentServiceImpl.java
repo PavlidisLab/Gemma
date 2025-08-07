@@ -739,7 +739,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public <T> T getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex ) {
-        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        CellLevelMeasurements clm = getCellLevelMeasurementsWithoutData( ee, qt, clmId );
         if ( clm == null ) {
             return null;
         }
@@ -750,7 +750,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public <T> T[] getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId,
             int cellIndex, int endIndexExclusive ) {
-        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        CellLevelMeasurements clm = getCellLevelMeasurementsWithoutData( ee, qt, clmId );
         if ( clm == null ) {
             return null;
         }
@@ -761,7 +761,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public <T> Stream<T> streamCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId,
             boolean createNewSession ) {
-        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        CellLevelMeasurements clm = getCellLevelMeasurementsWithoutData( ee, qt, clmId );
         if ( clm == null ) {
             return null;
         }
@@ -776,6 +776,36 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return null;
         }
         return expressionExperimentDao.getCellLevelMeasurements( ee, dim, clmId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, String clmName ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurements( ee, dim, clmName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CellLevelMeasurements> getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Category category ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurements( ee, dim, category );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelMeasurements getCellLevelMeasurementsWithoutData( ExpressionExperiment ee, QuantitationType qt, Long clmId ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurementsWithoutData( ee, dim, clmId );
     }
 
     @Override
@@ -1171,6 +1201,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public void addCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dimension, CellLevelMeasurements clm ) {
+        if ( clm.getName() != null ) {
+            for ( CellLevelMeasurements e : dimension.getCellLevelMeasurements() ) {
+                if ( clm.getName().equalsIgnoreCase( e.getName() ) ) {
+                    throw new IllegalArgumentException( "There is already a cell-level measurements named '" + e.getName() + "'." );
+                }
+            }
+        }
         if ( !dimension.getCellLevelMeasurements().add( clm ) ) {
             throw new IllegalStateException( String.format( "%s already has a cell-level measurements equal to %s: %s.",
                     dimension, clm, dimension.getCellLevelMeasurements().stream().filter( clm::equals ).findFirst() ) );

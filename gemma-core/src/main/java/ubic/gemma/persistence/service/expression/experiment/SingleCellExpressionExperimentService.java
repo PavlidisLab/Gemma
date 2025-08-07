@@ -189,6 +189,10 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CellLevelMeasurements getCellLevelMeasurementsWithoutData( ExpressionExperiment ee, QuantitationType qt, Long clmId );
+
     /**
      * Obtain a single-cell dimension used for a given dataset and QT.
      */
@@ -202,9 +206,6 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Retrieve a single-cell dimension with its bioassays and cell-level  characteristics initialized.
-     * @param ee
-     * @param qt
-     * @return
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -406,6 +407,14 @@ public interface SingleCellExpressionExperimentService {
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, String clmName );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<CellLevelMeasurements> getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Category category );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
     void addCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm );

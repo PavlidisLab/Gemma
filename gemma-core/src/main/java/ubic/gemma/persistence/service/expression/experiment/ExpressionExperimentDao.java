@@ -636,12 +636,31 @@ public interface ExpressionExperimentDao
     @Nullable
     CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Long clmId );
 
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, String clmName );
+
+    @Nullable
+    List<CellLevelMeasurements> getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Category category );
+
+    /**
+     * Obtain a cell-level measurements by ID without loading the data.
+     */
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurementsWithoutData( ExpressionExperiment ee, SingleCellDimension dim, Long clmId );
+
     /**
      * Obtain a measurement at a given cell index.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
      */
     @Nullable
     <T> T getCellLevelMeasurementAt( CellLevelMeasurements clm, int cellIndex );
 
+    /**
+     * Obtain a slice of measurements at a given cell index range.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
+     */
     @Nullable
     <T> T[] getCellLevelMeasurementAt( CellLevelMeasurements clm, int startIndex, int endIndexExclusive );
 
@@ -651,6 +670,8 @@ public interface ExpressionExperimentDao
      * The type held in the stream depends on the representation of the cell-level measurement. Refer to
      * {@link ubic.gemma.persistence.util.ByteArrayUtils#byteArrayToObjects(byte[], Class)} for more details on the
      * conversions.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
      */
     @Nullable
     <T> Stream<T> streamCellLevelMeasurements( CellLevelMeasurements clm, boolean createNewSession );
