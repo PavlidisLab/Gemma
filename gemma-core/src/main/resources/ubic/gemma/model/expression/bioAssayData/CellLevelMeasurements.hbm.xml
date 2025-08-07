@@ -45,16 +45,17 @@
         </property>
         <!-- absolutely necessary for this entity, so always fetched -->
         <!-- there's only a handful of units, so select and cache -->
-        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="select">
+        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="select"
+                     foreign-key="CELL_LEVEL_MEASUREMENTS_UNIT_FKC">
             <column name="UNIT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <property name="data">
             <column name="DATA" not-null="true" sql-type="LONGBLOB"/>
         </property>
         <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic" cascade="all"
-                     lazy="false"
-                     fetch="join">
-            <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+                     lazy="false" fetch="join" foreign-key="CELL_LEVEL_MEASUREMENTS_CATEGORY_FKC">
+            <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"
+                    index="CELL_LEVEL_MEASUREMENTS_CATEGORY"/>
         </many-to-one>
     </class>
 </hibernate-mapping>
