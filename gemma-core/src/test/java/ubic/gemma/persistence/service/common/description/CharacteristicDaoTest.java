@@ -37,6 +37,7 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -338,7 +339,8 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
                 CellTypeAssignment.class,
                 GenericCellLevelCharacteristics.class,
                 GeneSet.class,
-                Gene2GOAssociation.class );
+                Gene2GOAssociation.class,
+                CellLevelMeasurements.class );
 
         // ensure that all declared entities that have a characteristic is handled in getParents()
         for ( ClassMetadata cm : sessionFactory.getAllClassMetadata().values() ) {
@@ -350,6 +352,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
                 }
                 if ( propertyType.isAssociationType() && ( ( AssociationType ) propertyType ).getAssociatedEntityName( ( SessionFactoryImplementor ) sessionFactory ).equals( Characteristic.class.getName() ) ) {
                     assertThat( characteristicDao.getParentClasses() )
+                            .describedAs( cm.getEntityName() + "." + propertyName )
                             .contains( cm.getMappedClass() );
                 }
             }
