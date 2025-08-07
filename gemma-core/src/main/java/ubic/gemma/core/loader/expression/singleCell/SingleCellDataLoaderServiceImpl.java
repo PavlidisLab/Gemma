@@ -14,10 +14,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -186,6 +183,35 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    @Override
+    public Collection<CellLevelMeasurements> loadOtherCellLevelMeasurements( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
+        try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
+            return loadOtherCellLevelMeasurements( ee, loader, config );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public Collection<CellLevelMeasurements> loadOtherCellLevelMeasurements( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
+            return loadOtherCellLevelMeasurements( ee, loader, config );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    private Collection<CellLevelMeasurements> loadOtherCellLevelMeasurements( ExpressionExperiment ee, SingleCellDataLoader loader, SingleCellDataLoaderConfig config ) throws IOException {
+        SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
+        Collection<CellLevelMeasurements> created = new HashSet<>();
+        for ( CellLevelMeasurements clc : loader.getOtherCellLevelMeasurements( dimension ) ) {
+            singleCellExpressionExperimentService.addCellLevelMeasurements( ee, dimension, clc );
+            created.add( clc );
+        }
+        return created;
     }
 
     private QuantitationType getQuantitationType( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {

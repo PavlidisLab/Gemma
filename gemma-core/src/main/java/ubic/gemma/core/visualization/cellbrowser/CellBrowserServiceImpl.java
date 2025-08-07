@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -58,7 +59,8 @@ public class CellBrowserServiceImpl implements CellBrowserService {
             throw new IllegalArgumentException( "No SingleCellDimension found for " + ee + "." );
         }
         List<CellLevelCharacteristics> clcs = CellBrowserUtils.getCellLevelCharacteristics( scd );
-        return CellBrowserUtils.createMetadataMapping( factors, clcs, useRawColumnNames ).stream()
+        List<CellLevelMeasurements> clms = CellBrowserUtils.getCellLevelMeasurements( scd );
+        return CellBrowserUtils.createMetadataMapping( factors, clcs, clms, useRawColumnNames ).stream()
                 .filter( m -> hasMetaField( ee, m.getMetaColumnId() ) )
                 .collect( Collectors.toList() );
     }

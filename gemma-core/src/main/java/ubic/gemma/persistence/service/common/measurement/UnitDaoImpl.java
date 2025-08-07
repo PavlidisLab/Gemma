@@ -22,6 +22,7 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
@@ -48,5 +49,24 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
         BusinessKey.checkValidKey( unit );
         Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
         return ( Unit ) queryObject.uniqueResult();
+    }
+
+    @Override
+    public void removeIfUnused( Unit unit ) {
+        Assert.notNull( unit.getId(), "Cannot delete a transient unit." );
+        long users = 0;
+        users += ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from Measurement m where m.unit = :unit" )
+                .setParameter( "unit", unit )
+                .uniqueResult();
+        users += ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from CellLevelMeasurements m where m.unit = :unit" )
+                .setParameter( "unit", unit )
+                .uniqueResult();
+        if ( users == 0 ) {
+            remove( unit );
+        } else {
+            log.info( unit + " is still used by " + users + " measurements, not removing." );
+        }
     }
 }

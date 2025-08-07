@@ -6,6 +6,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.util.UninitializedList;
@@ -50,7 +52,7 @@ public class SingleCellSlicerUtils {
      * Create a slicer for single-cell data vectors.
      */
     public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays ) {
-        return createSlicer( assays, null, null, null );
+        return createSlicer( assays, null, null, null, null );
     }
 
     /**
@@ -62,7 +64,7 @@ public class SingleCellSlicerUtils {
      * @param clcs    pre-sliced CLCs
      */
     public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays,
-            @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs ) {
+            @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs, @Nullable Set<CellLevelMeasurements> clms ) {
         Map<SingleCellDimension, SingleCellDimension> scdCache = new HashMap<>();
         Map<SingleCellDimension, int[]> sampleIndicesCache = new HashMap<>();
         return vec -> sliceVector( vec, assays, cellIds, ctas, clcs, scdCache, sampleIndicesCache );
@@ -235,5 +237,52 @@ public class SingleCellSlicerUtils {
             clcs.add( newClc );
         }
         return clcs;
+    }
+
+    public static Set<CellLevelMeasurements> sliceClms( SingleCellDimension singleCellDimension, List<BioAssay> assays, int[] starts, int[] ends, int numCells ) {
+        if ( singleCellDimension.getCellTypeAssignments() instanceof UninitializedSet ) {
+            log.info( "CLMs are uninitialized, returning an uninitialized set." );
+            return new UninitializedSet<>();
+        }
+        Set<CellLevelMeasurements> clms = new HashSet<>();
+        for ( CellLevelMeasurements clm : singleCellDimension.getCellLevelMeasurements() ) {
+            int sizeInBytes = clm.getRepresentation().getSizeInBytes();
+            byte[] data;
+            if ( clm.getRepresentation() == PrimitiveType.BITSET ) {
+                BitSet b = clm.getDataAsBitSet();
+                BitSet slicedBitSet = new BitSet( numCells );
+                int offset = 0;
+                for ( int i = 0; i < assays.size(); i++ ) {
+                    for ( int j = 0; j < starts[i] - ends[i]; j++ ) {
+                        if ( b.get( starts[i] + j ) ) {
+                            slicedBitSet.set( offset + j );
+                        }
+                    }
+                    offset += ends[i] - starts[i];
+                }
+                data = slicedBitSet.toByteArray();
+            } else if ( sizeInBytes == -1 ) {
+                log.warn( "Cannot slice variable-size data from " + clm + ", skipping." );
+                continue;
+            } else {
+                data = new byte[sizeInBytes * numCells];
+                int newOffset = 0;
+                for ( int i = 0; i < assays.size(); i++ ) {
+                    int start = starts[i];
+                    int end = ends[i];
+                    System.arraycopy( clm.getData(), start * sizeInBytes, data, newOffset * sizeInBytes, ( end - start ) * sizeInBytes );
+                    newOffset += end - start;
+                }
+            }
+            CellLevelMeasurements newClm = CellLevelMeasurements.Factory.newInstance( clm.getName(), CharacteristicUtils.getCategory( clm.getCategory() ) );
+            newClm.setType( clm.getType() );
+            newClm.setKindCV( clm.getKindCV() );
+            newClm.setRepresentation( clm.getRepresentation() );
+            newClm.setUnit( clm.getUnit() );
+            newClm.setData( data );
+            log.info( "Sliced " + clm + " to " + newClm + "." );
+            clms.add( newClm );
+        }
+        return clms;
     }
 }
