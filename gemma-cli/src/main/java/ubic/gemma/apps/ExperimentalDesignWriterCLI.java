@@ -95,7 +95,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
             try ( PrintWriter writer = new PrintWriter( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
                 edWriter.setUseRawColumnNames( useRawColumnNames );
-                edWriter.write( ee, true, writer );
+                edWriter.write( ee, writer );
             } catch ( IOException e ) {
                 addErrorObject( ee, e );
             }

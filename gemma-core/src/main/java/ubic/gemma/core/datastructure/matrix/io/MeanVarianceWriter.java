@@ -11,6 +11,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Date;
 
 /**
  * @author poirigui
@@ -33,7 +34,7 @@ public class MeanVarianceWriter {
     public void write( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException {
         Assert.notNull( ee.getMeanVarianceRelation(), ee + " has no mean-variance relation." );
         ExpressionDataWriterUtils.appendBaseHeader( ee, qt, ProcessedExpressionDataVector.class, "Mean-variance relation",
-                entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, writer );
+                entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, new Date(), writer );
         MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
         writer.write( "mean\tvariance\n" );
         for ( int i = 0; i < mvr.getMeans().length; i++ ) {

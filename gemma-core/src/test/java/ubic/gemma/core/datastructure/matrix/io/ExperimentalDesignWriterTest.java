@@ -83,7 +83,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         assumeNotNull( ee, "Could not find experiment GSE1611." );
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
         StringWriter writer = new StringWriter();
-        edWriter.write( ee, true, writer );
+        edWriter.write( ee, writer );
         assertThat( writer.toString() )
                 .hasLineCount( 26 )
                 .contains( "#$strain : Category=strain Type=Categorical\n" )

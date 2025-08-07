@@ -944,6 +944,14 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
+        this.expressionExperimentDao.thawLite( ee );
+        return ee;
+    }
+
     @Nullable
     @Override
     @Transactional(readOnly = true)

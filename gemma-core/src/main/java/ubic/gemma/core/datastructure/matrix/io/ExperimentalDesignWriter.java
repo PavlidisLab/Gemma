@@ -71,25 +71,23 @@ public class ExperimentalDesignWriter {
     }
 
     /**
-     * @param ee          ee
-     * @param writeHeader writer header
-     * @param writer      writer
-     * @throws IOException when the write failed
+     * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer}.
+     * @see #write(ExpressionExperiment, Collection, boolean, Writer)
      */
-    public void write( ExpressionExperiment ee, boolean writeHeader, Writer writer ) throws IOException {
-        write( writer, ee, ee.getBioAssays(), writeHeader, writeHeader );
+    public void write( ExpressionExperiment ee, Writer writer ) throws IOException {
+        write( ee, ee.getBioAssays(), true, writer );
     }
 
     /**
-     * @param writeBaseHeader comments
-     * @param writeHeader     column names
-     * @param ee              ee
-     * @param bioAssays       bas
-     * @param writer          writer
-     * @throws IOException when the write failed
+     * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer} for a given
+     * collection of assays.
+     * @param bioAssays       assays to write, the order is defined by the order of their corresponding biomaterials
+     *                        as per {@link BioMaterial#COMPARATOR}.
+     * @param writeBaseHeader whether to write the base header (experiment URL, build info, etc.), see
+     *                        {@link ExpressionDataWriterUtils#appendBaseHeader(ExpressionExperiment, String, String, BuildInfo, Date, Writer)}
+     *                        for details
      */
-    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
-            boolean writeHeader ) throws IOException {
+    public void write( ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, Writer writer ) throws IOException {
         Assert.isTrue( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
                 ee + " does not have an experimental design." );
 
@@ -113,9 +111,7 @@ public class ExperimentalDesignWriter {
                 .sorted( ExperimentalFactor.COMPARATOR )
                 .collect( Collectors.toList() );
 
-        if ( writeHeader ) {
-            this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
-        }
+        this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
 
         Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ed, bioMaterials.keySet() );
 
@@ -157,7 +153,7 @@ public class ExperimentalDesignWriter {
 
         if ( writeBaseHeader ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString();
-            appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, buf );
+            appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, new Date(), buf );
             if ( autoFlush ) {
                 buf.flush();
             }

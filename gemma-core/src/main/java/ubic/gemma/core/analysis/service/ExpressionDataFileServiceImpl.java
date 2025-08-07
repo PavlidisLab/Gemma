@@ -711,7 +711,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( "No experimental design for " + ee );
         }
-        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush ).write( ee, true, writer );
+        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush ).write( ee, writer );
     }
 
     @Override
@@ -1031,7 +1031,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
         analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
-        new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, null, hasSignificantBatchConfound.get(), stream );
+        new DiffExAnalysisResultSetWriter( entityUrlBuilder, buildInfo ).write( analysis, geneAnnotations, null, hasSignificantBatchConfound.get(), stream );
     }
 
     /**

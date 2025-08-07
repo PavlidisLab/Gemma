@@ -40,10 +40,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.clearScalarConversionThreadLocalStorage;
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
@@ -232,10 +229,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         ExpressionExperiment experiment = matrix.getExpressionExperiment();
         if ( experiment != null ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( experiment ).web().toUriString();
-            appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, writer );
+            appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, new Date(), writer );
         } else {
             log.warn( "Provided matrix does not have an ExpressionExperiment, omitting it from the base header." );
-            appendBaseHeader( "Expression data", buildInfo, writer );
+            appendBaseHeader( "Expression data", buildInfo, new Date(), writer );
         }
 
         if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {

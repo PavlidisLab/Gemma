@@ -227,4 +227,8 @@ public class TsvUtils {
         }
         return ( comment.charAt( 0 ) != COMMENT ? COMMENT + " " : "" ) + comment.replaceAll( "\n([^" + COMMENT + "])", "\n" + COMMENT + " $1" );
     }
+
+    public static String formatComment( String format, Object... args ) {
+        return formatComment( String.format( format, args ) );
+    }
 }
