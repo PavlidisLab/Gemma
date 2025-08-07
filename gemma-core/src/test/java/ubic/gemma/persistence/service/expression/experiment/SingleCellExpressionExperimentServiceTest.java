@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.measurement.UnitService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 
@@ -102,6 +103,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         @Bean
         public SingleCellSparsityMetrics singleCellSparsityMetrics() {
             return new SingleCellSparsityMetrics();
+        }
+
+        @Bean
+        public UnitService unitService() {
+            return mock();
         }
     }
 
