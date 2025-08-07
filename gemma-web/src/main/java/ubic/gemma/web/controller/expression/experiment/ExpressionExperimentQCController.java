@@ -202,8 +202,7 @@ public class ExpressionExperimentQCController {
 
     @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyOutliersRemoved( @RequestParam("id") Long id ) throws IOException {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
 
         Collection<BioAssay> bioAssays = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -214,11 +213,9 @@ public class ExpressionExperimentQCController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
-
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
-        ee = expressionExperimentService.thawLiter( ee );
-        edWriter.write( writer, ee, bioAssays, false, true );
+        appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, new Date(), writer );
+        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false )
+                .write( ee, bioAssays, false, writer );
 
         TextView tv = new TextView( "tab-separated-values" );
         tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
@@ -227,7 +224,7 @@ public class ExpressionExperimentQCController {
 
     @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyPossibleOutliers( @RequestParam("id") Long id ) throws IOException {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
 
         // identify outliers
         if ( !sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
@@ -253,11 +250,9 @@ public class ExpressionExperimentQCController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
-
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
-        ee = expressionExperimentService.thawLiter( ee );
-        edWriter.write( writer, ee, bioAssays, false, true );
+        appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, new Date(), writer );
+        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false )
+                .write( ee, bioAssays, false, writer );
 
         TextView tv = new TextView( "tab-separated-values" );
         tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
