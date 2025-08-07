@@ -32,7 +32,6 @@ import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -84,33 +83,36 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         log.info( "Computing processed expression vectors for " + expressionExperiment );
 
-        boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
-
-        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<>();
-        if ( isTwoChannel ) {
-            missingValueVectors = this.getMissingValueVectors( expressionExperiment );
-        }
-
         Collection<RawExpressionDataVector> rawPreferredDataVectors = this
                 .getPreferredDataVectors( expressionExperiment );
         if ( rawPreferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
 
-        removeDuplicateElements( rawPreferredDataVectors );
-
-        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
-        QuantitationType preferredMaskedDataQuantitationType = this
-                .getPreferredMaskedDataQuantitationType( expressionExperiment, preferredDataVectorExemplar.getQuantitationType() );
+        rawPreferredDataVectors = removeDuplicateElements( rawPreferredDataVectors );
 
         /* log-transform if necessary */
         // this will also consolidate sets of raw vectors that have multiple BADs
-        Collection<RawExpressionDataVector> consolidatedRawVectors = consolidateRawVectors( rawPreferredDataVectors,
-                preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
+        rawPreferredDataVectors = consolidateAndLogTransformVectors( rawPreferredDataVectors, ignoreQuantitationMismatch );
 
-        BioAssayDimension preferredMaskedDataDimension = consolidatedRawVectors.iterator().next().getBioAssayDimension();
+        // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
+        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
+        QuantitationType preferredMaskedDataQuantitationType = this
+                .getPreferredMaskedDataQuantitationType( preferredDataVectorExemplar.getQuantitationType() );
+
+        // once the vectors have been consolidated, we can recover the dimension
+        // no that if multiple BADs were consolidated, this will return a new BAD, otherwise the same BAD that was used
+        // for the raw vectors will be re-used
+        BioAssayDimension preferredMaskedDataDimension = rawPreferredDataVectors.iterator().next().getBioAssayDimension();
+
+        // mask raw vectors
+        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<>();
+        boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
+        if ( isTwoChannel ) {
+            missingValueVectors = this.getMissingValueVectors( expressionExperiment );
+        }
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
-                .maskAndUnpack( consolidatedRawVectors, missingValueVectors );
+                .maskAndUnpack( rawPreferredDataVectors, missingValueVectors );
 
         /*
          * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
@@ -174,9 +176,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 newVectors.size() ) );
 
         int created = expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
-
-        assert expressionExperiment.getNumberOfDataVectors() != null;
-
+        assert expressionExperiment.getNumberOfDataVectors() == created;
         return created;
     }
 
@@ -414,19 +414,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     /**
      * Consolidate raw vectors that have multiple BADs and log-transform them if necessary.
-     *
-     * @param  rawPreferredDataVectors             raw preferred data vectors
-     * @param  preferredMaskedDataQuantitationType preferred masked data QT
-     * @return collection containing the vectors
+     * <p>
+     * The consolidation is done by passing the vectors through {@link ExpressionDataDoubleMatrix} which handle multiple
+     * assays per sample and then recover them on the other side.
      */
-    private Collection<RawExpressionDataVector> consolidateRawVectors(
+    private Collection<RawExpressionDataVector> consolidateAndLogTransformVectors(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
-            QuantitationType preferredMaskedDataQuantitationType,
             boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
-        preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
-        this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
-        return new HashSet<>( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( rawPreferredDataVectors );
+        matrix = ensureLog2Scale( matrix, ignoreQuantitationMismatch );
+        return BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class );
     }
 
     private void addToGene( RankMethod method, Map<Gene, Collection<Double>> result, Double rMean, Double rMax,
@@ -492,38 +489,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     /**
-     * Make (or re-use) a quantitation type for attaching to the new processed data - always log2 transformed
+     * Make a quantitation type for attaching to the new processed data - always log2 transformed
      *
-     * @param  ee          expression experiment we're dealing with
      * @param  preferredQt preferred QT
      * @return QT
      */
-    private QuantitationType getPreferredMaskedDataQuantitationType( ExpressionExperiment ee, QuantitationType preferredQt ) {
-        QuantitationType present = QuantitationType.Factory.newInstance();
-
+    private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
+        QuantitationType present = QuantitationType.Factory.newInstance( preferredQt );
         present.setName( preferredQt.getName() + " - Processed version" );
-        present.setDescription(
-                "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
-
-        present.setGeneralType( preferredQt.getGeneralType() );
-        present.setType( preferredQt.getType() );
-        present.setScale( preferredQt.getScale() );
-        present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
-
-        present.setIsBackground( false );
-        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
-
-        present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
-        present.setIsRecomputedFromRawData(
-                preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fastq etc.
-
+        present.setDescription( "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
         // we do not copy the normalized flag from raw QTs because it does not guarantee to mean it is quantile-normalized
-        // present.setIsNormalized( preferredQt.getIsNormalized() );
-
-        present.setIsRatio( preferredQt.getIsRatio() );
-
+        present.setIsNormalized( false );
         present.setIsMaskedPreferred( true );
-
         return quantitationTypeDao.create( present, ProcessedExpressionDataVector.class );
     }
 
@@ -605,8 +582,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     /**
+     * Remove duplicate elements from a collection of raw vectors.
+     * <p>
+     * If no duplicate elements are found, the original collection is returned.
      */
-    private void removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
+    private Collection<RawExpressionDataVector> removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
         /*
          * Remove rows that are duplicates for the same design element. This can happen for data sets that were merged.
          * We arbitrarily throw one out.
@@ -630,10 +610,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             }
             seenDes.add( de );
         }
-        if ( !toRemove.isEmpty() ) {
-            rawPreferredDataVectors.removeAll( toRemove );
-            log.info( "Removed " + toRemove.size() + " duplicate elements, " + rawPreferredDataVectors.size()
-                    + " remain" );
+
+        if ( toRemove.isEmpty() ) {
+            log.info( "No duplicate elements found, returning all raw vectors." );
+            return rawPreferredDataVectors;
+        } else {
+            Set<RawExpressionDataVector> result = new HashSet<>( rawPreferredDataVectors );
+            result.removeAll( toRemove );
+            log.info( String.format( "Removed %d duplicate elements, %d remain.", toRemove.size(), rawPreferredDataVectors.size() ) );
+            return result;
         }
     }
 
