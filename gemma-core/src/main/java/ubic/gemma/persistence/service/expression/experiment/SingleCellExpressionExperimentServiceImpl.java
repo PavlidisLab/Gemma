@@ -120,14 +120,24 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .map( createSlicer( samples,
                         sliceCellIds( scd, samples, sampleStarts, sampleEnds, totalCells ),
                         sliceCtas( scd, samples, sampleStarts, sampleEnds, totalCells ),
-                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
+                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ),
+                        sliceClms( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
                 .collect( Collectors.toList() );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, SingleCellVectorInitializationConfig config ) {
-        SingleCellDimension scd = config.isIncludeCellIds() ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
+        SingleCellDimensionInitializationConfig initConfig = SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeClms( true )
+                .includeCharacteristics( true )
+                // indices and values are not needed for slicing since we will perform it in the database
+                .includeBitSetValues( true )
+                .build();
+        SingleCellDimension scd = config.isIncludeCellIds() ? getSingleCellDimension( ee, quantitationType, initConfig ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType, initConfig );
         if ( scd == null ) {
             return null;
         }
@@ -152,7 +162,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .map( createSlicer( samples,
                         config.isIncludeCellIds() ? sliceCellIds( scd, samples, sampleStarts, sampleEnds, totalCells ) : null,
                         sliceCtas( scd, samples, sampleStarts, sampleEnds, totalCells ),
-                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
+                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ),
+                        sliceClms( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
                 .collect( Collectors.toList() );
     }
 
@@ -165,14 +176,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             Characteristic[] csi = new Characteristic[totalCells];
             int offset = 0;
             for ( int i = 0; i < bioAssays.size(); i++ ) {
-                System.arraycopy( expressionExperimentDao.getCellTypeAt( cta, sampleStarts[i], sampleEnds[i] ), 0,
+                System.arraycopy( requireNonNull( expressionExperimentDao.getCellTypeAt( cta, sampleStarts[i], sampleEnds[i] ) ), 0,
                         csi, offset, sampleEnds[i] - sampleStarts[i] );
                 offset += sampleEnds[i] - sampleStarts[i];
             }
             List<Characteristic> c = new ArrayList<>();
             int[] i = new int[csi.length];
             populate( csi, c, i );
-            slicedCtas.add( CellTypeAssignment.Factory.newInstance( cta.getName(), c, i ) );
+            CellTypeAssignment slicedCta = CellTypeAssignment.Factory.newInstance( cta.getName(), c, i );
+            slicedCta.setDescription( cta.getDescription() );
+            slicedCta.setPreferred( cta.isPreferred() );
+            slicedCta.setProtocol( cta.getProtocol() );
+            slicedCtas.add( slicedCta );
         }
         return slicedCtas;
     }
@@ -186,8 +201,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             Characteristic[] csi = new Characteristic[totalCells];
             int offset = 0;
             for ( int i = 0; i < bioAssays.size(); i++ ) {
-                System.arraycopy( expressionExperimentDao.getCellLevelCharacteristicAt( clc, sampleStarts[i], sampleEnds[i] ),
-                        0, csi, offset, sampleEnds[i] - sampleStarts[i] );
+                System.arraycopy( requireNonNull( expressionExperimentDao.getCellLevelCharacteristicAt( clc, sampleStarts[i], sampleEnds[i] ) ), 0,
+                        csi, offset, sampleEnds[i] - sampleStarts[i] );
                 offset += sampleEnds[i] - sampleStarts[i];
             }
             List<Characteristic> c = new ArrayList<>();
@@ -209,6 +224,50 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 c.add( cs[j] );
             }
         }
+    }
+
+    /**
+     * In-database version of {@link SingleCellSlicerUtils#sliceClms(SingleCellDimension, List, int[], int[], int)}.
+     */
+    private Set<CellLevelMeasurements> sliceClms( SingleCellDimension scd, List<BioAssay> bioAssays, int[] sampleStarts, int[] sampleEnds, int totalCells ) {
+        Set<CellLevelMeasurements> slicedClms = new HashSet<>();
+        for ( CellLevelMeasurements clm : scd.getCellLevelMeasurements() ) {
+            int sizeInBytes = clm.getRepresentation().getSizeInBytes();
+            byte[] data;
+            if ( clm.getRepresentation() == PrimitiveType.BITSET ) {
+                BitSet b = clm.getDataAsBitSet();
+                BitSet slicedBitSet = new BitSet( totalCells );
+                int offset = 0;
+                for ( int i = 0; i < bioAssays.size(); i++ ) {
+                    for ( int j = 0; j < sampleEnds[i] - sampleStarts[i]; j++ ) {
+                        if ( b.get( sampleStarts[i] + j ) ) {
+                            slicedBitSet.set( offset + j );
+                        }
+                    }
+                    offset += sampleEnds[i] - sampleStarts[i];
+                }
+                data = slicedBitSet.toByteArray();
+            } else if ( sizeInBytes == -1 ) {
+                log.warn( "Cannot slice variable-size data from " + clm + ", skipping." );
+                continue;
+            } else {
+                data = new byte[totalCells * sizeInBytes];
+                int offset = 0;
+                for ( int i = 0; i < bioAssays.size(); i++ ) {
+                    System.arraycopy( requireNonNull( expressionExperimentDao.getCellLevelMeasurementAtAsBytes( clm, sampleStarts[i], sampleEnds[i] ) ),
+                            0, data, offset * sizeInBytes, ( sampleEnds[i] - sampleStarts[i] ) * sizeInBytes );
+                    offset += sampleEnds[i] - sampleStarts[i];
+                }
+            }
+            CellLevelMeasurements slicedClm = CellLevelMeasurements.Factory.newInstance( clm.getName(), CharacteristicUtils.getCategory( clm.getCategory() ) );
+            slicedClm.setType( clm.getType() );
+            slicedClm.setKindCV( clm.getKindCV() );
+            slicedClm.setRepresentation( clm.getRepresentation() );
+            slicedClm.setUnit( clm.getUnit() );
+            slicedClm.setData( data );
+            slicedClms.add( slicedClm );
+        }
+        return slicedClms;
     }
 
     @Override
@@ -713,7 +772,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
-        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(),
+                config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(),
+                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues(),
+                config.isIncludeBitSetValues() );
     }
 
     @Override
@@ -733,7 +795,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
         return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(),
                 config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(),
-                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
+                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues(),
+                config.isIncludeBitSetValues() );
     }
 
     @Override
@@ -816,6 +879,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimension( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(),
+                config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(), config.isIncludeCharacteristics(),
+                config.isIncludeIndices(), config.isIncludeValues(), config.isIncludeBitSetValues() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt );
     }
@@ -838,7 +909,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionWithoutCellIds( ee,
                 config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(),
                 config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices(),
-                config.isIncludeValues() ) );
+                config.isIncludeValues(), config.isIncludeBitSetValues()) );
 
     }
 
@@ -887,10 +958,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Characteristic[] getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, Long ctaId, int startIndex, int endIndexExclusive ) {
-        CellTypeAssignment cta = expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaId );
-        if ( cta == null ) {
-            return null;
-        }
+        CellTypeAssignment cta = requireNonNull( expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaId ),
+                "No cell type assignment with ID " + ctaId + " found." );
         return expressionExperimentDao.getCellTypeAt( cta, startIndex, endIndexExclusive );
     }
 
@@ -1086,7 +1155,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {
-        return expressionExperimentDao.getCellTypeAssignmentByProtocol( ee, qt, protocolName );
+        return expressionExperimentDao.getCellTypeAssignmentsByProtocol( ee, qt, protocolName );
     }
 
     @Override

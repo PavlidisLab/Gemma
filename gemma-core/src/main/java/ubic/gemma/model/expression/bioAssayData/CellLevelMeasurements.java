@@ -163,5 +163,12 @@ public class CellLevelMeasurements extends AbstractDescribable {
             clm.setCategory( Characteristic.Factory.newInstance( category ) );
             return clm;
         }
+
+        public static CellLevelMeasurements newInstance( String name, Category category ) {
+            CellLevelMeasurements clm = new CellLevelMeasurements();
+            clm.setName( name );
+            clm.setCategory( Characteristic.Factory.newInstance( category ) );
+            return clm;
+        }
     }
 }

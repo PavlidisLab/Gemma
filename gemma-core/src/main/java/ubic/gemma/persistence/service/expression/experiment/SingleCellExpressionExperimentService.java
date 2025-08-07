@@ -172,6 +172,12 @@ public interface SingleCellExpressionExperimentService {
         private boolean includeCharacteristics;
         private boolean includeIndices;
         private boolean includeValues;
+        /**
+         * Special edge case of {@link #includeValues} where only bitsets are loaded.
+         * <p>
+         * This is needed because they cannot be sliced in the database like other primitive types.
+         */
+        private boolean includeBitSetValues;
     }
 
     @Nullable
@@ -213,6 +219,10 @@ public interface SingleCellExpressionExperimentService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
@@ -246,6 +256,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee );
 
+    /**
+     * Stream the cell IDs of the preferred single-cell dimension.
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<Stream<String>> streamCellIds( ExpressionExperiment ee, boolean createNewSession );
 
