@@ -215,6 +215,9 @@ public class TsvUtils {
         return String.valueOf( value );
     }
 
+    public static String formatFast( boolean value ) {
+        return String.valueOf( value );
+    }
 
     /**
      * Format a string as a TSV comment.

@@ -137,6 +137,7 @@ public class ExpressionExperimentControllerHelperService {
                 Map<Long, String> f2m = new HashMap<>();
                 Map<Long, String> cta2m = new HashMap<>();
                 Map<Long, String> clc2m = new HashMap<>();
+                Map<Long, String> clm2m = new HashMap<>();
                 for ( CellBrowserMapping m : mapping ) {
                     switch ( m.getType() ) {
                         case FACTOR:
@@ -148,11 +149,18 @@ public class ExpressionExperimentControllerHelperService {
                         case CELL_LEVEL_CHARACTERISTICS:
                             clc2m.put( m.getIdentifier(), m.getMetaColumnId() );
                             break;
+                        case CELL_LEVEL_MEASUREMENTS:
+                            clm2m.put( m.getIdentifier(), m.getMetaColumnId() );
+                            break;
+                        default:
+                            log.warn( "Unsupported CellBrowserMapping type: " + m.getType() );
+
                     }
                 }
                 finalResult.setCellBrowserFactorMetaNamesMap( f2m );
                 finalResult.setCellBrowserCellTypeAssignmentMetaNamesMap( cta2m );
                 finalResult.setCellBrowserCellLevelCharacteristicsMetaNamesMap( clc2m );
+                finalResult.setCellBrowserCellLevelMeasurementsMetaNamesMap( clm2m );
             }
         }
 

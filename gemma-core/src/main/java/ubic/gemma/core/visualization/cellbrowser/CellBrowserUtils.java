@@ -5,6 +5,7 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -75,10 +76,16 @@ public class CellBrowserUtils {
         return clcs;
     }
 
+    public static List<CellLevelMeasurements> getCellLevelMeasurements( SingleCellDimension singleCellDimension ) {
+        return singleCellDimension.getCellLevelMeasurements().stream()
+                .sorted( CellLevelMeasurements.COMPARATOR )
+                .collect( Collectors.toList() );
+    }
+
     /**
      * Generate the column names for the metadata file.
      */
-    public static String[] createMetaColumnNames( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, boolean useRawColumnNames ) {
+    public static String[] createMetaColumnNames( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, List<CellLevelMeasurements> clms, boolean useRawColumnNames ) {
         String[] columnNames = new String[1 + factors.size() + clcs.size()];
         int i = 0;
         columnNames[i++] = "cellId";
@@ -96,6 +103,13 @@ public class CellBrowserUtils {
                 throw new IllegalStateException( clc + " has no name nor characteristics, cannot write header." );
             }
         }
+        for ( CellLevelMeasurements clm : clms ) {
+            if ( clm.getName() != null ) {
+                columnNames[i++] = clm.getName();
+            } else {
+                columnNames[i++] = clm.getCategory().getCategory();
+            }
+        }
         if ( useRawColumnNames ) {
             columnNames = StringUtil.makeUnique( columnNames );
         } else {
@@ -106,11 +120,13 @@ public class CellBrowserUtils {
 
     /**
      * Obtain a mapping between Gemma entities (factors and cell-level characteristics) and the Cell Browser metadata columns.
+     *
+     * @param clms
      * @param useRawColumnNames whether to use raw column names
      */
-    public static List<CellBrowserMapping> createMetadataMapping( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, boolean useRawColumnNames ) {
+    public static List<CellBrowserMapping> createMetadataMapping( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, List<CellLevelMeasurements> clms, boolean useRawColumnNames ) {
         List<CellBrowserMapping> mapping = new ArrayList<>();
-        String[] metaNames = createMetaColumnNames( factors, clcs, useRawColumnNames );
+        String[] metaNames = createMetaColumnNames( factors, clcs, clms, useRawColumnNames );
         int i = 1; // column zero is the cell ID
         for ( ExperimentalFactor factor : factors ) {
             String n = metaNames[i++];
@@ -123,6 +139,10 @@ public class CellBrowserUtils {
             } else {
                 mapping.add( new CellBrowserMapping( CellBrowserMappingType.CELL_LEVEL_CHARACTERISTICS, clc.getId(), getMetaColumnIdentifier( n ), n ) );
             }
+        }
+        for ( CellLevelMeasurements clm : clms ) {
+            String n = metaNames[i++];
+            mapping.add( new CellBrowserMapping( CellBrowserMappingType.CELL_LEVEL_MEASUREMENTS, clm.getId(), getMetaColumnIdentifier( n ), n ) );
         }
         return mapping;
     }

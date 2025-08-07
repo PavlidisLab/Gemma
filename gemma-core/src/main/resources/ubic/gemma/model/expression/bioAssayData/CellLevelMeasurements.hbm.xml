@@ -10,6 +10,12 @@
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
         </id>
+        <property name="name">
+            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description">
+            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
+        </property>
         <property name="type">
             <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)" index="CELL_LEVEL_MEASUREMENTS_TYPE"/>
             <type name="org.hibernate.type.EnumType">

@@ -15,5 +15,9 @@ public enum CellBrowserMappingType {
     /**
      * @see SingleCellDimension#getCellLevelCharacteristics()
      */
-    CELL_LEVEL_CHARACTERISTICS
+    CELL_LEVEL_CHARACTERISTICS,
+    /**
+     * @see SingleCellDimension#getCellLevelMeasurements()
+     */
+    CELL_LEVEL_MEASUREMENTS
 }

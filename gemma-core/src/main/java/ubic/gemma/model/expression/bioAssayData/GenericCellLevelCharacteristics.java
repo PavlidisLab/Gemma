@@ -48,7 +48,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
 
     @Override
     public int hashCode() {
-        return Objects.hash( characteristics, Arrays.hashCode( indices ) );
+        return Objects.hash( super.hashCode(), characteristics, Arrays.hashCode( indices ) );
     }
 
     @Override

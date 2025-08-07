@@ -110,7 +110,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
 
     @Override
     public int hashCode() {
-        return Objects.hash( super.hashCode(), Arrays.hashCode( cellTypeIndices ), cellTypes );
+        return Objects.hash( getName(), Arrays.hashCode( cellTypeIndices ), cellTypes );
     }
 
     @Override

@@ -2,7 +2,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementKind;
@@ -14,13 +14,19 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.Objects;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 @Getter
 @Setter
-public class CellLevelMeasurements extends AbstractIdentifiable {
+public class CellLevelMeasurements extends AbstractDescribable {
+
+    public static final Comparator<CellLevelMeasurements> COMPARATOR = Comparator
+            .comparing( CellLevelMeasurements::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( CellLevelMeasurements::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( CellLevelMeasurements::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     private Characteristic category;
 
@@ -38,6 +44,12 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
 
     @Nullable
     private Unit unit;
+
+    @Override
+    @Nullable
+    public String getName() {
+        return super.getName();
+    }
 
     @Transient
     public double[] getDataAsDoubles() {
@@ -107,7 +119,7 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
 
     @Override
     public int hashCode() {
-        return Objects.hash( category, representation, type, unit, otherKind, kindCV, unit );
+        return Objects.hash( super.hashCode(), category, representation, type, unit, otherKind, kindCV, unit );
     }
 
     @Override
