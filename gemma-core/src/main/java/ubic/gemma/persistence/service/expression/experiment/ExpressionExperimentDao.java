@@ -455,6 +455,16 @@ public interface ExpressionExperimentDao
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType qt );
 
     /**
+     * Obtain the preferred raw data vectors for a given experiment.
+     */
+    Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Obtain the missing value vectors for a given experiment.
+     */
+    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee );
+
+    /**
      * Add raw data vectors with the given quantitation type.
      * @return the number of raw data vectors created
      */

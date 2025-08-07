@@ -3572,6 +3572,29 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from RawExpressionDataVector dedv "
+                                + "join dedv.quantitationType q "
+                                + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
+    public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return ( ( List<RawExpressionDataVector> ) getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from RawExpressionDataVector dedv "
+                                + "join dedv.quantitationType q "
+                                + "where q.type = 'PRESENTABSENT' and dedv.expressionExperiment  = :ee " )
+                .setParameter( "ee", ee )
+                .list() ).stream()
+                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toCollection( ArrayList::new ) ) );
+    }
+
+    @Override
     public int addRawDataVectors( ExpressionExperiment ee, QuantitationType newQt, Collection<RawExpressionDataVector> newVectors ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
