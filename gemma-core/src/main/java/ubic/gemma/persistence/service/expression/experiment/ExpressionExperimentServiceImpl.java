@@ -487,6 +487,30 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if (ee != null) {
+            if ( ee.getPrimaryPublication() != null ) {
+                Hibernate.initialize( ee.getPrimaryPublication() );
+                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
+                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
+                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+            }
+            Set<BibliographicReference> pubs = ee.getOtherRelevantPublications();
+
+            for (BibliographicReference pub : pubs) {
+                Hibernate.initialize( pub );
+                Hibernate.initialize( pub.getMeshTerms() );
+                Hibernate.initialize( pub.getChemicals() );
+                Hibernate.initialize( pub.getKeywords() );
+            }
+        }
+
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
