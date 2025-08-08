@@ -25,9 +25,9 @@ import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 import ubic.gemma.web.taglib.TagWriterUtils;
-import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -187,9 +187,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             /*
              * popupImage is defined in ExpressionExperimentDetails.js
              */
-            int width = 400;
-            int height = 400;
-            String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=4&forceShowLabels=1";
+            int sizeFactor = 2;
+            int width = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            int height = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=" + sizeFactor + "&forceShowLabels=1";
             writer.startTag( "td" );
 
             writer.startTag( "a" );

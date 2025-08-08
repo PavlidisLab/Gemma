@@ -145,7 +145,7 @@ public class ExpressionExperimentQCController {
     /**
      * Maximum size for an image, in pixels.
      */
-    private static final int MAX_QC_IMAGE_SIZE_PX = 800;
+    public static final int MAX_QC_IMAGE_SIZE_PX = 800;
 
     /**
      * Maximum size of a thumbnail, in pixels.
@@ -359,21 +359,32 @@ public class ExpressionExperimentQCController {
         ColorMatrix<String, String> cm = new ColorMatrix<>( matrix );
 
         int row = matrix.rows();
-        int cellsize = ( int ) Math.min( 12, Math.max( 1, sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX / row ) );
+
+        boolean showScalebar = sizeFactor >= 2;
+        // account for the labels if we intend to show them
+        // some of those numbers are in MatrixDisplay
+        int labelSize = ( showLabels || forceShowLabels ) ? 80 : 0;
+        int scalebarSize = showScalebar ? 40 : 0;
+        int cellsize = ( int ) Math.min( sizeFactor * ( DEFAULT_QC_IMAGE_SIZE_PX - labelSize - scalebarSize ) / row, ( double ) ( MAX_QC_IMAGE_SIZE_PX - labelSize - scalebarSize ) / row );
+        // at least 1 pixel per cell
+        cellsize = Math.max( cellsize, 1 );
 
         MatrixDisplay<String, String> writer = new MatrixDisplay<>( cm );
 
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
         if ( forceShowLabels ) {
-            cellsize = minimumCellSizeForText;
+            // make sure that the labels are readable
+            cellsize = Math.max( cellsize, minimumCellSizeForText );
+            reallyShowLabels = true;
+        } else if ( showLabels && cellsize >= minimumCellSizeForText ) {
             reallyShowLabels = true;
         } else {
-            reallyShowLabels = showLabels && cellsize >= minimumCellSizeForText;
+            log.warn( "Asking for labels, but the cell size is too small to display them." );
+            reallyShowLabels = false;
         }
 
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
-        boolean showScalebar = sizeFactor > 2;
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         writer.writeToPng( cm, response.getOutputStream(), reallyShowLabels, showScalebar );
     }
