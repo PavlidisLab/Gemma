@@ -152,6 +152,8 @@ public class ExpressionExperimentQCController {
      */
     private static final int MAX_QC_IMAGE_THUMBNAIL_SIZE_PX = 128;
 
+    private static final double MIN_SIZE_FACTOR = 0.5, MAX_SIZE_FACTOR = 5.0;
+
     @Autowired
     protected MessageSource messageSource;
     @Autowired
@@ -190,9 +192,17 @@ public class ExpressionExperimentQCController {
     private Path analysisStoragePath;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
+    public void detailedFactorAnalysis(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
-        this.writeDetailedFactorAnalysis( ee, response );
+        // compute the size of each chart
+        // this plot is fairly big, so the actual max is going to be 3 * numFactors * MAX_QC_IMAGE_SIZE_PX
+        int perChartSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+        this.writeDetailedFactorAnalysis( ee, perChartSize, response );
     }
 
     @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -256,7 +266,9 @@ public class ExpressionExperimentQCController {
     }
 
     @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void pcaFactors( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
+    public void pcaFactors( @RequestParam("id") Long id, @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor, HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
 
         SVDResult svdo = null;
@@ -268,20 +280,27 @@ public class ExpressionExperimentQCController {
         }
 
         if ( svdo != null ) {
-            this.writePCAFactors( ee, svdo, response );
+            this.writePCAFactors( ee, svdo, sizeFactor, response );
         } else {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            this.writePlaceholderImage( response, size );
         }
     }
 
     @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
+    public void pcaScree(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         SVDResult svdo = svdService.getSvd( ee );
+        int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
         if ( svdo != null ) {
-            this.writePCAScree( svdo, response );
+            this.writePCAScree( svdo, size, response );
         } else {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            this.writePlaceholderImage( response, size );
         }
     }
 
@@ -302,6 +321,8 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "forceShowLabels", defaultValue = "false") boolean forceShowLabels,
             @RequestParam(value = "reg", defaultValue = "false") boolean reg,
             HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiterOrFail( id, EntityNotFoundException::new );
         DoubleMatrix<BioAssay, BioAssay> omatrix = reg ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
@@ -368,6 +389,8 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             @RequestParam(value = "text", defaultValue = "false") boolean text,
             HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadWithMeanVarianceRelation( id );
         if ( ee == null ) {
             throw new EntityNotFoundException( "Could not load experiment with id " + id );
@@ -389,20 +412,23 @@ public class ExpressionExperimentQCController {
             response.setHeader( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
             writer.write( ee, quantitationType, response.getWriter() );
         } else {
+            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
-            writeMeanVariance( mvr, sizeFactor, response );
+            writeMeanVariance( mvr, size, response );
         }
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void visualizeProbeCorrDist( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return;
-        }
-        writeProbeCorrHistImage( ee, response );
+    public void visualizeProbeCorrDist(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+        writeProbeCorrHistImage( ee, size, response );
     }
 
     /**
@@ -418,7 +444,10 @@ public class ExpressionExperimentQCController {
             @RequestParam("analysisId") Long analysisId,
             @RequestParam("rsid") Long rsid,
             @RequestParam(value = "size", required = false) @Nullable Integer size,
+            @RequestParam(value = "sizeFactor", defaultValue = "1.0") double sizeFactor,
             HttpServletResponse response ) throws Exception {
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.loadWithExperimentAnalyzed( analysisId );
         if ( analysis == null ) {
@@ -436,7 +465,8 @@ public class ExpressionExperimentQCController {
             throw new IllegalArgumentException( "Result set with ID " + id + " does not belong to analysis with ID " + analysisId );
         }
         if ( size == null ) {
-            writePValueHistImage( rs, response );
+            int finalSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            writePValueHistImage( rs, finalSize, response );
         } else {
             writePValueHistThumbnailImage( rs, size, response );
         }
@@ -592,6 +622,8 @@ public class ExpressionExperimentQCController {
         if ( clcId != null && ctaName != null ) {
             throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
         }
+        Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
+                "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         QuantitationType qt;
         if ( quantitationTypeId != null ) {
@@ -658,13 +690,8 @@ public class ExpressionExperimentQCController {
         }
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                Math.min( ( int ) ( sizeFactor * 100 * dataset.getNumberOfBoxplots() ), 3 * MAX_QC_IMAGE_SIZE_PX ),
+                dataset.getNumberOfBoxplots() * 150,
                 Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ) );
-    }
-
-    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
-            double height ) {
-        chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
     }
 
     /**
@@ -892,15 +919,15 @@ public class ExpressionExperimentQCController {
         }
     }
 
-    private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
+    private void writeDetailedFactorAnalysis( ExpressionExperiment ee, int perChartSize, HttpServletResponse os ) throws Exception {
         SVDResult svdo = svdService.getSvdFactorAnalysis( ee );
         if ( svdo == null ) {
-            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( os, perChartSize );
             return;
         }
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {
-            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( os, perChartSize );
             return;
         }
         Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = svdo.getFactorCorrelations();
@@ -960,10 +987,6 @@ public class ExpressionExperimentQCController {
 
                 if ( isCategorical ) {
                     this.getCategories( efId, categories );
-                }
-
-                if ( !charts.containsKey( efId.getId() ) ) {
-                    charts.put( efId.getId(), new ArrayList<>() );
                 }
 
                 Double a = factorCorrelations.get( component ).get( efId );
@@ -1070,7 +1093,7 @@ public class ExpressionExperimentQCController {
 
                     chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
 
-                    charts.get( efId.getId() ).add( chart );
+                    charts.computeIfAbsent( efId.getId(), k -> new ArrayList<>( MAX_COMP ) ).add( chart );
                 }
             }
         }
@@ -1078,7 +1101,6 @@ public class ExpressionExperimentQCController {
         /*
          * DATES
          */
-        charts.put( -1L, new ArrayList<>() );
         for ( Integer component : dateCorrelations.keySet() ) {
             String xaxisLabel = componentShorthand + ( component + 1 );
 
@@ -1141,39 +1163,32 @@ public class ExpressionExperimentQCController {
                 xyPlot.setRenderer( renderer );
                 xyPlot.setRangeGridlinesVisible( false );
                 xyPlot.setDomainGridlinesVisible( false );
-                charts.get( -1L ).add( chart );
-
+                charts.computeIfAbsent( -1L, k -> new ArrayList<>( MAX_COMP ) ).add( chart );
             }
         }
 
         /*
          * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
          */
-        //noinspection MathRoundingWithIntArgument
-        int columns = ( int ) Math.ceil( charts.size() );
-        int perChartSize = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+        int columns = charts.size();
         BufferedImage image = new BufferedImage( columns * perChartSize, MAX_COMP * perChartSize,
                 BufferedImage.TYPE_INT_ARGB );
         Graphics2D g2 = image.createGraphics();
         int currentX = 0;
-        int currentY = 0;
         for ( Long id : charts.keySet() ) {
+            int currentY = 0;
             for ( JFreeChart chart : charts.get( id ) ) {
-                this.addChartToGraphics( chart, g2, currentX, currentY, perChartSize, perChartSize );
-                if ( currentY + perChartSize < MAX_COMP * perChartSize ) {
-                    currentY += perChartSize;
-                } else {
-                    currentY = 0;
-                    currentX += perChartSize;
-                }
+                chart.draw( g2, new Rectangle2D.Double( currentX, currentY, perChartSize, perChartSize ), null, null );
+                currentY += perChartSize;
             }
+            currentX += perChartSize;
         }
 
         os.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( os.getOutputStream(), image );
     }
 
-    private void writeMeanVariance( MeanVarianceRelation mvr, double sizeFactor, HttpServletResponse response ) throws Exception {
+    private void writeMeanVariance( MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
         // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
         final int THRESHOLD = 1000;
         final int TRANSLUCENT = 50;
@@ -1183,7 +1198,7 @@ public class ExpressionExperimentQCController {
         final double OFFSET_FACTOR = 0.05f;
 
         if ( mvr == null ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( response, size );
             return;
         }
 
@@ -1191,7 +1206,7 @@ public class ExpressionExperimentQCController {
         XYSeriesCollection collection = this.getMeanVariance( mvr );
 
         if ( collection.getSeries().isEmpty() ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( response, size );
             return;
         }
 
@@ -1224,7 +1239,7 @@ public class ExpressionExperimentQCController {
         double xRange = series.getMaxX() - series.getMinX();
         if ( xRange < 0 ) {
             log.warn( "Min X was greater than Max X: Max=" + series.getMaxY() + " Min= " + series.getMinY() );
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( response, size );
             return;
         }
         double ybuffer = ( yRange ) * OFFSET_FACTOR;
@@ -1241,10 +1256,8 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
-
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize, finalSize );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
     }
 
     /**
@@ -1308,7 +1321,7 @@ public class ExpressionExperimentQCController {
      *
      * @param svdo SVD value object
      */
-    private void writePCAFactors( ExpressionExperiment ee, SVDResult svdo, HttpServletResponse response ) throws Exception {
+    private void writePCAFactors( ExpressionExperiment ee, SVDResult svdo, double sizeFactor, HttpServletResponse response ) throws Exception {
         Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = svdo.getFactorCorrelations();
         // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
@@ -1316,7 +1329,8 @@ public class ExpressionExperimentQCController {
         assert ee.equals( svdo.getExperimentAnalyzed() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            this.writePlaceholderImage( response, size );
             return;
         }
         int maxWidth = 10;
@@ -1379,16 +1393,12 @@ public class ExpressionExperimentQCController {
         /*
          * Give figure more room .. up to a limit
          */
-        int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
-        if ( chart.getCategoryPlot().getCategories().size() > 3 ) {
-            width = width + 40 * ( chart.getCategoryPlot().getCategories().size() - 2 );
-        }
-        width = Math.min( width, MAX_QC_IMAGE_SIZE_PX );
+        int width = chart.getCategoryPlot().getCategories().size() * Math.min( ( int ) ( sizeFactor * 150 ), MAX_QC_IMAGE_SIZE_PX / 2 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width, Math.min( ( int ) sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX, MAX_QC_IMAGE_SIZE_PX ) );
     }
 
-    private void writePCAScree( SVDResult svdo, HttpServletResponse response ) throws Exception {
+    private void writePCAScree( SVDResult svdo, int size, HttpServletResponse response ) throws Exception {
         /*
          * Make a scree plot.
          */
@@ -1409,14 +1419,13 @@ public class ExpressionExperimentQCController {
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
-                ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
     }
 
     /**
      * Write a blank image so user doesn't see the broken icon.
      */
-    private void writePlaceholderImage( HttpServletResponse response, @SuppressWarnings("SameParameterValue") int size ) throws IOException {
+    private void writePlaceholderImage( HttpServletResponse response, int size ) throws IOException {
         BufferedImage buffer = new BufferedImage( size, size, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.lightGray );
@@ -1450,11 +1459,11 @@ public class ExpressionExperimentQCController {
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
     }
 
-    private void writeProbeCorrHistImage( ExpressionExperiment ee, HttpServletResponse response ) throws IOException {
+    private void writeProbeCorrHistImage( ExpressionExperiment ee, int size, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getCorrelHist( ee );
 
         if ( series == null || series.getItemCount() == 0 ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( response, size );
             return;
         }
 
@@ -1470,17 +1479,17 @@ public class ExpressionExperimentQCController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
     }
 
     /**
      * Has to handle the situation where there might be more than one ResultSet.
      */
-    private void writePValueHistImage( ExpressionAnalysisResultSet rs, HttpServletResponse response ) throws IOException {
+    private void writePValueHistImage( ExpressionAnalysisResultSet rs, int finalSize, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
+            writePlaceholderImage( response, finalSize );
             return;
         }
 
@@ -1496,7 +1505,7 @@ public class ExpressionExperimentQCController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize );
     }
 
     /**
