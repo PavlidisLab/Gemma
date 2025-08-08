@@ -20,11 +20,10 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
@@ -135,6 +134,7 @@ import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.
  * @author paul
  */
 @Controller
+@CommonsLog
 public class ExpressionExperimentQCController {
 
     /**
@@ -152,11 +152,6 @@ public class ExpressionExperimentQCController {
      */
     private static final int MAX_QC_IMAGE_THUMBNAIL_SIZE_PX = 128;
 
-    /**
-     * Maximum factor size when up-scaling an image.
-     */
-    private static final int MAX_IMAGE_SIZE_FACTOR = 5;
-    protected final Log log = LogFactory.getLog( getClass().getName() );
     @Autowired
     protected MessageSource messageSource;
     @Autowired
@@ -196,7 +191,7 @@ public class ExpressionExperimentQCController {
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
         this.writeDetailedFactorAnalysis( ee, response );
     }
 
@@ -262,7 +257,7 @@ public class ExpressionExperimentQCController {
 
     @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaFactors( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
 
         SVDResult svdo = null;
         try {
@@ -301,22 +296,17 @@ public class ExpressionExperimentQCController {
     @RequestMapping(value = "/expressionExperiment/visualizeCorrMat.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeCorrMat(
             @RequestParam("id") Long id,
-            @RequestParam(value = "size", required = false) Double sizeFactor,
-            @RequestParam(value = "text", required = false) Boolean text,
-            @RequestParam(value = "showLabels", required = false) Boolean showLabels,
-            @RequestParam(value = "forceShowLabels", required = false) Boolean forceShowLabels,
-            @RequestParam(value = "reg", required = false) Boolean reg,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "text", defaultValue = "false") boolean text,
+            @RequestParam(value = "showLabels", defaultValue = "false") boolean showLabels,
+            @RequestParam(value = "forceShowLabels", defaultValue = "false") boolean forceShowLabels,
+            @RequestParam(value = "reg", defaultValue = "false") boolean reg,
             HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        ee = expressionExperimentService.thawLiter( ee );
-        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiterOrFail( id, EntityNotFoundException::new );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = reg ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             throw new EntityNotFoundException( "No correlation matrix for ee " + id );
-        }
-
-        if ( sizeFactor == null ) {
-            sizeFactor = 1.0;
         }
 
         List<String> stringNames = new ArrayList<>();
@@ -327,7 +317,7 @@ public class ExpressionExperimentQCController {
         matrix.setRowNames( stringNames );
         matrix.setColumnNames( stringNames );
 
-        if ( text != null && text ) {
+        if ( text ) {
             StringWriter s = new StringWriter();
             MatrixWriter<String, String> mw = new MatrixWriter<>( s, new DecimalFormat( "#.##" ) );
             mw.writeMatrix( matrix, true );
@@ -354,11 +344,11 @@ public class ExpressionExperimentQCController {
 
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
-        if ( forceShowLabels != null && forceShowLabels ) {
+        if ( forceShowLabels ) {
             cellsize = minimumCellSizeForText;
             reallyShowLabels = true;
         } else {
-            reallyShowLabels = showLabels != null && ( showLabels && cellsize >= minimumCellSizeForText );
+            reallyShowLabels = showLabels && cellsize >= minimumCellSizeForText;
         }
 
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
@@ -375,8 +365,8 @@ public class ExpressionExperimentQCController {
     @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeMeanVariance(
             @RequestParam("id") Long id,
-            @RequestParam(value = "size", required = false) Double sizeFactor,
-            @RequestParam(value = "text", required = false) Boolean text,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "text", defaultValue = "false") boolean text,
             HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadWithMeanVarianceRelation( id );
         if ( ee == null ) {
@@ -393,7 +383,7 @@ public class ExpressionExperimentQCController {
             return;
         }
 
-        if ( text != null && text ) {
+        if ( text ) {
             MeanVarianceWriter writer = new MeanVarianceWriter( buildInfo, entityUrlBuilder );
             response.setContentType( "text/tab-separated-values" );
             response.setHeader( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
@@ -401,7 +391,7 @@ public class ExpressionExperimentQCController {
         } else {
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
-            writeMeanVariance( mvr, sizeFactor != null ? sizeFactor : 1.0, response );
+            writeMeanVariance( mvr, sizeFactor, response );
         }
     }
 
@@ -427,7 +417,7 @@ public class ExpressionExperimentQCController {
             @RequestParam("id") Long id,
             @RequestParam("analysisId") Long analysisId,
             @RequestParam("rsid") Long rsid,
-            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "size", required = false) @Nullable Integer size,
             HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.loadWithExperimentAnalyzed( analysisId );
@@ -491,9 +481,11 @@ public class ExpressionExperimentQCController {
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeSingleCellSparsityHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void visualizeSingleCellSparsityHeatmap( @RequestParam("id") Long id, @RequestParam("type") String type,
-            @RequestParam(value = "cellSize", required = false) Integer cellSize,
-            @RequestParam(value = "transpose", required = false) Boolean transpose,
+    public void visualizeSingleCellSparsityHeatmap(
+            @RequestParam("id") Long id,
+            @RequestParam("type") String type,
+            @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
+            @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
         Assert.isTrue( cellSize == null || cellSize > 0 );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No dataset with ID " + id + "." );
@@ -511,28 +503,23 @@ public class ExpressionExperimentQCController {
         if ( cellSize != null ) {
             heatmap.setCellSize( cellSize );
         }
-        if ( transpose != null ) {
-            heatmap.setTranspose( transpose );
-        }
+        heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void visualizeHeatmap( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId,
-            @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "cellSize", required = false) Integer cellSize,
-            @RequestParam(value = "transpose", required = false) Boolean transpose,
+    public void visualizeHeatmap(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "dimension", required = false) Long dimensionId,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
+            @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
         Assert.isTrue( cellSize == null || cellSize > 0 );
-        Assert.isTrue( limit == null || ( limit > 0 && limit <= 100 ) );
-        if ( offset == null ) {
-            offset = 0;
-        }
-        if ( limit == null ) {
-            limit = 10;
-        }
+        Assert.isTrue( limit > 0 && limit <= 100 );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "" );
         BioAssayDimension dimension;
         if ( dimensionId != null ) {
@@ -553,28 +540,22 @@ public class ExpressionExperimentQCController {
         if ( cellSize != null ) {
             heatmap.setCellSize( cellSize );
         }
-        if ( transpose != null ) {
-            heatmap.setTranspose( transpose );
-        }
+        heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeSubSetHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void visualizeSubSetHeatmap( @RequestParam("id") Long id,
-            @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "cellSize", required = false) Integer cellSize,
-            @RequestParam(value = "transpose", required = false) Boolean transpose,
+    public void visualizeSubSetHeatmap(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
+            @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
         Assert.isTrue( cellSize == null || cellSize > 0 );
-        Assert.isTrue( limit == null || ( limit > 0 && limit <= 100 ) );
-        if ( offset == null ) {
-            offset = 0;
-        }
-        if ( limit == null ) {
-            limit = 10;
-        }
+        Assert.isTrue( limit > 0 && limit <= 100 );
         ExpressionExperimentSubSet subSet = expressionExperimentSubSetService.loadWithBioAssays( id );
         if ( subSet == null ) {
             throw new EntityNotFoundException( "No subset with ID " + id );
@@ -591,23 +572,22 @@ public class ExpressionExperimentQCController {
         if ( cellSize != null ) {
             heatmap.setCellSize( cellSize );
         }
-        if ( transpose != null ) {
-            heatmap.setTranspose( transpose );
-        }
+        heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeSingleCellDataBoxplot.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void visualizeSingleCellDataBoxplot( @RequestParam("id") Long id,
-            @RequestParam(value = "quantitationType", required = false)
-            @Nullable Long quantitationTypeId,
+    public void visualizeSingleCellDataBoxplot(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "quantitationType", required = false) @Nullable Long quantitationTypeId,
             @RequestParam("designElement") Long designElementId,
-            @RequestParam(value = "assays", required = false) Long[] assayIds,
-            @RequestParam(value = "cellTypeAssignment", required = false) String ctaName,
-            @RequestParam(value = "cellLevelCharacteristics", required = false) Long clcId,
-            @RequestParam(value = "focusedCharacteristic", required = false) Long focusedCharacteristicId,
+            @RequestParam(value = "assays", required = false) @Nullable Long[] assayIds,
+            @RequestParam(value = "cellTypeAssignment", required = false) @Nullable String ctaName,
+            @RequestParam(value = "cellLevelCharacteristics", required = false) @Nullable Long clcId,
+            @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             HttpServletResponse response ) throws IOException {
         if ( clcId != null && ctaName != null ) {
             throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
@@ -678,8 +658,8 @@ public class ExpressionExperimentQCController {
         }
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                Math.min( Math.max( 50 * dataset.getNumberOfBoxplots(), DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ),
-                DEFAULT_QC_IMAGE_SIZE_PX );
+                Math.min( ( int ) ( sizeFactor * 100 * dataset.getNumberOfBoxplots() ), 3 * MAX_QC_IMAGE_SIZE_PX ),
+                Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ) );
     }
 
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
@@ -929,7 +909,6 @@ public class ExpressionExperimentQCController {
 
         assert ee.equals( svdo.getExperimentAnalyzed() );
 
-        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
         Collection<ExperimentalFactor> continuousFactors = new HashSet<>();
@@ -1262,7 +1241,7 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math.min( sizeFactor, MAX_IMAGE_SIZE_FACTOR ) * DEFAULT_QC_IMAGE_SIZE_PX;
+        int finalSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize, finalSize );
@@ -1340,7 +1319,6 @@ public class ExpressionExperimentQCController {
             this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
-        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 10;
 
         Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
