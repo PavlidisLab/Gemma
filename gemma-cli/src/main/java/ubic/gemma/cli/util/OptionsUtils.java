@@ -167,6 +167,18 @@ public class OptionsUtils {
                 .build() );
     }
 
+    public static <T extends Enum<T>> void addEnumSetOption( Options options, String optionName, String longOption, String description, Class<T> enumClass ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOption )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .converter( EnumConverter.of( enumClass ) )
+                .desc( String.format( "%s Possible values are: %s.",
+                        appendIfMissing( description, "." ),
+                        Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
+                .build() );
+    }
+
     /**
      * Obtain the value of an enumerated option.
      * <p>
@@ -176,6 +188,26 @@ public class OptionsUtils {
     public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName ) throws
             org.apache.commons.cli.ParseException {
         return commandLine.getParsedOptionValue( optionName );
+    }
+
+    @Nullable
+    public static <T extends Enum<T>> EnumSet<T> getEnumSetOptionValue( CommandLine commandLine, String optionName ) throws
+            org.apache.commons.cli.ParseException {
+        for ( Option o : commandLine.getOptions() ) {
+            if ( o.getOpt().equals( optionName ) ) {
+                Set<T> result = new HashSet<>();
+                for ( String s : o.getValues() ) {
+                    try {
+                        //noinspection unchecked
+                        result.add( ( T ) o.getConverter().apply( s ) );
+                    } catch ( Throwable e ) {
+                        throw new org.apache.commons.cli.ParseException( e );
+                    }
+                }
+                return EnumSet.copyOf( result );
+            }
+        }
+        return null;
     }
 
     /**

@@ -967,16 +967,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.GeoGrabberCli ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--chunk-size|--file|--output|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --chunk-size --file --help --output -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -startat -startdate -y" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--allowed-taxa|--chunk-size|--file|--output|--series-types|-allowedTaxa|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-seriesTypes|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --allowed-taxa --chunk-size --file --help --output --series-types -allowedTaxa -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -seriesTypes -startat -startdate -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--output|-f|-output) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--chunk-size|--file|--output|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --chunk-size --file --help --output -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -startat -startdate -y" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--allowed-taxa|--chunk-size|--file|--output|--series-types|-allowedTaxa|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-seriesTypes|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --allowed-taxa --chunk-size --file --help --output --series-types -allowedTaxa -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -seriesTypes -startat -startdate -y" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--output|-f|-output) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
