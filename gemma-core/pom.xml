@@ -251,6 +251,38 @@
             <version>${hdf5.version}</version>
         </dependency>
 
+        <!-- rJava -->
+        <dependency>
+            <groupId>org.rosuda.REngine</groupId>
+            <artifactId>REngine</artifactId>
+            <version>${rJava.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.rosuda.REngine</groupId>
+            <artifactId>JRI</artifactId>
+            <version>${rJava.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.rosuda.REngine</groupId>
+            <artifactId>JRIEngine</artifactId>
+            <version>${rJava.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.rosuda.REngine</groupId>
+            <artifactId>Rserve</artifactId>
+            <version>${rserve.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.kohlschutter.junixsocket</groupId>
+            <artifactId>junixsocket-core</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
         <!-- Gemma Slack Bot -->
         <dependency>
             <groupId>com.slack.api</groupId>
