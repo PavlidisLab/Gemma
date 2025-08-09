@@ -221,8 +221,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         if ( delete ) {
             log.info( "Deleting any analyses for experiment=" + ee );
-            differentialExpressionAnalyzerService.deleteAnalyses( ee );
-            addSuccessObject( ee, "Deleted analysis" );
+            int da = differentialExpressionAnalyzerService.deleteAnalyses( ee );
+            addSuccessObject( ee, "Deleted " + da + " analyses." );
             return;
         }
 
@@ -310,8 +310,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Collection<DifferentialExpressionAnalysis> results;
         if ( redo ) {
             results = redoDifferentialExpressionAnalyses( ee, config );
+            addSuccessObject( ee, "Performed differential expression analysis based on a previous analysis." );
         } else {
             results = runDifferentialExpressionAnalyses( ee, config );
+            addSuccessObject( ee, "Performed differential expression analysis." );
         }
 
         if ( config.isPersist() ) {

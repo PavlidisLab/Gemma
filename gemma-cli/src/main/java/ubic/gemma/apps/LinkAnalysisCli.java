@@ -428,6 +428,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
                 throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
             }
+            addSuccessObject( ee, "Deleted coexpression analysis." );
             return;
         }
 
@@ -435,6 +436,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
          * If we're not using the database, always run it.
          */
         if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
+            addSuccessObject( ee, "No need to perform coexpression analysis." );
             return;
         }
 
@@ -451,6 +453,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
 
         linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+        addSuccessObject( ee, "Performed coexpression analysis." );
         log.info( "==== Done: [" + ee.getShortName() + "] ======" );
         log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
     }

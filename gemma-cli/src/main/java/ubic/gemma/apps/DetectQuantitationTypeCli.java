@@ -1,28 +1,21 @@
 package ubic.gemma.apps;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
 
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.inferQuantitationType;
 
-public class DetectQuantitationTypeCli extends ExpressionExperimentManipulatingCLI {
-
-    @Autowired
-    public QuantitationTypeService quantitationTypeService;
+public class DetectQuantitationTypeCli extends ExpressionExperimentVectorsManipulatingCli<DataVector> {
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
@@ -30,8 +23,9 @@ public class DetectQuantitationTypeCli extends ExpressionExperimentManipulatingC
     @Autowired
     public SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
-    @Nullable
-    private String quantitationTypeName;
+    public DetectQuantitationTypeCli() {
+        super( DataVector.class );
+    }
 
     @Nullable
     @Override
@@ -46,44 +40,13 @@ public class DetectQuantitationTypeCli extends ExpressionExperimentManipulatingC
     }
 
     @Override
-    protected void buildExperimentOptions( Options options ) {
-        options.addOption( "qtName", "quantitation-type-name", true, "Name of the quantitation type to process." );
-    }
-
-    @Override
-    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        quantitationTypeName = commandLine.getOptionValue( "qtName" );
-    }
-
-    @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        if ( quantitationTypeName != null ) {
-            QuantitationType qt;
-            try {
-                qt = quantitationTypeService.findByNameAndVectorType( expressionExperiment, quantitationTypeName, RawExpressionDataVector.class );
-            } catch ( NonUniqueQuantitationTypeByNameException e ) {
-                throw new RuntimeException( e );
-            }
-            if ( qt != null ) {
-                detectRawQuantitationType( expressionExperiment, qt );
-            }
+    protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType ) throws Exception {
+        if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            detectRawQuantitationType( ee, qt );
+        } else if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            detectSingleCellQuantitationType( ee, qt );
         } else {
-            quantitationTypeService.findByExpressionExperiment( expressionExperiment, RawExpressionDataVector.class )
-                    .forEach( qt -> detectRawQuantitationType( expressionExperiment, qt ) );
-        }
-        if ( quantitationTypeName != null ) {
-            QuantitationType qt;
-            try {
-                qt = quantitationTypeService.findByNameAndVectorType( expressionExperiment, quantitationTypeName, SingleCellExpressionDataVector.class );
-            } catch ( NonUniqueQuantitationTypeByNameException e ) {
-                throw new RuntimeException( e );
-            }
-            if ( qt != null ) {
-                detectRawQuantitationType( expressionExperiment, qt );
-            }
-        } else {
-            quantitationTypeService.findByExpressionExperiment( expressionExperiment, SingleCellExpressionDataVector.class )
-                    .forEach( qt -> detectSingleCellQuantitationType( expressionExperiment, qt ) );
+            throw new UnsupportedOperationException( "Unsupported vector type " + vectorType );
         }
     }
 

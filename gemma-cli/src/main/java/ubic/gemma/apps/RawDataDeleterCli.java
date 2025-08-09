@@ -35,5 +35,6 @@ public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCl
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         dataDeleterService.deleteRawData( ee, qt );
+        addSuccessObject( ee, qt, "Deleted raw data." );
     }
 }

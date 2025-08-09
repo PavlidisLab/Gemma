@@ -26,5 +26,11 @@ public class SingleCellSparsityMetricsUpdaterCli extends ExpressionExperimentMan
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         singleCellExpressionExperimentService.updateSparsityMetrics( expressionExperiment );
+        addSuccessObject( expressionExperiment, "Updated sparsity metrics." );
+        try {
+            refreshExpressionExperimentFromGemmaWeb( expressionExperiment, false, false );
+        } catch ( Exception e ) {
+            addWarningObject( expressionExperiment, "Failed to refresh dataset from Gemma Web.", e );
+        }
     }
 }

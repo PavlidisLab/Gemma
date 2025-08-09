@@ -52,7 +52,7 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws IOException {
         try {
             String buf;
             if ( changelogEntry != null ) {
@@ -61,8 +61,7 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
                 buf = readChangelogEntryFromConsole( expressionExperiment, null );
             }
             expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
-        } catch ( IOException e ) {
-            addErrorObject( expressionExperiment, e );
+            addSuccessObject( expressionExperiment, "Added entry to the changelog." );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );

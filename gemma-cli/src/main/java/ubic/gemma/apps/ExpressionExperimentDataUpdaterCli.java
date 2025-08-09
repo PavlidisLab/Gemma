@@ -3,6 +3,7 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -64,11 +65,14 @@ public class ExpressionExperimentDataUpdaterCli extends ExpressionExperimentMani
         expressionExperiment = eeService.thawLite( expressionExperiment );
         if ( expressionExperiment.getAccession() == null
                 || !expressionExperiment.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-            log.warn( "Ignoring " + expressionExperiment + " because it is not from GEO." );
+            addWarningObject( expressionExperiment, "Ignoring because it is not from GEO." );
             return;
         }
         geoService.updateFromGEO( expressionExperiment, updateConfig );
-        addSuccessObject( expressionExperiment, "Updated" );
+        addSuccessObject( expressionExperiment, String.format( "Updated %s from GEO.",
+                StringUtils.removeEnd( ( updateExperimentTags ? "experiment tags, " : "" )
+                        + ( updateSampleCharacteristics ? "sample characteristics, " : "" )
+                        + ( updatePublications ? "publications" : "" ), ", " ) ) );
         try {
             refreshExpressionExperimentFromGemmaWeb( expressionExperiment, false, false );
         } catch ( Exception e ) {

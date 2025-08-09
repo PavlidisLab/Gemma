@@ -83,12 +83,11 @@ public class ExperimentalDesignImportCli extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws IOException {
         try ( InputStream inputStream = Files.newInputStream( experimentalDesignFile ) ) {
             expressionExperiment = ees.thawLite( expressionExperiment );
             edImp.importDesign( expressionExperiment, inputStream );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+            addSuccessObject( expressionExperiment, "Imported experimental design from " + experimentalDesignFile + "." );
         }
     }
 }

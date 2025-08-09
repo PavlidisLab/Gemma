@@ -25,6 +25,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
@@ -64,6 +66,7 @@ import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
  * @author paul
  */
 @Service
+@Transactional(propagation = Propagation.NEVER)
 public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private static final Log log = LogFactory.getLog( SplitExperimentServiceImpl.class );

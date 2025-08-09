@@ -83,16 +83,19 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
         switch ( mode ) {
             case DELETE_ALL:
                 dataDeleterService.deleteSingleCellData( ee, qt );
+                addSuccessObject( ee, qt, "Deleted single cell data." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );
                 CellTypeAssignment cta = entityLocator.locateCellTypeAssignment( ee, qt, ctaIdentifier );
                 singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta );
+                addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_CELL_LEVEL_CHARACTERISTICS:
                 ee = eeService.thawLite( ee );
                 CellLevelCharacteristics clc = entityLocator.locateCellLevelCharacteristics( ee, qt, clcIdentifier );
                 singleCellExpressionExperimentService.removeCellLevelCharacteristics( ee, qt, clc );
+                addSuccessObject( ee, qt, "Deleted cell-level characteristics: " + clc + "." );
                 break;
             default:
                 throw new UnsupportedOperationException( "Unsupported mode: " + mode + "." );

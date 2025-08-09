@@ -46,5 +46,6 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         processedExpressionDataVectorService.reorderByDesign( ee );
+        addSuccessObject( ee, "Re-ordered vectors by the experimental design." );
     }
 }

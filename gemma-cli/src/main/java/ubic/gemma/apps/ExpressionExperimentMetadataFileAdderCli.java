@@ -82,6 +82,8 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
                 expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
             }
             expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
+            addSuccessObject( expressionExperiment, String.format( "Added %s%sto the metadata file.", filename,
+                    fileType != null ? " (" + fileType + ")" : "" ) );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );

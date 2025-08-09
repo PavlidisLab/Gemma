@@ -26,11 +26,15 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 
@@ -83,22 +87,22 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) throws IOException {
         ee = eeService.thawLite( ee );
+        Path dest;
         if ( standardLocation ) {
-            try {
-                expressionDataFileService.writeOrLocateDesignFile( ee, isForce() );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
-            }
+            ExpressionExperiment finalEe = ee;
+            dest = expressionDataFileService.writeOrLocateDesignFile( ee, isForce() )
+                    .map( LockedPath::closeAndGetPath )
+                    .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {
-            try ( PrintWriter writer = new PrintWriter( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+            dest = Paths.get( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" );
+            try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
                 edWriter.setUseRawColumnNames( useRawColumnNames );
                 edWriter.write( ee, writer );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
             }
         }
+        addSuccessObject( ee, "Wrote experimental design to " + dest + "." );
     }
 }

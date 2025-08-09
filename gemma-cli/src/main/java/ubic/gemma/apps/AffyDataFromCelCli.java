@@ -68,7 +68,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption( Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null ).desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
+        addSingleExperimentOption( options, Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null )
+                .desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                 + "ensure you used the right official CDF/MPS configuration" ).argName( "path" ).hasArg().build() );
         addForceOption( options );
     }
@@ -84,78 +85,79 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
-        if ( StringUtils.isNotBlank( aptFile ) ) {
-            throw new IllegalArgumentException(
-                    "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
-        }
-        super.processExpressionExperiments( expressionExperiments );
-    }
-
-    @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-
         // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
         if ( StringUtils.isNotBlank( aptFile ) ) {
-            if ( this.celchip != null ) {
-                throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
-            }
+            processFromAptFile( ee );
+        } else {
+            reprocessFromCel( ee );
+        }
+    }
 
-            ee = this.eeService.thawLite( ee );
-
-            Collection<ArrayDesign> arrayDesignsUsed = this.eeService
-                    .getArrayDesignsUsed( ee );
-            if ( arrayDesignsUsed.size() > 1 ) {
-                throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
-                        + " for experiment that uses multiple platforms" );
-            }
-
-            ArrayDesign ad = arrayDesignsUsed.iterator().next();
-
-            if ( !GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
-                throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
-            }
-
-            log.info( "Loading data from " + aptFile );
-            try {
-                serv.addAffyDataFromAPTOutput( ee, aptFile );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-            return;
+    private void processFromAptFile( ExpressionExperiment ee ) {
+        if ( this.celchip != null ) {
+            throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
         }
 
         ee = this.eeService.thawLite( ee );
-        Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
+
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService
+                .getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
+                    + " for experiment that uses multiple platforms" );
+        }
+
+        ArrayDesign ad = arrayDesignsUsed.iterator().next();
+
+        if ( !GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
+            throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
+        }
+
+        log.info( "Loading data from " + aptFile );
+        try {
+            serv.addAffyDataFromAPTOutput( ee, aptFile );
+            addSuccessObject( ee, "Loaded Affy data from " + aptFile + "." );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    private void reprocessFromCel( ExpressionExperiment ee ) {
+        ee = this.eeService.thawLite( ee );
 
         /*
          * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
          */
         if ( this.checkForAlreadyDone( ee ) && !isForce() ) {
-            throw new RuntimeException( "Was already run before, use -force" );
+            addWarningObject( ee, "Was already run before, use -force to reload Affy data." );
+            return;
         }
 
         /*
          * Avoid repeated attempts that won't work e.g. no data available.
          */
         if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !isForce() ) {
-            throw new RuntimeException( "Failed before, use -force to re-attempt" );
+            addWarningObject( ee, "Loading Affy data failed before, use -force to re-attempt." );
+            return;
         }
 
         if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
-            throw new UnsupportedOperationException( "Can only process from CEL for data sets with an external accession" );
+            addWarningObject( ee, "Can only process from CEL for data sets with an external accession." );
+            return;
         }
 
+        Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
         ArrayDesign ad = adsUsed.iterator().next();
 
         /*
          * Even if there are multiple platforms, we assume they are all Affy, or all not. If not, that's your
          * problem :) (seriously, we could check...)
          */
-        if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
+        if ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
             log.info( ad + " looks like Affy array" );
             serv.reprocessAffyDataFromCel( ee );
-            addSuccessObject( ee );
+            addSuccessObject( ee, "Reprocessed Affy data from CEL." );
         } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
             ad = asd.thawLite( ad );
             ArrayDesign mergee = ad.getMergees().iterator().next();
@@ -169,7 +171,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             if ( GeoPlatform.isAffyPlatform( mergee.getShortName() ) ) {
                 log.info( ad + " looks like Affy array made from merger of other platforms" );
                 serv.reprocessAffyDataFromCel( ee );
-                addSuccessObject( ee );
+                addSuccessObject( ee, "Reprocessed Affy data from CEL from a merged platform." );
             } else {
                 throw new RuntimeException( ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
             }

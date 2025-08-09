@@ -155,8 +155,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
                 try {
                     ref = finder.locatePrimaryReference( experiment );
                 } catch ( IOException e ) {
-                    addErrorObject( experiment, e );
-                    log.error( e );
+                    addErrorObject( experiment, "Failed to locate primary publication.", e );
                     return;
                 }
 
@@ -171,7 +170,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             if ( experiment.getPrimaryPublication() == null ) {
                 nullPubCount.add( experiment.getShortName() );
             } else if ( experiment.getPrimaryPublication().getPubAccession().getAccession()
-                    .equals( pubmedIds.get( experiment.getShortName() ).toString() ) ) {
+                    .equals( pubmedIds.get( experiment.getShortName() ) ) ) {
                 samePubCount.add( experiment.getShortName() );
             } else {
                 diffPubCount.add( experiment.getShortName() );
@@ -181,7 +180,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             ref = ( BibliographicReference ) persisterHelper.persist( ref );
             experiment.setPrimaryPublication( ref );
             ees.update( experiment );
-            addSuccessObject( experiment );
+            addSuccessObject( experiment, "Updated primary publication." );
         } catch ( Exception e ) {
             addErrorObject( experiment, experiment.getShortName() + " (id=" + experiment.getId() + ") update failed.", e );
         }

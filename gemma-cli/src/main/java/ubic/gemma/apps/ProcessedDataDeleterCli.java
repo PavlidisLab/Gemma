@@ -35,5 +35,6 @@ public class ProcessedDataDeleterCli extends ExpressionExperimentVectorsManipula
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         dataDeleterService.deleteProcessedData( ee );
+        addSuccessObject( ee, qt, "Deleted processed data." );
     }
 }

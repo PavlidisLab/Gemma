@@ -53,15 +53,20 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( this.noNeedToRun( ee, null ) ) {
+            addSuccessObject( ee, "No need to compute coexpression matrix." );
             return;
         }
         ee = eeService.thawLiter( ee );
         try {
             if ( isForce() ) {
                 sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
+                addSuccessObject( ee, "Recomputed coexpression matrix." );
             } else {
                 if ( sampleCoexpressionAnalysisService.retrieveExisting( ee ) == null ) {
                     sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
+                    addSuccessObject( ee, "Recomputed coexpression matrix." );
+                } else {
+                    addSuccessObject( ee, "Experiment already has a coexpression matrix." );
                 }
             }
         } catch ( FilteringException e ) {

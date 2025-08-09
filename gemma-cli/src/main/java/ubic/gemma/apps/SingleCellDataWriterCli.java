@@ -224,15 +224,14 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 did = "Wrote";
                 written = raw( ee, qt );
             }
-            addSuccessObject( ee, String.format( "%s%s single-cell vectors%s for %s%s%s.", did,
+            addSuccessObject( ee, qt, String.format( "%s%s single-cell vectors%s for %s%s.", did,
                     written > 0 ? " " + written : "",
                     fileName != null ? " to " + fileName : "",
-                    qt,
                     useEnsemblIds ? " using Ensembl IDs" : "",
                     samples != null ? " for the following assays: " + String.join( ", ", samples ) : ""
             ) );
         } catch ( IOException e ) {
-            addErrorObject( ee, e );
+            addErrorObject( ee, qt, e );
         }
     }
 

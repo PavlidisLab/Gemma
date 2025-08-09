@@ -129,10 +129,9 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
                 }
             }
         }
-        addSuccessObject( ee, String.format( "Wrote%s raw vectors%s for %s%s.",
+        addSuccessObject( ee, qt, String.format( "Wrote%s raw vectors%s for %s.",
                 written > 0 ? " " + written : "",
                 fileName != null ? " to " + fileName : "",
-                qt,
                 samples != null ? " for the following assays: " + String.join( ", ", samples ) : ""
         ) );
     }

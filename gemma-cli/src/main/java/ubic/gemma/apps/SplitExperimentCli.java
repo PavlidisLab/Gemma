@@ -25,7 +25,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.util.Collection;
@@ -89,7 +93,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         ee = this.eeService.thawLite( ee );
         ExperimentalFactor splitOn = this.guessFactor( ee );
-        serv.split( ee, splitOn, true );
+        ExpressionExperimentSet eeSet = serv.split( ee, splitOn, true );
+        addSuccessObject( ee, "Experiment was split on " + splitOn + " into " + eeSet.getExperiments().size() + " parts." );
     }
 
     /**

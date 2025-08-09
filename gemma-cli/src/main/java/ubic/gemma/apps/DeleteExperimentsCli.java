@@ -113,13 +113,9 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        try {
-            log.info( "--------- Deleting " + ee + " --------" );
-            this.eeService.remove( ee );
-            addSuccessObject( ee );
-            log.info( "--------- Finished Deleting " + ee + " -------" );
-        } catch ( Exception ex ) {
-            addErrorObject( ee, ex );
-        }
+        log.info( "--------- Deleting " + ee + " --------" );
+        this.eeService.remove( ee );
+        addSuccessObject( ee, "Deleted" );
+        log.info( "--------- Finished Deleting " + ee + " -------" );
     }
 }
