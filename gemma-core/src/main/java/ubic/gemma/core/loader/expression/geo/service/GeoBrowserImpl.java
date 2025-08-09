@@ -676,6 +676,10 @@ public class GeoBrowserImpl implements GeoBrowser {
             if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession ) ) != null ) {
                 return document;
             }
+            log.warn( "Could not retrieve detailed GEO series MINiML from GEO FTP server (via HTTPS) for " + geoAccession + ", will attempt to retrieve it from GEO Query..." );
+            if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
+                return document;
+            }
         } catch ( Exception e ) {
             if ( e.getCause() instanceof SAXParseException ) {
                 // the stacktrace is not very useful, and if the error is reproducible, it will also happen on the GEO Query side
@@ -687,6 +691,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 throw e;
             }
         }
+        log.warn( "Could not retrieve detailed GEO series MINiML for " + geoAccession + " from either GEO FTP server (via HTTPS) nor GEO Query." );
         return null;
     }
 
@@ -724,9 +729,10 @@ public class GeoBrowserImpl implements GeoBrowser {
                     }
                 }
             } catch ( FileNotFoundException e ) {
+                log.warn( "No GEO series metadata found at " + documentUrl + "." );
                 return null;
             }
-            log.warn( "No entry with name " + geoAccession + "_family.xml" + " found in " + documentUrl + "." );
+            log.warn( "No entry with name " + geoAccession + "_family.xml found in " + documentUrl + "." );
             return null;
         }, "retrieve " + documentUrl );
     }
@@ -742,6 +748,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
                 return EntrezXmlUtils.parse( tis );
             } catch ( FileNotFoundException e ) {
+                log.warn( "No GEO series metadata found at " + documentUrl + "." );
                 return null;
             }
         }, "retrieve " + documentUrl );
