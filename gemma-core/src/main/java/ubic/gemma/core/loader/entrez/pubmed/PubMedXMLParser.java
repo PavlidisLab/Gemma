@@ -203,6 +203,7 @@ public class PubMedXMLParser {
                     break;
                 case "NlmUniqueID":
                 case "Country":
+                case "ISSNLinking":
                     break;
                 default:
                     log.warn( "Unrecognized node name " + jitem.getNodeName() + " in MedlineJournalInfo" );
