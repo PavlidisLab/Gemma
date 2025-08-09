@@ -57,5 +57,12 @@
                    lazy="false" fetch="join">
          <column name="EXTERNAL_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
+      <set name="otherExternalAccessions" cascade="all-delete-orphan">
+         <cache usage="read-write"/>
+         <key foreign-key="OTHER_EXTERNAL_ACCESSION_BIO_MATERIAL_FKC">
+            <column name="BIO_MATERIAL_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntry"/>
+      </set>
    </class>
 </hibernate-mapping>
