@@ -55,7 +55,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         }
 
         @Bean
-        public ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationService() {
+        public ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationHelperService() {
             return new ProcessedExpressionDataVectorCreationHelperServiceImpl();
         }
 
@@ -76,7 +76,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
     }
 
     @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorCreationHelperService;
+    private ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationHelperService;
 
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
