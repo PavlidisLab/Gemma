@@ -470,6 +470,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This file has a large TAR attachment in its ATAC-seq samples that should be ignored.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE196516() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE196516" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();

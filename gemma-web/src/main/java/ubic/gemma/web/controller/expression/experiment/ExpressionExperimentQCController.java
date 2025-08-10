@@ -25,7 +25,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
@@ -81,6 +80,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.core.visualization.SingleCellDataBoxplot;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.corej11.visualization.ChartUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -153,6 +153,11 @@ public class ExpressionExperimentQCController {
     private static final int MAX_QC_IMAGE_THUMBNAIL_SIZE_PX = 128;
 
     private static final double MIN_SIZE_FACTOR = 0.5, MAX_SIZE_FACTOR = 5.0;
+
+    /**
+     * DPI for rendering images.
+     */
+    private static final float DEFAULT_DPI = 300;
 
     @Autowired
     protected MessageSource messageSource;
@@ -298,7 +303,7 @@ public class ExpressionExperimentQCController {
         SVDResult svdo = svdService.getSvd( ee );
         int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
         if ( svdo != null ) {
-            this.writePCAScree( svdo, size, response );
+            this.writePCAScree( ee, svdo, size, response );
         } else {
             this.writePlaceholderImage( response, size );
         }
@@ -426,7 +431,7 @@ public class ExpressionExperimentQCController {
             int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
-            writeMeanVariance( mvr, size, response );
+            writeMeanVariance( ee, mvr, size, response );
         }
     }
 
@@ -477,9 +482,9 @@ public class ExpressionExperimentQCController {
         }
         if ( size == null ) {
             int finalSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
-            writePValueHistImage( rs, finalSize, response );
+            writePValueHistImage( ee, rs, finalSize, response );
         } else {
-            writePValueHistThumbnailImage( rs, size, response );
+            writePValueHistThumbnailImage( ee, rs, size, response );
         }
     }
 
@@ -547,7 +552,7 @@ public class ExpressionExperimentQCController {
         heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image, DEFAULT_DPI, "Single-cell sparsity heatmap for " + ee.getShortName(), buildInfo );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -584,7 +589,7 @@ public class ExpressionExperimentQCController {
         heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image, DEFAULT_DPI, "Expression data heatmap for " + ee.getShortName(), buildInfo );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeSubSetHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -616,7 +621,7 @@ public class ExpressionExperimentQCController {
         heatmap.setTranspose( transpose );
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image, DEFAULT_DPI, "Expression data heatmap for " + subSet.getName(), buildInfo );
     }
 
     @RequestMapping(value = "/expressionExperiment/visualizeSingleCellDataBoxplot.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -702,7 +707,8 @@ public class ExpressionExperimentQCController {
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
                 dataset.getNumberOfBoxplots() * 150,
-                Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ) );
+                Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
+                "Single-cell data boxplot for " + ee.getShortName(), buildInfo );
     }
 
     /**
@@ -1196,10 +1202,11 @@ public class ExpressionExperimentQCController {
         }
 
         os.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( os.getOutputStream(), image );
+        ChartUtils.writeBufferedImageAsPNG( os.getOutputStream(), image, DEFAULT_DPI,
+                "Detailed factor analysis for " + ee.getShortName(), buildInfo );
     }
 
-    private void writeMeanVariance( MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
+    private void writeMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
         // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
         final int THRESHOLD = 1000;
         final int TRANSLUCENT = 50;
@@ -1268,7 +1275,8 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().setDomainAxis( xAxis );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
+                "Mean-variance plot for " + ee.getShortName(), buildInfo );
     }
 
     /**
@@ -1404,12 +1412,15 @@ public class ExpressionExperimentQCController {
         /*
          * Give figure more room .. up to a limit
          */
-        int width = chart.getCategoryPlot().getCategories().size() * Math.min( ( int ) ( sizeFactor * 150 ), MAX_QC_IMAGE_SIZE_PX / 2 );
+        int barWidth = Math.min( ( int ) ( sizeFactor * 120 ), 300 );
+        int width = chart.getCategoryPlot().getCategories().size() * MAX_COMP * barWidth;
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width, Math.min( ( int ) sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX, MAX_QC_IMAGE_SIZE_PX ) );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width,
+                Math.min( ( int ) sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX, MAX_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
+                "PCA factors for " + ee.getShortName(), buildInfo );
     }
 
-    private void writePCAScree( SVDResult svdo, int size, HttpServletResponse response ) throws Exception {
+    private void writePCAScree( ExpressionExperiment ee, SVDResult svdo, int size, HttpServletResponse response ) throws Exception {
         /*
          * Make a scree plot.
          */
@@ -1430,7 +1441,7 @@ public class ExpressionExperimentQCController {
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI, "PCA scree for " + ee.getShortName(), buildInfo );
     }
 
     /**
@@ -1444,7 +1455,7 @@ public class ExpressionExperimentQCController {
         g.setColor( Color.black );
         g.drawString( "Not available", size / 4, size / 4 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer, DEFAULT_DPI, "Placeholder image", buildInfo );
     }
 
     /**
@@ -1467,7 +1478,7 @@ public class ExpressionExperimentQCController {
         g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
         g.drawString( "N/A", 9, size );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer, DEFAULT_DPI, "Placeholder thumbnail", buildInfo );
     }
 
     private void writeProbeCorrHistImage( ExpressionExperiment ee, int size, HttpServletResponse response ) throws IOException {
@@ -1490,13 +1501,14 @@ public class ExpressionExperimentQCController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
+                "Probe correlation histogram for " + ee.getShortName(), buildInfo );
     }
 
     /**
      * Has to handle the situation where there might be more than one ResultSet.
      */
-    private void writePValueHistImage( ExpressionAnalysisResultSet rs, int finalSize, HttpServletResponse response ) throws IOException {
+    private void writePValueHistImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int finalSize, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
@@ -1516,13 +1528,13 @@ public class ExpressionExperimentQCController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize, DEFAULT_DPI, "P-value histogram for " + ee.getShortName(), buildInfo );
     }
 
     /**
      * Write p-value histogram thumbnail image.
      */
-    private void writePValueHistThumbnailImage( ExpressionAnalysisResultSet rs, int size, HttpServletResponse response ) throws IOException {
+    private void writePValueHistThumbnailImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int size, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
@@ -1555,7 +1567,7 @@ public class ExpressionExperimentQCController {
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         int finalSize = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize + 16, finalSize + 9 );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize + 16, finalSize + 9, DEFAULT_DPI, "P-value histogram thumbnail for " + ee.getShortName(), buildInfo );
     }
 
     /**
