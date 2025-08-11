@@ -77,6 +77,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MeanVarianceWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.visualization.ChartThemeUtils;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.core.visualization.SingleCellDataBoxplot;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
@@ -130,6 +131,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+import static ubic.gemma.core.visualization.ChartThemeUtils.getGemmaChartTheme;
 
 /**
  * @author paul
@@ -195,8 +197,6 @@ public class ExpressionExperimentQCController {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-    @Autowired
-    private ChartTheme chartTheme;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
@@ -205,6 +205,7 @@ public class ExpressionExperimentQCController {
     public void detailedFactorAnalysis(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
@@ -212,7 +213,7 @@ public class ExpressionExperimentQCController {
         // compute the size of each chart
         // this plot is fairly big, so the actual max is going to be 3 * numFactors * MAX_QC_IMAGE_SIZE_PX
         int perChartSize = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
-        this.writeDetailedFactorAnalysis( ee, perChartSize, response );
+        this.writeDetailedFactorAnalysis( ee, perChartSize, ChartThemeUtils.getGemmaChartTheme( font ), response );
     }
 
     @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -276,7 +277,10 @@ public class ExpressionExperimentQCController {
     }
 
     @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void pcaFactors( @RequestParam("id") Long id, @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor, HttpServletResponse response ) throws Exception {
+    public void pcaFactors( @RequestParam("id") Long id,
+            @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
+            HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
@@ -290,7 +294,7 @@ public class ExpressionExperimentQCController {
         }
 
         if ( svdo != null ) {
-            this.writePCAFactors( ee, svdo, sizeFactor, response );
+            this.writePCAFactors( ee, svdo, sizeFactor, response, font );
         } else {
             int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             this.writePlaceholderImage( response, size );
@@ -301,6 +305,7 @@ public class ExpressionExperimentQCController {
     public void pcaScree(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
@@ -308,7 +313,7 @@ public class ExpressionExperimentQCController {
         SVDResult svdo = svdService.getSvd( ee );
         int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
         if ( svdo != null ) {
-            this.writePCAScree( ee, svdo, size, response );
+            this.writePCAScree( ee, svdo, size, font, response );
         } else {
             this.writePlaceholderImage( response, size );
         }
@@ -411,6 +416,7 @@ public class ExpressionExperimentQCController {
             @RequestParam("id") Long id,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             @RequestParam(value = "text", defaultValue = "false") boolean text,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
@@ -438,7 +444,7 @@ public class ExpressionExperimentQCController {
             int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
-            writeMeanVariance( ee, quantitationType, mvr, size, response );
+            writeMeanVariance( ee, quantitationType, mvr, size, font, response );
         }
     }
 
@@ -446,12 +452,13 @@ public class ExpressionExperimentQCController {
     public void visualizeProbeCorrDist(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
-        writeProbeCorrHistImage( ee, size, response );
+        writeProbeCorrHistImage( ee, size, font, response );
     }
 
     /**
@@ -468,6 +475,7 @@ public class ExpressionExperimentQCController {
             @RequestParam("rsid") Long rsid,
             @RequestParam(value = "size", required = false) @Nullable Integer size,
             @RequestParam(value = "sizeFactor", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws Exception {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
@@ -489,9 +497,9 @@ public class ExpressionExperimentQCController {
         }
         if ( size == null ) {
             int finalSize = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
-            writePValueHistImage( ee, rs, finalSize, response );
+            writePValueHistImage( ee, rs, finalSize, font, response );
         } else {
-            writePValueHistThumbnailImage( ee, rs, size, response );
+            writePValueHistThumbnailImage( ee, rs, size, font, response );
         }
     }
 
@@ -641,6 +649,7 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "cellLevelCharacteristics", required = false) @Nullable Long clcId,
             @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
+            @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws IOException {
         if ( clcId != null && ctaName != null ) {
             throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
@@ -704,7 +713,7 @@ public class ExpressionExperimentQCController {
                 dataset.setFocusedCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
             }
         }
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
                 "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
                 "Assay", "Expression data (log10)", dataset.createDataset(), ctaName != null || clcId != null );
@@ -926,7 +935,7 @@ public class ExpressionExperimentQCController {
         }
     }
 
-    private void writeDetailedFactorAnalysis( ExpressionExperiment ee, int perChartSize, HttpServletResponse os ) throws Exception {
+    private void writeDetailedFactorAnalysis( ExpressionExperiment ee, int perChartSize, ChartTheme chartTheme, HttpServletResponse os ) throws Exception {
         SVDResult svdo = svdService.getSvdFactorAnalysis( ee );
         if ( svdo == null ) {
             writePlaceholderImage( os, perChartSize );
@@ -1191,7 +1200,7 @@ public class ExpressionExperimentQCController {
                 "Detailed factor analysis for " + ee.getShortName(), buildInfo );
     }
 
-    private void writeMeanVariance( ExpressionExperiment ee, QuantitationType quantitationType, MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
+    private void writeMeanVariance( ExpressionExperiment ee, QuantitationType quantitationType, MeanVarianceRelation mvr, int size, String font, HttpServletResponse response ) throws Exception {
         // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
         final int THRESHOLD = 1000;
         final int TRANSLUCENT = 50;
@@ -1217,7 +1226,7 @@ public class ExpressionExperimentQCController {
         String xAxisLabel = "Mean (" + unit + ")";
         String yAxisLabel = "Variance (" + unit + "²)";
 
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createScatterPlot( "", xAxisLabel, yAxisLabel, collection, PlotOrientation.VERTICAL, false,
                         false, false );
@@ -1324,8 +1333,9 @@ public class ExpressionExperimentQCController {
      * Visualization of the correlation of principal components with factors or the date samples were run.
      *
      * @param svdo SVD value object
+     * @param font
      */
-    private void writePCAFactors( ExpressionExperiment ee, SVDResult svdo, double sizeFactor, HttpServletResponse response ) throws Exception {
+    private void writePCAFactors( ExpressionExperiment ee, SVDResult svdo, double sizeFactor, HttpServletResponse response, String font ) throws Exception {
         Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = svdo.getFactorCorrelations();
         // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
@@ -1370,7 +1380,7 @@ public class ExpressionExperimentQCController {
                 series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
             }
         }
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createBarChart( "", "Factors", "Component assoc.", series, PlotOrientation.VERTICAL, true, false,
                         false );
@@ -1403,7 +1413,7 @@ public class ExpressionExperimentQCController {
                 "PCA factors for " + ee.getShortName(), buildInfo );
     }
 
-    private void writePCAScree( ExpressionExperiment ee, SVDResult svdo, int size, HttpServletResponse response ) throws Exception {
+    private void writePCAScree( ExpressionExperiment ee, SVDResult svdo, int size, String font, HttpServletResponse response ) throws Exception {
         /*
          * Make a scree plot.
          */
@@ -1413,7 +1423,7 @@ public class ExpressionExperimentQCController {
             return;
         }
         int MAX_COMPONENTS_FOR_SCREE = 10;
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createBarChart( "", "Component (up to " + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
                         PlotOrientation.VERTICAL, false, false, false );
@@ -1462,7 +1472,7 @@ public class ExpressionExperimentQCController {
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer, DEFAULT_DPI, "Placeholder thumbnail", buildInfo );
     }
 
-    private void writeProbeCorrHistImage( ExpressionExperiment ee, int size, HttpServletResponse response ) throws IOException {
+    private void writeProbeCorrHistImage( ExpressionExperiment ee, int size, String font, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getCorrelHist( ee );
 
         if ( series == null || series.getItemCount() == 0 ) {
@@ -1472,7 +1482,7 @@ public class ExpressionExperimentQCController {
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
                         false, false );
@@ -1488,7 +1498,7 @@ public class ExpressionExperimentQCController {
     /**
      * Has to handle the situation where there might be more than one ResultSet.
      */
-    private void writePValueHistImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int finalSize, HttpServletResponse response ) throws IOException {
+    private void writePValueHistImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int finalSize, String font, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
@@ -1498,7 +1508,7 @@ public class ExpressionExperimentQCController {
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "P-value", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
                         false, false );
@@ -1515,7 +1525,7 @@ public class ExpressionExperimentQCController {
     /**
      * Write p-value histogram thumbnail image.
      */
-    private void writePValueHistThumbnailImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int size, HttpServletResponse response ) throws IOException {
+    private void writePValueHistThumbnailImage( ExpressionExperiment ee, ExpressionAnalysisResultSet rs, int size, String font, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
@@ -1525,7 +1535,7 @@ public class ExpressionExperimentQCController {
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
-        ChartFactory.setChartTheme( chartTheme );
+        ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
 

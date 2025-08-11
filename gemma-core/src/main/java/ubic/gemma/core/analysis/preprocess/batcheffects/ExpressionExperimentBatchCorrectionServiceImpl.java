@@ -17,7 +17,6 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import cern.colt.matrix.DoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jfree.chart.ChartTheme;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -29,6 +28,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.visualization.ChartThemeUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
@@ -74,9 +74,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private ChartTheme chartTheme;
 
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee ) {
@@ -323,7 +320,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          * Process
          */
         ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<>( matrix, designU );
-        comBat.setChartTheme( chartTheme );
+        comBat.setChartTheme( ChartThemeUtils.getGemmaChartTheme( "Arial" ) );
 
         DoubleMatrix2D results = null;
 
