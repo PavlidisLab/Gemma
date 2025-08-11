@@ -1,9 +1,8 @@
-package ubic.gemma.core.visualization.cellbrowser;
+package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.datastructure.matrix.io.SingleCellMetadataWriter;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -21,18 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Write metadata file for the Cell Browser visualization tool.
- * @author poirigui
- */
 @CommonsLog
-public class CellBrowserMetadataWriter implements SingleCellMetadataWriter {
+public class TabularSingleCellMetadataWriter implements SingleCellMetadataWriter {
 
     @Setter
     private boolean useBioAssayIds = false;
-    /**
-     * If true, use column names as they appear in the database.
-     */
     @Setter
     private boolean useRawColumnNames = false;
     @Setter
@@ -71,9 +63,10 @@ public class CellBrowserMetadataWriter implements SingleCellMetadataWriter {
     }
 
     private void writeHeader( List<ExperimentalFactor> factors, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        String[] columnNames = new String[1 + factors.size() + clcs.size()];
+        String[] columnNames = new String[2 + factors.size() + clcs.size()];
         int i = 0;
-        columnNames[i++] = "cellId";
+        columnNames[i++] = "sample_id";
+        columnNames[i++] = "cell_id";
         for ( ExperimentalFactor factor : factors ) {
             columnNames[i++] = factor.getName();
         }
@@ -107,7 +100,14 @@ public class CellBrowserMetadataWriter implements SingleCellMetadataWriter {
     }
 
     public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        writer.append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
+        if ( useBioAssayIds ) {
+            writer.append( String.valueOf( bioAssay.getId() ) );
+        } else if ( useRawColumnNames ) {
+            writer.append( bioAssay.getShortName() != null ? bioAssay.getShortName() : bioAssay.getName() );
+        } else {
+            writer.append( ExpressionDataWriterUtils.constructAssayName( bioAssay ) );
+        }
+        writer.append( "\t" ).append( cellId );
         for ( ExperimentalFactor factor : factors ) {
             FactorValue value = factorValueMap.get( factor ).get( bioAssay.getSampleUsed() );
             writer.append( "\t" );

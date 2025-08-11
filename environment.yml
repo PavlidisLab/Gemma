@@ -1,0 +1,15 @@
+name: gemma
+dependencies:
+  - r=4.4
+  - r-rserve
+  - r-rjava
+  - repeatmasker
+  - blast
+  - sra-tools
+  - hdf5=1.12
+  - python
+  - pip
+  - pip:
+    - anndata
+    - scipy
+    - numpy

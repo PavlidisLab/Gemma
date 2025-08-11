@@ -13,7 +13,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Interface for bulk expression data matrices.
