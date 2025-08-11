@@ -389,8 +389,10 @@ public class ExpressionExperimentQCController {
             reallyShowLabels = true;
         } else if ( showLabels && cellsize >= minimumCellSizeForText ) {
             reallyShowLabels = true;
+        } else if ( showLabels ) {
+            log.warn( "Asking for labels, but the cell size (" + cellsize + ") is too small to display them." );
+            reallyShowLabels = false;
         } else {
-            log.warn( "Asking for labels, but the cell size is too small to display them." );
             reallyShowLabels = false;
         }
 
