@@ -62,6 +62,8 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -796,6 +798,22 @@ public class DatasetsWebService {
             return respond( datasetArgService.getSamples( datasetArg, qt ) );
         }
         return respond( datasetArgService.getSamples( datasetArg ) );
+    }
+
+    @GET
+    @Path("/{dataset}/publications")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
+            @PathParam( "dataset" ) DatasetArg<?> datasetArg
+    ){
+
+        List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
+        return respond(out);
+
     }
 
     /**
