@@ -394,7 +394,6 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
  * @param height the height of the image to generate, in pixels
  */
 Gemma.ExpressionExperimentPage.popupImage = function( url, width, height ) {
-   url = url + "&nocache=" + Math.floor( Math.random() * 1000 );
    var b = new Ext.Window( {
       modal : true,
       stateful : false,

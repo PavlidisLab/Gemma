@@ -711,6 +711,7 @@ public class ExpressionExperimentQCController {
             dataset.createAnnotations().forEach( chart.getCategoryPlot()::addAnnotation );
         }
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
                 ( int ) ( sizeFactor * dataset.getNumberOfBoxplots() * 150 ),
                 ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
@@ -1255,6 +1256,8 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().getDomainAxis().setRange( newXMin, newXMax );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
                 "Mean-variance plot for " + ee.getShortName(), buildInfo );
     }
@@ -1392,6 +1395,7 @@ public class ExpressionExperimentQCController {
          */
         int width = ( int ) ( sizeFactor * Math.min( chart.getCategoryPlot().getCategories().size() * MAX_COMP * 120, DEFAULT_QC_IMAGE_SIZE_PX ) );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width,
                 ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
                 "PCA factors for " + ee.getShortName(), buildInfo );
@@ -1417,6 +1421,7 @@ public class ExpressionExperimentQCController {
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI, "PCA scree for " + ee.getShortName(), buildInfo );
     }
 
@@ -1473,6 +1478,7 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().setDomainGridlinesVisible( false );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
                 "Probe correlation histogram for " + ee.getShortName(), buildInfo );
     }
@@ -1500,6 +1506,7 @@ public class ExpressionExperimentQCController {
         chart.getXYPlot().getDomainAxis().setRange( -0.01, 1.01 );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize, DEFAULT_DPI, "P-value histogram for " + ee.getShortName(), buildInfo );
     }
 
@@ -1536,6 +1543,7 @@ public class ExpressionExperimentQCController {
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         int finalSize = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
+        response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize, DEFAULT_DPI, "P-value histogram thumbnail for " + ee.getShortName(), buildInfo );
     }
 
