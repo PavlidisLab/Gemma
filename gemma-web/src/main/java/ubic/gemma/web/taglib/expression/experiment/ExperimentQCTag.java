@@ -305,8 +305,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
              */
             String detailsUrl = contextPath + "/expressionExperiment/detailedFactorAnalysis.html?id=" + this.expressionExperiment.getId();
 
-            int width = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
-            int height = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
+            int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay + POPUP_WINDOW_PADDING_PX;
+            int height = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
 
             writer.startTag( "td" );
             writer.startTag( "a" );

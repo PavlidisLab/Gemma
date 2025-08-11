@@ -1168,19 +1168,19 @@ public class ExpressionExperimentQCController {
         /*
          * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
          */
-        int columns = charts.size();
-        BufferedImage image = new BufferedImage( columns * perChartSize, MAX_COMP * perChartSize,
+        int rows = charts.size();
+        BufferedImage image = new BufferedImage( MAX_COMP * perChartSize, rows * perChartSize,
                 BufferedImage.TYPE_INT_ARGB );
         Graphics2D g2 = image.createGraphics();
-        int currentX = 0;
+        int currentY = 0;
         for ( Long id : charts.keySet() ) {
-            int currentY = 0;
+            int currentX = 0;
             for ( JFreeChart chart : charts.get( id ) ) {
                 chartTheme.apply( chart );
                 chart.draw( g2, new Rectangle2D.Double( currentX, currentY, perChartSize, perChartSize ), null, null );
-                currentY += perChartSize;
+                currentX += perChartSize;
             }
-            currentX += perChartSize;
+            currentY += perChartSize;
         }
 
         os.setContentType( MediaType.IMAGE_PNG_VALUE );
