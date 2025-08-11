@@ -1093,8 +1093,6 @@ public class ExpressionExperimentQCController {
                         plot.setRenderer( renderer );
                     }
 
-                    chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
-
                     charts.computeIfAbsent( efId.getId(), k -> new ArrayList<>( MAX_COMP ) ).add( chart );
                 }
             }
@@ -1151,8 +1149,6 @@ public class ExpressionExperimentQCController {
 
                 XYPlot xyPlot = chart.getXYPlot();
 
-                chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
-
                 // standard renderer makes lines.
                 XYDotRenderer renderer = new XYDotRenderer();
                 renderer.setDotHeight( 3 );
@@ -1180,6 +1176,7 @@ public class ExpressionExperimentQCController {
         for ( Long id : charts.keySet() ) {
             int currentY = 0;
             for ( JFreeChart chart : charts.get( id ) ) {
+                chartTheme.apply( chart );
                 chart.draw( g2, new Rectangle2D.Double( currentX, currentY, perChartSize, perChartSize ), null, null );
                 currentY += perChartSize;
             }
@@ -1453,8 +1450,6 @@ public class ExpressionExperimentQCController {
         g.drawLine( 8, size + 5, size + 8, size + 5 ); // x-axis
         g.drawLine( 8, 5, 8, size + 5 ); // y-axis
         g.setColor( Color.black );
-        Font font = g.getFont();
-        g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
         g.drawString( "N/A", 9, size );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer, DEFAULT_DPI, "Placeholder thumbnail", buildInfo );
