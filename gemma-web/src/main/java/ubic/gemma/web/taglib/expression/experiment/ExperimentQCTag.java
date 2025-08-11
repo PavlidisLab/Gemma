@@ -44,6 +44,11 @@ import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 @Setter
 public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttributes {
 
+    /**
+     * Amount of padding (vertical and horizontal) to apply to popup windows that display QC images.
+     */
+    public static final int POPUP_WINDOW_PADDING_PX = 60;
+
     private transient StaticAssetResolver staticAssetResolver;
     private transient WebEntityUrlBuilder entityUrlBuilder;
 
@@ -188,8 +193,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
              * popupImage is defined in ExpressionExperimentDetails.js
              */
             int sizeFactor = 2;
-            int width = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
-            int height = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            int width = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
+            int height = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
             String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=" + sizeFactor + "&forceShowLabels=1";
             writer.startTag( "td" );
 
@@ -259,6 +264,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.startTag( "img" );
             writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaScree.html?id=" + this.expressionExperiment.getId() );
             writer.writeAttribute( "alt", "Bar plot of the top 10 PCA components." );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
             writer.endTag(); // </img>
 
             if ( eeManagerId != null ) {
@@ -298,8 +305,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
              */
             String detailsUrl = contextPath + "/expressionExperiment/detailedFactorAnalysis.html?id=" + this.expressionExperiment.getId();
 
-            int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors;
-            int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay;
+            int width = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
+            int height = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
 
             writer.startTag( "td" );
             writer.startTag( "a" );
@@ -309,6 +316,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.startTag( "img" );
             writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaFactors.html?id=" + this.expressionExperiment.getId() );
             writer.writeAttribute( "alt", "Bar plot of the association between the factors and the top 3 PCA components." );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            // TODO: infer the width from the number of factors
             writer.endTag(); // </img>
             writer.endTag(); // </a>
             writer.endTag(); // </td>
@@ -325,8 +334,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
              * popupImage is defined in ExpressinExperimentDetails.js
              */
             int scaleLarge = 2;
-            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
-            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
+            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
             String bigImageUrl = contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=" + scaleLarge;
             writer.startTag( "td" );
             writer.startTag( "a" );

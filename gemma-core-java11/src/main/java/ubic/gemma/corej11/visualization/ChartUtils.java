@@ -14,10 +14,6 @@ import java.io.OutputStream;
  */
 public class ChartUtils {
 
-    public static void applyCurrentTheme( JFreeChart chart ) {
-        org.jfree.chart.ChartUtils.applyCurrentTheme( chart );
-    }
-
     public static void writeChartAsPNG( OutputStream out, JFreeChart chart, int width, int height, double dpi, String title, BuildInfo buildInfo ) throws IOException {
         BufferedImage bufferedImage = chart.createBufferedImage( width, height, null );
         writeBufferedImageAsPNG( out, bufferedImage, dpi, title, buildInfo );

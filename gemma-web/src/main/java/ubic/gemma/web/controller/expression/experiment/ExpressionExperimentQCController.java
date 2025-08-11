@@ -25,8 +25,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartTheme;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
@@ -152,7 +152,9 @@ public class ExpressionExperimentQCController {
      */
     private static final int MAX_QC_IMAGE_THUMBNAIL_SIZE_PX = 128;
 
-    private static final double MIN_SIZE_FACTOR = 0.5, MAX_SIZE_FACTOR = 5.0;
+    private static final double
+            MIN_SIZE_FACTOR = 0.5,
+            MAX_SIZE_FACTOR = 2.0;
 
     /**
      * DPI for rendering images.
@@ -192,6 +194,8 @@ public class ExpressionExperimentQCController {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private ChartTheme chartTheme;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
@@ -206,7 +210,7 @@ public class ExpressionExperimentQCController {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
         // compute the size of each chart
         // this plot is fairly big, so the actual max is going to be 3 * numFactors * MAX_QC_IMAGE_SIZE_PX
-        int perChartSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+        int perChartSize = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
         this.writeDetailedFactorAnalysis( ee, perChartSize, response );
     }
 
@@ -287,7 +291,7 @@ public class ExpressionExperimentQCController {
         if ( svdo != null ) {
             this.writePCAFactors( ee, svdo, sizeFactor, response );
         } else {
-            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             this.writePlaceholderImage( response, size );
         }
     }
@@ -301,7 +305,7 @@ public class ExpressionExperimentQCController {
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         SVDResult svdo = svdService.getSvd( ee );
-        int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+        int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
         if ( svdo != null ) {
             this.writePCAScree( ee, svdo, size, response );
         } else {
@@ -370,7 +374,7 @@ public class ExpressionExperimentQCController {
         // some of those numbers are in MatrixDisplay
         int labelSize = ( showLabels || forceShowLabels ) ? 80 : 0;
         int scalebarSize = showScalebar ? 40 : 0;
-        int cellsize = ( int ) Math.min( sizeFactor * ( DEFAULT_QC_IMAGE_SIZE_PX - labelSize - scalebarSize ) / row, ( double ) ( MAX_QC_IMAGE_SIZE_PX - labelSize - scalebarSize ) / row );
+        int cellsize = ( int ) ( sizeFactor * ( DEFAULT_QC_IMAGE_SIZE_PX - labelSize - scalebarSize ) / row );
         // at least 1 pixel per cell
         cellsize = Math.max( cellsize, 1 );
 
@@ -428,7 +432,7 @@ public class ExpressionExperimentQCController {
             response.setHeader( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getMeanVarianceRelationFilename( ee ) ) + "\"" );
             writer.write( ee, quantitationType, response.getWriter() );
         } else {
-            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
             writeMeanVariance( ee, mvr, size, response );
@@ -443,7 +447,7 @@ public class ExpressionExperimentQCController {
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
                 "The size factor factor must be between " + MIN_SIZE_FACTOR + " and " + MAX_SIZE_FACTOR + "." );
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+        int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
         writeProbeCorrHistImage( ee, size, response );
     }
 
@@ -481,7 +485,7 @@ public class ExpressionExperimentQCController {
             throw new IllegalArgumentException( "Result set with ID " + id + " does not belong to analysis with ID " + analysisId );
         }
         if ( size == null ) {
-            int finalSize = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            int finalSize = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             writePValueHistImage( ee, rs, finalSize, response );
         } else {
             writePValueHistThumbnailImage( ee, rs, size, response );
@@ -697,6 +701,7 @@ public class ExpressionExperimentQCController {
                 dataset.setFocusedCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
             }
         }
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
                 "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
                 "Assay", "Expression data (log10)", dataset.createDataset(), ctaName != null || clcId != null );
@@ -706,8 +711,8 @@ public class ExpressionExperimentQCController {
         }
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                dataset.getNumberOfBoxplots() * 150,
-                Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
+                ( int ) ( sizeFactor * dataset.getNumberOfBoxplots() * 150 ),
+                ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
                 "Single-cell data boxplot for " + ee.getShortName(), buildInfo );
     }
 
@@ -817,25 +822,6 @@ public class ExpressionExperimentQCController {
             return series;
 
         }
-    }
-
-    /**
-     * @return JFreeChart XYSeries representing the histogram for the requested result set
-     */
-    private XYSeries getDiffExPvalueHistXYSeries( ExpressionAnalysisResultSet rs ) {
-        Histogram hist = expressionAnalysisResultSetService.loadPvalueDistribution( rs );
-        if ( hist != null ) {
-            XYSeries xySeries;
-            xySeries = new XYSeries( rs.getId(), true, true );
-            Double[] binEdges = hist.getBinEdges();
-            double[] counts = hist.getArray();
-            assert binEdges.length == counts.length;
-            for ( int i = 0; i < binEdges.length; i++ ) {
-                xySeries.add( binEdges[i].doubleValue(), counts[i] );
-            }
-            return xySeries;
-        }
-        return null;
     }
 
     /**
@@ -972,7 +958,6 @@ public class ExpressionExperimentQCController {
         int MAX_COMP = 3;
 
         Map<Long, List<JFreeChart>> charts = new LinkedHashMap<>();
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         /*
          * FACTORS
          */
@@ -1078,7 +1063,6 @@ public class ExpressionExperimentQCController {
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         renderer.setUseOutlinePaint( false );
                         renderer.setUseFillPaint( true );
-                        renderer.setDefaultFillPaint( Color.white );
                         CategoryAxis domainAxis = plot.getDomainAxis();
                         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
                     } else {
@@ -1093,6 +1077,7 @@ public class ExpressionExperimentQCController {
                                         ArrayUtils.toPrimitive( eigenGene ) } );
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
+                        ChartFactory.setChartTheme( chartTheme );
                         chart = ChartFactory
                                 .createScatterPlot( title, null, xaxisLabel, series, PlotOrientation.VERTICAL, false,
                                         false, false );
@@ -1101,7 +1086,6 @@ public class ExpressionExperimentQCController {
                         plot.setDomainGridlinesVisible( false );
 
                         XYItemRenderer renderer = plot.getRenderer();
-                        renderer.setDefaultPaint( Color.white );
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                         renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
@@ -1159,6 +1143,7 @@ public class ExpressionExperimentQCController {
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
 
+                ChartFactory.setChartTheme( chartTheme );
                 JFreeChart chart = ChartFactory
                         .createTimeSeriesChart( "Dates: " + xaxisLabel + " " + String.format( "r=%.2f", a ), null,
                                 xaxisLabel, dataset, false, false, false );
@@ -1169,7 +1154,6 @@ public class ExpressionExperimentQCController {
 
                 // standard renderer makes lines.
                 XYDotRenderer renderer = new XYDotRenderer();
-                renderer.setDefaultFillPaint( Color.white );
                 renderer.setDotHeight( 3 );
                 renderer.setDotWidth( 3 );
                 renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) ); // has no effect, need dotheight.
@@ -1228,14 +1212,13 @@ public class ExpressionExperimentQCController {
             return;
         }
 
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createScatterPlot( "", "mean (log2)", "variance (log2)", collection, PlotOrientation.VERTICAL, false,
                         false, false );
 
         // adjust colors and shapes
         XYRegressionRenderer renderer = new XYRegressionRenderer();
-        renderer.setDefaultPaint( Color.white );
         XYSeries series = collection.getSeries( 0 );
         int alpha = series.getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
         renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
@@ -1348,7 +1331,7 @@ public class ExpressionExperimentQCController {
         assert ee.equals( svdo.getExperimentAnalyzed() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
-            int size = Math.min( ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX );
+            int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             this.writePlaceholderImage( response, size );
             return;
         }
@@ -1385,18 +1368,16 @@ public class ExpressionExperimentQCController {
                 series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
             }
         }
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createBarChart( "", "Factors", "Component assoc.", series, PlotOrientation.VERTICAL, true, false,
                         false );
 
         chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
         renderer.setShadowVisible( false );
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
-        ChartUtils.applyCurrentTheme( chart );
 
         CategoryAxis domainAxis = chart.getCategoryPlot().getDomainAxis();
         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
@@ -1410,13 +1391,12 @@ public class ExpressionExperimentQCController {
         }
 
         /*
-         * Give figure more room .. up to a limit
+         * Give figure more room... up to a limit
          */
-        int barWidth = Math.min( ( int ) ( sizeFactor * 120 ), 300 );
-        int width = chart.getCategoryPlot().getCategories().size() * MAX_COMP * barWidth;
+        int width = ( int ) ( sizeFactor * Math.min( chart.getCategoryPlot().getCategories().size() * MAX_COMP * 120, DEFAULT_QC_IMAGE_SIZE_PX ) );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width,
-                Math.min( ( int ) sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX, MAX_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
+                ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_DPI,
                 "PCA factors for " + ee.getShortName(), buildInfo );
     }
 
@@ -1430,13 +1410,12 @@ public class ExpressionExperimentQCController {
             return;
         }
         int MAX_COMPONENTS_FOR_SCREE = 10;
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createBarChart( "", "Component (up to " + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
                         PlotOrientation.VERTICAL, false, false, false );
 
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
         renderer.setShadowVisible( false );
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
@@ -1465,11 +1444,11 @@ public class ExpressionExperimentQCController {
         size = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
         // Make the image a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        BufferedImage buffer = new BufferedImage( size + 16, size + 9,
+        BufferedImage buffer = new BufferedImage( ( int ) ( 1.4 * size ), size,
                 BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.white );
-        g.fillRect( 0, 0, size + 16, size + 9 );
+        g.fillRect( 0, 0, ( int ) ( 1.4 * size ), size );
         g.setColor( Color.gray );
         g.drawLine( 8, size + 5, size + 8, size + 5 ); // x-axis
         g.drawLine( 8, 5, 8, size + 5 ); // y-axis
@@ -1489,16 +1468,14 @@ public class ExpressionExperimentQCController {
             return;
         }
 
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
                         false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
@@ -1518,14 +1495,14 @@ public class ExpressionExperimentQCController {
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "P-value", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
                         false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
+        // allows for seeing the edges of the P-value histogram
+        chart.getXYPlot().getDomainAxis().setRange( -0.01, 1.01 );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize, DEFAULT_DPI, "P-value histogram for " + ee.getShortName(), buildInfo );
@@ -1542,15 +1519,12 @@ public class ExpressionExperimentQCController {
             return;
         }
 
-        series.add( -0.01, 0.0 );
-
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
                 .createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
 
-        chart.getXYPlot().setBackgroundPaint( new Color( 230, 230, 230 ) );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         chart.getXYPlot().setOutlineVisible( false ); // around the plot
@@ -1567,7 +1541,26 @@ public class ExpressionExperimentQCController {
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         int finalSize = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize + 16, finalSize + 9, DEFAULT_DPI, "P-value histogram thumbnail for " + ee.getShortName(), buildInfo );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * finalSize ), finalSize, DEFAULT_DPI, "P-value histogram thumbnail for " + ee.getShortName(), buildInfo );
+    }
+
+    /**
+     * @return JFreeChart XYSeries representing the histogram for the requested result set
+     */
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionAnalysisResultSet rs ) {
+        Histogram hist = expressionAnalysisResultSetService.loadPvalueDistribution( rs );
+        if ( hist != null ) {
+            XYSeries xySeries;
+            xySeries = new XYSeries( rs.getId(), true, true );
+            Double[] binEdges = hist.getBinEdges();
+            double[] counts = hist.getArray();
+            assert binEdges.length == counts.length;
+            for ( int i = 0; i < binEdges.length; i++ ) {
+                xySeries.add( binEdges[i].doubleValue(), counts[i] );
+            }
+            return xySeries;
+        }
+        return null;
     }
 
     /**
