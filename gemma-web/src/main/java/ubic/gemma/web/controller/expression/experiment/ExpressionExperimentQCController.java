@@ -85,6 +85,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
@@ -435,7 +436,7 @@ public class ExpressionExperimentQCController {
             int size = ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX );
             // FIXME might be something better to do
             response.setContentType( MediaType.IMAGE_PNG_VALUE );
-            writeMeanVariance( ee, mvr, size, response );
+            writeMeanVariance( ee, quantitationType, mvr, size, response );
         }
     }
 
@@ -1190,7 +1191,7 @@ public class ExpressionExperimentQCController {
                 "Detailed factor analysis for " + ee.getShortName(), buildInfo );
     }
 
-    private void writeMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
+    private void writeMeanVariance( ExpressionExperiment ee, QuantitationType quantitationType, MeanVarianceRelation mvr, int size, HttpServletResponse response ) throws Exception {
         // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
         final int THRESHOLD = 1000;
         final int TRANSLUCENT = 50;
@@ -1212,9 +1213,13 @@ public class ExpressionExperimentQCController {
             return;
         }
 
+        String unit = QuantitationTypeUtils.getUnit( quantitationType );
+        String xAxisLabel = "Mean (" + unit + ")";
+        String yAxisLabel = "Variance (" + unit + "²)";
+
         ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory
-                .createScatterPlot( "", "mean (log2)", "variance (log2)", collection, PlotOrientation.VERTICAL, false,
+                .createScatterPlot( "", xAxisLabel, yAxisLabel, collection, PlotOrientation.VERTICAL, false,
                         false, false );
 
         // adjust colors and shapes
@@ -1249,13 +1254,8 @@ public class ExpressionExperimentQCController {
         double newYMax = series.getMaxY() + ybuffer;
         double newXMin = series.getMinX() - xbuffer;
         double newXMax = series.getMaxX() + xbuffer;
-
-        ValueAxis yAxis = new NumberAxis( "Variance" );
-        yAxis.setRange( newYMin, newYMax );
-        ValueAxis xAxis = new NumberAxis( "Mean" );
-        xAxis.setRange( newXMin, newXMax );
-        chart.getXYPlot().setRangeAxis( yAxis );
-        chart.getXYPlot().setDomainAxis( xAxis );
+        chart.getXYPlot().getRangeAxis().setRange( newYMin, newYMax );
+        chart.getXYPlot().getDomainAxis().setRange( newXMin, newXMax );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size, DEFAULT_DPI,
