@@ -20,6 +20,7 @@
 	</parent>
 	<modules>
 		<module>gemma-core</module>
+		<module>gemma-core-java11</module>
 		<module>gemma-cli</module>
 		<module>gemma-rest</module>
 		<module>gemma-web</module>
@@ -800,6 +801,8 @@
 		</plugins>
 	</reporting>
 	<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 		<gsec.version>0.0.21</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
@@ -835,6 +838,7 @@
 			<!-- FIXME: remove this once we've migrated to Spring 5 -->
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
+			--add-opens=java.desktop/com.sun.imageio.plugins.png=ALL-UNNAMED
 		</jvmOptions>
 		<!-- JVM options used in tests -->
 		<testJvmOptions>

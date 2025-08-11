@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
@@ -183,5 +184,35 @@ public class QuantitationTypeUtils {
         }
         description += s;
         qt.setDescription( description + s );
+    }
+
+    /**
+     * @return a unit, or null if the QT is unitless (e.g. ratio)
+     */
+    @Nullable
+    public static String getUnit( QuantitationType quantitationType ) {
+        if ( quantitationType.getIsRatio() ) {
+            // ratio are unitless
+            return null;
+        }
+        if ( quantitationType.getName().contains( "log2cpm" ) && quantitationType.getScale() == ScaleType.LOG2 ) {
+            return "log2cpm";
+        }
+        switch ( quantitationType.getScale() ) {
+            case COUNT:
+                return "count";
+            case PERCENT:
+                return "%";
+            case LOG1P:
+                return "log1p";
+            case LOG10:
+                return "log10";
+            case LOG2:
+                return "log2";
+            case LN:
+                return "ln";
+            default:
+                return "?";
+        }
     }
 }

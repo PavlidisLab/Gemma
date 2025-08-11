@@ -6,6 +6,7 @@ import ubic.gemma.cli.util.CLI;
 import ubic.gemma.cli.util.CliContext;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.List;
 
 public class TestCli implements CLI {

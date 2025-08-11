@@ -28,6 +28,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.visualization.ChartThemeUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
@@ -319,6 +320,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          * Process
          */
         ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<>( matrix, designU );
+        comBat.setChartTheme( ChartThemeUtils.getGemmaChartTheme( "Arial" ) );
 
         DoubleMatrix2D results = null;
 

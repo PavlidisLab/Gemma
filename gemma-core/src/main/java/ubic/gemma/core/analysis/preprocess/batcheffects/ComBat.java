@@ -24,14 +24,12 @@ import cern.jet.math.Functions;
 import cern.jet.random.Gamma;
 import cern.jet.random.Normal;
 import cern.jet.random.engine.MersenneTwister;
+import lombok.Setter;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtils;
-import org.jfree.chart.JFreeChart;
+import org.jfree.chart.*;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -44,7 +42,6 @@ import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.util.concurrent.Executors;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -102,6 +99,11 @@ class ComBat<R, C> {
      */
     private DoubleMatrix2D x;
 
+    /**
+     * Theme to use for rendering the ComBat diagnostic plots.
+     */
+    @Setter
+    private ChartTheme chartTheme = StandardChartTheme.createLegacyTheme();
 
     /**
      * Constructor that can be used just for testing correctability (data is not provided) - FIXME refactor so it's not a constructor.
@@ -164,33 +166,38 @@ class ComBat<R, C> {
 
         try ( OutputStream os = Files.newOutputStream( tmpfile ) ) {
             this.writePlot( os, ghplot, ghtheory );
-
-            /*
-             * View the distribution of deltaHat, which we assume has an inverse gamma distribution
-             */
-            DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
-            Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
-            XYSeries dhplot = deltaHatHist.plot();
-            Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
-
-            Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
-
-            for ( int i = 0; i < 10000; i++ ) {
-                double invg = 1.0 / g.nextDouble();
-                deltaHatT.fill( invg );
-            }
-            XYSeries dhtheory = deltaHatT.plot();
-
-            tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
-            ComBat.log.info( tmpfile );
-
-            try ( OutputStream os2 = Files.newOutputStream( tmpfile ) ) {
-                this.writePlot( os2, dhplot, dhtheory );
-            }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
+        /*
+         * View the distribution of deltaHat, which we assume has an inverse gamma distribution
+         */
+        DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
+        Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
+        XYSeries dhplot = deltaHatHist.plot();
+        Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
+
+        Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
+
+        for ( int i = 0; i < 10000; i++ ) {
+            double invg = 1.0 / g.nextDouble();
+            deltaHatT.fill( invg );
+        }
+        XYSeries dhtheory = deltaHatT.plot();
+
+        try {
+            tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        ComBat.log.info( tmpfile );
+
+        try ( OutputStream os2 = Files.newOutputStream( tmpfile ) ) {
+            this.writePlot( os2, dhplot, dhtheory );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -353,24 +360,16 @@ class ComBat<R, C> {
         return meansubtracted.assign( varsq, Functions.div );
     }
 
-    private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) {
-        // ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+    private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) throws IOException {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( empirical );
         xySeriesCollection.addSeries( theory );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "Magnitude", "Density", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
-
-        try {
-            int size = 500;
-            ChartUtils.writeChartAsPNG( os, chart, 500, size );
-            os.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        int size = 500;
+        ChartUtils.writeChartAsPNG( os, chart, size, size );
     }
 
     /**

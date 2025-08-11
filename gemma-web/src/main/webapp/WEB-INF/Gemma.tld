@@ -333,6 +333,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>dpi</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>alt</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -358,6 +362,10 @@
 		</attribute>
 		<attribute>
 			<name>useResizeTrick</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>dpi</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>

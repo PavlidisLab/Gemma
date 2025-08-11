@@ -1,5 +1,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
+import org.jfree.chart.ChartTheme;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +126,11 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
         public BuildInfo buildInfo() {
             return mock();
         }
+
+        @Bean
+        public ChartTheme chartTheme() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -149,9 +155,8 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         ee.setShortName( "GSE01019" );
-        when( expressionExperimentService.loadOrFail( eq( 1L ), any( Function.class ) ) )
+        when( expressionExperimentService.loadAndThawLiterOrFail( eq( 1L ), any( Function.class ) ) )
                 .thenReturn( ee );
-        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
         DoubleMatrix<BioAssay, BioAssay> mat = mock();
         double[][] rawMat = { { 0, 1 }, { 1, 0 } };
         when( mat.getRowNames() ).thenReturn( Arrays.asList( BioAssay.Factory.newInstance( "a" ), BioAssay.Factory.newInstance( "b" ) ) );
@@ -159,12 +164,12 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
         when( mat.rows() ).thenReturn( 2 );
         when( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) ).thenReturn( mat );
         perform( get( "/expressionExperiment/visualizeCorrMat.html" ).param( "id", "1" )
-                .param( "size", "10" ) )
+                .param( "size", "2" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().contentType( MediaType.IMAGE_PNG ) );
 
         perform( get( "/expressionExperiment/visualizeCorrMat.html" ).param( "id", "1" )
-                .param( "size", "10" )
+                .param( "size", "2" )
                 .param( "text", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( header().string( "Content-Disposition", "attachment; filename=\"1_GSE01019_coExp.data.txt.gz\"" ) )

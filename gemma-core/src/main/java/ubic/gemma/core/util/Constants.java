@@ -6,6 +6,8 @@ package ubic.gemma.core.util;
  */
 public class Constants {
 
+    public static final String GEMMA_COPYRIGHT_NOTICE = "Copyright © 2007-2025 The University of British Columbia";
+
     /**
      * Citation notice to include in every data files we generate.
      */
