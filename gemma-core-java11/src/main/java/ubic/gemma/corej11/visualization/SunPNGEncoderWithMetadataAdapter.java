@@ -9,6 +9,7 @@ import org.jfree.chart.encoders.ImageEncoder;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -113,7 +114,11 @@ class SunPNGEncoderWithMetadataAdapter implements ImageEncoder {
         }
         IIOImage iioImage = new IIOImage( bufferedImage, null, pngMetadata );
         ImageWriter writer = ImageIO.getImageWritersByFormatName( "png" ).next();
-        writer.setOutput( ImageIO.createImageOutputStream( outputStream ) );
-        writer.write( iioImage );
+        try ( ImageOutputStream out = ImageIO.createImageOutputStream( outputStream ) ) {
+            writer.setOutput( out );
+            writer.write( iioImage );
+        } finally {
+            writer.dispose();
+        }
     }
 }
