@@ -645,13 +645,13 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "quantitationType", required = false) @Nullable Long quantitationTypeId,
             @RequestParam("designElement") Long designElementId,
             @RequestParam(value = "assays", required = false) @Nullable Long[] assayIds,
-            @RequestParam(value = "cellTypeAssignment", required = false) @Nullable String ctaName,
-            @RequestParam(value = "cellLevelCharacteristics", required = false) @Nullable Long clcId,
+            @RequestParam(value = "ctaIdentifier", required = false) @Nullable String ctaIdentifier,
+            @RequestParam(value = "clcIdentifier", required = false) @Nullable String clcIdentifier,
             @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             @RequestParam(value = "font", defaultValue = "Arial") String font,
             HttpServletResponse response ) throws IOException {
-        if ( clcId != null && ctaName != null ) {
+        if ( clcIdentifier != null && ctaIdentifier != null ) {
             throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
         }
         Assert.isTrue( sizeFactor >= MIN_SIZE_FACTOR && sizeFactor <= MAX_SIZE_FACTOR,
@@ -699,15 +699,31 @@ public class ExpressionExperimentQCController {
                     .collect( Collectors.toList() );
             dataset.setBioAssays( assays );
         }
-        if ( ctaName != null ) {
-            CellTypeAssignment cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName ) );
+        if ( ctaIdentifier != null ) {
+            CellTypeAssignment cta = null;
+            try {
+                cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, Long.parseLong( ctaIdentifier ) );
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
+            if ( cta == null ) {
+                cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaIdentifier ) );
+            }
             dataset.setCellLevelCharacteristics( cta );
             if ( focusedCharacteristicId != null ) {
                 dataset.setFocusedCharacteristic( cta.getCellTypes().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
             }
         }
-        if ( clcId != null ) {
-            CellLevelCharacteristics clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcId ) );
+        if ( clcIdentifier != null ) {
+            CellLevelCharacteristics clc = null;
+            try {
+                clc = singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, Long.parseLong( clcIdentifier ) );
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
+            if ( clc == null ) {
+                clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcIdentifier ) );
+            }
             dataset.setCellLevelCharacteristics( clc );
             if ( focusedCharacteristicId != null ) {
                 dataset.setFocusedCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
@@ -716,8 +732,8 @@ public class ExpressionExperimentQCController {
         ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
                 "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
-                "Assay", "Expression data (log10)", dataset.createDataset(), ctaName != null || clcId != null );
-        if ( ( ctaName == null && clcId == null ) || focusedCharacteristicId != null ) {
+                "Assay", "Expression data (log10)", dataset.createDataset(), ctaIdentifier != null || clcIdentifier != null );
+        if ( ( ctaIdentifier == null && clcIdentifier == null ) || focusedCharacteristicId != null ) {
             // TODO: add per-row annotation, this does not appear to be supported by JFreeChart
             dataset.createAnnotations().forEach( chart.getCategoryPlot()::addAnnotation );
         }

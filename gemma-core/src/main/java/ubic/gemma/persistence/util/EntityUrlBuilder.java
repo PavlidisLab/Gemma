@@ -261,7 +261,7 @@ public class EntityUrlBuilder {
             entityPath = "/expressionExperiment/visualizeSingleCellDataBoxplot.html";
             additionalQuery = "&quantitationType=" + quantitationType.getId() + "&designElement=" + designElement.getId();
             if ( cellLevelCharacteristics instanceof CellTypeAssignment ) {
-                additionalQuery += "&cellTypeAssignment=" + urlEncode( ( ( CellTypeAssignment ) cellLevelCharacteristics ).getName() );
+                additionalQuery += "&cellTypeAssignment=" + cellLevelCharacteristics.getId();
             } else if ( cellLevelCharacteristics != null ) {
                 additionalQuery += "&cellLevelCharacteristics=" + cellLevelCharacteristics.getId();
             }
