@@ -95,8 +95,8 @@ public class ExpressionExperimentControllerHelperService {
 
     @Nullable
     @Transactional(readOnly = true)
-    public ExpressionExperimentDetailsValueObject load( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLite( ee );
+    public ExpressionExperimentDetailsValueObject load( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         List<ExpressionExperimentDetailsValueObject> finalResults = expressionExperimentService.loadDetailsValueObjectsByIdsWithCache( Collections.singleton( ee.getId() ) );
         if ( finalResults.isEmpty() ) {
             return null;
@@ -323,7 +323,6 @@ public class ExpressionExperimentControllerHelperService {
             return 0;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
                 count++;

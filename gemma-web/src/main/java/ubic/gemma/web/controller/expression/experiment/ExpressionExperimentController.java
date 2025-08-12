@@ -620,9 +620,7 @@ public class ExpressionExperimentController {
      * @return ee details vo
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
-        ExpressionExperiment ee = getExperimentById( id, false );
-
-        ExpressionExperimentDetailsValueObject finalResult = expressionExperimentControllerHelperService.load( ee );
+        ExpressionExperimentDetailsValueObject finalResult = expressionExperimentControllerHelperService.load( id );
 
         if ( finalResult == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );

@@ -282,6 +282,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThaw( Long id );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawLite( Long id );
+
     /**
      * Load an experiment without cache and thaw it as per {@link #thaw(ExpressionExperiment)} with {@link org.hibernate.CacheMode#REFRESH}.
      * <p>

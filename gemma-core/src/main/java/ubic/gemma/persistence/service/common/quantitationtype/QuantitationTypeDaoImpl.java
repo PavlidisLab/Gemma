@@ -105,7 +105,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .createCriteria( dataVectorType )
                 .createCriteria( "quantitationType" )
                 .add( createRestrictions( entity ) )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .setResultTransformer( new TypedResultTransformer<QuantitationType>() {
                     @Override
                     public QuantitationType transformTuple( Object[] tuple, String[] aliases ) {
@@ -183,7 +183,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
                 .createCriteria( "quantitationType" )
                 .add( Restrictions.eq( "name", name ) )
-                .setProjection( Projections.distinct( Projections.id() ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .list();
         return load( ids );
     }
@@ -255,7 +255,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .createCriteria( vectorType )
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
                 .createCriteria( "quantitationType" )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .list() );
     }
 
@@ -278,7 +278,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                     .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
                     .add( Restrictions.eq( "bioAssayDimension", dimension ) )
                     .createCriteria( "quantitationType" )
-                    .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                    .setProjection( Projections.groupProperty( "id" ) )
                     .list() ) );
         }
         return qts;
@@ -353,7 +353,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                     .add( Restrictions.eq( "expressionExperiment", ee ) )
                     .createCriteria( "quantitationType" )
                     .add( Restrictions.in( "id", optimizeParameterList( ids ) ) )
-                    .setProjection( Projections.distinct( Projections.id() ) )
+                    .setProjection( Projections.groupProperty( "id" ) )
                     .list();
             qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
         }

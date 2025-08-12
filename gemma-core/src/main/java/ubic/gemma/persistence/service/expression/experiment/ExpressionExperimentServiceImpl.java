@@ -993,13 +993,22 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             this.expressionExperimentDao.thaw( ee );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawLite( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
     }
