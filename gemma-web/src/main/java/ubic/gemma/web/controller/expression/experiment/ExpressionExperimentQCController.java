@@ -386,9 +386,14 @@ public class ExpressionExperimentQCController {
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
         if ( forceShowLabels ) {
-            // make sure that the labels are readable
-            cellsize = Math.max( cellsize, minimumCellSizeForText );
-            reallyShowLabels = true;
+            if ( row >= 200 ) {
+                log.warn( "Too many rows (" + row + ") to display labels, ignoring forceShowLabels." );
+                reallyShowLabels = false;
+            } else {
+                // make sure that the labels are readable
+                cellsize = Math.max( cellsize, minimumCellSizeForText );
+                reallyShowLabels = true;
+            }
         } else if ( showLabels && cellsize >= minimumCellSizeForText ) {
             reallyShowLabels = true;
         } else if ( showLabels ) {
