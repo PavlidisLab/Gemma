@@ -188,15 +188,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.endTag(); // </th>
         }
 
-        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
-            writer.startTag( "th" );
-            writer.startTag( "strong" );
-            writer.appendValue( "Single-cell" );
-            writer.endTag(); // </strong>
-            writer.endTag(); // </th>
-        }
-
-        writer.endTag();
+        writer.endTag(); // </tr>
 
         writer.startTag( "tr" );
 
@@ -371,8 +363,19 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         }
 
         if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
+            writer.endTag(); // </tr>
+            writer.startTag( "tr" );
+            writer.startTag( "th" );
+            writer.writeAttribute( "colspan", "4" );
+            writer.startTag( "strong" );
+            writer.appendValue( "Single-cell" );
+            writer.endTag(); // </strong>
+            writer.endTag(); // </th>
+            writer.endTag(); // </tr>
+            writer.startTag( "tr" );
             if ( singleCellSparsityHeatmap != null ) {
                 writer.startTag( "td" );
+                writer.writeAttribute( "colspan", "2" );
                 // the default alignment is baseline, but that pulls the heatmap down because of where the labels start
                 writer.writeAttribute( "style", "vertical-align: top;" );
                 SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );
