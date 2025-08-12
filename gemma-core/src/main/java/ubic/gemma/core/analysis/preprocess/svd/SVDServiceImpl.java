@@ -249,8 +249,8 @@ public class SVDServiceImpl implements SVDService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasPca( ExpressionExperiment ee ) {
-        return this.getSvd( ee ) != null;
+    public boolean hasSvd( ExpressionExperiment ee ) {
+        return principalComponentAnalysisService.existsByExperiment( ee );
     }
 
     @Override

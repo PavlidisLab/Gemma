@@ -550,7 +550,10 @@ public class ExpressionExperimentQCController {
             HttpServletResponse response ) throws IOException {
         Assert.isTrue( cellSize == null || cellSize > 0 );
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No dataset with ID " + id + "." );
-        SingleCellDimension singleCellDimension = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeBioAssays( true )
+                .build();
+        SingleCellDimension singleCellDimension = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee, initConfig )
                 .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a preferred single-cell dimension." ) );
         QuantitationType qt = expressionExperimentService.getProcessedQuantitationType( ee )
                 .orElseThrow( () -> new EntityNotFoundException( "No processed quantitation type found for " + ee.getShortName() + "." ) );

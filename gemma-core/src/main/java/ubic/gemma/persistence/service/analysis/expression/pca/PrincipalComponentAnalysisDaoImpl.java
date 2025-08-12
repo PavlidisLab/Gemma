@@ -43,8 +43,16 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
     public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PrincipalComponentAnalysis as p fetch all properties where p.experimentAnalyzed = :ee" )
+                "select p from PrincipalComponentAnalysis as p where p.experimentAnalyzed = :ee" )
                 .setParameter( "ee", ee ).list();
+    }
+
+    @Override
+    public boolean existsByExperiment( ExpressionExperiment ee ) {
+        return ( Boolean ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) > 0 from PrincipalComponentAnalysis as p where p.experimentAnalyzed = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
     }
 
     @Override

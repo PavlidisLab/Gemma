@@ -38,13 +38,25 @@ public interface SVDService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component, int count );
 
+    /**
+     * Check if a dataset has a SVD analysis.
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    boolean hasPca( ExpressionExperiment ee );
+    boolean hasSvd( ExpressionExperiment ee );
 
+    /**
+     * Obtain the SVD analysis for the given experiment, if it exists.
+     * <p>
+     * If you only need to check if an SVD analysis exists, use {@link #hasSvd(ExpressionExperiment)} instead as this
+     * method may retrieve a large matrix.
+     */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SVDResult getSvd( ExpressionExperiment ee );
 
+    /**
+     * Compute and update the SVD analysis fo the given experiment.
+     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     SVDResult svd( ExpressionExperiment ee ) throws SVDException;
 

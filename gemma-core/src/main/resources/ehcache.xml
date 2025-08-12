@@ -10,18 +10,6 @@
         current working directory java.io.tmpdir - Default temp file path -->
     <diskStore path="ehcache.disk.store.dir"/>
 
-    <!-- Default Cache configuration. These will applied to caches programmatically created through the CacheManager. The following
-        attributes are required for defaultCache: maxInMemory - Sets the maximum number of objects that will be created in memory
-        eternal - Sets whether elements are eternal. If eternal, timeouts are ignored and the element is never expired. timeToIdleSeconds
-        - Sets the time to idle for an element before it expires. i.e. The maximum amount of time between accesses before an element
-        expires Is only used if the element is not eternal. Optional attribute. A value of 0 means that an Element can idle for infinity
-        timeToLiveSeconds - Sets the time to live for an element before it expires. i.e. The maximum time between creation time and
-        when an element expires. Is only used if the element is not eternal. overflowToDisk - Sets whether elements can overflow
-        to disk when the in-memory cache has reached the maxInMemory limit. -->
-    <defaultCache maxElementsInMemory="10000" timeToLiveSeconds="1200"
-                  overflowToDisk="false" diskSpoolBufferSizeMB="30" maxElementsOnDisk="10000000" diskPersistent="false"
-                  diskExpiryThreadIntervalSeconds="120" memoryStoreEvictionPolicy="LRU"/>
-
     <!-- Customize caches below. Increase or decrease maxElementsInMemory; 10000 genes takes about 10 MB in RAM. Make items
         that are essentially immutable 'eternal'. -->
 
@@ -32,7 +20,7 @@
     <cache name="org.hibernate.cache.internal.StandardQueryCache" maxElementsInMemory="5000" timeToLiveSeconds="1200"
            timeToIdleSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsOnDisk="10000" maxElementsInMemory="5000"
+    <cache name="org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="5000"
            eternal="true" overflowToDisk="false"/>
 
     <!-- cache names must match the class element names defined in the hbm.xml files. -->
@@ -402,31 +390,43 @@
     <cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" maxElementsInMemory="1000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation" maxElementsOnDisk="10000"
+    <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation"
            maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation.phenotypeAssociationPublications"
-           maxElementsOnDisk="10000" maxElementsInMemory="1000" timeToLiveSeconds="1200"
+           maxElementsInMemory="1000" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication"
-           maxElementsOnDisk="10000" maxElementsInMemory="1000" timeToLiveSeconds="1200"
+           maxElementsInMemory="1000" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution"
-           maxElementsOnDisk="10000" maxElementsInMemory="1000" timeToLiveSeconds="1200"
+           maxElementsInMemory="1000" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix" maxElementsOnDisk="10000"
+    <cache name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
+           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
+
+    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"
+           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
+    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenValues"
+           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
+    <!-- there's about 100 eigenvalues/vectors per PCA -->
+    <cache name="ubic.gemma.model.analysis.expression.pca.Eigenvalue"
+           maxElementsInMemory="100000" eternal="true" overflowToDisk="false"/>
+    <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenVectors"
+           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
+    <cache name="ubic.gemma.model.analysis.expression.pca.Eigenvector"
+           maxElementsInMemory="100000" eternal="true" overflowToDisk="false"/>
+
+    <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation.phenotypes"
            maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation.phenotypes" maxElementsOnDisk="10000"
+    <cache name="ubic.gemma.model.genome.Gene.phenotypeAssociations"
            maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.Gene.phenotypeAssociations" maxElementsOnDisk="10000"
-           maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.analysis.Investigation.characteristics" maxElementsOnDisk="10000"
+    <cache name="ubic.gemma.model.analysis.Investigation.characteristics"
            maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.ExternalDatabase.externalDatabases"

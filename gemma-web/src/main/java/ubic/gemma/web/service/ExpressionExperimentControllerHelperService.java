@@ -241,14 +241,17 @@ public class ExpressionExperimentControllerHelperService {
             } else {
                 qc.setHasCorrMat( false );
             }
-            if ( svdService.hasPca( ee ) ) {
-                qc.setHasPCA( svdService.hasPca( ee ) );
+            if ( svdService.hasSvd( ee ) ) {
+                qc.setHasPCA( true );
                 qc.setNumFactors( 3 );
             } else {
                 qc.setHasPCA( false );
             }
             qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
-            Optional<SingleCellDimension> scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee );
+            SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                    .includeBioAssays( true )
+                    .build();
+            Optional<SingleCellDimension> scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee, initConfig );
             qc.setHasSingleCellData( scd.isPresent() );
             scd.ifPresent( singleCellDimension -> qc.setSingleCellSparsityHeatmap( getSingleCellSparsityHeatmap( ee, singleCellDimension, false ) ) );
             qc.writeQc( new TagWriter( sw ), servletContext.getContextPath() );
@@ -268,7 +271,7 @@ public class ExpressionExperimentControllerHelperService {
         } else {
             result.put( "hasCorrMat", false );
         }
-        if ( svdService.hasPca( expressionExperiment ) ) {
+        if ( svdService.hasSvd( expressionExperiment ) ) {
             result.put( "hasPCA", true );
             result.put( "numFactors", 3 );
         } else {

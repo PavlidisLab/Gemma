@@ -136,6 +136,12 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean existsByExperiment( ExpressionExperiment ee ) {
+        return this.principalComponentAnalysisDao.existsByExperiment( ee );
+    }
+
+    @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.principalComponentAnalysisDao.removeForExperiment(ee);

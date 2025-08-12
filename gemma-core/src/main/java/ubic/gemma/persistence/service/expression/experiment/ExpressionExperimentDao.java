@@ -580,6 +580,9 @@ public interface ExpressionExperimentDao
     @Nullable
     SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Create a single-cell dimension for a given experiment.
      * @throws IllegalArgumentException if the single-cell dimension is invalid

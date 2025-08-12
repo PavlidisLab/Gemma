@@ -2257,16 +2257,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee ) {
+        return getPreferredSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true, true );
+    }
+
+    @Override
+    public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true, true ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
                 .uniqueResult();
     }
-
 
     private class SingleCellDimensionWithoutCellIdsInitializer implements TypedResultTransformer<SingleCellDimension> {
 
@@ -3248,11 +3252,12 @@ public class ExpressionExperimentDaoImpl
     public Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment ) {
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createQuery( "select ba, count(distinct cs) from ExpressionExperiment ee "
+                .createQuery( "select ba, count(*) from ExpressionExperiment ee "
                         + "join ee.bioAssays ba join ba.arrayDesignUsed ad "
                         + "join ad.compositeSequences cs where ee = :ee "
                         + "group by ba" )
                 .setParameter( "ee", expressionExperiment )
+                .setCacheable( true )
                 .list();
         return result.stream()
                 .collect( Collectors.toMap( o -> ( BioAssay ) ( ( Object[] ) o )[0], o -> ( Long ) ( ( Object[] ) o )[1] ) );
