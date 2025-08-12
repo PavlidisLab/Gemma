@@ -9,8 +9,9 @@ import org.jfree.chart.StandardChartTheme;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -23,6 +24,8 @@ public class ChartThemeUtils {
      * Liberation Sans is not defined in the frontend, but we make it available as a substitute for Arial.
      */
     private static final String[] fonts = { "Avenir", "Helvetica", "Arial", "Liberation Sans" };
+
+    private static final LinkedHashSet<String> availableFonts;
 
     static {
         // LiberationSans is a free font that is compatible with Arial
@@ -40,6 +43,15 @@ public class ChartThemeUtils {
                 throw new RuntimeException( e );
             }
         }
+        availableFonts = new LinkedHashSet<>( Arrays.asList( GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames() ) );
+        List<String> missingFonts = Arrays.stream( fonts ).filter( f -> !availableFonts.contains( f ) ).collect( Collectors.toList() );
+        if ( missingFonts.size() == fonts.length ) {
+            log.warn( "None of the pre-defined frontend fonts are available on this system, Font.SANS_SERIF as fallback." );
+        } else if ( !missingFonts.isEmpty() ) {
+            log.warn( "The following pre-defined frontend fonts are not available on this system: " + String.join( ", ", missingFonts ) + "." );
+        } else {
+            log.debug( "All pre-defined frontend fonts are available on this system." );
+        }
     }
 
     /**
@@ -51,23 +63,11 @@ public class ChartThemeUtils {
         if ( fi == -1 ) {
             throw new IllegalArgumentException( "Requested font is not supported, choose one among: " + String.join( ", ", fonts ) + "." );
         }
-        String fontFamily = null;
-        Set<String> availableFonts = new HashSet<>( Arrays.asList( GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames() ) );
+        String fontFamily = Font.SANS_SERIF;
         for ( int i = fi; i < fonts.length; i++ ) {
             if ( availableFonts.contains( fonts[i] ) ) {
-                // Found a matching font, use it
                 fontFamily = fonts[i];
                 break;
-            }
-        }
-        if ( fontFamily == null ) {
-            if ( availableFonts.contains( "Liberation Sans" ) ) {
-                // Liberation Sans is a free font that is compatible with Arial, use it if available
-                log.warn( "None of the pre-defined frontend fonts are available on this system, using 'Liberation Sans' as fallback." );
-                fontFamily = "Liberation Sans";
-            } else {
-                log.warn( "None of the pre-defined frontend fonts are available on this system, using Font.SANS_SERIF as fallback." );
-                fontFamily = Font.SANS_SERIF;
             }
         }
         StandardChartTheme chartTheme = new StandardChartTheme( "Gemma" );
