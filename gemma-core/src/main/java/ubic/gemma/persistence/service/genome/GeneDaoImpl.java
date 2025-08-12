@@ -329,7 +329,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Collection<Gene> loadKnownGenes( Taxon taxon ) {
         //language=HQL
-        final String queryString = "select gene from Gene as gene fetch all properties where gene.taxon = :taxon";
+        final String queryString = "select gene from Gene as gene where gene.taxon = :taxon";
 
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
