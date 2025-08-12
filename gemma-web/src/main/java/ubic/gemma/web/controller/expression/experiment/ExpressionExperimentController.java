@@ -1031,7 +1031,7 @@ public class ExpressionExperimentController {
                 ExpressionDataHeatmap heatmap = ExpressionDataHeatmap.fromDesignElements( ee, dimension, designElements, genes );
                 if ( singleCellQt != null ) {
                     heatmap.setSingleCellQuantitationType( singleCellQt );
-                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, singleCellQt )
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee, singleCellQt )
                             .ifPresent( cta -> {
                                 heatmap.setCellLevelCharacteristics( cta );
                                 heatmap.setFocusedCellLevelCharacteristic( null );
@@ -1119,7 +1119,7 @@ public class ExpressionExperimentController {
                 heatmap = ExpressionDataHeatmap.fromDesignElements( subset, dimension, designElements, genes );
                 singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( subset.getSourceExperiment() ).ifPresent( scQt -> {
                     heatmap.setSingleCellQuantitationType( scQt );
-                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( subset.getSourceExperiment(), scQt ).ifPresent( cta -> {
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( subset.getSourceExperiment(), scQt ).ifPresent( cta -> {
                         heatmap.setCellLevelCharacteristics( cta );
                         // TODO: use the subset factor if available to determine the cell type we want to focus on
                         cta.getCellTypes().stream()

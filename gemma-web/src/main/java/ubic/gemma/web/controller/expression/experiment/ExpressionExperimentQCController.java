@@ -710,12 +710,12 @@ public class ExpressionExperimentQCController {
         if ( ctaIdentifier != null ) {
             CellTypeAssignment cta = null;
             try {
-                cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, Long.parseLong( ctaIdentifier ) );
+                cta = singleCellExpressionExperimentService.getCellTypeAssignmentWithoutIndices( ee, qt, Long.parseLong( ctaIdentifier ) );
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             if ( cta == null ) {
-                cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaIdentifier ) );
+                cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignmentWithoutIndices( ee, qt, ctaIdentifier ) );
             }
             dataset.setCellLevelCharacteristics( cta );
             if ( focusedCharacteristicId != null ) {
@@ -725,12 +725,12 @@ public class ExpressionExperimentQCController {
         if ( clcIdentifier != null ) {
             CellLevelCharacteristics clc = null;
             try {
-                clc = singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, Long.parseLong( clcIdentifier ) );
+                clc = singleCellExpressionExperimentService.getCellLevelCharacteristicsWithoutIndices( ee, qt, Long.parseLong( clcIdentifier ) );
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             if ( clc == null ) {
-                clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcIdentifier ) );
+                clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristicsWithoutIndices( ee, qt, clcIdentifier ) );
             }
             dataset.setCellLevelCharacteristics( clc );
             if ( focusedCharacteristicId != null ) {

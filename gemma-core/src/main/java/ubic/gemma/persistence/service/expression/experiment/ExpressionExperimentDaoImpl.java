@@ -2771,6 +2771,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
+                        + "group by cta" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .uniqueResult();
+    }
+
+    @Override
+    public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
+                        + "group by cta" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setResultTransformer( new CtaInitializer( true, true ) )
+                .uniqueResult();
+    }
+
+    @Override
     public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select cta from SingleCellExpressionDataVector scedv "
@@ -2937,6 +2964,38 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "qt", qt )
                 .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
                 .list();
+    }
+
+    @Override
+    public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId ) {
+        return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells "
+                        + "from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellLevelCharacteristics clc "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and clc.id = :clcId "
+                        + "group by clc" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setParameter( "clcId", clcId )
+                .setResultTransformer( new ClcInitializer( true ) )
+                .uniqueResult();
+    }
+
+    @Override
+    public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
+        return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells "
+                        + "from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellLevelCharacteristics clc "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and clc.name = :clcName "
+                        + "group by clc" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setParameter( "clcName", clcName )
+                .setResultTransformer( new ClcInitializer( true ) )
+                .uniqueResult();
     }
 
     @Override

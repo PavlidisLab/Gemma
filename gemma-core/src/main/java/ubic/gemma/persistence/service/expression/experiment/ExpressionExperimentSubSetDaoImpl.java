@@ -32,13 +32,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -82,11 +81,10 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
 
     @Override
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct eess from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba in :bas" )
-                .setParameterList( "bas", optimizeIdentifiableParameterList( bioAssays ) )
-                .list();
+        return new HashSet<>( QueryUtils.listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select distinct eess from ExpressionExperimentSubSet eess "
+                                + "join eess.bioAssays ba where ba in :bas" ),
+                "bas", bioAssays, QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
     }
 
     @Override

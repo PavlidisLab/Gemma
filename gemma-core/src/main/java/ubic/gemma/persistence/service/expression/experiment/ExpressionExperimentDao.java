@@ -653,6 +653,22 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
 
     /**
+     * Obtain the preferred assignment for the given quantitation type.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
+     */
+    @Nullable
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException;
+
+    /**
+     * Obtain the preferred assignment for the given quantitation type without loading the indices.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
+     */
+    @Nullable
+    CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException;
+
+    /**
      * Obtain a cell type assignment by ID.
      */
     @Nullable
@@ -708,6 +724,12 @@ public interface ExpressionExperimentDao
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category );
+
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId );
+
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
