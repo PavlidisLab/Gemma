@@ -216,6 +216,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- User-Agent parsing -->
+		<dependency>
+			<groupId>nl.basjes.parse.useragent</groupId>
+			<artifactId>yauaa</artifactId>
+			<version>7.30.0</version>
+		</dependency>
+
 		<!-- Testing -->
 		<dependency>
 			<groupId>gemma</groupId>

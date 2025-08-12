@@ -256,7 +256,7 @@ public class EntityUrlBuilder {
             return this;
         }
 
-        public ExpressionExperimentWebUrl visualizeSingleCellBoxPlot( QuantitationType quantitationType, CompositeSequence designElement, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic ) {
+        public ExpressionExperimentWebUrl visualizeSingleCellBoxPlot( QuantitationType quantitationType, CompositeSequence designElement, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic, @Nullable String font ) {
             Assert.state( !byShortName, "Single-cell box plots cannot be visualized by short name." );
             entityPath = "/expressionExperiment/visualizeSingleCellDataBoxplot.html";
             additionalQuery = "&quantitationType=" + quantitationType.getId() + "&designElement=" + designElement.getId();
@@ -267,6 +267,9 @@ public class EntityUrlBuilder {
             }
             if ( focusedCharacteristic != null ) {
                 additionalQuery += "&focusedCharacteristic=" + focusedCharacteristic.getId();
+            }
+            if ( font != null ) {
+                additionalQuery += "&font=" + urlEncode( font );
             }
             return this;
         }

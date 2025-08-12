@@ -135,7 +135,8 @@
                     <td><Gemma:expressionDataHeatmap heatmap="${heatmapsByDimension[e.key]}"
                             alt="Heatmap of the expression data of ${expressionExperiment.name}. The rows correspond to genes and columns to assays."
                             maxWidth="800"
-                            maxHeight="600" /></td>
+                            maxHeight="600"
+                            font="${font}" /></td>
                 </tr>
             </c:if>
         </c:forEach>

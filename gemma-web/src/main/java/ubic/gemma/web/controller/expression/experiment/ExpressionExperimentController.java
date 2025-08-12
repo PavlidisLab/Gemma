@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
+import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -34,6 +36,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.servlet.view.RedirectView;
@@ -105,6 +110,7 @@ import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -522,8 +528,13 @@ public class ExpressionExperimentController {
             ExperimentQCTag qc = new ExperimentQCTag( true );
             qc.setStaticAssetResolver( staticAssetResolver );
             qc.setEntityUrlBuilder( entityUrlBuilder );
+            qc.setBuildInfo( buildInfo );
             qc.setExpressionExperiment( ee );
             qc.setEeManagerId( ee.getId() + "-eemanager" );
+            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+            if ( requestAttributes instanceof ServletRequestAttributes ) {
+                qc.setFont( detectFont( ( ( ServletRequestAttributes ) requestAttributes ).getRequest() ) );
+            }
             if ( sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
                 qc.setHasCorrMat( true );
                 qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
@@ -549,6 +560,33 @@ public class ExpressionExperimentController {
             return sw.toString();
         } catch ( IOException | JspException e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    private final UserAgentAnalyzer uaa = UserAgentAnalyzer
+            .newBuilder()
+            .build();
+
+    /**
+     * Detect the theme to use for rendering plots.
+     * <p>
+     * Unfortunately, it is not possible to detect the font used by the browser with perfect accuracy, but we can assume
+     * that certain fonts are present on some operating systems.
+     */
+    @Nullable
+    private String detectFont( HttpServletRequest request ) {
+        String userAgent = request.getHeader( "User-Agent" );
+        if ( StringUtils.isBlank( userAgent ) ) {
+            return null;
+        }
+        UserAgent ua = uaa.parse( userAgent );
+        String osName = ua.getValue( UserAgent.OPERATING_SYSTEM_NAME );
+        if ( osName.equals( "Mac OS" ) || osName.equals( "iOS" ) ) {
+            return "Avenir";
+        } else if ( osName.equals( "Windows NT" ) ) {
+            return "Helvetica";
+        } else {
+            return null;
         }
     }
 
@@ -702,6 +740,11 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setSuitableForDEA( expressionExperimentService.isSuitableForDEA( ee ) );
+
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if ( requestAttributes instanceof ServletRequestAttributes ) {
+            finalResult.setFont( detectFont( ( ( ServletRequestAttributes ) requestAttributes ).getRequest() ) );
+        }
 
         return finalResult;
     }
@@ -1053,16 +1096,16 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
-    public ModelAndView showAllSubSets( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
-        return showAllSubSets( getExperimentById( id, true ), dimensionId );
+    public ModelAndView showAllSubSets( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId, HttpServletRequest request ) {
+        return showAllSubSets( getExperimentById( id, true ), dimensionId, request );
     }
 
     @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "shortName" })
-    public ModelAndView showAllSubSets( @RequestParam("shortName") String shortName, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
-        return showAllSubSets( getExperimentByShortName( shortName, true ), dimensionId );
+    public ModelAndView showAllSubSets( @RequestParam("shortName") String shortName, @RequestParam(value = "dimension", required = false) Long dimensionId, HttpServletRequest request ) {
+        return showAllSubSets( getExperimentByShortName( shortName, true ), dimensionId, request );
     }
 
-    private ModelAndView showAllSubSets( ExpressionExperiment ee, @Nullable Long dimensionId ) {
+    private ModelAndView showAllSubSets( ExpressionExperiment ee, @Nullable Long dimensionId, HttpServletRequest request ) {
         Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> subsetsByDimension;
         BioAssayDimension dim;
         if ( dimensionId != null ) {
@@ -1146,6 +1189,7 @@ public class ExpressionExperimentController {
                 .addObject( "subSetsByDimension", subsetsByDimensionSorted )
                 .addObject( "quantitationTypesByDimension", quantitationTypesByDimension )
                 .addObject( "heatmapsByDimension", heatmapsByDimension )
+                .addObject( "font", detectFont( request ) )
                 .addObject( "subSetFactorsByDimension", subSetFactorsByDimension )
                 .addObject( "vectorTypes", vectorTypes )
                 .addObject( "keywords", getKeywords( ee ) );
@@ -1162,7 +1206,7 @@ public class ExpressionExperimentController {
      * Shows a list of BioAssays for an expression experiment subset.
      */
     @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showSubSet( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+    public ModelAndView showSubSet( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId, HttpServletRequest request ) {
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.loadWithBioAssays( id );
         if ( subset == null ) {
             throw new EntityNotFoundException( "No experiment subset with ID " + id + "." );
@@ -1235,6 +1279,7 @@ public class ExpressionExperimentController {
                 .addObject( "bioAssays", bioAssays )
                 .addObject( "annotations", annotations )
                 .addObject( "heatmap", heatmap )
+                .addObject( "font", detectFont( request ) )
                 .addObject( "keywords", annotations.stream()
                         .map( AnnotationValueObject::getTermName )
                         .collect( Collectors.joining( "," ) ) );

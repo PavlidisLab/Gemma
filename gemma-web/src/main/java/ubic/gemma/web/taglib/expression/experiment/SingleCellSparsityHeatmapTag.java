@@ -191,8 +191,7 @@ public class SingleCellSparsityHeatmapTag extends AbstractHeatmapTag<SingleCellS
             BufferedImage image = heatmap.createAggregateImage( type );
             heatmap.setCellSize( cellSize ); // restore
             // create a data URL with the image
-            // with the resize trick on, DPI must be 0
-            ChartUtils.writeBufferedImageAsPNG( baos, image, useResizeTrick ? 0 : dpi, alt, getBuildInfo());
+            ChartUtils.writeBufferedImageAsPNG( baos, image, alt, getBuildInfo() );
             imageUrl = "data:image/png;base64," + Base64.getEncoder().encodeToString( baos.toByteArray() );
             if ( useResizeTrick ) {
                 height = heatmap.getCellSize() * image.getHeight();

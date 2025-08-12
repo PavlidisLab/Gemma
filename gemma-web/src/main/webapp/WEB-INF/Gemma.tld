@@ -152,6 +152,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>font</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>htmlEscape</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -333,19 +337,16 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<name>dpi</name>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
 			<name>alt</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<name>maxWidth</name>
+			<name>maxHeight</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<name>maxHeight</name>
+			<description>Font used for links to the related single-cell data boxplots.</description>
+			<name>font</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
@@ -362,10 +363,6 @@
 		</attribute>
 		<attribute>
 			<name>useResizeTrick</name>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>dpi</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>

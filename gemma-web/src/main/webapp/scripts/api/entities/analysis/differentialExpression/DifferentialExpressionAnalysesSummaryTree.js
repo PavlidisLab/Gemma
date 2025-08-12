@@ -62,6 +62,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             },
             build: function () {
                 var analyses = this.ee.differentialExpressionAnalyses;
+                const font = this.ee.font;
                 Ext.apply(this, {
                     contrastPercents: [], // for drawing charts
                     totalProbes: this.ee.processedExpressionVectorCount
@@ -154,10 +155,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         // FIXME
                         if (subsetText !== '') {
                             subsetText += this.getBaseline(resultSet);
-                            subsetText += this.getActionLinks(resultSet, analysisName[0], this.ee.id,  primaryFactorID, nodeId);
+                            subsetText += this.getActionLinks( resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId, font );
                         } else {
                             nodeText += "<span style='white-space:normal;'>" + this.getBaseline(resultSet) + "</span>"
-                            nodeText += "<span>" + this.getActionLinks(resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId) +"</span>" ;
+                            nodeText += "<span>" + this.getActionLinks( resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId, font ) + "</span>";
                         }
 
                         parentText = '<b>'
@@ -202,7 +203,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                             nodeText = '';
                             nodeText += this.getBaseline(resultSet);
-                            nodeText += this.getActionLinks(resultSet, factor, this.ee.id, primaryFactorID,(nodeId + 1));
+                           nodeText += this.getActionLinks( resultSet, factor, this.ee.id, primaryFactorID, (nodeId + 1), font );
 
                             // make child nodes for each analysis and
                             // add them to parent
@@ -414,7 +415,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 // across all opened windows.
                 return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div';
             },
-            getActionLinks: function ( resultSet, factorString, eeID, primaryFactorID, nodeId) {
+           getActionLinks : function( resultSet, factorString, eeID, primaryFactorID, nodeId, font ) {
                 /* link for details */
                 var numbers = this.getExpressionNumbers(resultSet, nodeId, true);
                 var linkText = '&nbsp;'
@@ -454,6 +455,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 var pValueDistImageSize = 30;
                 var imageUrl = Gemma.CONTEXT_PATH + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
+                if ( font ) {
+                   imageUrl += '&font=' + encodeURIComponent( font );
+                }
                 var thumbnailImageUrl = imageUrl + '&size=' + pValueDistImageSize;
                 // -8px -6px is used as background-position property because the image has gray border.
                 var thumbnailCss = 'cursor: pointer; display: inline-block;'

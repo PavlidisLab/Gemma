@@ -44,13 +44,6 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
      */
     protected boolean useResizeTrick = true;
     /**
-     * DPI (dots per inch) for the heatmap image.
-     * <p>
-     * This is not used if {@link #useResizeTrick} is true, as the image is rendered at 1 pixel per cell and scaled with
-     * CSS.
-     */
-    protected double dpi = 300.0f;
-    /**
      * Display row labels.
      */
     protected boolean showXLabels = true;
@@ -131,7 +124,7 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
             BufferedImage image = heatmap.createImage( cellSize );
             // create a data URL with the image
-            ChartUtils.writeBufferedImageAsPNG( baos, image, useResizeTrick ? 0 : dpi, alt, getBuildInfo() );
+            ChartUtils.writeBufferedImageAsPNG( baos, image, alt, getBuildInfo() );
             imageUrl = "data:image/png;base64," + Base64.getEncoder().encodeToString( baos.toByteArray() );
             if ( useResizeTrick ) {
                 height = heatmap.getCellSize() * image.getHeight();

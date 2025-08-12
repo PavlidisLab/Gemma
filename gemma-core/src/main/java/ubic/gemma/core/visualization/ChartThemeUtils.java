@@ -37,8 +37,12 @@ public class ChartThemeUtils {
         };
         for ( String fontPath : librationSansFonts ) {
             try {
-                GraphicsEnvironment.getLocalGraphicsEnvironment()
-                        .registerFont( Font.createFont( Font.TRUETYPE_FONT, requireNonNull( ChartUtils.class.getResourceAsStream( fontPath ) ) ) );
+                if ( GraphicsEnvironment.getLocalGraphicsEnvironment()
+                        .registerFont( Font.createFont( Font.TRUETYPE_FONT, requireNonNull( ChartUtils.class.getResourceAsStream( fontPath ) ) ) ) ) {
+                    log.debug( "Font from classpath:" + fontPath + " was registered." );
+                } else {
+                    log.debug( "Font from classpath:" + fontPath + " was not registered, it may already be available on the system." );
+                }
             } catch ( FontFormatException | IOException e ) {
                 throw new RuntimeException( e );
             }
