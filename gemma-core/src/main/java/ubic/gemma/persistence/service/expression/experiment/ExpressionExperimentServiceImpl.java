@@ -657,6 +657,16 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByShortName( shortName );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByShortNameAndThawLite( String shortName ) {
+        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
+        if ( ee != null ) {
+            expressionExperimentDao.thawLite( ee );
+        }
+        return ee;
+    }
+
     /**
      * @see ExpressionExperimentService#findByTaxon(Taxon)
      */

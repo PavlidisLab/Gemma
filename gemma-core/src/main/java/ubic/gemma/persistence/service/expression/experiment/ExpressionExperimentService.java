@@ -403,6 +403,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment findByShortName( String shortName );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findByShortNameAndThawLite( String shortName );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
