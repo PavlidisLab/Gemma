@@ -466,4 +466,7 @@
     <cache name="CacheMonitor.inMemoryCacheSizeCache" maxElementsInMemory="100" timeToLiveSeconds="60"
            overflowToDisk="false"/>
 
+    <cache name="OutlierDetailsCache" maxElementsInMemory="1000" timeToLiveSeconds="1200"
+           overflowToDisk="false"/>
+
 </ehcache>

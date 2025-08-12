@@ -286,15 +286,13 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
-        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
-        if ( outliers != null ) {
+        outlierDetectionService.getOutlierDetails( ee ).ifPresent( outliers -> {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
-                    .map( OutlierDetails::getBioAssay )
-                    .map( BioAssay::getId )
+                    .map( OutlierDetails::getBioAssayId )
                     .collect( Collectors.toSet() );
             for ( BioAssayValueObject vo : bioAssayValueObjects ) {
                 vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
             }
-        }
+        } );
     }
 }

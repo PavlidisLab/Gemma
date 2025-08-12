@@ -99,6 +99,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -194,6 +195,8 @@ public class ExpressionExperimentQCController {
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
+    @Autowired
+    private BioAssayService bioAssayService;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis(
@@ -252,10 +255,11 @@ public class ExpressionExperimentQCController {
         Collection<OutlierDetails> outliers = outlierDetectionService
                 .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
 
+        Map<Long, BioAssay> baId2ba = IdentifiableUtils.getIdMap( sampleCorrelationMatrix.getColNames() );
         Collection<BioAssay> bioAssays = new HashSet<>();
         if ( !outliers.isEmpty() ) {
             for ( OutlierDetails details : outliers ) {
-                bioAssays.add( details.getBioAssay() );
+                bioAssays.add( baId2ba.get( details.getBioAssayId() ) );
             }
         }
 

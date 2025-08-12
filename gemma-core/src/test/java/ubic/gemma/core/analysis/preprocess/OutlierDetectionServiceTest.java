@@ -77,10 +77,10 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         boolean found1 = false;
         boolean found2 = false;
         for ( OutlierDetails outlier : output ) {
-            BioAssay s = outlier.getBioAssay();
-            if ( ol1.equals( s ) ) {
+            Long s = outlier.getBioAssayId();
+            if ( ol1.getId().equals( s ) ) {
                 found1 = true;
-            } else if ( ol2.equals( s ) ) {
+            } else if ( ol2.getId().equals( s ) ) {
                 found2 = true;
             }
         }

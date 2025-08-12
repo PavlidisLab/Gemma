@@ -179,7 +179,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         Collection<OutlierDetails> outliers = new LinkedList<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( ba.getIsOutlier() ) {
-                OutlierDetails od = new OutlierDetails( ba );
+                OutlierDetails od = new OutlierDetails( ba.getId() );
                 if ( !outliers.contains( od ) ) {
                     outliers.add( od );
                 }

@@ -301,18 +301,15 @@ public class ExpressionExperimentControllerHelperService {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
-
-        if ( outliers == null ) {
+        Optional<Collection<OutlierDetails>> outliers = outlierDetectionService.getOutlierDetails( ee );
+        if ( outliers.isPresent() ) {
+            count = outliers.get().size();
+            if ( count > 0 ) log.debug( count + " possible outliers detected." );
+            return count;
+        } else {
             log.warn( String.format( "%s does not have analysis performed, will return zero.", ee ) );
             return 0;
         }
-
-        count = outliers.size();
-
-        if ( count > 0 ) log.debug( count + " possible outliers detected." );
-
-        return count;
     }
 
     /**
