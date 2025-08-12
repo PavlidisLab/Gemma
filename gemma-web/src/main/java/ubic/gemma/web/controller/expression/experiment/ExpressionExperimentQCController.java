@@ -865,11 +865,11 @@ public class ExpressionExperimentQCController {
      * Get the eigengene for the given component.
      * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
      */
-    private Double[] getEigenGene( SVDResult svdo, Integer component ) {
+    private double[] getEigenGene( SVDResult svdo, Integer component ) {
         DoubleArrayList eigenGeneL = new DoubleArrayList(
                 ArrayUtils.toPrimitive( svdo.getVMatrix().getColObj( component ) ) );
         DescriptiveWithMissing.standardize( eigenGeneL );
-        return ArrayUtils.toObject( eigenGeneL.elements() );
+        return eigenGeneL.elements();
     }
 
     private Map<ExperimentalFactor, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
@@ -1034,7 +1034,7 @@ public class ExpressionExperimentQCController {
                 if ( a != null && !Double.isNaN( a ) ) {
                     String title = plotname + " " + String.format( "%.2f", a );
                     List<Number> values = svdo.getFactors().get( efId );
-                    Double[] eigenGene = this.getEigenGene( svdo, component );
+                    double[] eigenGene = this.getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
 
                     /*
@@ -1109,15 +1109,12 @@ public class ExpressionExperimentQCController {
                          */
 
                         DefaultXYDataset series = new DefaultXYDataset();
-                        series.addSeries( plotname,
-                                new double[][] { ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ),
-                                        ArrayUtils.toPrimitive( eigenGene ) } );
+                        series.addSeries( plotname, new double[][] { values.stream().mapToDouble( Number::doubleValue ).toArray(), eigenGene } );
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
                         ChartFactory.setChartTheme( chartTheme );
-                        chart = ChartFactory
-                                .createScatterPlot( title, null, xaxisLabel, series, PlotOrientation.VERTICAL, false,
-                                        false, false );
+                        chart = ChartFactory.createScatterPlot( title, null, xaxisLabel, series,
+                                PlotOrientation.VERTICAL, false, false, false );
                         XYPlot plot = chart.getXYPlot();
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
