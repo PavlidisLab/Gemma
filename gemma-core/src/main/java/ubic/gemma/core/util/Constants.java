@@ -19,5 +19,5 @@ public class Constants {
     /**
      * Notice to include in all generated files.
      */
-    public static final String GEMMA_LICENSE_NOTICE = "Gemma Data by Pavlidis Lab is licensed under CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/.";
+    public static final String GEMMA_LICENSE_NOTICE = "Gemma Data and Graphics by the Pavlidis Lab are licensed under CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/.";
 }
