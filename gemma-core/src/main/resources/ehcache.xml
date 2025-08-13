@@ -409,7 +409,7 @@
            maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"
-           maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
+           maxElementsInMemory="1000" timeToLiveSeconds="1200" overflowToDisk="false"/>
     <cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenValues"
            maxElementsInMemory="1000" eternal="true" overflowToDisk="false"/>
     <!-- there's about 100 eigenvalues/vectors per PCA -->
