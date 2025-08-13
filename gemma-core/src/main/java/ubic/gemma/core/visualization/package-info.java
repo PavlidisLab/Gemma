@@ -2,6 +2,6 @@
  * @author poirigui
  */
 @ParametersAreNonnullByDefault
-package ubic.gemma.corej11.visualization;
+package ubic.gemma.core.visualization;
 
 import javax.annotation.ParametersAreNonnullByDefault;

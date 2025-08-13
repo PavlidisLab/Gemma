@@ -1,14 +1,13 @@
-package ubic.gemma.corej11.visualization;
+package ubic.gemma.core.visualization;
 
-import com.sun.imageio.plugins.png.PNGMetadata;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.encoders.ImageEncoder;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
+import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -82,18 +81,34 @@ class SunPNGEncoderWithMetadataAdapter implements ImageEncoder {
 
     @Override
     public void encode( BufferedImage bufferedImage, OutputStream outputStream ) throws IOException {
-        PNGMetadata pngMetadata = new PNGMetadata();
-        for ( Map.Entry<String, String> entry : keywords.entrySet() ) {
-            pngMetadata.tEXt_keyword.add( entry.getKey() );
-            pngMetadata.tEXt_text.add( entry.getValue() );
-        }
-        IIOImage iioImage = new IIOImage( bufferedImage, null, pngMetadata );
         ImageWriter writer = ImageIO.getImageWritersByFormatName( "png" ).next();
+
+        ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType( isEncodingAlpha ?
+                BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB );
+        ImageWriteParam writeParam = writer.getDefaultWriteParam();
+
+        IIOMetadata metadata = writer.getDefaultImageMetadata( typeSpecifier, writeParam );
+        metadata.mergeTree( "javax_imageio_png_1.0", createPNGMetadata() );
+
+        IIOImage iioImage = new IIOImage( bufferedImage, null, metadata );
         try ( ImageOutputStream out = ImageIO.createImageOutputStream( outputStream ) ) {
             writer.setOutput( out );
-            writer.write( iioImage );
+            writer.write( metadata, iioImage, writeParam );
         } finally {
             writer.dispose();
         }
+    }
+
+    private IIOMetadataNode createPNGMetadata() {
+        IIOMetadataNode root = new IIOMetadataNode( "javax_imageio_png_1.0" );
+        IIOMetadataNode text = new IIOMetadataNode( "tEXt" );
+        for ( Map.Entry<String, String> entry : keywords.entrySet() ) {
+            IIOMetadataNode textEntry = new IIOMetadataNode( "tEXtEntry" );
+            textEntry.setAttribute( "keyword", entry.getKey() );
+            textEntry.setAttribute( "value", entry.getValue() );
+            text.appendChild( textEntry );
+        }
+        root.appendChild( text );
+        return root;
     }
 }

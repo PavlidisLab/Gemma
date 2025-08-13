@@ -20,7 +20,6 @@
 	</parent>
 	<modules>
 		<module>gemma-core</module>
-		<module>gemma-core-java11</module>
 		<module>gemma-cli</module>
 		<module>gemma-rest</module>
 		<module>gemma-web</module>

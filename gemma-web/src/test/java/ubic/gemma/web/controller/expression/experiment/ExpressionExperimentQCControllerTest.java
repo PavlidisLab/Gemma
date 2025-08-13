@@ -10,11 +10,14 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.w3c.dom.Node;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,11 +34,19 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.web.util.BaseWebTest;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.metadata.IIOMetadata;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -198,6 +209,39 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
                 .param( "analysisId", "9182" )
                 .param( "rsid", "29182" ) )
                 .andExpect( status().isOk() )
-                .andExpect( content().contentType( MediaType.IMAGE_PNG ) );
+                .andExpect( content().contentType( MediaType.IMAGE_PNG ) )
+                .andExpect( ( ResultMatcher ) result1 -> {
+                    ImageReader reader = ImageIO.getImageReadersByFormatName( "png" ).next();
+                    BufferedImage image;
+                    IIOMetadata metadata;
+                    try {
+                        reader.setInput( ImageIO.createImageInputStream( new ByteArrayInputStream( result1.getResponse().getContentAsByteArray() ) ) );
+                        image = reader.read( 0 );
+                        metadata = reader.getImageMetadata( 0 );
+                    } finally {
+                        reader.dispose();
+                    }
+                    assertThat( image.getHeight() ).isEqualTo( 400 );
+                    assertThat( image.getWidth() ).isEqualTo( 400 );
+                    Node node = metadata.getAsTree( "javax_imageio_png_1.0" );
+                    Map<String, String> keywords = new HashMap<>();
+                    for ( Node c = node.getFirstChild(); c != null; c = c.getNextSibling() ) {
+                        if ( c.getNodeName().equals( "tEXt" ) ) {
+                            for ( Node d = c.getFirstChild(); d != null; d = d.getNextSibling() ) {
+                                if ( d.getNodeName().equals( "tEXtEntry" ) ) {
+                                    String keyword = d.getAttributes().getNamedItem( "keyword" ).getNodeValue();
+                                    String value = d.getAttributes().getNamedItem( "value" ).getNodeValue();
+                                    keywords.put( keyword, value );
+                                }
+                            }
+                        }
+                    }
+                    assertThat( keywords )
+                            .containsEntry( "Title", "Placeholder image" )
+                            .containsEntry( "Copyright", Constants.GEMMA_COPYRIGHT_NOTICE )
+                            .containsEntry( "Disclaimer", Constants.GEMMA_LICENSE_NOTICE )
+                            .containsKey( "Software" )
+                            .containsKey( "Creation Time" );
+                } );
     }
 }

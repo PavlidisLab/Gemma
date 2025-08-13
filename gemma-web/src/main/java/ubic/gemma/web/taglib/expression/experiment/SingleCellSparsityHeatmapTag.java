@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
-import ubic.gemma.corej11.visualization.ChartUtils;
+import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.web.util.WebEntityUrlBuilder;

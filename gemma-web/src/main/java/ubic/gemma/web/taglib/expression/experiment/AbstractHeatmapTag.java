@@ -6,7 +6,7 @@ import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.Heatmap;
-import ubic.gemma.corej11.visualization.ChartUtils;
+import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.web.taglib.TagWriterUtils;
 
 import javax.servlet.jsp.JspException;

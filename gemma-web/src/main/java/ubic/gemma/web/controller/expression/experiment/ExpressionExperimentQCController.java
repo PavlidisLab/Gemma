@@ -81,7 +81,7 @@ import ubic.gemma.core.visualization.ChartThemeUtils;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.core.visualization.SingleCellDataBoxplot;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
-import ubic.gemma.corej11.visualization.ChartUtils;
+import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -99,7 +99,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -195,8 +194,6 @@ public class ExpressionExperimentQCController {
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
-    @Autowired
-    private BioAssayService bioAssayService;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis(

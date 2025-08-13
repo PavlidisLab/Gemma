@@ -1,4 +1,4 @@
-package ubic.gemma.corej11.visualization;
+package ubic.gemma.core.visualization;
 
 import org.jfree.chart.JFreeChart;
 import ubic.gemma.core.util.BuildInfo;
@@ -22,6 +22,7 @@ public class ChartUtils {
 
     public static void writeBufferedImageAsPNG( OutputStream out, BufferedImage bufferedImage, String title, BuildInfo buildInfo ) throws IOException {
         SunPNGEncoderWithMetadataAdapter imageEncoder = new SunPNGEncoderWithMetadataAdapter();
+        imageEncoder.setEncodingAlpha( true );
         imageEncoder.setTitle( title );
         imageEncoder.setCopyright( Constants.GEMMA_COPYRIGHT_NOTICE );
         imageEncoder.setDisclaimer( Constants.GEMMA_LICENSE_NOTICE );
