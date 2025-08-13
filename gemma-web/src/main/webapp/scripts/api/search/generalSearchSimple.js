@@ -80,7 +80,7 @@ Gemma.Search.GeneralSearchSimpleCombo = Ext.extend( Ext.form.ComboBox, {
    boxLabel : 'Search for',
    store : new Ext.data.ArrayStore( {
       fields : [ 'myTextId', 'displayText' ],
-      data : [ [ 'experiments', 'experiments' ] ,[ 'genes', 'genes' ] ]
+      data : [ [ 'experiments', 'datasets' ] ,[ 'genes', 'genes' ] ]
    } ),
    valueField : 'myTextId',
    displayField : 'displayText',

@@ -54,7 +54,7 @@
 
         <c:if test="${not empty bioAssaySets}">
             <tr>
-                <td class="label">Experiments used in:</td>
+                <td class="label">Datasets used in:</td>
                 <td>
                     <c:forEach items="${bioAssaySets}" var="bioAssaySet" varStatus="i">
                         <c:if test="${!i.first}">, </c:if>

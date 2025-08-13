@@ -230,7 +230,7 @@
 
         <hr class="normal">
 
-        <h3>Biomaterials and Assays</h3>
+        <h3>Samples and Assays</h3>
 
         <form:errors path="assayToMaterialMap" cssClass="error" />
 

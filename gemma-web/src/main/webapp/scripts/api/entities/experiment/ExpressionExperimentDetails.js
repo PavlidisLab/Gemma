@@ -321,7 +321,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     }
                 }
                 if (eeSetLinks.length === 0) {
-                    eeSetLinks.push('Not currently a member of any experiment group');
+                    eeSetLinks.push('Not currently a member of any dataset group.');
                 }
                 return eeSetLinks;
             },
@@ -780,7 +780,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         items: [tagView]
                                     },
                                     {
-                                        fieldLabel: 'Experiment Groups',
+                                        fieldLabel: 'Dataset Groups',
                                         html: this.renderEESets(e.expressionExperimentSets).join(',')
                                     },
                                     {
@@ -794,10 +794,10 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: '<div id="downloads"> '
                                         + this.renderProcessedExpressionVectorCount(e)
                                         + '&nbsp;&nbsp;'
-                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
+                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the filtered tab-delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
                                         + e.id
                                         + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
+                                        + '<span class="link" ext:qtip="Download the unfiltered tab-delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
                                         + e.id
                                         + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
                                         + '<i class="qtp fa fa-question-circle fa-fw"></i>'

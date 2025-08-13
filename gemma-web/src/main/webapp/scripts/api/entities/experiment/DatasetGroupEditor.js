@@ -107,7 +107,7 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
          collapseMode : 'mini',
          width : 400,
          height : 200,
-         title : "Available expression experiment groups",
+         title : "Available dataset groups",
          displayGrid : this.datasetGroupMembersGrid,
          tbar : new Gemma.DatasetGroupEditToolbar()
       } );

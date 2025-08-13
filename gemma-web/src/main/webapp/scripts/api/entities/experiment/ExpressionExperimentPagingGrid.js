@@ -164,7 +164,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
         columns: [
             {
                 id: 'name',
-                header: "Dataset Name",
+                header: "Name",
                 dataIndex: 'name',
                 sortable: true,
                 width: 1, // viewConfig.forceFit resizes based on relative widths,
@@ -174,7 +174,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 }
             },
             {
-                header: "Updated",
+                header: "Last Updated",
                 dataIndex: 'lastUpdated',
                 sortable: true,
                 width: 0.2,
@@ -518,7 +518,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             } else if (filterByTaxon) {
                 pageStore = this.getTaxonStore(this.taxonId);
             } else {
-                this.setTitle("All Expression Experiments");
+                this.setTitle("All Datasets");
                 pageStore = new Gemma.ExperimentPagingStore({
                     autoLoad: {
                         params: {
@@ -591,7 +591,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             });
 
             var QClinkButton = new Ext.Button({
-                text: 'Experiment QC',
+                text: 'Dataset with QC',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
                     window.location = Gemma.CONTEXT_PATH + "/expressionExperimentsWithQC.html";

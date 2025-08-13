@@ -297,7 +297,7 @@ Ext
             width : 600,
             autoHeight : true,
             frame : true,
-            title : "Enter expression experiment details",
+            title : "Enter dataset details",
             items : [
                {
                   xtype : 'panel',

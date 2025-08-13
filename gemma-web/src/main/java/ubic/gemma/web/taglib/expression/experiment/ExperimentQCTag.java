@@ -176,7 +176,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         writer.startTag( "tr" );
 
         for ( String header : new String[] {
-                "Sample correlation",
+                "Sample Correlation Matrix", // this is technically an assay correlation matrix, but the term sample is more familiar
                 "PCA Scree",
                 "PCA+Factors",
                 "Mean-Variance"

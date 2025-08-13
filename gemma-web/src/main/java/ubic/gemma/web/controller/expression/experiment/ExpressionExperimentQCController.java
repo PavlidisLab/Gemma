@@ -77,11 +77,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MeanVarianceWriter;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.visualization.ChartThemeUtils;
-import ubic.gemma.core.visualization.ExpressionDataHeatmap;
-import ubic.gemma.core.visualization.SingleCellDataBoxplot;
-import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
-import ubic.gemma.core.visualization.ChartUtils;
+import ubic.gemma.core.visualization.*;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -1401,7 +1397,7 @@ public class ExpressionExperimentQCController {
         }
         ChartFactory.setChartTheme( theme );
         JFreeChart chart = ChartFactory
-                .createBarChart( "", "Factors", "Component assoc.", series, PlotOrientation.VERTICAL, true, false,
+                .createBarChart( "", "Factors", "Component association", series, PlotOrientation.VERTICAL, true, false,
                         false );
 
         chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
@@ -1444,7 +1440,7 @@ public class ExpressionExperimentQCController {
         int MAX_COMPONENTS_FOR_SCREE = 10;
         ChartFactory.setChartTheme( theme );
         JFreeChart chart = ChartFactory
-                .createBarChart( "", "Component (up to " + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
+                .createBarChart( "", "Component (up to " + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of variance", series,
                         PlotOrientation.VERTICAL, false, false, false );
 
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();

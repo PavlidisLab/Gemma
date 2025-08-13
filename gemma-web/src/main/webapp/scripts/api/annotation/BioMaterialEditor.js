@@ -98,32 +98,32 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
    createColumns : function( factors ) {
       var columns = [ this.rowExpander, {
          id : "bm-column",
-         header : "BioMaterial",
+         header : "Sample",
          dataIndex : "bmName",
          sortable : true,
          width : 120,
-         tooltip : 'BioMaterial (sample) name/details'
+         tooltip : 'Sample name/details'
       }, {
          id : "ba-column",
-         header : "BioAssay",
+         header : "Assay",
          width : 150,
          dataIndex : "baName",
          sortable : true,
-         tooltip : 'BioAssay name/details'
+         tooltip : 'Assay name/details'
       }, {
          id : "date-column",
-         header : "BA Date",
+         header : "Assay Date",
          width : 40,
          dataIndex : "baDate",
          sortable : true,
-         tooltip : 'BioAssay processing date (available for microarrays only, may be absent)'
+         tooltip : 'Assay processing date (available for microarrays only, may be absent)'
       }, {
          id : "fastq-column",
-         header : "BA FASTQ",
+         header : "Assay FASTQ",
          width : 40,
          dataIndex : "baFastq",
          sortable : true,
-         tooltip : 'BioAssay FASTQ header exemplar (available for RNA-seq only, may be absent)'
+         tooltip : 'Assay FASTQ header exemplar (available for RNA-seq only, may be absent)'
       } ];
 
       this.factorValueEditors = [];
@@ -639,8 +639,8 @@ Gemma.BioMaterialGrid = Ext.extend( Gemma.GemmaGridPanel, {
    rowExpander : new Ext.grid.RowExpander(
       {
          tpl : new Ext.Template(
-            "<dl style='background-color:#EEE;padding:2px;margin-left:1em;margin-bottom:2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
-            "<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>" )
+            "<dl style='background-color:#EEE;padding:2px;margin-left:1em;margin-bottom:2px;'><dt>Sample {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
+            "<dt>Assay {baName}</dt><dd>{baDesc}</dd></dl>" )
       } ),
 
    searchForText : function( text ) {

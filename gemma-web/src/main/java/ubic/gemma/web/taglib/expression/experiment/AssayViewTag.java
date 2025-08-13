@@ -142,7 +142,7 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
         writer.writeAttribute( "class", "detail row-separated odd-gray" );
         writer.startTag( "tr" );
         writer.startTag( "th" );
-        writer.appendValue( materialCount + " Biomaterials" );
+        writer.appendValue( materialCount + " Samples" );
         if ( expressionExperimentId != null ) {
             writer.appendValue( " (" );
             writer.startTag( "a" );
@@ -159,7 +159,7 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
         for ( ArrayDesignValueObject design : designs ) {
             Long count = arrayMaterialCount.get( design );
             writer.startTag( "th" );
-            writer.appendValue( count + " Assays " );
+            writer.appendValue( count + " Assays" );
             if ( expressionExperimentId != null ) {
                 writer.appendValue( " (" );
                 writer.startTag( "a" );
