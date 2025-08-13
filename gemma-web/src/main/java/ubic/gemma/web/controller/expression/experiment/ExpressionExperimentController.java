@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.dataStructure.CountingMap;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -52,7 +53,9 @@ import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -89,14 +92,15 @@ import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.ListBatchCommand;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
-import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.service.ExpressionExperimentControllerHelperService;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -105,9 +109,6 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
-import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
-import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
-import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * @author keshav
@@ -1276,21 +1277,23 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = "/downloadExpressionExperimentList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView handleRequestInternal(
+    public void downloadExpressionExperimentList(
             @RequestParam(value = "e", required = false) String e,
             @RequestParam(value = "es", required = false) String es,
-            @RequestParam(value = "esn", required = false) String esn
-    ) {
+            HttpServletResponse response
+    ) throws IOException {
+        if ( e == null && es == null ) {
+            throw new IllegalArgumentException( "Either 'e' or 'es' must be specified." );
+        }
         StopWatch watch = new StopWatch();
         watch.start();
 
         Collection<Long> eeIds = ControllerUtils.extractIds( e ); // might not be any
         Collection<Long> eeSetIds = ControllerUtils.extractIds( es ); // might not be there
 
-        ModelAndView mav = new ModelAndView( new TextView() );
         if ( eeIds.isEmpty() && eeSetIds.isEmpty() ) {
-            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds + "} or expression experiment set ids {" + eeSetIds + "}" );
-            return mav;
+            throw new EntityNotFoundException( String.format( "Could not find genes to match IDs: {%s} or dataset group IDs {%s}",
+                    eeIds, eeSetIds ) );
         }
 
         Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjectsByIds( eeIds );
@@ -1299,14 +1302,42 @@ public class ExpressionExperimentController {
             ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
         }
 
-        mav.addObject( TextView.TEXT_PARAM, this.format4File( ees, esn ) );
+        if ( eeIds.isEmpty() && eeSetIds.size() == 1 ) {
+            ExpressionExperimentSet eeSet = expressionExperimentSetService.loadOrFail( eeSetIds.iterator().next(), EntityNotFoundException::new );
+            response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + eeSet.getId() + "_" + FileTools.cleanForFileName( eeSet.getName() ) + ".tsv\"" );
+            format4File( ees, "Dataset Group", eeSet.getName(), response.getWriter() );
+        } else {
+            response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"datasets.tsv\"" );
+            format4File( ees, "Dataset List", null, response.getWriter() );
+        }
+
         watch.stop();
         long time = watch.getTime();
 
         if ( time > 100 ) {
             ExpressionExperimentController.log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
         }
-        return mav;
+    }
+
+    private void format4File( Collection<ExpressionExperimentValueObject> ees, String what, @Nullable String eeSetName, Writer strBuff ) throws IOException {
+        TsvUtils.appendBaseHeader( what, buildInfo, new Date(), strBuff );
+        if ( eeSetName != null ) {
+            strBuff.append( "#\n" );
+            strBuff.append( "# Dataset Group: " ).append( eeSetName ).append( "\n" );
+        }
+        strBuff.append( "#\n" );
+        strBuff.append( "# " ).append( String.valueOf( ees.size() ) ).append( ( ees.size() > 1 ) ? " datasets" : " dataset" )
+                .append( "\n" );
+
+        // add header
+        strBuff.append( "Short Name\tFull Name\n" );
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            strBuff.append( ee.getShortName() )
+                    .append( "\t" ).append( ee.getName() )
+                    .append( "\n" );
+        }
     }
 
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch, List<Long> ids, Taxon taxon ) {
@@ -1408,33 +1439,6 @@ public class ExpressionExperimentController {
         }
 
         return eeValObjectCol;
-    }
-
-    private String format4File( Collection<ExpressionExperimentValueObject> ees, @Nullable String eeSetName ) {
-        StringBuilder strBuff = new StringBuilder();
-        strBuff.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
-        strBuff.append( "#\n" );
-        for ( String line : GEMMA_CITATION_NOTICE ) {
-            strBuff.append( "# " ).append( line ).append( "\n" );
-        }
-        strBuff.append( "#\n" );
-        strBuff.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
-        strBuff.append( "#\n" );
-
-        if ( eeSetName != null && !eeSetName.isEmpty() )
-            strBuff.append( "# Experiment Set: " ).append( eeSetName ).append( "\n" );
-        strBuff.append( "# " ).append( ees.size() ).append( ( ees.size() > 1 ) ? " experiments" : " experiment" ).append( "\n#\n" );
-
-        // add header
-        strBuff.append( "Short Name\tFull Name\n" );
-        for ( ExpressionExperimentValueObject ee : ees ) {
-            if ( ee != null ) {
-                strBuff.append( ee.getShortName() ).append( "\t" ).append( ee.getName() );
-                strBuff.append( "\n" );
-            }
-        }
-
-        return strBuff.toString();
     }
 
     /**

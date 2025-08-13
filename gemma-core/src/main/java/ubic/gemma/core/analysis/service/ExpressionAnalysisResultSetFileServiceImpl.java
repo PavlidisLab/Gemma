@@ -100,9 +100,9 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
                     contrastResultPrefix + "pvalue" ) );
         }
 
-        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, extraHeaderComments.toArray( new String[1] ) )
+        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, new Date(), extraHeaderComments.toArray( new String[1] ) )
                 .setHeader( header.toArray( new String[0] ) )
-                .build()
+                .get()
                 .print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
                 final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),

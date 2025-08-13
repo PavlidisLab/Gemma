@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,30 +26,33 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.util.ControllerUtils;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.MessageUtil;
-import ubic.gemma.web.controller.util.view.TextView;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
-import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
-import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.appendBaseHeader;
 
 /**
  * @author daq2101
@@ -62,6 +64,7 @@ import static ubic.gemma.core.util.TsvUtils.format;
 public class GeneController {
 
     protected final Log log = LogFactory.getLog( getClass().getName() );
+
     @Autowired
     protected MessageSource messageSource;
     @Autowired
@@ -97,129 +100,121 @@ public class GeneController {
 
     @SuppressWarnings("unused") // Required
     @RequestMapping(value = { "/showGene.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView show( HttpServletRequest request ) {
+    public ModelAndView show( @RequestParam(value = "id", required = false) Long id,
+            @RequestParam(value = "ncbiid", required = false) Integer ncbiId,
+            @RequestParam(value = "name", required = false) String geneName,
+            @RequestParam(value = "taxon", required = false) String taxonName,
+            @RequestParam(value = "ensemblId", required = false) String ensemblId ) {
 
-        String idString = request.getParameter( "id" );
-        String ncbiId = request.getParameter( "ncbiid" );
-        String geneName = request.getParameter( "name" );
-        String taxonName = request.getParameter( "taxon" );
-        String ensemblId = request.getParameter( "ensemblId" );
-
+        String idDesc;
         GeneValueObject geneVO = null;
-
-        try {
-            if ( StringUtils.isNotBlank( idString ) ) {
-                Long id = Long.parseLong( idString );
-
-                geneVO = geneService.loadValueObjectById( id );
-
-                if ( geneVO == null ) {
-                    messageUtil.saveMessage( "object.notfound", new Object[] { "Gene " + id }, "??" + "object.notfound" + "??" );
-                    return new ModelAndView( "index" );
-                }
-            } else if ( StringUtils.isNotBlank( ncbiId ) ) {
-
-                geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
-
-            } else if ( StringUtils.isNotBlank( ensemblId ) ) {
-                Collection<Gene> foundGenes = Collections
-                        .singleton( geneService.findByEnsemblId( ensemblId ) );
-
-                Gene gene = foundGenes.iterator().next();
-                if ( gene != null ) {
-                    geneVO = geneService.loadValueObjectById( gene.getId() );
-                }
-
-            } else if ( StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName ) ) {
-                Taxon taxon = taxonService.findByCommonName( taxonName );
-                if ( taxon != null ) {
-                    Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
-                    if ( gene != null ) {
-                        geneVO = geneService.loadValueObjectById( gene.getId() );
-                    }
-                }
+        if ( id != null ) {
+            idDesc = "ID " + id;
+            geneVO = geneService.loadValueObjectById( id );
+        } else if ( ncbiId != null ) {
+            idDesc = "NCBI ID " + ncbiId;
+            geneVO = geneService.findByNCBIIdValueObject( ncbiId );
+        } else if ( ensemblId != null ) {
+            idDesc = "Ensembl ID " + ensemblId;
+            Collection<Gene> foundGenes = Collections
+                    .singleton( geneService.findByEnsemblId( ensemblId ) );
+            Gene gene = foundGenes.iterator().next();
+            if ( gene != null ) {
+                geneVO = geneService.loadValueObjectById( gene.getId() );
             }
-
-        } catch ( NumberFormatException e ) {
-            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
-            return new ModelAndView( "index" );
+        } else if ( geneName != null && taxonName != null ) {
+            Taxon taxon = taxonService.findByCommonName( taxonName );
+            if ( taxon == null ) {
+                throw new EntityNotFoundException( "No taxon found with common name " + taxonName + "." );
+            }
+            idDesc = "official symbol " + geneName + " (" + taxon.getCommonName() + ")";
+            Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
+            if ( gene != null ) {
+                geneVO = geneService.loadValueObjectById( gene.getId() );
+            }
+        } else {
+            throw new IllegalArgumentException( "No valid parameters provided to identify gene." );
         }
 
         if ( geneVO == null ) {
-            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
-            return new ModelAndView( "index" );
+            throw new EntityNotFoundException( "No gene found with " + idDesc );
         }
 
-        Long id = geneVO.getId();
-
-        assert id != null;
         return new ModelAndView( "gene.detail" )
                 .addObject( "gene", geneVO );
     }
 
     @RequestMapping(value = "/downloadGeneList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    public void downloadGeneList(
+            @RequestParam(value = "g", required = false) @Nullable String geneIdsStr,
+            @RequestParam(value = "gs", required = false) @Nullable String geneSetIdsStr,
+            HttpServletResponse response ) throws IOException {
+        if ( geneIdsStr == null && geneSetIdsStr == null ) {
+            throw new IllegalArgumentException( "No gene IDs or gene set IDs provided." );
+        }
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> geneIds = ControllerUtils.extractIds( request.getParameter( "g" ) ); // might not be any
-        Collection<Long> geneSetIds = ControllerUtils.extractIds( request.getParameter( "gs" ) ); // might not be there
-        String geneSetName = request.getParameter( "gsn" ); // might not be there
+        Collection<Long> geneIds = ControllerUtils.extractIds( geneIdsStr ); // might not be any
+        Collection<Long> geneSetIds = ControllerUtils.extractIds( geneSetIdsStr ); // might not be there
 
-        ModelAndView mav = new ModelAndView( new TextView() );
-        if ( geneIds.isEmpty() && geneSetIds.isEmpty() ) {
-            mav.addObject( "text",
-                    "Could not find genes to match gene ids: {" + geneIds + "} or gene set ids {" + geneSetIds + "}" );
-            return mav;
+        Collection<Gene> genes = geneService.load( geneIds );
+        Collection<GeneSet> geneSets = geneSetService.loadWithMembers( geneSetIds );
+
+        if ( genes.isEmpty() && geneSets.isEmpty() ) {
+            throw new EntityNotFoundException( String.format( "Could not find genes to match gene IDs: %s or gene set IDs: %s.",
+                    geneIds.stream().sorted().map( String::valueOf ).collect( Collectors.joining( ", " ) ),
+                    geneSetIds.stream().sorted().map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
         }
-        Collection<GeneValueObject> genes = new ArrayList<>();
-        for ( Long id : geneIds ) {
-            GeneValueObject vo = geneService.loadValueObjectById( id );
-            if ( vo != null ) {
-                genes.add( vo );
+
+        if ( geneIds.isEmpty() && geneSetIds.size() == 1 ) {
+            // requesting a single gene set
+            GeneSet geneSet = geneSets.iterator().next();
+            response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + geneSet.getId() + "_" + FileTools.cleanForFileName( geneSet.getName() ) + ".tsv\"" );
+            format4File( geneSet.getMembers().stream().map( GeneSetMember::getGene ).collect( Collectors.toSet() ),
+                    "Gene Set", geneSet.getName(), response.getWriter() );
+        } else {
+            // requesting multiple gene sets and/or genes
+            Set<Gene> allGenes = new HashSet<>( genes );
+            for ( GeneSet gs : geneSets ) {
+                for ( GeneSetMember gsm : gs.getMembers() ) {
+                    allGenes.add( gsm.getGene() );
+                }
             }
-        }
-        for ( Long id : geneSetIds ) {
-            genes.addAll( geneSetService.getGenesInGroup( new GeneSetValueObject( id ) ) );
+            response.setContentType( "text/tab-separated-values" );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"genes.tsv\"" );
+            format4File( allGenes, "Gene List", null, response.getWriter() );
         }
 
-        mav.addObject( "text", format4File( genes, geneSetName ) );
         watch.stop();
         long time = watch.getTime();
 
         if ( time > 100 ) {
             log.info( "Retrieved and Formated" + genes.size() + " genes in : " + time + " ms." );
         }
-        return mav;
-
     }
 
-    private String format4File( Collection<GeneValueObject> genes, String geneSetName ) {
-        StringBuilder strBuff = new StringBuilder();
-        strBuff.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
-        strBuff.append( "#\n" );
-        for ( String line : GEMMA_CITATION_NOTICE ) {
-            strBuff.append( "# " ).append( line ).append( "\n" );
+    private void format4File( Collection<Gene> genes, String what, @Nullable String geneSetName, Writer strBuff ) throws IOException {
+        appendBaseHeader( what, buildInfo, new Date(), strBuff );
+        if ( geneSetName != null ) {
+            strBuff.append( "#\n" )
+                    .append( "# Gene Set: " ).append( geneSetName )
+                    .append( "\n" );
         }
-        strBuff.append( "#\n" );
-        strBuff.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
-        strBuff.append( "#\n" );
-
-        if ( geneSetName != null && !geneSetName.isEmpty() )
-            strBuff.append( "# Gene Set: " ).append( geneSetName ).append( "\n" );
-        strBuff.append( "# " ).append( genes.size() ).append( ( genes.size() > 1 ) ? " genes" : " gene" )
+        strBuff.append( "#\n" )
+                .append( "# " ).append( String.valueOf( genes.size() ) ).append( ( genes.size() > 1 ) ? " genes" : " gene" )
                 .append( "\n" );
 
         // add header
         strBuff.append( "Gene Symbol\tGene Name\tNCBI ID\n" );
-        for ( GeneValueObject gene : genes ) {
-            strBuff.append( gene.getOfficialSymbol() ).append( "\t" ).append( gene.getOfficialName() ).append( "\t" )
-                    .append( gene.getNcbiId() );
-            strBuff.append( "\n" );
+        for ( Gene gene : genes ) {
+            strBuff.append( TsvUtils.format( gene.getOfficialSymbol() ) )
+                    .append( "\t" ).append( TsvUtils.format( gene.getOfficialName() ) )
+                    .append( "\t" ).append( TsvUtils.format( gene.getNcbiGeneId() ) )
+                    .append( "\n" );
         }
-
-        return strBuff.toString();
     }
 
 }

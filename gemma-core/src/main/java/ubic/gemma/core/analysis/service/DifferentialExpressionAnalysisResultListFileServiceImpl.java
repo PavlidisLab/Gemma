@@ -12,10 +12,7 @@ import ubic.gemma.model.genome.Gene;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.TsvUtils.*;
@@ -53,8 +50,8 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl implements 
         if ( baselineMap != null ) {
             header.add( "baseline" );
         }
-        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, extraHeaderComments.toArray( new String[0] ) )
-                .setHeader( header.toArray( new String[0] ) ).build().print( writer ) ) {
+        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, new Date(), extraHeaderComments.toArray( new String[0] ) )
+                .setHeader( header.toArray( new String[0] ) ).get().print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult result : entity ) {
                 List<Object> record = new ArrayList<>( header.size() );
                 record.add( result.getId() );
