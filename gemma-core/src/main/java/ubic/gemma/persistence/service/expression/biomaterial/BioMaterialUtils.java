@@ -26,12 +26,12 @@ public class BioMaterialUtils {
     }
 
     /**
-     * Create a mapping of characteristics
+     * Create a mapping of biomaterial to characteristics for each category.
      */
     public static Map<Category, Map<BioMaterial, Collection<Characteristic>>> createCharacteristicMap( Collection<BioMaterial> samples ) {
         Map<Category, Map<BioMaterial, Collection<Characteristic>>> map = new HashMap<>();
         for ( BioMaterial sample : samples ) {
-            for ( Characteristic characteristic : sample.getCharacteristics() ) {
+            for ( Characteristic characteristic : sample.getAllCharacteristics() ) {
                 map.computeIfAbsent( CharacteristicUtils.getCategory( characteristic ), k -> new HashMap<>() )
                         .computeIfAbsent( sample, k -> new HashSet<>( samples.size() ) )
                         .add( characteristic );

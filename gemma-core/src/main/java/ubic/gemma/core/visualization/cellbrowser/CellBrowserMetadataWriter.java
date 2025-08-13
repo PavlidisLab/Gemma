@@ -38,25 +38,40 @@ public class CellBrowserMetadataWriter {
     private boolean autoFlush = false;
 
     public void write( ExpressionExperiment ee, SingleCellDimension singleCellDimension, Writer writer ) throws IOException {
+        List<BioMaterial> samples = singleCellDimension.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toList() );
+        // only retain factors that are actually used in the samples from the single-cell dimension
+        // some factors are assigned to pseudo-bulk samples such as the cell type, so they should not be included in
+        // the Cell Browser metadata
+        Set<ExperimentalFactor> usedFactors = samples.stream()
+                .map( BioMaterial::getAllFactorValues )
+                .flatMap( Collection::stream )
+                .map( FactorValue::getExperimentalFactor )
+                .collect( Collectors.toSet() );
         List<ExperimentalFactor> factors;
         if ( ee.getExperimentalDesign() != null ) {
             factors = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                    .filter( usedFactors::contains )
                     .sorted( ExperimentalFactor.COMPARATOR )
                     .collect( Collectors.toList() );
         } else {
             log.warn( ee + " does not have an experimental design, no factors will be written." );
             factors = Collections.emptyList();
         }
-        List<BioMaterial> samples = singleCellDimension.getBioAssays().stream()
-                .map( BioAssay::getSampleUsed )
-                .collect( Collectors.toList() );
-        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ee.getExperimentalDesign(), samples );
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( factors, samples );
         SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics = createCharacteristicMap( samples )
                 .entrySet()
                 .stream()
                 // only keep categories that have at most one characteristic per sample
+                // note: sample without a characteristic for that category lack an entry in the map
                 .filter( e -> {
-                    return e.getValue().values().stream().allMatch( v -> v.size() == 1 );
+                    if ( e.getValue().values().stream().allMatch( v -> v.size() == 1 ) ) {
+                        return true;
+                    } else {
+                        log.warn( "Category " + e.getKey() + " has multiple characteristics for some samples, skipping it." );
+                        return false;
+                    }
                 } )
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ),
                         ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Category::getCategory ) ) ) );
