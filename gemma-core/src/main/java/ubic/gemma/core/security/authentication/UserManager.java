@@ -1,6 +1,7 @@
 package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.GroupManager;
+import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserDetailsManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +16,8 @@ import java.util.Collection;
  * @author poirigui
  */
 public interface UserManager extends UserDetailsManager, GroupManager {
+
+    UserDetailsImpl createUser( String username, String email, String password );
 
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     User findByEmail( String s ) throws UsernameNotFoundException;

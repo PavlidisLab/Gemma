@@ -23,14 +23,12 @@ import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -44,7 +42,7 @@ import ubic.gemma.web.controller.util.MessageUtil;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -59,8 +57,6 @@ import java.util.Map;
 @CommonsLog
 public class SignupController implements InitializingBean {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
     @Autowired
     private UserManager userManager;
     @Autowired
@@ -88,7 +84,7 @@ public class SignupController implements InitializingBean {
     }
 
     @RequestMapping(value = "/ajaxLoginCheck.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public void ajaxLoginCheck( HttpServletResponse response ) throws Exception {
+    public void ajaxLoginCheck( HttpServletResponse response ) throws IOException {
         JSONObject json;
         try {
             if ( userManager.loggedIn() ) {
@@ -98,12 +94,11 @@ public class SignupController implements InitializingBean {
             } else {
                 json = new JSONObject().put( "success", false );
             }
+            JsonUtil.writeToResponse( json, response );
         } catch ( Exception e ) {
             log.error( "Error while checking if the current user is logged in.", e );
             JsonUtil.writeErrorToResponse( e, response );
-            return;
         }
-        JsonUtil.writeToResponse( json, response );
     }
 
     /*
@@ -160,53 +155,39 @@ public class SignupController implements InitializingBean {
             @RequestParam("username") String username,
             @RequestParam("email") String email,
             @RequestParam("emailConfirm") String cEmail,
+            @RequestParam(value = "ajaxRegisterTrue", defaultValue = "false") boolean ajaxRegisterTrue,
             HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        if ( reCaptcha.isPrivateKeySet() ) {
-
-            if ( !reCaptcha.validateRequest( request ).isValid() ) {
-                JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Captcha was not entered correctly.", response );
-                return;
+        try {
+            if ( reCaptcha.isPrivateKeySet() && !reCaptcha.validateRequest( request ).isValid() ) {
+                throw new IllegalArgumentException( "Captcha was not entered correctly." );
             }
 
-        }
+            if ( password.length() < UserFormMultiActionController.MIN_PASSWORD_LENGTH ) {
+                throw new IllegalArgumentException( "Password must be at least " + UserFormMultiActionController.MIN_PASSWORD_LENGTH + " characters long." );
+            }
 
-        if ( password.length() < UserFormMultiActionController.MIN_PASSWORD_LENGTH || !password.equals( cPass ) ) {
-            JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Password was not valid or didn't match", response );
-            return;
-        }
+            if ( !password.equals( cPass ) ) {
+                throw new IllegalArgumentException( "Password does not match the confirmation." );
+            }
 
-        String encodedPassword = passwordEncoder.encodePassword( password, username );
+            if ( !UserFormMultiActionController.RFC_5322_EMAIL_PATTERN.matcher( email ).matches() ) {
+                throw new IllegalArgumentException( "Invalid email address." );
+            }
 
-        /*
-         * Validate that it is a valid email....this regex adapted from extjs; a word possibly containing '-', '+' or
-         * '.', following by '@', followed by up to 5 chunks separated by '.', finally a 2-4 letter alphabetic suffix.
-         */
-        if ( !email.matches( "^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$" ) || !email
-                .equals( cEmail ) ) {
-            JsonUtil.writeErrorToResponse( HttpServletResponse.SC_BAD_REQUEST, "Email was not valid or didn't match", response );
-            return;
-        }
+            if ( !email.equals( cEmail ) ) {
+                throw new IllegalArgumentException( "Email does not match the confirmation." );
+            }
 
-        String key = userManager.generateSignupToken( username );
-
-        Date now = new Date();
-
-        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, false, null, email, key, now );
-
-        try {
-            userManager.createUser( u );
-            sendSignupConfirmationEmail( request, u );
+            UserDetailsImpl u = userManager.createUser( username, email, password );
+            sendSignupConfirmationEmail( u, ajaxRegisterTrue );
+            JsonUtil.writeSuccessToResponse( response );
         } catch ( Exception e ) {
             /*
              * Most common cause: user exists already.
              */
-            log.error( String.format( "User registration failed: %s", ExceptionUtils.getRootCauseMessage( e ) ), e );
+            log.error( "User registration failed.", e );
             JsonUtil.writeErrorToResponse( e, response );
-            return;
         }
-
-        JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
     }
 
     @RequestMapping(value = "/signup.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -217,31 +198,29 @@ public class SignupController implements InitializingBean {
     /*
      * Send an email to request signup confirmation.
      */
-    private void sendSignupConfirmationEmail( HttpServletRequest request, UserDetailsImpl u ) {
+    private void sendSignupConfirmationEmail( UserDetailsImpl u, boolean ajaxRegisterTrue ) {
         String email = u.getEmail();
 
         Map<String, Object> model = new HashMap<>();
         model.put( "siteurl", hostUrl + servletContext.getContextPath() + "/" );
 
-        this.sendConfirmationEmail( u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
+        this.sendConfirmationEmail( u.getSignupToken(), u.getUsername(), email, model );
 
         // See if this comes from AjaxRegister.js, if it does don't save confirmation message
-        String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
-
-        if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
+        if ( !ajaxRegisterTrue ) {
             messageUtil.saveMessage( "signup.email.sent", email,
                     "A confirmation email was sent. Please check your mail and click the link it contains" );
         }
     }
 
-    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model, String templateName ) {
+    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model ) {
         Locale locale = LocaleContextHolder.getLocale();
         try {
             model.put( "username", username );
             model.put( "confirmLink",
                     hostUrl + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
 
-            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), templateName, model );
+            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), "accountCreated.vm", model );
 
         } catch ( Exception e ) {
             log.error( "Couldn't send email to " + email, e );
