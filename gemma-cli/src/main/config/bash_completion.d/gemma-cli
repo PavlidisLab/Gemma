@@ -215,16 +215,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.DetectQuantitationTypeCli ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type-name|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-qtName|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type-name --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -qtName -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' detectQuantitationType ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type-name|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-qtName|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type-name --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -qtName -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -360,7 +360,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.CellLevelMetadataWriterCli ' ]]; then
         if ! [[ "$current_option" =~ (--experiment|--output-dir|--output-file|--quantitation-type|-d|-e|-o|-qt) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --force --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -force -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
         fi
         if [[ "$current_option" =~ (--output-dir|--output-file|-d|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -368,7 +368,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' getSingleCellMetadata ' ]]; then
         if ! [[ "$current_option" =~ (--experiment|--output-dir|--output-file|--quantitation-type|-d|-e|-o|-qt) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--experiment --force --help --output-dir --output-file --quantitation-type --stdout --use-bioassay-ids --use-raw-column-names -d -e -force -h -o -qt -stdout -useBioAssayIds -useRawColumnNames" -- "$2")
         fi
         if [[ "$current_option" =~ (--output-dir|--output-file|-d|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
