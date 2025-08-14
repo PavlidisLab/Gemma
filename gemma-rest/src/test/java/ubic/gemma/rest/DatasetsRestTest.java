@@ -259,7 +259,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .asString( StandardCharsets.UTF_8 )
                 .contains( ee.getShortName() )
                 // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-                .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
+                .hasLineCount( 14 + 2 * testHelper.getTestElementCollectionSize() );
 
         // as a download, the Content-Encoding is not set and the .gz extension is kept, the payload also remains
         // compressed
@@ -276,7 +276,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                             .asString( StandardCharsets.UTF_8 )
                             .contains( ee.getShortName() )
                             // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-                            .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
+                            .hasLineCount( 14 + 2 * testHelper.getTestElementCollectionSize() );
                 } );
     }
 }
