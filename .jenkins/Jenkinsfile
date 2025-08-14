@@ -156,8 +156,10 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
+                        lock('gemma-slow-tests') {
+                            setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
+                        }
                     }
                     post {
                         always {
@@ -212,9 +214,11 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                        withSonarQubeEnv('UBC SonarQube') {
-                            sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                        lock('gemma-sonarqube-analysis') {
+                            setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                            withSonarQubeEnv('UBC SonarQube') {
+                                sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                            }
                         }
                     }
                     post {
