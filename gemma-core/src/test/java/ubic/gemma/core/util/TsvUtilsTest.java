@@ -80,4 +80,9 @@ public class TsvUtilsTest {
         assertEquals( "# abc\n# def", formatComment( "# abc\n# def" ) );
         assertEquals( "# abc\n# def\n# test\n#ghi", formatComment( "# abc\n# def\ntest\n#ghi" ) );
     }
+
+    @Test
+    public void testFormatArray() {
+        assertEquals( "1|2|3|_", format( new String[] { "1", "2", "3", "|" } ) );
+    }
 }

@@ -19,9 +19,6 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
@@ -38,8 +35,7 @@ import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorNames;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
 import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
@@ -50,8 +46,6 @@ import static ubic.gemma.core.util.TsvUtils.format;
  */
 public class ExperimentalDesignWriter {
 
-    private final Log log = LogFactory.getLog( this.getClass() );
-
     private static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
 
     private final EntityUrlBuilder entityUrlBuilder;
@@ -59,10 +53,26 @@ public class ExperimentalDesignWriter {
     private final boolean autoFlush;
 
     /**
-     * If true, write the sample identifier and the assay identifiers in separate columns.
+     * Write assays over multiple rows.
+     * <p>
+     * This simplifies merging the experimental design with the expression data as the "Bioassay" column will match
+     * exactly the columns of the matrix written by {@link MatrixWriter}.
+     * <p>
+     * If separating identifiers with {@link #separateSampleFromAssaysIdentifiers}, {@link MatrixWriter#setOnlyIncludeBioAssayIdentifiers(boolean)}
+     * can be used to match the "Assay" column instead.
      */
     @Setter
-    private boolean separateSampleFromAssayIdentifiers = false;
+    private boolean useMultipleRowsForAssays = false;
+    /**
+     * If true, write the sample identifier and the assay(s) identifiers in separate columns.
+     * <p>
+     * The column will be named "Sample" and "Assays" respectively. If {@link #useMultipleRowsForAssays} is true, the
+     * assay column will be named "Assay".
+     * <p>
+     * The default column name for mangled sample and assay identifiers is "Bioassay".
+     */
+    @Setter
+    private boolean separateSampleFromAssaysIdentifiers = false;
     /**
      * If true, use the IDs of the {@link BioAssay}s (and {@link BioMaterial}s.
      */
@@ -107,7 +117,7 @@ public class ExperimentalDesignWriter {
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        SortedMap<BioMaterial, Collection<BioAssay>> bioMaterials = new TreeMap<>( BioMaterial.COMPARATOR );
+        SortedMap<BioMaterial, Set<BioAssay>> bioMaterials = new TreeMap<>( BioMaterial.COMPARATOR );
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             bioMaterials.computeIfAbsent( bm, k -> new HashSet<>() ).add( bioAssay );
@@ -122,34 +132,13 @@ public class ExperimentalDesignWriter {
 
         Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ed, bioMaterials.keySet() );
 
-        for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
-
-            /* column 0 of the design matrix */
-            if ( separateSampleFromAssayIdentifiers ) {
-                writer.append( ExpressionDataWriterUtils.constructSampleName( bioMaterial, useBioAssayIds, useRawColumnNames ) );
-                writer.append( "\t" ).append( ExpressionDataWriterUtils.constructAssaysName( bioMaterials.get( bioMaterial ), useBioAssayIds, useRawColumnNames, String.valueOf( TsvUtils.SUB_DELIMITER ) ) );
-            } else {
-                writer.append( ExpressionDataWriterUtils.constructSampleName( bioMaterial,
-                        bioMaterials.get( bioMaterial ), useBioAssayIds, useRawColumnNames, "." ) );
-            }
-
-            /* column 1 */
-            String externalId = getSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
-            writer.append( "\t" ).append( format( externalId ) );
-
-            /* columns 2 ... n where n+1 is the number of factors */
-            for ( ExperimentalFactor ef : orderedFactors ) {
-                writer.append( "\t" );
-                FactorValue value = factorValueMap.get( ef ).get( bioMaterial );
-                if ( value != null ) {
-                    writer.append( format( FactorValueUtils.getValue( value, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
-                } else {
-                    writer.append( format( ( String ) null ) );
+        for ( Map.Entry<BioMaterial, Set<BioAssay>> e : bioMaterials.entrySet() ) {
+            if ( useMultipleRowsForAssays ) {
+                for ( BioAssay assay : e.getValue() ) {
+                    writeRow( e.getKey(), Collections.singleton( assay ), orderedFactors, factorValueMap, writer );
                 }
-            }
-            writer.append( "\n" );
-            if ( autoFlush ) {
-                writer.flush();
+            } else {
+                writeRow( e.getKey(), e.getValue(), orderedFactors, factorValueMap, writer );
             }
         }
     }
@@ -199,10 +188,18 @@ public class ExperimentalDesignWriter {
             }
         }
 
-        if ( separateSampleFromAssayIdentifiers ) {
-            buf.append( "Sample\tAssays" );
+        if ( useMultipleRowsForAssays ) {
+            if ( separateSampleFromAssaysIdentifiers ) {
+                buf.append( "Sample\tAssay" );
+            } else {
+                buf.append( "Bioassay" );
+            }
         } else {
-            buf.append( "Bioassay" );
+            if ( separateSampleFromAssaysIdentifiers ) {
+                buf.append( "Sample\tAssays" );
+            } else {
+                buf.append( "Bioassay" );
+            }
         }
 
         buf.append( "\tExternalID" );
@@ -217,6 +214,33 @@ public class ExperimentalDesignWriter {
         }
     }
 
+    private void writeRow( BioMaterial bioMaterial, Set<BioAssay> assays, List<ExperimentalFactor> orderedFactors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, Writer writer ) throws IOException {
+        if ( separateSampleFromAssaysIdentifiers ) {
+            writer.append( format( constructSampleName( bioMaterial, useBioAssayIds, useRawColumnNames ) ) );
+            writer.append( "\t" ).append( format( constructAssaysName( assays, useBioAssayIds, useRawColumnNames, TsvUtils.SUB_DELIMITER ) ) );
+        } else {
+            writer.append( format( constructSampleName( bioMaterial, assays, useBioAssayIds, useRawColumnNames, '.' ) ) );
+        }
+
+        /* column 1 */
+        writer.append( "\t" ).append( formatSampleExternalId( bioMaterial, assays ) );
+
+        /* columns 2 ... n where n+1 is the number of factors */
+        for ( ExperimentalFactor ef : orderedFactors ) {
+            writer.append( "\t" );
+            FactorValue value = factorValueMap.get( ef ).get( bioMaterial );
+            if ( value != null ) {
+                writer.append( format( FactorValueUtils.getValues( value ) ) );
+            } else {
+                writer.append( TsvUtils.NA );
+            }
+        }
+        writer.append( "\n" );
+        if ( autoFlush ) {
+            writer.flush();
+        }
+    }
+
 
     /**
      * @param bioAssays   BAs
@@ -225,9 +249,9 @@ public class ExperimentalDesignWriter {
      * ArrayExpress accession, or {@code null} if no such identifier is available.
      */
     @Nullable
-    private String getSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
+    private String formatSampleExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
         if ( bioMaterial.getExternalAccession() != null ) {
-            return bioMaterial.getExternalAccession().getAccession();
+            return format( bioMaterial.getExternalAccession().getAccession() );
         } else if ( !bioAssays.isEmpty() ) {
             // use the external IDs of the associated bioassays
             SortedSet<String> ids = new TreeSet<>();
@@ -236,9 +260,9 @@ public class ExperimentalDesignWriter {
                     ids.add( ba.getAccession().getAccession() );
                 }
             }
-            return !ids.isEmpty() ? StringUtils.join( ids, TsvUtils.SUB_DELIMITER ) : null;
+            return format( ids );
         } else {
-            return null;
+            return TsvUtils.NA;
         }
     }
 }

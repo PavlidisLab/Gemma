@@ -3,6 +3,7 @@ package ubic.gemma.core.visualization.cellbrowser;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -18,6 +19,7 @@ import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.createCharacteristicMap;
 
 /**
@@ -27,6 +29,18 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
 @CommonsLog
 public class CellBrowserMetadataWriter {
 
+    /**
+     * If true, write the sample identifier and the assay identifiers in separate columns.
+     * <p>
+     * The column will be named "Sample" and "Assay" respectively.
+     * <p>
+     * The default column name for mangled sample and assay identifiers is "Bioassay".
+     */
+    @Setter
+    private boolean separateSampleFromAssayIdentifiers = false;
+    /**
+     * This is only used for the cell ID and does not affect the 'Bioassay', 'Sample' and 'Assay' columns.
+     */
     @Setter
     private boolean useBioAssayIds = false;
     /**
@@ -93,9 +107,15 @@ public class CellBrowserMetadataWriter {
     }
 
     private void writeHeader( List<ExperimentalFactor> factors, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        String[] columnNames = new String[1 + factors.size() + sampleCharacteristics.size() + clcs.size()];
+        String[] columnNames = new String[1 + ( separateSampleFromAssayIdentifiers ? 2 : 1 ) + factors.size() + sampleCharacteristics.size() + clcs.size()];
         int i = 0;
         columnNames[i++] = "cellId";
+        if ( separateSampleFromAssayIdentifiers ) {
+            columnNames[i++] = "Sample";
+            columnNames[i++] = "Assay";
+        } else {
+            columnNames[i++] = "Bioassay";
+        }
         for ( ExperimentalFactor factor : factors ) {
             columnNames[i++] = factor.getName();
         }
@@ -123,7 +143,7 @@ public class CellBrowserMetadataWriter {
             if ( j > 0 ) {
                 writer.append( "\t" );
             }
-            writer.append( TsvUtils.format( colName ) );
+            writer.append( format( colName ) );
         }
         writer.append( "\n" );
         if ( autoFlush ) {
@@ -132,14 +152,21 @@ public class CellBrowserMetadataWriter {
     }
 
     public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        writer.append( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) );
+        writer.append( format( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) ) );
+        // ignore the useBioAssayIds for the sample and assay names, this is only intended for the cell ID
+        if ( separateSampleFromAssayIdentifiers ) {
+            writer.append( "\t" ).append( format( ExpressionDataWriterUtils.constructSampleName( bioAssay.getSampleUsed(), false, true ) ) );
+            writer.append( "\t" ).append( format( ExpressionDataWriterUtils.constructAssayName( bioAssay, false, true ) ) );
+        } else {
+            writer.append( "\t" ).append( format( ExpressionDataWriterUtils.constructSampleName( bioAssay.getSampleUsed(), Collections.singleton( bioAssay ), false, true, TsvUtils.SUB_DELIMITER ) ) );
+        }
         for ( ExperimentalFactor factor : factors ) {
             FactorValue value = factorValueMap.get( factor ).get( bioAssay.getSampleUsed() );
             writer.append( "\t" );
             if ( value != null ) {
-                writer.append( TsvUtils.format( FactorValueUtils.getValue( value, String.valueOf( TsvUtils.SUB_DELIMITER ) ) ) );
+                writer.append( format( FactorValueUtils.getValues( value ) ) );
             } else {
-                writer.append( TsvUtils.format( ( String ) null ) );
+                writer.append( TsvUtils.NA );
             }
         }
         for ( Category category : sampleCharacteristics.keySet() ) {
@@ -147,16 +174,16 @@ public class CellBrowserMetadataWriter {
             Characteristic c = characteristics.get( bioAssay.getSampleUsed() );
             writer.append( "\t" );
             if ( c != null ) {
-                writer.append( TsvUtils.format( c.getValue() ) );
+                writer.append( format( c.getValue() ) );
             } else {
-                writer.append( TsvUtils.format( ( String ) null ) );
+                writer.append( TsvUtils.NA );
             }
         }
         for ( CellLevelCharacteristics clc : clcs ) {
             writer.append( "\t" );
             Characteristic c = clc.getCharacteristic( cellIndex );
             if ( c != null ) {
-                writer.append( TsvUtils.format( c.getValue() ) );
+                writer.append( format( c.getValue() ) );
             }
         }
         writer.append( "\n" );

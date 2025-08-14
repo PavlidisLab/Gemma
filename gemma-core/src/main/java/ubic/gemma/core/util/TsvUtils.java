@@ -12,6 +12,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.Constants.*;
 
@@ -25,8 +26,18 @@ public class TsvUtils {
 
     /**
      * Delimiter used when printing a list of strings in a column.
+     * <p>
+     * When replacing the delimiter in a value, the occurrences of the delimiter itself should be replaced with an '_'.
+     * This is done automatically in {@link #format(String[])} and {@link #format(Collection)}.
      */
     public static final char SUB_DELIMITER = '|';
+
+    public static final String SUB_DELIMITER_STR = String.valueOf( SUB_DELIMITER );
+
+    /**
+     * Indicator used for a missing value (e.g. NaN or null) in a TSV file.
+     */
+    public static final String NA = "";
 
     private static final DecimalFormat smallNumberFormat, midNumberFormat, largeNumberFormat;
 
@@ -37,7 +48,7 @@ public class TsvUtils {
 
     static {
         DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
-        symbols.setNaN( "" );
+        symbols.setNaN( NA );
         symbols.setInfinity( "inf" );
 
         // show 4 significant digits
@@ -129,13 +140,36 @@ public class TsvUtils {
     }
 
     /**
+     * Join multiple values into a single string, separated by the {@link #SUB_DELIMITER}.
+     * <p>
+     * If the delimiter appears in a value, it will be replaced with a {@code _} character.
+     */
+    public static String format( @Nullable String[] values ) {
+        if ( values == null ) {
+            return NA;
+        }
+        return format( Arrays.stream( values )
+                .map( s -> s.replace( SUB_DELIMITER, '_' ) )
+                .collect( Collectors.joining( SUB_DELIMITER_STR ) ) );
+    }
+
+    public static String format( @Nullable Collection<String> values ) {
+        if ( values == null ) {
+            return NA;
+        }
+        return format( values.stream()
+                .map( s -> s.replace( SUB_DELIMITER, '_' ) )
+                .collect( Collectors.joining( SUB_DELIMITER_STR ) ) );
+    }
+
+    /**
      * Format a {@link Double} for TSV.
      * @param d a double to format
      * @return a formatted double, an empty string if d is null or NaN or inf/-inf if infinite
      */
     public static String format( @Nullable Double d ) {
         if ( d == null ) {
-            return "";
+            return NA;
         } else {
             return format( d.doubleValue() );
         }
@@ -155,7 +189,7 @@ public class TsvUtils {
 
     public static String format( @Nullable Integer i ) {
         if ( i == null ) {
-            return "";
+            return NA;
         } else {
             return format( i.intValue() );
         }
@@ -167,7 +201,7 @@ public class TsvUtils {
 
     public static String format( @Nullable Long l ) {
         if ( l == null ) {
-            return "";
+            return NA;
         } else {
             return format( l.longValue() );
         }
@@ -182,7 +216,7 @@ public class TsvUtils {
      */
     public static String format( @Nullable String s ) {
         if ( s == null ) {
-            return "";
+            return NA;
         }
         return s.replace( "\\", "\\\\" )
                 .replace( "\n", "\\n" )
@@ -192,7 +226,7 @@ public class TsvUtils {
 
     public static String format( @Nullable Date d ) {
         if ( d == null ) {
-            return "";
+            return NA;
         }
         return dateFormat.format( d );
     }
@@ -209,7 +243,7 @@ public class TsvUtils {
         } else if ( object != null ) {
             return format( object.toString() );
         } else {
-            return "";
+            return NA;
         }
     }
 
@@ -243,7 +277,7 @@ public class TsvUtils {
      */
     public static String formatComment( @Nullable String comment ) {
         if ( StringUtils.isBlank( comment ) ) {
-            return "";
+            return NA;
         }
         return ( comment.charAt( 0 ) != COMMENT ? COMMENT + " " : "" ) + comment.replaceAll( "\n([^" + COMMENT + "])", "\n" + COMMENT + " $1" );
     }

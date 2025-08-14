@@ -20,7 +20,6 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -47,7 +46,6 @@ import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUti
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.formatQuantitationType;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
@@ -64,7 +62,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     /**
      * Only include bioassays in the formed column name instead of prepending it with the sample name.
      */
-    private boolean onlyIncludeBioAssays = false;
+    private boolean onlyIncludeBioAssayIdentifiers = false;
     /**
      * Use BioAssay IDs (and BioMaterial IDs) in the column names instead of names (or short names).
      */
@@ -237,7 +235,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String colName;
-            if ( onlyIncludeBioAssays ) {
+            if ( onlyIncludeBioAssayIdentifiers ) {
                 colName = ExpressionDataWriterUtils.constructAssayName( matrix.getBioAssayForColumn( i ), useBioAssayIds, useRawColumnNames );
             } else {
                 BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( i );
@@ -247,7 +245,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 } else {
                     bioAssaysForColumn = Collections.singleton( matrix.getBioAssayForColumn( i ) );
                 }
-                colName = ExpressionDataWriterUtils.constructSampleName( bioMaterialForColumn, bioAssaysForColumn, useBioAssayIds, useRawColumnNames, "." );
+                colName = ExpressionDataWriterUtils.constructSampleName( bioMaterialForColumn, bioAssaysForColumn, useBioAssayIds, useRawColumnNames, '.' );
             }
             writer.append( "\t" ).append( format( colName ) );
         }
@@ -337,10 +335,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 ncbiIds.add( format( gene.getNcbiGeneId() ) );
             }
             writer
-                    .append( "\t" ).append( StringUtils.join( gs, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( gn, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( ids, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
+                    .append( "\t" ).append( format( gs ) )
+                    .append( "\t" ).append( format( gn ) )
+                    .append( "\t" ).append( format( ids ) )
+                    .append( "\t" ).append( format( ncbiIds ) );
         }
     }
 

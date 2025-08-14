@@ -28,6 +28,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
+    private boolean separateSampleFromAssaysIdentifiers;
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
     private ExpressionDataFileResult result;
@@ -45,7 +46,9 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names." );
+        options.addOption( "separateSampleFromAssayIdentifiers", "separate-sample-from-assay-identifiers", false,
+                "Separate sample and assay identifiers in distinct columns named 'Sample' and 'Assay' (instead of a single 'Bioassay' column)." );
+        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names in the 'cellId' column. This does not affect the 'Bioassay', 'Sample' and 'Assay' columns." );
         options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used." );
         addExpressionDataFileOptions( options, "cell-level metadata", false );
         addForceOption( options );
@@ -53,6 +56,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
+        separateSampleFromAssaysIdentifiers = commandLine.hasOption( "separateSampleFromAssayIdentifiers" );
         useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
         useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
         result = getExpressionDataFileResult( commandLine, false );
@@ -73,6 +77,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
             dest = null;
             try ( Writer out = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
+                writer.setSeparateSampleFromAssayIdentifiers( separateSampleFromAssaysIdentifiers );
                 writer.setUseBioAssayIds( useBioAssayIds );
                 writer.setUseRawColumnNames( useRawColumnNames );
                 writer.setAutoFlush( true );
@@ -82,6 +87,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
             dest = result.getOutputFile( getMetadataOutputFilename( ee, qt, CELL_BROWSER_SC_METADATA_SUFFIX ) );
             try ( Writer out = new OutputStreamWriter( openOutputFile( dest ), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
+                writer.setSeparateSampleFromAssayIdentifiers( separateSampleFromAssaysIdentifiers );
                 writer.setUseBioAssayIds( useBioAssayIds );
                 writer.setUseRawColumnNames( useRawColumnNames );
                 writer.setAutoFlush( true );

@@ -77,7 +77,10 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl implements 
     }
 
     private String formatContrasts( Set<ContrastResult> contrasts ) {
-        return contrasts.stream().map( this::formatContrast ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return contrasts.stream()
+                .map( this::formatContrast )
+                .map( s -> s.replace( SUB_DELIMITER, '_' ) )
+                .collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
     }
 
     private String formatContrast( ContrastResult contrast ) {

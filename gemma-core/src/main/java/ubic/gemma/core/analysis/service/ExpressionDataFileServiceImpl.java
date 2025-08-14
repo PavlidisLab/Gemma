@@ -688,21 +688,21 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
-        return writeRawExpressionDataInternal( ee, null, qt, scaleType, onlyIncludeBioAssays, useBioAssayIds, useRawColumnNames, writer, autoFlush );
+    public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
+        return writeRawExpressionDataInternal( ee, null, qt, scaleType, onlyIncludeBioAssayIdentifiers, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @Override
-    public int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
-        return writeRawExpressionDataInternal( ee, samples, qt, scaleType, onlyIncludeBioAssays, useBioAssayIds, useRawColumnNames, writer, autoFlush );
+    public int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
+        return writeRawExpressionDataInternal( ee, samples, qt, scaleType, onlyIncludeBioAssayIdentifiers, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private int writeRawExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
+    private int writeRawExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, qt, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
-        matrixWriter.setOnlyIncludeBioAssays( onlyIncludeBioAssays );
+        matrixWriter.setOnlyIncludeBioAssayIdentifiers( onlyIncludeBioAssayIdentifiers );
         matrixWriter.setUseBioAssayIds( useBioAssayIds );
         matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );
@@ -720,21 +720,21 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
-        return writeProcessedExpressionDataInternal( ee, null, filtered, scaleType, onlyIncludeBioAssays, useBioAssayIds, useRawColumnNames, writer, autoFlush );
+    public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        return writeProcessedExpressionDataInternal( ee, null, filtered, scaleType, onlyIncludeBioAssayIdentifiers, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @Override
-    public int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
-        return writeProcessedExpressionDataInternal( ee, samples, filtered, scaleType, onlyIncludeBioAssays, useBioAssayIds, useRawColumnNames, writer, autoFlush );
+    public int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        return writeProcessedExpressionDataInternal( ee, samples, filtered, scaleType, onlyIncludeBioAssayIdentifiers, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private int writeProcessedExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssays, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+    private int writeProcessedExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, filtered, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
-        matrixWriter.setOnlyIncludeBioAssays( onlyIncludeBioAssays );
+        matrixWriter.setOnlyIncludeBioAssayIdentifiers( onlyIncludeBioAssayIdentifiers );
         matrixWriter.setUseBioAssayIds( useBioAssayIds );
         matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );

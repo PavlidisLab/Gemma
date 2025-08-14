@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -23,7 +22,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
-import static ubic.gemma.core.util.TsvUtils.*;
+import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.getTsvFormatBuilder;
 
 @Service
 @CommonsLog
@@ -147,15 +147,15 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
     }
 
     private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     /**

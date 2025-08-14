@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
@@ -127,10 +128,10 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct a sample name in case there is only one BioAssay attached to the corresponding BioMaterial.
-     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean, String)
+     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean, char)
      */
     public static String constructSampleName( BioMaterial bm, BioAssay ba, boolean useIds, boolean useRawColumnNames ) {
-        return constructSampleName( bm, Collections.singleton( ba ), useIds, useRawColumnNames, "." );
+        return constructSampleName( bm, Collections.singleton( ba ), useIds, useRawColumnNames, '.' );
     }
 
     public static String constructSampleName( BioMaterial bioMaterial, boolean useIds, boolean useRawColumnNames ) {
@@ -138,8 +139,8 @@ public class ExpressionDataWriterUtils {
         return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
-    public static String constructAssaysName( Collection<BioAssay> bas, boolean useIds, boolean useRawColumnNames, String assayDelimiter ) {
-        String colName = bas.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( assayDelimiter ) );
+    public static String constructAssaysName( Collection<BioAssay> bas, boolean useIds, boolean useRawColumnNames, char assayDelimiter ) {
+        String colName = bas.stream().map( ba -> getBioAssayName( ba, useIds ).replace( assayDelimiter, '_' ) ).sorted().collect( Collectors.joining( String.valueOf( assayDelimiter ) ) );
         return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
@@ -150,13 +151,16 @@ public class ExpressionDataWriterUtils {
      * @param useIds            use biomaterial and bioassay IDs instead of names (or short names)
      * @param useRawColumnNames do not clean up the names with {@link StringUtil#makeNames(String)} to make them
      *                          R-friendly
-     * @param assayDelimiter    the delimiter to use between bioassays
+     * @param assayDelimiter    the delimiter to use between bioassays, if that delimiter appears in the bioassay name,
+     *                          it will be replaced with a '_'. For this reason, this function does not allow '_' as a
+     *                          delimiter.
      */
-    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays, boolean useIds, boolean useRawColumnNames, String assayDelimiter ) {
+    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays, boolean useIds, boolean useRawColumnNames, char assayDelimiter ) {
+        Assert.isTrue( assayDelimiter != '_', "Cannot use '_' as assay delimiter, it is reserved." );
         String colName = ( useIds ? bioMaterial.getId() : bioMaterial.getName() )
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
-                // sort for consistency
-                + bioAssays.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( assayDelimiter ) );
+                // use raw here, we'll clean it up afterward
+                + constructAssaysName( bioAssays, useIds, true, assayDelimiter );
         return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
