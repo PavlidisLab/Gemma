@@ -59,7 +59,8 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
-
+    private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
     private boolean autoFlush = false;
 
     @Nullable
@@ -68,6 +69,14 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     public MatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
         this.entityUrlBuilder = entityUrlBuilder;
         this.buildInfo = buildInfo;
+    }
+
+    public void setUseBioAssayIds( boolean useBioAssayIds ) {
+        this.useBioAssayIds = useBioAssayIds;
+    }
+
+    public void setUseRawColumnNames( boolean useRawColumnNames ) {
+        this.useRawColumnNames = useRawColumnNames;
     }
 
     @Override
@@ -256,7 +265,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( BioMaterial bioMaterial : orderedBioMaterials ) {
             int i = matrix.getColumnIndex( bioMaterial );
-            String colName = ExpressionDataWriterUtils.constructSampleName( matrix, i );
+            String colName = ExpressionDataWriterUtils.constructSampleName( matrix, i, useBioAssayIds, useRawColumnNames );
             writer.append( "\t" ).append( format( colName ) );
         }
         writer.append( "\n" );

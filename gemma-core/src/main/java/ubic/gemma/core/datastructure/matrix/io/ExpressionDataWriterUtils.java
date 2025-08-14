@@ -133,8 +133,9 @@ public class ExpressionDataWriterUtils {
      * @param matrix           matrix
      * @param assayColumnIndex The column index in the matrix.
      * @return BA name
+     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean) 
      */
-    public static String constructSampleName( BulkExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
+    public static String constructSampleName( BulkExpressionDataMatrix<?> matrix, int assayColumnIndex, boolean useIds, boolean useRawColumnNames ) {
         BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
         Collection<BioAssay> bioAssaysForColumn;
         if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
@@ -142,43 +143,51 @@ public class ExpressionDataWriterUtils {
         } else {
             bioAssaysForColumn = Collections.singleton( matrix.getBioAssayForColumn( assayColumnIndex ) );
         }
-        return constructSampleName( bioMaterialForColumn, bioAssaysForColumn );
+        return constructSampleName( bioMaterialForColumn, bioAssaysForColumn, useIds, useRawColumnNames );
     }
 
     /**
      * Construct a sample name in case there is only one BioAssay attached to the corresponding BioMaterial.
+     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean) 
      */
-    public static String constructSampleName( BioMaterial bm, BioAssay ba ) {
-        return constructSampleName( bm, Collections.singleton( ba ) );
+    public static String constructSampleName( BioMaterial bm, BioAssay ba, boolean useIds, boolean useRawColumnNames ) {
+        return constructSampleName( bm, Collections.singleton( ba ), useIds, useRawColumnNames );
     }
 
     /**
      * Construct a BioAssay column name prefixed by the {@link BioMaterial} from which it originates.
+     * @param bioMaterial       the biomaterial
+     * @param bioAssays         the bioassay(s) associated to the biomaterial
+     * @param useIds            use biomaterial and bioassay IDs instead of names (or short names)
+     * @param useRawColumnNames do not clean up the names with {@link StringUtil#makeNames(String)} to make them
+     *                          R-friendly
      */
-    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
-        // sort for consistency
-        return StringUtil.makeNames( bioMaterial.getName()
+    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays, boolean useIds, boolean useRawColumnNames ) {
+        String colName = ( useIds ? bioMaterial.getId() : bioMaterial.getName() )
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
                 // sort for consistency
-                + bioAssays.stream().map( ExpressionDataWriterUtils::getBioAssayName ).sorted().collect( Collectors.joining( "." ) ) );
+                + bioAssays.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( "." ) );
+        return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
     /**
      * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
      */
-    public static String constructAssayName( BioAssay ba ) {
-        return StringUtil.makeNames( getBioAssayName( ba ) );
+    public static String constructAssayName( BioAssay ba, boolean useIds, boolean useRawColumnNames ) {
+        String colName = getBioAssayName( ba, useIds );
+        return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
     /**
      * Construct a BioAssay column name, unprefixed by the {@link BioMaterial} from which it originates.
      */
-    public static String constructCellIdName( BioAssay ba, String cellId ) {
-        return StringUtil.makeNames( getBioAssayName( ba ) + "_" + cellId );
+    public static String constructCellIdName( BioAssay ba, String cellId, boolean useBioAssayIds, boolean useRawColumnNames ) {
+        String colName = getBioAssayName( ba, useBioAssayIds ) + "_" + cellId;
+        return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
-    private static String getBioAssayName( BioAssay ba ) {
-        return ba.getShortName() != null ? ba.getShortName() : ba.getName();
+    private static String getBioAssayName( BioAssay ba, boolean useIds ) {
+        return useIds ? String.valueOf( ba.getId() ) : ( ba.getShortName() != null ? ba.getShortName() : ba.getName() );
     }
 
     /**

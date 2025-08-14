@@ -48,6 +48,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private static final String
             STANDARD_LOCATION_OPTION = "standardLocation",
             OUT_FILE_PREFIX_OPTION = "o",
+            USE_BIO_ASSAY_IDS = "useBioAssayIds",
             USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames";
 
     @Autowired
@@ -57,6 +58,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private ExpressionDataFileService expressionDataFileService;
 
     private boolean standardLocation;
+    private boolean useBioAssayIds;
     private boolean useRawColumnNames;
     @Nullable
     private String outFileName;
@@ -75,6 +77,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void buildExperimentOptions( Options options ) {
         options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
         options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( USE_BIO_ASSAY_IDS, "use-bioassay-ids", false, "Prefix column names with IDs." );
         options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
         addForceOption( options );
     }
@@ -83,6 +86,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
         outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
+        useBioAssayIds = commandLine.hasOption( USE_BIO_ASSAY_IDS );
         useRawColumnNames = commandLine.hasOption( USE_RAW_COLUMN_NAMES_OPTION );
     }
 
@@ -99,6 +103,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
             dest = Paths.get( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" );
             try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
+                edWriter.setUseBioAssayIds( useBioAssayIds );
                 edWriter.setUseRawColumnNames( useRawColumnNames );
                 edWriter.write( ee, writer );
             }

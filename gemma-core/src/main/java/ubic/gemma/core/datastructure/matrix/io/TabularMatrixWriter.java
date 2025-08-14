@@ -14,7 +14,6 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -32,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.util.TsvUtils.*;
 
 /**
@@ -54,6 +54,8 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
+    private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
     private boolean autoFlush;
 
     @Nullable
@@ -133,7 +135,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         }
         for ( BioAssay ba : scd.getBioAssays() ) {
             Assert.notNull( ba.getName() );
-            String sampleColumnPrefix = constructSampleName( ba.getSampleUsed(), ba ) + "_";
+            String sampleColumnPrefix = constructSampleName( ba.getSampleUsed(), ba, useBioAssayIds, useRawColumnNames ) + "_";
             pwriter.append( "\t" ).append( sampleColumnPrefix ).append( "cell_ids" )
                     .append( "\t" ).append( sampleColumnPrefix ).append( "values" );
         }

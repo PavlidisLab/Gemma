@@ -1,5 +1,6 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
+import lombok.Setter;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
@@ -29,30 +30,14 @@ import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.get
  * Generate a tabular matrix format compatible with <a href="https://cellbrowser.readthedocs.io/en/master/tabsep.html">Cell Browser</a>.
  * @author poirigui
  */
+@Setter
 public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private boolean useBioAssayIds = false;
     private boolean useRawColumnNames = false;
     private boolean autoFlush = false;
+    @Nullable
     private ScaleType scaleType = null;
-
-    public void setUseBioAssayIds( boolean useBioAssayIds ) {
-        this.useBioAssayIds = useBioAssayIds;
-    }
-
-    public void setUseRawColumnNames( boolean useRawColumnNames ) {
-        this.useRawColumnNames = useRawColumnNames;
-    }
-
-    @Override
-    public void setAutoFlush( boolean autoFlush ) {
-        this.autoFlush = autoFlush;
-    }
-
-    @Override
-    public void setScaleType( @Nullable ScaleType scaleType ) {
-        this.scaleType = scaleType;
-    }
 
     @Override
     public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer writer ) throws IOException, UnsupportedOperationException {

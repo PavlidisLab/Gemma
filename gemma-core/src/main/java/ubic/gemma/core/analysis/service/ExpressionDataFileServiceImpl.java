@@ -499,15 +499,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, null, qt, scaleType, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
+        return writeTabularSingleCellExpressionDataInternal( ee, null, qt, scaleType, useBioAssayIds, useRawColumnNames, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
     }
 
     @Override
-    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, samples, qt, scaleType, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
+        return writeTabularSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useBioAssayIds, useRawColumnNames, fetchSize, writer, useCursorFetchIfSupported, autoFlush );
     }
 
     @Override
@@ -519,7 +519,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, fetchSize, writer, useCursorFetchIfSupported, false );
+                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, false, false, fetchSize, writer, useCursorFetchIfSupported, false );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
@@ -538,9 +538,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } );
     }
 
-    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean useCursorFetchIfSupported, boolean autoFlush ) throws IOException {
+    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, Writer writer, boolean useCursorFetchIfSupported, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         TabularMatrixWriter matrixWriter = new TabularMatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setUseBioAssayIds( useBioAssayIds );
+        matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
         if ( scaleType != null && qt.getScale() != scaleType ) {
@@ -686,20 +688,22 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException {
-        return writeRawExpressionDataInternal( ee, null, qt, scaleType, writer, autoFlush );
+    public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
+        return writeRawExpressionDataInternal( ee, null, qt, scaleType, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @Override
-    public int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException {
-        return writeRawExpressionDataInternal( ee, samples, qt, scaleType, writer, autoFlush );
+    public int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
+        return writeRawExpressionDataInternal( ee, samples, qt, scaleType, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private int writeRawExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException {
+    private int writeRawExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, qt, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setUseBioAssayIds( useBioAssayIds );
+        matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
         return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, RawExpressionDataVector.class, geneAnnotations );
@@ -715,20 +719,22 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
-        return writeProcessedExpressionDataInternal( ee, null, filtered, scaleType, writer, autoFlush );
+    public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        return writeProcessedExpressionDataInternal( ee, null, filtered, scaleType, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @Override
-    public int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
-        return writeProcessedExpressionDataInternal( ee, samples, filtered, scaleType, writer, autoFlush );
+    public int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        return writeProcessedExpressionDataInternal( ee, samples, filtered, scaleType, useBioAssayIds, useRawColumnNames, writer, autoFlush );
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private int writeProcessedExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+    private int writeProcessedExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, filtered, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setUseBioAssayIds( useBioAssayIds );
+        matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
         return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, ProcessedExpressionDataVector.class, geneAnnotations );
@@ -777,7 +783,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getPath() );
-                int written = writeProcessedExpressionData( ee, filtered, null, writer, false );
+                int written = writeProcessedExpressionData( ee, filtered, null, false, false, writer, false );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return Optional.of( lockedPath.toShared() );
             } catch ( Exception e ) {
@@ -809,7 +815,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             try ( LockedPath ignored = f.toExclusive(); Writer writer = openCompressedFile( ignored.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new tabular expression data file: " + f );
-                int written = writeProcessedExpressionData( ee, filtered, null, writer, false );
+                int written = writeProcessedExpressionData( ee, filtered, null, false, false, writer, false );
                 log.info( "Wrote " + written + " vectors to " + f + "." );
                 return Optional.of( ignored.toShared() );
             } catch ( Exception e ) {
@@ -828,7 +834,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
-                int written = writeRawExpressionData( ee, type, null, writer, false );
+                int written = writeRawExpressionData( ee, type, null, false, false, writer, false );
                 log.info( "Wrote " + written + " vectors for " + type + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
@@ -849,7 +855,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
                     Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
-                int written = writeRawExpressionData( ee, type, null, writer, false );
+                int written = writeRawExpressionData( ee, type, null, false, false, writer, false );
                 log.info( "Wrote " + written + " vectors for " + type + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {

@@ -59,6 +59,11 @@ public class ExperimentalDesignWriter {
     private final boolean autoFlush;
 
     /**
+     * If true, use the IDs of the {@link BioAssay}s (and {@link BioMaterial}s.
+     */
+    @Setter
+    private boolean useBioAssayIds = false;
+    /**
      * If true, use column names as they appear in the database.
      */
     @Setter
@@ -119,7 +124,7 @@ public class ExperimentalDesignWriter {
 
             /* column 0 of the design matrix */
             String rowName = ExpressionDataWriterUtils
-                    .constructSampleName( bioMaterial, bioMaterials.get( bioMaterial ) );
+                    .constructSampleName( bioMaterial, bioMaterials.get( bioMaterial ), useBioAssayIds, useRawColumnNames );
             writer.append( rowName );
 
             writer.append( "\t" );

@@ -191,19 +191,21 @@ public interface ExpressionDataFileService {
      * @param ee                        the experiment to use
      * @param qt                        the quantitation type to retrieve
      * @param scaleType                 a scale type to use or null to leave the data untransformed
+     * @param useBioAssayIds            whether to use bioassay and biomaterial IDs instead of names or short names
+     * @param useRawColumnNames         whether to use raw column names instead of R-friendly ones
      * @param fetchSize                 retrieve data in a streaming fashion
      * @param useCursorFetchIfSupported use cursor fetching if supported by the database. It is not recommended to use
      *                                  this for public-facing operations because it may require a lot of memory
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
 
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
      * @return a path where the vectors were written
-     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, int, boolean, Writer, boolean)
+     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, boolean, int, boolean, Writer, boolean)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
     LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException;
@@ -273,15 +275,17 @@ public interface ExpressionDataFileService {
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * @param ee        the expression experiment
-     * @param qt        a quantitation type to use
-     * @param scaleType a scale type to use or null to leave the data untransformed
-     * @param writer    the destination for the raw expression data
+     * @param ee                the expression experiment
+     * @param qt                a quantitation type to use
+     * @param scaleType         a scale type to use or null to leave the data untransformed
+     * @param useBioAssayIds    whether to use bioassay and biomaterial IDs instead of names or short names
+     * @param useRawColumnNames whether to use raw column names instead of R-friendly ones
+     * @param writer            the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
 
-    int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write processed expression data to a given writer for a given quantitation type.
@@ -289,13 +293,15 @@ public interface ExpressionDataFileService {
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * @param ee     the expression experiment
-     * @param writer the destination for the raw expression data
+     * @param ee                the expression experiment
+     * @param useBioAssayIds    whether to use bioassay and biomaterial IDs instead of names or short names
+     * @param useRawColumnNames whether to use raw column names instead of R-friendly ones
+     * @param writer            the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
-    int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
      * Writes out the experimental design for the given experiment.
