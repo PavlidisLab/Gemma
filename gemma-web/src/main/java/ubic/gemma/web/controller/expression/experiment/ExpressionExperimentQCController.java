@@ -650,8 +650,8 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "quantitationType", required = false) @Nullable Long quantitationTypeId,
             @RequestParam("designElement") Long designElementId,
             @RequestParam(value = "assays", required = false) @Nullable Long[] assayIds,
-            @RequestParam(value = "ctaIdentifier", required = false) @Nullable String ctaIdentifier,
-            @RequestParam(value = "clcIdentifier", required = false) @Nullable String clcIdentifier,
+            @RequestParam(value = "cellTypeAssignment", required = false) @Nullable String ctaIdentifier,
+            @RequestParam(value = "cellLevelCharacteristics", required = false) @Nullable String clcIdentifier,
             @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             @RequestParam(value = "font", defaultValue = "Arial") String font,
@@ -707,12 +707,15 @@ public class ExpressionExperimentQCController {
         if ( ctaIdentifier != null ) {
             CellTypeAssignment cta = null;
             try {
-                cta = singleCellExpressionExperimentService.getCellTypeAssignmentWithoutIndices( ee, qt, Long.parseLong( ctaIdentifier ) );
+                cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, Long.parseLong( ctaIdentifier ) );
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             if ( cta == null ) {
-                cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignmentWithoutIndices( ee, qt, ctaIdentifier ) );
+                cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaIdentifier );
+            }
+            if ( cta == null ) {
+                throw new EntityNotFoundException( "No cell type assignment with identifier '" + ctaIdentifier + "' for " + ee.getShortName() + "." );
             }
             dataset.setCellLevelCharacteristics( cta );
             if ( focusedCharacteristicId != null ) {
@@ -722,12 +725,15 @@ public class ExpressionExperimentQCController {
         if ( clcIdentifier != null ) {
             CellLevelCharacteristics clc = null;
             try {
-                clc = singleCellExpressionExperimentService.getCellLevelCharacteristicsWithoutIndices( ee, qt, Long.parseLong( clcIdentifier ) );
+                clc = singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, Long.parseLong( clcIdentifier ) );
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             if ( clc == null ) {
-                clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristicsWithoutIndices( ee, qt, clcIdentifier ) );
+                clc = singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcIdentifier );
+            }
+            if ( clc == null ) {
+                throw new EntityNotFoundException( "No cell level characteristics with identifier '" + clcIdentifier + "' for " + ee.getShortName() + "." );
             }
             dataset.setCellLevelCharacteristics( clc );
             if ( focusedCharacteristicId != null ) {
