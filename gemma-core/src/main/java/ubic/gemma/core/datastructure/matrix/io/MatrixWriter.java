@@ -62,7 +62,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     /**
      * Only include bioassays in the formed column name instead of prepending it with the sample name.
      */
-    private boolean onlyIncludeBioAssayIdentifiers = false;
+    private boolean excludeSampleIdentifiers = false;
     /**
      * Use BioAssay IDs (and BioMaterial IDs) in the column names instead of names (or short names).
      */
@@ -200,7 +200,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String colName;
-            if ( onlyIncludeBioAssayIdentifiers ) {
+            if ( excludeSampleIdentifiers ) {
                 colName = ExpressionDataWriterUtils.constructAssayName( matrix.getBioAssayForColumn( i ), useBioAssayIds, useRawColumnNames );
             } else {
                 BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( i );

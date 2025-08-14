@@ -278,15 +278,15 @@ public interface ExpressionDataFileService {
      * @param ee                   the expression experiment
      * @param qt                   a quantitation type to use
      * @param scaleType            a scale type to use or null to leave the data untransformed
-     * @param onlyIncludeBioAssayIdentifiers
+     * @param excludeSampleIdentifiers
      * @param useBioAssayIds       whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames    whether to use raw column names instead of R-friendly ones
      * @param writer               the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
 
-    int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write processed expression data to a given writer for a given quantitation type.
@@ -295,15 +295,15 @@ public interface ExpressionDataFileService {
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
      * @param ee                   the expression experiment
-     * @param onlyIncludeBioAssayIdentifiers
+     * @param excludeSampleIdentifiers
      * @param useBioAssayIds       whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames    whether to use raw column names instead of R-friendly ones
      * @param writer               the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
-    int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean onlyIncludeBioAssayIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
      * Writes out the experimental design for the given experiment.

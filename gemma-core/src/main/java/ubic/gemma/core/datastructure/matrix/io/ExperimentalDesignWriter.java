@@ -58,7 +58,7 @@ public class ExperimentalDesignWriter {
      * This simplifies merging the experimental design with the expression data as the "Bioassay" column will match
      * exactly the columns of the matrix written by {@link MatrixWriter}.
      * <p>
-     * If separating identifiers with {@link #separateSampleFromAssaysIdentifiers}, {@link MatrixWriter#setOnlyIncludeBioAssayIdentifiers(boolean)}
+     * If separating identifiers with {@link #separateSampleFromAssaysIdentifiers}, {@link MatrixWriter#setExcludeSampleIdentifiers(boolean)}
      * can be used to match the "Assay" column instead.
      */
     @Setter

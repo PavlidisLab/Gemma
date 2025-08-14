@@ -53,7 +53,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
-    private boolean onlyIncludeBioAssayIdentifiers = false;
+    private boolean excludeSampleIdentifiers = false;
     private boolean useBioAssayIds = false;
     private boolean useRawColumnNames = false;
     private boolean autoFlush;
@@ -136,7 +136,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         for ( BioAssay ba : scd.getBioAssays() ) {
             Assert.notNull( ba.getName() );
             String sampleColumnPrefix;
-            if ( onlyIncludeBioAssayIdentifiers ) {
+            if ( excludeSampleIdentifiers ) {
                 sampleColumnPrefix = constructAssayName( ba, useBioAssayIds, useRawColumnNames ) + "_";
             } else {
                 sampleColumnPrefix = constructSampleName( ba.getSampleUsed(), ba, useBioAssayIds, useRawColumnNames ) + "_";
