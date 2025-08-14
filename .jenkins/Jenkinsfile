@@ -44,7 +44,6 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     buildHash = env.GIT_COMMIT
@@ -185,7 +184,7 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        lock('database/' + testdbUrl) {
+                        lock('database/gemdtest') {
                             sh 'mvn -B verify --fail-at-end -DskipUnitTests -Dmaven.javadoc.skip=true -DskipWebpack -DskipVersionFile'
                         }
                     }
