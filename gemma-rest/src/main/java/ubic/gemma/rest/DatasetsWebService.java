@@ -1383,7 +1383,7 @@ public class DatasetsWebService {
             String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
             return Response.ok( ( StreamingOutput ) output -> {
                         try {
-                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false,
+                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
                                     false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true );
                         } catch ( FilteringException ex ) {
                             // this is a bit unfortunate, because it's too late for producing a 204 error
@@ -1450,7 +1450,7 @@ public class DatasetsWebService {
         } catch ( IOException e ) {
             log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
             String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
-            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();

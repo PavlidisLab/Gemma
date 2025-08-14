@@ -73,6 +73,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private MatrixFormat format;
     @Nullable
     private ScaleType scaleType;
+    private boolean onlyIncludeBioAssays;
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
     private boolean useEnsemblIds;
@@ -321,6 +322,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             matrix = new ExpressionDataDoubleMatrix( vecs );
         }
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setOnlyIncludeBioAssays( onlyIncludeBioAssays );
         matrixWriter.setUseBioAssayIds( useBioAssayIds );
         matrixWriter.setUseRawColumnNames( useRawColumnNames );
         matrixWriter.setAutoFlush( autoFlush );

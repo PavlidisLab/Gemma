@@ -19,8 +19,6 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -128,30 +126,21 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * Constructs a sample name for a given column of a data matrix.
-     *
-     * @param matrix           matrix
-     * @param assayColumnIndex The column index in the matrix.
-     * @return BA name
-     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean) 
-     */
-    public static String constructSampleName( BulkExpressionDataMatrix<?> matrix, int assayColumnIndex, boolean useIds, boolean useRawColumnNames ) {
-        BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
-        Collection<BioAssay> bioAssaysForColumn;
-        if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
-            bioAssaysForColumn = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getBioAssaysForColumn( assayColumnIndex );
-        } else {
-            bioAssaysForColumn = Collections.singleton( matrix.getBioAssayForColumn( assayColumnIndex ) );
-        }
-        return constructSampleName( bioMaterialForColumn, bioAssaysForColumn, useIds, useRawColumnNames );
-    }
-
-    /**
      * Construct a sample name in case there is only one BioAssay attached to the corresponding BioMaterial.
-     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean) 
+     * @see #constructSampleName(BioMaterial, Collection, boolean, boolean, String)
      */
     public static String constructSampleName( BioMaterial bm, BioAssay ba, boolean useIds, boolean useRawColumnNames ) {
-        return constructSampleName( bm, Collections.singleton( ba ), useIds, useRawColumnNames );
+        return constructSampleName( bm, Collections.singleton( ba ), useIds, useRawColumnNames, "." );
+    }
+
+    public static String constructSampleName( BioMaterial bioMaterial, boolean useIds, boolean useRawColumnNames ) {
+        String colName = ( useIds ? String.valueOf( bioMaterial.getId() ) : bioMaterial.getName() );
+        return useRawColumnNames ? colName : StringUtil.makeNames( colName );
+    }
+
+    public static String constructAssaysName( Collection<BioAssay> bas, boolean useIds, boolean useRawColumnNames, String assayDelimiter ) {
+        String colName = bas.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( assayDelimiter ) );
+        return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
     /**
@@ -161,12 +150,13 @@ public class ExpressionDataWriterUtils {
      * @param useIds            use biomaterial and bioassay IDs instead of names (or short names)
      * @param useRawColumnNames do not clean up the names with {@link StringUtil#makeNames(String)} to make them
      *                          R-friendly
+     * @param assayDelimiter    the delimiter to use between bioassays
      */
-    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays, boolean useIds, boolean useRawColumnNames ) {
+    public static String constructSampleName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays, boolean useIds, boolean useRawColumnNames, String assayDelimiter ) {
         String colName = ( useIds ? bioMaterial.getId() : bioMaterial.getName() )
                 + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS
                 // sort for consistency
-                + bioAssays.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( "." ) );
+                + bioAssays.stream().map( ba -> getBioAssayName( ba, useIds ) ).sorted().collect( Collectors.joining( assayDelimiter ) );
         return useRawColumnNames ? colName : StringUtil.makeNames( colName );
     }
 
