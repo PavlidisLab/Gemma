@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
-import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
-import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
-import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.*;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -926,7 +923,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     Writer writer = openCompressedFile( ignored.getPath() ) ) {
                 ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, null, filtered );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + ignored.getPath() );
-                int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, matrix );
+                int written = new JsonMatrixWriter().write( matrix, ProcessedExpressionDataVector.class, writer );
                 log.info( "Wrote " + written + " vectors to " + ignored.getPath() + "." );
                 return Optional.of( f.toShared() );
             } catch ( Exception e ) {
@@ -947,7 +944,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
                 BulkExpressionDataMatrix<?> expressionDataMatrix = MultiAssayBulkExpressionDataMatrix.getMatrix( vectors );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
-                int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
+                int written = new JsonMatrixWriter().write( expressionDataMatrix, RawExpressionDataVector.class, writer );
                 log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
