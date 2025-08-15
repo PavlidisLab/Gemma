@@ -16,22 +16,24 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.util;
+package ubic.gemma.core.mail;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
+import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
-import org.springframework.ui.velocity.VelocityEngineUtils;
+import org.springframework.util.Assert;
 
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -41,7 +43,11 @@ import java.util.Map;
  */
 @Component
 public class MailEngineImpl implements MailEngine {
+
     private static final Log log = LogFactory.getLog( MailEngineImpl.class );
+
+    private static final String VELOCITY_TEMPLATE_PATH = "ubic/gemma/core/mail/templates/";
+    private static final String VELOCITY_TEMPLATE_SUFFIX = ".vm";
 
     @Autowired
     private MailSender mailSender;
@@ -58,11 +64,8 @@ public class MailEngineImpl implements MailEngine {
     @Value("${gemma.support.email}")
     private String supportEmailAddress;
 
-    /**
-     * Sends a message to the gemma administrator as defined in the Gemma.properties file
-     */
     @Override
-    public void sendAdminMessage( String subject, String bodyText ) {
+    public void sendMessageToAdmin( String subject, String bodyText ) {
         if ( StringUtils.isBlank( adminEmailAddress ) ) {
             MailEngineImpl.log.warn( "Not sending email, no admin email is configured." );
             return;
@@ -75,7 +78,6 @@ public class MailEngineImpl implements MailEngine {
         msg.setSubject( subject );
         msg.setText( bodyText );
         send( msg );
-        MailEngineImpl.log.info( "Email notification sent to " + Arrays.toString( msg.getTo() ) );
     }
 
     @Override
@@ -96,26 +98,28 @@ public class MailEngineImpl implements MailEngine {
         msg.setFrom( noreplyEmailAddress );
         msg.setReplyTo( supportEmailAddress );
         msg.setSubject( subject );
-        try {
-            msg.setText( VelocityEngineUtils.mergeTemplateIntoString( velocityEngine, templateName,
-                    RuntimeConstants.ENCODING_DEFAULT, model ) );
-        } catch ( VelocityException e ) {
-            MailEngineImpl.log.error( e.getMessage(), e );
-            return;
-        }
+        msg.setText( mergeTemplateIntoString( templateName, model ) );
         send( msg );
     }
 
-    private void send( SimpleMailMessage msg ) {
-        if ( StringUtils.isBlank( msg.getSubject() ) || StringUtils.isBlank( msg.getText() ) ) {
-            MailEngineImpl.log.warn( "Not sending empty email, both subject and body are blank" );
-            return;
-        }
+    private String mergeTemplateIntoString( String templateName, Map<String, Object> model ) {
         try {
-            mailSender.send( msg );
-        } catch ( MailException ex ) {
-            // log it and go on
-            MailEngineImpl.log.error( ex.getMessage(), ex );
+            StringWriter writer = new StringWriter();
+            velocityEngine.mergeTemplate( VELOCITY_TEMPLATE_PATH + templateName + VELOCITY_TEMPLATE_SUFFIX,
+                    RuntimeConstants.ENCODING_DEFAULT, new VelocityContext( model ), writer );
+            return writer.toString();
+        } catch ( VelocityException e ) {
+            throw new MailPreparationException( "Failed to evaluate Velocity template " + templateName + ".", e );
         }
+    }
+
+    private void send( SimpleMailMessage msg ) {
+        Assert.isTrue( msg.getTo().length > 0, "There must be at least one recipient." );
+        Assert.isTrue( Arrays.stream( msg.getTo() ).allMatch( StringUtils::isNotBlank ), "All recipient must be non-blank." );
+        Assert.isTrue( StringUtils.isNotBlank( msg.getFrom() ), "The From field must be non-blank." );
+        Assert.isTrue( StringUtils.isNotBlank( msg.getSubject() ), "The subject line must be non-blank." );
+        Assert.isTrue( StringUtils.isNotBlank( msg.getText() ), "The body must be non-blank." );
+        mailSender.send( msg );
+        MailEngineImpl.log.info( "Email notification sent to: " + String.join( ", ", msg.getTo() ) + "." );
     }
 }

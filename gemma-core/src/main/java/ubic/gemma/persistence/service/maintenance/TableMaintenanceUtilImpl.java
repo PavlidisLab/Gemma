@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -436,6 +436,11 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( !sendEmail ) {
             return;
         }
-        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
+        try {
+            mailEngine.sendMessageToAdmin( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
+        } catch ( Exception e ) {
+            log.error( "Failed to send email about Gene2Cs update status.", e );
+            // not rethrowing, or else the update itself would be rolled back
+        }
     }
 }

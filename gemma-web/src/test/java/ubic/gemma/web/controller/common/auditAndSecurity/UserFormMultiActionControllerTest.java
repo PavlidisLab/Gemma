@@ -11,6 +11,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.mail.MailService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.web.util.BaseWebTest;
 
@@ -34,6 +35,11 @@ public class UserFormMultiActionControllerTest extends BaseWebTest {
 
         @Bean
         public UserManager userManager() {
+            return mock();
+        }
+
+        @Bean
+        public MailService mailService() {
             return mock();
         }
     }

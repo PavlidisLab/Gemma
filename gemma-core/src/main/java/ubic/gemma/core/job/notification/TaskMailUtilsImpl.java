@@ -18,11 +18,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
@@ -55,14 +54,13 @@ public class TaskMailUtilsImpl implements TaskMailUtils {
 
             if ( emailAddress != null ) {
                 TaskMailUtilsImpl.log.info( "Sending email notification to " + emailAddress );
-                SimpleMailMessage msg = new SimpleMailMessage();
                 String logs = "";
                 if ( taskResult.getException() != null ) {
                     logs += "Task failed with :\n";
                     logs += taskResult.getException().getMessage();
                 }
                 String body = "A job you started on Gemma is completed (taskId=" + taskId + ", " + taskName + ")\n\n" + logs + "\n";
-                mailEngine.sendMessage( emailAddress, "Gemma task completed", body );
+                mailEngine.sendMessage( emailAddress, "Your Gemma task is completed", body );
             }
         }
     }

@@ -26,13 +26,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.mail.MailService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
@@ -48,13 +48,11 @@ import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 
-import javax.servlet.ServletContext;
 import java.util.*;
 
 /**
  * Manages data-level security (ie. can make data private).
  */
-@SuppressWarnings("unused")
 @Controller
 public class SecurityController {
 
@@ -69,18 +67,11 @@ public class SecurityController {
     @Autowired
     private GeneSetService geneSetService;
     @Autowired
-    private MailEngine mailEngine;
+    private MailService mailService;
     @Autowired
     private SecurityService securityService;
     @Autowired
     private UserManager userManager;
-    @Autowired
-    private ServletContext servletContext;
-
-    @Value("${gemma.hosturl}")
-    private String hostUrl;
-    @Value("${gemma.admin.email}")
-    private String adminEmailAddress;
 
     public boolean addUserToGroup( String userName, String groupName ) {
 
@@ -110,19 +101,13 @@ public class SecurityController {
             throw new EntityNotFoundException( "Sorry, there is no matching user." );
         }
 
-        /*
-         * send the user an email.
-         */
-        String emailAddress = u.getEmail();
-        if ( StringUtils.isNotBlank( emailAddress ) ) {
-            SecurityController.log.debug( "Sending email notification to " + emailAddress );
-            String manageGroupsUrl = hostUrl + servletContext.getContextPath() + "/manageGroups.html";
-            String body = String.format( "%s has added you to the group '%s'.\n"
-                            + "To view groups you belong to, visit %s\n"
-                            + "\n"
-                            + "If you believe you received this email in error, contact %s.",
-                    userTakingAction.getUserName(), groupName, manageGroupsUrl, adminEmailAddress );
-            mailEngine.sendMessage( emailAddress, "You have been added to a group on Gemma", body );
+        if ( !StringUtils.isBlank( u.getEmail() ) ) {
+            // send the user an email.
+            try {
+                mailService.sendAddUserToGroupEmail( u, groupName, userTakingAction );
+            } catch ( MailException e ) {
+                log.error( "Failed to send email to " + u.getEmail() + ".", e );
+            }
         }
 
         return true;
@@ -624,5 +609,4 @@ public class SecurityController {
         }
         return result;
     }
-
 }

@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.authentication.LoginDetailsValueObject;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.util.SecurityUtil;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -28,24 +29,21 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import ubic.gemma.core.mail.MailService;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.controller.util.JsonUtil;
 import ubic.gemma.web.controller.util.MessageUtil;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Controller to signup new users. See also the UserListController.
@@ -60,19 +58,16 @@ public class SignupController implements InitializingBean {
     @Autowired
     private UserManager userManager;
     @Autowired
-    private MailEngine mailEngine;
+    private MailService mailService;
     @Autowired
     protected MessageSource messageSource;
     @Autowired
     protected MessageUtil messageUtil;
-    @Autowired
-    private ServletContext servletContext;
 
-    @Value("${gemma.hosturl}")
-    private String hostUrl;
     @Value("${gemma.recaptcha.privateKey}")
     private String recaptchaPrivateKey;
 
+    @Setter
     private ReCaptcha reCaptcha;
 
     @Override
@@ -156,7 +151,7 @@ public class SignupController implements InitializingBean {
             @RequestParam("email") String email,
             @RequestParam("emailConfirm") String cEmail,
             @RequestParam(value = "ajaxRegisterTrue", defaultValue = "false") boolean ajaxRegisterTrue,
-            HttpServletRequest request, HttpServletResponse response ) throws Exception {
+            HttpServletRequest request, HttpServletResponse response, Locale locale ) throws Exception {
         try {
             if ( reCaptcha.isPrivateKeySet() && !reCaptcha.validateRequest( request ).isValid() ) {
                 throw new IllegalArgumentException( "Captcha was not entered correctly." );
@@ -179,7 +174,17 @@ public class SignupController implements InitializingBean {
             }
 
             UserDetailsImpl u = userManager.createUser( username, email, password );
-            sendSignupConfirmationEmail( u, ajaxRegisterTrue );
+            try {
+                mailService.sendSignupConfirmationEmail( u.getEmail(), u.getUsername(), u.getSignupToken(), locale );
+            } catch ( MailException e ) {
+                log.error( "Couldn't send email with confirmation link to " + email + ".", e );
+            }
+
+            // See if this comes from AjaxRegister.js, if it does don't save confirmation message
+            if ( !ajaxRegisterTrue ) {
+                messageUtil.saveMessage( "signup.email.sent", email,
+                        "A confirmation email was sent. Please check your mail and click the link it contains" );
+            }
             JsonUtil.writeSuccessToResponse( response );
         } catch ( Exception e ) {
             /*
@@ -193,41 +198,5 @@ public class SignupController implements InitializingBean {
     @RequestMapping(value = "/signup.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public String signupForm() {
         return "register";
-    }
-
-    /*
-     * Send an email to request signup confirmation.
-     */
-    private void sendSignupConfirmationEmail( UserDetailsImpl u, boolean ajaxRegisterTrue ) {
-        String email = u.getEmail();
-
-        Map<String, Object> model = new HashMap<>();
-        model.put( "siteurl", hostUrl + servletContext.getContextPath() + "/" );
-
-        this.sendConfirmationEmail( u.getSignupToken(), u.getUsername(), email, model );
-
-        // See if this comes from AjaxRegister.js, if it does don't save confirmation message
-        if ( !ajaxRegisterTrue ) {
-            messageUtil.saveMessage( "signup.email.sent", email,
-                    "A confirmation email was sent. Please check your mail and click the link it contains" );
-        }
-    }
-
-    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model ) {
-        Locale locale = LocaleContextHolder.getLocale();
-        try {
-            model.put( "username", username );
-            model.put( "confirmLink",
-                    hostUrl + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
-
-            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), "accountCreated.vm", model );
-
-        } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + email, e );
-        }
-    }
-
-    public void setRecaptchaTester( ReCaptcha reCaptcha ) {
-        this.reCaptcha = reCaptcha;
     }
 }

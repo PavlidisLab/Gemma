@@ -24,8 +24,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,19 +33,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import ubic.gemma.core.mail.MailService;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.web.controller.util.JsonUtil;
 import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -69,16 +65,9 @@ public class UserFormMultiActionController {
     @Autowired
     private UserManager userManager;
     @Autowired
-    private MailEngine mailEngine;
-    @Autowired
-    private ServletContext servletContext;
-    @Autowired
-    private MessageSource messageSource;
+    private MailService mailService;
     @Autowired
     private MessageUtil messageUtil;
-
-    @Value("${gemma.hosturl}")
-    private String hostUrl;
 
     /**
      * Entry point for updates.
@@ -188,7 +177,12 @@ public class UserFormMultiActionController {
 
             String token = userManager.changePasswordForUser( email, username, pwd );
 
-            sendResetConfirmationEmail( token, username, pwd, email, locale );
+            try {
+                mailService.sendResetConfirmationEmail( email, username, pwd, token, locale );
+            } catch ( MailException e ) {
+                log.error( "Couldn't send password reset email to " + email + ".", e );
+            }
+            messageUtil.saveMessage( "login.passwordReset", new Object[] { username, email }, "??login.passwordReset??" );
 
             JsonUtil.writeSuccessToResponse( response );
         } catch ( AuthenticationException e ) {
@@ -197,29 +191,6 @@ public class UserFormMultiActionController {
         } catch ( Exception e ) {
             log.error( "Unexpected exception when attempting to change password.", e );
             JsonUtil.writeErrorToResponse( e, response );
-        }
-    }
-
-    /**
-     * Send an email to request signup confirmation.
-     */
-    private void sendResetConfirmationEmail( String token, String username, String password,
-            String email, Locale locale ) {
-        try {
-            Map<String, Object> model = new HashMap<>();
-            model.put( "password", password );
-            model.put( "message", messageSource.getMessage( "login.passwordReset.emailMessage", null, locale ) );
-            model.put( "username", username );
-            model.put( "confirmLink",
-                    hostUrl + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
-            try {
-                mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), "passwordReset.vm", model );
-            } catch ( Exception e ) {
-                log.error( "Couldn't send email to " + email, e );
-            }
-            messageUtil.saveMessage( "login.passwordReset", new Object[] { username, email }, "??login.passwordReset??" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
         }
     }
 }

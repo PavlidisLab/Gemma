@@ -56,7 +56,7 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
 
     @Override
     public void afterPropertiesSet() {
-        suc.setRecaptchaTester( mockReCaptcha );
+        suc.setReCaptcha( mockReCaptcha );
     }
 
     @Before

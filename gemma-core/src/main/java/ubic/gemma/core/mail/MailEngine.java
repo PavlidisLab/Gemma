@@ -12,7 +12,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.core.util;
+package ubic.gemma.core.mail;
+
+import org.springframework.mail.MailException;
 
 import java.util.Map;
 
@@ -24,15 +26,15 @@ public interface MailEngine {
     /**
      * Send an email message to the administrator.
      */
-    void sendAdminMessage( String subject, String bodyText );
+    void sendMessageToAdmin( String subject, String bodyText ) throws MailException;
 
     /**
      * Send a text email message.
      */
-    void sendMessage( String to, String subject, String body );
+    void sendMessage( String to, String subject, String body ) throws MailException;
 
     /**
      * Send a templated email message.
      */
-    void sendMessage( String to, String subject, String templateName, Map<String, Object> model );
+    void sendMessage( String to, String subject, String templateName, Map<String, Object> model ) throws MailException;
 }
