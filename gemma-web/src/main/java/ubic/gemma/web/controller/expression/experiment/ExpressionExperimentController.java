@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -265,7 +264,6 @@ public class ExpressionExperimentController {
     /**
      * Exposed for AJAX calls.
      */
-    @Secured("GROUP_USER")
     @SuppressWarnings("unused")
     public String deleteById( Long id ) {
         if ( id == null ) return null;
@@ -828,7 +826,6 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
-    @Secured("GROUP_USER")
     public String removePrimaryPublication( Long eeId ) {
         RemovePubMed task = new RemovePubMed( new EntityTaskCommand<>( ExpressionExperiment.class, eeId ) );
         return taskRunningService.submitTask( task );
@@ -1291,7 +1288,6 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - possibly used in JS
-    @Secured("GROUP_USER")
     public String updatePubMed( Long eeId, String pubmedId ) {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );

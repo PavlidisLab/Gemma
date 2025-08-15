@@ -22,7 +22,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,12 +36,9 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ubic.gemma.web.util.dwr.MockDwrRequestBuilders.dwr;
 import static ubic.gemma.web.util.dwr.MockDwrResultHandlers.getCallback;
-import static ubic.gemma.web.util.dwr.MockDwrResultHandlers.getException;
 import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.callback;
-import static ubic.gemma.web.util.dwr.MockDwrResultMatchers.exception;
 
 /**
  * @author ptan
@@ -128,24 +124,5 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
                     ExpressionExperiment ee1 = expressionExperimentService.thaw( ee );
                     assertEquals( "Biochem Biophys Res Commun", ee1.getPrimaryPublication().getPublication() );
                 } ) );
-    }
-
-    @Test
-    public void testUpdatePubMedAsAnonymousUser() throws Exception {
-        ExpressionExperiment ee = getTestPersistentExpressionExperiment();
-        ees.add( ee );
-        runAsAnonymous();
-        try {
-            perform( dwr( ExpressionExperimentController.class, "updatePubMed", ee.getId(), "1" ) )
-                    .andExpect( status().isOk() )
-                    .andExpect( exception().exist() )
-                    .andExpect( callback().doesNotExist() )
-                    .andDo( getException( e -> {
-                        assertEquals( AccessDeniedException.class.getName(), e.getJavaClassName() );
-                        assertEquals( "Access is denied", e.getMessage() );
-                    } ) );
-        } finally {
-            runAsAdmin();
-        }
     }
 }

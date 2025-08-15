@@ -18,7 +18,6 @@ package ubic.gemma.web.controller.job;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
@@ -162,7 +161,6 @@ public class ProgressStatusController {
         return new SubmittedTaskValueObject( task );
     }
 
-    @Secured({ "GROUP_ADMIN" })
     public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
         return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks() );
     }
