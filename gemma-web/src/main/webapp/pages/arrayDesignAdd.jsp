@@ -1,6 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="arrayDesignSequenceCommand" scope="request"
-	class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignAddCommand" />
+
+<%--@elvariable id="arrayDesigns" type="java.util.List"--%>
+<%--@elvariable id="taxa" type="java.util.List"--%>
 
 <title> add array design </title>
 

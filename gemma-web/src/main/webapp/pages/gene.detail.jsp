@@ -1,5 +1,4 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="gene" scope="request" type="ubic.gemma.model.genome.gene.GeneValueObject" />
 
 <head>
 <title>${fn:escapeXml(gene.name)} - ${fn:escapeXml(gene.officialName)}</title>

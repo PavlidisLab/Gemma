@@ -1,6 +1,4 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="expressionExperiment" scope="request"
-        type="ubic.gemma.model.expression.experiment.ExpressionExperiment" />
 <head>
 <title>
     <fmt:message key="bioAssays.title" /> from ${expressionExperiment.shortName}

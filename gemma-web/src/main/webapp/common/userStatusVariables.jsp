@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
+<%--@elvariable id="appConfig" type="java.util.Map"--%>
 
 <%-- Security fields used in Java script calls to hide or display information on pages, used to be in footer --%>
 <security:authorize access="hasAuthority('GROUP_ADMIN')">

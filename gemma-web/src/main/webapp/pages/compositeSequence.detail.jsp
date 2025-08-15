@@ -1,5 +1,3 @@
-<jsp:useBean id="compositeSequence" scope="request"
-        type="ubic.gemma.model.expression.designElement.CompositeSequence" />
 <%@ include file="/common/taglibs.jsp" %>
 
 <head>
