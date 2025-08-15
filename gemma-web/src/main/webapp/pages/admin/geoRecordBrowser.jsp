@@ -32,7 +32,7 @@
     <p>
         To search GEO, type your query in the 'Search' field, e.g. <i>Mus+musculus[ORGN]+AND+brain[ALL]</i>.
         For more information on how to construct queries, go to the
-        <a href="http://www.ncbi.nlm.nih.gov/geo/info/qqtutorial.html">NCBI website</a>.
+        <a href="https://www.ncbi.nlm.nih.gov/geo/info/qqtutorial.html">NCBI website</a>.
     </p>
 </div>
 <div id="taskId" style="display: none;"></div>

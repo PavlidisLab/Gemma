@@ -110,6 +110,7 @@
         <c:if test="${heatmap != null}">
         </c:if>
         <c:if test="${not empty bioAssays}">
+            <tr>
             <td class="label">Assays:</td>
             <td>
                 <c:choose>

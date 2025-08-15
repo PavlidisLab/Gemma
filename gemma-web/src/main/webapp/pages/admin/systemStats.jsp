@@ -9,9 +9,7 @@
 }
 
 input[type=button] {
-	padding: 0 4px;
-	padding-top: 4px;
-	padding-bottom: 3px;
+    padding: 4px 4px 3px;
 }
 </style>
 
