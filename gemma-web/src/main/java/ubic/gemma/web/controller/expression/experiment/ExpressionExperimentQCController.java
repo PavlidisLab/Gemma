@@ -655,6 +655,7 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
             @RequestParam(value = "size", defaultValue = "1.0") double sizeFactor,
             @RequestParam(value = "font", defaultValue = "Arial") String font,
+            @RequestParam(value = "showTitle", defaultValue = "false") boolean showTitle,
             HttpServletResponse response ) throws IOException {
         if ( clcIdentifier != null && ctaIdentifier != null ) {
             throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
@@ -742,16 +743,18 @@ public class ExpressionExperimentQCController {
         }
         ChartFactory.setChartTheme( ChartThemeUtils.getGemmaChartTheme( font ) );
         JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
-                "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
+                showTitle ? "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName() : null,
                 "Assay", "Expression data (log10)", dataset.createDataset(), ctaIdentifier != null || clcIdentifier != null );
         if ( ( ctaIdentifier == null && clcIdentifier == null ) || focusedCharacteristicId != null ) {
             // TODO: add per-row annotation, this does not appear to be supported by JFreeChart
             dataset.createAnnotations().forEach( chart.getCategoryPlot()::addAnnotation );
         }
+        int numberOfDisplayedAssays = assayIds != null ? assayIds.length : vector.getSingleCellDimension().getBioAssays().size();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         response.setHeader( "Cache-Control", "no-cache" );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                ( int ) ( sizeFactor * dataset.getNumberOfBoxplots() * 150 ),
+                // we just need enough width to display the assay identifiers
+                ( int ) ( sizeFactor * numberOfDisplayedAssays * 120 ),
                 ( int ) ( sizeFactor * DEFAULT_QC_IMAGE_SIZE_PX ),
                 "Single-cell data boxplot for " + ee.getShortName(), buildInfo );
     }

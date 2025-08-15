@@ -116,8 +116,7 @@
                     <c:when test="${heatmap != null}">
                         <Gemma:expressionDataHeatmap heatmap="${heatmap}"
                                 alt="Heatmap of the expression data of ${subSet.name}. The rows correspond to assays and columns to genes."
-                                maxWidth="800"
-                                font="${font}" />
+                                maxWidth="800" />
                     </c:when>
                     <c:otherwise>
                         <table class="mb-3">

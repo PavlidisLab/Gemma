@@ -1,7 +1,6 @@
 package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -13,7 +12,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,12 +20,6 @@ import java.util.stream.Collectors;
 public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataHeatmap> {
 
     private transient WebEntityUrlBuilder entityUrlBuilder;
-
-    /**
-     * Font to use for the single-cell boxplot links.
-     */
-    @Nullable
-    private String font;
 
     // needed for JSP
     @Override
@@ -139,11 +131,11 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
                         }
                         String boxplotUrl = entityUrlBuilder.fromContextPath().entity( ee )
                                 .web()
-                                .visualizeSingleCellBoxPlot( heatmap.getSingleCellQuantitationType(),
-                                        designElement, heatmap.getCellLevelCharacteristics(),
-                                        heatmap.getFocusedCellLevelCharacteristic(),
-                                        // may be an empty string when set via JSP
-                                        StringUtils.stripToNull( font ) )
+                                .showSingleCellExpressionData( heatmap.getSingleCellQuantitationType(),
+                                        designElement,
+                                        null,
+                                        heatmap.getCellLevelCharacteristics(),
+                                        heatmap.getFocusedCellLevelCharacteristic() )
                                 .toUriString();
                         writer.startTag( "a" );
                         writer.writeAttribute( "href", boxplotUrl );
@@ -180,7 +172,7 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
         }
         boolean first = true;
-        for ( BioAssay ba : heatmap.getSamples() ) {
+        for ( BioAssay ba : heatmap.getAssays() ) {
             if ( !first ) {
                 writer.startTag( "br" );
                 writer.endTag(); // </br>

@@ -329,6 +329,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String ctaName );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain a collection of protocols used to assign cell types to single-cell vectors.
      */
@@ -406,6 +409,9 @@ public interface SingleCellExpressionExperimentService {
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Obtain a mask if one is unambiguously defined for the given experiment and quantitation type.

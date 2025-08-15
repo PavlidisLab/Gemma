@@ -644,6 +644,8 @@ public interface ExpressionExperimentDao
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
+    Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain the preferred assignment of the preferred single-cell vectors.
      *
@@ -730,6 +732,8 @@ public interface ExpressionExperimentDao
 
     @Nullable
     CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName );
+
+    Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 

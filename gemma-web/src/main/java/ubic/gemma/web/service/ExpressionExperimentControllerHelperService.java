@@ -19,21 +19,25 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.web.assets.StaticAssetResolver;
+import ubic.gemma.web.controller.expression.experiment.SingleCellExpressionDataModel;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
@@ -45,6 +49,7 @@ import javax.servlet.jsp.JspException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
@@ -76,6 +81,12 @@ public class ExpressionExperimentControllerHelperService {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Autowired
     private StaticAssetResolver staticAssetResolver;
@@ -398,5 +409,75 @@ public class ExpressionExperimentControllerHelperService {
         } else {
             return null;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public SingleCellExpressionDataModel loadSingleCellExpressionData( Long id, @Nullable Long quantitationTypeId, Long designElementId,
+            @Nullable Long[] assayIds, @Nullable Long cellTypeAssignmentId, @Nullable Long cellLevelCharacteristicsId,
+            @Nullable Long focusedCharacteristicId, HttpServletRequest request ) {
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        CompositeSequence designElement = compositeSequenceService.loadOrFail( designElementId, EntityNotFoundException::new );
+        QuantitationType qt;
+        if ( quantitationTypeId != null ) {
+            qt = quantitationTypeService.loadByIdAndVectorType( quantitationTypeId, ee, SingleCellExpressionDataVector.class );
+            if ( qt == null ) {
+                throw new EntityNotFoundException( ee.getShortName() + " does not have a single-cell quantitation type with ID " + quantitationTypeId + "." );
+            }
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        }
+        Gene gene;
+        Collection<Gene> genes = compositeSequenceService.getGenes( designElement );
+        if ( genes.size() == 1 ) {
+            gene = genes.iterator().next();
+        } else {
+            gene = null;
+        }
+
+        if ( assayIds != null ) {
+            // TODO: validate and load requested assays
+        }
+
+        Collection<CellTypeAssignment> ctas = singleCellExpressionExperimentService.getCellTypeAssignmentsWithoutIndices( ee, qt );
+        Collection<CellLevelCharacteristics> clcs = singleCellExpressionExperimentService.getCellLevelCharacteristicsWithoutIndices( ee, qt );
+        Characteristic focusedCharacteristic = null;
+
+        CellTypeAssignment cta;
+        if ( cellTypeAssignmentId != null ) {
+            cta = ctas.stream().filter( cta2 -> cta2.getId().equals( cellTypeAssignmentId ) ).findFirst()
+                    .orElseThrow( () -> new EntityNotFoundException( "No CTA with ID " + cellTypeAssignmentId + "." ) );
+            if ( focusedCharacteristicId != null ) {
+                focusedCharacteristic = cta.getCellTypes().stream()
+                        .filter( ct -> ct.getId().equals( focusedCharacteristicId ) )
+                        .findFirst()
+                        .orElseThrow( () -> new EntityNotFoundException( "" ) );
+            }
+        } else {
+            cta = null;
+        }
+
+        CellLevelCharacteristics clc;
+        if ( cellLevelCharacteristicsId != null ) {
+            clc = clcs.stream().filter( clc2 -> clc2.getId().equals( cellLevelCharacteristicsId ) ).findFirst()
+                    .orElseThrow( () -> new EntityNotFoundException( "No CLC with ID " + cellLevelCharacteristicsId + "." ) );
+            if ( focusedCharacteristicId != null ) {
+                focusedCharacteristic = clc.getCharacteristics().stream()
+                        .filter( ct -> ct.getId().equals( focusedCharacteristicId ) )
+                        .findFirst()
+                        .orElseThrow( () -> new EntityNotFoundException( "" ) );
+            }
+        } else {
+            clc = null;
+        }
+
+        return new SingleCellExpressionDataModel( ee, ctas, clcs, qt, designElement, gene, assayIds, cta, clc, focusedCharacteristic, getKeywords( ee ), detectFont( request ) );
+    }
+
+    @Transactional(readOnly = true)
+    public String getKeywords( ExpressionExperiment ee ) {
+        return expressionExperimentService.getAnnotations( ee ).stream()
+                .map( AnnotationValueObject::getTermName )
+                .collect( Collectors.joining( "," ) );
     }
 }

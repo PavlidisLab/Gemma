@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -206,6 +207,8 @@ public class EntityUrlBuilder {
                 this.entityPath = "/taxon/showTaxon.html?id=";
             } else if ( entity instanceof Gene ) {
                 this.entityPath = "/gene/showGene.html?id=";
+            } else if ( entity instanceof CompositeSequence ) {
+                this.entityPath = "/compositeSequence/show.html?id=";
             } else {
                 throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entity.getClass() + "." );
             }
@@ -256,10 +259,16 @@ public class EntityUrlBuilder {
             return this;
         }
 
-        public ExpressionExperimentWebUrl visualizeSingleCellBoxPlot( QuantitationType quantitationType, CompositeSequence designElement, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic, @Nullable String font ) {
+        public ExpressionExperimentWebUrl showSingleCellExpressionData( QuantitationType quantitationType, CompositeSequence designElement, @Nullable List<BioAssay> assays, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic ) {
             Assert.state( !byShortName, "Single-cell box plots cannot be visualized by short name." );
-            entityPath = "/expressionExperiment/visualizeSingleCellDataBoxplot.html";
-            additionalQuery = "&quantitationType=" + quantitationType.getId() + "&designElement=" + designElement.getId();
+            entityPath = "/expressionExperiment/showSingleCellExpressionData.html";
+            additionalQuery = "&quantitationType=" + quantitationType.getId();
+            additionalQuery += "&designElement=" + designElement.getId();
+            if ( assays != null ) {
+                for ( BioAssay assay : assays ) {
+                    additionalQuery += "&assays=" + assay.getId();
+                }
+            }
             if ( cellLevelCharacteristics instanceof CellTypeAssignment ) {
                 additionalQuery += "&cellTypeAssignment=" + cellLevelCharacteristics.getId();
             } else if ( cellLevelCharacteristics != null ) {
@@ -267,9 +276,6 @@ public class EntityUrlBuilder {
             }
             if ( focusedCharacteristic != null ) {
                 additionalQuery += "&focusedCharacteristic=" + focusedCharacteristic.getId();
-            }
-            if ( font != null ) {
-                additionalQuery += "&font=" + urlEncode( font );
             }
             return this;
         }

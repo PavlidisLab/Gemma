@@ -181,7 +181,7 @@ public class ExpressionExperimentController {
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
-   
+
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
      * level.
@@ -968,9 +968,7 @@ public class ExpressionExperimentController {
     }
 
     private String getKeywords( ExpressionExperiment ee ) {
-        return expressionExperimentService.getAnnotations( ee ).stream()
-                .map( AnnotationValueObject::getTermName )
-                .collect( Collectors.joining( "," ) );
+        return expressionExperimentControllerHelperService.getKeywords( ee );
     }
 
     @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
@@ -1063,7 +1061,6 @@ public class ExpressionExperimentController {
                 .addObject( "subSetsByDimension", subsetsByDimensionSorted )
                 .addObject( "quantitationTypesByDimension", quantitationTypesByDimension )
                 .addObject( "heatmapsByDimension", heatmapsByDimension )
-                .addObject( "font", expressionExperimentControllerHelperService.detectFont( request ) )
                 .addObject( "subSetFactorsByDimension", subSetFactorsByDimension )
                 .addObject( "vectorTypes", vectorTypes )
                 .addObject( "keywords", getKeywords( ee ) );
@@ -1153,10 +1150,36 @@ public class ExpressionExperimentController {
                 .addObject( "bioAssays", bioAssays )
                 .addObject( "annotations", annotations )
                 .addObject( "heatmap", heatmap )
-                .addObject( "font", expressionExperimentControllerHelperService.detectFont( request ) )
                 .addObject( "keywords", annotations.stream()
                         .map( AnnotationValueObject::getTermName )
                         .collect( Collectors.joining( "," ) ) );
+    }
+
+    @RequestMapping(value = "/showSingleCellExpressionData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public ModelAndView showSingleCellExpressionData( @RequestParam("id") Long id,
+            @RequestParam(value = "quantitationType", required = false) @Nullable Long quantitationTypeId,
+            @RequestParam(value = "designElement") Long designElementId,
+            @RequestParam(value = "assays", required = false) @Nullable Long[] assayIds,
+            @RequestParam(value = "cellTypeAssignment", required = false) @Nullable Long cellTypeAssignmentId,
+            @RequestParam(value = "cellLevelCharacteristics", required = false) @Nullable Long cellLevelCharacteristicsId,
+            @RequestParam(value = "focusedCharacteristic", required = false) @Nullable Long focusedCharacteristicId,
+            HttpServletRequest request ) {
+        SingleCellExpressionDataModel model = expressionExperimentControllerHelperService.loadSingleCellExpressionData( id,
+                quantitationTypeId, designElementId, assayIds, cellTypeAssignmentId, cellLevelCharacteristicsId,
+                focusedCharacteristicId, request );
+        return new ModelAndView( "expressionExperiment.singleCellExpressionData" )
+                .addObject( "expressionExperiment", model.getExpressionExperiment() )
+                .addObject( "cellTypeAssignments", model.getCellTypeAssignments() )
+                .addObject( "allCellLevelCharacteristics", model.getCellLevelCharacteristics() )
+                .addObject( "quantitationType", model.getQuantitationType() )
+                .addObject( "designElement", model.getDesignElement() )
+                .addObject( "gene", model.getGene() )
+                .addObject( "assayIds", model.getAssayIds() )
+                .addObject( "cellTypeAssignment", model.getCellTypeAssignment() )
+                .addObject( "cellLevelCharacteristics", model.getCellLevelCharacteristics1() )
+                .addObject( "focusedCharacteristic", model.getFocusedCharacteristic() )
+                .addObject( "keywords", model.getKeywords() )
+                .addObject( "font", model.getFont() );
     }
 
     /**

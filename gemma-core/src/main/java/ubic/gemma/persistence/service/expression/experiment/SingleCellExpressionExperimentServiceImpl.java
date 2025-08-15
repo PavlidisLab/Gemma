@@ -1009,6 +1009,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getCellTypeAssignmentsWithoutIndices( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Protocol> getCellTypeAssignmentProtocols() {
         return expressionExperimentDao.getCellTypeAssignmentProtocols();
     }
@@ -1131,6 +1137,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
         return expressionExperimentDao.getCellLevelCharacteristicsWithoutIndices( ee, qt, clcName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getCellLevelCharacteristicsWithoutIndices( ee, qt );
     }
 
     @Override

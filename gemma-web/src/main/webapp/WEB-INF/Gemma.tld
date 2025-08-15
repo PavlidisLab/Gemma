@@ -344,11 +344,6 @@
 			<name>maxHeight</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
-		<attribute>
-			<description>Font used for links to the related single-cell data boxplots.</description>
-			<name>font</name>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
