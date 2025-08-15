@@ -81,17 +81,6 @@ public class MailEngineImpl implements MailEngine {
     }
 
     @Override
-    public void sendMessage( String to, String subject, String body ) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo( to );
-        msg.setFrom( noreplyEmailAddress );
-        msg.setReplyTo( supportEmailAddress );
-        msg.setSubject( subject );
-        msg.setText( body );
-        send( msg );
-    }
-
-    @Override
     public void sendMessage( String to, String subject, String templateName, Map<String, Object> model ) {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo( to );

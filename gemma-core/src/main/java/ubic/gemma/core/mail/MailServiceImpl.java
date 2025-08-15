@@ -63,8 +63,7 @@ public class MailServiceImpl implements MailService {
         model.put( "group", groupName );
         model.put( "manageGroupsUrl", hostUrl + "/manageGroups.html" );
         model.put( "adminEmailAddress", adminEmailAddress );
-        String to = user.getEmail();
-        mailEngine.sendMessage( to, "You have been added to a group in Gemma", "userAddedToGroup", model );
+        mailEngine.sendMessage( user.getEmail(), "You have been added to a group in Gemma", "userAddedToGroup", model );
     }
 
     /**
@@ -78,8 +77,18 @@ public class MailServiceImpl implements MailService {
         model.put( "group", groupName );
         model.put( "manageGroupsUrl", hostUrl + "/manageGroups.html" );
         model.put( "adminEmailAddress", adminEmailAddress );
-        String to = user.getEmail();
-        mailEngine.sendMessage( to, "You have been added to a group in Gemma", "userRemovedFromGroup", model );
+        mailEngine.sendMessage( user.getEmail(), "You have been added to a group in Gemma", "userRemovedFromGroup", model );
+    }
+
+    @Override
+    public void sendTaskCompletedEmail( User user, String taskId, String taskName, String taskStatus, String logs ) {
+        Map<String, Object> model = new HashMap<>();
+        model.put( "username", user.getUserName() );
+        model.put( "taskId", taskId );
+        model.put( "taskName", taskName );
+        model.put( "taskStatus", taskStatus );
+        model.put( "taskLogs", logs );
+        mailEngine.sendMessage( user.getEmail(), "Your Gemma task is completed", "taskCompleted", model );
     }
 
     private String urlEncode( String s ) {

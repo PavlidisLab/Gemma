@@ -18,4 +18,6 @@ public interface MailService {
     void sendAddUserToGroupEmail( User user, String groupName, User userTakingAction ) throws MailException;
 
     void sendRemoveUserFromGroupEmail( User user, String groupName, User userTakingAction ) throws MailException;
+
+    void sendTaskCompletedEmail( User user, String taskId, String taskName, String taskStatus, String logs );
 }

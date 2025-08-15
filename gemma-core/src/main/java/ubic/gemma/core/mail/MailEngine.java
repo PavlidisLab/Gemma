@@ -29,11 +29,6 @@ public interface MailEngine {
     void sendMessageToAdmin( String subject, String bodyText ) throws MailException;
 
     /**
-     * Send a text email message.
-     */
-    void sendMessage( String to, String subject, String body ) throws MailException;
-
-    /**
      * Send a templated email message.
      */
     void sendMessage( String to, String subject, String templateName, Map<String, Object> model ) throws MailException;

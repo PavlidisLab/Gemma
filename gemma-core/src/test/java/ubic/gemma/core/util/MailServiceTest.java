@@ -92,7 +92,7 @@ public class MailServiceTest extends BaseTest {
     }
 
     @Test
-    public void testUserAddeddToGroup() {
+    public void testUserAddedToGroup() {
         User user = User.Factory.newInstance( "foo" );
         user.setEmail( "foo@example.com" );
         String group = "testGroup";
@@ -125,5 +125,22 @@ public class MailServiceTest extends BaseTest {
                 .contains( "foo" )
                 .contains( "bar" )
                 .contains( "http://localhost:8080/manageGroups.html" );
+    }
+
+    @Test
+    public void testSendTaskCompletedEmail() {
+        User user = User.Factory.newInstance( "foo" );
+        user.setEmail( "foo@example.com" );
+        mailService.sendTaskCompletedEmail( user, "123", "test", "SUCCESS", "Stuff happened." );
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass( SimpleMailMessage.class );
+        verify( mailSender ).send( captor.capture() );
+        assertThat( captor.getValue() )
+                .isNotNull();
+        assertThat( captor.getValue().getText() )
+                .contains( "foo" )
+                .contains( "123" )
+                .contains( "test" )
+                .contains( "SUCCESS" )
+                .contains( "Stuff happened." );
     }
 }
