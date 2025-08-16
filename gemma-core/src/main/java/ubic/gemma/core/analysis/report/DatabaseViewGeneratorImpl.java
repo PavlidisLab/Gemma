@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -32,6 +31,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -249,7 +249,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                 ee = expressionExperimentService.thawLite( ee );
 
                 Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
-                        .getAnalyses( ee, true );
+                        .findByExperiment( ee, true );
                 if ( results == null || results.isEmpty() ) {
                     DatabaseViewGeneratorImpl.log.warn( "No differential expression results found for " + ee );
                     continue;

@@ -136,7 +136,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .getAnalyses( expressionExperiment, true );
+                .findByExperiment( expressionExperiment, true );
         return differentialExpressionAnalysisService.thaw( expressionAnalyses );
     }
 

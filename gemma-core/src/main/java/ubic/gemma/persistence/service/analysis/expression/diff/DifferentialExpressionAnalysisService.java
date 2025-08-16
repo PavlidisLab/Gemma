@@ -61,9 +61,6 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_READ" })
     DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
-    Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment, boolean includeSubSets );
-
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );

@@ -104,12 +104,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment, includeSubSets );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
         HashSet<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {

@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
@@ -58,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -81,6 +83,8 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.*;
  * @author Paul
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSeekingCLI<ExpressionExperiment> {
+
+    private final String SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX = "\n" + "This option is not available when processing more than one experiment.";
 
     @Autowired
     protected ExpressionExperimentService eeService;
@@ -173,7 +177,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, Option option ) {
-        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        option.setDescription( option.getDescription() + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
         options.addOption( option );
         singleExperimentOptions.add( option.getOpt() );
     }
@@ -182,7 +186,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
-        options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
+        options.addOption( opt, longOpt, hasArg, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
+        singleExperimentOptions.add( opt );
+    }
+
+    /**
+     * Add an enumerated option that is only available in single-experiment mode.
+     * @see OptionsUtils#addEnumOption(Options, String, String, String, Class, EnumMap)
+     */
+    protected <T extends Enum<T>> void addSingleExperimentEnumOption( Options options, String opt, String longOpt, String description, Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
+        addEnumOption( options, opt, longOpt, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX, enumClass, descriptions );
         singleExperimentOptions.add( opt );
     }
 
