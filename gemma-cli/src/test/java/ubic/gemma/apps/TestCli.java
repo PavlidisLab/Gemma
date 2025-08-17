@@ -3,10 +3,9 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Options;
 import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import ubic.gemma.cli.util.CLI;
-import ubic.gemma.cli.util.CliContext;
+import ubic.gemma.cli.util.CLIContext;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.List;
 
 public class TestCli implements CLI {
@@ -44,7 +43,7 @@ public class TestCli implements CLI {
     }
 
     @Override
-    public int executeCommand( CliContext ctx ) {
-        return 0;
+    public void executeCommand( CLIContext ctx ) {
+
     }
 }

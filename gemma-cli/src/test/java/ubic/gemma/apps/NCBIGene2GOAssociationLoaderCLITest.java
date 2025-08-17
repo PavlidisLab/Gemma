@@ -12,7 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.cli.util.TestCliContext;
+import ubic.gemma.cli.util.TestCLIContext;
 import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -87,7 +87,7 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
         assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
         ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( "go", DatabaseType.OTHER );
         when( externalDatabaseService.findByNameWithAuditTrail( "go" ) ).thenReturn( gene2go );
-        ncbiGene2GOAssociationLoaderCLI.executeCommand( new TestCliContext( null, new String[] {} ) );
+        ncbiGene2GOAssociationLoaderCLI.executeCommand( new TestCLIContext( null, new String[] {} ) );
         verify( gene2GOAssociationService ).removeAll();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "go" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( same( gene2go ), isNull(), any() );

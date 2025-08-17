@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A simple implementation of {@link CliContext} for testing purposes.
+ * A simple implementation of {@link CLIContext} for testing purposes.
  * @author poirigui
  */
-public class TestCliContext implements CliContext {
+public class TestCLIContext implements CLIContext {
 
     @Nullable
     private String commandNameOrAliasUsed;
@@ -19,8 +19,11 @@ public class TestCliContext implements CliContext {
     private InputStream inputStream = new ByteArrayInputStream( new byte[0] );
     private PrintStream outputStream = new PrintStream( new ByteArrayOutputStream() );
     private PrintStream errorStream = new PrintStream( new ByteArrayOutputStream() );
+    private int exitStatus = 0;
+    @Nullable
+    private Exception exitCause = null;
 
-    public TestCliContext( @Nullable String commandNameOrAliasUsed, String[] arguments ) {
+    public TestCLIContext( @Nullable String commandNameOrAliasUsed, String[] arguments ) {
         this.commandNameOrAliasUsed = commandNameOrAliasUsed;
         this.arguments = arguments;
     }
@@ -88,5 +91,22 @@ public class TestCliContext implements CliContext {
 
     public void setErrorStream( PrintStream errorStream ) {
         this.errorStream = errorStream;
+    }
+
+    @Override
+    public int getExitStatus() {
+        return exitStatus;
+    }
+
+    @Nullable
+    @Override
+    public Exception getExitCause() {
+        return exitCause;
+    }
+
+    @Override
+    public void setExitStatus( int exitStatus, @Nullable Exception exitCause ) {
+        this.exitStatus = exitStatus;
+        this.exitCause = exitCause;
     }
 }

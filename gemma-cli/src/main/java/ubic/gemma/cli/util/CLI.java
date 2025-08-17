@@ -50,9 +50,8 @@ public interface CLI {
 
     /**
      * Execute the given command given CLI arguments.
-     * @return an exit code
      */
-    int executeCommand( CliContext ctx );
+    void executeCommand( CLIContext ctx );
 
     // order here is significant.
     enum CommandGroup {

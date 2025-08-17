@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Map;
 
-public interface CliContext {
+public interface CLIContext {
 
     /**
      * Command name or alias used to invoke the command, or {@code null} if this was invoked using the fully
@@ -36,4 +36,14 @@ public interface CliContext {
     PrintStream getOutputStream();
 
     PrintStream getErrorStream();
+
+    int getExitStatus();
+
+    /**
+     * Obtain the exit cause, if known.
+     */
+    @Nullable
+    Exception getExitCause();
+
+    void setExitStatus( int exitStatus, @Nullable Exception exitCause );
 }
