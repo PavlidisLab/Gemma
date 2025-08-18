@@ -2,12 +2,14 @@ package ubic.gemma.core.visualization.cellbrowser;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.tuple.Pair;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -52,6 +54,7 @@ public class CellBrowserMetadataWriter {
     private boolean autoFlush = false;
 
     public void write( ExpressionExperiment ee, SingleCellDimension singleCellDimension, Writer writer ) throws IOException {
+        List<BioAssay> assays = singleCellDimension.getBioAssays();
         List<BioMaterial> samples = singleCellDimension.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
                 .collect( Collectors.toList() );
@@ -74,21 +77,8 @@ public class CellBrowserMetadataWriter {
             factors = Collections.emptyList();
         }
         Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( factors, samples );
-        SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics = createCharacteristicMap( samples )
-                .entrySet()
-                .stream()
-                // only keep categories that have at most one characteristic per sample
-                // note: sample without a characteristic for that category lack an entry in the map
-                .filter( e -> {
-                    if ( e.getValue().values().stream().allMatch( v -> v.size() == 1 ) ) {
-                        return true;
-                    } else {
-                        log.warn( "Category " + e.getKey() + " has multiple characteristics for some samples, skipping it." );
-                        return false;
-                    }
-                } )
-                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ),
-                        ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Category::getCategory ) ) ) );
+        SortedMap<Category, Map<BioAssay, Characteristic>> bioAssayCharacteristics = selectCharacteristics( BioAssayUtils.createCharacteristicMap( assays ), assays.size() );
+        SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics = selectCharacteristics( createCharacteristicMap( samples ), samples.size() );
         List<CellLevelCharacteristics> clcs = new ArrayList<>( singleCellDimension.getCellTypeAssignments().size() + singleCellDimension.getCellLevelCharacteristics().size() );
         singleCellDimension.getCellTypeAssignments().stream()
                 .sorted( CellTypeAssignment.COMPARATOR )
@@ -96,18 +86,53 @@ public class CellBrowserMetadataWriter {
         singleCellDimension.getCellLevelCharacteristics().stream()
                 .sorted( CellLevelCharacteristics.COMPARATOR )
                 .forEach( clcs::add );
-        writeHeader( factors, sampleCharacteristics, clcs, writer );
+        writeHeader( factors, bioAssayCharacteristics, sampleCharacteristics, clcs, writer );
         int cellIndex = 0;
         for ( int sampleIndex = 0; sampleIndex < singleCellDimension.getBioAssays().size(); sampleIndex++ ) {
             BioAssay bioAssay = singleCellDimension.getBioAssays().get( sampleIndex );
             for ( String cellId : singleCellDimension.getCellIdsBySample( sampleIndex ) ) {
-                writeCell( bioAssay, cellId, cellIndex++, factors, factorValueMap, sampleCharacteristics, clcs, writer );
+                writeCell( bioAssay, cellId, cellIndex++, factors, factorValueMap, bioAssayCharacteristics, sampleCharacteristics, clcs, writer );
             }
         }
     }
 
-    private void writeHeader( List<ExperimentalFactor> factors, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
-        String[] columnNames = new String[1 + ( separateSampleFromAssayIdentifiers ? 2 : 1 ) + factors.size() + sampleCharacteristics.size() + clcs.size()];
+    /**
+     * Select characteristics suitable for the Cell Browser metadata file.
+     */
+    private <T> SortedMap<Category, Map<T, Characteristic>> selectCharacteristics( Map<Category, Map<T, Collection<Characteristic>>> characteristics, int numSamples ) {
+        return characteristics.entrySet()
+                .stream()
+                // only keep categories that have at most one characteristic per sample
+                // note: sample without a characteristic for that category lack an entry in the map
+                .filter( e -> {
+                    if ( e.getValue().values().stream().allMatch( v -> v.size() == 1 ) ) {
+                        return true;
+                    } else {
+                        log.warn( e.getKey() + " has multiple characteristics for some samples, skipping it." );
+                        return false;
+                    }
+                } )
+                .map( e -> Pair.of( e.getKey(), e.getValue().entrySet().stream()
+                        .map( e2 -> Pair.of( e2.getKey(), e2.getValue().iterator().next() ) )
+                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) ) )
+                .filter( e -> {
+                    Set<Characteristic> distinctValues = new HashSet<>( e.getValue().values() );
+                    // only keep categories that have more than one distinct values
+                    // it's not possible to have a category with zero distinct values at this point, so if it has
+                    // missing values, we can safely include it
+                    boolean hasMissingValues = e.getValue().size() < numSamples;
+                    if ( distinctValues.size() > 1 || hasMissingValues ) {
+                        return true;
+                    } else {
+                        log.warn( e.getKey() + " has no distinct values, skipping it." );
+                        return false;
+                    }
+                } )
+                .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Category::getCategory ) ) ) );
+    }
+
+    private void writeHeader( List<ExperimentalFactor> factors, SortedMap<Category, Map<BioAssay, Characteristic>> bioAssayCharacteristics, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
+        String[] columnNames = new String[1 + ( separateSampleFromAssayIdentifiers ? 2 : 1 ) + factors.size() + bioAssayCharacteristics.size() + sampleCharacteristics.size() + clcs.size()];
         int i = 0;
         columnNames[i++] = "cellId";
         if ( separateSampleFromAssayIdentifiers ) {
@@ -118,6 +143,10 @@ public class CellBrowserMetadataWriter {
         }
         for ( ExperimentalFactor factor : factors ) {
             columnNames[i++] = factor.getName();
+        }
+        // assay metadata
+        for ( Category category : bioAssayCharacteristics.keySet() ) {
+            columnNames[i++] = category.getCategory();
         }
         for ( Category category : sampleCharacteristics.keySet() ) {
             columnNames[i++] = category.getCategory();
@@ -151,7 +180,7 @@ public class CellBrowserMetadataWriter {
         }
     }
 
-    public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
+    public void writeCell( BioAssay bioAssay, String cellId, int cellIndex, List<ExperimentalFactor> factors, Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap, SortedMap<Category, Map<BioAssay, Characteristic>> bioAssayCharacteristics, SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics, List<CellLevelCharacteristics> clcs, Writer writer ) throws IOException {
         writer.append( format( CellBrowserUtils.constructCellId( bioAssay, cellId, useBioAssayIds, useRawColumnNames ) ) );
         // ignore the useBioAssayIds for the sample and assay names, this is only intended for the cell ID
         if ( separateSampleFromAssayIdentifiers ) {
@@ -165,6 +194,16 @@ public class CellBrowserMetadataWriter {
             writer.append( "\t" );
             if ( value != null ) {
                 writer.append( format( FactorValueUtils.getValues( value ) ) );
+            } else {
+                writer.append( TsvUtils.NA );
+            }
+        }
+        for ( Category category : bioAssayCharacteristics.keySet() ) {
+            Map<BioAssay, Characteristic> characteristics = bioAssayCharacteristics.get( category );
+            Characteristic c = characteristics.get( bioAssay );
+            writer.append( "\t" );
+            if ( c != null ) {
+                writer.append( format( c.getValue() ) );
             } else {
                 writer.append( TsvUtils.NA );
             }
