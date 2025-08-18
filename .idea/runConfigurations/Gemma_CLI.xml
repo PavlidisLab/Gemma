@@ -2,6 +2,7 @@
   <configuration default="false" name="Gemma CLI" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="ubic.gemma.cli.main.GemmaCLI" />
     <module name="gemma-cli" />
+    <option name="PROGRAM_PARAMETERS" value="diffExAnalyze -e 1 --complete-factors" />
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j2.configurationFile=$PROJECT_DIR$/gemma-cli/src/main/config/log4j2-dev.xml -Djava.awt.headless=true" />
     <method v="2">
       <option name="Make" enabled="true" />
