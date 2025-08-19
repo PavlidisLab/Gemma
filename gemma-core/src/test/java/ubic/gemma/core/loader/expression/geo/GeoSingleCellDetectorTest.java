@@ -54,7 +54,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 /**
  * TODO: move SOFT files in test resources and mock FTP downloads
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
 public class GeoSingleCellDetectorTest extends BaseTest {
 
