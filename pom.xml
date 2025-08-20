@@ -776,13 +776,9 @@
 				<jdk>(24,</jdk>
 			</activation>
 			<properties>
-				<testJvmOptions>
-					${jvmOptions}
-					<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
-					-Djava.library.path=${hdf5.libDir}
+				<additionalTestJvmOptions>
 					--enable-native-access=ALL-UNNAMED
-					-javaagent:${org.mockito:mockito-core:jar}
-				</testJvmOptions>
+				</additionalTestJvmOptions>
 			</properties>
 		</profile>
 	</profiles>
@@ -868,6 +864,8 @@
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
 			-javaagent:${org.mockito:mockito-core:jar}
+			${additionalTestJvmOptions}
 		</testJvmOptions>
+		<additionalTestJvmOptions/>
 	</properties>
 </project>
