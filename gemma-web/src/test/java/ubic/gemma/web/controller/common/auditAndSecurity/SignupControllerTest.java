@@ -73,9 +73,9 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
     public void testSignup() throws Exception {
         when( mockReCaptcha.validateRequest( any() ) )
                 .thenReturn( new ReCaptchaResponse( true, "" ) );
-        String uname = RandomStringUtils.randomAlphabetic( 10 );
-        String password = RandomStringUtils.randomAlphabetic( 40 );
-        String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+        String uname = RandomStringUtils.insecure().nextAlphabetic( 10 );
+        String password = RandomStringUtils.insecure().nextAlphabetic( 40 );
+        String email = "foo@" + RandomStringUtils.insecure().nextAlphabetic( 10 ) + ".edu";
         perform( post( "/signup.html" )
                 .param( "password", password )
                 .param( "passwordConfirm", password )
@@ -99,9 +99,9 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
     @Test
     public void testSignupWhenRecaptchaIsDisabled() throws Exception {
         when( mockReCaptcha.isPrivateKeySet() ).thenReturn( false );
-        String uname = RandomStringUtils.randomAlphabetic( 10 );
-        String password = RandomStringUtils.randomAlphabetic( 40 );
-        String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+        String uname = RandomStringUtils.insecure().nextAlphabetic( 10 );
+        String password = RandomStringUtils.insecure().nextAlphabetic( 40 );
+        String email = "foo@" + RandomStringUtils.insecure().nextAlphabetic( 10 ) + ".edu";
         perform( post( "/signup.html" )
                 .param( "password", password )
                 .param( "passwordConfirm", password )
@@ -126,9 +126,9 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
     public void testSignupWithRecaptchaIsInvalid() throws Exception {
         when( mockReCaptcha.validateRequest( any() ) )
                 .thenReturn( new ReCaptchaResponse( false, "You are a bot, I knew it!" ) );
-        String uname = RandomStringUtils.randomAlphabetic( 10 );
-        String password = RandomStringUtils.randomAlphabetic( 40 );
-        String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+        String uname = RandomStringUtils.insecure().nextAlphabetic( 10 );
+        String password = RandomStringUtils.insecure().nextAlphabetic( 40 );
+        String email = "foo@" + RandomStringUtils.insecure().nextAlphabetic( 10 ) + ".edu";
         perform( post( "/signup.html" )
                 .param( "password", password )
                 .param( "passwordConfirm", password )
@@ -148,9 +148,9 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
     public void testSignupWithPasswordDosentMatch() throws Exception {
         when( mockReCaptcha.validateRequest( any() ) )
                 .thenReturn( new ReCaptchaResponse( false, "You are a bot, I knew it!" ) );
-        String uname = RandomStringUtils.randomAlphabetic( 10 );
-        String password = RandomStringUtils.randomAlphabetic( 40 );
-        String email = "foo@" + RandomStringUtils.randomAlphabetic( 10 ) + ".edu";
+        String uname = RandomStringUtils.insecure().nextAlphabetic( 10 );
+        String password = RandomStringUtils.insecure().nextAlphabetic( 40 );
+        String email = "foo@" + RandomStringUtils.insecure().nextAlphabetic( 10 ) + ".edu";
         perform( post( "/signup.html" )
                 .param( "password", password )
                 .param( "passwordConfirm", password )

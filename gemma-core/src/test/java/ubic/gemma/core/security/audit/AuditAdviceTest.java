@@ -115,7 +115,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         bm = bioMaterialService.create( bm );
 
         BioAssay ba = BioAssay.Factory.newInstance();
-        String name = RandomStringUtils.randomAlphabetic( 20 );
+        String name = RandomStringUtils.insecure().nextAlphabetic( 20 );
         ba.setName( name );
         ba.setArrayDesignUsed( ee.getBioAssays().iterator().next().getArrayDesignUsed() );
         ba.setSampleUsed( bm );
@@ -160,7 +160,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     public void testSimpleAuditFindOrCreate() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
-        ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+        ee.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) );
         ee.setTaxon( taxonService.load( 1L ) );
         ee = expressionExperimentService.findOrCreate( ee );
 
@@ -196,8 +196,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                 futures.add( es.submit( () -> {
                     ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
                     ee.setDescription( "From test" );
-                    ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
-                    ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+                    ee.setShortName( RandomStringUtils.insecure().nextAlphabetic( 20 ) );
+                    ee.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) );
                     ee.setTaxon( taxonService.load( 1L ) );
                     ee = expressionExperimentService.findOrCreate( ee );
 

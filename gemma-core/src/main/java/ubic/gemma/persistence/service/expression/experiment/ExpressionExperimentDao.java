@@ -408,7 +408,7 @@ public interface ExpressionExperimentDao
      * <p>
      * Uncategorized terms (or the uncategorized category) has both null URI and label.
      */
-    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.insecure().nextAlphanumeric( 10 ) + "]";
 
     Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 

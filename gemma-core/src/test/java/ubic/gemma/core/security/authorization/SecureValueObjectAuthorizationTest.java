@@ -44,8 +44,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
-    private final String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
-    private final String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
+    private final String ownerUsername = RandomStringUtils.insecure().nextAlphabetic( 5 );
+    private final String aDifferentUsername = RandomStringUtils.insecure().nextAlphabetic( 5 );
     @Autowired
     private UserManager userManager;
     @Autowired
@@ -110,7 +110,7 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 

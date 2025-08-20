@@ -81,7 +81,7 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
         } catch ( UsernameNotFoundException e ) {
             if ( createIfMissing ) {
                 user = new UserDetailsImpl( "foo", userName, true, Collections.singletonList( new SimpleGrantedAuthority( AuthorityConstants.USER_GROUP_AUTHORITY ) ),
-                        RandomStringUtils.randomAlphabetic( 10 ) + "@example.com", "key", new Date() );
+                        RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@example.com", "key", new Date() );
                 this.userManager.createUser( user );
             } else {
                 throw e;

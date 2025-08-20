@@ -55,7 +55,7 @@ public class BlacklistTest extends BaseSpringContextTest {
         blee.setReason( "no good" );
         blee.setName( "the experiment" );
 
-        String acc = "GSE" + RandomStringUtils.randomNumeric( 10 );
+        String acc = "GSE" + RandomStringUtils.insecure().nextNumeric( 10 );
 
         blee.setShortName( acc );
 

@@ -266,7 +266,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         /*
          * Test ancillary methods
          */
-        metaAnalysis.setName( RandomStringUtils.random( 10 ) );
+        metaAnalysis.setName( RandomStringUtils.insecure().next( 10 ) );
         metaAnalysis = analyzerService.persist( metaAnalysis );
 
         assertNotNull( metaAnalysis.getId() );

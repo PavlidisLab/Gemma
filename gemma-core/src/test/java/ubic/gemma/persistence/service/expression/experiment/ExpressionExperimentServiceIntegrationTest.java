@@ -64,7 +64,7 @@ import static org.junit.Assert.*;
  */
 public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContextTest {
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
+    private static final String EE_NAME = RandomStringUtils.insecure().nextAlphanumeric( 20 );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

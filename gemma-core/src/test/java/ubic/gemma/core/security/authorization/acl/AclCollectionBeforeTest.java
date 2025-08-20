@@ -74,7 +74,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
             userManager.loadUserByUsername( userName );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", userName, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
 
     }

@@ -147,8 +147,8 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
     private Characteristic createCharacteristic( Long id ) {
         Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( RandomStringUtils.randomAlphanumeric( 10 ) );
-        c.setValue( RandomStringUtils.randomAlphanumeric( 10 ) );
+        c.setCategory( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
+        c.setValue( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
         c.setId( id );
         return c;
     }

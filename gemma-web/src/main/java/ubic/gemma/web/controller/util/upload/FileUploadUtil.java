@@ -99,7 +99,7 @@ public class FileUploadUtil {
             throw new RuntimeException( e );
         }
 
-        Path copiedFile = uploadDir.resolve( RandomStringUtils.randomAlphanumeric( 51 ) );
+        Path copiedFile = uploadDir.resolve( RandomStringUtils.insecure().nextAlphanumeric( 51 ) );
         try ( OutputStream fos = Files.newOutputStream( copiedFile ) ) {
             IOUtils.copy( is, fos );
         }
@@ -118,14 +118,14 @@ public class FileUploadUtil {
 
         String filename;
         if ( file.getOriginalFilename() == null ) {
-            filename = RandomStringUtils.randomAlphanumeric( 50 );
+            filename = RandomStringUtils.insecure().nextAlphanumeric( 50 );
         } else {
             filename = FilenameUtils.getName( file.getOriginalFilename() );
         }
 
         return uploadDir.resolve(
                 ( request == null || request.getSession() == null ?
-                        RandomStringUtils.randomAlphanumeric( 20 ) :
+                        RandomStringUtils.insecure().nextAlphanumeric( 20 ) :
                         request.getSession().getId() ) + "__" + filename );
     }
 }
