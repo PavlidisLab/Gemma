@@ -99,12 +99,6 @@
 
 		<dependency>
 			<groupId>gemma</groupId>
-			<artifactId>gemma-core-java11</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>gemma</groupId>
 			<artifactId>gemma-rest</artifactId>
 			<version>${project.version}</version>
 		</dependency>
