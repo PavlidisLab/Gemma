@@ -757,6 +757,20 @@
 				</site>
 			</distributionManagement>
 		</profile>
+		<profile>
+			<id>java24</id>
+			<activation>
+				<jdk>(24,</jdk>
+			</activation>
+			<properties>
+				<testJvmOptions>
+					${jvmOptions}
+					<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
+					-Djava.library.path=${hdf5.libDir}
+					--enable-native-access=ALL-UNNAMED
+				</testJvmOptions>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
