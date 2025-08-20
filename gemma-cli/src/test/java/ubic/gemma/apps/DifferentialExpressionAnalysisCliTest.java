@@ -239,6 +239,20 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
     }
 
     @Test
+    public void testSubSetAnalysisWithAutomaticallySelectedFactorsAndContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "age" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "ExperimentalFactor Id=5 Name=age Type=CONTINUOUS is not categorical. A subset factor must be categorical." );
+    }
+
+    @Test
     public void testAnalysisWithManuallySelectedFactors() {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.getExperimentalFactors().add( a );
@@ -287,6 +301,20 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
             assertThat( config.getInteractionsToInclude() ).isEmpty();
             assertThat( config.getSubsetFactor() ).isNull();
         } ) );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactorsWithInteractionOfContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "age:genotype" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Interactions can only be specified for categorical factors. Factor age in interaction age:genotype is continuous." );
     }
 
     @Test
@@ -369,6 +397,20 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
             assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
             assertThat( config.getSubsetFactor() ).isEqualTo( d );
         } ) );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithManuallySelectedFactorsAndContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "age", "-factors", "genotype" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "ExperimentalFactor Id=5 Name=age Type=CONTINUOUS is not categorical. A subset factor must be categorical." );
     }
 
     @Test

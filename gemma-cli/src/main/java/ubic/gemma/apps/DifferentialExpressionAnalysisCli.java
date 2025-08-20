@@ -152,12 +152,15 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .hasArgs()
                 .valueSeparator( ',' )
                 .desc( "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores. "
+                        + "Interaction can be specified by using ':' as a delimiter (e.g. 'factor1:factor2'). "
+                        + "Only categorical factors can be used in interactions. "
                         + "If omitted, factors will be selected automatically. "
                         + "This is incompatible with " + formatOption( options, "redo" ) + "." )
                 .build() );
 
         addSingleExperimentOption( options, "subset", "subset", true,
                 "ID number, category or name of the factor to use for subsetting the analysis. "
+                        + "The factor must be categorical. "
                         + "If used without specifying  " + formatOption( options, "factors" ) + ", factors will be selected automatically among the remaining one in the design. "
                         + "If the experiment already has subsets for the factor, those will be reused. "
                         + "This is incompatible with " + formatOption( options, "redo" ) + "." );
@@ -295,7 +298,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             Collection<ExperimentalFactor> factorsToUse = new HashSet<>( experimentalFactors );
 
             if ( subsetFactorIdentifier != null ) {
-                ExperimentalFactor subsetFactor = locateExperimentalFactor( subsetFactorIdentifier, factorsById, factorsByName );
+                ExperimentalFactor subsetFactor = getSubsetFactor( factorsById, factorsByName );
                 factorsToUse.remove( subsetFactor );
                 config.setSubsetFactor( subsetFactor );
                 log.info( "Subsetting by " + subsetFactor + "." );
@@ -451,7 +454,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     @Nullable
     private ExperimentalFactor getSubsetFactor( Map<Long, ExperimentalFactor> factorById, Map<String, Set<ExperimentalFactor>> factorByName ) {
         if ( this.subsetFactorIdentifier != null ) {
-            return locateExperimentalFactor( this.subsetFactorIdentifier, factorById, factorByName );
+            ExperimentalFactor subsetFactor = locateExperimentalFactor( this.subsetFactorIdentifier, factorById, factorByName );
+            if ( subsetFactor.getType() != FactorType.CATEGORICAL ) {
+                throw new IllegalArgumentException( subsetFactor + " is not categorical. A subset factor must be categorical." );
+            }
+            return subsetFactor;
         }
         return null;
     }
