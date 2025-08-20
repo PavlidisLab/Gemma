@@ -534,6 +534,19 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.8.1</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
 				<configuration>
@@ -768,6 +781,7 @@
 					<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 					-Djava.library.path=${hdf5.libDir}
 					--enable-native-access=ALL-UNNAMED
+					-javaagent:${org.mockito:mockito-core:jar}
 				</testJvmOptions>
 			</properties>
 		</profile>
@@ -853,6 +867,7 @@
 			${jvmOptions}
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
+			-javaagent:${org.mockito:mockito-core:jar}
 		</testJvmOptions>
 	</properties>
 </project>
