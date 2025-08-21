@@ -43,6 +43,11 @@ public abstract class AbstractOntologyResourceSimple implements OntologyResource
     }
 
     @Override
+    public <T> T unwrap( Class<T> aClass ) throws ClassCastException {
+        return aClass.cast( uri );
+    }
+
+    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( obj == null ) return false;
