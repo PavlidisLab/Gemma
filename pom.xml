@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.23</version>
+		<version>1.3.0-SNAPSHOT</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -260,7 +260,7 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>${mysql.version}</version>
+			<scope>compile</scope>
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
@@ -536,7 +536,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.3</version>
 				<configuration>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
@@ -551,7 +550,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.5.3</version>
 				<configuration>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
@@ -607,7 +605,6 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.18.0</version>
 				<configuration>
 					<allowMajorUpdates>false</allowMajorUpdates>
 					<processDependencyManagement>false</processDependencyManagement>
@@ -633,88 +630,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!-- version overrides from pavlab-starter-parent since we require Maven 3.6.3 -->
-				<!-- TODO: remove those once pavlab-starter-parent 1.3 is ready -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.14.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.5.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.4</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-install-plugin</artifactId>
-					<version>3.1.4</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.2</version>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.plexus</groupId>
-							<artifactId>plexus-io</artifactId>
-							<version>3.5.1</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.9.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.3.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>3.3.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.11.3</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-war-plugin</artifactId>
-					<version>3.4.0</version>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.plexus</groupId>
-							<artifactId>plexus-io</artifactId>
-							<version>3.5.1</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.21.0</version>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.plexus</groupId>
-							<artifactId>plexus-io</artifactId>
-							<version>3.5.1</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 	<repositories>
 		<repository>
@@ -802,10 +717,12 @@
 		</plugins>
 	</reporting>
 	<properties>
+		<java.version>8</java.version>
 		<maven.compiler.proc>full</maven.compiler.proc>
 		<gsec.version>0.0.21</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
+		<hibernate.version>4.2.21.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.18.2</jackson.version>
 		<swagger.version>2.2.34</swagger.version>
@@ -818,7 +735,6 @@
 		<hdf5.version>1.12.1</hdf5.version>
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
-		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.108</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
