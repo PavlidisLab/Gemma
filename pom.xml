@@ -718,6 +718,7 @@
 	</reporting>
 	<properties>
 		<java.version>8</java.version>
+		<java.jdk.version>11</java.jdk.version>
 		<gsec.version>0.0.21</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
