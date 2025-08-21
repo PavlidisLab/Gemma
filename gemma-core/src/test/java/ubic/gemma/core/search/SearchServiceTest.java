@@ -102,6 +102,47 @@ public class SearchServiceTest extends BaseTest {
         searchService.search( settings );
         verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
         verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
+
+        settings = SearchSettings.builder()
+                .resultType( Gene.class )
+                .query( "the best RAT in the universe" )
+                .build();
+        searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
+
+        // NCBI ID
+        settings = SearchSettings.builder()
+                .resultType( Gene.class )
+                .query( "the best 192 in the universe" )
+                .build();
+        searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
+
+        settings = SearchSettings.builder()
+                .resultType( Gene.class )
+                .query( "the best Rattus norvegicus in the universe" )
+                .build();
+        searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
+
+        settings = SearchSettings.builder()
+                .resultType( Gene.class )
+                .query( "the best \"Rattus norvegicus\" in the universe" )
+                .build();
+        searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings.withTaxonConstraint( rat ) );
+        verify( databaseSearchSource ).searchGene( settings.withTaxonConstraint( rat ), new SearchContext( null, null ) );
+
+        settings = SearchSettings.builder()
+                .resultType( Gene.class )
+                .query( "the best Rattus in the universe" )
+                .build();
+        searchService.search( settings );
+        verify( databaseSearchSource ).accepts( settings );
+        verify( databaseSearchSource ).searchGene( settings, new SearchContext( null, null ) );
     }
 
     @Test

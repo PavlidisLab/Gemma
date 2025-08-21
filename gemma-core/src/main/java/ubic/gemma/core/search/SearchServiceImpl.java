@@ -125,8 +125,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
     }
 
-    private final Map<String, Taxon> nameToTaxonMap = new LinkedHashMap<>();
-
     /* sources */
     @Autowired
     private List<SearchSource> searchSources;
@@ -146,14 +144,23 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     private ConversionService valueObjectConversionService;
 
     /**
+     * A composite search source that combines all the search sources.
+     */
+    private CompositeSearchSource searchSource;
+
+    /**
      * Mapping of supported result types to their corresponding VO type.
      */
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
 
-    /**
-     * A composite search source that combines all the search sources.
-     */
-    private CompositeSearchSource searchSource;
+    @Nullable
+    private Map<Set<String>, Taxon> nameToTaxonMap;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        searchSource = new CompositeSearchSource( searchSources );
+        initializeSupportedResultTypes();
+    }
 
     @Override
     public Set<String> getFields( Class<? extends Identifiable> resultType ) {
@@ -241,13 +248,6 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     public Set<Class<? extends Identifiable>> getSupportedResultTypes() {
         return supportedResultTypes.keySet();
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        searchSource = new CompositeSearchSource( searchSources );
-        initializeSupportedResultTypes();
-        this.initializeNameToTaxonMap();
     }
 
     private void initializeSupportedResultTypes() {
@@ -567,62 +567,56 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         return combinedGeneList;
     }
 
-    private void initializeNameToTaxonMap() {
-
-        Collection<? extends Taxon> taxonCollection = taxonService.loadAll();
-
-        for ( Taxon taxon : taxonCollection ) {
-            if ( taxon.getScientificName() != null )
-                nameToTaxonMap.put( taxon.getScientificName().trim().toLowerCase(), taxon );
-            if ( taxon.getCommonName() != null )
-                nameToTaxonMap.put( taxon.getCommonName().trim().toLowerCase(), taxon );
-        }
-
-        // Loop through again breaking up multi-word taxon database names.
-        // Doing this is a separate loop so that these names take lower precedence when matching than the full terms in
-        // the generated keySet.
-        for ( Taxon taxon : taxonCollection ) {
-            if ( taxon.getCommonName() != null ) {
-                this.addTerms( taxon, taxon.getCommonName() );
-            }
-            if ( taxon.getScientificName() != null ) {
-                this.addTerms( taxon, taxon.getScientificName() );
-            }
-        }
-
-    }
-
-    private void addTerms( Taxon taxon, String taxonName ) {
-        String[] terms;
-        if ( StringUtils.isNotBlank( taxonName ) ) {
-            terms = taxonName.split( "\\s+" );
-            // Only continue for multi-word
-            if ( terms.length > 1 ) {
-                for ( String s : terms ) {
-                    if ( !nameToTaxonMap.containsKey( s.trim().toLowerCase() ) ) {
-                        nameToTaxonMap.put( s.trim().toLowerCase(), taxon );
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * Infer a {@link Taxon} from the search settings.
      */
     @Nullable
     private Taxon inferTaxon( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        if ( nameToTaxonMap == null ) {
+            nameToTaxonMap = createNameToTaxonMap();
+        }
+
         // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
         // remove quotes and other characters tha can interfere with the exact match
-        Set<String> searchTerms = extractTerms( settings, issueReporter );
+        Set<String> searchTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        searchTerms.addAll( extractTerms( settings, issueReporter ) );
 
-        for ( String term : searchTerms ) {
-            if ( nameToTaxonMap.containsKey( term ) ) {
-                return nameToTaxonMap.get( term );
+        for ( Map.Entry<Set<String>, Taxon> e : nameToTaxonMap.entrySet() ) {
+            if ( searchTerms.containsAll( e.getKey() ) ) {
+                return e.getValue();
             }
         }
 
-        // no match found, on taxon is inferred
+        // no match found, no taxon is inferred
         return null;
+    }
+
+    private Map<Set<String>, Taxon> createNameToTaxonMap() {
+        Map<Set<String>, Taxon> nameToTaxonMap = new LinkedHashMap<>();
+        Collection<? extends Taxon> taxonCollection = taxonService.loadAll();
+        for ( Taxon taxon : taxonCollection ) {
+            if ( taxon.getNcbiId() != null ) {
+                nameToTaxonMap.put( Collections.singleton( String.valueOf( taxon.getNcbiId() ) ), taxon );
+            }
+            if ( taxon.getScientificName() != null ) {
+                nameToTaxonMap.put( extractKeywords( taxon.getScientificName(), false ), taxon );
+                nameToTaxonMap.put( extractKeywords( taxon.getScientificName(), true ), taxon );
+            }
+            if ( taxon.getCommonName() != null ) {
+                nameToTaxonMap.put( extractKeywords( taxon.getCommonName(), false ), taxon );
+                nameToTaxonMap.put( extractKeywords( taxon.getCommonName(), true ), taxon );
+            }
+        }
+        return nameToTaxonMap;
+    }
+
+    private Set<String> extractKeywords( String s, boolean split ) {
+        Set<String> kw = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        if ( split ) {
+            kw.addAll( Arrays.asList( s.trim().split( "\\s+" ) ) );
+        } else {
+            kw.add( s.trim() );
+        }
+        return kw;
     }
 }
