@@ -5,9 +5,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.completion.CompletionType;
-import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
+import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -137,13 +137,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                 }
                 break;
             case DATASET:
-                expressionExperimentService.loadAllIdAndName()
-                        .forEach( ( id, name ) -> printCompletion( String.valueOf( id ), name ) );
-                expressionExperimentService.loadAllShortNameAndName()
-                        .forEach( this::printCompletion );
-                expressionExperimentService.loadAllName()
-                        .forEach( name -> printCompletion( name, name ) );
-                expressionExperimentService.loadAllAccessionAndName()
+                expressionExperimentService.loadAllIdentifiersAndName( false )
                         .forEach( this::printCompletion );
                 break;
             default:

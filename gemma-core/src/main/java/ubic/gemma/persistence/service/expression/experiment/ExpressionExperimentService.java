@@ -90,22 +90,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     List<Long> loadTroubledIds();
 
     /**
-     * Load all ID and name pairs.
-     * <p>
-     * Results are filtered by ACLs at the query-level.
+     * Load all possible identifiers for experiments.
+     * @param includeNames if true, include experiment names as possible identifier
+     * @return a mapping of candidate identifier to experiment name
      */
-    SortedMap<Long, String> loadAllIdAndName();
-
-    /**
-     * Load all short name and name pairs.
-     * <p>
-     * Results are filtered by ACLs at the query-level.
-     */
-    SortedMap<String, String> loadAllShortNameAndName();
-
-    SortedSet<String> loadAllName();
-
-    SortedMap<String, String> loadAllAccessionAndName();
+    SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
     /**
      * @see ExpressionExperimentDao#reload(Object)

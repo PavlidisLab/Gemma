@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import org.hibernate.NonUniqueResultException;
@@ -51,13 +52,19 @@ public interface ExpressionExperimentDao
      */
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
-    SortedMap<Long, String> loadAllIdAndName();
+    @Data
+    class Identifiers {
+        Long id;
+        String shortName;
+        String name;
+        @Nullable
+        String accession;
+    }
 
-    SortedMap<String, String> loadAllShortNameAndName();
-
-    SortedSet<String> loadAllName();
-
-    SortedMap<String, String> loadAllAccessionAndName();
+    /**
+     * Load all possible identifiers for all experiments.
+     */
+    List<Identifiers> loadAllIdentifiers();
 
     @Nullable
     BioAssaySet loadBioAssaySet( Long id );
