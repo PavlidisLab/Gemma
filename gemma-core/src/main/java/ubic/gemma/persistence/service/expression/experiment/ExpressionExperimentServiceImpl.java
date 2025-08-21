@@ -170,26 +170,39 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public SortedMap<Long, String> loadAllIdAndName() {
-        return expressionExperimentDao.loadAllIdAndName();
+    public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
+        List<ExpressionExperimentDao.Identifiers> allIds = expressionExperimentDao.loadAllIdentifiers();
+        TreeMap<String, String> finalIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+        populateIdentifierMap( allIds, identifiers -> String.valueOf( identifiers.getId() ), finalIds );
+        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getShortName, finalIds );
+        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getAccession, finalIds );
+        if ( includeNames ) {
+            populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getName, finalIds );
+        }
+        return finalIds;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public SortedMap<String, String> loadAllShortNameAndName() {
-        return expressionExperimentDao.loadAllShortNameAndName();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SortedSet<String> loadAllName() {
-        return expressionExperimentDao.loadAllName();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SortedMap<String, String> loadAllAccessionAndName() {
-        return expressionExperimentDao.loadAllAccessionAndName();
+    private void populateIdentifierMap( Collection<ExpressionExperimentDao.Identifiers> identifiers,
+            Function<ExpressionExperimentDao.Identifiers, String> extractor, Map<String, String> identifierMap ) {
+        Map<String, String> eeIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+        Set<String> ambiguousIdentifiers = new HashSet<>();
+        for ( ExpressionExperimentDao.Identifiers ids : identifiers ) {
+            String id = extractor.apply( ids );
+            if ( id == null ) {
+                continue;
+            }
+            if ( identifierMap.containsKey( id ) ) {
+                // this indicates that there is already a higher-priority identifier for this EE
+                continue;
+            }
+            if ( eeIds.put( id, ids.getName() ) != null ) {
+                // another EE has the same ID
+                ambiguousIdentifiers.add( id );
+            }
+        }
+        ambiguousIdentifiers.forEach( eeIds::remove );
+        log.info( "Removed " + ambiguousIdentifiers.size() + " ambiguous identifiers." );
+        identifierMap.putAll( eeIds );
     }
 
     @Override
