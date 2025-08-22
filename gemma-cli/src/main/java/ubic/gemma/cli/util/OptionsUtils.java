@@ -160,6 +160,7 @@ public class OptionsUtils {
         options.addOption( Option.builder( optionName )
                 .longOpt( longOption )
                 .hasArg()
+                .argName( enumClass.getSimpleName() )
                 .converter( EnumConverter.of( enumClass, descriptions ) )
                 .desc( String.format( "%s Possible values are: %s.",
                         appendIfMissing( description, "." ),

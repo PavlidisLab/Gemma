@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.BuildInfo;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.formatInteraction;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructExperimentalFactorName;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.core.util.TsvUtils.formatComment;
@@ -71,7 +73,7 @@ public class DiffExAnalysisResultSetWriter {
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
                 if ( resultSet.getExperimentalFactors().size() > 1 ) {
                     // Skip interactions.
-                    log.info( "Result file for interaction is omitted" ); // Why?
+                    log.info( "Result file for interaction " + formatInteraction( resultSet.getExperimentalFactors() ) + " is omitted" ); // Why?
                     continue;
                 }
                 String result;

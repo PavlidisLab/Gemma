@@ -36,6 +36,11 @@ public interface DifferentialExpressionAnalyzerService {
     int deleteAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
+     * Delete the specified differential expression analyses associated with the experiment.
+     */
+    int deleteAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> analysesToDelete );
+
+    /**
      * Deletes the given analysis. Also deletes files associated with the analysis. (e.g., results dumps)
      *
      * @param expressionExperiment the experiment

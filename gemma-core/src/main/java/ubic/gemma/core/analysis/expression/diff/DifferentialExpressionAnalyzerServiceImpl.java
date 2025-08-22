@@ -24,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
@@ -55,6 +57,7 @@ import java.util.*;
  * @author keshav
  */
 @Component
+@Transactional(propagation = Propagation.NEVER)
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
@@ -98,6 +101,16 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return result;
+    }
+
+    @Override
+    public int deleteAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> analysesToDelete ) {
+        int deleted = 0;
+        for ( DifferentialExpressionAnalysis analysis : analysesToDelete ) {
+            deleteAnalysis( ee, analysis );
+            deleted++;
+        }
+        return deleted;
     }
 
     @Override
