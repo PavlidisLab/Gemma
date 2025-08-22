@@ -44,7 +44,7 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        addDateOption( SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date", options );
+        addDateOption( options, SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date" );
     }
 
     @Override

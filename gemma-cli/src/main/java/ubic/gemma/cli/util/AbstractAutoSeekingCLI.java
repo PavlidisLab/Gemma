@@ -91,9 +91,9 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
      */
     protected void addLimitingDateOption( Options options ) {
         Assert.state( !options.hasOption( LIMITING_DATE_OPTION ), "The -" + LIMITING_DATE_OPTION + " option was already added." );
-        addDateOption( LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
+        addDateOption( options, LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
                 + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                + "If there is no record of when the analysis was last run, it will be run.", options );
+                + "If there is no record of when the analysis was last run, it will be run." );
     }
 
     protected void addForceOption( Options options ) {

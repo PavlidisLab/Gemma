@@ -10,6 +10,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.basecode.util.DateUtil;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -29,16 +30,29 @@ public class OptionsUtils {
 
     private static final TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
+    public static void addFileOption( Options options, String name, @Nullable String longOpt, String desc ) {
+        options.addOption( Option.builder( name )
+                .longOpt( longOpt ).hasArg().type( Path.class ).argName( StandardArgNames.FILE )
+                .desc( desc )
+                .build() );
+    }
+
+    public static void addDirectoryOption( Options options, String name, @Nullable String longOpt, String desc ) {
+        options.addOption( Option.builder( name )
+                .longOpt( longOpt ).hasArg().type( Path.class ).argName( StandardArgNames.DIR )
+                .desc( desc )
+                .build() );
+    }
+
     /**
      * Add a date option with support for fuzzy dates (i.e. one month ago).
      * @see DateConverterImpl
      */
-    public static void addDateOption( String name, @Nullable String longOpt, String desc, Options options ) {
+    public static void addDateOption( Options options, String name, @Nullable String longOpt, String desc ) {
         options.addOption( Option.builder( name )
                 .longOpt( longOpt )
                 .desc( desc )
-                .hasArg()
-                .type( Date.class )
+                .hasArg().type( Date.class ).argName( StandardArgNames.DATE )
                 .converter( new DateConverterImpl( DEFAULT_RELATIVE_TO, DEFAULT_TIME_ZONE ) ).build() );
     }
 

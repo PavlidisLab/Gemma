@@ -49,7 +49,7 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
-        addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date", options );
+        addDateOption( options, SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date" );
     }
 
     @Override

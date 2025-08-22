@@ -26,10 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
-import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
-import ubic.gemma.cli.util.EntityLocator;
-import ubic.gemma.cli.util.FileUtils;
-import ubic.gemma.cli.util.OptionsUtils;
+import ubic.gemma.cli.util.*;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -58,6 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
+import static ubic.gemma.cli.util.OptionsUtils.addFileOption;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -213,9 +211,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         OptionGroup og = new OptionGroup();
         addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
                 .longOpt( "output-file" ).hasArg().type( Path.class )
+                .argName( StandardArgNames.FILE )
                 .desc( "Write " + what + " to the given output file." ).build() );
         og.addOption( Option.builder( OUTPUT_DIR_OPTION )
                 .longOpt( "output-dir" ).hasArg().type( Path.class )
+                .argName( StandardArgNames.DIR )
                 .desc( "Write " + what + " inside the given directory." ).build() );
         if ( allowStandardLocation ) {
             og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
@@ -312,10 +312,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             options.addOption( "all", false, "Process all expression experiments" );
         }
 
-        Option eeFileListOption = Option.builder( "f" ).hasArg().type( Path.class ).argName( "file" )
-                .desc( "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
-                .longOpt( "eeListfile" ).build();
-        options.addOption( eeFileListOption );
+        addFileOption( options, "f", "eeListfile",
+                "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" );
 
         addExperimentSetOption( options, "eeset", "experiment-set", "Name of expression experiment set to use" );
 
@@ -326,10 +324,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
         addTaxonOption( options, "t", "taxon", "Taxon of the expression experiments and genes" );
 
-        Option excludeEeOption = Option.builder( "x" ).hasArg().type( Path.class ).argName( "file" )
-                .desc( "File containing list of expression experiments to exclude" )
-                .longOpt( "excludeEEFile" ).build();
-        options.addOption( excludeEeOption );
+        addFileOption( options, "x", "excludeEEFile", "File containing list of expression experiments to exclude" );
 
         addBatchOption( options );
 
