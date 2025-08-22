@@ -19,16 +19,14 @@
 package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,8 +45,7 @@ import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
 @Repository
-public class CoexpressionAnalysisDaoImpl extends ubic.gemma.persistence.service.AbstractDao<CoexpressionAnalysis>
-        implements CoexpressionAnalysisDao, ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao<CoexpressionAnalysis> {
+public class CoexpressionAnalysisDaoImpl extends AbstractDao<CoexpressionAnalysis> implements CoexpressionAnalysisDao {
 
     @Autowired
     public CoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
@@ -56,22 +53,22 @@ public class CoexpressionAnalysisDaoImpl extends ubic.gemma.persistence.service.
     }
 
     @Override
-    public Collection<CoexpressionAnalysis> findByExperiment( final BioAssaySet experiment, boolean includeSubSets ) {
+    public Collection<CoexpressionAnalysis> findByExperimentAnalyzed( final ExpressionExperiment experimentAnalyzed ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createCriteria( CoexpressionAnalysis.class )
-                .add( Restrictions.eq( "experimentAnalyzed", experiment ) )
+                .add( Restrictions.eq( "experimentAnalyzed", experimentAnalyzed ) )
                 .list();
     }
 
     @Override
-    public Map<BioAssaySet, Collection<CoexpressionAnalysis>> findByExperiments( final Collection<? extends BioAssaySet> experiments, boolean includeSubSets ) {
+    public Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> findByExperimentsAnalyzed( final Collection<ExpressionExperiment> experimentsAnalyzed ) {
         //noinspection unchecked
         List<CoexpressionAnalysis> results = ( List<CoexpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
                 .createCriteria( CoexpressionAnalysis.class )
-                .add( Restrictions.in( "experimentAnalyzed", experiments ) )
+                .add( Restrictions.in( "experimentAnalyzed", experimentsAnalyzed ) )
                 .list();
-        return results.stream().collect( Collectors.groupingBy( SingleExperimentAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
+        return results.stream().collect( Collectors.groupingBy( CoexpressionAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
     }
 
     @Override
@@ -87,37 +84,20 @@ public class CoexpressionAnalysisDaoImpl extends ubic.gemma.persistence.service.
     }
 
     @Override
-    public boolean existsByExperiment( BioAssaySet ee, boolean includeSubSets ) {
-        return ( Long ) getSessionFactory().getCurrentSession()
-                .createCriteria( CoexpressionAnalysis.class )
-                .setProjection( Projections.rowCount() )
-                .add( Restrictions.eq( "experimentAnalyzed", ee ) )
-                .uniqueResult() > 0L;
-    }
-
-    @Override
-    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment experimentAnalyzed ) {
         return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ccd from CoexpressionAnalysis pca "
                         + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee" )
-                .setParameter( "ee", expressionExperiment )
+                .setParameter( "ee", experimentAnalyzed )
                 .uniqueResult();
 
     }
 
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds ) {
         return listByBatch( this.getSessionFactory().getCurrentSession()
                         .createQuery( "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" ),
-                "ids", idsToFilter, 2048 );
+                "ids", eeIds, 2048 );
     }
 
-    @Override
-    public boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ccd from CoexpressionAnalysis pca "
-                        + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee" )
-                .setParameter( "ee", ee )
-                .uniqueResult() != null;
-    }
 }

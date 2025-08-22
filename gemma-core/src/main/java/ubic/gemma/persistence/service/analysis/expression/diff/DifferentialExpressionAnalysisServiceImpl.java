@@ -29,10 +29,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
@@ -98,8 +95,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets ) {
-        return differentialExpressionAnalysisDao.findByExperimentAnalyzedAndId( expressionExperiment, analysisId, includeSubSets );
+    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( ExpressionExperiment expressionExperiment, Long analysisId, boolean includeSubSets ) {
+        return differentialExpressionAnalysisDao.findByExperimentAndAnalysisId( expressionExperiment, analysisId, includeSubSets );
     }
 
     @Override
@@ -225,9 +222,17 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional
-    public void removeForExperiment( BioAssaySet ee, boolean includeSubSets ) {
+    public void removeForExperiment( ExpressionExperiment ee, boolean includeSubSets ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByExperiment( ee, includeSubSets );
+                .findByExperimentAnalyzed( ee, includeSubSets );
+        this.remove( diffAnalyses );
+    }
+
+    @Override
+    @Transactional
+    public void removeForExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByExperimentAnalyzed( experimentAnalyzed );
         this.remove( diffAnalyses );
     }
 
@@ -249,16 +254,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( experiment, includeSubSets );
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( ExpressionExperiment experiment, boolean includeSubSets ) {
+        return this.differentialExpressionAnalysisDao.findByExperimentAnalyzed( experiment, includeSubSets );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
-            Collection<BioAssaySet> experiments, boolean includeSubSets ) {
+            Collection<ExpressionExperiment> experiments, boolean includeSubSets ) {
         return this.differentialExpressionAnalysisDao
-                .findByExperiments( experiments, includeSubSets );
+                .findByExperimentsAnalyzed( experiments, includeSubSets );
     }
 
     @Override

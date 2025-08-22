@@ -475,6 +475,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         if ( subsetFactorValue == null ) {
             log.info( "No factor value set in the configuration, will determine it from the samples..." );
             subsetFactorValue = determineSubsetFactorValue( ef, subset );
+            log.info( "The subset factor value appears to be " + subsetFactorValue + "." );
         }
 
         samplesInSubset = orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude(), null );

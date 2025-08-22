@@ -356,7 +356,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                     .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ) ) );
         } else {
             securityFilteredEevos = new ArrayList<>( expressionExperimentService
-                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds, true ) ) );
+                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ) ) );
         }
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<>();

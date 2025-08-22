@@ -23,6 +23,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -32,6 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
@@ -113,6 +115,11 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
                 .setParameter( "es", subSetId )
                 .setParameter( "ef", experimentalFactor )
                 .list();
+    }
+
+    @Override
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return CommonQueries.getArrayDesignsUsed( subset, this.getSessionFactory().getCurrentSession() );
     }
 
     @Override

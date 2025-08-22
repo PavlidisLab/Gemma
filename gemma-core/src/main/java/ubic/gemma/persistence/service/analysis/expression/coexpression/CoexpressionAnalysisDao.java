@@ -22,20 +22,22 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
-public interface CoexpressionAnalysisDao extends SingleExperimentAnalysisDao<CoexpressionAnalysis> {
+public interface CoexpressionAnalysisDao extends ubic.gemma.persistence.service.analysis.AnalysisDao<CoexpressionAnalysis> {
+
+    Collection<CoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed );
+
+    Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> findByExperimentsAnalyzed( Collection<ExpressionExperiment> experimentsAnalyzed );
 
     Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
 
-    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment experimentAnalyzed );
 
     Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
-
-    boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 }

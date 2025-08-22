@@ -978,12 +978,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssaySet loadBioAssaySet( Long id ) {
-        return expressionExperimentDao.loadBioAssaySet( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
         this.expressionExperimentDao.thawLite( ee );
@@ -1222,14 +1216,19 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
+    public Collection<ArrayDesign> getArrayDesignsUsed( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, quantitationTypeService.getDataVectorType( qt ) );
+        Class<? extends DataVector> dvt = quantitationTypeService.getDataVectorType( qt );
+        if ( dvt == null ) {
+            log.warn( "There are no vectors associated to " + qt + " in " + ee + ", will return no platforms." );
+            return Collections.emptySet();
+        }
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, dvt );
     }
 
     @Override
@@ -1637,14 +1636,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
-        return this.expressionExperimentDao.getTaxa( bioAssaySets );
+    public Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees ) {
+        return this.expressionExperimentDao.getTaxa( ees );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
-        return this.expressionExperimentDao.getTaxon( bioAssaySet );
+    public Taxon getTaxon( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getTaxon( ee );
     }
 
     @Override
@@ -1855,7 +1854,7 @@ public class ExpressionExperimentServiceImpl
         this.principalComponentAnalysisService.removeForExperiment( ee );
 
         // Remove coexpression analyses
-        this.coexpressionAnalysisService.removeForExperiment( ee, true );
+        this.coexpressionAnalysisService.removeForExperimentAnalyzed( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

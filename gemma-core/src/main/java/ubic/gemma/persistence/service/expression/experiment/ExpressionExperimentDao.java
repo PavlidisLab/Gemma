@@ -66,9 +66,6 @@ public interface ExpressionExperimentDao
      */
     List<Identifiers> loadAllIdentifiers();
 
-    @Nullable
-    BioAssaySet loadBioAssaySet( Long id );
-
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     ExpressionExperiment findByShortName( String shortName );
@@ -122,9 +119,9 @@ public interface ExpressionExperimentDao
 
     Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
-    Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment bas );
 
-    Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees );
+    Collection<ArrayDesign> getArrayDesignsUsed( Collection<ExpressionExperiment> ees );
 
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
@@ -289,14 +286,14 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperimentSubSet getSubSetById( ExpressionExperiment ee, Long subSetId );
 
-    <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
+    Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees );
 
     /**
      * Determine the taxon for a given experiment or subset.
      * @return a unique taxon for the dataset, or null if no taxon could be determined
      */
     @Nullable
-    Taxon getTaxon( BioAssaySet ee );
+    Taxon getTaxon( ExpressionExperiment ee );
 
     /**
      * Load datasets by IDs with the same relation as {@link #loadWithCache(Filters, Sort)}.

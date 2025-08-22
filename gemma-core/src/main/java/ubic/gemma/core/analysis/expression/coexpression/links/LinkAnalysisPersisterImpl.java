@@ -6,12 +6,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
@@ -19,6 +18,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
 import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
@@ -45,8 +45,8 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     private Persister persisterHelper;
 
     @Override
-    public boolean deleteAnalyses( BioAssaySet ee ) {
-        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByExperiment( ee, true );
+    public boolean deleteAnalyses( ExpressionExperiment ee ) {
+        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByExperimentAnalyzed( ee );
 
         if ( oldAnalyses.isEmpty() )
             return false;

@@ -28,7 +28,10 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -368,7 +371,7 @@ public class ExpressionExperimentControllerHelperService {
         return singleCellSparsityHeatmap;
     }
 
-    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( BioAssaySet ee ) {
+    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( ExpressionExperiment ee ) {
 
         Collection<Long> eeSetIds = expressionExperimentSetService.findIds( ee );
 

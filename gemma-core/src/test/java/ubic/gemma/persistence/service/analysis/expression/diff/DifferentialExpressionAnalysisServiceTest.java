@@ -24,7 +24,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -142,7 +141,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     @Test
     public void testFindByInvestigations() {
-        Collection<BioAssaySet> investigations = new ArrayList<>();
+        Collection<ExpressionExperiment> investigations = new ArrayList<>();
         investigations.add( e1 );
         investigations.add( e3 );
 

@@ -21,21 +21,42 @@ package ubic.gemma.persistence.service.analysis.expression.coexpression;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
+import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Deals with the Analysis objects for Coexpression - not the coexpression results themselves.
  *
  * @author kelsey
  */
-public interface CoexpressionAnalysisService extends SingleExperimentAnalysisService<CoexpressionAnalysis>, SecurableBaseService<CoexpressionAnalysis> {
+public interface CoexpressionAnalysisService extends AnalysisService<CoexpressionAnalysis>, SecurableBaseService<CoexpressionAnalysis> {
 
+    /**
+     * @param experimentAnalyzed experiment analyzed
+     * @return find all the analyses that involved the given investigation
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<CoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed );
+
+    /**
+     * @param experimentsAnalyzed investigations
+     * @return Given a collection of investigations returns a Map of Analysis --&gt; collection of Investigations
+     * The collection of investigations returned by the map will include all the investigations for the analysis key iff
+     * one of the investigations for that analysis was in the given collection started with
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
+    Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> findByExperimentsAnalyzed( Collection<ExpressionExperiment> experimentsAnalyzed );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeForExperimentAnalyzed( ExpressionExperiment ee );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
 
@@ -49,24 +70,16 @@ public interface CoexpressionAnalysisService extends SingleExperimentAnalysisSer
     void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
-
-    @Override
-    void removeForExperiment( BioAssaySet ee, boolean includeSubSets );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * Not secured: for internal use only
      *
-     * @param experimentAnalyzedIds    starting list of bioassayset ids.
-     * @param includeSubSets
+     * @param eeIds expression experiment IDs
      * @return the ones which have a coexpression analysis.
      */
-    @Override
-    Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds );
 
     /**
      * Not secured: for internal use only
@@ -74,6 +87,5 @@ public interface CoexpressionAnalysisService extends SingleExperimentAnalysisSer
      * @param taxon taxon
      * @return ids of bioassaysets from the given taxon that have a coexpression analysis
      */
-    @Override
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 }

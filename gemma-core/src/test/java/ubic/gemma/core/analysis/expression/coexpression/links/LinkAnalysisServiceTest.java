@@ -28,23 +28,22 @@ import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionCache;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.sql.ResultSet;
@@ -131,7 +130,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         assertNotNull( analysisObj.getCoexpCorrelationDistribution() );
 
-        Collection<BioAssaySet> ees = new HashSet<>();
+        Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.add( ee );
 
         this.updateNodeDegree();
@@ -234,7 +233,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertTrue( coex.toString(), !coex.getSupportingDatasets().isEmpty() );
     }
 
-    private int checkResults( Collection<BioAssaySet> ees, int expectedMinimumMaxSupport ) {
+    private int checkResults( Collection<ExpressionExperiment> ees, int expectedMinimumMaxSupport ) {
         boolean foundOne = false;
 
         int maxSupport = 0;

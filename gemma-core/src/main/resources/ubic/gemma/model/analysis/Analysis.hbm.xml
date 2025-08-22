@@ -57,6 +57,7 @@
                     <column name="NUMBER_OF_ELEMENTS_ANALYZED" not-null="false" unique="false" sql-type="INTEGER"
                             index="ANALYSIS_NUMBER_OF_ELEMENTS_ANALYZED"/>
                 </property>
+                <!-- declared as a BioAssaySet, but subclasses can restrict it to a particuar type -->
                 <!-- assumed available in DifferentialExpressionAnalysisValueObject -->
                 <many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet"
                              lazy="false"

@@ -17,6 +17,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -72,6 +73,12 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return expressionExperimentSubSetDao.getArrayDesignsUsed( subset );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
         return expressionExperimentSubSetDao.loadWithBioAssays( id );
     }
@@ -87,7 +94,7 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     public void remove( ExpressionExperimentSubSet subset ) {
         subset = ensureInSession( subset );
         // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( subset, true );
+        this.differentialExpressionAnalysisService.removeForExperimentAnalyzed( subset );
         super.remove( subset );
     }
 

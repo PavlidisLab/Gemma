@@ -240,9 +240,6 @@
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor.annotations" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.experiment.BioAssaySet" maxElementsInMemory="10000"
-           timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet" maxElementsInMemory="10000"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 

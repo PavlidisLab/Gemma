@@ -44,7 +44,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -108,8 +107,8 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
              * Figure out the taxon from the experiments. mustn't be heterogeneous.
              */
             Taxon taxon = null;
-            for ( BioAssaySet bioAssaySet : newSet.getExperiments() ) {
-                Taxon eeTaxon = expressionExperimentService.getTaxon( bioAssaySet );
+            for ( ExpressionExperiment ee : newSet.getExperiments() ) {
+                Taxon eeTaxon = expressionExperimentService.getTaxon( ee );
                 /*
                  * this can be null.
                  */

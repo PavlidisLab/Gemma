@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -31,7 +31,7 @@ public interface LinkAnalysisPersister {
      * @param ee the experiment
      * @return true if anything was deleted.
      */
-    boolean deleteAnalyses( BioAssaySet ee );
+    boolean deleteAnalyses( ExpressionExperiment ee );
 
     /**
      * Temporary method.

@@ -102,7 +102,7 @@ public class AclAdvice extends BaseAclAdvice {
         // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
         // If aclParent is passed to this method we overwrite it.
         if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-            SingleExperimentAnalysis experimentAnalysis = ( SingleExperimentAnalysis ) object;
+            SingleExperimentAnalysis<?> experimentAnalysis = ( SingleExperimentAnalysis<?> ) object;
 
             BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
             ObjectIdentity oi_temp = this.makeObjectIdentity( bioAssaySet );

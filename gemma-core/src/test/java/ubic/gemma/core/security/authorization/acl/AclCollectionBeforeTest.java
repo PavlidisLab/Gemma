@@ -29,11 +29,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -55,7 +57,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     private ExpressionExperiment one;
     @SuppressWarnings("FieldCanBeLocal")
     private ExpressionExperiment two;
-    private Collection<BioAssaySet> ees;
+    private Collection<ExpressionExperiment> ees;
 
     @Before
     public final void setUp() throws Exception {
@@ -84,7 +86,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         securityService.makePrivate( one );
         super.runAsUser( userName );
         assertTrue( securityService.isPrivate( one ) );
-        coexpressionAnalysisService.findByExperiments( ees, true );
+        coexpressionAnalysisService.findByExperimentsAnalyzed( ees );
         super.runAsUser( userName );
     }
 
@@ -92,8 +94,8 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     public final void testAclCollectionEntryVoterOK() {
         // both data sets are public here.
         super.runAsUser( userName );
-        Map<BioAssaySet, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
-                .findByExperiments( ees, true );
+        Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService
+                .findByExperimentsAnalyzed( ees );
         assertNotNull( r );
     }
 }

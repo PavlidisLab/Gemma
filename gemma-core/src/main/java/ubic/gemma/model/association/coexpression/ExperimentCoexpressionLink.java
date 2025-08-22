@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.association.coexpression;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Represents coexpression at the level of experiment, referinng to links stored as Gene2GeneCoexpression.
@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class ExperimentCoexpressionLink {
 
-    private BioAssaySet experiment;
+    private ExpressionExperiment experiment;
 
     /**
      * we need to have the genes here as a denormalization. We store these links both ways for efficiency.
@@ -49,18 +49,18 @@ public abstract class ExperimentCoexpressionLink {
     private Long secondGene;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public ExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene, Long secondGene ) {
+    public ExperimentCoexpressionLink( ExpressionExperiment experiment, Long linkId, Long firstGene, Long secondGene ) {
         this.firstGene = firstGene;
         this.secondGene = secondGene;
         this.linkId = linkId;
-        this.experiment = bioAssaySet;
+        this.experiment = experiment;
     }
 
-    public BioAssaySet getExperiment() {
+    public ExpressionExperiment getExperiment() {
         return experiment;
     }
 
-    public void setExperiment( BioAssaySet experiment ) {
+    public void setExperiment( ExpressionExperiment experiment ) {
         this.experiment = experiment;
     }
 
