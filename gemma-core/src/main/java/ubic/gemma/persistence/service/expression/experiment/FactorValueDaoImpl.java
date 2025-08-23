@@ -135,8 +135,10 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         // detach from any sample
         //noinspection unchecked
         List<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial bm "
-                        + "join bm.factorValues fv where fv = :fv" )
+                .createQuery( "select bm from BioMaterial bm "
+                        + "join bm.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by bm" )
                 .setParameter( "fv", factorValue )
                 .list();
         for ( BioMaterial bm : bms ) {

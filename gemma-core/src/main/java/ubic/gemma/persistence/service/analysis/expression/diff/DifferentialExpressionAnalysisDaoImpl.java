@@ -244,19 +244,21 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor = :ef" )
+                        + "where ssf.experimentalFactor = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
         // factors used in the analysis.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa = :ef" )
+                        + "where efa = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
@@ -273,19 +275,21 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor in :efs" )
+                        + "where ssf.experimentalFactor in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
         // factors used in the analysis
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa in :efs" )
+                        + "where efa in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
@@ -325,9 +329,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
         //noinspection unchecked
         List<Object[]> qresult = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e, a from DifferentialExpressionAnalysis a "
+                .createQuery( "select e, a from DifferentialExpressionAnalysis a "
                         + "join a.experimentAnalyzed e "
-                        + "where e.id in (:eeIds)" )
+                        + "where e.id in (:eeIds) "
+                        + "group by e, a" )
                 .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedId ) )
                 .list();
         for ( Object[] o : qresult ) {
@@ -400,19 +405,20 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
 
     @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds, boolean includeSubSets ) {
-        Set<Long> result = new HashSet<>();
         //noinspection unchecked
-        result.addAll( ( List<Long> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a.experimentAnalyzed.id from DifferentialExpressionAnalysis a"
-                        + " where a.experimentAnalyzed.id in (:eeIds)" )
+        Set<Long> result = new HashSet<>( ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select a.experimentAnalyzed.id from DifferentialExpressionAnalysis a"
+                        + " where a.experimentAnalyzed.id in (:eeIds) "
+                        + "group by a.experimentAnalyzed" )
                 .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                 .list() );
         if ( includeSubSets ) {
             //noinspection unchecked
             result.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
+                    .createQuery( "select e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
                             + "join eess.sourceExperiment e "
-                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds)" )
+                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds) "
+                            + "group by e" )
                     .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                     .list() );
         }
@@ -423,11 +429,12 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee.id from DifferentialExpressionAnalysis as doa "
+                .createQuery( "select ee.id from DifferentialExpressionAnalysis as doa "
                         + "join doa.experimentAnalyzed as ee "
                         + "join ee.bioAssays as ba "
                         + "join ba.sampleUsed as sample "
-                        + "where sample.sourceTaxon = :taxon" )
+                        + "where sample.sourceTaxon = :taxon "
+                        + "group by ee" )
                 .setParameter( "taxon", taxon )
                 .list();
     }
@@ -474,9 +481,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
             // factor values for the experiments.
             //noinspection unchecked
             fvs = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct ee.id, fv from ExpressionExperiment ee "
+                    .createQuery( "select ee.id, fv from ExpressionExperiment ee "
                             + "join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                            + "where ee.id in (:ees)" )
+                            + "where ee.id in (:ees) "
+                            + "group by ee, fv" )
                     .setParameterList( "ees", optimizeParameterList( experimentAnalyzedIds ) ).list();
             this.addFactorValues( ee2fv, fvs );
 
@@ -491,9 +499,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
             if ( !probableSubSetIds.isEmpty() ) {
                 //noinspection unchecked
                 fvs = this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct eess.id, fv from ExpressionExperimentSubSet eess "
+                        .createQuery( "select eess.id, fv from ExpressionExperimentSubSet eess "
                                 + "join eess.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                                + "where eess.id in (:ees)" )
+                                + "where eess.id in (:ees) "
+                                + "group by eess, fv" )
                         .setParameterList( "ees", optimizeParameterList( probableSubSetIds ) ).list();
                 this.addFactorValues( ee2fv, fvs );
             }
@@ -524,9 +533,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                 // factor value information for the subset. The key output is the ID of the subset, not of the source
                 // experiment.
                 //noinspection unchecked
-                fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                                "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                fvs = this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select ee.id, fv from ExpressionExperimentSubSet ee "
+                                + "join ee.bioAssays ba "
+                                + "join ba.sampleUsed bm "
+                                + "join bm.factorValues fv "
+                                + "where ee.id in (:ees) "
+                                + "group by ee, fv" )
                         .setParameterList( "ees", optimizeParameterList( experimentSubsetIds ) ).list();
                 this.addFactorValues( ee2fv, fvs );
             }
@@ -588,11 +601,11 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         if ( includeSubSets ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery(
-                            "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                                    + "join eess.sourceExperiment see "
-                                    + "join a.experimentAnalyzed eeanalyzed "
-                                    + "where see = :ee and eess = eeanalyzed" )
+                    .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                            + "join eess.sourceExperiment see "
+                            + "join a.experimentAnalyzed eeanalyzed "
+                            + "where see = :ee and eess = eeanalyzed "
+                            + "group by a" )
                     .setParameter( "ee", experiment )
                     .list() );
         }
@@ -612,13 +625,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
 
     @Override
     public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperimentsAnalyzed( Collection<ExpressionExperiment> experiments, boolean includeSubSets ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-
         //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed in :ees" )
-                .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) ).list() );
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>(
+                ( List<DifferentialExpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed in :ees group by a" )
+                        .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) )
+                        .list() );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
@@ -628,10 +641,11 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
             if ( !sourceExperiments.isEmpty() ) {
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                        .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                                 + "join eess.sourceExperiment see "
                                 + "join a.experimentAnalyzed eeanalyzed "
-                                + "where see in :ees and eess=eeanalyzed" )
+                                + "where see in :ees and eess=eeanalyzed "
+                                + "group by eess, a" )
                         .setParameterList( "ees", optimizeIdentifiableParameterList( sourceExperiments ) )
                         .list() );
             }

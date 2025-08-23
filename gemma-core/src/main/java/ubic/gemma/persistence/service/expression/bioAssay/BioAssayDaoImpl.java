@@ -73,7 +73,7 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
+                        "select b from BioAssay b join b.accession a where a.accession = :accession group by b" )
                 .setParameter( "accession", accession ).list();
     }
 
@@ -82,12 +82,12 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         Collection<BioAssaySet> results = new HashSet<>();
         //noinspection unchecked
         results.addAll( getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bas from ExpressionExperiment bas join bas.bioAssays ba where ba = :ba" )
+                .createQuery( "select bas from ExpressionExperiment bas join bas.bioAssays ba where ba = :ba group by bas" )
                 .setParameter( "ba", bioAssay )
                 .list() );
         //noinspection unchecked
         results.addAll( getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bas from ExpressionExperimentSubSet bas join bas.bioAssays ba where ba = :ba" )
+                .createQuery( "select bas from ExpressionExperimentSubSet bas join bas.bioAssays ba where ba = :ba group by bas" )
                 .setParameter( "ba", bioAssay )
                 .list() );
         return results;

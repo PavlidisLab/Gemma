@@ -78,7 +78,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     public List<Taxon> getTaxa( GeneSet geneSet ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .createQuery( "select t from GeneSet gs join gs.members m join m.gene g join g.taxon t where gs = :gs group by t" )
                 .setParameter( "gs", geneSet )
                 .list();
     }
@@ -198,7 +198,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             return this.loadAll();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
+                .createQuery( "select gs from GeneSet gs "
+                        + "join gs.members m "
+                        + "join m.gene g "
+                        + "where g.taxon = :t "
+                        + "group by gs" )
                 .setParameter( "t", tax ).list();
     }
 

@@ -135,8 +135,9 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         // find all QTs for the experiment
         //noinspection unchecked
         List<QuantitationType> list = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct quantType from ExpressionExperiment ee "
-                        + "inner join ee.quantitationTypes as quantType where ee  = :ee " )
+                .createQuery( "select quantType from ExpressionExperiment ee "
+                        + "join ee.quantitationTypes as quantType where ee = :ee "
+                        + "group by quantType" )
                 .setParameter( "ee", ee )
                 .list();
 
@@ -149,8 +150,10 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             for ( Class<? extends DataVector> dvt : dataVectorTypes ) {
                 //noinspection unchecked
                 qtsFromVectors.addAll( this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct q from " + dvt.getName() + " v "
-                                + "join v.quantitationType as q where v.expressionExperiment = :ee" )
+                        .createQuery( "select q from " + dvt.getName() + " v "
+                                + "join v.quantitationType as q "
+                                + "where v.expressionExperiment = :ee "
+                                + "group by q" )
                         .setParameter( "ee", ee ).list() );
             }
             list.retainAll( qtsFromVectors );

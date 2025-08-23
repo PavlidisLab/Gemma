@@ -122,12 +122,13 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
     public Collection<ExpressionExperiment> getNonBlacklistedExpressionExperiments( ArrayDesign arrayDesign ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct ee from ExpressionExperiment ee "
-                                + "inner join ee.bioAssays bas "
-                                + "inner join bas.arrayDesignUsed ad "
+                        "select ee from ExpressionExperiment ee "
+                                + "join ee.bioAssays bas "
+                                + "join bas.arrayDesignUsed ad "
                                 + "where ad = :ad "
                                 + "and (ee.shortName not in (select be.externalAccession.accession from BlacklistedExperiment be)  "
-                                + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be))" )
+                                + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be)) "
+                                + "group by ee")
                 .setParameter( "ad", arrayDesign )
                 .list();
     }

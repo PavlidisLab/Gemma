@@ -84,8 +84,8 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     @Override
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
         return new HashSet<>( QueryUtils.listByIdentifiableBatch( getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct eess from ExpressionExperimentSubSet eess "
-                                + "join eess.bioAssays ba where ba in :bas" ),
+                        .createQuery( "select eess from ExpressionExperimentSubSet eess "
+                                + "join eess.bioAssays ba where ba in :bas group by eess" ),
                 "bas", bioAssays, QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
     }
 
@@ -93,11 +93,12 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct fv from ExpressionExperimentSubSet es "
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
                         + "join es.bioAssays ba "
                         + "join ba.sampleUsed bm "
                         + "join bm.factorValues fv "
-                        + "where es=:es and fv.experimentalFactor = :ef" )
+                        + "where es=:es and fv.experimentalFactor = :ef "
+                        + "group by fv")
                 .setParameter( "es", entity )
                 .setParameter( "ef", factor )
                 .list();
@@ -107,11 +108,12 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
+                        "select fv from ExpressionExperimentSubSet es "
                                 + "join es.bioAssays ba "
                                 + "join ba.sampleUsed bm "
                                 + "join bm.factorValues fv "
-                                + "where es.id=:es and fv.experimentalFactor.id = :ef" )
+                                + "where es.id=:es and fv.experimentalFactor.id = :ef "
+                                + "group by fv")
                 .setParameter( "es", subSetId )
                 .setParameter( "ef", experimentalFactor )
                 .list();
@@ -169,7 +171,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -177,7 +179,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     private Collection<SingleCellDimension> getSingleCellDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -187,12 +189,13 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
      */
     private Collection<FactorValue> getFactorValueUsed( ExpressionExperimentSubSet subset ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
-                                + "join es.bioAssays ba "
-                                + "join ba.sampleUsed bm "
-                                + "join bm.factorValues fv "
-                                + "where es=:es" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
+                        + "join es.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "join bm.factorValues fv "
+                        + "where es=:es "
+                        + "group by fv" )
                 .setParameter( "es", subset )
                 .list();
     }

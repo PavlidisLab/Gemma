@@ -149,7 +149,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
+                        "select bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee group by bm" )
                 .setParameter( "ee", experiment ).list();
     }
 
@@ -157,7 +157,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .createQuery( "select bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef group by bm" )
                 .setParameter( "ef", experimentalFactor )
                 .list();
     }

@@ -48,6 +48,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
+    @Nullable
     Gene findByAccession( String accession, @Nullable ExternalDatabase source );
 
     /**
@@ -58,8 +59,10 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> findByAlias( String search );
 
+    @Nullable
     Gene findByEnsemblId( String exactString );
 
+    @Nullable
     Gene findByNcbiId( Integer accession );
 
     Collection<Gene> findByOfficialSymbol( String officialSymbol );
@@ -68,6 +71,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> findByOfficialNameInexact( String officialName );
 
+    @Nullable
     Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );

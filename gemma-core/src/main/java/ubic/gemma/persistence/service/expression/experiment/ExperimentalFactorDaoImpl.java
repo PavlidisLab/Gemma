@@ -92,7 +92,10 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     private List<BioMaterial> getBioMaterials( ExperimentalFactor ef ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .createQuery( "select bm from BioMaterial bm "
+                        + "join bm.factorValues fv "
+                        + "where fv.experimentalFactor = :ef "
+                        + "group by bm" )
                 .setParameter( "ef", ef )
                 .list();
     }
