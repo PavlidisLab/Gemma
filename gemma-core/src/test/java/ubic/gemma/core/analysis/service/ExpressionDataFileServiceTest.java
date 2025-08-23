@@ -27,6 +27,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
@@ -93,6 +94,11 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
             return mock( ExpressionExperimentService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentSubSetService expressionExperimentSubSetService() {
+            return mock();
         }
 
         @Bean
