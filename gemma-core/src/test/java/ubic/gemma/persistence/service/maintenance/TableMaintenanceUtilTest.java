@@ -126,7 +126,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
         tableMaintenanceUtil.updateGene2CsEntries();
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
-        verify( session ).createSQLQuery( startsWith( "REPLACE INTO GENE2CS" ) );
+        verify( session ).createSQLQuery( startsWith( "insert into GENE2CS" ) );
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );

@@ -68,11 +68,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
-    private static final String GENE2CS_REPOPULATE_QUERY =
-            "REPLACE INTO GENE2CS (GENE, CS, AD) " + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
-                    + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-                    + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
-                    + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
+    private static final String GENE2CS_REPOPULATE_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
 
     /**
      * Select the bitmask of permissions that applies to the {@code IS_AUTHENTICATED_ANONYMOUSLY} granted authority. If
@@ -369,7 +368,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         StopWatch timer = StopWatch.createStarted();
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         int updated = this.sessionFactory.getCurrentSession()
-                .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
+                .createSQLQuery( "insert into GENE2CS (GENE, CS, AD) "
+                        + TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY + " "
+                        // duplicate keys should never happen, so this is a no-op
+                        + "on duplicate key update GENE = GENE, CS = CS, AD = AD" )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .executeUpdate();
         TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated in %d ms.", updated, timer.getTime() ) );
