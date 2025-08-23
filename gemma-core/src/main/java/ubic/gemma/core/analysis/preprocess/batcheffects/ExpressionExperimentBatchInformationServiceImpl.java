@@ -10,7 +10,10 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -89,7 +92,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         }
 
         for ( BatchConfound c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+            if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                 return true;
             }
         }
@@ -116,7 +119,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             // confounds have to be sorted in order to always get the same string
             confounds.sort( Comparator.comparing( BatchConfound::toString ) );
             for ( BatchConfound c : confounds ) {
-                if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                     significantConfounds.add( c );
                 }
             }
@@ -147,7 +150,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
                 // confounds have to be sorted in order to always get the same string
                 subsetConfounds.sort( Comparator.comparing( BatchConfound::toString ) );
                 for ( BatchConfound c : subsetConfounds ) {
-                    if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                    if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                         significantSubsetConfounds
                                 .computeIfAbsent( subset, k -> new ArrayList<>() )
                                 .add( c );
@@ -174,7 +177,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         result.append( "One or more factors were confounded with batches in the full design; batch correction was not performed. "
                 + "Analyses may not be affected if performed on non-confounded subsets. Factor(s) confounded were: " );
         result.append( confounds.stream()
-                .map( c -> escapeHtml4( c.getEf().getName() ) )
+                .map( c -> escapeHtml4( c.getFactor().getName() ) )
                 .collect( Collectors.joining( ", " ) ) );
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfoundss = getSignificantBatchConfoundsForSubsets( ee );
@@ -182,7 +185,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             ExpressionExperimentSubSet subset = subsetConfounds.getKey();
             for ( BatchConfound c : subsetConfounds.getValue() ) {
                 result.append( "<br/><br/>Confound still exists for " )
-                        .append( escapeHtml4( c.getEf().getName() ) )
+                        .append( escapeHtml4( c.getFactor().getName() ) )
                         .append( " in " )
                         .append( escapeHtml4( subset.toString() ) );
             }

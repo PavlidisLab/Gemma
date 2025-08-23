@@ -807,11 +807,11 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
-            @PathParam( "dataset" ) DatasetArg<?> datasetArg
-    ){
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
 
         List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
-        return respond(out);
+        return respond( out );
 
     }
 
@@ -1706,10 +1706,10 @@ public class DatasetsWebService {
         int numberOfBatches;
 
         public BatchConfoundValueObject( BatchConfound batchConfound ) {
-            this.factor = new ExperimentalFactorValueObject( batchConfound.getEf(), false );
+            this.factor = new ExperimentalFactorValueObject( batchConfound.getFactor(), false );
             this.chiSquared = batchConfound.getChiSquare();
             this.df = batchConfound.getDf();
-            this.pvalue = batchConfound.getP();
+            this.pvalue = batchConfound.getPValue();
             this.numberOfBatches = batchConfound.getNumBatches();
         }
     }
