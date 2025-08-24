@@ -297,7 +297,7 @@ public class DifferentialExpressionSearchController {
         }
 
         return geneDifferentialExpressionService
-                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
+                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments, false );
     }
 
     private Collection<ExpressionExperimentDetailsValueObject> loadExperimentsByIds( Collection<Long> ids ) {

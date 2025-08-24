@@ -14,6 +14,9 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
+import ubic.gemma.model.common.ValueObject;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Vector;
@@ -23,11 +26,13 @@ import java.util.Vector;
  *
  * @author Paul
  */
+@Data
+@ValueObject
 public class ContrastsValueObject implements Serializable {
 
-    private final List<ContrastVO> contrasts = new Vector<>( 2 ); // commonly only have one.
-
     private Long resultId;
+
+    private final List<ContrastVO> contrasts = new Vector<>( 2 ); // commonly only have one.
 
     public ContrastsValueObject() {
         super();
@@ -37,20 +42,10 @@ public class ContrastsValueObject implements Serializable {
         this.resultId = resultId;
     }
 
-    public void addContrast( Long id, Long factorValueId, Double logFoldchange, Double pvalue,
-            Long secondFactorValueId ) {
-        contrasts.add( new ContrastVO( id, factorValueId, logFoldchange, pvalue, secondFactorValueId ) );
-    }
-
-    public List<ContrastVO> getContrasts() {
-        return contrasts;
-    }
-
-    public Long getResultId() {
-        return resultId;
-    }
-
-    public void setResultId( Long resultId ) {
-        this.resultId = resultId;
+    public ContrastsValueObject( DifferentialExpressionAnalysisResult o ) {
+        this( o.getId() );
+        for ( ContrastResult c : o.getContrasts() ) {
+            contrasts.add( new ContrastVO( c ) );
+        }
     }
 }

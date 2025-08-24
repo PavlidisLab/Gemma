@@ -656,7 +656,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), any(), anyDouble(), eq( false ), eq( true ) );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzedIds( eq( brca1 ), eq( false ), any(), true, any(), any(), any(), anyDouble(), eq( true ) );
     }
 
     @Test
@@ -675,7 +675,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), any(), anyDouble(), eq( false ), eq( true ) );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzedIds( eq( brca1 ), eq( false ), any(), true, any(), any(), any(), anyDouble(), eq( true ) );
     }
 
     @Test

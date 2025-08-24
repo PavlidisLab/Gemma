@@ -22,6 +22,7 @@ import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -40,8 +41,11 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
     private String probeName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<GeneValueObject> genes;
+    @Nullable
     private Double pValue;
+    @Nullable
     private Double correctedPvalue;
+    @Nullable
     private Double rank;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ContrastResultValueObject> contrasts;

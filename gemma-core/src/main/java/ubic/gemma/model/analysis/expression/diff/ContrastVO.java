@@ -14,52 +14,48 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
+import ubic.gemma.model.common.ValueObject;
+
+import javax.annotation.Nullable;
+import java.io.Serializable;
+
 /**
  * Helper object, not for general use.
  *
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ContrastVO {
+@Data
+@ValueObject
+public class ContrastVO implements Serializable {
 
-    private final Long factorValueId;
-
-    private final Long id;
-
+    private Long id;
+    @Nullable
+    private Long factorValueId;
+    @Nullable
+    private Long secondFactorValueId;
+    @Nullable
     private Double logFoldChange;
-
+    @Nullable
     private Double pvalue;
 
-    private Long secondFactorValueId;
+    public ContrastVO() {
 
-    public ContrastVO( Long id, Long factorValueId, Double logFoldchange, Double pvalue, Long secondFactorValueId ) {
+    }
+
+    public ContrastVO( Long id, @Nullable Long factorValueId, @Nullable Long secondFactorValueId, @Nullable Double logFoldchange, @Nullable Double pvalue ) {
         super();
         this.id = id;
         this.factorValueId = factorValueId; // can be null if it's a continuous factor
-        this.logFoldChange = logFoldchange;
         this.secondFactorValueId = secondFactorValueId;
-
+        this.logFoldChange = logFoldchange;
         this.pvalue = pvalue;
     }
 
-    public Long getFactorValueId() {
-        return factorValueId;
+    public ContrastVO( ContrastResult c ) {
+        this( c.getId(), c.getFactorValue() == null ? null : c.getFactorValue().getId(),
+                c.getSecondFactorValue() != null ? c.getSecondFactorValue().getId() : null,
+                c.getLogFoldChange(), c.getPvalue() );
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Double getLogFoldChange() {
-        return logFoldChange;
-    }
-
-    public Double getPvalue() {
-        return pvalue;
-    }
-
-    public Long getSecondFactorValueId() {
-        return secondFactorValueId;
-    }
-
 }

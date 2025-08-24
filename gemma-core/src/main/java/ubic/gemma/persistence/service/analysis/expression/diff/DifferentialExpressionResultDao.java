@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -33,6 +32,30 @@ import java.util.Map;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  */
 public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
+
+    /**
+     * Find differential expression results for a given gene, grouped by experiment.
+     *
+     * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
+     */
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean keepNonSpecificProbes );
+
+    /**
+     * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
+     *
+     * @param gene                  gene
+     * @param keepNonSpecificProbes keep non-specific probes (i.e. probes that map to more than one gene)
+     * @param threshold             threshold
+     * @param limit                 limit
+     * @return map to diff exp VOs
+     */
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean keepNonSpecificProbes, double threshold, int limit );
+
+    /**
+     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
+     * experiments
+     */
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByExperimentAnalyzed( Collection<Long> experimentAnalyzedIds, boolean includeSubSets, double threshold, int limit );
 
     /**
      * Retrieve differential expression results for a given gene across all the given datasets.
@@ -64,34 +87,24 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
             boolean initializeFactorValues );
 
     /**
-     * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
-     * corrected pvalue field)
-     */
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, int limit );
-
-    /**
-     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
-     * experiments
-     */
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
-            Collection<Long> experimentsAnalyzed, double threshold, int limit );
-
-    /**
-     * Find differential expression results for a given gene, grouped by experiment.
-     *
-     * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
-     */
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene );
-
-    /**
      * Find differential expression results for a given gene and set of experiments, grouped by experiment.
      *
+     * @param gene                  gene to retrieve differential expression for
+     * @param keepNonSpecificProbes keep non-specific probes (i.e. probes that map to more than one gene)
+     * @param experimentAnalyzedIds IDs of experiments or experiment subsets to consider
+     * @param includeSubSets        include subsets of the analyzed experiments
      * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
      * {@link BioAssaySet}.
      */
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            Collection<Long> experimentsAnalyzed );
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed(
+            Gene gene, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
+
+    /**
+     * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
+     * corrected pvalue field)
+     */
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed(
+            Gene gene, boolean keepNonSpecificProbes, Collection<Long> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
 
     /**
      * @return map of resultSetId to map of gene to DiffExprGeneSearchResult
@@ -99,19 +112,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
+    List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
             int maxResultsToReturn, int minNumberOfResults );
 
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
-
-    /**
-     * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
-     *
-     * @param  gene      gene
-     * @param  threshold threshold
-     * @param  limit     limit
-     * @return map to diff exp VOs
-     */
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
-            int limit );
 }

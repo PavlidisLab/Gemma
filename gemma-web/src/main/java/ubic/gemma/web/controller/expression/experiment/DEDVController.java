@@ -395,7 +395,7 @@ public class DEDVController {
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<>();
         validatedProbes.put( ee.getId(),
-                geneDifferentialExpressionService.getDifferentialExpression( g, ee, threshold, -1 ) );
+                geneDifferentialExpressionService.getDifferentialExpression( g, ee, false, threshold, -1 ) );
 
         watch.stop();
         time = watch.getTime();

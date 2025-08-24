@@ -183,5 +183,13 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
             experimentalFactor.setCategory( Characteristic.Factory.newInstance( category ) );
             return experimentalFactor;
         }
+
+        public static ExperimentalFactor newInstance( ExperimentalDesign ed, String name, FactorType factorType ) {
+            ExperimentalFactor experimentalFactor = newInstance();
+            experimentalFactor.setExperimentalDesign( ed );
+            experimentalFactor.setName( name );
+            experimentalFactor.setType( factorType );
+            return experimentalFactor;
+        }
     }
 }
