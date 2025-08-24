@@ -758,6 +758,15 @@
 				</site>
 			</distributionManagement>
 		</profile>
+		<profile>
+			<id>fast</id>
+			<properties>
+				<skipVersionFile>true</skipVersionFile>
+				<skipJavadoc>true</skipJavadoc>
+				<skipTests>true</skipTests>
+				<skipWebpack>true</skipWebpack>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
