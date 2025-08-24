@@ -10,6 +10,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -43,6 +44,18 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
             // also remove the parent folder
             assertThat( f.getParentFile().delete() ).isTrue();
         }
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void test() {
+        tableMaintenanceUtil.updateGene2CsEntries();
+        assertThatThrownBy( () -> tableMaintenanceUtil.updateGene2CsEntries( new Date(), true, true ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        tableMaintenanceUtil.updateGene2CsEntries( null, true, true );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setId( 1L );
+        tableMaintenanceUtil.updateGene2CsEntries( ad, true );
     }
 
     @Test

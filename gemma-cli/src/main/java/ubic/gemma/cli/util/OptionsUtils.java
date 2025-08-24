@@ -36,7 +36,7 @@ public class OptionsUtils {
     public static void addDateOption( String name, @Nullable String longOpt, String desc, Options options ) {
         options.addOption( Option.builder( name )
                 .longOpt( longOpt )
-                .desc( desc )
+                .desc( appendIfMissing( desc, "." ) + "\nThe date can be specified in ISO 8601 format, as a relative date (e.g. +1d, -1m, -1h), or as a natural language expression (e.g. five hours ago, last week, etc.)." )
                 .hasArg()
                 .type( Date.class )
                 .converter( new DateConverterImpl( DEFAULT_RELATIVE_TO, DEFAULT_TIME_ZONE ) ).build() );

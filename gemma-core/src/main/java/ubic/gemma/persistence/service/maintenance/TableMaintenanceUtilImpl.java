@@ -24,6 +24,7 @@ import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,11 +67,33 @@ import java.util.Map;
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     /**
+     * Clause for selecting entities updated since a given date.
+     */
+    private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
+
+    /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
     private static final String GENE2CS_REPOPULATE_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
             + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
             + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
+
+    /**
+     * The query used to repopulate the contents of the GENE2CS table.
+     */
+    private static final String GENE2CS_REPOPULATE_SINCE_LAST_UPDATE_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "join ARRAY_DESIGN ad on ad.ID = cs.ARRAY_DESIGN_FK "
+            + "join CURATION_DETAILS CD on CD.ID = ad.CURATION_DETAILS_FK "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "and " + CD_LAST_UPDATED_SINCE
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
+
+    private static final String GENE2CS_REPOPULATE_BY_ARRAY_DESIGN_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "and cs.ARRAY_DESIGN_FK = :ad "
             + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
 
     /**
@@ -87,11 +110,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and AOI.OBJECT_ID = I.ID "
                     + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
                     + "group by AOI.ID), 0)";
-
-    /**
-     * Clause for selecting entities updated since a given date.
-     */
-    private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
 
     private static final String EE2C_EE_QUERY =
             "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
@@ -168,13 +186,25 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateGene2CsEntries() {
-        return updateGene2CsEntries( false );
+        return updateGene2CsEntries( null, false, false );
     }
 
     @Override
     @Transactional
     @Timed
-    public int updateGene2CsEntries( boolean force ) {
+    public int updateGene2CsEntries( ArrayDesign arrayDesign, boolean force ) {
+        return updateGene2CsEntries( arrayDesign, null, false, force );
+    }
+
+    @Override
+    @Transactional
+    @Timed
+    public int updateGene2CsEntries( @Nullable Date sinceLastUpdate, boolean truncate, boolean force ) {
+        return updateGene2CsEntries( null, sinceLastUpdate, truncate, force );
+    }
+
+    private int updateGene2CsEntries( @Nullable ArrayDesign arrayDesign, @Nullable Date sinceLastUpdate, boolean truncate, boolean force ) {
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         try {
             String annotation;
             if ( ( annotation = needsToRefreshGene2Cs( force ) ) == null ) {
@@ -182,11 +212,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 return 0;
             }
             TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
-            int updated = this.generateGene2CsEntries();
-            if ( updated > 0 ) {
-                annotation += "\n\n" + "Updated " + updated + " entries.";
+            int updated = this.generateGene2CsEntries( arrayDesign, sinceLastUpdate, truncate );
+            String extra = "";
+            if ( arrayDesign != null ) {
+                extra += " for " + arrayDesign;
             }
-            TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
+            if ( sinceLastUpdate != null ) {
+                extra += " since " + sinceLastUpdate;
+            }
+            if ( updated > 0 ) {
+                annotation += "\n\n" + "Updated " + updated + " entries";
+                annotation += extra;
+                annotation += ".";
+            }
+            TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table%s; %d entries were updated.", extra, updated ) );
             Gene2CsStatus updatedStatus;
             updatedStatus = createUpdateStatus( annotation, null );
             updateGene2csExternalDatabaseLastUpdated( updatedStatus );
@@ -206,7 +245,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateExpressionExperiment2CharacteristicEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
-        Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
@@ -239,7 +278,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Timed
     @Transactional
     public int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
-        Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
             query = EE2C_EE_QUERY;
@@ -364,16 +403,33 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      *
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
-    private int generateGene2CsEntries() {
+    private int generateGene2CsEntries( @Nullable ArrayDesign arrayDesign, @Nullable Date sinceLastUpdate, boolean truncate ) {
         StopWatch timer = StopWatch.createStarted();
+        if ( truncate ) {
+            sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS" );
+        }
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
-        int updated = this.sessionFactory.getCurrentSession()
+        String query;
+        if ( arrayDesign != null ) {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_BY_ARRAY_DESIGN_QUERY;
+        } else if ( sinceLastUpdate != null ) {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_SINCE_LAST_UPDATE_QUERY;
+        } else {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY;
+        }
+        Query queryObject = this.sessionFactory.getCurrentSession()
                 .createSQLQuery( "insert into GENE2CS (GENE, CS, AD) "
-                        + TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY + " "
+                        + query + " "
                         // duplicate keys should never happen, so this is a no-op
                         + "on duplicate key update GENE = GENE, CS = CS, AD = AD" )
-                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
-                .executeUpdate();
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        if ( arrayDesign != null ) {
+            queryObject.setParameter( "ad", arrayDesign.getId() );
+        }
+        if ( sinceLastUpdate != null ) {
+            queryObject.setParameter( "since", sinceLastUpdate );
+        }
+        int updated = queryObject.executeUpdate();
         TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated in %d ms.", updated, timer.getTime() ) );
         return updated;
     }

@@ -1247,10 +1247,14 @@ function __gemma_cli_staging_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --persist -d -h" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.UpdateGene2CsCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--since|-a|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --force --help --since --truncate -a -f -h -s -truncate" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' updateGene2Cs ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
+        if ! [[ "$current_option" =~ (--array|--since|-a|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --force --help --since --truncate -a -f -h -s -truncate" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.UnifiedOntologyUpdaterCli ' ]]; then
         if ! [[ "$current_option" =~ (--dest-dir|--sources-dir|--threads|-destDir|-sourcesDir|-threads) ]]; then

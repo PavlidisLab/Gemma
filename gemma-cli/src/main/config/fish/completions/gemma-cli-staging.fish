@@ -2249,10 +2249,16 @@ complete -c gemma-cli-staging -n '__fish_seen_subcommand_from pubmedSearchAndSav
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.UpdateGene2CsCli --description 'Update the GENE2CS table.'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -s a -l array -r -a '(gemma-cli-staging complete platform 2>/dev/null)' -f --description 'Only update GENE2CS entries for a particular platform.'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -s s -l since -r -f --description 'Only update GENE2CS entries from platforms update since the given date'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -o truncate -l truncate -f --description 'Truncate the table before updating it'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UpdateGene2CsCli' -s f -l force -f --description 'Force update of the GENE2CS table, even if no platforms have been updated since the last update.'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a updateGene2Cs --description 'Update the GENE2CS table.'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -s a -l array -r -a '(gemma-cli-staging complete platform 2>/dev/null)' -f --description 'Only update GENE2CS entries for a particular platform.'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -s s -l since -r -f --description 'Only update GENE2CS entries from platforms update since the given date'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -o truncate -l truncate -f --description 'Truncate the table before updating it'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from updateGene2Cs' -s f -l force -f --description 'Force update of the GENE2CS table, even if no platforms have been updated since the last update.'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.UnifiedOntologyUpdaterCli --description 'Update or initialize the unified ontology'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -f
