@@ -822,9 +822,12 @@
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
-		<!--suppress UnresolvedMavenProperty -->
+		<skipVersionFile>false</skipVersionFile>
+		<skipJavadoc>false</skipJavadoc>
+		<skipWebpack>false</skipWebpack>
+		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
+		<skipTests>false</skipTests>
 		<skipUnitTests>${skipTests}</skipUnitTests>
-		<!--suppress UnresolvedMavenProperty -->
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
 		<redirectTestOutputToFile>true</redirectTestOutputToFile>
 		<!-- common JVM options -->

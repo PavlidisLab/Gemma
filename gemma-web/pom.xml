@@ -235,7 +235,6 @@
     </dependencies>
 
 	<properties>
-		<skipWebpack>false</skipWebpack>
 		<webpackInstallCommand>install</webpackInstallCommand>
 		<webpackBuildCommand>devbuild</webpackBuildCommand>
 	</properties>
