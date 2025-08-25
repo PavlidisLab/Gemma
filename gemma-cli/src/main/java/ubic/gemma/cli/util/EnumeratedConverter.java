@@ -9,7 +9,7 @@ import java.util.Map;
  * This interface is implemented by converters that can enumerate their possible values.
  * @author poirigui
  */
-public interface EnumeratedConverter<T, E extends Throwable> extends Converter<T, E> {
+public interface EnumeratedConverter<T, E extends Exception> extends Converter<T, E> {
 
     /**
      * Obtain a list of possible values that the converter can convert to {@link T}.
