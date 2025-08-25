@@ -103,10 +103,12 @@ public interface TableMaintenanceUtil {
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
+     * @param sinceLastUpdate only update entries for platforms updated since this date
+     * @param truncate        if true, the table will be truncated before the update
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate );
+    int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate );
 
     @Secured({ "GROUP_ADMIN" })
     void evictGene2CsQueryCache();

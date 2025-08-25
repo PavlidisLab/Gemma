@@ -94,6 +94,6 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2ArrayDesignEntries() {
-        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null );
+        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null, false );
     }
 }

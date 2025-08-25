@@ -317,10 +317,16 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Override
     @Transactional
-    public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate ) {
+    public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
         StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
+        if ( truncate ) {
+            log.info( "Truncating EXPRESSION_EXPERIMENT2ARRAY_DESIGN..." );
+            sessionFactory.getCurrentSession()
+                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
+                    .executeUpdate();
+        }
         int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "since", sinceLastUpdate )
@@ -406,7 +412,16 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private int generateGene2CsEntries( @Nullable ArrayDesign arrayDesign, @Nullable Date sinceLastUpdate, boolean truncate ) {
         StopWatch timer = StopWatch.createStarted();
         if ( truncate ) {
-            sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS" );
+            if ( arrayDesign != null ) {
+                TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS for " + arrayDesign + "..." );
+                sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
+                        .setParameter( "adId", arrayDesign.getId() )
+                        .executeUpdate();
+            } else {
+                TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS..." );
+                sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS" )
+                        .executeUpdate();
+            }
         }
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
         String query;

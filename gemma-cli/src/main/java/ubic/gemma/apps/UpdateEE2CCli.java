@@ -17,8 +17,8 @@ import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
 public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     private static final String
-            TRUNCATE_OPTION = "truncate",
-            SINCE_OPTION = "s";
+            SINCE_OPTION = "s",
+            TRUNCATE_OPTION = "truncate";
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -26,8 +26,8 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
 
-    private boolean truncate;
     private Date sinceLastUpdate;
+    private boolean truncate;
 
     @Nullable
     @Override
@@ -48,18 +48,18 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
         addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date", options );
+        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        truncate = commandLine.hasOption( TRUNCATE_OPTION );
         if ( commandLine.hasOption( SINCE_OPTION ) ) {
             sinceLastUpdate = commandLine.getParsedOptionValue( SINCE_OPTION );
         } else {
             sinceLastUpdate = null;
         }
+        truncate = commandLine.hasOption( TRUNCATE_OPTION );
     }
 
     @Override
