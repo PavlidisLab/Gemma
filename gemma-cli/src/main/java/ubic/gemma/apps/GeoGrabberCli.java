@@ -169,11 +169,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
-    }
-
-    @Override
     public String getCommandName() {
         return "listGEOData";
     }
@@ -181,6 +176,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     @Override
     public String getShortDesc() {
         return "Grab information on GEO data sets not yet in the system, working backwards in time";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
     @Override

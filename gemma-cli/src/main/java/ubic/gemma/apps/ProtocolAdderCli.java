@@ -34,6 +34,11 @@ public class ProtocolAdderCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         options.addRequiredOption( "name", "name", true, "Name for the protocol" );
         options.addOption( "description", "description", true, "Description for the protocol" );

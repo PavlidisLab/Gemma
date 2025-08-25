@@ -37,6 +37,11 @@ public class ProtocolDeleterCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         options.addOption( "protocol", "protocol", true, "Protocol ID or name." );
     }

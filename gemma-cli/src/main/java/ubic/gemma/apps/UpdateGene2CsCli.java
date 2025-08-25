@@ -52,6 +52,11 @@ public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         addPlatformOption( options, PLATFORM_OPTION, "array", "Only update GENE2CS entries for a particular platform." );
         addDateOption( SINCE_OPTION, "since", "Only update GENE2CS entries from platforms update since the given date", options );

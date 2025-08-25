@@ -62,6 +62,21 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public String getCommandName() {
+        return "complete";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Provide various completions for the CLI";
+    }
+
+    @Override
+    protected String getUsage() {
+        return "gemma-cli [options] complete <type> [completeArgs...]";
+    }
+
+    @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.getArgList().isEmpty() ) {
@@ -77,16 +92,6 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
         } else {
             completeArgs = new String[0];
         }
-    }
-
-    @Override
-    public String getCommandName() {
-        return "complete";
-    }
-
-    @Override
-    protected String getUsage() {
-        return "gemma-cli [options] complete <type> [completeArgs...]";
     }
 
     @Override

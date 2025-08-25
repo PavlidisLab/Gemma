@@ -24,8 +24,8 @@ import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.concurrent.Executors;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.BufferedReader;
@@ -79,6 +79,11 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     @Override
     public String getShortDesc() {
         return "Update or initialize the unified ontology";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
     }
 
     @Override
