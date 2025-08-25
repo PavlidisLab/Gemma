@@ -37,8 +37,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMapping
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -131,7 +134,61 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
-    private static final String EE2C_ED_QUERY =
+    private static final String EE2C_CTA_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellTypeAssignment' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_ASSAYS2SINGLE_CELL_DIMENSIONS B2SCD on BA.ID = B2SCD.BIO_ASSAYS_FK "
+                    + "join SINGLE_CELL_DIMENSION SCD on SCD.ID = B2SCD.SINGLE_CELL_DIMENSIONS_FK "
+                    + "join ANALYSIS CTA on SCD.ID = CTA.SINGLE_CELL_DIMENSION_FK "
+                    + "join CHARACTERISTIC C on CTA.ID = C.CELL_TYPE_ASSIGNMENT_FK "
+                    + "where I.class = 'ExpressionExperiment' and CTA.class = 'CellTypeAssignment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_CLC_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_ASSAYS2SINGLE_CELL_DIMENSIONS B2SCD on BA.ID = B2SCD.BIO_ASSAYS_FK "
+                    + "join SINGLE_CELL_DIMENSION SCD on SCD.ID = B2SCD.SINGLE_CELL_DIMENSIONS_FK "
+                    + "join CELL_LEVEL_CHARACTERISTICS CLC on SCD.ID = CLC.SINGLE_CELL_DIMENSION_FK "
+                    + "join CHARACTERISTIC C on CLC.ID = C.CELL_LEVEL_CHARACTERISTICS_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_ED_FACTOR_CATEGORIES_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
+                    + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                    + "join CHARACTERISTIC C on C.ID = EF.CATEGORY_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    /**
+     * @deprecated this is deprecated because {@link ExperimentalFactor#getAnnotations()} is also deprecated. However,
+     * there's a possibility that this will be repurposed for annotating continuous FVs, see <a href="https://github.com/PavlidisLab/Gemma/issues/950">#950</a>
+     * for more details.
+     */
+    @Deprecated
+    private static final String EE2C_ED_FACTOR_ANNOTATIONS_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
+                    + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                    + "join CHARACTERISTIC C on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY =
             "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
@@ -144,6 +201,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and C.class = 'Statement' "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
+
+    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_CATEGORIES_QUERY
+            + " union "
+            + EE2C_ED_FACTOR_ANNOTATIONS_QUERY
+            + " union "
+            + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -253,6 +316,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC..." );
             sessionFactory.getCurrentSession()
                     .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .executeUpdate();
         }
         int updated = sessionFactory.getCurrentSession()
@@ -261,6 +325,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + EE2C_EE_QUERY
                                 + " union "
                                 + EE2C_BM_QUERY
+                                + " union "
+                                + EE2C_CTA_QUERY
+                                + " union "
+                                + EE2C_CLC_QUERY
                                 + " union "
                                 + EE2C_ED_QUERY + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
@@ -286,6 +354,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
             query = EE2C_ED_QUERY;
+        } else if ( level.equals( CellTypeAssignment.class ) ) {
+            query = EE2C_CTA_QUERY;
+        } else if ( level.equals( CellLevelCharacteristics.class ) ) {
+            query = EE2C_CLC_QUERY;
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
         }
@@ -297,6 +369,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC at " + level.getSimpleName() + " level..." );
             sessionFactory.getCurrentSession()
                     .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC where LEVEL = :level" )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .setParameter( "level", level )
                     .executeUpdate();
         }
@@ -325,9 +398,11 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2ARRAY_DESIGN..." );
             sessionFactory.getCurrentSession()
                     .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
+                    .addScalar( EE2AD_QUERY_SPACE )
                     .executeUpdate();
         }
-        int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
+        int updated = sessionFactory.getCurrentSession()
+                .createSQLQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
@@ -414,12 +489,16 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( truncate ) {
             if ( arrayDesign != null ) {
                 TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS for " + arrayDesign + "..." );
-                sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
+                sessionFactory.getCurrentSession()
+                        .createSQLQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
+                        .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                         .setParameter( "adId", arrayDesign.getId() )
                         .executeUpdate();
             } else {
                 TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS..." );
-                sessionFactory.getCurrentSession().createSQLQuery( "delete from GENE2CS" )
+                sessionFactory.getCurrentSession()
+                        .createSQLQuery( "delete from GENE2CS" )
+                        .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                         .executeUpdate();
             }
         }

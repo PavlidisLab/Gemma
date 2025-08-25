@@ -110,12 +110,21 @@ public interface TableMaintenanceUtil {
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate );
 
+    /**
+     * Evict the query cache for the {@code GENE2CS} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictGene2CsQueryCache();
 
+    /**
+     * Evict the query cache for the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictEe2CQueryCache();
 
+    /**
+     * Evict the query cache for the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictEe2AdQueryCache();
 
