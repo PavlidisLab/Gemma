@@ -202,6 +202,16 @@
         <jsp-file>/resources/restapidocs/index.jsp</jsp-file>
     </servlet>
 
+    <servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>precompressed</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>gemma</servlet-name>
         <url-pattern>/</url-pattern>

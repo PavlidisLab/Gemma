@@ -11,6 +11,7 @@
   "license": "Apache 2.0",
   "description": "",
   "devDependencies": {
+    "compression-webpack-plugin": "^11.1.0",
     "css-loader": "^7.1.2",
     "mini-css-extract-plugin": "^2.9.2",
     "webpack": "^5.96.1",
