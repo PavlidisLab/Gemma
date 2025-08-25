@@ -160,17 +160,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
-    private static final String EE2C_ED_FACTOR_CATEGORIES_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
-                    + "from INVESTIGATION I "
-                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
-                    + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
-                    + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
-                    + "join CHARACTERISTIC C on C.ID = EF.CATEGORY_FK "
-                    + "where I.class = 'ExpressionExperiment' "
-                    + "and " + CD_LAST_UPDATED_SINCE + " "
-                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
-
     /**
      * @deprecated this is deprecated because {@link ExperimentalFactor#getAnnotations()} is also deprecated. However,
      * there's a possibility that this will be repurposed for annotating continuous FVs, see <a href="https://github.com/PavlidisLab/Gemma/issues/950">#950</a>
@@ -202,9 +191,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
 
-    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_CATEGORIES_QUERY
-            + " union "
-            + EE2C_ED_FACTOR_ANNOTATIONS_QUERY
+    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_ANNOTATIONS_QUERY
             + " union "
             + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
 
