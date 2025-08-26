@@ -253,7 +253,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      */
     private void checkAllBioAssayDimensionsMatch( Collection<BioAssayDimension> dims ) {
         ProcessedExpressionDataVectorHelperServiceImpl.log
-                .info( "Data set has more than one bioassaydimension for its processed data vectors" );
+                .info( "Dataset has more than one bioassaydimension for its processed data vectors" );
         List<BioMaterial> ordering = new ArrayList<>();
         int i = 0;
         for ( BioAssayDimension dim : dims ) {

@@ -50,7 +50,7 @@ Gemma.PlatformDetails = Ext
                 if (pd.isAffymetrixAltCdf) {
                     text = text + '<i class="orange fa fa-exclamation-circle fa-lg" ></i>&nbsp;'
                         + "This platform is an alternative to a 'standard' " + "gene-level Affymetrix probe layout: "
-                        + Gemma.arrayDesignLink(pd.alternative) + ". Data sets using it will be switched to the "
+                        + Gemma.arrayDesignLink(pd.alternative) + ". Datasets using it will be switched to the "
                         + "canonical one when raw data are available. We do not provide annotation files for this platform.";
                     text = text + "<br />";
                 }

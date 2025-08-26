@@ -172,7 +172,7 @@ public class ExpressionExperimentPlatformSwitchService {
             targetBioAssayDimension = this.doMultiSample( ee, unusedBADs );
         }
         if ( multiPlatformPerSample && targetBioAssayDimension == null ) {
-            throw new RuntimeException( "Data set cannot be switched to merged platform: no suitable bioassaydimension found" );
+            throw new RuntimeException( "Dataset cannot be switched to merged platform: no suitable bioassaydimension found" );
         }
 
         /*
