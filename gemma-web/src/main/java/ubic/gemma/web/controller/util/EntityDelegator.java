@@ -18,15 +18,21 @@
  */
 package ubic.gemma.web.controller.util;
 
+import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.ValueObject;
+
+import java.io.Serializable;
 
 /**
  * Bean to expose for remote access via AJAX, when all that is needed is the ID and a way to know what the class is.
  * @param <T> the type of entity being delegated
  * @author Paul
  */
-public class EntityDelegator<T extends Identifiable> {
+@Data
+@ValueObject
+public class EntityDelegator<T extends Identifiable> implements Serializable {
 
     private Long id;
 
@@ -39,22 +45,6 @@ public class EntityDelegator<T extends Identifiable> {
         Assert.notNull( entity.getId(), "The entity being delegated must have a non-null ID." );
         this.id = entity.getId();
         this.classDelegatingFor = entity.getClass().getName();
-    }
-
-    public String getClassDelegatingFor() {
-        return classDelegatingFor;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setClassDelegatingFor( String classDelegatingFor ) {
-        this.classDelegatingFor = classDelegatingFor;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**

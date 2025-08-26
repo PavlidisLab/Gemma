@@ -374,7 +374,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             bmToFv.put( sample, fv );
 
         }
-        expressionExperimentService.addFactorValues( ee, bmToFv );
+        expressionExperimentService.addFactorValues( ee, bmToFv, false );
 
         ee = expressionExperimentService.thawLite( ee );
 

@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author kelsey
@@ -51,6 +52,12 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue loadWithExperimentalFactor( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    <T extends Exception> Collection<FactorValue> loadWithExperimentalFactorOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T;
 
     /**
      * Load a {@link FactorValue} with an initialized experimental factor or fail.
