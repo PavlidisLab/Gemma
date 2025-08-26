@@ -30,7 +30,7 @@ import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -64,24 +64,24 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     private GeneDao geneDao;
 
     @Override
-    public boolean hasLinks( BioAssaySet ee ) {
+    public boolean hasLinks( ExpressionExperiment ee ) {
         Taxon taxon = this.experimentDao.getTaxon( ee );
         return taxon != null && coexpressionDao.hasLinks( taxon, ee );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Integer countLinks( BioAssaySet ee, Gene gene ) {
+    public Integer countLinks( ExpressionExperiment ee, Gene gene ) {
         return this.coexpressionDao.countLinks( gene, ee );
     }
 
     @Override
     @Transactional
-    public void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
+    public void createOrUpdate( ExpressionExperiment ee, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
             Set<Gene> genesTested ) {
-        assert bioAssaySet != null;
+        assert ee != null;
         assert genesTested != null;
-        this.coexpressionDao.createOrUpdate( bioAssaySet, links, c, genesTested );
+        this.coexpressionDao.createOrUpdate( ee, links, c, genesTested );
 
         // remove these from the queue, in case they are there.
         // Collection<Long> genes = new HashSet<>();
@@ -94,7 +94,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     @Override
     @Transactional
-    public void deleteLinks( BioAssaySet experiment ) {
+    public void deleteLinks( ExpressionExperiment experiment ) {
         Taxon taxon = this.experimentDao.getTaxon( experiment );
         if ( taxon == null ) {
             log.warn( experiment + " does not have a taxon, cannot remove coexpression links." );
@@ -170,7 +170,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CoexpressionValueObject> getCoexpression( BioAssaySet experiment, boolean quick ) {
+    public Collection<CoexpressionValueObject> getCoexpression( ExpressionExperiment experiment, boolean quick ) {
         Taxon taxon = experimentDao.getTaxon( experiment );
         if ( taxon == null ) {
             log.warn( experiment + " does not have a taxon, returning no coexpression links." );

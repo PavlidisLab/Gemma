@@ -52,7 +52,7 @@ public interface ProcessedExpressionDataVectorService
      * This also adds an audit event and evict the vectors from the cache.
      * @param updateRanks whether to update the rnaks of the vectors or not
      * @see #updateRanks(ExpressionExperiment)
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
      * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -81,7 +81,7 @@ public interface ProcessedExpressionDataVectorService
      * @param ee      ee
      * @param vectors non-persistent, all of the same {@link QuantitationType}
      * @param updateRanks whether to update ranks or not
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks );

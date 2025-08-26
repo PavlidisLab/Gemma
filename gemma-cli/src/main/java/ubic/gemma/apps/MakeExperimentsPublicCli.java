@@ -43,5 +43,6 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         securityService.makePublic( ee );
         this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
+        addSuccessObject( ee, "Experiment was made public." );
     }
 }

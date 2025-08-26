@@ -320,7 +320,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                               this.rowExpander,
                               {
                                  id : 'name',
-                                 header : "Platform Name",
+                                 header : "Name",
                                  dataIndex : 'name',
                                  width : 0.3, // viewConfig.forceFit resizes based on relative widths,
                                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
@@ -379,7 +379,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                  }
                               },
                               {
-                                 header : "Curation status",
+                                 header : "Curation Status",
                                  tooltip : "",
                                  dataIndex : 'needsAttention',
                                  sortable : true,
@@ -420,7 +420,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                  format : 'Y-m-d'
                               },
                               {
-                                 header : "Rep. mask",
+                                 header : "Rep. Mask",
                                  dataIndex : 'lastRepeatMask',
                                  width : 0.07,
                                  sortDir : 'DESC',

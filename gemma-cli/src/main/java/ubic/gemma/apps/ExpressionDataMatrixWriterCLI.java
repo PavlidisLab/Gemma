@@ -62,6 +62,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private String[] samples;
     @Nullable
     private ScaleType scaleType;
+    private boolean excludeSampleIdentifiers;
+    private boolean useBioAssayIds;
+    private boolean useRawColumnNames;
     private ExpressionDataFileResult result;
     private boolean filter;
 
@@ -81,6 +84,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
+        options.addOption( "excludeSampleIdentifiers", "exclude-sample-identifiers", false, "Only include bioassays identifier in the output instead of mangling it with the sample identifier." );
+        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use IDs instead of names or short names for bioassays and samples." );
+        options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw column names instead of R-friendly ones." );
         addForceOption( options );
     }
 
@@ -96,6 +102,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             throw new ParseException( "Cannot specify scale type when writing to standard location." );
         }
         filter = commandLine.hasOption( "filter" );
+        excludeSampleIdentifiers = commandLine.hasOption( "excludeSampleIdentifiers" );
+        useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
+        useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
     }
 
     @Override
@@ -119,14 +128,14 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                         .collect( Collectors.toList() );
                 fileName = result.getOutputFile( getDataOutputFilename( ee, assays, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
-                    written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, writer, true );
+                    written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException | FilteringException e ) {
                     throw new RuntimeException( e );
                 }
             } else {
                 fileName = result.getOutputFile( getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
-                    written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
+                    written = fs.writeProcessedExpressionData( ee, filter, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException | FilteringException e ) {
                     throw new RuntimeException( e );
                 }

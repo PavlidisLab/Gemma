@@ -16,8 +16,10 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -98,35 +100,63 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
-        Collection<QuantitationType> qts;
+        Map<Class<? extends T>, Collection<QuantitationType>> qts;
         if ( qtIdentifier != null ) {
-            qts = Collections.singleton( entityLocator.locateQuantitationType( expressionExperiment, qtIdentifier, quantitationTypeService.getMappedDataVectorType( dataVectorType ) ) );
+            Map.Entry<Class<? extends T>, QuantitationType> vqt = entityLocator.locateQuantitationType( expressionExperiment, qtIdentifier, quantitationTypeService.getMappedDataVectorType( dataVectorType ) );
+            qts = Collections.singletonMap( vqt.getKey(), Collections.singleton( vqt.getValue() ) );
         } else if ( usePreferredQuantitationType ) {
             qts = quantitationTypeService.getMappedDataVectorType( dataVectorType ).stream()
-                    .map( vt -> locatePreferredQuantitationType( expressionExperiment, vt ) )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toMap( vt -> vt, vt -> Collections.singleton( locatePreferredQuantitationType( expressionExperiment, vt ) ) ) );
         } else {
             qts = quantitationTypeService.getMappedDataVectorType( dataVectorType ).stream()
-                    .flatMap( vt -> quantitationTypeService.findByExpressionExperiment( expressionExperiment, vt ).stream() )
-                    .collect( Collectors.toSet() );
+                    .collect( Collectors.toMap( vt -> vt, vt -> quantitationTypeService.findByExpressionExperiment( expressionExperiment, vt ) ) );
         }
-        for ( QuantitationType qt : qts ) {
-            try {
-                processExpressionExperimentVectors( expressionExperiment, qt );
-            } catch ( Exception e ) {
-                if ( isAbortOnError() ) {
-                    throw e;
-                } else {
-                    addErrorObject( expressionExperiment, "Error while processing " + qt, e );
+        for ( Map.Entry<Class<? extends T>, Collection<QuantitationType>> e : qts.entrySet() ) {
+            Class<? extends T> vectorType = e.getKey();
+            for ( QuantitationType qt : e.getValue() ) {
+                try {
+                    processExpressionExperimentVectors( expressionExperiment, qt, vectorType );
+                } catch ( Exception e2 ) {
+                    if ( isAbortOnError() ) {
+                        throw e2;
+                    } else {
+                        addErrorObject( expressionExperiment, qt, "Error while processing " + qt, e2 );
+                    }
                 }
             }
         }
     }
 
+    protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt, Class<? extends T> vectorType ) throws Exception {
+        processExpressionExperimentVectors( ee, qt );
+    }
+
     /**
      * Process a set of vectors identified by a {@link QuantitationType}.
      */
-    protected abstract void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) throws Exception;
+    protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) throws Exception {
+        throw new UnsupportedOperationException( "This command line does support experiment vectors." );
+    }
+
+    protected final void addSuccessObject( ExpressionExperiment ee, QuantitationType qt, String message ) {
+        addSuccessObject( toBatchObject( ee, qt ), message );
+    }
+
+    protected final void addErrorObject( ExpressionExperiment ee, QuantitationType qt, String message ) {
+        addErrorObject( toBatchObject( ee, qt ), message );
+    }
+
+    protected final void addErrorObject( ExpressionExperiment ee, QuantitationType qt, String message, Throwable throwable ) {
+        addErrorObject( toBatchObject( ee, qt ), message, throwable );
+    }
+
+    protected final void addErrorObject( ExpressionExperiment ee, QuantitationType qt, Exception exception ) {
+        addErrorObject( toBatchObject( ee, qt ), exception );
+    }
+
+    private Serializable toBatchObject( ExpressionExperiment ee, QuantitationType qt ) {
+        return String.format( "%s (%s)", toBatchObject( ee ), qt.getName() );
+    }
 
     private QuantitationType locatePreferredQuantitationType( ExpressionExperiment expressionExperiment, Class<? extends DataVector> dataVectorType ) {
         if ( RawExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {

@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -64,7 +63,7 @@ public interface ExpressionExperimentSetService
     void update( ExpressionExperimentSet expressionExperimentSet );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
+    Collection<ExpressionExperimentSet> find( ExpressionExperiment ee );
 
     /**
      * security at DAO level
@@ -78,10 +77,10 @@ public interface ExpressionExperimentSetService
     /**
      * security at DAO level
      *
-     * @param bioAssaySet BA set
+     * @param ee BA set
      * @return collection of IDs
      */
-    Collection<Long> findIds( BioAssaySet bioAssaySet );
+    Collection<Long> findIds( ExpressionExperiment ee );
 
     /**
      * Get the (security-filtered) list of experiments in a set.
@@ -172,5 +171,5 @@ public interface ExpressionExperimentSetService
      * @return the number of sets this experiment was removed from
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    int removeFromSets( BioAssaySet bas );
+    int removeFromSets( ExpressionExperiment bas );
 }

@@ -11,14 +11,18 @@ import java.util.Map;
  * A context for the CLI based on {@link System}.
  * @author poirigui
  */
-public class SystemCliContext implements CliContext {
+public class SystemCLIContext implements CLIContext {
 
     @Nullable
     private final String commandNameOrAliasUsed;
 
     private final String[] arguments;
 
-    public SystemCliContext( @Nullable String commandNameOrAliasUsed, String[] arguments ) {
+    private int exitStatus = 0;
+    @Nullable
+    private Exception exitCause = null;
+
+    public SystemCLIContext( @Nullable String commandNameOrAliasUsed, String[] arguments ) {
         this.commandNameOrAliasUsed = commandNameOrAliasUsed;
         this.arguments = Arrays.copyOf( arguments, arguments.length );
     }
@@ -58,5 +62,21 @@ public class SystemCliContext implements CliContext {
     @Override
     public PrintStream getErrorStream() {
         return System.err;
+    }
+
+    @Override
+    public int getExitStatus() {
+        return exitStatus;
+    }
+
+    @Override
+    public Exception getExitCause() {
+        return null;
+    }
+
+    @Override
+    public void setExitStatus( int exitStatus, @Nullable Exception exitCause ) {
+        this.exitStatus = exitStatus;
+        this.exitCause = exitCause;
     }
 }

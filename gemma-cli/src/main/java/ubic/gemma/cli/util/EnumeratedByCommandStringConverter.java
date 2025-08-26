@@ -1,6 +1,6 @@
 package ubic.gemma.cli.util;
 
-public class EnumeratedByCommandStringConverter implements EnumeratedByCommandConverter<String, Throwable> {
+public class EnumeratedByCommandStringConverter implements EnumeratedByCommandConverter<String, Exception> {
 
     public static EnumeratedByCommandStringConverter of( String... command ) {
         return new EnumeratedByCommandStringConverter( command );
@@ -18,7 +18,7 @@ public class EnumeratedByCommandStringConverter implements EnumeratedByCommandCo
     }
 
     @Override
-    public String apply( String string ) throws Throwable {
+    public String apply( String string ) {
         return string;
     }
 }

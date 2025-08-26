@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 /**
@@ -178,15 +179,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * modified to have just one factor with two levels. (The data sets have nothing to do with each other, it's
          * just a test)
          */
-        for ( ExperimentalFactor ef : ds1.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : requireNonNull( ds1.getExperimentalDesign() ).getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
 
         }
-        for ( ExperimentalFactor ef : ds2.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : requireNonNull( ds2.getExperimentalDesign() ).getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
 
         }
-        for ( ExperimentalFactor ef : ds3.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : requireNonNull( ds3.getExperimentalDesign() ).getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
         }
         ds1.getExperimentalDesign().getExperimentalFactors().clear();
@@ -208,13 +209,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         ds3 = experimentService.thawLite( ds3 );
 
         designImporter.importDesign( ds1,
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
+                requireNonNull( this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) ) );
 
         designImporter.importDesign( ds2,
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse6344.design.txt" ) );
+                requireNonNull( this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse6344.design.txt" ) ) );
 
         designImporter.importDesign( ds3,
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) );
+                requireNonNull( this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) ) );
 
         ds1 = experimentService.thawLite( ds1 );
         ds2 = experimentService.thawLite( ds2 );
@@ -238,9 +239,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         Collection<DifferentialExpressionAnalysis> ds3Analyses = differentialExpressionAnalysisService
                 .findByExperiment( ds3, true );
 
-        assertTrue( !ds1Analyses.isEmpty() );
-        assertTrue( !ds2Analyses.isEmpty() );
-        assertTrue( !ds3Analyses.isEmpty() );
+        assertFalse( ds1Analyses.isEmpty() );
+        assertFalse( ds2Analyses.isEmpty() );
+        assertFalse( ds3Analyses.isEmpty() );
 
         ds1Analyses = differentialExpressionAnalysisService.thaw( ds1Analyses );
         ds2Analyses = differentialExpressionAnalysisService.thaw( ds2Analyses );
@@ -330,13 +331,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 case "THRA":
                     foundTests++;
                     found[4] = true;
-                    assertTrue( !r.getUpperTail() );
+                    assertFalse( r.getUpperTail() );
                     assertEquals( this.logComponentResults( r, gene ), 0.008188016, r.getMetaPvalue(), 0.00001 );
                     break;
                 case "PPM1G":
                     foundTests++;
                     found[5] = true;
-                    assertTrue( !r.getUpperTail() );
+                    assertFalse( r.getUpperTail() );
                     assertEquals( this.logComponentResults( r, gene ), 0.001992656, r.getMetaPvalue(), 0.00001 );
                     break;
                 case "SEPW1":
@@ -388,7 +389,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private void testAnalysis( GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
                 .loadAllMetaAnalyses();
-        assertTrue( myMetaAnalyses.size() > 0 );
+        assertFalse( myMetaAnalyses.isEmpty() );
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject mvo : myMetaAnalyses ) {
             assertEquals( 3, mvo.getNumResultSetsIncluded().intValue() );
         }
@@ -399,7 +400,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         for ( IncludedResultSetInfoValueObject gdemairsivo : mdvo.getIncludedResultSetsInfo() ) {
             this.differentialExpressionAnalysisService
-                    .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
+                    .thawFully( requireNonNull( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) ) );
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {
@@ -410,22 +411,22 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     private void extraTests2( ExpressionExperiment ds1, ExpressionExperiment ds2, ExpressionExperiment ds3 ) {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ACTA2" );
-        assertTrue( !geneCollection.isEmpty() );
+        assertFalse( geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
 
-        assertNotNull( differentialExpressionResultService.find( g ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true ) );
         assertNotNull(
-                differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
+                differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false ) );
         assertNotNull( differentialExpressionResultService
-                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
-        assertNotNull( differentialExpressionResultService.find( g, 0.05, 10 ) );
+                .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ) );
 
-        assertTrue( !differentialExpressionResultService.find( g ).isEmpty() );
-        assertTrue( !differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) )
+        assertFalse( differentialExpressionResultService.findByGene( g, true ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false )
                 .isEmpty() );
-        assertTrue( !differentialExpressionResultService
-                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
-        assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
+        assertFalse( differentialExpressionResultService
+                .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
@@ -440,19 +441,19 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         Map<Long, Map<Long, DiffExprGeneSearchResult>> ffResultSets = differentialExpressionResultService
                 .findDiffExAnalysisResultIdsInResultSets( resultSets, Collections.singletonList( g.getId() ) );
         assertNotNull( ffResultSets );
-        assertTrue( !ffResultSets.isEmpty() );
+        assertFalse( ffResultSets.isEmpty() );
     }
 
     private void extraTests1( ExpressionExperiment ds1 ) {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ACTA2" );
-        assertTrue( !geneCollection.isEmpty() );
+        assertFalse( geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
         assertNotNull( g );
         long count = geneService.getCompositeSequenceCount( g, true );
         assertTrue( count != 0 );
 
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequences( g, true );
-        assertTrue( compSequences.size() != 0 );
+        assertFalse( compSequences.isEmpty() );
 
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
         assertEquals( 1, collection.size() );
@@ -462,7 +463,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1, collection.size() );
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "200974_at" );
-        assertTrue( !css.isEmpty() );
+        assertFalse( css.isEmpty() );
         CompositeSequence cs = css.iterator().next();
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
         assertEquals( 1, genes.size() );
@@ -545,6 +546,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     private DifferentialExpressionAnalysisConfig getConfig( ExpressionExperiment ee ) {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
+        assertNotNull( ee.getExperimentalDesign() );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config1.addFactorsToInclude( factors );
         config1.setModerateStatistics( false );

@@ -2,6 +2,7 @@ package ubic.gemma.cli.completion;
 
 import lombok.Value;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -15,6 +16,7 @@ public interface CompletionSource {
     @Value
     class Completion {
         String name;
+        @Nullable
         String description;
     }
 }

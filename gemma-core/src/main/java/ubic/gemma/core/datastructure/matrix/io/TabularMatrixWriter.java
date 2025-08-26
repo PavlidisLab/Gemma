@@ -2,7 +2,6 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
@@ -30,9 +29,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
-import static ubic.gemma.core.util.TsvUtils.*;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
+import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.formatFast;
 
 /**
  * Write a set of single-cell vectors to a simple tabular format.
@@ -54,6 +53,9 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
+    private boolean excludeSampleIdentifiers = false;
+    private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
     private boolean autoFlush;
 
     @Nullable
@@ -65,8 +67,8 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
-        return write( matrix, null, writer );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer writer ) throws IOException {
+        return write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, writer );
     }
 
     public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
@@ -122,10 +124,10 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString() : null;
-        appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, pwriter );
+        appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, new Date(), pwriter );
         pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
         pwriter.append( "# Single-cell dimension: " ).append( format( scd ) ).append( "\n" );
-        pwriter.append( "# Quantitation type: " ).append( format( qt ) ).append( "\n" );
+        pwriter.append( "# Quantitation type: " ).append( formatQuantitationType( qt, SingleCellExpressionDataVector.class ) ).append( "\n" );
         pwriter.append( "# Samples: " ).append( scd.getBioAssays().stream().map( TsvUtils::format ).collect( Collectors.joining( ", " ) ) ).append( "\n" );
         pwriter.append( "probe_id\tprobe_name" );
         if ( cs2gene != null ) {
@@ -133,7 +135,12 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         }
         for ( BioAssay ba : scd.getBioAssays() ) {
             Assert.notNull( ba.getName() );
-            String sampleColumnPrefix = constructSampleName( ba.getSampleUsed(), ba ) + "_";
+            String sampleColumnPrefix;
+            if ( excludeSampleIdentifiers ) {
+                sampleColumnPrefix = constructAssayName( ba, useBioAssayIds, useRawColumnNames ) + "_";
+            } else {
+                sampleColumnPrefix = constructSampleName( ba.getSampleUsed(), ba, useBioAssayIds, useRawColumnNames ) + "_";
+            }
             pwriter.append( "\t" ).append( sampleColumnPrefix ).append( "cell_ids" )
                     .append( "\t" ).append( sampleColumnPrefix ).append( "values" );
         }
@@ -216,8 +223,8 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     w++;
                 }
                 pwriter
-                        .append( '\t' ).append( StringUtils.join( cellIds, SUB_DELIMITER ) )
-                        .append( '\t' ).append( StringUtils.join( vals, SUB_DELIMITER ) );
+                        .append( '\t' ).append( format( cellIds ) )
+                        .append( '\t' ).append( format( vals ) );
             }
             start = end;
         }
@@ -244,14 +251,14 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 }

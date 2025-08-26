@@ -52,10 +52,11 @@ public class CommonQueries {
      */
     public static Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas, Session session ) {
         //noinspection unchecked
-        return session.createQuery( "select distinct ad from ExpressionExperiment ee "
+        return session.createQuery( "select ad from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed ad "
-                        + "where ee = :ee" )
+                        + "where ee = :ee "
+                        + "group by ad")
                 .setParameter( "ee", getExperiment( bas ) )
                 .list();
     }
@@ -67,10 +68,10 @@ public class CommonQueries {
         // Safety 1st....
         if ( ees == null || ees.isEmpty() )
             return Collections.emptySet();
-        return listByIdentifiableBatch( session.createQuery( "select distinct ad from ExpressionExperiment as ee "
+        return listByIdentifiableBatch( session.createQuery( "select ad from ExpressionExperiment as ee "
                 + "join ee.bioAssays b join b.arrayDesignUsed ad "
                 + "where ee in (:ees) "
-                + "group by ee, ad" ), "ees", getExperiments( ees ), 2048 );
+                + "group by ad" ), "ees", getExperiments( ees ), 2048 );
     }
 
     private static Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
@@ -147,9 +148,10 @@ public class CommonQueries {
      */
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
         //noinspection unchecked
-        return session.createQuery( "select distinct cs from Gene as gene "
+        return session.createQuery( "select cs from Gene as gene "
                         + "join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
-                        + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene" )
+                        + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene "
+                        + "group by cs")
                 .setParameter( "gene", gene )
                 .setCacheable( true )
                 .list();

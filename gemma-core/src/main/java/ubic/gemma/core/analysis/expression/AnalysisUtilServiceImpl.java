@@ -81,7 +81,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
                 removedAll = false;
             }
         }
-        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByExperiment( expExp, true ) ) {
+        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByExperimentAnalyzed( expExp ) ) {
             try {
                 coexpressionAnalysisService.remove( coex );
             } catch ( Exception e ) {

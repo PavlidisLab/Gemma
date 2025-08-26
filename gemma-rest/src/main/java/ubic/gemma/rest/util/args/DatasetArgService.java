@@ -9,6 +9,8 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -256,16 +258,41 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                 .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );
     }
 
+    public List<BibliographicReferenceValueObject> getPublications( DatasetArg<?> datasetArg ) {
+        Long eeId = getEntityId( datasetArg );
+        if (eeId == null) {
+            throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
+        }
+        ExpressionExperiment ee = service.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
+        if (ee == null){
+            throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
+        }
+        BibliographicReference prim_ref = ee.getPrimaryPublication();
+        Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
+        List<BibliographicReferenceValueObject> out = new ArrayList<>();
+        if (prim_ref != null){
+            out.add(  new BibliographicReferenceValueObject(prim_ref) );
+        }
+        for (BibliographicReference ref : other_refs) {
+            if (prim_ref != null && Objects.equals( ref.getId(), prim_ref.getId() )){
+                    continue;
+            }
+            out.add( new BibliographicReferenceValueObject(ref));
+        }
+
+        out.sort( Comparator.comparing( BibliographicReferenceValueObject::getId ) );
+
+        return out;
+    }
+
     public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
-        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
-        if ( outliers != null ) {
+        outlierDetectionService.getOutlierDetails( ee ).ifPresent( outliers -> {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
-                    .map( OutlierDetails::getBioAssay )
-                    .map( BioAssay::getId )
+                    .map( OutlierDetails::getBioAssayId )
                     .collect( Collectors.toSet() );
             for ( BioAssayValueObject vo : bioAssayValueObjects ) {
                 vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
             }
-        }
+        } );
     }
 }

@@ -46,6 +46,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -474,6 +475,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         if ( subsetFactorValue == null ) {
             log.info( "No factor value set in the configuration, will determine it from the samples..." );
             subsetFactorValue = determineSubsetFactorValue( ef, subset );
+            log.info( "The subset factor value appears to be " + subsetFactorValue + "." );
         }
 
         samplesInSubset = orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude(), null );
@@ -588,7 +590,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
-            mw.write( dmatrix, writer );
+            mw.write( dmatrix, ProcessedExpressionDataVector.class, writer );
 
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
                     out );
@@ -768,7 +770,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     continue;
                 }
 
-                Double overallPValue;
+                double overallPValue;
                 DifferentialExpressionAnalysisResult probeAnalysisResult = DifferentialExpressionAnalysisResult.Factory
                         .newInstance();
                 probeAnalysisResult.setProbe( el );
@@ -791,16 +793,18 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     ExperimentalFactor experimentalFactor = factorsForName.iterator().next();
 
                     if ( experimentalFactor.equals( interceptFactor ) ) {
-                        overallPValue = lm.getInterceptP();
+                        overallPValue = lm.getInterceptPValue();
+                    } else if ( lm.getAnova() != null ) {
+                        overallPValue = lm.getAnova().getMainEffectPValue( factorName );
                     } else {
-                        overallPValue = lm.getMainEffectP( factorName );
+                        overallPValue = Double.NaN;
                     }
 
                     /*
                      * Add contrasts unless overall pvalue is NaN
                      */
-                    if ( overallPValue == null || Double.isNaN( overallPValue ) ) {
-                        warnForElement( el, "ANOVA could not be done for " + experimentalFactor + ", the overall P-value is either null or NaN.", warned++ );
+                    if ( Double.isNaN( overallPValue ) ) {
+                        warnForElement( el, "ANOVA could not be done for " + experimentalFactor + ", the overall P-value is NaN.", warned++ );
                         continue;
                     }
 
@@ -823,10 +827,14 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     assert factorName.contains( ":" );
                     String[] factorNames = StringUtils.split( factorName, ":" );
                     assert factorNames.length == factorsForName.size();
-                    overallPValue = lm.getInteractionEffectP( factorNames );
+                    if ( lm.getAnova() != null ) {
+                        overallPValue = lm.getAnova().getInteractionEffectPValue( factorNames );
+                    } else {
+                        overallPValue = Double.NaN;
+                    }
 
-                    if ( overallPValue == null || Double.isNaN( overallPValue ) ) {
-                        warnForElement( el, "Overall P-value for " + factorName + " was either null or NaN, skipping.", warned++ );
+                    if ( Double.isNaN( overallPValue ) ) {
+                        warnForElement( el, "Overall P-value for " + factorName + " was NaN, skipping.", warned++ );
                         continue;
                     }
 

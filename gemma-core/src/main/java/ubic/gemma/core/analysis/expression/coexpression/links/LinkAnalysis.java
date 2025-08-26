@@ -31,7 +31,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -54,7 +54,7 @@ public class LinkAnalysis {
     private LinkAnalysisConfig config;
     private ExpressionDataDoubleMatrix dataMatrix = null;
 
-    private BioAssaySet expressionExperiment;
+    private ExpressionExperiment expressionExperiment;
     private NumberFormat form;
 
     private ObjectArrayList keep; // links that are retained.
@@ -153,11 +153,11 @@ public class LinkAnalysis {
         this.dataMatrix = paraDataMatrix;
     }
 
-    public BioAssaySet getExpressionExperiment() {
+    public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
 
-    public void setExpressionExperiment( BioAssaySet expressionExperiment ) {
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 

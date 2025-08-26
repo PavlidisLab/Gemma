@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.association.coexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.*;
 import ubic.gemma.model.association.coexpression.*;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonUtils;
@@ -71,7 +71,7 @@ public class LinkCreator {
         try {
             factoryMethod = clazz.getMethod( "newInstance", Double.class, Long.class, Long.class );
             eeFactoryMethod = ( Constructor<ExperimentCoexpressionLink> ) eeClazz
-                    .getConstructor( BioAssaySet.class, Long.class, Long.class, Long.class );
+                    .getConstructor( ExpressionExperiment.class, Long.class, Long.class, Long.class );
             supportDetailsFactoryMethod = supportClazz.getConstructor( Gene.class, Gene.class, Boolean.class );
             supportDetailsFactoryMethodByIds = supportClazz.getConstructor( Long.class, Long.class, Boolean.class );
         } catch ( SecurityException | NoSuchMethodException e ) {
@@ -88,9 +88,9 @@ public class LinkCreator {
         }
     }
 
-    public ExperimentCoexpressionLink createEELink( BioAssaySet bas, Long linkid, Long firstGene, Long secondGene ) {
+    public ExperimentCoexpressionLink createEELink( ExpressionExperiment ee, Long linkid, Long firstGene, Long secondGene ) {
         try {
-            return eeFactoryMethod.newInstance( bas, linkid, firstGene, secondGene );
+            return eeFactoryMethod.newInstance( ee, linkid, firstGene, secondGene );
         } catch ( InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }

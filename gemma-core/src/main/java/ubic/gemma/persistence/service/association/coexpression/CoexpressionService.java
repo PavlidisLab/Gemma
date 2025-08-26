@@ -22,7 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -46,7 +46,7 @@ public interface CoexpressionService {
     /**
      * Check if a given dataset has coexpression links.
      */
-    boolean hasLinks( BioAssaySet ee );
+    boolean hasLinks( ExpressionExperiment ee );
 
     /**
      * @param gene gene
@@ -54,18 +54,18 @@ public interface CoexpressionService {
      * @return the number of links the gene has in the given data set ("node degree")
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer countLinks( BioAssaySet ee, Gene gene );
+    Integer countLinks( ExpressionExperiment ee, Gene gene );
 
     /**
      * Maintenance method.
      *
-     * @param bioAssaySet should be all of them for the bioAssaySet (not a batch)
+     * @param ee should be all of them for the bioAssaySet (not a batch)
      * @param geesTested  genes which were tested
      * @param c           link creator
      * @param links       links
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
+    void createOrUpdate( ExpressionExperiment ee, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
             Set<Gene> geesTested );
 
     /**
@@ -75,7 +75,7 @@ public interface CoexpressionService {
      * @param experiment experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void deleteLinks( BioAssaySet experiment );
+    void deleteLinks( ExpressionExperiment experiment );
 
     /**
      * Find links which are common to all of the given data sets.
@@ -156,7 +156,7 @@ public interface CoexpressionService {
      * @return all the coexpression links for the given experiment, but not including flipped versions
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<CoexpressionValueObject> getCoexpression( BioAssaySet experiment, boolean quick );
+    Collection<CoexpressionValueObject> getCoexpression( ExpressionExperiment experiment, boolean quick );
 
     @Secured("GROUP_ADMIN")
     void updateNodeDegrees( Taxon taxon );

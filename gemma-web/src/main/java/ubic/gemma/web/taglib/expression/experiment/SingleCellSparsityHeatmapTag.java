@@ -2,10 +2,10 @@ package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.jfree.chart.ChartUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
@@ -191,7 +191,7 @@ public class SingleCellSparsityHeatmapTag extends AbstractHeatmapTag<SingleCellS
             BufferedImage image = heatmap.createAggregateImage( type );
             heatmap.setCellSize( cellSize ); // restore
             // create a data URL with the image
-            ChartUtils.writeBufferedImageAsPNG( baos, image );
+            ChartUtils.writeBufferedImageAsPNG( baos, image, alt, getBuildInfo() );
             imageUrl = "data:image/png;base64," + Base64.getEncoder().encodeToString( baos.toByteArray() );
             if ( useResizeTrick ) {
                 height = heatmap.getCellSize() * image.getHeight();

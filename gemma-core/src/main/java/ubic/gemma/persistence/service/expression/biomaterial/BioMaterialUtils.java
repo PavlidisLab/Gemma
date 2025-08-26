@@ -1,11 +1,12 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.description.Category;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class BioMaterialUtils {
@@ -22,5 +23,20 @@ public class BioMaterialUtils {
             Assert.state( visited.add( bm ), "Circular biomaterial detected" );
             visitor.accept( bm );
         }
+    }
+
+    /**
+     * Create a mapping of biomaterial to characteristics for each category.
+     */
+    public static Map<Category, Map<BioMaterial, Collection<Characteristic>>> createCharacteristicMap( Collection<BioMaterial> samples ) {
+        Map<Category, Map<BioMaterial, Collection<Characteristic>>> map = new HashMap<>();
+        for ( BioMaterial sample : samples ) {
+            for ( Characteristic characteristic : sample.getAllCharacteristics() ) {
+                map.computeIfAbsent( CharacteristicUtils.getCategory( characteristic ), k -> new HashMap<>() )
+                        .computeIfAbsent( sample, k -> new HashSet<>( samples.size() ) )
+                        .add( characteristic );
+            }
+        }
+        return map;
     }
 }

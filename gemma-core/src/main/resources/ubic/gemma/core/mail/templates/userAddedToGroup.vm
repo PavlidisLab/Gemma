@@ -1,0 +1,7 @@
+Dear ${username},
+
+${userTakingAction} has added you to the group '${group}'.
+
+To view groups you belong to, visit: ${manageGroupsUrl}.
+
+If you believe you received this email in error, contact ${adminEmailAddress}.

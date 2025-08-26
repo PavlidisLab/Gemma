@@ -26,11 +26,16 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.TsvUtils;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 
@@ -44,6 +49,9 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private static final String
             STANDARD_LOCATION_OPTION = "standardLocation",
             OUT_FILE_PREFIX_OPTION = "o",
+            USE_MULTIPLE_ROWS_FOR_ASSAYS = "useMultipleRowsForAssays",
+            SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION = "separateSampleFromAssayIdentifiers",
+            USE_BIO_ASSAY_IDS = "useBioAssayIds",
             USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames";
 
     @Autowired
@@ -53,6 +61,9 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private ExpressionDataFileService expressionDataFileService;
 
     private boolean standardLocation;
+    private boolean useMultipleRowsForAssays;
+    private boolean separateSampleFromAssaysIdentifiers;
+    private boolean useBioAssayIds;
     private boolean useRawColumnNames;
     @Nullable
     private String outFileName;
@@ -71,6 +82,10 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void buildExperimentOptions( Options options ) {
         options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
         options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( USE_MULTIPLE_ROWS_FOR_ASSAYS, "use-multiple-rows-for-assays", false, "Use multiple rows for assays." );
+        options.addOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION, "separate-sample-from-assays-identifiers", false,
+                "Separate sample and assay(s) identifiers in distinct columns named 'Sample' and 'Assays' (instead of a single 'Bioassay' column). The assays will be delimited by a '" + TsvUtils.SUB_DELIMITER + "' character." );
+        options.addOption( USE_BIO_ASSAY_IDS, "use-bioassay-ids", false, "Use IDs instead of names or short names for bioassays and samples." );
         options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
         addForceOption( options );
     }
@@ -79,26 +94,32 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
         outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
+        useMultipleRowsForAssays = commandLine.hasOption( USE_MULTIPLE_ROWS_FOR_ASSAYS );
+        separateSampleFromAssaysIdentifiers = commandLine.hasOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION );
+        useBioAssayIds = commandLine.hasOption( USE_BIO_ASSAY_IDS );
         useRawColumnNames = commandLine.hasOption( USE_RAW_COLUMN_NAMES_OPTION );
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) throws IOException {
         ee = eeService.thawLite( ee );
+        Path dest;
         if ( standardLocation ) {
-            try {
-                expressionDataFileService.writeOrLocateDesignFile( ee, isForce() );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
-            }
+            ExpressionExperiment finalEe = ee;
+            dest = expressionDataFileService.writeOrLocateDesignFile( ee, isForce() )
+                    .map( LockedPath::closeAndGetPath )
+                    .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {
-            try ( PrintWriter writer = new PrintWriter( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+            dest = Paths.get( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" );
+            try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
+                edWriter.setUseMultipleRowsForAssays( useMultipleRowsForAssays );
+                edWriter.setSeparateSampleFromAssaysIdentifiers( separateSampleFromAssaysIdentifiers );
+                edWriter.setUseBioAssayIds( useBioAssayIds );
                 edWriter.setUseRawColumnNames( useRawColumnNames );
-                edWriter.write( ee, true, writer );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
+                edWriter.write( ee, writer );
             }
         }
+        addSuccessObject( ee, "Wrote experimental design to " + dest + "." );
     }
 }

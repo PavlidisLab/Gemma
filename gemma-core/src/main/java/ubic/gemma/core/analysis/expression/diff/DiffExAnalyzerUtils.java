@@ -1,7 +1,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -361,32 +360,42 @@ public class DiffExAnalyzerUtils {
                 .append( config.getAnalysisType() == null ? "Unknown" : config.getAnalysisType().toString() )
                 .append( "\n" );
 
-        writer.append( "# Factors: " )
-                .append( StringUtils.join( config.getFactorsToInclude(), " " ) )
-                .append( "\n" );
-
         if ( config.getSubsetFactor() != null ) {
-            writer.append( "# Subset factor: " ).append( formatFactor( config.getSubsetFactor() ) ).append( "\n" );
+            writer.append( "# Subset factor: " ).append( formatFactor( config.getSubsetFactor(), true ) ).append( "\n" );
         }
         if ( config.getSubsetFactorValue() != null ) {
-            writer.append( "# Subset analysis for " ).append( formatFactorValue( config.getSubsetFactorValue() ) ).append( "\n" );
+            writer.append( "# Subset analysis for " ).append( formatFactorValue( config.getSubsetFactorValue(), true ) ).append( "\n" );
         }
+
+        writer.append( "# Factors: " )
+                .append( config.getFactorsToInclude().stream()
+                        .sorted( ExperimentalFactor.COMPARATOR )
+                        .map( ( ExperimentalFactor f ) -> formatFactor( f, true ) )
+                        .collect( Collectors.joining( ", " ) ) )
+                .append( "\n" );
 
         if ( !config.getInteractionsToInclude().isEmpty() ) {
             writer.append( "# Interactions: " );
             writer.append( config.getInteractionsToInclude().stream()
-                    .map( i -> i.stream().map( DiffExAnalyzerUtils::formatFactor ).collect( Collectors.joining( ":" ) ) )
+                    .map( DiffExAnalyzerUtils::formatInteraction )
                     .collect( Collectors.joining( ", " ) ) );
             writer.append( "\n" );
+        } else {
+            writer.append( "# No interactions defined.\n" );
         }
 
         if ( !config.getBaselineFactorValues().isEmpty() ) {
             writer.append( "# Baselines:\n" );
-            for ( ExperimentalFactor ef : config.getBaselineFactorValues().keySet() ) {
-                writer.append( "# " ).append( ef.getName() ).append( ": Baseline = " )
-                        .append( formatFactorValue( config.getBaselineFactorValues().get( ef ) ) )
+            List<ExperimentalFactor> factors = config.getBaselineFactorValues().keySet().stream()
+                    .sorted( ExperimentalFactor.COMPARATOR )
+                    .collect( Collectors.toList() );
+            for ( ExperimentalFactor ef : factors ) {
+                writer.append( "# " ).append( formatFactor( ef, false ) ).append( ": Baseline = " )
+                        .append( formatFactorValue( config.getBaselineFactorValues().get( ef ), true ) )
                         .append( "\n" );
             }
+        } else {
+            writer.append( "# No baseline conditions defined, those will be detected automatically.\n" );
         }
 
         if ( config.isUseWeights() ) {
@@ -398,12 +407,22 @@ public class DiffExAnalyzerUtils {
         }
     }
 
-    private static String formatFactor( ExperimentalFactor ef ) {
-        return ef.getName();
+    /**
+     * Format an interaction of factors.
+     */
+    public static String formatInteraction( Set<ExperimentalFactor> i ) {
+        return i.stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .map( f -> formatFactor( f, false ) )
+                .collect( Collectors.joining( ":" ) );
     }
 
-    private static String formatFactorValue( FactorValue fv ) {
-        return FactorValueUtils.getSummaryString( fv );
+    private static String formatFactor( ExperimentalFactor ef, boolean verbose ) {
+        return verbose ? ef.toString() : ef.getName();
+    }
+
+    private static String formatFactorValue( FactorValue fv, boolean verbose ) {
+        return verbose ? fv.toString() : FactorValueUtils.getSummaryString( fv );
     }
 
     /**

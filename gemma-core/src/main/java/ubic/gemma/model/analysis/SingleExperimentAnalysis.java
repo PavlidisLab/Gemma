@@ -28,17 +28,19 @@ import javax.persistence.Transient;
 
 /**
  * An analysis of a single experiment or subset.
+ * @param <T> the type of experiment analyzed, usually {@link ubic.gemma.model.expression.experiment.ExpressionExperiment},
+ *            but you can use {@link BioAssaySet} to also allow {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
  */
-public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
+public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild {
 
-    private BioAssaySet experimentAnalyzed;
+    private T experimentAnalyzed;
     private Integer numberOfElementsAnalyzed;
 
-    public BioAssaySet getExperimentAnalyzed() {
+    public T getExperimentAnalyzed() {
         return this.experimentAnalyzed;
     }
 
-    public void setExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
+    public void setExperimentAnalyzed( T experimentAnalyzed ) {
         this.experimentAnalyzed = experimentAnalyzed;
     }
 

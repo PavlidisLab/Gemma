@@ -34,6 +34,7 @@ import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -76,6 +77,9 @@ public class UserManagerImpl implements UserManager {
     @Autowired
     private AuthenticationTrustResolver authenticationTrustResolver;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public String changePasswordForUser( String email, String username, String newPassword )
@@ -102,7 +106,7 @@ public class UserManagerImpl implements UserManager {
 
         logger.debug( "Changing password for user '" + username + "'" );
 
-        u.setPassword( newPassword );
+        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
         u.setEnabled( false );
         u.setSignupToken( this.generateSignupToken( username ) );
         u.setSignupTokenDatestamp( new Date() );
@@ -123,6 +127,17 @@ public class UserManagerImpl implements UserManager {
             result.add( u.getUserName() );
         }
         return result;
+    }
+
+    @Override
+    @Transactional
+    public UserDetailsImpl createUser( String username, String email, String password ) {
+        Date now = new Date();
+        String key = generateSignupToken( username );
+        String encodedPassword = passwordEncoder.encodePassword( password, username );
+        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, false, null, email, key, now );
+        createUser( u );
+        return u;
     }
 
     @Override
@@ -366,11 +381,11 @@ public class UserManagerImpl implements UserManager {
         logger.debug( "Changing password for user '" + username + "'" );
 
         User u = this.loadUser( username );
-        u.setPassword( newPassword );
+        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
         userService.update( u );
 
         SecurityContextHolder.getContext()
-                .setAuthentication( this.createNewAuthentication( currentAuthentication, newPassword ) );
+                .setAuthentication( this.createNewAuthentication( currentAuthentication, u.getPassword() ) );
 
         userCache.removeUserFromCache( username );
     }

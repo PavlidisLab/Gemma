@@ -549,7 +549,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
              * useful for tests.
              */
             biomaterialsInExpressionExperiment
-                    .put( ExpressionDataWriterUtils.constructSampleName( bm, bm.getBioAssaysUsedIn() ), bm );
+                    .put( ExpressionDataWriterUtils.constructSampleName( bm, bm.getBioAssaysUsedIn(), false, false, '.' ), bm );
 
         }
         return biomaterialsInExpressionExperiment;

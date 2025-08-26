@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="bioAssaySet" scope="request" type="ubic.gemma.model.expression.experiment.BioAssaySet" />
+<%--@elvariable id="bioAssaySet" type="ubic.gemma.model.expression.experiment.BioAssaySet"--%>
 <title>Assays for ${bioAssaySet.name}</title>
 
 <h2>Assays for ${bioAssaySet.name}</h2>

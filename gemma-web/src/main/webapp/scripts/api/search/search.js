@@ -382,7 +382,7 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
                applyState : function( state ) {
                   this.setValue( state.value );
                },
-               boxLabel : "Experiments",
+               boxLabel : "Datasets",
                hideLabel : true
             }, {
                id : 'search-ars-chkbx',
@@ -402,7 +402,7 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
             }, {
                id : 'search-genesets-chkbx',
                name : "searchGeneSets",
-               boxLabel : "Gene groups",
+               boxLabel : "Gene Groups",
                stateful : true,
                stateEvents : [ 'check' ],
                getState : function() {
@@ -417,7 +417,7 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
             }, {
                id : 'search-eesets-chkbx',
                name : "searchEESets",
-               boxLabel : "Experiment groups",
+               boxLabel : "Dataset Groups",
                stateful : true,
                stateEvents : [ 'check' ],
                getState : function() {

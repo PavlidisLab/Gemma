@@ -14,7 +14,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -126,12 +126,12 @@ public class TableMaintenanceUtilTest extends BaseTest {
         tableMaintenanceUtil.updateGene2CsEntries();
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
-        verify( session ).createSQLQuery( startsWith( "REPLACE INTO GENE2CS" ) );
+        verify( session ).createSQLQuery( startsWith( "insert into GENE2CS" ) );
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
         verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "No Gene2Cs status exists on disk." ), any() );
-        verify( mailEngine ).sendAdminMessage( any(), any() );
+        verify( mailEngine ).sendMessageToAdmin( any(), any() );
     }
 
     @Test

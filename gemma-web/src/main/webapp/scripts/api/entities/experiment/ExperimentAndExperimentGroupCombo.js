@@ -62,7 +62,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
         enableKeyEvents: true,
 
         loadingText: 'Searching ...',
-        emptyText: "Find experiments by keyword",
+        emptyText: "Find datasets by keyword",
         listEmptyTextBlankQuery: 'Search by keyword or ID',
         listEmptyText: 'No results',
         minChars: 3,

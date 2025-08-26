@@ -44,7 +44,6 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     buildHash = env.GIT_COMMIT
@@ -157,8 +156,10 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
+                        lock('gemma-slow-tests') {
+                            setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
+                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
+                        }
                     }
                     post {
                         always {
@@ -185,8 +186,8 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -Dmaven.javadoc.skip=true -DskipWebpack -DskipVersionFile'
+                        lock('database/gemdtest') {
+                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack -DskipVersionFile'
                         }
                     }
                     post {
@@ -213,9 +214,11 @@ pipeline {
                         }
                     }
                     steps {
-                        setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                        withSonarQubeEnv('UBC SonarQube') {
-                            sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                        lock('gemma-sonarqube-analysis') {
+                            setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                            withSonarQubeEnv('UBC SonarQube') {
+                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                            }
                         }
                     }
                     post {
@@ -241,7 +244,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B deploy -DskipTests -DskipWebpack -DskipVersionFile'
+                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile'
                     }
                 }
                 stage('Deploy Maven website') {

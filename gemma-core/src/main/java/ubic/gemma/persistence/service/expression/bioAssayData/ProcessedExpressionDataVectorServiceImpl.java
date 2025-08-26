@@ -61,6 +61,8 @@ public class ProcessedExpressionDataVectorServiceImpl
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private CachedProcessedExpressionDataVectorService cachedProcessedExpressionDataVectorService;
+    @Autowired
+    private ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationHelperService;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -84,7 +86,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         int created;
         try {
-            created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
+            created = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
             auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
         } catch ( Exception e ) {
             // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be

@@ -1,11 +1,12 @@
 package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
-import org.jfree.chart.ChartUtils;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.Heatmap;
+import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.web.taglib.TagWriterUtils;
 
 import javax.servlet.jsp.JspException;
@@ -19,6 +20,8 @@ import java.util.Map;
 
 @Setter
 public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscapingAwareTag implements DynamicAttributes {
+
+    private transient BuildInfo buildInfo;
 
     /**
      * Heatmap to render.
@@ -50,6 +53,13 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
     protected boolean showYLabels = true;
 
     protected final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
+
+    protected BuildInfo getBuildInfo() {
+        if ( buildInfo == null ) {
+            getRequestContext().getWebApplicationContext().getBean( BuildInfo.class );
+        }
+        return buildInfo;
+    }
 
     @Override
     public void setDynamicAttribute( String uri, String localName, Object value ) {
@@ -114,7 +124,7 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
             BufferedImage image = heatmap.createImage( cellSize );
             // create a data URL with the image
-            ChartUtils.writeBufferedImageAsPNG( baos, image );
+            ChartUtils.writeBufferedImageAsPNG( baos, image, alt, getBuildInfo() );
             imageUrl = "data:image/png;base64," + Base64.getEncoder().encodeToString( baos.toByteArray() );
             if ( useResizeTrick ) {
                 height = heatmap.getCellSize() * image.getHeight();

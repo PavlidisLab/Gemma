@@ -95,7 +95,7 @@ public class VectorMergingServiceImpl
 
     @Override
     @Transactional
-    public void mergeVectors( ExpressionExperiment ee ) {
+    public int mergeVectors( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -131,7 +131,7 @@ public class VectorMergingServiceImpl
         if ( allOldBioAssayDims.size() == 1 ) {
             VectorMergingServiceImpl.log
                     .warn( "Experiment already has only a single bioAssayDimension, nothing seems to need merging. Bailing" );
-            return;
+            return 0;
         }
 
         VectorMergingServiceImpl.log.info( allOldBioAssayDims.size() + " bioAssayDimensions to merge" );
@@ -244,6 +244,8 @@ public class VectorMergingServiceImpl
         this.audit( ee,
                 "Vector merging performed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
                         + " quantitation types." );
+
+        return numSuccessfulMergers;
     }
 
     private void audit( ExpressionExperiment ee, String note ) {

@@ -62,6 +62,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             },
             build: function () {
                 var analyses = this.ee.differentialExpressionAnalyses;
+                const font = this.ee.font;
                 Ext.apply(this, {
                     contrastPercents: [], // for drawing charts
                     totalProbes: this.ee.processedExpressionVectorCount
@@ -154,10 +155,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         // FIXME
                         if (subsetText !== '') {
                             subsetText += this.getBaseline(resultSet);
-                            subsetText += this.getActionLinks(resultSet, analysisName[0], this.ee.id,  primaryFactorID, nodeId);
+                            subsetText += this.getActionLinks( resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId, font );
                         } else {
                             nodeText += "<span style='white-space:normal;'>" + this.getBaseline(resultSet) + "</span>"
-                            nodeText += "<span>" + this.getActionLinks(resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId) +"</span>" ;
+                            nodeText += "<span>" + this.getActionLinks( resultSet, analysisName[0], this.ee.id, primaryFactorID, nodeId, font ) + "</span>";
                         }
 
                         parentText = '<b>'
@@ -202,7 +203,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                             nodeText = '';
                             nodeText += this.getBaseline(resultSet);
-                            nodeText += this.getActionLinks(resultSet, factor, this.ee.id, primaryFactorID,(nodeId + 1));
+                           nodeText += this.getActionLinks( resultSet, factor, this.ee.id, primaryFactorID, (nodeId + 1), font );
 
                             // make child nodes for each analysis and
                             // add them to parent
@@ -414,13 +415,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 // across all opened windows.
                 return this.getId() + 'Experiment' + eeId + 'Chart' + nodeId + 'Div';
             },
-            getActionLinks: function ( resultSet, factorString, eeID, primaryFactorID, nodeId) {
+           getActionLinks : function( resultSet, factorString, eeID, primaryFactorID, nodeId, font ) {
                 /* link for details */
                 var numbers = this.getExpressionNumbers(resultSet, nodeId, true);
                 var linkText = '&nbsp;'
                     + '<span class="link" onClick="Ext.Msg.alert(\'Differential Expression Specificity and Contrast Ratio\', \''
                     + numbers + '\')" ext:qtip=\"' + numbers + '\">' + '&nbsp;<canvas height=20 width=20 id="'
-                    + this.calculateChartId(eeID, nodeId) + '"></canvas>';
+                    + this.calculateChartId(eeID, nodeId) + '" style="vertical-align: bottom;"></canvas>';
 
                 // if the number of up or downregulated probes is
                 // less than 5% of the total number of differentially
@@ -451,18 +452,23 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                    + '\', \'' + primaryFactorID + '\')">&nbsp;'
                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
-                var pValueDistImageSize = 16;
+                var pValueDistImageSize = 30;
                 var imageUrl = Gemma.CONTEXT_PATH + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
-                var placeholderImageUrl = imageUrl + '&size=' + pValueDistImageSize;
+                if ( font ) {
+                   imageUrl += '&font=' + encodeURIComponent( font );
+                }
+                var thumbnailImageUrl = imageUrl + '&size=' + pValueDistImageSize;
                 // -8px -6px is used as background-position property because the image has gray border.
-                var placeholderCss = 'cursor: pointer; display: inline-block;'
-                   + 'width: ' + pValueDistImageSize + 'px;'
-                   + 'height: ' + pValueDistImageSize + 'px;'
-                   + 'background: url(' + placeholderImageUrl + ') no-repeat -8px -6px; margin: 0 3px;'
+                var thumbnailCss = 'cursor: pointer; display: inline-block;'
+                   // aspect ratio is 1.4
+                   + 'width: 21px;'
+                   + 'height: 15px;'
+                   + 'background: url(' + thumbnailImageUrl + ') center no-repeat; margin: 0 3px;'
+                   + 'vertical-align: middle;'
                 var methodWithArguments = 'showPValueDistributionWindow(\'' + factorString.replaceAll( "'", "\\'" ) + '\', \'' + imageUrl.replaceAll( "'", "\\''" ) + '\');';
 
-                linkText += '<div style="' + placeholderCss + '" '
+                linkText += '<div style="' + thumbnailCss + '" '
                    + 'ext:qtip="Click to view the P-value distribution"'
                    + ' onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments + '"></div>';
 
@@ -721,12 +727,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 new Ext.Window({
                     title: eeInfoTitle,
                     constrain: true, // Should not be modal so that other window can be opened.
-                    width: 500,
+                    width: 1.4 * 400 + 60,
+                    height: 400 + 60,
                     shadow: true,
                     closeAction: 'close',
                     items: [{
-                        bodyStyle: 'background-color: #EEEEEE; text-align: center; padding: 15px 60px 15px 15px;',
-                        html: '<img src="' + imageUrl + '">'
+                        bodyStyle: 'background-color: #EEEEEE; text-align: center; padding: 15px 15px 15px 15px;',
+                        html: '<img src="' + imageUrl + '" height="400" width="560">'
                     }]
                 }).show();
             }

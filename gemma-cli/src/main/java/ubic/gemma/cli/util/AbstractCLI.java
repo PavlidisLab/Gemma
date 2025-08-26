@@ -22,7 +22,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
@@ -94,7 +93,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * CLI context.
      */
     @Nullable
-    private CliContext cliContext;
+    private CLIContext cliContext;
     /**
      * Indicate if this CLI allows positional arguments.
      */
@@ -170,20 +169,20 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
-    public final int executeCommand( CliContext cliContext ) {
+    public final void executeCommand( CLIContext cliContext ) {
         Assert.state( this.cliContext == null, "There is already a CLI context." );
         try {
             this.cliContext = cliContext;
-            return executeCommandWithCliContext();
+            executeCommandWithCliContext( cliContext );
         } finally {
             this.cliContext = null;
         }
     }
 
     /**
-     * Execute a command with a {@link CliContext} set.
+     * Execute a command with a {@link CLIContext} set.
      */
-    private int executeCommandWithCliContext() {
+    private void executeCommandWithCliContext( CLIContext cliContext ) {
         Options options = getOptions();
         try {
             DefaultParser parser = new DefaultParser();
@@ -191,7 +190,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
-                return SUCCESS;
+                return;
             }
             if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
                 throw new UnrecognizedOptionException( "The command line does not allow positional arguments." );
@@ -203,18 +202,21 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                 // check if -h/--help was passed alongside a required argument
                 if ( ArrayUtils.containsAny( getCliContext().getArguments(), "-h", "--help" ) ) {
                     printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
-                    return SUCCESS;
+                    return;
                 }
             }
             getCliContext().getErrorStream().println( e.getMessage() );
             printHelp( options, new PrintWriter( getCliContext().getErrorStream(), true ) );
-            return FAILURE;
+            cliContext.setExitStatus( FAILURE, e );
+            return;
         }
         try ( BatchTaskExecutorService executorService = createBatchTaskExecutor() ) {
             this.executorService = executorService;
             doWork();
             executorService.shutdownAndAwaitTermination();
-            return executorService.getProgressReporter().hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
+            if ( executorService.getProgressReporter().hasErrorObjects() ) {
+                cliContext.setExitStatus( FAILURE_FROM_ERROR_OBJECTS, null );
+            }
         } catch ( Exception e ) {
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
@@ -225,10 +227,10 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
-                return ABORTED;
+                cliContext.setExitStatus( ABORTED, e );
             } else {
-                log.error( String.format( "%s failed: %s", getActualCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
-                return FAILURE;
+                log.error( getActualCommandName() + " failed:", e );
+                cliContext.setExitStatus( FAILURE, e );
             }
         } finally {
             this.executorService = null;
@@ -253,9 +255,9 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     /**
      * Obtain the CLI context.
      * <p>
-     * This is only valid for the duration of the {@link #executeCommand(CliContext)} method.
+     * This is only valid for the duration of the {@link #executeCommand(CLIContext)} method.
      */
-    protected final CliContext getCliContext() {
+    protected final CLIContext getCliContext() {
         Assert.state( cliContext != null, "The CLI context can only be obtained during the execution of the command." );
         return cliContext;
     }

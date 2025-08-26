@@ -3,7 +3,6 @@ package ubic.gemma.core.search.source;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import lombok.var;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,7 +135,7 @@ public class OntologySearchSource implements SearchSource {
             // at this point, subclauses have already been parsed, so if they contain special characters, those must be
             // escaped, spaces must be quoted
             String subClauseQuery = LuceneQueryUtils.quote( subClause );
-            var subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), context, timeoutMs );
+            SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), context, timeoutMs );
             if ( results.isEmpty() ) {
                 results.addAll( subqueryResults );
             } else {

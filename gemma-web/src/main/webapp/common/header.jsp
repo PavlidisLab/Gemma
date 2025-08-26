@@ -1,6 +1,6 @@
 <!-- Default header for any page but the main gemma home page -->
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
+<%--@elvariable id="appConfig" type="java.util.Map"--%>
 
 <c:if test="${pageContext.request.locale.language != 'en'}">
     <div id="switchLocale">

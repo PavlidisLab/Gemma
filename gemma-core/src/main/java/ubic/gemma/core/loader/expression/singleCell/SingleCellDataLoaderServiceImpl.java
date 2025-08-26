@@ -126,8 +126,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 .map( CellTypeAssignment::getName ).filter( Objects::nonNull )
                 .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
         Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
+        Set<String> newCtaNames = new HashSet<>();
+        for ( CellTypeAssignment cta : ctas ) {
+            if ( cta.getName() != null && !newCtaNames.add( cta.getName() ) ) {
+                throw new IllegalArgumentException( cta + " has a non-unique name." );
+            }
+        }
         applyPreferredCellTypeAssignment( ctas, config );
-        Set<CellTypeAssignment> set = new HashSet<>();
+        Set<CellTypeAssignment> created = new HashSet<>();
         for ( CellTypeAssignment cta : ctas ) {
             if ( cta.getName() != null && existingCtaNames.contains( cta.getName() ) ) {
                 if ( config.isReplaceExistingCellTypeAssignment() ) {
@@ -138,10 +144,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     continue;
                 }
             }
-            CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
-            set.add( cellTypeAssignment );
+            created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta ) );
         }
-        return set;
+        return created;
     }
 
     @Override
@@ -149,24 +154,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Set<String> existingClcNames = dimension.getCellLevelCharacteristics().stream()
-                    .map( CellLevelCharacteristics::getName ).filter( Objects::nonNull )
-                    .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
-            Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
-                if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
-                    if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
-                        log.info( "There is already a cell-level characteristics named " + clc.getName() + " in " + ee + ", replacing it..." );
-                        singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, clc.getName() );
-                    } else {
-                        log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
-                        continue;
-                    }
-                }
-                created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
-            }
-            return created;
+            return loadOtherCellLevelCharacteristics( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -177,15 +165,38 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
-                created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
-            }
-            return created;
+            return loadOtherCellLevelCharacteristics( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
+        SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
+        Set<String> existingClcNames = dimension.getCellLevelCharacteristics().stream()
+                .map( CellLevelCharacteristics::getName ).filter( Objects::nonNull )
+                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
+        Set<CellLevelCharacteristics> clcs = loader.getOtherCellLevelCharacteristics( dimension );
+        Set<String> newClcNames = new HashSet<>();
+        for ( CellLevelCharacteristics clc : clcs ) {
+            if ( clc.getName() != null && !newClcNames.add( clc.getName() ) ) {
+                throw new IllegalArgumentException( clc + " has a non-unique name." );
+            }
+        }
+        Collection<CellLevelCharacteristics> created = new HashSet<>();
+        for ( CellLevelCharacteristics clc : clcs ) {
+            if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
+                if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
+                    log.info( "There is already a cell-level characteristics named " + clc.getName() + " in " + ee + ", replacing it..." );
+                    singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, clc.getName() );
+                } else {
+                    log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
+                    continue;
+                }
+            }
+            created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
+        }
+        return created;
     }
 
     private QuantitationType getQuantitationType( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {

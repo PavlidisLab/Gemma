@@ -1,5 +1,6 @@
 const path = require( 'path' );
 const MiniCssExtractPlugin = require( 'mini-css-extract-plugin' );
+const CompressionPlugin = require( 'compression-webpack-plugin' );
 const webpack = require( 'webpack' );
 
 module.exports = {
@@ -14,7 +15,8 @@ module.exports = {
          // this is mostly for flotr2 which improperly imports bean and underscore
          bean : 'bean',
          _ : 'underscore'
-      } )
+      } ),
+      new CompressionPlugin()
    ],
    entry : {
       style : {

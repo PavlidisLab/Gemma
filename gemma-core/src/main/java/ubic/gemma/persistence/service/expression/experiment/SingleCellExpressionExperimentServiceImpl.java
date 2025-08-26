@@ -759,6 +759,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee ) {
         return getPreferredSingleCellDimension( ee )
                 .map( scd -> {
@@ -991,6 +997,24 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long ctaId ) {
+        return expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String ctaName ) {
+        return expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getCellTypeAssignmentsWithoutIndices( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Protocol> getCellTypeAssignmentProtocols() {
         return expressionExperimentDao.getCellTypeAssignmentProtocols();
     }
@@ -1010,7 +1034,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) {
-        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee ) );
+        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee, qt ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignmentWithoutIndices( ee, qt ) );
     }
 
     @Override
@@ -1079,14 +1109,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return expressionExperimentDao.getCellLevelCharacteristics( ee, category );
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Long id ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, id );
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String name ) {
@@ -1097,6 +1125,24 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId ) {
+        return expressionExperimentDao.getCellLevelCharacteristicsWithoutIndices( ee, qt, clcId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
+        return expressionExperimentDao.getCellLevelCharacteristicsWithoutIndices( ee, qt, clcName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getCellLevelCharacteristicsWithoutIndices( ee, qt );
     }
 
     @Override

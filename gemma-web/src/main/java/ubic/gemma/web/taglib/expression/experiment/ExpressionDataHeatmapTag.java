@@ -131,7 +131,11 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
                         }
                         String boxplotUrl = entityUrlBuilder.fromContextPath().entity( ee )
                                 .web()
-                                .visualizeSingleCellBoxPlot( heatmap.getSingleCellQuantitationType(), designElement, heatmap.getCellLevelCharacteristics(), heatmap.getFocusedCellLevelCharacteristic() )
+                                .showSingleCellExpressionData( heatmap.getSingleCellQuantitationType(),
+                                        designElement,
+                                        null,
+                                        heatmap.getCellLevelCharacteristics(),
+                                        heatmap.getFocusedCellLevelCharacteristic() )
                                 .toUriString();
                         writer.startTag( "a" );
                         writer.writeAttribute( "href", boxplotUrl );
@@ -168,7 +172,7 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
         }
         boolean first = true;
-        for ( BioAssay ba : heatmap.getSamples() ) {
+        for ( BioAssay ba : heatmap.getAssays() ) {
             if ( !first ) {
                 writer.startTag( "br" );
                 writer.endTag(); // </br>

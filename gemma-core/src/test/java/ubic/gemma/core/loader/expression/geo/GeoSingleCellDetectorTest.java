@@ -54,7 +54,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 /**
  * TODO: move SOFT files in test resources and mock FTP downloads
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
 public class GeoSingleCellDetectorTest extends BaseTest {
 
@@ -89,7 +89,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE225158() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE225158" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -134,7 +133,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE221593() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221593" );
         detector.downloadSingleCellData( series );
@@ -178,7 +176,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testGSE221522() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221522" );
         detector.downloadSingleCellData( series );
@@ -205,7 +202,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE254569() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE254569" );
         detector.downloadSingleCellData( series );
@@ -233,7 +229,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE201814() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -268,7 +263,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Test
     @Ignore("This is simply too slow to be practical.")
-    @Category(SlowTest.class)
     public void testGSE201814DownloadAll() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -295,7 +289,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * We need to download it to make sure that the file is properly stored.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE174574() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE174574" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -313,7 +306,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset has multiple {@code .h5ad} supplementary files. The solution is to manually pick one of them.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE202051() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE202051" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -392,7 +384,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * at the series level.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE242423() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE242423" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -480,7 +471,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This series contains large TAR attachment that should be skipped when inspecting for MEX.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE235314() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE235314" );
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
@@ -493,7 +483,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * Similar case here with large TAR attachments, but in this case it has a lot of samples to skip.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE201263() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201262" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -504,7 +493,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This files produces "java.util.zip.ZipException: invalid block type" apparently...
      */
     @Test
-    @Category(SlowTest.class)
     @Ignore("This files produces \"java.util.zip.ZipException: invalid block type\" apparently.")
     public void testGSE200202() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE200202" );
@@ -516,7 +504,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This example has some additional supplementary materials that are inside a TAR archive that contains MEX data.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE155499() throws IOException, NoSingleCellDataFoundException {
         // this archive is actually quite deep and the default 10 is not enough
         try {
@@ -560,7 +547,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testGSE201032() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE201032" );
         assertThat( detector.getAdditionalSupplementaryFiles( series ) )
@@ -616,7 +602,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE159416() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE159416" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -632,7 +617,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * MEX dataset stored in ZIP archives.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE178226() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE178226" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -643,7 +627,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This one uses non-standard file names.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE199762() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE199762" );
         try {
@@ -666,7 +649,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset has technical replicates, this is not supported.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE155695() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE155695" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -693,7 +675,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSM4282408() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE144172" );
         GeoSample sample = getSample( series, "GSM4282408" );
@@ -712,7 +693,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * skip enough entries within the archive.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE109774() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE109774" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -737,7 +717,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      */
     @Test
     @Ignore
-    @Category(SlowTest.class)
     public void testGSE244451() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE244451" );
         detector.downloadSingleCellData( series );
@@ -769,7 +748,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This series has complete MEX files at the sample-level, but also provide MEX files in the series.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE184506() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE184506" );
         assertThat( detector.hasSingleCellData( series ) )

@@ -97,5 +97,6 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
         }
 
         dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
+        addSuccessObject( ee, "Replaced data." );
     }
 }

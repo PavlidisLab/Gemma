@@ -19,7 +19,7 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,16 +27,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObjectUtils;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -49,6 +56,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.ControllerUtils;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
@@ -56,14 +64,11 @@ import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
-import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
-import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
-import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for visualization
@@ -100,6 +105,8 @@ public class DEDVController {
     private ExperimentalFactorService experimentalFactorService;
     @Autowired
     private BuildInfo buildInfo;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     /**
      * Assign colour lists (queues actually) to factors. The idea is that every factor value will get a colour assigned
@@ -173,14 +180,18 @@ public class DEDVController {
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
      * of genes. The EE info is in the value object. FIXME handle subsets.
+     * <p>
+     * AJAX
      */
     public Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> getDEDV(
             Collection<Long> eeIds, Collection<Long> geneIds ) {
         StopWatch watch = new StopWatch();
         watch.start();
         Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
-        if ( ees == null || ees.isEmpty() )
-            return null;
+        if ( ees == null || ees.isEmpty() ) {
+            log.warn( "Could not locate any experiments for the given IDs: " + eeIds.stream().map( String::valueOf ).collect( Collectors.joining( ", " ) ) );
+            return Collections.emptyMap();
+        }
 
         Collection<DoubleVectorValueObject> dedvMap;
 
@@ -384,7 +395,7 @@ public class DEDVController {
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<>();
         validatedProbes.put( ee.getId(),
-                geneDifferentialExpressionService.getDifferentialExpression( g, ee, threshold, -1 ) );
+                geneDifferentialExpressionService.getDifferentialExpression( g, ee, false, threshold, -1 ) );
 
         watch.stop();
         time = watch.getTime();
@@ -569,226 +580,106 @@ public class DEDVController {
 
     }
 
+    private static final ModelAndView NO_RESULTS = new ModelAndView( new TextView( "tab-separated-values" ) )
+            .addObject( TextView.TEXT_PARAM, "No results" );
+
+    @RequestMapping(value = "/downloadDEDV.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "pca" })
+    public ModelAndView downloadPCA(
+            @RequestParam(value = "ee") Long eeId,
+            @RequestParam(value = "pca") String pca,
+            @RequestParam(value = "component", required = false) Integer component,
+            @RequestParam(value = "thresh", defaultValue = "100") int thresh
+    ) {
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
+        if ( component == null ) {
+            throw new IllegalArgumentException( "If pca is specified, a component must also be specified." );
+        }
+        Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
+                .getTopLoadedVectors( ee, component, thresh );
+        if ( topLoadedVectors == null || topLoadedVectors.isEmpty() ) {
+            return NO_RESULTS;
+        }
+        TextView textView = new TextView( "tab-separated-values" );
+        textView.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getDataOutputFilename( ee, false, ".pc_" + component + ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) ) + "\"" );
+        return new ModelAndView( textView )
+                .addObject( TextView.TEXT_PARAM, format4File( ee, topLoadedVectors.values() ) );
+    }
+
+    @RequestMapping(value = "/downloadDEDV.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "rs" })
+    public ModelAndView downloadDEDV(
+            @RequestParam(value = "ee") Long eeId,
+            @RequestParam(value = "rs") Long resultSetId,
+            @RequestParam(value = "g", required = false) String gS,
+            @RequestParam(value = "thresh", defaultValue = "0.05") double thresh
+    ) {
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
+        /*
+         * Diff ex case.
+         */
+        List<DoubleVectorValueObject> result = processedExpressionDataVectorService
+                .getDiffExVectors( resultSetId, thresh, MAX_RESULTS_TO_RETURN );
+        if ( result == null || result.isEmpty() ) {
+            return NO_RESULTS;
+        }
+        TextView textView = new TextView( "tab-separated-values" );
+        textView.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getDataOutputFilename( ee, false, ".rs_" + resultSetId + ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) ) + "\"" );
+        return new ModelAndView( textView ).addObject( TextView.TEXT_PARAM, format4File( ee, result ) );
+    }
+
     /**
      * Handle case of text export of the results.
      */
     @RequestMapping(value = "/downloadDEDV.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView downloadDEDV( HttpServletRequest request ) {
+    public ModelAndView downloadDEDV(
+            @RequestParam(value = "ee") Long eeId,
+            @RequestParam(value = "g", required = false) String gS
+    ) {
+        StopWatch watch = StopWatch.createStarted();
 
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        Collection<Long> geneIds = ControllerUtils.extractIds( request.getParameter( "g" ) ); // might not be any
-        Collection<Long> eeIds = ControllerUtils.extractIds( request.getParameter( "ee" ) ); // might not be there
-
-        ModelAndView mav = new ModelAndView( new TextView( "tab-separated-values" ) );
-        if ( eeIds.isEmpty() ) {
-            mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
-            return mav;
-        }
-
-        String threshSt = request.getParameter( "thresh" );
-        String resultSetIdSt = request.getParameter( "rs" );
-
-        double thresh = 100.0;
-        if ( StringUtils.isNotBlank( threshSt ) ) {
-            try {
-                thresh = Double.parseDouble( threshSt );
-            } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Threshold was not a valid value: " + threshSt );
-            }
-        }
-
-        Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result;
-
-        if ( request.getParameter( "pca" ) != null ) {
-            int component = Integer.parseInt( request.getParameter( "component" ) );
-            Long eeId = eeIds.iterator().next();
-
-            ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
-            Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                    .getTopLoadedVectors( ee, component, ( int ) thresh );
-
-            if ( topLoadedVectors == null )
-                return null;
-
-            mav.addObject( "text", format4File( topLoadedVectors.values() ) );
-            return mav;
-        }
+        List<Long> geneIds = ControllerUtils.extractIds( gS ); // might not be any
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
 
         /*
          * The following should be set if we're viewing diff. ex results.
          */
-
-        Long resultSetId = null;
-        if ( StringUtils.isNumeric( resultSetIdSt ) ) {
-            resultSetId = Long.parseLong( resultSetIdSt );
+        Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> m = getDEDV( Collections.singleton( eeId ), geneIds );
+        if ( m.isEmpty() ) {
+            return NO_RESULTS;
         }
 
-        if ( resultSetId != null ) {
-
-            /*
-             * Diff ex case.
-             */
-            Long eeId = eeIds.iterator().next();
-
-            Collection<DoubleVectorValueObject> diffExVectors = processedExpressionDataVectorService
-                    .getDiffExVectors( resultSetId, thresh, MAX_RESULTS_TO_RETURN );
-
-            if ( diffExVectors == null || diffExVectors.isEmpty() ) {
-                mav.addObject( "text", "No results" );
-                return mav;
-            }
-
-            /*
-             * Organize the vectors in the same way expected by the ee+gene type of request.
-             */
-            ExpressionExperimentValueObject ee = expressionExperimentService
-                    .loadValueObjectById( eeId );
-
-            result = new HashMap<>();
-            Map<Long, Collection<DoubleVectorValueObject>> gmap = new HashMap<>();
-
-            for ( DoubleVectorValueObject dv : diffExVectors ) {
-                assert dv.getGenes() != null;
-                for ( Long g : dv.getGenes() ) {
-                    if ( !gmap.containsKey( g ) ) {
-                        gmap.put( g, new HashSet<>() );
-                    }
-                    gmap.get( g ).add( dv );
-                }
-            }
-
-            result.put( ee, gmap );
-
-        } else {
-            // Generic listing.
-            result = getDEDV( eeIds, geneIds );
+        Collection<DoubleVectorValueObject> result = m.values().iterator().next().entrySet()
+                .stream()
+                // preserve the requested gene ordering
+                .sorted( Comparator.comparingInt( e -> geneIds.indexOf( e.getKey() ) ) )
+                .map( Entry::getValue )
+                .flatMap( Collection::stream )
+                .collect( Collectors.toList() );
+        if ( result.isEmpty() ) {
+            return NO_RESULTS;
         }
 
-        if ( result == null || result.isEmpty() ) {
-            mav.addObject( "text", "No results" );
-            return mav;
-        }
-
-        mav.addObject( "text", format4File( result ) );
-        watch.stop();
         long time = watch.getTime();
 
         if ( time > 100 ) {
-            log.info(
-                    "Retrieved and Formated" + result.size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: "
-
-                            + geneIds + " in : " + time + " ms." );
+            log.info( String.format( "Retrieved and formated %d DEDVs for ee ID: %s and gene IDs: %s in %d ms.",
+                    result.size(), eeId, !geneIds.isEmpty() ? geneIds : "[all]", time ) );
         }
-        return mav;
 
+        TextView textView = new TextView( "tab-separated-values" );
+        textView.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( ExpressionDataFileUtils.getDataOutputFilename( ee, false, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) ) + "\"" );
+        return new ModelAndView( textView ).addObject( TextView.TEXT_PARAM, format4File( ee, result ) );
     }
 
-    private String format4File( Collection<DoubleVectorValueObject> vectors ) {
-        StringBuilder converted = new StringBuilder();
-        converted.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
-        for ( String line : GEMMA_CITATION_NOTICE ) {
-            converted.append( "# " ).append( line ).append( "\n" );
+    private String format4File( ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
+        BulkExpressionDataMatrix<?> mat = new ExpressionDataDoubleMatrix( DoubleVectorValueObjectUtils.toBulkVectors( vectors ) );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( mat.getDesignElements() );
+        MatrixWriter writer = new MatrixWriter( entityUrlBuilder, buildInfo );
+        try ( StringWriter buf = new StringWriter() ) {
+            writer.write( mat, ProcessedExpressionDataVector.class, cs2gene, buf );
+            return buf.toString();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        converted.append( "#\n" );
-        converted.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
-        boolean didHeader = false;
-
-        Map<Long, GeneValueObject> gmap = getGeneValueObjectsUsed( vectors );
-
-        for ( DoubleVectorValueObject vec : vectors ) {
-            if ( !didHeader ) {
-                converted.append( makeHeader( vec ) );
-                didHeader = true;
-            }
-
-            List<String> geneSymbols = new ArrayList<>();
-            List<String> geneNames = new ArrayList<>();
-
-            assert vec.getGenes() != null;
-            for ( Long g : vec.getGenes() ) {
-                GeneValueObject gene = gmap.get( g );
-                assert gene != null;
-                geneSymbols.add( gene.getOfficialSymbol() );
-                geneNames.add( gene.getOfficialName() );
-            }
-
-            converted.append( StringUtils.join( geneSymbols, "|" ) ).append( "\t" )
-                    .append( StringUtils.join( geneNames, "|" ) ).append( "\t" );
-            converted.append( vec.getDesignElement().getName() ).append( "\t" );
-
-            if ( vec.getData() != null && vec.getData().length != 0 ) {
-                for ( double data : vec.getData() ) {
-                    converted.append( String.format( "%.3f", data ) ).append( "\t" );
-                }
-                converted.deleteCharAt( converted.length() - 1 ); // remove the trailing tab // FIXME just joind
-            }
-            converted.append( "\n" );
-        }
-
-        return converted.toString();
-    }
-
-    /**
-     * Converts the given map into a tab delimited String
-     */
-    private String format4File(
-            Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result ) {
-        StringBuilder converted = new StringBuilder();
-        Map<Long, GeneValueObject> genes = new HashMap<>(); // Saves us from loading genes
-        // unnecessarily
-        converted.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
-        converted.append( "#\n" );
-        for ( String line : GEMMA_CITATION_NOTICE ) {
-            converted.append( "# " ).append( line ).append( "\n" );
-        }
-        converted.append( "#\n" );
-        for ( BioAssaySetValueObject ee : result.keySet() ) {
-
-            boolean didHeaderForEe = false;
-
-            Collection<Long> geneIds = result.get( ee ).keySet();
-            for ( Long geneId : geneIds ) {
-                GeneValueObject gene;
-                if ( genes.containsKey( geneId ) ) {
-                    gene = genes.get( geneId );
-                } else {
-                    gene = geneService.loadValueObjectById( geneId );
-                    if ( gene == null ) {
-                        log.warn( String.format( "Failed to convert gene with ID %d to VO.", geneId ) );
-                        continue;
-                    }
-                    genes.put( geneId, gene );
-                }
-                String geneName = gene.getOfficialSymbol();
-
-                Collection<DoubleVectorValueObject> vecs = result.get( ee ).get( geneId );
-
-                for ( DoubleVectorValueObject dedv : vecs ) {
-
-                    if ( !didHeaderForEe ) {
-                        converted.append( makeHeader( dedv ) );
-                        didHeaderForEe = true;
-                    }
-
-                    converted.append( geneName ).append( "\t" ).append( gene.getOfficialName() ).append( "\t" );
-                    converted.append( dedv.getDesignElement().getName() ).append( "\t" );
-
-                    if ( dedv.getData() != null && dedv.getData().length != 0 ) {
-                        for ( double data : dedv.getData() ) {
-                            converted.append( String.format( "%.3f", data ) ).append( "\t" );
-                        }
-                        converted.deleteCharAt( converted.length() - 1 ); // remove the trailing tab
-                    }
-                    converted.append( "\n" );
-                }
-            }
-            converted.append( "\n" );
-
-        }
-        converted.append( "\r\n" );
-        return converted.toString();
     }
 
     private LinkedHashSet<ExperimentalFactor> getFactorNames(
@@ -1126,30 +1017,6 @@ public class DEDVController {
         }
         return result;
 
-    }
-
-    /**
-     * @param dedv exemplar to use for forming the heading
-     */
-    private String makeHeader( DoubleVectorValueObject dedv ) {
-
-        String firstThreeColumnHeadings = "GeneSymbol\tGeneName\tElement";
-
-        StringBuilder buf = new StringBuilder();
-        BioAssaySetValueObject ee = dedv.getExpressionExperiment();
-        buf.append( "# " );
-        if ( ee instanceof ExpressionExperimentValueObject ) {
-            buf.append( ( ( ExpressionExperimentValueObject ) ee ).getShortName() ).append( " : " );
-        }
-        buf.append( ee.getName() ).append( "\n" );
-        buf.append( firstThreeColumnHeadings );
-        for ( BioAssayValueObject ba : dedv.getBioAssays() ) {
-            buf.append( "\t" ).append( ba.getName() );
-        }
-
-        buf.append( "\n" );
-
-        return buf.toString();
     }
 
     private Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> makeVectorMap(

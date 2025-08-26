@@ -1,5 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 
+<%--@elvariable id="bibliographicReference" type="ubic.gemma.model.common.description.BibliographicReference"--%>
+
 <head>
 <title>Import ${fn:escapeXml(bibliographicReference.pubAccession.accession)}
     from ${fn:escapeXml(bibliographicReference.pubAccession.externalDatabase.name)}</title>

@@ -52,6 +52,7 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 @Service
 @Transactional(propagation = Propagation.NEVER)
@@ -127,10 +128,15 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             throw new QuantitationTypeConversionRelatedPreprocessingException( ee, e );
         }
 
-        ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
+        List<ProcessedExpressionDataVector> correctedVectors = this.getCorrectedData( ee, vecs );
+
+        QuantitationType correctedQt = correctedVectors.iterator().next().getQuantitationType();
+
+        // ComBat will create a new QT, but will not pass on the preferred flag
+        correctedQt.setIsMaskedPreferred( true );
 
         // Convert to vectors (persist QT)
-        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, BulkExpressionDataMatrixUtils.toVectors( correctedData, ProcessedExpressionDataVector.class ), false );
+        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedVectors, false );
 
         auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, String.format( "ComBat batch correction, vectors were replaced with %d batch-corrected ones.", replaced ) );
     }
@@ -173,7 +179,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         Collection<OutlierDetails> outliers = new LinkedList<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( ba.getIsOutlier() ) {
-                OutlierDetails od = new OutlierDetails( ba );
+                OutlierDetails od = new OutlierDetails( ba.getId() );
                 if ( !outliers.contains( od ) ) {
                     outliers.add( od );
                 }
@@ -264,19 +270,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         dataFileService.deleteAllAnalysisFiles( expExp );
     }
 
-    private void checkQuantitationType( ExpressionDataDoubleMatrix correctedData ) {
-        Collection<QuantitationType> qts = correctedData.getQuantitationTypes();
-        assert !qts.isEmpty();
-
-        if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Only support a single quantitation type" );
-        }
-
-        QuantitationType batchCorrectedQt = qts.iterator().next();
-        assert batchCorrectedQt.getIsBatchCorrected();
-    }
-
-    private ExpressionDataDoubleMatrix getCorrectedData( ExpressionExperiment ee,
+    private List<ProcessedExpressionDataVector> getCorrectedData( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) throws PreprocessingException {
 
         /*
@@ -286,6 +280,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
                 .comBat( ee, new ExpressionDataDoubleMatrix( ee, vecs ) );
 
+
         /*
          * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.
          */
@@ -294,13 +289,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             throw new PreprocessingException( ee, "could not be batch-corrected: ComBat did not found a suitable batch factor" );
         }
 
-        if ( correctedData.rows() != vecs.size() ) {
+        List<ProcessedExpressionDataVector> correctedVectors = BulkExpressionDataMatrixUtils.toVectors( correctedData, ProcessedExpressionDataVector.class );
+
+        if ( correctedVectors.size() != vecs.size() ) {
             throw new PreprocessingException( ee, "could not be batch-corrected: matrix returned by ComBat had wrong number of rows" );
         }
 
-        this.checkQuantitationType( correctedData );
+        QuantitationType batchCorrectedQt = correctedVectors.iterator().next().getQuantitationType();
+        if ( !batchCorrectedQt.getIsBatchCorrected() ) {
+            throw new IllegalStateException( "Batch correction did not set the isBatchCorrected flag on " + batchCorrectedQt + "." );
+        }
 
-        return correctedData;
+        return correctedVectors;
     }
 
     /**

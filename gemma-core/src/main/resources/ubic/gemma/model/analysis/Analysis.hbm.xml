@@ -57,6 +57,7 @@
                     <column name="NUMBER_OF_ELEMENTS_ANALYZED" not-null="false" unique="false" sql-type="INTEGER"
                             index="ANALYSIS_NUMBER_OF_ELEMENTS_ANALYZED"/>
                 </property>
+                <!-- declared as a BioAssaySet, but subclasses can restrict it to a particuar type -->
                 <!-- assumed available in DifferentialExpressionAnalysisValueObject -->
                 <many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet"
                              lazy="false"
@@ -78,15 +79,16 @@
                 <subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
                           discriminator-value="SampleCoexpressionAnalysis"
                           abstract="false">
+                    <!-- using select because the matrices can be cached -->
                     <many-to-one name="fullCoexpressionMatrix"
                                  class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-                                 cascade="all" lazy="false" fetch="join">
+                                 cascade="all" lazy="false" fetch="select">
                         <column name="SAMPLE_COEXPRESSION_MATRIX_RAW_FK" not-null="false" sql-type="BIGINT"
                                 unique="true"/>
                     </many-to-one>
                     <many-to-one name="regressedCoexpressionMatrix"
                                  class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-                                 cascade="all" lazy="false" fetch="join">
+                                 cascade="all" lazy="false" fetch="select">
                         <column name="SAMPLE_COEXPRESSION_MATRIX_REG_FK" not-null="false" sql-type="BIGINT"
                                 unique="true"/>
                     </many-to-one>
@@ -127,12 +129,14 @@
                         <one-to-many class="ubic.gemma.model.analysis.expression.pca.ProbeLoading"/>
                     </set>
                     <set name="eigenValues" lazy="false" fetch="select" cascade="all" mutable="false">
+                        <cache usage="read-only"/>
                         <key foreign-key="EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                             <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>
                         <one-to-many class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
                     </set>
                     <set name="eigenVectors" lazy="false" fetch="select" cascade="all" mutable="false">
+                        <cache usage="read-only"/>
                         <key foreign-key="EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                             <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                         </key>

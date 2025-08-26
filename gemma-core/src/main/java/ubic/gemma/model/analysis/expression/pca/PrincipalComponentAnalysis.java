@@ -23,11 +23,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.persistence.Transient;
 import java.util.*;
 
-public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
+public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
     private Integer numComponentsStored;
     private Integer maxNumProbesPerComponent;

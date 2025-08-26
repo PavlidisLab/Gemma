@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome.gene;
 import gemma.gsec.SecurityService;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -71,6 +72,17 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     @Autowired
     public GeneSetServiceImpl( GeneSetDao voDao ) {
         super( voDao );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<GeneSet> loadWithMembers( Collection<Long> ids ) {
+        Collection<GeneSet> geneSets = geneSetDao.load( ids );
+        geneSets.forEach( gs -> {
+            Hibernate.initialize( gs.getMembers() );
+            gs.getMembers().forEach( member -> Hibernate.initialize( member.getGene() ) );
+        } );
+        return geneSets;
     }
 
     @Override

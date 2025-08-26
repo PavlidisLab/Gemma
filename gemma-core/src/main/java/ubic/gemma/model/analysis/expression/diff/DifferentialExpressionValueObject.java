@@ -18,15 +18,19 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.ValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * Represents the results for one probe. Fairly heavy-weight.
@@ -34,6 +38,8 @@ import java.util.HashSet;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
+@ValueObject
 public class DifferentialExpressionValueObject implements Serializable {
 
     private ContrastsValueObject contrasts;
@@ -56,17 +62,13 @@ public class DifferentialExpressionValueObject implements Serializable {
     }
 
     public DifferentialExpressionValueObject( DifferentialExpressionAnalysisResult o ) {
+        this.id = o.getId();
         this.p = o.getPvalue();
         this.corrP = o.getCorrectedPvalue();
         this.probe = o.getProbe().getName();
         this.probeId = o.getProbe().getId();
         this.resultSetId = o.getResultSet().getId();
-
-        this.contrasts = new ContrastsValueObject( this.id );
-        for ( ContrastResult c : o.getContrasts() ) {
-            contrasts.addContrast( c.getId(), c.getFactorValue() == null ? null : c.getFactorValue().getId(), c.getLogFoldChange(), c.getPvalue(),
-                    c.getSecondFactorValue() == null ? null : c.getSecondFactorValue().getId() );
-        }
+        this.contrasts = new ContrastsValueObject( o );
     }
 
     public DifferentialExpressionValueObject( Long id ) {
@@ -74,133 +76,9 @@ public class DifferentialExpressionValueObject implements Serializable {
         this.contrasts = new ContrastsValueObject( this.id );
     }
 
-    /**
-     * @param cid                 id of the contrast
-     * @param secondFactorValueId null unless this is an interaction
-     * @param pvalue              the p value
-     * @param factorValueId       factor value id
-     * @param logFoldChange       the fold change
-     */
-    public void addContrast( Long cid, Long factorValueId, Double pvalue, Double logFoldChange,
-            Long secondFactorValueId ) {
-        this.contrasts.addContrast( cid, factorValueId, logFoldChange, pvalue, secondFactorValueId );
-    }
-
-    public ContrastsValueObject getContrasts() {
-        return contrasts;
-    }
-
-    public void setContrasts( ContrastsValueObject contrasts ) {
-        this.contrasts = contrasts;
-    }
-
-    public Double getCorrP() {
-        return corrP;
-    }
-
-    public void setCorrP( Double corrP ) {
-        this.corrP = corrP;
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public void setDirection( Direction direction ) {
-        this.direction = direction;
-    }
-
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
-        return experimentalFactors;
-    }
-
-    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
-        this.experimentalFactors = experimentalFactors;
-    }
-
-    public BioAssaySetValueObject getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( BioAssaySetValueObject expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public Boolean getFisherContribution() {
-        return fisherContribution;
-    }
-
-    public void setFisherContribution( Boolean fisherContribution ) {
-        this.fisherContribution = fisherContribution;
-    }
-
-    public GeneValueObject getGene() {
-        return gene;
-    }
-
-    public void setGene( GeneValueObject gene ) {
-        this.gene = gene;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public Boolean getMetThreshold() {
-        return metThreshold;
-    }
-
-    public void setMetThreshold( Boolean metThreshold ) {
-        this.metThreshold = metThreshold;
-    }
-
-    public Double getP() {
-        return p;
-    }
-
-    public void setP( Double p ) {
-        this.p = p;
-    }
-
-    public String getProbe() {
-        return probe;
-    }
-
-    public void setProbe( String probe ) {
-        this.probe = probe;
-    }
-
-    public Long getProbeId() {
-        return probeId;
-    }
-
-    public void setProbeId( Long probeId ) {
-        this.probeId = probeId;
-    }
-
-    public Long getResultSetId() {
-        return resultSetId;
-    }
-
-    public void setResultSetId( Long long1 ) {
-        this.resultSetId = long1;
-
-    }
-
-    public String getSortKey() {
-        return sortKey;
-    }
-
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
+        return Objects.hash( id );
     }
 
     @Override
@@ -238,6 +116,8 @@ public class DifferentialExpressionValueObject implements Serializable {
 
         if ( expressionExperiment instanceof ExpressionExperimentValueObject ) {
             buf.append( ( ( ExpressionExperimentValueObject ) expressionExperiment ).getShortName() ).append( "\t" );
+        } else if ( expressionExperiment instanceof ExpressionExperimentSubsetValueObject ) {
+            buf.append( ( ( ExpressionExperimentSubsetValueObject ) expressionExperiment ).getSourceExperimentShortName() ).append( "\t" );
         }
 
         buf.append( probe ).append( "\t" );
@@ -257,9 +137,4 @@ public class DifferentialExpressionValueObject implements Serializable {
 
         return buf.toString();
     }
-
-    public void setSortKey() {
-        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
-    }
-
 }

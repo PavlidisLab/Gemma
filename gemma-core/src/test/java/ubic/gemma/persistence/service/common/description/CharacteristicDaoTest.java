@@ -31,7 +31,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.association.Gene2GOAssociation;

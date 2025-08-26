@@ -74,7 +74,7 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend( Ext.Panel,
          + '<td style="text-align: right;">New</td>'
          + '</tpl>'
          + '</tr><tr>'
-         + '<td><b>Data sets:</b></td>'
+         + '<td><b>Datasets:</b></td>'
          + '<td style="text-align: right;">'
          + '<a href="' + Gemma.GEMBROW_URL + '/#">{expressionExperimentCount}'
          + '</td>'

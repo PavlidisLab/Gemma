@@ -40,6 +40,10 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
     @Nullable
     private ScaleType scaleType;
 
+    private boolean excludeSampleIdentifiers = false;
+    private boolean useBioAssayIds = false;
+    private boolean useRawColumnNames = false;
+
     private ExpressionDataFileResult result;
 
     public RawExpressionDataWriterCli() {
@@ -64,6 +68,9 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
         addExpressionDataFileOptions( options, "raw data", true );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation/--standard-location." ).build() );
         OptionsUtils.addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the data. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
+        options.addOption( "excludeSampleIdentifiers", "exclude-sample-identifiers", false, "Only include bioassays identifier in the output instead of mangling it with the sample identifier." );
+        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use IDs instead of names or short names for bioassays and samples." );
+        options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw column names instead of R-friendly ones." );
         addForceOption( options );
     }
 
@@ -72,6 +79,9 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
         this.result = getExpressionDataFileResult( commandLine, true );
         this.samples = commandLine.getOptionValues( "samples" );
         this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
+        this.excludeSampleIdentifiers = commandLine.hasOption( "excludeSampleIdentifiers" );
+        this.useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
+        this.useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
         if ( this.result.isStandardLocation() && this.samples != null ) {
             throw new ParseException( "Cannot use -samples with -standardLocation." );
         }
@@ -93,14 +103,14 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
             } else if ( result.isStandardOutput() ) {
                 fileName = null;
                 try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                    written = expressionDataFileService.writeRawExpressionData( ee, assays, qt, scaleType, writer, true );
+                    written = expressionDataFileService.writeRawExpressionData( ee, assays, qt, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
             } else {
                 fileName = result.getOutputFile( getDataOutputFilename( ee, assays, qt, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
-                    written = expressionDataFileService.writeRawExpressionData( ee, assays, qt, scaleType, writer, true );
+                    written = expressionDataFileService.writeRawExpressionData( ee, assays, qt, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
@@ -116,23 +126,22 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
             } else if ( result.isStandardOutput() ) {
                 fileName = null;
                 try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
-                    written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, writer, true );
+                    written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
             } else {
                 fileName = result.getOutputFile( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
-                    written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, writer, true );
+                    written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
             }
         }
-        addSuccessObject( ee, String.format( "Wrote%s raw vectors%s for %s%s.",
+        addSuccessObject( ee, qt, String.format( "Wrote%s raw vectors%s for %s.",
                 written > 0 ? " " + written : "",
                 fileName != null ? " to " + fileName : "",
-                qt,
                 samples != null ? " for the following assays: " + String.join( ", ", samples ) : ""
         ) );
     }

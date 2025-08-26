@@ -121,20 +121,25 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
     @Override
     public Collection<Gene> getGenesByAccession( String search ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
-                                + " inner join bs2gp.bioSequence bs "
-                                + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct "
-                                + " and de.accession = :search " )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gene from Gene as gene "
+                        + "join gene.products gp, "
+                        + "BioSequence2GeneProduct as bs2gp "
+                        + "join bs2gp.bioSequence bs "
+                        + "join bs.sequenceDatabaseEntry de "
+                        + "where gp=bs2gp.geneProduct and de.accession = :search "
+                        + "group by gene" )
                 .setParameter( "search", search ).list();
     }
 
     @Override
     public Collection<Gene> getGenesByName( String search ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
-                                + " and bs2gp.bioSequence.name like :search " )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gene from Gene as gene "
+                        + "join gene.products gp, BioSequence2GeneProduct as bs2gp "
+                        + "where gp=bs2gp.geneProduct and bs2gp.bioSequence.name like :search "
+                        + "group by gene" )
                 .setString( "search", search ).list();
     }
 

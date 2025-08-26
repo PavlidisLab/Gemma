@@ -290,9 +290,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
             try {
                 newQt = splitAndAggregateService.redoAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, dimension, previousQt, config );
-                addSuccessObject( expressionExperiment, "Aggregated single-cell data into " + newQt + "." );
+                addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
             } catch ( UnsupportedScaleTypeForAggregationException e ) {
-                addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
+                addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;
             }
@@ -319,9 +319,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
             try {
                 newQt = splitAndAggregateService.splitAndAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, splitConfig, config );
-                addSuccessObject( expressionExperiment, "Aggregated single-cell data into " + newQt + "." );
+                addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
             } catch ( UnsupportedScaleTypeForAggregationException e ) {
-                addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
+                addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;
             }
@@ -332,9 +332,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         if ( newQt.getIsPreferred() ) {
             log.info( "Creating a data file for " + newQt + "..." );
             try ( LockedPath lockedFile = expressionDataFileService.writeOrLocateRawExpressionDataFile( expressionExperiment, newQt, true ) ) {
-                addSuccessObject( expressionExperiment, "Created a data file for " + newQt + ": " + lockedFile.getPath() );
+                addSuccessObject( expressionExperiment, qt, "Created a data file for " + newQt + ": " + lockedFile.getPath() );
             } catch ( IOException e ) {
-                addErrorObject( expressionExperiment, "Failed to generate a data file for " + newQt + ".", e );
+                addErrorObject( expressionExperiment, qt, "Failed to generate a data file for " + newQt + ".", e );
             }
 
             if ( !skipPostProcessing ) {
@@ -342,9 +342,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 try {
                     expressionExperiment = eeService.thaw( expressionExperiment );
                     preprocessorService.process( expressionExperiment );
-                    addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
+                    addSuccessObject( expressionExperiment, qt, "Post-processed data from " + newQt + "." );
                 } catch ( Exception e ) {
-                    addErrorObject( expressionExperiment, "Failed to post-process the data from " + newQt + ".", e );
+                    addErrorObject( expressionExperiment, qt, "Failed to post-process the data from " + newQt + ".", e );
                 } finally {
                     // if process() fails, vector might or might not have been created, so we should evict the cache of
                     // Gemma Web regardless

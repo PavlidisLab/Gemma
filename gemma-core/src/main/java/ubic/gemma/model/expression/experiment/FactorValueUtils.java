@@ -5,7 +5,6 @@ import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
@@ -24,17 +23,22 @@ public class FactorValueUtils {
      */
     @Nullable
     public static String getValue( FactorValue fv, String delimiter ) {
+        String[] values = getValues( fv );
+        return values != null ? String.join( delimiter, values ) : null;
+    }
+
+    public static String[] getValues( FactorValue fv ) {
         if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
+            return new String[] { fv.getMeasurement().getValue() };
         } else {
-            String valueFromStatements = fv.getCharacteristics().stream()
+            String[] valuesFromStatements = fv.getCharacteristics().stream()
                     .map( Statement::getSubject )
                     .sorted()
-                    .collect( Collectors.joining( delimiter ) );
-            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
-                return valueFromStatements;
+                    .toArray( String[]::new );
+            if ( valuesFromStatements.length > 0 ) {
+                return valuesFromStatements;
             } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-                return fv.getValue();
+                return new String[] { fv.getValue() };
             } else {
                 return null;
             }

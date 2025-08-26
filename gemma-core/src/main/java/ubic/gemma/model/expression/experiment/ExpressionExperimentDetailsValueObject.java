@@ -27,6 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -92,6 +93,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String secondaryAccession;
     private String secondaryExternalDatabase;
     private String secondaryExternalUri;
+
+    /**
+     * Font to use when rendering diagnostic plots, etc.
+     */
+    @Nullable
+    private String font;
 
     /**
      * Required when using the class as a spring bean.
@@ -580,5 +587,14 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setSecondaryExternalUri( String secondaryExternalUri ) {
         this.secondaryExternalUri = secondaryExternalUri;
+    }
+
+    @Nullable
+    public String getFont() {
+        return font;
+    }
+
+    public void setFont( @Nullable String font ) {
+        this.font = font;
     }
 }

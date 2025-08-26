@@ -19,11 +19,7 @@
 package ubic.gemma.persistence.service.analysis;
 
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
-
-import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.analysis.Analysis

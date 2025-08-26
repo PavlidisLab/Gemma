@@ -24,20 +24,24 @@ import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -66,13 +70,34 @@ import java.util.Map;
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     /**
+     * Clause for selecting entities updated since a given date.
+     */
+    private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
+
+    /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
-    private static final String GENE2CS_REPOPULATE_QUERY =
-            "REPLACE INTO GENE2CS (GENE, CS, AD) " + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
-                    + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-                    + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
-                    + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
+    private static final String GENE2CS_REPOPULATE_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
+
+    /**
+     * The query used to repopulate the contents of the GENE2CS table.
+     */
+    private static final String GENE2CS_REPOPULATE_SINCE_LAST_UPDATE_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "join ARRAY_DESIGN ad on ad.ID = cs.ARRAY_DESIGN_FK "
+            + "join CURATION_DETAILS CD on CD.ID = ad.CURATION_DETAILS_FK "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "and " + CD_LAST_UPDATED_SINCE
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
+
+    private static final String GENE2CS_REPOPULATE_BY_ARRAY_DESIGN_QUERY = "select gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+            + "from CHROMOSOME_FEATURE as gene, CHROMOSOME_FEATURE as geneprod, BIO_SEQUENCE2_GENE_PRODUCT as bsgp, COMPOSITE_SEQUENCE cs "
+            + "where geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "and cs.ARRAY_DESIGN_FK = :ad "
+            + "group by gene.ID, cs.ID, cs.ARRAY_DESIGN_FK";
 
     /**
      * Select the bitmask of permissions that applies to the {@code IS_AUTHENTICATED_ANONYMOUSLY} granted authority. If
@@ -88,11 +113,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and AOI.OBJECT_ID = I.ID "
                     + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
                     + "group by AOI.ID), 0)";
-
-    /**
-     * Clause for selecting entities updated since a given date.
-     */
-    private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
 
     private static final String EE2C_EE_QUERY =
             "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
@@ -114,7 +134,50 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
-    private static final String EE2C_ED_QUERY =
+    private static final String EE2C_CTA_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellTypeAssignment' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_ASSAYS2SINGLE_CELL_DIMENSIONS B2SCD on BA.ID = B2SCD.BIO_ASSAYS_FK "
+                    + "join SINGLE_CELL_DIMENSION SCD on SCD.ID = B2SCD.SINGLE_CELL_DIMENSIONS_FK "
+                    + "join ANALYSIS CTA on SCD.ID = CTA.SINGLE_CELL_DIMENSION_FK "
+                    + "join CHARACTERISTIC C on CTA.ID = C.CELL_TYPE_ASSIGNMENT_FK "
+                    + "where I.class = 'ExpressionExperiment' and CTA.class = 'CellTypeAssignment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_CLC_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
+                    + "join BIO_ASSAYS2SINGLE_CELL_DIMENSIONS B2SCD on BA.ID = B2SCD.BIO_ASSAYS_FK "
+                    + "join SINGLE_CELL_DIMENSION SCD on SCD.ID = B2SCD.SINGLE_CELL_DIMENSIONS_FK "
+                    + "join CELL_LEVEL_CHARACTERISTICS CLC on SCD.ID = CLC.SINGLE_CELL_DIMENSION_FK "
+                    + "join CHARACTERISTIC C on CLC.ID = C.CELL_LEVEL_CHARACTERISTICS_FK "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    /**
+     * @deprecated this is deprecated because {@link ExperimentalFactor#getAnnotations()} is also deprecated. However,
+     * there's a possibility that this will be repurposed for annotating continuous FVs, see <a href="https://github.com/PavlidisLab/Gemma/issues/950">#950</a>
+     * for more details.
+     */
+    @Deprecated
+    private static final String EE2C_ED_FACTOR_ANNOTATIONS_QUERY =
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
+                    + "from INVESTIGATION I "
+                    + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
+                    + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
+                    + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
+                    + "join CHARACTERISTIC C on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "where I.class = 'ExpressionExperiment' "
+                    + "and " + CD_LAST_UPDATED_SINCE + " "
+                    + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
+
+    private static final String EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY =
             "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
@@ -127,6 +190,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and C.class = 'Statement' "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
+
+    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_ANNOTATIONS_QUERY
+            + " union "
+            + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -169,13 +236,25 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateGene2CsEntries() {
-        return updateGene2CsEntries( false );
+        return updateGene2CsEntries( null, false, false );
     }
 
     @Override
     @Transactional
     @Timed
-    public int updateGene2CsEntries( boolean force ) {
+    public int updateGene2CsEntries( ArrayDesign arrayDesign, boolean force ) {
+        return updateGene2CsEntries( arrayDesign, null, false, force );
+    }
+
+    @Override
+    @Transactional
+    @Timed
+    public int updateGene2CsEntries( @Nullable Date sinceLastUpdate, boolean truncate, boolean force ) {
+        return updateGene2CsEntries( null, sinceLastUpdate, truncate, force );
+    }
+
+    private int updateGene2CsEntries( @Nullable ArrayDesign arrayDesign, @Nullable Date sinceLastUpdate, boolean truncate, boolean force ) {
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         try {
             String annotation;
             if ( ( annotation = needsToRefreshGene2Cs( force ) ) == null ) {
@@ -183,11 +262,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                 return 0;
             }
             TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
-            int updated = this.generateGene2CsEntries();
-            if ( updated > 0 ) {
-                annotation += "\n\n" + "Updated " + updated + " entries.";
+            int updated = this.generateGene2CsEntries( arrayDesign, sinceLastUpdate, truncate );
+            String extra = "";
+            if ( arrayDesign != null ) {
+                extra += " for " + arrayDesign;
             }
-            TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated.", updated ) );
+            if ( sinceLastUpdate != null ) {
+                extra += " since " + sinceLastUpdate;
+            }
+            if ( updated > 0 ) {
+                annotation += "\n\n" + "Updated " + updated + " entries";
+                annotation += extra;
+                annotation += ".";
+            }
+            TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table%s; %d entries were updated.", extra, updated ) );
             Gene2CsStatus updatedStatus;
             updatedStatus = createUpdateStatus( annotation, null );
             updateGene2csExternalDatabaseLastUpdated( updatedStatus );
@@ -207,7 +295,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Transactional
     @Timed
     public int updateExpressionExperiment2CharacteristicEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
-        Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2CHARACTERISTIC table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
@@ -215,6 +303,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC..." );
             sessionFactory.getCurrentSession()
                     .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC" )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .executeUpdate();
         }
         int updated = sessionFactory.getCurrentSession()
@@ -223,6 +312,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                 + EE2C_EE_QUERY
                                 + " union "
                                 + EE2C_BM_QUERY
+                                + " union "
+                                + EE2C_CTA_QUERY
+                                + " union "
+                                + EE2C_CLC_QUERY
                                 + " union "
                                 + EE2C_ED_QUERY + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
@@ -240,7 +333,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Timed
     @Transactional
     public int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
-        Assert.isTrue( !( sinceLastUpdate != null && truncate ), "Cannot perform a partial update with sinceLastUpdate with truncate." );
+        Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         String query;
         if ( level.equals( ExpressionExperiment.class ) ) {
             query = EE2C_EE_QUERY;
@@ -248,6 +341,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
             query = EE2C_ED_QUERY;
+        } else if ( level.equals( CellTypeAssignment.class ) ) {
+            query = EE2C_CTA_QUERY;
+        } else if ( level.equals( CellLevelCharacteristics.class ) ) {
+            query = EE2C_CLC_QUERY;
         } else {
             throw new IllegalArgumentException( "Level must be one of ExpressionExperiment.class, BioMaterial.class or ExperimentalDesign.class." );
         }
@@ -259,6 +356,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC at " + level.getSimpleName() + " level..." );
             sessionFactory.getCurrentSession()
                     .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC where LEVEL = :level" )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .setParameter( "level", level )
                     .executeUpdate();
         }
@@ -279,11 +377,19 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     @Override
     @Transactional
-    public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate ) {
+    public int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate ) {
         StopWatch timer = StopWatch.createStarted();
         log.info( String.format( "Updating the EXPRESSION_EXPERIMENT2ARRAY_DESIGN table%s...",
                 sinceLastUpdate != null ? " since " + sinceLastUpdate : "" ) );
-        int updated = sessionFactory.getCurrentSession().createSQLQuery( EE2AD_QUERY )
+        if ( truncate ) {
+            log.info( "Truncating EXPRESSION_EXPERIMENT2ARRAY_DESIGN..." );
+            sessionFactory.getCurrentSession()
+                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
+                    .addScalar( EE2AD_QUERY_SPACE )
+                    .executeUpdate();
+        }
+        int updated = sessionFactory.getCurrentSession()
+                .createSQLQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "since", sinceLastUpdate )
                 .executeUpdate();
@@ -365,13 +471,46 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      *
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
-    private int generateGene2CsEntries() {
+    private int generateGene2CsEntries( @Nullable ArrayDesign arrayDesign, @Nullable Date sinceLastUpdate, boolean truncate ) {
         StopWatch timer = StopWatch.createStarted();
+        if ( truncate ) {
+            if ( arrayDesign != null ) {
+                TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS for " + arrayDesign + "..." );
+                sessionFactory.getCurrentSession()
+                        .createSQLQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
+                        .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                        .setParameter( "adId", arrayDesign.getId() )
+                        .executeUpdate();
+            } else {
+                TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS..." );
+                sessionFactory.getCurrentSession()
+                        .createSQLQuery( "delete from GENE2CS" )
+                        .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                        .executeUpdate();
+            }
+        }
         TableMaintenanceUtilImpl.log.info( "Updating the GENE2CS table..." );
-        int updated = this.sessionFactory.getCurrentSession()
-                .createSQLQuery( TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY )
-                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
-                .executeUpdate();
+        String query;
+        if ( arrayDesign != null ) {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_BY_ARRAY_DESIGN_QUERY;
+        } else if ( sinceLastUpdate != null ) {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_SINCE_LAST_UPDATE_QUERY;
+        } else {
+            query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY;
+        }
+        Query queryObject = this.sessionFactory.getCurrentSession()
+                .createSQLQuery( "insert into GENE2CS (GENE, CS, AD) "
+                        + query + " "
+                        // duplicate keys should never happen, so this is a no-op
+                        + "on duplicate key update GENE = GENE, CS = CS, AD = AD" )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE );
+        if ( arrayDesign != null ) {
+            queryObject.setParameter( "ad", arrayDesign.getId() );
+        }
+        if ( sinceLastUpdate != null ) {
+            queryObject.setParameter( "since", sinceLastUpdate );
+        }
+        int updated = queryObject.executeUpdate();
         TableMaintenanceUtilImpl.log.info( String.format( "Done regenerating the GENE2CS table; %d entries were updated in %d ms.", updated, timer.getTime() ) );
         return updated;
     }
@@ -436,6 +575,11 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( !sendEmail ) {
             return;
         }
-        mailEngine.sendAdminMessage( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
+        try {
+            mailEngine.sendMessageToAdmin( "Gene2Cs update status.", "Gene2Cs updating was run.\n" + updatedStatus.getAnnotation() );
+        } catch ( Exception e ) {
+            log.error( "Failed to send email about Gene2Cs update status.", e );
+            // not rethrowing, or else the update itself would be rolled back
+        }
     }
 }

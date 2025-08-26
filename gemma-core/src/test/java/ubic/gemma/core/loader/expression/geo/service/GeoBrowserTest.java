@@ -193,13 +193,22 @@ public class GeoBrowserTest {
     }
 
     /**
-     * This dataset has incorrect UTF-8 characters in its MINiML file on GEO FTP server. The document is instead
-     * retrieved from GEO Query.
+     * This dataset has incorrect UTF-8 characters in its MINiML file on GEO FTP server. It is re-attempted with
+     * Windows-1252 encoding.
      */
     @Test
     @Category(SlowTest.class)
     public void testGSE2569() throws IOException {
         b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED );
+    }
+
+    /**
+     * THis dataset has invalid 1-byte UTF-8 sequence (0x1b)
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE8579() throws IOException {
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE8579", GeoRetrieveConfig.builder().sampleDetails( true ).ignoreErrors( true ).build() );
     }
 
     /**

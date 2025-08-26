@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import org.hibernate.NonUniqueResultException;
@@ -51,16 +52,19 @@ public interface ExpressionExperimentDao
      */
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
-    SortedMap<Long, String> loadAllIdAndName();
+    @Data
+    class Identifiers {
+        Long id;
+        String shortName;
+        String name;
+        @Nullable
+        String accession;
+    }
 
-    SortedMap<String, String> loadAllShortNameAndName();
-
-    SortedSet<String> loadAllName();
-
-    SortedMap<String, String> loadAllAccessionAndName();
-
-    @Nullable
-    BioAssaySet loadBioAssaySet( Long id );
+    /**
+     * Load all possible identifiers for all experiments.
+     */
+    List<Identifiers> loadAllIdentifiers();
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
@@ -115,9 +119,9 @@ public interface ExpressionExperimentDao
 
     Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
-    Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment bas );
 
-    Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees );
+    Collection<ArrayDesign> getArrayDesignsUsed( Collection<ExpressionExperiment> ees );
 
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
@@ -282,14 +286,14 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperimentSubSet getSubSetById( ExpressionExperiment ee, Long subSetId );
 
-    <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
+    Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees );
 
     /**
      * Determine the taxon for a given experiment or subset.
      * @return a unique taxon for the dataset, or null if no taxon could be determined
      */
     @Nullable
-    Taxon getTaxon( BioAssaySet ee );
+    Taxon getTaxon( ExpressionExperiment ee );
 
     /**
      * Load datasets by IDs with the same relation as {@link #loadWithCache(Filters, Sort)}.
@@ -455,6 +459,16 @@ public interface ExpressionExperimentDao
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType qt );
 
     /**
+     * Obtain the preferred raw data vectors for a given experiment.
+     */
+    Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Obtain the missing value vectors for a given experiment.
+     */
+    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee );
+
+    /**
      * Add raw data vectors with the given quantitation type.
      * @return the number of raw data vectors created
      */
@@ -570,6 +584,9 @@ public interface ExpressionExperimentDao
     @Nullable
     SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Create a single-cell dimension for a given experiment.
      * @throws IllegalArgumentException if the single-cell dimension is invalid
@@ -631,6 +648,8 @@ public interface ExpressionExperimentDao
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
+    Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain the preferred assignment of the preferred single-cell vectors.
      *
@@ -638,6 +657,22 @@ public interface ExpressionExperimentDao
      */
     @Nullable
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
+
+    /**
+     * Obtain the preferred assignment for the given quantitation type.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
+     */
+    @Nullable
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException;
+
+    /**
+     * Obtain the preferred assignment for the given quantitation type without loading the indices.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
+     */
+    @Nullable
+    CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException;
 
     /**
      * Obtain a cell type assignment by ID.
@@ -695,6 +730,14 @@ public interface ExpressionExperimentDao
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category );
+
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId );
+
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName );
+
+    Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 

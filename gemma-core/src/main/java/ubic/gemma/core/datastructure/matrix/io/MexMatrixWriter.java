@@ -15,7 +15,6 @@ import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeCo
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
-import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -39,7 +38,6 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.formatBioAssayFilename;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 
@@ -71,13 +69,13 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     private Executor executorService;
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer stream ) throws IOException {
         throw new UnsupportedOperationException( "MEX is a binary format as it bundles the files in a TAR archive." );
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        return write( matrix, null, stream );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, OutputStream stream ) throws IOException {
+        return write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, stream );
     }
 
     /**
@@ -308,7 +306,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, Writer out, boolean autoFlush ) {

@@ -36,7 +36,7 @@ public class OptionsUtils {
     public static void addDateOption( String name, @Nullable String longOpt, String desc, Options options ) {
         options.addOption( Option.builder( name )
                 .longOpt( longOpt )
-                .desc( desc )
+                .desc( appendIfMissing( desc, "." ) + "\nThe date can be specified in ISO 8601 format, as a relative date (e.g. +1d, -1m, -1h), or as a natural language expression (e.g. five hours ago, last week, etc.)." )
                 .hasArg()
                 .type( Date.class )
                 .converter( new DateConverterImpl( DEFAULT_RELATIVE_TO, DEFAULT_TIME_ZONE ) ).build() );
@@ -160,7 +160,20 @@ public class OptionsUtils {
         options.addOption( Option.builder( optionName )
                 .longOpt( longOption )
                 .hasArg()
+                .argName( enumClass.getSimpleName() )
                 .converter( EnumConverter.of( enumClass, descriptions ) )
+                .desc( String.format( "%s Possible values are: %s.",
+                        appendIfMissing( description, "." ),
+                        Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
+                .build() );
+    }
+
+    public static <T extends Enum<T>> void addEnumSetOption( Options options, String optionName, String longOption, String description, Class<T> enumClass ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOption )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .converter( EnumConverter.of( enumClass ) )
                 .desc( String.format( "%s Possible values are: %s.",
                         appendIfMissing( description, "." ),
                         Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
@@ -176,6 +189,26 @@ public class OptionsUtils {
     public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName ) throws
             org.apache.commons.cli.ParseException {
         return commandLine.getParsedOptionValue( optionName );
+    }
+
+    @Nullable
+    public static <T extends Enum<T>> EnumSet<T> getEnumSetOptionValue( CommandLine commandLine, String optionName ) throws
+            org.apache.commons.cli.ParseException {
+        for ( Option o : commandLine.getOptions() ) {
+            if ( o.getOpt().equals( optionName ) ) {
+                Set<T> result = new HashSet<>();
+                for ( String s : o.getValues() ) {
+                    try {
+                        //noinspection unchecked
+                        result.add( ( T ) o.getConverter().apply( s ) );
+                    } catch ( Throwable e ) {
+                        throw new org.apache.commons.cli.ParseException( e );
+                    }
+                }
+                return EnumSet.copyOf( result );
+            }
+        }
+        return null;
     }
 
     /**

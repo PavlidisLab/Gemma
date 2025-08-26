@@ -19,7 +19,7 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
@@ -28,7 +28,7 @@ import javax.persistence.Transient;
  * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator
  * of all the sample coexpression matrices.
  */
-public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
+public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
     @Nullable
@@ -84,7 +84,7 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     public static class Factory {
 
-        public static SampleCoexpressionAnalysis newInstance( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
+        public static SampleCoexpressionAnalysis newInstance( ExpressionExperiment experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
                 @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
             SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis();
             analysis.setExperimentAnalyzed( experimentAnalyzed );

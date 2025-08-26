@@ -79,7 +79,7 @@
         </tr>
 
         <tr>
-            <td class="label">Experiments used in</td>
+            <td class="label">Datasets used in</td>
             <td>
                 <c:forEach items="${expressionExperiments.entrySet()}" var="e">
                     <c:forEach items="${e.value.entrySet()}" var="ba2bm">

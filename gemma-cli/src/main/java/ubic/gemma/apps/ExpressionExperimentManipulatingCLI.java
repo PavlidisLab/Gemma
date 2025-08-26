@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
@@ -53,11 +54,13 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -81,6 +84,8 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.*;
  * @author Paul
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSeekingCLI<ExpressionExperiment> {
+
+    private final String SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX = "\n" + "This option is not available when processing more than one experiment.";
 
     @Autowired
     protected ExpressionExperimentService eeService;
@@ -173,7 +178,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, Option option ) {
-        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        option.setDescription( option.getDescription() + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
         options.addOption( option );
         singleExperimentOptions.add( option.getOpt() );
     }
@@ -182,7 +187,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
-        options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
+        options.addOption( opt, longOpt, hasArg, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
+        singleExperimentOptions.add( opt );
+    }
+
+    /**
+     * Add an enumerated option that is only available in single-experiment mode.
+     * @see OptionsUtils#addEnumOption(Options, String, String, String, Class, EnumMap)
+     */
+    protected <T extends Enum<T>> void addSingleExperimentEnumOption( Options options, String opt, String longOpt, String description, Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
+        addEnumOption( options, opt, longOpt, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX, enumClass, descriptions );
         singleExperimentOptions.add( opt );
     }
 
@@ -202,31 +216,48 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             STANDARD_LOCATION_OPTION = "standardLocation",
             STANDARD_OUTPUT_OPTION = "stdout";
 
+    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        addExpressionDataFileOptions( options, what, allowStandardLocation, true, true, false, true );
+    }
+
     /**
      * Add options for writing expression data files, such as raw or processed data files.
      *
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
      * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
      * @param allowStandardLocation if true, the standard location option will be added
+     * @param allowFile             if true, the output file option will be added, otherwise only the output directory
+     *                              will be added
+     * @param allowDirectory        if true, the output directory option will be added
+     * @param allowCurrentDirectory if true, writing to the current directory will be allowed
+     * @param allowStdout           if true, the standard output option will be added
      */
-    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
+        Assert.isTrue( !allowCurrentDirectory || allowDirectory, "Cannot allow current directory without allowing output directory." );
         OptionGroup og = new OptionGroup();
-        addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
-                .longOpt( "output-file" ).hasArg().type( Path.class )
-                .desc( "Write " + what + " to the given output file." ).build() );
-        og.addOption( Option.builder( OUTPUT_DIR_OPTION )
-                .longOpt( "output-dir" ).hasArg().type( Path.class )
-                .desc( "Write " + what + " inside the given directory." ).build() );
+        if ( allowFile ) {
+            addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
+                    .longOpt( "output-file" ).hasArg().type( Path.class )
+                    .desc( "Write " + what + " to the given output file." ).build() );
+        }
+        if ( allowDirectory ) {
+            og.addOption( Option.builder( OUTPUT_DIR_OPTION )
+                    .longOpt( "output-dir" ).hasArg().type( Path.class )
+                    .desc( "Write " + what + " inside the given directory." + ( !allowStandardLocation && allowCurrentDirectory && !allowStdout ? " Defaults to the current directory of no other destination is selected." : "" ) )
+                    .build() );
+        }
         if ( allowStandardLocation ) {
             og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
                     .longOpt( "standard-location" )
                     .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
                     .build() );
         }
-        addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
-                .longOpt( "stdout" )
-                .desc( "Write " + what + " to standard output." + ( !allowStandardLocation ? " This is the default if no other destination is selected." : "" ) )
-                .build() );
+        if ( allowStdout ) {
+            addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
+                    .longOpt( "stdout" )
+                    .desc( "Write " + what + " to standard output." + ( !allowStandardLocation && !allowCurrentDirectory ? " This is the default if no other destination is selected." : "" ) )
+                    .build() );
+        }
         options.addOptionGroup( og );
     }
 
@@ -275,19 +306,37 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         }
     }
 
+    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return getExpressionDataFileResult( commandLine, allowStandardLocation, true, true );
+    }
+
     /**
      * Obtain the result of the expression data file options added by {@link #addExpressionDataFileOptions(Options, String, boolean)}.
+     *
      * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
      *                              other destination is selected. Otherwise, standard output will be used as a default.
+     * @param allowStdout           if true, the standard output option will be considered and used as a default if no
+     *                              other destination is selected. Otherwise, the current directory will be used as a
+     *                              default.
+     * @param allowCurrentDirectory if true, the current directory will be used as a default if no other destination is
+     *                              selected. Note that a file can be written to inside that directory via
+     *                              {@link ExpressionDataFileResult#getOutputFile(String)}
+     * @throws MissingOptionException if no destination is selected and no default location is allowed.
      */
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine,
+            boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
         if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
             if ( allowStandardLocation ) {
                 log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
                 return new ExpressionDataFileResult( true, false, null, null );
-            } else {
+            } else if ( allowStdout ) {
                 log.debug( "No expression data file options provided, defaulting to -standardOutput/--standard-output." );
                 return new ExpressionDataFileResult( false, true, null, null );
+            } else if ( allowCurrentDirectory ) {
+                log.debug( "No expression data file options provided, defaulting to the current directory." );
+                return new ExpressionDataFileResult( false, true, null, Paths.get( "" ) );
+            } else {
+                throw new MissingOptionException( "No destination is selected and no default location is allowed." );
             }
         }
         return new ExpressionDataFileResult(

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.maintenance;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -31,7 +32,7 @@ public interface TableMaintenanceUtil {
     /**
      * Query space used by the {@code GENE2CS} table.
      * <p>
-     * You may also want to synchronize to {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign},
+     * You may also want to synchronize to {@link ArrayDesign},
      * {@link ubic.gemma.model.expression.designElement.CompositeSequence} and {@link ubic.gemma.model.genome.Gene}
      * since entries in the GENE2CS table are removed in cascade.
      */
@@ -55,7 +56,7 @@ public interface TableMaintenanceUtil {
      * Query space used by the {@code EXPRESSION_EXPERIMENT2ARRAY_DESIGN} table.
      * <p>
      * You may also want to synchronize to {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and
-     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign} since entries in the EE2AD table are removed in
+     * {@link ArrayDesign} since entries in the EE2AD table are removed in
      * cascade.
      */
     String EE2AD_QUERY_SPACE = "EXPRESSION_EXPERIMENT2_ARRAY_DESIGN";
@@ -67,11 +68,22 @@ public interface TableMaintenanceUtil {
     int updateGene2CsEntries();
 
     /**
-     * Update the GENE2CS table.
-     * @param force update the table even if no platforms has been modified since the last update
+     * Update the GENE2CS table for a specific {@link ArrayDesign}.
+     * @param arrayDesign the platform for which to update the GENE2CS entries
+     * @param force       update the table even if no platforms has been modified since the last update
      */
     @Secured({ "GROUP_AGENT" })
-    int updateGene2CsEntries( boolean force );
+    int updateGene2CsEntries( ArrayDesign arrayDesign, boolean force );
+
+    /**
+     * Update the GENE2CS table.
+     * @param sinceLastUpdate if not null, only update entries whose corresponding {@link ArrayDesign} hsa been updated
+     *                        after the given date
+     * @param truncate        if true, the GENE2CS table will be truncated before the update
+     * @param force           update the table even if no platforms has been modified since the last update
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateGene2CsEntries( @Nullable Date sinceLastUpdate, boolean truncate, boolean force );
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
@@ -91,17 +103,28 @@ public interface TableMaintenanceUtil {
 
     /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
+     * @param sinceLastUpdate only update entries for platforms updated since this date
+     * @param truncate        if true, the table will be truncated before the update
      * @return the number of records that were created or updated
      */
     @Secured({ "GROUP_AGENT" })
-    int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate );
+    int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate );
 
+    /**
+     * Evict the query cache for the {@code GENE2CS} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictGene2CsQueryCache();
 
+    /**
+     * Evict the query cache for the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictEe2CQueryCache();
 
+    /**
+     * Evict the query cache for the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
+     */
     @Secured({ "GROUP_ADMIN" })
     void evictEe2AdQueryCache();
 

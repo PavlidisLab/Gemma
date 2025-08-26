@@ -234,7 +234,7 @@ Gemma.GemmaNavigationHeader = Ext
                      href : Gemma.CONTEXT_PATH + "/geneGroupManager.html",
                      tooltip : "Manage your gene groups"
                   }, {
-                     text : 'Experiment Groups',
+                     text : 'Dataset Groups',
                      href : Gemma.CONTEXT_PATH + "/expressionExperimentSetManager.html",
                      tooltip : "Manage your dataset / expression experiment groups"
                   }, '-', {

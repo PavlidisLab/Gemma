@@ -29,6 +29,8 @@ public interface PrincipalComponentAnalysisDao extends BaseDao<PrincipalComponen
 
     Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee );
 
+    boolean existsByExperiment( ExpressionExperiment ee );
+
     List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
     void removeForExperiment( ExpressionExperiment ee );

@@ -18,16 +18,17 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,22 +45,34 @@ import java.util.*;
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.clearScalarConversionThreadLocalStorage;
 import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.formatQuantitationType;
 import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
- * Writes {@link BulkExpressionDataMatrix} to various tabular formats.
+ * Writes {@link BulkExpressionDataMatrix} to a tabular format.
  * @author pavlidis
  */
+@Setter
 @CommonsLog
 @ParametersAreNonnullByDefault
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
-
+    /**
+     * Only include bioassays in the formed column name instead of prepending it with the sample name.
+     */
+    private boolean excludeSampleIdentifiers = false;
+    /**
+     * Use BioAssay IDs (and BioMaterial IDs) in the column names instead of names (or short names).
+     */
+    private boolean useBioAssayIds = false;
+    /**
+     * Do not make the column names R-friendly.
+     * @see ubic.basecode.util.StringUtil#makeNames(String)
+     */
+    private boolean useRawColumnNames = false;
     private boolean autoFlush = false;
-
     @Nullable
     private ScaleType scaleType;
 
@@ -69,33 +82,23 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     }
 
     @Override
-    public void setAutoFlush( boolean autoFlush ) {
-        this.autoFlush = autoFlush;
-    }
-
-    @Override
-    public void setScaleType( @Nullable ScaleType scaleType ) {
-        this.scaleType = scaleType;
-    }
-
-    @Override
-    public int write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
-        return this.write( matrix, null, writer );
+    public int write( BulkExpressionDataMatrix<?> matrix, Class<? extends BulkExpressionDataVector> vectorType, Writer writer ) throws IOException {
+        return this.write( matrix, vectorType, null, writer );
     }
 
     /**
-     * @param writer          the writer to use
      * @param matrix          the matrix
+     * @param vectorType      the type of vector to write
      * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
      *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
      *                        files.
+     * @param writer          the writer to use
      * @throws IOException when the write failed
      */
-    public int write( BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
+    public int write( BulkExpressionDataMatrix<?> matrix, Class<? extends BulkExpressionDataVector> vectorType, @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
         QuantitationType qt = matrix.getQuantitationType();
 
-        List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, false );
-        this.writeHeader( bioMaterials, matrix, geneAnnotations, writer );
+        this.writeHeader( matrix, vectorType, geneAnnotations, writer );
 
         int rows = matrix.rows();
         for ( int j = 0; j < rows; j++ ) {
@@ -106,8 +109,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 this.writeGeneInfo( probeForRow, geneAnnotations, writer );
             }
             // print the data.
-            for ( BioMaterial bioMaterial : bioMaterials ) {
-                int i = matrix.getColumnIndex( bioMaterial );
+            for ( int i = 0; i < matrix.columns(); i++ ) {
                 writer.append( "\t" );
                 writeValue( matrix.get( j, i ), qt, writer );
             }
@@ -127,20 +129,19 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     /**
      * Alternate method that uses annotations in string form (e.g., read from another file).
      *
+     * @param writer          the writer to use
+     * @param matrix          the matrix to write
+     * @param vectorType      the type of vector to write
      * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
      *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
      *                        files.
-     * @param matrix          the matrix to write
-     * @param writer          the writer to use
      * @throws IOException when the write failed
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
-    public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
+    public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, Class<? extends BulkExpressionDataVector> vectorType, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         QuantitationType qt = matrix.getQuantitationType();
 
-        List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, true );
-
-        this.writeHeader( orderedBioMaterials, matrix, geneAnnotations, writer );
+        this.writeHeader( matrix, vectorType, geneAnnotations, writer );
 
         int rows = matrix.rows();
         for ( int j = 0; j < rows; j++ ) {
@@ -151,8 +152,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 this.writeStringifiedGeneInfo( probeForRow, geneAnnotations, writer );
             }
 
-            for ( BioMaterial bioMaterial : orderedBioMaterials ) {
-                int i = matrix.getColumnIndex( bioMaterial );
+            for ( int i = 0; i < matrix.columns(); i++ ) {
                 Object val = matrix.get( j, i );
                 writer.append( "\t" );
                 writeValue( val, qt, writer );
@@ -167,80 +167,29 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         return rows;
     }
 
-    public int writeJSON( Writer writer, BulkExpressionDataMatrix<?> matrix ) throws IOException {
-        int columns = matrix.columns();
-        int rows = matrix.rows();
-
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( "{ 'numRows' : " ).append( matrix.rows() ).append( ", 'rows': " );
-
-        buf.append( "[" );
-
-        for ( int j = 0; j < rows; j++ ) {
-
-            if ( j > 0 )
-                buf.append( "," );
-            buf.append( "{" );
-            buf.append( "'id' : \"" ).append( matrix.getDesignElementForRow( j ).getName() ).append( "\"" );
-            BioSequence biologicalCharacteristic = matrix.getDesignElementForRow( j ).getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null )
-                buf.append( ", 'sequence' : \"" ).append( biologicalCharacteristic.getName() ).append( "\"" );
-
-            buf.append( ", 'data' : [" );
-            for ( int i = 0; i < columns; i++ ) {
-                Object val = matrix.get( j, i );
-                if ( i > 0 )
-                    buf.append( "," );
-                buf.append( val );
-            }
-
-            buf.append( "]}\n" );
-        }
-        buf.append( "\n]}" );
-        writer.write( buf.toString() );
-        return rows;
-    }
-
-    private List<BioMaterial> getBioMaterialsInRequestedOrder( BulkExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
-        List<BioMaterial> bioMaterials = new ArrayList<>();
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
-        }
-        if ( orderByDesign ) {
-            return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( bioMaterials, null, null );
-        } else {
-            return bioMaterials;
-        }
-    }
-
-    /**
-     * @param geneAnnotations just passed in to check it is there.
-     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
-     */
-    private void writeHeader( List<BioMaterial> orderedBioMaterials, BulkExpressionDataMatrix<?> matrix,
+    private void writeHeader( BulkExpressionDataMatrix<?> matrix, Class<? extends BulkExpressionDataVector> vectorType,
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
         ExpressionExperiment experiment = matrix.getExpressionExperiment();
         if ( experiment != null ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( experiment ).web().toUriString();
-            appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, writer );
+            appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, new Date(), writer );
         } else {
             log.warn( "Provided matrix does not have an ExpressionExperiment, omitting it from the base header." );
-            appendBaseHeader( "Expression data", buildInfo, writer );
+            appendBaseHeader( "Expression data", buildInfo, new Date(), writer );
         }
 
-        Collection<QuantitationType> qts;
         if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
-            qts = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getQuantitationTypes();
-        } else {
-            qts = Collections.singleton( matrix.getQuantitationType() );
-        }
-        for ( QuantitationType qt : qts ) {
-            writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
-            if ( autoFlush ) {
-                writer.flush();
+            Collection<QuantitationType> qts = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getQuantitationTypes();
+            for ( QuantitationType qt : qts ) {
+                writer.append( "# Quantitation type: " ).append( formatQuantitationType( qt, vectorType ) ).append( "\n" );
             }
+        } else {
+            writer.append( "# Quantitation type: " ).append( formatQuantitationType( matrix.getQuantitationType(), vectorType ) ).append( "\n" );
+        }
+
+        if ( autoFlush ) {
+            writer.flush();
         }
 
         writer.append( "Probe\tSequence" );
@@ -249,9 +198,20 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             writer.append( "\tGeneSymbol\tGeneName\tGemmaId\tNCBIid" );
         }
 
-        for ( BioMaterial bioMaterial : orderedBioMaterials ) {
-            int i = matrix.getColumnIndex( bioMaterial );
-            String colName = ExpressionDataWriterUtils.constructSampleName( matrix, i );
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            String colName;
+            if ( excludeSampleIdentifiers ) {
+                colName = ExpressionDataWriterUtils.constructAssayName( matrix.getBioAssayForColumn( i ), useBioAssayIds, useRawColumnNames );
+            } else {
+                BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( i );
+                Collection<BioAssay> bioAssaysForColumn;
+                if ( matrix instanceof MultiAssayBulkExpressionDataMatrix ) {
+                    bioAssaysForColumn = ( ( MultiAssayBulkExpressionDataMatrix<?> ) matrix ).getBioAssaysForColumn( i );
+                } else {
+                    bioAssaysForColumn = Collections.singleton( matrix.getBioAssayForColumn( i ) );
+                }
+                colName = ExpressionDataWriterUtils.constructSampleName( bioMaterialForColumn, bioAssaysForColumn, useBioAssayIds, useRawColumnNames, '.' );
+            }
             writer.append( "\t" ).append( format( colName ) );
         }
         writer.append( "\n" );
@@ -340,10 +300,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 ncbiIds.add( format( gene.getNcbiGeneId() ) );
             }
             writer
-                    .append( "\t" ).append( StringUtils.join( gs, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( gn, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( ids, SUB_DELIMITER ) )
-                    .append( "\t" ).append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
+                    .append( "\t" ).append( format( gs ) )
+                    .append( "\t" ).append( format( gn ) )
+                    .append( "\t" ).append( format( ids ) )
+                    .append( "\t" ).append( format( ncbiIds ) );
         }
     }
 

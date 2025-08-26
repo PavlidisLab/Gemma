@@ -1,5 +1,8 @@
 <%@ include file="/common/taglibs.jsp" %>
 
+<%--@elvariable id="arrayDesign" type="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject"--%>
+<%--@elvariable id="technologyTypes" type="java.util.List"--%>
+
 <head>
 <title>Edit ${fn:escapeXml(arrayDesign.name)}</title>
 </head>

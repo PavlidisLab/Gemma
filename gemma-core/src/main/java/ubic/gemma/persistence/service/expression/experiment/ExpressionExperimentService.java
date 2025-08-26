@@ -90,22 +90,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     List<Long> loadTroubledIds();
 
     /**
-     * Load all ID and name pairs.
-     * <p>
-     * Results are filtered by ACLs at the query-level.
+     * Load all possible identifiers for experiments.
+     * @param includeNames if true, include experiment names as possible identifier
+     * @return a mapping of candidate identifier to experiment name
      */
-    SortedMap<Long, String> loadAllIdAndName();
-
-    /**
-     * Load all short name and name pairs.
-     * <p>
-     * Results are filtered by ACLs at the query-level.
-     */
-    SortedMap<String, String> loadAllShortNameAndName();
-
-    SortedSet<String> loadAllName();
-
-    SortedMap<String, String> loadAllAccessionAndName();
+    SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
     /**
      * @see ExpressionExperimentDao#reload(Object)
@@ -257,17 +246,17 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment loadWithCharacteristics( Long id );
 
     /**
-     * Load a {@link BioAssaySet} by ID which can be either a {@link ExpressionExperiment} or a {@link ExpressionExperimentSubSet}.
-     */
-    @Nullable
-    BioAssaySet loadBioAssaySet( Long id );
-
-    /**
      * Load an experiment and thaw it as per {@link #thawLite(ExpressionExperiment)} or fail with the supplied exception
      * and message.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> ExpressionExperiment loadAndThawLiterOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
     /**
      * Load an experiment and thaw it as per {@link #thaw(ExpressionExperiment)}.
@@ -275,6 +264,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThaw( Long id );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment loadAndThawLite( Long id );
 
     /**
      * Load an experiment without cache and thaw it as per {@link #thaw(ExpressionExperiment)} with {@link org.hibernate.CacheMode#REFRESH}.
@@ -303,6 +296,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithPrimaryPublication( Long id );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
@@ -392,6 +389,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment findByShortName( String shortName );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findByShortNameAndThawLite( String shortName );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
@@ -523,7 +524,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * ExpressionExperiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
@@ -814,9 +815,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId );
 
     /**
-     * Return the taxon for each of the given experiments (or subsets).
+     * Return the taxon for each of the given experiments.
      */
-    <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
+    Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees );
 
     /**
      * Returns the taxon of the given experiment or subset.
@@ -826,7 +827,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Taxon getTaxon( BioAssaySet bioAssaySet );
+    Taxon getTaxon( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiment ee

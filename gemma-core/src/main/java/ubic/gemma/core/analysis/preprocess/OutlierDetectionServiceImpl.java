@@ -18,6 +18,8 @@ import cern.colt.list.DoubleArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -25,7 +27,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -40,28 +41,44 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
-    @Nullable
+    private final Cache cache;
+
+    @Autowired
+    public OutlierDetectionServiceImpl( CacheManager cacheManager ) {
+        cache = cacheManager.getCache( "OutlierDetailsCache" );
+    }
+
     @Override
-    public Collection<OutlierDetails> getOutlierDetails( ExpressionExperiment ee ) {
+    public Optional<Collection<OutlierDetails>> getOutlierDetails( ExpressionExperiment ee ) {
+        Cache.ValueWrapper value = cache.get( ee.getId() );
+        if ( value != null ) {
+            //noinspection unchecked
+            return Optional.of( ( Collection<OutlierDetails> ) value.get() );
+        }
         DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( cormat == null || cormat.rows() == 0 ) {
             OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );
-            return new HashSet<>();
+            return Optional.empty();
         }
-        return this.identifyOutliersByMedianCorrelation( cormat );
+        Collection<OutlierDetails> details = this.identifyOutliersByMedianCorrelation( cormat );
+        cache.put( ee.getId(), details );
+        return Optional.of( details );
     }
 
     @Override
     public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) throws FilteringException {
         DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( cormat == null ) {
+            log.info( "Correlation matrix is missing, computing it now..." );
             cormat = sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         }
         if ( cormat.rows() == 0 ) {
             OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );
             return new HashSet<>();
         }
-        return this.identifyOutliersByMedianCorrelation( cormat );
+        Collection<OutlierDetails> details = this.identifyOutliersByMedianCorrelation( cormat );
+        cache.put( ee.getId(), details );
+        return details;
     }
 
     @Override
@@ -73,7 +90,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         /* Find the 1st, 2nd, and 3rd quartiles of each sample */
         for ( int i = 0; i < cormat.rows(); i++ ) {
             DoubleArrayList cors = new DoubleArrayList();
-            sample = new OutlierDetails( cormat.getRowName( i ) );
+            sample = new OutlierDetails( cormat.getRowName( i ).getId() );
             for ( int j = 0; j < cormat.columns(); j++ ) {
                 if ( j != i ) { // get all sample correlations except correlation with self
                     double d = cormat.get( i, j );
@@ -95,7 +112,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         }
 
         /* Sort all samples by median correlation */
-        Collections.sort( allSamples, OutlierDetails.MEDIAN_COMPARATOR );
+        allSamples.sort( OutlierDetails.MEDIAN_COMPARATOR );
 
         int numOutliers = 0;
 
@@ -210,7 +227,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             }
         }
 
-        Collections.sort( inliers, OutlierDetails.FIRST_QUARTILE_COMPARATOR );
+        inliers.sort( OutlierDetails.FIRST_QUARTILE_COMPARATOR );
 
         double threshold = inliers.get( 0 ).getFirstQuartile();
 

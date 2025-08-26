@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
+<%--@elvariable id="appConfig" type="java.util.Map"--%>
 
 <c:if test='${ appConfig["ga.tracker"] != null}'>
     <!-- Google tag (gtag.js) -->

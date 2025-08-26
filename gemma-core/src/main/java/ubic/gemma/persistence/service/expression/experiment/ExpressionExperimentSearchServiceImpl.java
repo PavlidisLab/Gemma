@@ -202,7 +202,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 assert numWithDifferentialExpressionAnalysis <= entry.getValue().size();
 
                 int numWithCoexpressionAnalysis = coexpressionAnalysisService
-                        .getExperimentsWithAnalysis( entry.getValue(), true ).size();
+                        .getExperimentsWithAnalysis( entry.getValue() ).size();
 
                 ftvo.setNumWithCoexpressionAnalysis( numWithCoexpressionAnalysis );
                 ftvo.setNumWithDifferentialExpressionAnalysis( numWithDifferentialExpressionAnalysis );

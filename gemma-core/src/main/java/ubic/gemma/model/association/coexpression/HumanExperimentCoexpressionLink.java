@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.association.coexpression;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author Paul
@@ -30,9 +30,9 @@ public class HumanExperimentCoexpressionLink extends ExperimentCoexpressionLink 
         this( null, null, null, null );
     }
 
-    public HumanExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
+    public HumanExperimentCoexpressionLink( ExpressionExperiment experiment, Long linkId, Long firstGene,
             Long secondGene ) {
-        super( bioAssaySet, linkId, firstGene, secondGene );
+        super( experiment, linkId, firstGene, secondGene );
     }
 
 }

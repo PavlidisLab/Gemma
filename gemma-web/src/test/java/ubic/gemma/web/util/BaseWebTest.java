@@ -10,14 +10,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.web.controller.util.DefaultHandlerExceptionResolver;
 import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.servlet.ServletContext;
-
-import static org.mockito.Mockito.mock;
 
 /**
  * Base class for a Web-based unit test.
@@ -39,11 +36,6 @@ public abstract class BaseWebTest extends BaseTest {
         @Bean
         public MessageUtil messageUtil() {
             return new MessageUtil();
-        }
-
-        @Bean
-        public MailEngine mailEngine() {
-            return mock( MailEngine.class );
         }
 
         @Bean

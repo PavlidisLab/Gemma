@@ -36,7 +36,7 @@ import ubic.gemma.model.association.coexpression.ExperimentCoexpressionLink;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.IdentifiableUtils;
@@ -109,7 +109,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     private SessionFactory sessionFactory;
 
     @Override
-    public boolean hasLinks( Taxon taxon, BioAssaySet ee ) {
+    public boolean hasLinks( Taxon taxon, ExpressionExperiment ee ) {
         return ( Boolean ) sessionFactory.getCurrentSession()
                 .createQuery( "select count(*) > 0 from " + CoexpressionQueryUtils.getExperimentLinkClassName( taxon ) + " e "
                         + "where e.experiment = :ee" )
@@ -118,7 +118,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    public Integer countLinks( Gene gene, BioAssaySet ee ) {
+    public Integer countLinks( Gene gene, ExpressionExperiment ee ) {
         // Looking at the first gene is enough if we save the flipped versions; we don't get a double-count here because
         // of the constraint on the first gene.
         Session sess = sessionFactory.getCurrentSession();
@@ -134,12 +134,12 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      *
      */
     @Override
-    public void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
+    public void createOrUpdate( ExpressionExperiment ee, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
             Set<Gene> genesTested ) {
 
         // assumption is that these are _all_ the links for this experiment
         assert !links.isEmpty();
-        assert bioAssaySet != null;
+        assert ee != null;
         assert c != null;
 
         Collections.sort( links );
@@ -154,9 +154,9 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
         /*
          * Check that there are no links for this experiment.
          */
-        if ( this.countLinks( gene.getTaxon(), bioAssaySet ) > 0 ) {
+        if ( this.countLinks( gene.getTaxon(), ee ) > 0 ) {
             throw new IllegalStateException(
-                    "There are already links for given bioAssaySet; they must be deleted before proceeding" );
+                    "There are already links for given ee; they must be deleted before proceeding" );
         }
 
         /*
@@ -219,10 +219,10 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
                 // initialize the supportdetails
                 SupportDetails sd = c
                         .createSupportDetails( firstGene, secondGene, proposedG2G.isPositiveCorrelation() );
-                sd.addEntity( bioAssaySet.getId() );
+                sd.addEntity( ee.getId() );
 
                 assert sd.getNumIds() > 0;
-                assert sd.isIncluded( bioAssaySet.getId() );
+                assert sd.isIncluded( ee.getId() );
 
                 // Must be unique
                 assert !seenNewSupportDetails.contains( sd ) : "Already saw " + sd + " while processing " + proposedG2G;
@@ -254,7 +254,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
                 }
 
                 /* sanity check that we aren't adding dataset twice; we might be able make this an assertion instead. */
-                if ( existingLink.isSupportedBy( bioAssaySet ) ) {
+                if ( existingLink.isSupportedBy( ee ) ) {
                     throw new IllegalStateException( "Support for this experiment already exists for " + existingLink
                             + ", must be deleted first" );
                 }
@@ -263,7 +263,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
                 int oldSupport = existingLink.getSupportDetails().getNumIds();
 
                 // update the support
-                existingLink.getSupportDetails().addEntity( bioAssaySet.getId() );
+                existingLink.getSupportDetails().addEntity( ee.getId() );
                 existingLink.updateNumDatasetsSupporting();
 
                 // there is no cascade... on purpose.
@@ -359,10 +359,10 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
          */
         CoexpressionDaoImpl.log
                 .info( "Saving " + linkIds.size() + " experiment-level links (plus flipped versions) ..." );
-        this.saveExperimentLevelLinks( sess, c, linkIds, bioAssaySet );
+        this.saveExperimentLevelLinks( sess, c, linkIds, ee );
 
         if ( genesTested != null )
-            this.updatedTestedIn( bioAssaySet, genesTested );
+            this.updatedTestedIn( ee, genesTested );
 
         this.updateGeneCoexpressedWith( links );
 
@@ -380,7 +380,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      *
      */
     @Override
-    public void deleteLinks( Taxon t, BioAssaySet experiment ) {
+    public void deleteLinks( Taxon t, ExpressionExperiment experiment ) {
         Session sess = sessionFactory.getCurrentSession();
         sess.setCacheMode( CacheMode.IGNORE );
 
@@ -647,7 +647,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @Override
-    public Collection<CoexpressionValueObject> getCoexpression( Taxon taxon, BioAssaySet experiment, boolean quick ) {
+    public Collection<CoexpressionValueObject> getCoexpression( Taxon taxon, ExpressionExperiment experiment, boolean quick ) {
 
         Session sess = sessionFactory.getCurrentSession();
 
@@ -846,7 +846,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void updateModifiedSupportDetails( BioAssaySet experiment, Collection<SupportDetails> supportDetailsToDelete,
+    public void updateModifiedSupportDetails( ExpressionExperiment experiment, Collection<SupportDetails> supportDetailsToDelete,
             Collection<SupportDetails> supportDetailsToUpdate ) {
         int count;
         int BATCH_SIZE = 1024;
@@ -1191,7 +1191,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
         return results;
     }
 
-    private Integer countLinks( Taxon t, BioAssaySet ee ) {
+    private Integer countLinks( Taxon t, ExpressionExperiment ee ) {
         int rawCount = ( ( BigInteger ) sessionFactory.getCurrentSession().createSQLQuery(
                 "select count(*) from " + CoexpressionQueryUtils.getExperimentLinkTableName( t )
                         + " e where e.EXPERIMENT_FK=:ee" ).setParameter( "ee", ee.getId() ).uniqueResult() ).intValue();
@@ -1267,7 +1267,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      * @param experiment ee
      * @return all the links which involve this experiment, including the "flipped" versions.
      */
-    private Collection<Gene2GeneCoexpression> getCoexpression( Taxon t, BioAssaySet experiment ) {
+    private Collection<Gene2GeneCoexpression> getCoexpression( Taxon t, ExpressionExperiment experiment ) {
         Session sess = sessionFactory.getCurrentSession();
 
         // distinct because ee links are stored twice. However, the flipped versions of the ee links are linked to only
@@ -2107,7 +2107,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      * @param experiment ee
      * @param t          t
      */
-    private void removeTestedIn( Taxon t, BioAssaySet experiment ) {
+    private void removeTestedIn( Taxon t, ExpressionExperiment experiment ) {
 
         Session sess = sessionFactory.getCurrentSession();
 
@@ -2190,14 +2190,14 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     }
 
     private void saveExperimentLevelLinks( Session sess, LinkCreator c,
-            TreeMap<Long, NonPersistentNonOrderedCoexpLink> links, BioAssaySet bioAssaySet ) {
+            TreeMap<Long, NonPersistentNonOrderedCoexpLink> links, ExpressionExperiment ee ) {
         int progress = 0;
         int BATCH_SIZE = 1024;
         List<ExperimentCoexpressionLink> flippedLinks = new ArrayList<>();
         for ( Long linkid : links.keySet() ) {
             NonPersistentNonOrderedCoexpLink link = links.get( linkid );
             ExperimentCoexpressionLink ecl = c
-                    .createEELink( bioAssaySet, linkid, link.getFirstGene(), link.getSecondGene() );
+                    .createEELink( ee, linkid, link.getFirstGene(), link.getSecondGene() );
 
             /*
              * At same time, create flipped versions, but save them later for ordering. Notice that we use the SAME link
@@ -2208,7 +2208,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
              * experiment-level query, without going to the supportDetails. I do not believe the current code guarantees
              * this.
              */
-            flippedLinks.add( c.createEELink( bioAssaySet, linkid, link.getSecondGene(), link.getFirstGene() ) );
+            flippedLinks.add( c.createEELink( ee, linkid, link.getSecondGene(), link.getFirstGene() ) );
 
             sess.save( ecl );
 
@@ -2341,7 +2341,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
      * @param ee          the data set
      * @param genesTested the genes
      */
-    private void updatedTestedIn( BioAssaySet ee, Collection<Gene> genesTested ) {
+    private void updatedTestedIn( ExpressionExperiment ee, Collection<Gene> genesTested ) {
         Session sess = sessionFactory.getCurrentSession();
         Query q = sess.createQuery( "from GeneCoexpressionTestedIn where geneId in (:ids)" );
 

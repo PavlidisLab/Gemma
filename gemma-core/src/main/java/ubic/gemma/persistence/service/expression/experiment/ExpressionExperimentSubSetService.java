@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -84,4 +85,6 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
     Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
+
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset );
 }

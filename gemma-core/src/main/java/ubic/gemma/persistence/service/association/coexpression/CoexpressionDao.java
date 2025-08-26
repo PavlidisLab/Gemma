@@ -22,7 +22,7 @@ import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -36,9 +36,9 @@ import java.util.Set;
  */
 public interface CoexpressionDao {
 
-    boolean hasLinks( Taxon taxon, BioAssaySet ee );
+    boolean hasLinks( Taxon taxon, ExpressionExperiment ee );
 
-    Integer countLinks( Gene gene, BioAssaySet ee );
+    Integer countLinks( Gene gene, ExpressionExperiment ee );
 
     /**
      * @param p2plinks    in gene order
@@ -46,10 +46,10 @@ public interface CoexpressionDao {
      * @param c           link creator
      * @param genesTested genes tested
      */
-    void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> p2plinks, LinkCreator c,
+    void createOrUpdate( ExpressionExperiment bioAssaySet, List<NonPersistentNonOrderedCoexpLink> p2plinks, LinkCreator c,
             Set<Gene> genesTested );
 
-    void deleteLinks( Taxon taxon, BioAssaySet experiment );
+    void deleteLinks( Taxon taxon, ExpressionExperiment experiment );
 
     /**
      * Find coexpression links for a gene that are <em>common</em> to all the given datasets. That is the stringency is
@@ -118,7 +118,7 @@ public interface CoexpressionDao {
      * @param experiment experiment
      * @return links, but not including flipped versions
      */
-    Collection<CoexpressionValueObject> getCoexpression( Taxon taxon, BioAssaySet experiment, boolean quick );
+    Collection<CoexpressionValueObject> getCoexpression( Taxon taxon, ExpressionExperiment experiment, boolean quick );
 
     /**
      * @param gene gene

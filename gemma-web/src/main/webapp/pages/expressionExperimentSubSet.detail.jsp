@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp" %>
 
-<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
+<%--@elvariable id="appConfig" type="java.util.Map"--%>
 
 <head>
 <title>${subSet.name} of ${subSet.sourceExperiment.shortName} - ${subSet.sourceExperiment.name}</title>
@@ -110,6 +110,7 @@
         <c:if test="${heatmap != null}">
         </c:if>
         <c:if test="${not empty bioAssays}">
+            <tr>
             <td class="label">Assays:</td>
             <td>
                 <c:choose>

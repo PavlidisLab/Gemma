@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.2</version>
+        <version>1.32.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -184,7 +184,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.14.0</version>
+            <version>1.14.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -194,7 +194,7 @@
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>3.11.1</version>
+            <version>3.12.0</version>
         </dependency>
 
         <!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->
@@ -249,8 +249,6 @@
             <groupId>org.hdf5group</groupId>
             <artifactId>hdf5</artifactId>
             <version>${hdf5.version}</version>
-            <scope>system</scope>
-            <systemPath>${hdf5.jarPath}</systemPath>
         </dependency>
 
         <!-- Gemma Slack Bot -->
@@ -301,7 +299,4 @@
 
     </dependencies>
 
-    <properties>
-        <skipVersionFile>false</skipVersionFile>
-    </properties>
 </project>

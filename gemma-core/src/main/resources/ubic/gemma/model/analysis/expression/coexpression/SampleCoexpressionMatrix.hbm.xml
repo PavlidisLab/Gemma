@@ -3,8 +3,8 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
     <class name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-           table="SAMPLE_COEXPRESSION_MATRIX">
-        <cache usage="read-write"/>
+           table="SAMPLE_COEXPRESSION_MATRIX" mutable="false">
+        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">

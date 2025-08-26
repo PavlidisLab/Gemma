@@ -37,5 +37,6 @@ public class SingleCellDataAggregateDeleterCli extends ExpressionExperimentVecto
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         dataDeleterService.deleteSingleCellDataAggregate( ee, qt );
+        addSuccessObject( ee, qt, "Deleted single-cell data aggregate." );
     }
 }

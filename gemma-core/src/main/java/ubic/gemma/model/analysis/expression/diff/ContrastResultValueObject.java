@@ -9,6 +9,8 @@ import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a contrast result.
  * @author poirigui
@@ -18,9 +20,13 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 @ToString
 public class ContrastResultValueObject extends IdentifiableValueObject<ContrastResult> {
 
+    @Nullable
     private Double pvalue;
+    @Nullable
     private Double tStat;
+    @Nullable
     private Double coefficient;
+    @Nullable
     private Double logFoldChange;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "This property is mutually exclusive with `factorValue`.")

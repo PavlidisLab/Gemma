@@ -376,9 +376,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 // using distinct for multi-mapping probes
-                .createSQLQuery( "select distinct {G.*} from GENE2CS "
+                .createSQLQuery( "select {G.*} from GENE2CS "
                         + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
-                        + "where GENE2CS.AD = :ad" )
+                        + "where GENE2CS.AD = :ad "
+                        + "group by G.ID")
                 .addEntity( "G", Gene.class )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
@@ -619,9 +620,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         //noinspection unchecked
         List<Long> ids = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ad.id from ExpressionExperiment as ee "
+                .createQuery( "select ad.id from ExpressionExperiment as ee "
                         + "join ee.bioAssays b join b.arrayDesignUsed ad "
-                        + "where ee.id = :eeId" )
+                        + "where ee.id = :eeId "
+                        + "group by ad")
                 .setParameter( "eeId", eeId )
                 .setCacheable( true )
                 .list();

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.loader.expression.geo.service.*;
@@ -49,6 +50,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumSetOption;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
@@ -85,7 +87,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
-    private static final GeoSeriesType[] SERIES_TYPES = new GeoSeriesType[] {
+    private static final GeoSeriesType[] DEFAULT_SERIES_TYPES = new GeoSeriesType[] {
             GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY,
             GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING,
             GeoSeriesType.EXPRESSION_PROFILING_BY_MPSS,
@@ -131,6 +133,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private Path accessionFile;
 
     // options for browsing datasets
+    private EnumSet<GeoSeriesType> seriesTypes;
+    @Nullable
+    private Set<String> allowedTaxa;
     @Nullable
     private Date dateLimit;
     @Nullable
@@ -164,11 +169,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
-    }
-
-    @Override
     public String getCommandName() {
         return "listGEOData";
     }
@@ -176,6 +176,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     @Override
     public String getShortDesc() {
         return "Grab information on GEO data sets not yet in the system, working backwards in time";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
     @Override
@@ -197,7 +202,14 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .desc( "A file containing accessions to retrieve from GEO" )
                 .build() );
 
+
         // for browsing datasets
+        addEnumSetOption( options, "seriesTypes", "series-types",
+                String.format( "Specify what kind of GEO series types to retrieve. Defaults to %s.",
+                        Arrays.stream( DEFAULT_SERIES_TYPES )
+                                .map( Enum::toString )
+                                .collect( Collectors.joining( ", " ) ) ), GeoSeriesType.class );
+        options.addOption( Option.builder( "allowedTaxa" ).longOpt( "allowed-taxa" ).hasArgs().valueSeparator( ',' ).desc( "Limit to selected taxa. Defaults to all taxa declared in Gemma." ).build() );
         options.addOption( "platformLimit", true, "Limit to selected platforms" );
         options.addOption( "startdate", true, "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd and continue retrieving from there" );
         options.addOption( "date", true, "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12). Records on that date will not be processed." );
@@ -229,6 +241,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         this.accession = commandLine.getOptionValue( ACCESSION_OPTION );
         this.accessionFile = commandLine.getParsedOptionValue( ACCESSION_FILE_OPTION );
 
+        if ( commandLine.hasOption( "seriesTypes" ) ) {
+            this.seriesTypes = requireNonNull( OptionsUtils.getEnumSetOptionValue( commandLine, "seriesTypes" ) );
+        } else {
+            this.seriesTypes = EnumSet.copyOf( Arrays.asList( DEFAULT_SERIES_TYPES ) );
+        }
+
         if ( commandLine.hasOption( "date" ) ) {
             try {
                 // this is a user input, so we have to respect its locale
@@ -239,6 +257,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
             this.gseLimit = commandLine.getOptionValue( "gselimit" );
+        }
+
+        if ( commandLine.hasOption( "allowedTaxa" ) ) {
+            this.allowedTaxa = new HashSet<>( Arrays.asList( commandLine.getOptionValues( "allowedTaxa" ) ) );
+        } else {
+            this.allowedTaxa = null;
         }
 
         if ( commandLine.hasOption( "platformLimit" ) ) {
@@ -298,7 +322,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 getDatasets( accessions );
                 break;
             case BROWSE_DATASETS:
-                browseDatasets( startFrom, gseLimit, startDate, dateLimit, limitPlatform, Arrays.asList( SERIES_TYPES ) );
+                browseDatasets( startFrom, gseLimit, startDate, dateLimit, limitPlatform, seriesTypes );
                 break;
             default:
                 throw new IllegalStateException( "Unknown mode " + mode );
@@ -309,7 +333,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa(), 10000 );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, allowedTaxa != null ? allowedTaxa : getTaxaInGemma(), 10000 );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
@@ -339,7 +363,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private void browseDatasets( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
         Set<String> seen = new HashSet<>();
         Map<String, ArrayDesign> seenArrayDesigns = new HashMap<>();
-        Collection<String> allowedTaxa = getAllowedTaxa();
+        Collection<String> allowedTaxa = this.allowedTaxa != null ? this.allowedTaxa : getTaxaInGemma();
 
         String searchMessage = "Browsing GEO series with the following characteristics:";
         searchMessage += "\n\t" + "Taxa: " + String.join( ", ", allowedTaxa );
@@ -504,7 +528,10 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
     }
 
-    private Set<String> getAllowedTaxa() {
+    /**
+     * Obtain a set of taxa that are considered usable in Gemma.
+     */
+    private Set<String> getTaxaInGemma() {
         Set<String> allowedTaxa = new HashSet<>();
         for ( Taxon t : ts.loadAll() ) {
             allowedTaxa.add( t.getScientificName() );

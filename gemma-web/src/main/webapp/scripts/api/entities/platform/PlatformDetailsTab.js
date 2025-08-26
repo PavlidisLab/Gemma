@@ -513,7 +513,7 @@ Gemma.PlatformDetails = Ext
                                                                 items: this.renderElementsLink(platformDetails)
                                                             },
                                                             {
-                                                                fieldLabel: 'Experiments'
+                                                                fieldLabel: 'Number of datasets'
                                                                 + '&nbsp<i id="experimentsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                                 items: this.renderExperimentLink(platformDetails)
                                                             },

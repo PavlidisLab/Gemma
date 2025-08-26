@@ -139,7 +139,7 @@ public class SingleCellDataBoxplot {
                 columnIndex.put( ba.getName(), i++ );
             }
             columnKeys = bioAssays.stream()
-                    .map( BioAssay::getName )
+                    .map( ba -> ba.getShortName() != null ? ba.getShortName() : ba.getName() )
                     .collect( Collectors.toList() );
             if ( cellLevelCharacteristics != null ) {
                 if ( focusedCharacteristic != null ) {

@@ -28,8 +28,10 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.visualization.ChartThemeUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -318,6 +320,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          * Process
          */
         ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<>( matrix, designU );
+        comBat.setChartTheme( ChartThemeUtils.getGemmaChartTheme( "Arial" ) );
 
         DoubleMatrix2D results = null;
 
@@ -416,27 +419,12 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     private QuantitationType makeNewQuantitationType( QuantitationType oldQt ) {
-        QuantitationType newQt = QuantitationType.Factory.newInstance();
-        newQt.setIsBatchCorrected( true );
-        newQt.setDescription( oldQt.getDescription() );
-        newQt.setIsBackground( oldQt.getIsBackground() );
-        newQt.setIsBackgroundSubtracted( oldQt.getIsBackgroundSubtracted() );
-        newQt.setGeneralType( oldQt.getGeneralType() );
-        //noinspection deprecation
-        newQt.setIsMaskedPreferred( oldQt.getIsMaskedPreferred() );
-        newQt.setIsPreferred( oldQt.getIsPreferred() );
-        newQt.setIsRatio( oldQt.getIsRatio() );
-        newQt.setScale( oldQt.getScale() );
-        newQt.setIsNormalized( oldQt.getIsNormalized() );
-        newQt.setRepresentation( oldQt.getRepresentation() );
-        newQt.setName( oldQt.getName() );
-        newQt.setType( oldQt.getType() );
-        newQt.setIsRecomputedFromRawData( oldQt.getIsRecomputedFromRawData() );
-        if ( !newQt.getDescription().toLowerCase().contains(
-                ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED ) ) {
-            newQt.setDescription( newQt.getDescription() + " "
-                    + ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED );
+        QuantitationType newQt = QuantitationType.Factory.newInstance( oldQt );
+        QuantitationTypeUtils.appendToDescription( newQt, "Batch corrected." );
+        if ( newQt.getDescription() == null || !newQt.getDescription().toLowerCase().contains( ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED ) ) {
+            QuantitationTypeUtils.appendToDescription( newQt, ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED );
         }
+        newQt.setIsBatchCorrected( true );
         return newQt;
     }
 

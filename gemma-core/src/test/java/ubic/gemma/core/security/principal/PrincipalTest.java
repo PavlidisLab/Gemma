@@ -19,9 +19,6 @@
 package ubic.gemma.core.security.principal;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Date;
 
@@ -75,9 +74,8 @@ public class PrincipalTest extends BaseSpringContextTest {
     @Test
     public final void testChangePassword() {
         String newpwd = this.randomName();
-        String encodedPassword = passwordEncoder.encodePassword( newpwd, username );
 
-        String token = userManager.changePasswordForUser( email, username, encodedPassword );
+        String token = userManager.changePasswordForUser( email, username, newpwd );
         System.out.println( "passwd changed" );
 
         assertTrue( !userManager.loadUserByUsername( username ).isEnabled() );

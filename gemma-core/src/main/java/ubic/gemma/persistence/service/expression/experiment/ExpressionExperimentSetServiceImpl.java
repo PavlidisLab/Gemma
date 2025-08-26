@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -60,8 +59,8 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.expressionExperimentSetDao.find( bioAssaySet );
+    public Collection<ExpressionExperimentSet> find( ExpressionExperiment ee ) {
+        return this.expressionExperimentSetDao.find( ee );
     }
 
     @Override
@@ -72,9 +71,9 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
+    public Collection<Long> findIds( ExpressionExperiment ee ) {
         Collection<Long> ids = new ArrayList<>();
-        Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( bioAssaySet );
+        Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( ee );
         for ( ExpressionExperimentSet eeset : eesets ) {
             ids.add( eeset.getId() );
         }
@@ -190,7 +189,7 @@ public class ExpressionExperimentSetServiceImpl
         // make sure potentially new experiment members are of the right taxon
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
-        for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
+        for ( ExpressionExperiment ee : expressionExperimentSet.getExperiments() ) {
             eeTaxon = expressionExperimentService.getTaxon( ee );
 
             if ( eeTaxon == null ) {
@@ -220,7 +219,7 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional
-    public int removeFromSets( BioAssaySet bas ) {
+    public int removeFromSets( ExpressionExperiment bas ) {
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetDao.find( bas );
         for ( ExpressionExperimentSet eeSet : sets ) {
             log.info( "Removing " + bas + " from " + eeSet );

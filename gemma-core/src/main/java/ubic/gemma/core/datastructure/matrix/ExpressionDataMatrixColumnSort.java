@@ -27,11 +27,15 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Methods to organize ExpressionDataMatrices by column (or at least provide the ordering). This works by greedily
@@ -67,7 +71,7 @@ public class ExpressionDataMatrixColumnSort {
         for ( int i = 0; i < dmatrix.columns(); i++ ) {
             bms.add( dmatrix.getBioMaterialForColumn( i ) );
         }
-        return orderByExperimentalDesign( bms, factors, null );
+        return orderByExperimentalDesign( bms, factors, primaryFactor );
     }
 
     /**
@@ -107,77 +111,17 @@ public class ExpressionDataMatrixColumnSort {
      */
     private static List<ExperimentalFactor> orderFactorsByExperimentalDesign( List<BioMaterial> start,
             Collection<ExperimentalFactor> factors, @Nullable ExperimentalFactor primaryFactor ) {
+        Assert.isTrue( primaryFactor == null || factors.contains( primaryFactor ),
+                "The primary factor must be in the provided list of factors." );
 
         if ( factors.isEmpty() ) {
             ExpressionDataMatrixColumnSort.log.warn( "No factors supplied for sorting." );
-            if ( primaryFactor != null ) {
-                return Collections.singletonList( primaryFactor );
-            } else {
-                return Collections.emptyList();
-            }
+            return Collections.emptyList();
         }
 
-        // if we are provided a primary factor, we just work with it.
-        LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<>();
-
-        Collection<ExperimentalFactor> factorsToTake = new HashSet<>( factors );
-
-        if ( primaryFactor != null ) {
-            if ( !factorsToTake.contains( primaryFactor ) ) {
-                throw new IllegalArgumentException( "Primary factor not in the list of factors" );
-            }
-            sortedFactors.add( primaryFactor );
-            factorsToTake.remove( primaryFactor );
-        }
-
-        while ( !factorsToTake.isEmpty() ) {
-            ExperimentalFactor simplest = ExpressionDataMatrixColumnSort.chooseSimplestFactor( start, factorsToTake );
-            if ( simplest == null ) {
-                // none of the factors have more than one factor value. One-sided t-tests ...
-
-                /*
-                 * This assertion isn't right -- we now allow this, though we can only have ONE such constant factor.
-                 * See bug 2390. Unless we are dealing with a subset, in which case there can be any number of constant
-                 * factors within the subset.
-                 */
-                // assert factors.size() == 1 :
-                // "It's possible to have just one factor value, but only if there is only one factor.";
-
-                sortedFactors.addAll( factors );
-                return sortedFactors;
-            }
-            sortedFactors.addLast( simplest );
-
-            factorsToTake.remove( simplest );
-        }
-
-        return sortedFactors;
-    }
-
-    private static Map<FactorValue, List<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
-        Map<FactorValue, List<BioMaterial>> fv2bms = new HashMap<>();
-
-        FactorValue dummy = FactorValue.Factory.newInstance();
-        dummy.setId( -1L );
-
-        for ( BioMaterial bm : bms ) {
-            // boolean used = false;
-            Collection<FactorValue> factorValues = bm.getAllFactorValues();
-            for ( FactorValue fv : factorValues ) {
-                if ( !fv2bms.containsKey( fv ) ) {
-                    fv2bms.put( fv, new ArrayList<>() );
-                }
-                fv2bms.get( fv ).add( bm );
-            }
-
-        }
-
-        for ( Entry<FactorValue, List<BioMaterial>> e : fv2bms.entrySet() ) {
-            List<BioMaterial> biomaterials = e.getValue();
-            ExpressionDataMatrixColumnSort.sortBioMaterials( biomaterials );
-        }
-
-        return fv2bms;
+        return factors.stream()
+                .sorted( getSimplestFactorComparator( start, primaryFactor ) )
+                .collect( Collectors.toList() );
     }
 
     /**
@@ -188,44 +132,52 @@ public class ExpressionDataMatrixColumnSort {
      * @return null if no factor has at least 2 values represented, or the factor with the fewest number of values (at
      * least 2 values that is)
      */
-    private static ExperimentalFactor chooseSimplestFactor( List<BioMaterial> bms,
-            Collection<ExperimentalFactor> factors ) {
+    private static Comparator<ExperimentalFactor> getSimplestFactorComparator( Collection<BioMaterial> samples, @Nullable ExperimentalFactor primaryFactor ) {
+        Set<FactorValue> usedFactorValues = samples.stream()
+                .flatMap( bm -> bm.getAllFactorValues().stream() )
+                .collect( Collectors.toSet() );
 
-        ExperimentalFactor simplest = null;
-        int smallestSize = Integer.MAX_VALUE;
-
-        Collection<FactorValue> usedValues = new HashSet<>();
-        for ( BioMaterial bm : bms ) {
-            usedValues.addAll( bm.getAllFactorValues() );
-        }
-
-        for ( ExperimentalFactor ef : factors ) {
-
-            // if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
-            //     return ef;
-            // }
-
-            /*
-             * Always push 'batch' down the list
-             */
-            if ( factors.size() > 1 && ExperimentFactorUtils.isBatchFactor( ef ) ) {
-                continue;
-            }
-
-            int numvals = 0;
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( usedValues.contains( fv ) ) {
-                    numvals++;
-                }
-            }
-
-            if ( numvals > 1 && numvals < smallestSize ) {
-                smallestSize = numvals;
-                simplest = ef;
+        Map<ExperimentalFactor, Integer> usedValues = new HashMap<>();
+        for ( FactorValue fv : usedFactorValues ) {
+            if ( usedValues.containsKey( fv.getExperimentalFactor() ) ) {
+                usedValues.put( fv.getExperimentalFactor(), usedValues.get( fv.getExperimentalFactor() ) + 1 );
+            } else {
+                usedValues.put( fv.getExperimentalFactor(), 1 );
             }
         }
-        return simplest;
+
+        return Comparator
+                // primary factor should be first, regardless of any other consideration
+                .comparing( ( ExperimentalFactor factor ) -> primaryFactor != null ? ( primaryFactor.equals( factor ) ? 0 : 1 ) : 0 )
+                // factor needs to have at least one used value
+                .thenComparing( factor -> usedValues.getOrDefault( factor, 0 ) > 1 ? 0 : 1 )
+                // always push 'batch' down the list
+                .thenComparing( f -> ExperimentFactorUtils.isBatchFactor( f ) ? 1 : 0 )
+                // pick the factor with the least number of used values
+                .thenComparingInt( f -> usedValues.getOrDefault( f, 0 ) )
+                // prefer categorical factor over continuous ones
+                .thenComparing( f -> f.getType() == FactorType.CATEGORICAL ? 0 : 1 );
     }
+
+    private static Map<FactorValue, List<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
+        Map<FactorValue, List<BioMaterial>> fv2bms = new HashMap<>();
+        for ( BioMaterial bm : bms ) {
+            // boolean used = false;
+            Collection<FactorValue> factorValues = bm.getAllFactorValues();
+            for ( FactorValue fv : factorValues ) {
+                if ( !fv2bms.containsKey( fv ) ) {
+                    fv2bms.put( fv, new ArrayList<>() );
+                }
+                fv2bms.get( fv ).add( bm );
+            }
+        }
+        for ( Entry<FactorValue, List<BioMaterial>> e : fv2bms.entrySet() ) {
+            List<BioMaterial> biomaterials = e.getValue();
+            ExpressionDataMatrixColumnSort.sortBioMaterials( biomaterials );
+        }
+        return fv2bms;
+    }
+
 
     /**
      * Divide the biomaterials up into chunks based on the experimental factor given, keeping everybody in order. If the

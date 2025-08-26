@@ -8,6 +8,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public interface DataUpdater {
     void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException;
 
     void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
-            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix,
+            @Nullable DoubleMatrix<String, String> countMatrix, @Nullable DoubleMatrix<String, String> rpkmMatrix,
             Map<BioAssay, SequencingMetadata> sequencingMetadata, boolean allowMissingSamples );
 
     void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt );

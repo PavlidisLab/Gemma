@@ -22,7 +22,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.Gene2GeneIdAssociation;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -116,9 +116,9 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
         return positiveCorrelation;
     }
 
-    public boolean isSupportedBy( BioAssaySet bioAssaySet ) {
+    public boolean isSupportedBy( ExpressionExperiment ee ) {
         assert this.supportDetails != null;
-        return this.supportDetails.isIncluded( bioAssaySet.getId() );
+        return this.supportDetails.isIncluded( ee.getId() );
     }
 
     @Override

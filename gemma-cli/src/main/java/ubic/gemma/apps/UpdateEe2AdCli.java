@@ -15,9 +15,12 @@ import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
 
 public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
-    private static final String SINCE_OPTION = "s";
+    private static final String
+            SINCE_OPTION = "s",
+            TRUNCATE_OPTION = "truncate";
 
     private Date sinceLastUpdate;
+    private boolean truncate;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -45,6 +48,7 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         addDateOption( SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date", options );
+        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
     }
 
     @Override
@@ -54,11 +58,12 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
         } else {
             sinceLastUpdate = null;
         }
+        truncate = commandLine.hasOption( TRUNCATE_OPTION );
     }
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate );
+        int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate, truncate );
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/platforms/refresh" );

@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionValue
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
@@ -49,6 +50,8 @@ class ExpressionDataFileHelperService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -176,8 +179,14 @@ class ExpressionDataFileHelperService {
      * id(s), ncbi id(s)].
      */
     public Map<CompositeSequence, String[]> getGeneAnnotationsAsStrings( BioAssaySet experimentAnalyzed ) {
-        Collection<ArrayDesign> ads = this.expressionExperimentService
-                .getArrayDesignsUsed( experimentAnalyzed );
+        Collection<ArrayDesign> ads;
+        if ( experimentAnalyzed instanceof ExpressionExperiment ) {
+            ads = this.expressionExperimentService.getArrayDesignsUsed( ( ExpressionExperiment ) experimentAnalyzed );
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+            ads = this.expressionExperimentSubSetService.getArrayDesignsUsed( ( ExpressionExperimentSubSet ) experimentAnalyzed );
+        } else {
+            throw new UnsupportedOperationException( "Unsupported BioAssaySet type: " + experimentAnalyzed.getClass() );
+        }
         return getGeneAnnotationsAsStringsByProbe( ads );
     }
 
@@ -206,7 +215,7 @@ class ExpressionDataFileHelperService {
     }
 
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment ee ) {
-        return differentialExpressionAnalysisService.getAnalyses( ee, true );
+        return differentialExpressionAnalysisService.findByExperiment( ee, true );
     }
 
     public DifferentialExpressionAnalysis getAnalysisById( Long analysisId ) {

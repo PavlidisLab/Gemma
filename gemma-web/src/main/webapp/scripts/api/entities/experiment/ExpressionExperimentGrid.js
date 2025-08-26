@@ -462,7 +462,7 @@ Gemma.ExpressionExperimentQCGrid = Ext.extend(Gemma.ExpressionExperimentGrid, {
             })
         });
         store.on('load', function (store, records, options) {
-            this.setTitle(records.length + " Experiments had Samples Removed due To Outliers");
+           this.setTitle( records.length + " Datasets had samples removed due to outliers" );
         }, this);
         Ext.apply(this, {
             store: store
@@ -492,9 +492,9 @@ Gemma.ExpressionExperimentQCGrid = Ext.extend(Gemma.ExpressionExperimentGrid, {
                         width: 0.55
                     } /*
                             * ,{ id : 'sampleRemoved', header : "Samples Removed", dataIndex : "sampleRemoved", tooltip :
-                            * "Experiments that have had samples removed due to outliers.", width:0.1, renderer:
+                            * "Datasets that have had samples removed due to outliers.", width:0.1, renderer:
                             * this.booleanRenderer }/*,{ id : 'batchEffect', header : "Batch Effects", dataIndex :
-                            * "batchEffect", tooltip : "Experiments that have possible batch effects.", width:0.1,
+                            * "batchEffect", tooltip : "Datasets that have possible batch effects.", width:0.1,
                             * renderer: this.booleanRenderer }
                             */]
             })

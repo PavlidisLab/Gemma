@@ -181,7 +181,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     addErrorObject( ee.getShortName(), "Preferred data is not counts" );
                 }
                 serv.log2cpmFromCounts( ee, qt );
-                addSuccessObject( ee );
+                addSuccessObject( ee, "Back-filled log2cpm from " + qt + "." );
             } catch ( Exception e ) {
                 addErrorObject( ee, e );
             }
@@ -216,6 +216,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
             }
 
             serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, allowMissingSamples );
+            addSuccessObject( ee, String.format( "Added%s%s.",
+                    countFile != null ? " count data from " + countFile : "",
+                    rpkmMatrix != null ? " RPKM data from " + rpkmFile : "" ) );
         } catch ( IOException e ) {
             addErrorObject( ee, "Failed to add count and RPKM data.", e );
             return;

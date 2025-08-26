@@ -27,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -67,6 +68,7 @@ public class HomePageController {
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
         mav.addObject( "buildInfo", buildInfo );
+        mav.addObject( "copyrightNotice", Constants.GEMMA_COPYRIGHT_NOTICE );
         /*
          * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
          * functionality here without considering that.

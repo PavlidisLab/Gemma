@@ -25,8 +25,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.Serializable;
 import java.util.*;
@@ -43,7 +43,7 @@ public class SVDResult implements Serializable {
     /**
      * Experiment or subset this is for.
      */
-    BioAssaySet experimentAnalyzed;
+    ExpressionExperiment experimentAnalyzed;
 
     /**
      * Assays used in the SVD analysis.

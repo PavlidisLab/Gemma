@@ -28,11 +28,6 @@ import javax.persistence.Transient;
  */
 public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1880425342951467283L;
-
     public static final int MAX_NAME_LENGTH = 255;
 
 

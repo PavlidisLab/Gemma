@@ -21,23 +21,21 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.RandomExperimentalDesignUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static ubic.gemma.core.visualization.RandomExperimentalDesignUtils.randomContinuousFactor;
-import static ubic.gemma.core.visualization.RandomExperimentalDesignUtils.randomExperimentalDesign;
+import static ubic.gemma.persistence.service.expression.experiment.RandomExperimentalDesignUtils.randomContinuousFactor;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -82,8 +80,10 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
             ee.getBioAssays().add( BioAssay.Factory.newInstance( "ba" + i, ad, BioMaterial.Factory.newInstance( "bm" + i ) ) );
         }
 
-        ee.setExperimentalDesign( randomExperimentalDesign( ee, 4 ) );
-        ee.getExperimentalDesign().getExperimentalFactors().add( randomContinuousFactor( ee ) );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        randomCategoricalFactor( ee, "genotype", 2 );
+        randomCategoricalFactor( ee, "treatment", 2 );
+        randomContinuousFactor( ee, "age" );
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -131,8 +131,10 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
             subsets.get( i % 4 ).getBioAssays().add( ba );
         }
 
-        ee.setExperimentalDesign( randomExperimentalDesign( ee, 4 ) );
-        ee.getExperimentalDesign().getExperimentalFactors().add( randomContinuousFactor( ee ) );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        randomCategoricalFactor( ee, "genotype", 2 );
+        randomCategoricalFactor( ee, "treatment", 2 );
+        randomContinuousFactor( ee, "age" );
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -206,5 +208,18 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
                 .containsKey( 1L );
         // RandomExperimentalDesignUtils.randomExperimentalDesign( ee );
         // RandomCellLevelCharacteristicsUtils.randomCellTypeAssignment( ee );
+    }
+
+    private final AtomicLong idGenerator = new AtomicLong( 0L );
+
+    /**
+     * Unfortunately, the visualization tool relies on FV IDs being assigned.
+     */
+    private ExperimentalFactor randomCategoricalFactor( ExpressionExperiment ee, String name, int numValues ) {
+        ExperimentalFactor factor = RandomExperimentalDesignUtils.randomCategoricalFactor( ee, name, numValues );
+        for ( FactorValue fv : factor.getFactorValues() ) {
+            fv.setId( idGenerator.incrementAndGet() );
+        }
+        return factor;
     }
 }

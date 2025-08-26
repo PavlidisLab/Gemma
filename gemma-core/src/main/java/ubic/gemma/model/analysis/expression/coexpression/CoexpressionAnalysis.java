@@ -19,12 +19,13 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A coexpression analysis of one experiment. Note that this is used to store meta-data about the analysis, the actual
  * results are not attached to this.
  */
-public class CoexpressionAnalysis extends SingleExperimentAnalysis {
+public class CoexpressionAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
     private CoexpCorrelationDistribution coexpCorrelationDistribution;
     /**

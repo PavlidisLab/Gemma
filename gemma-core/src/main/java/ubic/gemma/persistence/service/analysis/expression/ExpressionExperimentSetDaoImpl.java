@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -58,11 +57,11 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
+    public Collection<ExpressionExperimentSet> find( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ees from ExpressionExperimentSet ees inner join ees.experiments e where e = :ee" )
-                .setParameter( "ee", bioAssaySet ).list();
+                .setParameter( "ee", ee ).list();
     }
 
     @Override

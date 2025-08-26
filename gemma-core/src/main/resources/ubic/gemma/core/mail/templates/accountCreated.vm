@@ -1,0 +1,11 @@
+Dear ${username},
+
+Thank you for registering for Gemma.
+
+Please confirm your registration by clicking on the following link:
+
+${confirmLink}
+
+Please feel free to contact us at ${supportEmailAddress} or by replying to this email.
+
+Enjoy!

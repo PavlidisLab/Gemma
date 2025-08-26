@@ -1,6 +1,5 @@
 package ubic.gemma.web.controller.util;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -15,12 +14,28 @@ import java.nio.charset.StandardCharsets;
  */
 public final class JsonUtil {
 
-    public static void writeErrorToResponse( AuthenticationException e, HttpServletResponse response ) throws IOException {
-        writeErrorToResponse( HttpServletResponse.SC_UNAUTHORIZED, ExceptionUtils.getRootCauseMessage( e ), response );
+    /**
+     * Write a simple JSON object with a "success" key set to true to the response.
+     */
+    public static void writeSuccessToResponse( HttpServletResponse response ) throws IOException {
+        JSONObject json = new JSONObject();
+        json.put( "success", true );
+        writeToResponse( json, response );
     }
 
+    /**
+     * Write an error message to the response based on the exception type.
+     */
     public static void writeErrorToResponse( Exception e, HttpServletResponse response ) throws IOException {
-        writeErrorToResponse( HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getRootCauseMessage( e ), response );
+        int code;
+        if ( e instanceof IllegalArgumentException ) {
+            code = HttpServletResponse.SC_BAD_REQUEST;
+        } else if ( e instanceof AuthenticationException ) {
+            code = HttpServletResponse.SC_FORBIDDEN;
+        } else {
+            code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        }
+        writeErrorToResponse( code, e.getMessage(), response );
     }
 
     public static void writeErrorToResponse( int status, String message, HttpServletResponse response ) throws IOException {

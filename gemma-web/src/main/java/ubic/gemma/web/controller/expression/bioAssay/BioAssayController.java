@@ -130,14 +130,12 @@ public class BioAssayController {
                 EntityNotFoundException::new, "Could not load experiment with ID=" + eeId );
 
         Collection<BioAssayValueObject> result = new HashSet<>();
-        Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
+        Map<Long, OutlierDetails> outlierMap = outlierDetectionService.getOutlierDetails( ee )
+                .map( outliers -> outliers.stream().collect( Collectors.toMap( od -> od.getBioAssayId(), od -> od, ( a, b ) -> b ) ) )
+                .orElse( Collections.emptyMap() );
 
-        if ( outliers != null ) {
-            Map<Long, OutlierDetails> outlierMap = outliers.stream()
-                    .collect( Collectors.toMap( od -> od.getBioAssay().getId(), od -> od, ( a, b ) -> b ) );
-            for ( BioAssay assay : ee.getBioAssays() ) {
-                result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
-            }
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
         }
 
         BioAssayController.log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );

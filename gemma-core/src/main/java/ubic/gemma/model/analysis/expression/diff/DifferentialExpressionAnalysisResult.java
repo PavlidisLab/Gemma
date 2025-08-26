@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -32,12 +33,16 @@ import java.util.Set;
  */
 public class DifferentialExpressionAnalysisResult extends AnalysisResult {
 
+    @Nullable
     private Double pvalue;
     /**
      * Typically actually a qvalue.
      */
+    @Nullable
     private Double correctedPvalue;
+    @Nullable
     private Double rank;
+    @Nullable
     private Integer correctedPValueBin;
     private Long id;
     private Set<ContrastResult> contrasts = new HashSet<>();
@@ -94,11 +99,12 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult {
     /**
      * @return A false discovery estimate (qvalue)
      */
+    @Nullable
     public Double getCorrectedPvalue() {
         return this.correctedPvalue;
     }
 
-    public void setCorrectedPvalue( Double correctedPvalue ) {
+    public void setCorrectedPvalue( @Nullable Double correctedPvalue ) {
 
         if ( correctedPvalue == null )
             return;
@@ -116,11 +122,12 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult {
     /**
      * @return an indexable parameter for the corrected qvalue, to speed searches.
      */
+    @Nullable
     public Integer getCorrectedPValueBin() {
         return this.correctedPValueBin;
     }
 
-    public void setCorrectedPValueBin( Integer correctedPValueBin ) {
+    public void setCorrectedPValueBin( @Nullable Integer correctedPValueBin ) {
         this.correctedPValueBin = correctedPValueBin;
     }
 
@@ -144,11 +151,12 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult {
     /**
      * @return The p-value from the test for rejection of the null hypothesis of no effect
      */
+    @Nullable
     public Double getPvalue() {
         return this.pvalue;
     }
 
-    public void setPvalue( Double pvalue ) {
+    public void setPvalue( @Nullable Double pvalue ) {
         this.pvalue = pvalue;
     }
 
@@ -156,11 +164,12 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult {
      * @return The fractional rank of this result, relative to the others in the ResultSet. Thus the best (lowest p-value) will
      * have a fractional rank of 0.0, the worst wil lbe 1.0.
      */
+    @Nullable
     public Double getRank() {
         return this.rank;
     }
 
-    public void setRank( Double rank ) {
+    public void setRank( @Nullable Double rank ) {
         this.rank = rank;
     }
 

@@ -25,9 +25,9 @@ Ext.onReady( function() {
             cls : 'trouble',
             id : 'browserWarning',
             html : 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  ' +
-               '<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, ' +
-               '<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-               '<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'
+               '<a href="https://www.microsoft.com/en-us/edge/" target="_blank">Microsoft Edge</a>, ' +
+               '<a href="https://www.firefox.com/en-CA/" target="_blank">Firefox</a> or ' +
+               '<a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.'
          } );
       } else if ( Ext.isIE ) {
          Ext.DomHelper.append( 'meta-heatmap-div', {
@@ -35,9 +35,9 @@ Ext.onReady( function() {
             cls : 'trouble',
             id : 'browserWarning',
             html : 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to ' +
-               '<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, ' +
-               '<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-               '<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.' +
+               '<a href="https://www.microsoft.com/en-us/edge/" target="_blank">Microsoft Edge</a>, ' +
+               '<a href="https://www.firefox.com/en-CA/" target="_blank">Firefox</a> or ' +
+               '<a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.' +
                ' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. '
          } );
       } else {
@@ -47,9 +47,9 @@ Ext.onReady( function() {
             id : 'browserWarning',
             html : 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)' +
                ' Please switch to ' +
-               '<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,' +
-               '<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or' +
-               '<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.'
+               '<a href="https://www.microsoft.com/en-us/edge/" target="_blank">Microsoft Edge</a>, ' +
+               '<a href="https://www.firefox.com/en-CA/" target="_blank">Firefox</a> or ' +
+               '<a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.'
          } );
       }
    } else {

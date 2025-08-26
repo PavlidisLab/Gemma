@@ -37,18 +37,6 @@ import java.util.Map;
 public interface ProcessedExpressionDataVectorDao extends DesignElementDataVectorDao<ProcessedExpressionDataVector> {
 
     /**
-     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
-     * should already have been computed. If the values already exist, they will be re-written. The data will be
-     * quantile normalized (with some exceptions: ratios and count data will not be normalized).
-     *
-     * @param expressionExperiment       ee
-     * @param ignoreQuantitationMismatch use raw data to infer scale type and the adequate transformation for producing
-     *                                   processed EVs instead of relying on the QT
-     * @return the number of created vectors
-     */
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
-
-    /**
      * @param expressionExperiment ee
      * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
      */

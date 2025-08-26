@@ -354,7 +354,9 @@ public class GemmaCLI {
             System.err.println( "========= Gemma CLI invocation of " + command.getCommandName() + " ============" );
             System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
             CLI cli = ctx.getBean( command.getBeanName(), CLI.class );
-            statusCode = cli.executeCommand( new SystemCliContext( commandRequested, argsToPass ) );
+            SystemCLIContext cliContext = new SystemCLIContext( commandRequested, argsToPass );
+            cli.executeCommand( cliContext );
+            statusCode = cliContext.getExitStatus();
         } catch ( Exception e ) {
             System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
             System.err.println( ExceptionUtils.getStackTrace( e ) );

@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by tesarst on 09/03/17.
@@ -18,8 +18,8 @@ public class ControllerUtils {
     /**
      * Returns a collection of {@link Long} ids from strings.
      */
-    public static Collection<Long> extractIds( @Nullable String idString ) {
-        Collection<Long> ids = new ArrayList<>();
+    public static List<Long> extractIds( @Nullable String idString ) {
+        List<Long> ids = new ArrayList<>();
         if ( idString != null ) {
             for ( String s : idString.split( "," ) ) {
                 try {

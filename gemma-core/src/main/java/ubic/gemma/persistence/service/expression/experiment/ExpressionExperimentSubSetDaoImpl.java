@@ -23,6 +23,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -32,13 +33,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.CommonQueries;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -82,22 +83,22 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
 
     @Override
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct eess from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba in :bas" )
-                .setParameterList( "bas", optimizeIdentifiableParameterList( bioAssays ) )
-                .list();
+        return new HashSet<>( QueryUtils.listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select eess from ExpressionExperimentSubSet eess "
+                                + "join eess.bioAssays ba where ba in :bas group by eess" ),
+                "bas", bioAssays, QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
     }
 
     @Override
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct fv from ExpressionExperimentSubSet es "
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
                         + "join es.bioAssays ba "
                         + "join ba.sampleUsed bm "
                         + "join bm.factorValues fv "
-                        + "where es=:es and fv.experimentalFactor = :ef" )
+                        + "where es=:es and fv.experimentalFactor = :ef "
+                        + "group by fv")
                 .setParameter( "es", entity )
                 .setParameter( "ef", factor )
                 .list();
@@ -107,14 +108,20 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
+                        "select fv from ExpressionExperimentSubSet es "
                                 + "join es.bioAssays ba "
                                 + "join ba.sampleUsed bm "
                                 + "join bm.factorValues fv "
-                                + "where es.id=:es and fv.experimentalFactor.id = :ef" )
+                                + "where es.id=:es and fv.experimentalFactor.id = :ef "
+                                + "group by fv")
                 .setParameter( "es", subSetId )
                 .setParameter( "ef", experimentalFactor )
                 .list();
+    }
+
+    @Override
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return CommonQueries.getArrayDesignsUsed( subset, this.getSessionFactory().getCurrentSession() );
     }
 
     @Override
@@ -164,7 +171,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -172,7 +179,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     private Collection<SingleCellDimension> getSingleCellDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -182,12 +189,13 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
      */
     private Collection<FactorValue> getFactorValueUsed( ExpressionExperimentSubSet subset ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
-                                + "join es.bioAssays ba "
-                                + "join ba.sampleUsed bm "
-                                + "join bm.factorValues fv "
-                                + "where es=:es" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
+                        + "join es.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "join bm.factorValues fv "
+                        + "where es=:es "
+                        + "group by fv" )
                 .setParameter( "es", subset )
                 .list();
     }

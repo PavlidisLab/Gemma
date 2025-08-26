@@ -20,14 +20,16 @@ package ubic.gemma.web.taglib.expression.experiment;
 
 import gemma.gsec.util.SecurityUtil;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 import ubic.gemma.web.taglib.TagWriterUtils;
-import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -44,8 +46,14 @@ import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 @Setter
 public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttributes {
 
+    /**
+     * Amount of padding (vertical and horizontal) to apply to popup windows that display QC images.
+     */
+    public static final int POPUP_WINDOW_PADDING_PX = 60;
+
     private transient StaticAssetResolver staticAssetResolver;
     private transient WebEntityUrlBuilder entityUrlBuilder;
+    private transient BuildInfo buildInfo;
 
     /**
      * Expression experiment to display the QC info for.
@@ -92,6 +100,13 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
      * Indicate if the experiment has single-cell data.
      */
     private boolean hasSingleCellData = false;
+
+    /**
+     * Font to use for the rendering diagnostic plots.
+     */
+    @Nullable
+    private String font;
+
     /**
      * Heatmap for single-cell data.
      * <p>
@@ -135,6 +150,9 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         if ( entityUrlBuilder == null ) {
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
         }
+        if ( buildInfo == null ) {
+            buildInfo = getRequestContext().getWebApplicationContext().getBean( BuildInfo.class );
+        }
         writeQc( new TagWriter( pageContext ), pageContext.getServletContext().getContextPath() );
         return SKIP_BODY;
     }
@@ -158,7 +176,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         writer.startTag( "tr" );
 
         for ( String header : new String[] {
-                "Sample correlation",
+                "Sample Correlation Matrix", // this is technically an assay correlation matrix, but the term sample is more familiar
                 "PCA Scree",
                 "PCA+Factors",
                 "Mean-Variance"
@@ -170,15 +188,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.endTag(); // </th>
         }
 
-        if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
-            writer.startTag( "th" );
-            writer.startTag( "strong" );
-            writer.appendValue( "Single-cell" );
-            writer.endTag(); // </strong>
-            writer.endTag(); // </th>
-        }
-
-        writer.endTag();
+        writer.endTag(); // </tr>
 
         writer.startTag( "tr" );
 
@@ -187,9 +197,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             /*
              * popupImage is defined in ExpressionExperimentDetails.js
              */
-            int width = 400;
-            int height = 400;
-            String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=4&forceShowLabels=1";
+            int sizeFactor = 2;
+            int width = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
+            int height = sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
+            String bigImageUrl = contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=" + sizeFactor + ( StringUtils.isNotBlank( font ) ? "&font=" + urlEncode( font ) : "" ) + "&forceShowLabels=1";
             writer.startTag( "td" );
 
             writer.startTag( "a" );
@@ -199,7 +210,9 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
 
             writer.startTag( "img" );
             writer.writeAttribute( "style", "image-rendering: pixelated;" );
-            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId() + "&size=1" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeCorrMat.html?id=" + this.expressionExperiment.getId()
+                    + "&size=1"
+                    + ( StringUtils.isNotBlank( font ) ? "&font=" + urlEncode( font ) : "" ) );
             writer.writeAttribute( "alt", "Correlation matrix displayed as a heatmap." );
             writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
             writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
@@ -256,8 +269,11 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         if ( hasPCA ) {
             writer.startTag( "td" );
             writer.startTag( "img" );
-            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaScree.html?id=" + this.expressionExperiment.getId() );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaScree.html?id=" + this.expressionExperiment.getId()
+                    + ( StringUtils.isNotBlank( font ) ? "&font=" + urlEncode( font ) : "" ) );
             writer.writeAttribute( "alt", "Bar plot of the top 10 PCA components." );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
             writer.endTag(); // </img>
 
             if ( eeManagerId != null ) {
@@ -295,10 +311,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             /*
              * popupImage is defined in ExpressionExperimentPage.js
              */
-            String detailsUrl = contextPath + "/expressionExperiment/detailedFactorAnalysis.html?id=" + this.expressionExperiment.getId();
+            String detailsUrl = contextPath + "/expressionExperiment/detailedFactorAnalysis.html?id=" + this.expressionExperiment.getId() + ( font != null ? "&font=" + urlEncode( font ) : "" );
 
-            int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors;
-            int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay;
+            int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numPcsToDisplay + POPUP_WINDOW_PADDING_PX;
+            int height = Math.min( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors, ExpressionExperimentQCController.MAX_QC_IMAGE_SIZE_PX ) + POPUP_WINDOW_PADDING_PX;
 
             writer.startTag( "td" );
             writer.startTag( "a" );
@@ -306,8 +322,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.writeAttribute( "onclick", "Gemma.ExpressionExperimentPage.popupImage('" + javaScriptEscape( detailsUrl ) + "'," + width + "," + height + ");return 1" );
             writer.writeAttribute( "title", "Correlations of PCs with experimental factors; click for details." );
             writer.startTag( "img" );
-            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaFactors.html?id=" + this.expressionExperiment.getId() );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/pcaFactors.html?id=" + this.expressionExperiment.getId() + ( StringUtils.isNotBlank( font ) ? "&font=" + urlEncode( font ) : "" ) );
             writer.writeAttribute( "alt", "Bar plot of the association between the factors and the top 3 PCA components." );
+            writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
+            // TODO: infer the width from the number of factors
             writer.endTag(); // </img>
             writer.endTag(); // </a>
             writer.endTag(); // </td>
@@ -321,11 +339,11 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
 
         if ( hasMeanVariance ) {
             /*
-             * popupImage is defined in ExpressinExperimentDetails.js
+             * popupImage is defined in ExpressionExperimentDetails.js
              */
             int scaleLarge = 2;
-            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
-            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
+            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + POPUP_WINDOW_PADDING_PX;
             String bigImageUrl = contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=" + scaleLarge;
             writer.startTag( "td" );
             writer.startTag( "a" );
@@ -333,7 +351,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
             writer.writeAttribute( "onclick", "Gemma.ExpressionExperimentPage.popupImage('" + javaScriptEscape( bigImageUrl ) + "'," + width + "," + height + ");return 1" );
             writer.writeAttribute( "title", "Mean-variance relationship; click for larger version." );
             writer.startTag( "img" );
-            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=1" );
+            writer.writeAttribute( "src", contextPath + "/expressionExperiment/visualizeMeanVariance.html?id=" + this.expressionExperiment.getId() + "&size=1" + ( StringUtils.isNotBlank( font ) ? "&font=" + urlEncode( font ) : "" ) );
             writer.writeAttribute( "alt", "Plot of the mean-variance relation." );
             writer.writeAttribute( "width", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
             writer.writeAttribute( "height", String.valueOf( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX ) );
@@ -345,11 +363,25 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         }
 
         if ( hasSingleCellData && SecurityUtil.isUserAdmin() ) {
+            writer.endTag(); // </tr>
+            writer.startTag( "tr" );
+            writer.startTag( "th" );
+            writer.writeAttribute( "colspan", "4" );
+            writer.startTag( "strong" );
+            writer.appendValue( "Single-cell" );
+            writer.endTag(); // </strong>
+            writer.endTag(); // </th>
+            writer.endTag(); // </tr>
+            writer.startTag( "tr" );
             if ( singleCellSparsityHeatmap != null ) {
                 writer.startTag( "td" );
+                writer.writeAttribute( "colspan", "2" );
+                // the default alignment is baseline, but that pulls the heatmap down because of where the labels start
+                writer.writeAttribute( "style", "vertical-align: top;" );
                 SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );
                 heatmapTag.setHeatmap( singleCellSparsityHeatmap );
                 heatmapTag.setEntityUrlBuilder( entityUrlBuilder );
+                heatmapTag.setBuildInfo( buildInfo );
                 heatmapTag.setParent( this );
                 heatmapTag.setPageContext( pageContext );
                 heatmapTag.setAlt( "Heatmap of the number of cells with at least one expressed gene. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.CELL );
@@ -366,6 +398,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         writer.endTag(); // </table>
 
         writer.endTag(); // </div>
+    }
+
+    private String urlEncode( String s ) {
+        return s;
     }
 
     private void writePlaceholder( TagWriter writer ) throws JspException {

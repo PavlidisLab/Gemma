@@ -23,8 +23,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -43,6 +43,10 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    boolean existsByExperiment( ExpressionExperiment ee );
 }

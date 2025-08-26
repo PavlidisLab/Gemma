@@ -19,8 +19,8 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * @author paul
@@ -29,10 +29,9 @@ public interface OutlierDetectionService {
 
     /**
      * Obtain existing outlier details from a previous {@link #identifyOutliersByMedianCorrelation(ExpressionExperiment)} invocation.
-     * @return outlier details or {@code null} if none exist.
+     * @return outlier details or {@code Optional#empty()} if no sample coexpression analysis exists
      */
-    @Nullable
-    Collection<OutlierDetails> getOutlierDetails( ExpressionExperiment ee );
+    Optional<Collection<OutlierDetails>> getOutlierDetails( ExpressionExperiment ee );
 
     /**
      * Identify outliers by median correlation for the given dataset.

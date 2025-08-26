@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
@@ -58,7 +57,7 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds ) {
         return this.coexpressionAnalysisDao.getExperimentsWithAnalysis( experimentAnalyzedIds );
     }
 
@@ -83,7 +82,7 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
     @Transactional
     public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd ) {
-        Collection<CoexpressionAnalysis> analyses = this.findByExperiment( expressionExperiment, true );
+        Collection<CoexpressionAnalysis> analyses = this.findByExperimentAnalyzed( expressionExperiment );
         if ( analyses.size() > 1 ) {
             throw new IllegalStateException( "Multiple coexpression analyses for one experiment" );
         } else if ( analyses.isEmpty() ) {
@@ -92,12 +91,6 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
         CoexpressionAnalysis analysis = analyses.iterator().next();
         analysis.setCoexpCorrelationDistribution( coexpd );
         this.update( analysis );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
-        return this.coexpressionAnalysisDao.hasCoexpCorrelationDistribution( ee );
     }
 
     @Override
@@ -124,20 +117,19 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> findByExperiment( BioAssaySet investigation, boolean includeSubSets ) {
-        return this.coexpressionAnalysisDao.findByExperiment( investigation, includeSubSets );
+    public Collection<CoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment investigation ) {
+        return this.coexpressionAnalysisDao.findByExperimentAnalyzed( investigation );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySet, Collection<CoexpressionAnalysis>> findByExperiments(
-            Collection<BioAssaySet> investigations, boolean includeSubSets ) {
-        return this.coexpressionAnalysisDao.findByExperiments( investigations, includeSubSets );
+    public Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> findByExperimentsAnalyzed( Collection<ExpressionExperiment> investigations ) {
+        return this.coexpressionAnalysisDao.findByExperimentsAnalyzed( investigations );
     }
 
     @Override
     @Transactional
-    public void removeForExperiment( BioAssaySet ee, boolean includeSubSets ) {
-        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByExperiment( ee, includeSubSets ) );
+    public void removeForExperimentAnalyzed( ExpressionExperiment ee ) {
+        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByExperimentAnalyzed( ee ) );
     }
 }

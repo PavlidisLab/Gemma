@@ -2,6 +2,7 @@ package ubic.gemma.cli.util;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -191,21 +192,21 @@ public class EntityLocatorImpl implements EntityLocator {
     }
 
     @Override
-    public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
+    public <T extends DataVector> Pair<Class<? extends T>, QuantitationType> locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
         Assert.isTrue( StringUtils.isNotBlank( qt ), "Quantitation type identifier must not be blank." );
         qt = StringUtils.strip( qt );
         QuantitationType result;
         for ( Class<? extends T> vectorType : vectorTypes ) {
             try {
                 if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
-                    return result;
+                    return Pair.of( vectorType, result );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             try {
                 if ( ( result = quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) ) != null ) {
-                    return result;
+                    return Pair.of( vectorType, result );
                 }
             } catch ( NonUniqueQuantitationTypeByNameException e ) {
                 Collection<QuantitationType> possibleValues = quantitationTypeService.findAllByNameAndVectorType( ee, qt, vectorType );
@@ -347,7 +348,7 @@ public class EntityLocatorImpl implements EntityLocator {
                 () -> String.format( "Could not locate an analysis matching '%s' in %s.%s",
                         analysisIdentifier,
                         ee.getShortName(),
-                        formatPossibleValues( differentialExpressionAnalysisService.getAnalyses( ee, true ), false ) ) );
+                        formatPossibleValues( differentialExpressionAnalysisService.findByExperiment( ee, true ), false ) ) );
     }
 
     @Nullable

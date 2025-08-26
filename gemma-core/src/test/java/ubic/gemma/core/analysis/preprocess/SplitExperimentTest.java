@@ -36,11 +36,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.persistence.service.expression.experiment.BioAssaySetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -72,9 +69,6 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-
-    @Autowired
-    private BioAssaySetService bioAssaySetService;
 
     @Autowired
     private SecurityService securityService;
@@ -129,8 +123,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
 
-        for ( BioAssaySet b : results.getExperiments() ) {
-            ExpressionExperiment e = eeService.thaw( ( ExpressionExperiment ) b );
+        for ( ExpressionExperiment b : results.getExperiments() ) {
+            ExpressionExperiment e = eeService.thaw( b );
 
             // sanity checks for the clones
             assertNotNull( ee.getAccession() );
@@ -213,16 +207,12 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     public void teardown() throws Exception {
         // remove original dataset
         if ( ees != null ) {
-            bioAssaySetService.remove( ees );
+            eeService.remove( ees );
         }
-        // remove any created subsets
+        // remove any created experiments
         if ( results != null ) {
-            for ( BioAssaySet b : results.getExperiments() ) {
-                if ( b instanceof ExpressionExperiment ) {
-                    bioAssaySetService.remove( b );
-                } else if ( b instanceof ExpressionExperimentSubSet ) {
-                    bioAssaySetService.remove( b );
-                }
+            for ( ExpressionExperiment b : results.getExperiments() ) {
+                eeService.remove( b );
             }
         }
     }

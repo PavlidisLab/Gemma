@@ -5,9 +5,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.completion.CompletionType;
-import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
+import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -62,6 +62,21 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public String getCommandName() {
+        return "complete";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Provide various completions for the CLI";
+    }
+
+    @Override
+    protected String getUsage() {
+        return "gemma-cli [options] complete <type> [completeArgs...]";
+    }
+
+    @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         if ( commandLine.getArgList().isEmpty() ) {
@@ -77,16 +92,6 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
         } else {
             completeArgs = new String[0];
         }
-    }
-
-    @Override
-    public String getCommandName() {
-        return "complete";
-    }
-
-    @Override
-    protected String getUsage() {
-        return "gemma-cli [options] complete <type> [completeArgs...]";
     }
 
     @Override
@@ -137,13 +142,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                 }
                 break;
             case DATASET:
-                expressionExperimentService.loadAllIdAndName()
-                        .forEach( ( id, name ) -> printCompletion( String.valueOf( id ), name ) );
-                expressionExperimentService.loadAllShortNameAndName()
-                        .forEach( this::printCompletion );
-                expressionExperimentService.loadAllName()
-                        .forEach( name -> printCompletion( name, name ) );
-                expressionExperimentService.loadAllAccessionAndName()
+                expressionExperimentService.loadAllIdentifiersAndName( false )
                         .forEach( this::printCompletion );
                 break;
             default:

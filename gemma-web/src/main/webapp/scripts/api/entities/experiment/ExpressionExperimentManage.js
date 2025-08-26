@@ -926,7 +926,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
 
             this.searchCombo = new Gemma.ExperimentAndExperimentGroupCombo({
                 width: 220,
-                emptyText: "Search for experiments",
+                emptyText: "Search for datasets",
                 listeners: {
                     scope: this,
                     'selected': this.filterBySearch

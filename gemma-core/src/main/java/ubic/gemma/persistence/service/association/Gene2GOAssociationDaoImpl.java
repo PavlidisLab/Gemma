@@ -76,9 +76,12 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     @Override
     public Collection<Characteristic> findByGene( Gene gene ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct geneAss.ontologyEntry from Gene2GOAssociation as geneAss  where geneAss.gene = :gene" )
-                .setParameter( "gene", gene ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select geneAss.ontologyEntry from Gene2GOAssociation as geneAss "
+                        + "where geneAss.gene = :gene "
+                        + "group by geneAss.ontologyEntry" )
+                .setParameter( "gene", gene )
+                .list();
     }
 
     @Override
@@ -118,8 +121,10 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
             return Collections.emptyList();
         }
         return listByBatch( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                                + "where geneAss.ontologyEntry.valueUri in (:uris)" ), "uris", uris, 2048 );
+                "select geneAss.gene from Gene2GOAssociation as geneAss "
+                        + "join geneAss.gene gene "
+                        + "where geneAss.ontologyEntry.valueUri in (:uris) "
+                        + "group by geneAss.gene" ), "uris", uris, 2048 );
     }
 
     @Override
@@ -128,9 +133,10 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
             return Collections.emptyList();
         }
         return listByBatch( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct gene from Gene2GOAssociation as geneAss "
+                .createQuery( "select gene from Gene2GOAssociation as geneAss "
                         + "join geneAss.gene as gene "
-                                + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax" )
+                        + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax "
+                        + "group by gene" )
                 .setParameter( "tax", taxon ), "uris", uris, 2048 );
     }
 

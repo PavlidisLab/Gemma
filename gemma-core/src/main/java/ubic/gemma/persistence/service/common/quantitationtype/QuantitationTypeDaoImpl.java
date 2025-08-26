@@ -105,7 +105,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .createCriteria( dataVectorType )
                 .createCriteria( "quantitationType" )
                 .add( createRestrictions( entity ) )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .setResultTransformer( new TypedResultTransformer<QuantitationType>() {
                     @Override
                     public QuantitationType transformTuple( Object[] tuple, String[] aliases ) {
@@ -135,8 +135,9 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         // find all QTs for the experiment
         //noinspection unchecked
         List<QuantitationType> list = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct quantType from ExpressionExperiment ee "
-                        + "inner join ee.quantitationTypes as quantType where ee  = :ee " )
+                .createQuery( "select quantType from ExpressionExperiment ee "
+                        + "join ee.quantitationTypes as quantType where ee = :ee "
+                        + "group by quantType" )
                 .setParameter( "ee", ee )
                 .list();
 
@@ -149,8 +150,10 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             for ( Class<? extends DataVector> dvt : dataVectorTypes ) {
                 //noinspection unchecked
                 qtsFromVectors.addAll( this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct q from " + dvt.getName() + " v "
-                                + "join v.quantitationType as q where v.expressionExperiment = :ee" )
+                        .createQuery( "select q from " + dvt.getName() + " v "
+                                + "join v.quantitationType as q "
+                                + "where v.expressionExperiment = :ee "
+                                + "group by q" )
                         .setParameter( "ee", ee ).list() );
             }
             list.retainAll( qtsFromVectors );
@@ -183,7 +186,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
                 .createCriteria( "quantitationType" )
                 .add( Restrictions.eq( "name", name ) )
-                .setProjection( Projections.distinct( Projections.id() ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .list();
         return load( ids );
     }
@@ -255,7 +258,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .createCriteria( vectorType )
                 .add( Restrictions.eq( "expressionExperiment", ee ) )
                 .createCriteria( "quantitationType" )
-                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setProjection( Projections.groupProperty( "id" ) )
                 .list() );
     }
 
@@ -278,7 +281,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                     .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
                     .add( Restrictions.eq( "bioAssayDimension", dimension ) )
                     .createCriteria( "quantitationType" )
-                    .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                    .setProjection( Projections.groupProperty( "id" ) )
                     .list() ) );
         }
         return qts;
@@ -353,7 +356,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                     .add( Restrictions.eq( "expressionExperiment", ee ) )
                     .createCriteria( "quantitationType" )
                     .add( Restrictions.in( "id", optimizeParameterList( ids ) ) )
-                    .setProjection( Projections.distinct( Projections.id() ) )
+                    .setProjection( Projections.groupProperty( "id" ) )
                     .list();
             qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
         }

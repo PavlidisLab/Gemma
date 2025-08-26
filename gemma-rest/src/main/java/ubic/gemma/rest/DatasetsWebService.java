@@ -62,6 +62,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -798,6 +799,22 @@ public class DatasetsWebService {
         return respond( datasetArgService.getSamples( datasetArg ) );
     }
 
+    @GET
+    @Path("/{dataset}/publications")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+
+        List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
+        return respond( out );
+
+    }
+
     /**
      * Retrieves the differential analysis results for the given dataset.
      *
@@ -954,7 +971,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzed( gene, sliceIds( ids, offset, limit ), sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false, true ).stream()
+                .findByGeneAndExperimentAnalyzedIds( gene, false, sliceIds( ids, offset, limit ), true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, true ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
@@ -1042,7 +1059,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, ids, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzedIds( gene, false, ids, true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
@@ -1366,7 +1383,8 @@ public class DatasetsWebService {
             String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
             return Response.ok( ( StreamingOutput ) output -> {
                         try {
-                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true );
+                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
+                                    false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true );
                         } catch ( FilteringException ex ) {
                             // this is a bit unfortunate, because it's too late for producing a 204 error
                             throw new RuntimeException( ex );
@@ -1432,7 +1450,7 @@ public class DatasetsWebService {
         } catch ( IOException e ) {
             log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
             String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
-            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
@@ -1531,7 +1549,7 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
@@ -1688,10 +1706,10 @@ public class DatasetsWebService {
         int numberOfBatches;
 
         public BatchConfoundValueObject( BatchConfound batchConfound ) {
-            this.factor = new ExperimentalFactorValueObject( batchConfound.getEf(), false );
+            this.factor = new ExperimentalFactorValueObject( batchConfound.getFactor(), false );
             this.chiSquared = batchConfound.getChiSquare();
             this.df = batchConfound.getDf();
-            this.pvalue = batchConfound.getP();
+            this.pvalue = batchConfound.getPValue();
             this.numberOfBatches = batchConfound.getNumBatches();
         }
     }

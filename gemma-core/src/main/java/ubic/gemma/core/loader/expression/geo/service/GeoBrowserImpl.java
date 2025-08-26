@@ -450,6 +450,11 @@ public class GeoBrowserImpl implements GeoBrowser {
      * details might not be filled.
      */
     private void fillDetails( GeoRecord record, GeoRetrieveConfig config ) {
+        if ( record.getGeoAccession() == null ) {
+            log.warn( record + " has no GEO accession, cannot fill details." );
+            return;
+        }
+
         if ( !config.isSubSeriesStatus() && !config.isMeshHeadings() && !config.isLibraryStrategy() && !config.isSampleDetails() ) {
             log.debug( "No need to fill details for " + record + "." );
             return;
@@ -461,7 +466,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         Document document;
         try {
             document = fetchDetailedGeoSeriesFamilyFromGeo( record.getGeoAccession() );
-        } catch ( IOException | SAXParseException e ) {
+        } catch ( Exception e ) {
             if ( config.isIgnoreErrors() ) {
                 log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
                 return;
@@ -489,7 +494,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         if ( config.isMeshHeadings() ) {
             try {
                 fillMeshHeadings( record );
-            } catch ( IOException e ) {
+            } catch ( Exception e ) {
                 String message = "Could not get MeSH headings for " + record.getGeoAccession() + ".";
                 if ( config.isIgnoreErrors() ) {
                     log.error( message, e );
@@ -670,22 +675,26 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Nullable
-    private Document fetchDetailedGeoSeriesFamilyFromGeo( String geoAccession ) throws IOException, SAXParseException {
+    private Document fetchDetailedGeoSeriesFamilyFromGeo( String geoAccession ) throws IOException {
         Document document;
         try {
             if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession ) ) != null ) {
                 return document;
+            } else {
+                log.warn( "Could not retrieve detailed GEO series MINiML from FTP server (via HTTPS) for " + geoAccession + ", will attempt to retrieve it from GEO Query..." );
             }
         } catch ( Exception e ) {
             if ( e.getCause() instanceof SAXParseException ) {
                 // the stacktrace is not very useful, and if the error is reproducible, it will also happen on the GEO Query side
-                log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query...", e );
-                if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
-                    return document;
-                }
+                log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query..." );
             } else {
                 throw e;
             }
+        }
+        if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
+            return document;
+        } else {
+            log.warn( "Could not retrieve detailed GEO series MINiML for " + geoAccession + " from either GEO FTP server (via HTTPS) nor GEO Query." );
         }
         return null;
     }
@@ -724,9 +733,10 @@ public class GeoBrowserImpl implements GeoBrowser {
                     }
                 }
             } catch ( FileNotFoundException e ) {
+                log.warn( "No GEO series metadata found at " + documentUrl + "." );
                 return null;
             }
-            log.warn( "No entry with name " + geoAccession + "_family.xml" + " found in " + documentUrl + "." );
+            log.warn( "No entry with name " + geoAccession + "_family.xml found in " + documentUrl + "." );
             return null;
         }, "retrieve " + documentUrl );
     }
@@ -742,6 +752,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
                 return EntrezXmlUtils.parse( tis );
             } catch ( FileNotFoundException e ) {
+                log.warn( "No GEO series metadata found at " + documentUrl + "." );
                 return null;
             }
         }, "retrieve " + documentUrl );

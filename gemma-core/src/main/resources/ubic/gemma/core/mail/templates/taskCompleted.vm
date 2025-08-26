@@ -1,0 +1,10 @@
+Dear ${username},
+
+A job you started on Gemma is completed.
+
+Task ID: ${taskId}
+Task Name: ${taskName}
+Task Status: ${taskStatus}
+
+Task Logs:
+${taskLogs}

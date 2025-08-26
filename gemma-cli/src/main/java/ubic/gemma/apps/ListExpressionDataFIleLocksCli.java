@@ -31,7 +31,12 @@ public class ListExpressionDataFIleLocksCli extends AbstractCLI {
 
     @Override
     public String getShortDesc() {
-        return "List all locks over data and metadata files.";
+        return "List all locks over data and metadata files";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
     @Override

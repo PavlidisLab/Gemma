@@ -22,9 +22,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface VectorMergingService {
 
     /**
-     * @param expExp the experiment
-     * @return experiment with merged vectors
+     * Merge the raw data vectors of a given experiment.
+     * @return the number of raw data vectors that were merged
      */
-    void mergeVectors( ExpressionExperiment expExp );
-
+    int mergeVectors( ExpressionExperiment expExp );
 }

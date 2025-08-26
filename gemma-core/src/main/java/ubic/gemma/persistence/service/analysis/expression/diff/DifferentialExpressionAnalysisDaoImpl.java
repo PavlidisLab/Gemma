@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -60,8 +61,8 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
  * @see    DifferentialExpressionAnalysis
  */
 @Repository
-class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.service.AbstractDao<DifferentialExpressionAnalysis>
-        implements DifferentialExpressionAnalysisDao, ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao<DifferentialExpressionAnalysis> {
+class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpressionAnalysis>
+        implements DifferentialExpressionAnalysisDao {
 
     /**
      * Logger for manual SQL statements so they appear alongside Hibernate's.
@@ -243,19 +244,21 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor = :ef" )
+                        + "where ssf.experimentalFactor = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
         // factors used in the analysis.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa = :ef" )
+                        + "where efa = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
@@ -272,19 +275,21 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor in :efs" )
+                        + "where ssf.experimentalFactor in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
         // factors used in the analysis
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa in :efs" )
+                        + "where efa in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
@@ -292,7 +297,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet experimentAnalyzed, Long analysisId, boolean includeSubSets ) {
+    public DifferentialExpressionAnalysis findByExperimentAndAnalysisId( ExpressionExperiment experimentAnalyzed, Long analysisId, boolean includeSubSets ) {
         DifferentialExpressionAnalysis result = ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
                 .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "where a.experimentAnalyzed = :experimentAnalyzed and a.id = :id" )
@@ -305,7 +310,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         }
 
         // try to lookup subsets if we haven't found the analysis directly
-        if ( includeSubSets && experimentAnalyzed instanceof ExpressionExperiment ) {
+        if ( includeSubSets ) {
             return ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
                     .createQuery( "select a from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet subset "
                             + "where subset.sourceExperiment = :experimentAnalyzed and a.experimentAnalyzed = subset and a.id = :id" )
@@ -324,9 +329,10 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
         //noinspection unchecked
         List<Object[]> qresult = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e, a from DifferentialExpressionAnalysis a "
+                .createQuery( "select e, a from DifferentialExpressionAnalysis a "
                         + "join a.experimentAnalyzed e "
-                        + "where e.id in (:eeIds)" )
+                        + "where e.id in (:eeIds) "
+                        + "group by e, a" )
                 .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedId ) )
                 .list();
         for ( Object[] o : qresult ) {
@@ -398,21 +404,22 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
-        Set<Long> result = new HashSet<>();
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds, boolean includeSubSets ) {
         //noinspection unchecked
-        result.addAll( ( List<Long> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a.experimentAnalyzed.id from DifferentialExpressionAnalysis a"
-                        + " where a.experimentAnalyzed.id in (:eeIds)" )
-                .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedIds ) )
+        Set<Long> result = new HashSet<>( ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select a.experimentAnalyzed.id from DifferentialExpressionAnalysis a"
+                        + " where a.experimentAnalyzed.id in (:eeIds) "
+                        + "group by a.experimentAnalyzed" )
+                .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                 .list() );
         if ( includeSubSets ) {
             //noinspection unchecked
             result.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
+                    .createQuery( "select e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
                             + "join eess.sourceExperiment e "
-                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds)" )
-                    .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedIds ) )
+                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds) "
+                            + "group by e" )
+                    .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                     .list() );
         }
         return result;
@@ -422,11 +429,12 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee.id from DifferentialExpressionAnalysis as doa "
+                .createQuery( "select ee.id from DifferentialExpressionAnalysis as doa "
                         + "join doa.experimentAnalyzed as ee "
                         + "join ee.bioAssays as ba "
                         + "join ba.sampleUsed as sample "
-                        + "where sample.sourceTaxon = :taxon" )
+                        + "where sample.sourceTaxon = :taxon "
+                        + "group by ee" )
                 .setParameter( "taxon", taxon )
                 .list();
     }
@@ -473,9 +481,10 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
             // factor values for the experiments.
             //noinspection unchecked
             fvs = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct ee.id, fv from ExpressionExperiment ee "
+                    .createQuery( "select ee.id, fv from ExpressionExperiment ee "
                             + "join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                            + "where ee.id in (:ees)" )
+                            + "where ee.id in (:ees) "
+                            + "group by ee, fv" )
                     .setParameterList( "ees", optimizeParameterList( experimentAnalyzedIds ) ).list();
             this.addFactorValues( ee2fv, fvs );
 
@@ -490,9 +499,10 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
             if ( !probableSubSetIds.isEmpty() ) {
                 //noinspection unchecked
                 fvs = this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct eess.id, fv from ExpressionExperimentSubSet eess "
+                        .createQuery( "select eess.id, fv from ExpressionExperimentSubSet eess "
                                 + "join eess.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                                + "where eess.id in (:ees)" )
+                                + "where eess.id in (:ees) "
+                                + "group by eess, fv" )
                         .setParameterList( "ees", optimizeParameterList( probableSubSetIds ) ).list();
                 this.addFactorValues( ee2fv, fvs );
             }
@@ -523,9 +533,13 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
                 // factor value information for the subset. The key output is the ID of the subset, not of the source
                 // experiment.
                 //noinspection unchecked
-                fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                                "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                fvs = this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select ee.id, fv from ExpressionExperimentSubSet ee "
+                                + "join ee.bioAssays ba "
+                                + "join ba.sampleUsed bm "
+                                + "join bm.factorValues fv "
+                                + "where ee.id in (:ees) "
+                                + "group by ee, fv" )
                         .setParameterList( "ees", optimizeParameterList( experimentSubsetIds ) ).list();
                 this.addFactorValues( ee2fv, fvs );
             }
@@ -578,50 +592,20 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public boolean existsByExperiment( BioAssaySet ee, boolean includeSubSets ) {
-        if ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count(a) from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed = :ee" )
-                .setParameter( "ee", ee )
-                .uniqueResult() > 0 ) {
-            return true;
-        }
-
-        if ( includeSubSets && ee instanceof ExpressionExperiment ) {
-            return ( Long ) this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select count(distinct a) from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                            + "join eess.sourceExperiment see "
-                            + "join a.experimentAnalyzed eeanalyzed "
-                            + "where see = :ee and eess = eeanalyzed" )
-                    .setParameter( "ee", ee )
-                    .uniqueResult() > 0;
-        }
-
-        return false;
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-
-        //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select a from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed = :ee" )
-                .setParameter( "ee", experiment )
-                .list() );
+    public Collection<DifferentialExpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment experiment, boolean includeSubSets ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>( findByExperimentAnalyzed( experiment ) );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
          */
-        if ( includeSubSets && experiment instanceof ExpressionExperiment ) {
+        if ( includeSubSets ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery(
-                            "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                                    + "join eess.sourceExperiment see "
-                                    + "join a.experimentAnalyzed eeanalyzed "
-                                    + "where see = :ee and eess = eeanalyzed" )
+                    .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                            + "join eess.sourceExperiment see "
+                            + "join a.experimentAnalyzed eeanalyzed "
+                            + "where see = :ee and eess = eeanalyzed "
+                            + "group by a" )
                     .setParameter( "ee", experiment )
                     .list() );
         }
@@ -630,15 +614,24 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends
-            BioAssaySet> experiments, boolean includeSubSets ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-
+    public Collection<DifferentialExpressionAnalysis> findByExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
         //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed in :ees" )
-                .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) ).list() );
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
+                .list();
+    }
+
+    @Override
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperimentsAnalyzed( Collection<ExpressionExperiment> experiments, boolean includeSubSets ) {
+        //noinspection unchecked
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>(
+                ( List<DifferentialExpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed in :ees group by a" )
+                        .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) )
+                        .list() );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
@@ -648,10 +641,11 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
             if ( !sourceExperiments.isEmpty() ) {
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                        .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                                 + "join eess.sourceExperiment see "
                                 + "join a.experimentAnalyzed eeanalyzed "
-                                + "where see in :ees and eess=eeanalyzed" )
+                                + "where see in :ees and eess=eeanalyzed "
+                                + "group by eess, a" )
                         .setParameterList( "ees", optimizeIdentifiableParameterList( sourceExperiments ) )
                         .list() );
             }

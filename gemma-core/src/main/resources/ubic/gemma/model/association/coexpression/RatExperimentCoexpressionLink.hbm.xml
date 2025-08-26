@@ -13,7 +13,7 @@
             <generator class="org.hibernate.id.MultipleHiLoPerTableGenerator"/>
         </id>
 
-        <many-to-one name="experiment" class="ubic.gemma.model.expression.experiment.BioAssaySet" cascade="none"
+        <many-to-one name="experiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment" cascade="none"
                      lazy="proxy">
             <column name="EXPERIMENT_FK" not-null="true" unique="false" sql-type="BIGINT"/>
         </many-to-one>

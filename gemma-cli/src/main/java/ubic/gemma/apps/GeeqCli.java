@@ -75,10 +75,12 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( this.noNeedToRun( ee, GeeqEvent.class ) ) {
+            addSuccessObject( ee, "No need to calculate GEEQ scores." );
             return;
         }
 
         geeqService.calculateScore( ee, mode );
+        addSuccessObject( ee, "Calculated GEEQ scores with mode: " + mode + "." );
 
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, false, true );

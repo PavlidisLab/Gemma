@@ -130,7 +130,12 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Download single cell data from GEO.\nFor the moment, only GEO series accessions are supported.";
+        return "Download single cell data.\nFor the moment, only GEO series accessions are supported.";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
     @Override

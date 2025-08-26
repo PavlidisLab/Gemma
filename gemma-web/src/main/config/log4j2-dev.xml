@@ -31,6 +31,8 @@
 
         <Logger name="net" level="WARN"/>
 
+        <Logger name="nl.basjes.parse.useragent" level="WARN"/>
+
         <Logger name="org" level="WARN"/>
 
         <!-- Apache Commons -->

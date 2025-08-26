@@ -24,5 +24,6 @@ public class MakeExperimentPrivateCli extends ExpressionExperimentManipulatingCL
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         securityService.makePrivate( ee );
         this.auditTrailService.addUpdateEvent( ee, MakePrivateEvent.class, "Made private from command line" );
+        addSuccessObject( ee, "Experiment was made private." );
     }
 }

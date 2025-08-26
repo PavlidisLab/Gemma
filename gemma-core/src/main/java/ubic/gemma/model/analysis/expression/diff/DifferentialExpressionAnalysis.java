@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -29,7 +30,7 @@ import java.util.Set;
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
-public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
+public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis<BioAssaySet> {
 
     private Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 

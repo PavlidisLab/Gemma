@@ -76,7 +76,7 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
         }));
 
         this.add(new Gemma.ExpressionExperimentGrid({
-            title: 'Experiments',
+            title: 'Datasets',
             itemId: 'experiments',
             loadOnlyOnRender: true,
             platformId: platformId

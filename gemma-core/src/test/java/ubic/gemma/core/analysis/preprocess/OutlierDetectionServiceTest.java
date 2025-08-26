@@ -22,26 +22,47 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
 import java.util.Collection;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link OutlierDetectionService}
  *
  * @author ptan
  */
-public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
+@ContextConfiguration
+public class OutlierDetectionServiceTest extends BaseTest {
 
     private static final int MATRIX_SIZE = 20;
 
-    private Random random = new Random();
+    @Configuration
+    @TestComponent
+    static class CC {
+        @Bean
+        public OutlierDetectionService outlierDetectionService() {
+            return new OutlierDetectionServiceImpl( mock() );
+        }
+
+        @Bean
+        public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
+            return mock();
+        }
+    }
+
+    private final Random random = new Random( 123 );
 
     @Autowired
     private OutlierDetectionService outlierDetectionService;
@@ -77,10 +98,10 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         boolean found1 = false;
         boolean found2 = false;
         for ( OutlierDetails outlier : output ) {
-            BioAssay s = outlier.getBioAssay();
-            if ( ol1.equals( s ) ) {
+            Long s = outlier.getBioAssayId();
+            if ( ol1.getId().equals( s ) ) {
                 found1 = true;
-            } else if ( ol2.equals( s ) ) {
+            } else if ( ol2.getId().equals( s ) ) {
                 found2 = true;
             }
         }
@@ -93,6 +114,7 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         DoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( OutlierDetectionServiceTest.MATRIX_SIZE, OutlierDetectionServiceTest.MATRIX_SIZE );
         for ( int i = 0; i < OutlierDetectionServiceTest.MATRIX_SIZE; i++ ) {
             BioAssay sample = BioAssay.Factory.newInstance( RandomStringUtils.randomAlphabetic( 8 ) );
+            sample.setId( i + 1L );
             matrix.setRowName( sample, i );
             matrix.setColumnName( sample, i );
             for ( int j = 0; j < OutlierDetectionServiceTest.MATRIX_SIZE; j++ ) {

@@ -43,6 +43,11 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
 
+    /**
+     * Load the gene sets with their members initialized.
+     */
+    Collection<GeneSet> loadWithMembers( Collection<Long> ids );
+
     @Override
     @Secured({ "GROUP_USER" })
     Collection<GeneSet> create( Collection<GeneSet> sets );

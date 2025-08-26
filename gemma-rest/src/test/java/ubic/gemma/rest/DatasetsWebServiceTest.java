@@ -35,6 +35,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -655,7 +656,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), any(), anyDouble(), eq( false ), eq( true ) );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzedIds( eq( brca1 ), eq( false ), any(), eq( true ), any(), any(), any(), anyDouble(), eq( true ) );
     }
 
     @Test
@@ -674,7 +675,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "sourceExperimentId" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "sourceExperimentId", "experimentAnalyzedId", "resultSetId" );
-        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzed( eq( brca1 ), any(), any(), any(), any(), anyDouble(), eq( false ), eq( true ) );
+        verify( differentialExpressionResultService ).findByGeneAndExperimentAnalyzedIds( eq( brca1 ), eq( false ), any(), eq( true ), any(), any(), any(), anyDouble(), eq( true ) );
     }
 
     @Test
@@ -845,6 +846,30 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/1/subSets/1/samples" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetAllPublications() {
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference prim_ref = new BibliographicReference();
+        prim_ref.setId( 1L );
+        BibliographicReference second_ref = new BibliographicReference();
+        second_ref.setId( 2L );
+        BibliographicReference third_ref = new BibliographicReference();
+        third_ref.setId( 3L );
+
+        Set<BibliographicReference> other_pubs = new HashSet<>();
+        other_pubs.add( prim_ref );
+        other_pubs.add( second_ref );
+        other_pubs.add( third_ref );
+        ee.setPrimaryPublication( prim_ref );
+        ee.setOtherRelevantPublications( other_pubs );
+
+        assertThat( target( "/datasets/1/publications" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
     }
 
     private static class DummyLockedPath implements LockedPath {

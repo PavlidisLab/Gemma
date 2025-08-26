@@ -79,8 +79,8 @@ public class ExpressionDataHeatmap implements Heatmap {
 
     private final BioAssaySet bioAssaySet;
     private final BioAssayDimension dimension;
-    private final List<BioAssay> samples;
-    private final int[] sampleIndex;
+    private final List<BioAssay> assays;
+    private final int[] assayIndex;
     @Nullable
     private final Slice<? extends BulkExpressionDataVector> vectors;
     @Nullable
@@ -122,12 +122,12 @@ public class ExpressionDataHeatmap implements Heatmap {
                 "The number of genes must match the number of design elements." );
         this.bioAssaySet = bioAssaySet;
         this.dimension = dimension;
-        this.samples = dimension.getBioAssays().stream()
+        this.assays = dimension.getBioAssays().stream()
                 .filter( ba -> bioAssays == null || bioAssays.contains( ba ) )
                 .collect( Collectors.toList() );
-        this.sampleIndex = new int[samples.size()];
-        for ( int i = 0; i < samples.size(); i++ ) {
-            this.sampleIndex[i] = dimension.getBioAssays().indexOf( samples.get( i ) );
+        this.assayIndex = new int[assays.size()];
+        for ( int i = 0; i < assays.size(); i++ ) {
+            this.assayIndex[i] = dimension.getBioAssays().indexOf( assays.get( i ) );
         }
         this.vectors = vectors;
         if ( vectors != null && designElements == null ) {
@@ -143,12 +143,12 @@ public class ExpressionDataHeatmap implements Heatmap {
         Assert.notNull( vectors, "Vectors must be set to generate an image." );
         double maxData = Double.MIN_VALUE;
         double minData = Double.MAX_VALUE;
-        double[][] data = new double[samples.size()][vectors.size()];
+        double[][] data = new double[assays.size()][vectors.size()];
         for ( int i = 0; i < vectors.size(); i++ ) {
             BulkExpressionDataVector vec = vectors.get( i );
             DoubleBuffer buffer = vec.getDataAsDoubleBuffer();
-            for ( int j = 0; j < samples.size(); j++ ) {
-                data[j][i] = buffer.get( sampleIndex[j] );
+            for ( int j = 0; j < assays.size(); j++ ) {
+                data[j][i] = buffer.get( assayIndex[j] );
                 if ( Double.isFinite( data[j][i] ) ) {
                     maxData = Math.max( maxData, data[j][i] );
                     minData = Math.min( minData, data[j][i] );
@@ -168,7 +168,7 @@ public class ExpressionDataHeatmap implements Heatmap {
     @Override
     public List<String> getXLabels() {
         if ( transpose ) {
-            return samples.stream().map( BioAssay::getName ).collect( Collectors.toList() );
+            return assays.stream().map( BioAssay::getName ).collect( Collectors.toList() );
         }
         if ( genes != null ) {
             return genes.stream().map( g -> g != null ? g.getOfficialSymbol() : "null" ).collect( Collectors.toList() );
@@ -190,7 +190,7 @@ public class ExpressionDataHeatmap implements Heatmap {
                 throw new IllegalStateException( "No genes nor vectors are set, cannot generate row labels." );
             }
         }
-        return samples.stream().map( BioAssay::getName ).collect( Collectors.toList() );
+        return assays.stream().map( BioAssay::getName ).collect( Collectors.toList() );
     }
 
     private static class HeatMapDatasetImpl implements HeatMapDataset {

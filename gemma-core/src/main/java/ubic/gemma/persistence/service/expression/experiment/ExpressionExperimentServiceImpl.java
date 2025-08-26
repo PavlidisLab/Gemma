@@ -35,7 +35,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -171,26 +170,39 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public SortedMap<Long, String> loadAllIdAndName() {
-        return expressionExperimentDao.loadAllIdAndName();
+    public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
+        List<ExpressionExperimentDao.Identifiers> allIds = expressionExperimentDao.loadAllIdentifiers();
+        TreeMap<String, String> finalIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+        populateIdentifierMap( allIds, identifiers -> String.valueOf( identifiers.getId() ), finalIds );
+        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getShortName, finalIds );
+        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getAccession, finalIds );
+        if ( includeNames ) {
+            populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getName, finalIds );
+        }
+        return finalIds;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public SortedMap<String, String> loadAllShortNameAndName() {
-        return expressionExperimentDao.loadAllShortNameAndName();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SortedSet<String> loadAllName() {
-        return expressionExperimentDao.loadAllName();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SortedMap<String, String> loadAllAccessionAndName() {
-        return expressionExperimentDao.loadAllAccessionAndName();
+    private void populateIdentifierMap( Collection<ExpressionExperimentDao.Identifiers> identifiers,
+            Function<ExpressionExperimentDao.Identifiers, String> extractor, Map<String, String> identifierMap ) {
+        Map<String, String> eeIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+        Set<String> ambiguousIdentifiers = new HashSet<>();
+        for ( ExpressionExperimentDao.Identifiers ids : identifiers ) {
+            String id = extractor.apply( ids );
+            if ( id == null ) {
+                continue;
+            }
+            if ( identifierMap.containsKey( id ) ) {
+                // this indicates that there is already a higher-priority identifier for this EE
+                continue;
+            }
+            if ( eeIds.put( id, ids.getName() ) != null ) {
+                // another EE has the same ID
+                ambiguousIdentifiers.add( id );
+            }
+        }
+        ambiguousIdentifiers.forEach( eeIds::remove );
+        log.info( "Removed " + ambiguousIdentifiers.size() + " ambiguous identifiers." );
+        identifierMap.putAll( eeIds );
     }
 
     @Override
@@ -488,6 +500,30 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if (ee != null) {
+            if ( ee.getPrimaryPublication() != null ) {
+                Hibernate.initialize( ee.getPrimaryPublication() );
+                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
+                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
+                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+            }
+            Set<BibliographicReference> pubs = ee.getOtherRelevantPublications();
+
+            for (BibliographicReference pub : pubs) {
+                Hibernate.initialize( pub );
+                Hibernate.initialize( pub.getMeshTerms() );
+                Hibernate.initialize( pub.getChemicals() );
+                Hibernate.initialize( pub.getKeywords() );
+            }
+        }
+
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
@@ -632,6 +668,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment findByShortName( final String shortName ) {
         return this.expressionExperimentDao.findByShortName( shortName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByShortNameAndThawLite( String shortName ) {
+        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
+        if ( ee != null ) {
+            expressionExperimentDao.thawLite( ee );
+        }
+        return ee;
     }
 
     /**
@@ -932,25 +978,44 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssaySet loadBioAssaySet( Long id ) {
-        return expressionExperimentDao.loadBioAssaySet( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
         this.expressionExperimentDao.thawLite( ee );
         return ee;
     }
 
-    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
+        this.expressionExperimentDao.thawLite( ee );
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> ExpressionExperiment loadAndThawLiterOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
+        this.expressionExperimentDao.thawLiter( ee );
+        return ee;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             this.expressionExperimentDao.thaw( ee );
+        }
+        return ee;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawLite( Long id ) {
+        ExpressionExperiment ee = load( id );
+        if ( ee != null ) {
+            this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
     }
@@ -1151,14 +1216,19 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
+    public Collection<ArrayDesign> getArrayDesignsUsed( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, quantitationTypeService.getDataVectorType( qt ) );
+        Class<? extends DataVector> dvt = quantitationTypeService.getDataVectorType( qt );
+        if ( dvt == null ) {
+            log.warn( "There are no vectors associated to " + qt + " in " + ee + ", will return no platforms." );
+            return Collections.emptySet();
+        }
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, dvt );
     }
 
     @Override
@@ -1566,14 +1636,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
-        return this.expressionExperimentDao.getTaxa( bioAssaySets );
+    public Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees ) {
+        return this.expressionExperimentDao.getTaxa( ees );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
-        return this.expressionExperimentDao.getTaxon( bioAssaySet );
+    public Taxon getTaxon( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getTaxon( ee );
     }
 
     @Override
@@ -1784,7 +1854,7 @@ public class ExpressionExperimentServiceImpl
         this.principalComponentAnalysisService.removeForExperiment( ee );
 
         // Remove coexpression analyses
-        this.coexpressionAnalysisService.removeForExperiment( ee, true );
+        this.coexpressionAnalysisService.removeForExperimentAnalyzed( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

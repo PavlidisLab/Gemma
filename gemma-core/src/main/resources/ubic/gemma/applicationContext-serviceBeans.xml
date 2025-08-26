@@ -24,18 +24,6 @@
         <property name="queueCapacity" value="${gemma.expressionDataFileTasks.queueCapacity}"/>
     </bean>
 
-    <!-- Configure Velocity for sending e-mail -->
-    <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
-        <constructor-arg>
-            <props>
-                <prop key="resource.loaders">class</prop>
-                <prop
-                    key="resource.loader.class.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
-                </prop>
-            </props>
-        </constructor-arg>
-    </bean>
-
     <!-- micrometer, for metrics -->
     <beans profile="metrics">
         <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
