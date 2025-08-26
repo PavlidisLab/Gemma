@@ -144,7 +144,7 @@ class ComBat<R, C> {
         DoubleMatrix1D ghr = gammaHat.viewRow( 0 );
         int NUM_HIST_BINS = 100;
         Histogram gammaHatHist = new Histogram( "GammaHat", NUM_HIST_BINS, ghr );
-        XYSeries ghplot = gammaHatHist.plot();
+        XYSeries ghplot = plot( gammaHatHist );
 
         Normal rn = new Normal( this.gammaBar.get( 0 ), Math.sqrt( this.t2.get( 0 ) ), new MersenneTwister() );
 
@@ -153,7 +153,7 @@ class ComBat<R, C> {
             double n = rn.nextDouble();
             ghtheoryT.fill( n );
         }
-        XYSeries ghtheory = ghtheoryT.plot();
+        XYSeries ghtheory = plot( ghtheoryT );
         Path tmpfile;
         try {
             tmpfile = Files.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
@@ -170,7 +170,7 @@ class ComBat<R, C> {
              */
             DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
             Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
-            XYSeries dhplot = deltaHatHist.plot();
+            XYSeries dhplot = plot( deltaHatHist );
             Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
 
             Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
@@ -179,7 +179,7 @@ class ComBat<R, C> {
                 double invg = 1.0 / g.nextDouble();
                 deltaHatT.fill( invg );
             }
-            XYSeries dhtheory = deltaHatT.plot();
+            XYSeries dhtheory = plot( deltaHatT );
 
             tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
             ComBat.log.info( tmpfile );
@@ -902,4 +902,19 @@ class ComBat<R, C> {
         }
     }
 
+
+    /**
+     * Provide graph for JFreePlot; counts expressed as a fraction.
+     */
+    private XYSeries plot( Histogram hist ) {
+        XYSeries series = new XYSeries( hist.getName(), true, true );
+        double step = hist.min();
+        double binWidth = hist.stepSize();
+        double[] binHeights = hist.getArray();
+        for ( double binHeight : binHeights ) {
+            series.add( step, binHeight / hist.entries() );
+            step += binWidth;
+        }
+        return series;
+    }
 }
