@@ -529,7 +529,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         if ( series.getSamples().isEmpty() ) {
             throw new IllegalStateException(
-                    "Data set is for unsupported taxa (" + StringUtils.join( unsupportedTaxa, ";" ) + ")" + series );
+                    "Dataset is for unsupported taxa (" + StringUtils.join( unsupportedTaxa, ";" ) + ")" + series );
         }
 
         if ( series.getSamples().size() < minimumSampleCountToLoad ) {
