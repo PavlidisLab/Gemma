@@ -693,23 +693,35 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.UpdateEe2AdCli ' ]]; then
-        if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since --truncate -h -s -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--since|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-s|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --since --taxon --truncate -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -s -t -truncate -x" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updateEe2Ad ' ]]; then
-        if ! [[ "$current_option" =~ (--since|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --since --truncate -h -s -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--since|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-s|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --since --taxon --truncate -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -q -s -t -truncate -x" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.UpdateEE2CCli ' ]]; then
-        if ! [[ "$current_option" =~ (--level|--since|-l|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --level --since --truncate -h -l -s -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--level|--since|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-l|-q|-s|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --level --since --taxon --truncate -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -l -q -s -t -truncate -x" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' updateEe2c ' ]]; then
-        if ! [[ "$current_option" =~ (--level|--since|-l|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --level --since --truncate -h -l -s -truncate" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--level|--since|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-l|-q|-s|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --level --since --taxon --truncate -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -l -q -s -t -truncate -x" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExpressionExperimentDataUpdaterCli ' ]]; then

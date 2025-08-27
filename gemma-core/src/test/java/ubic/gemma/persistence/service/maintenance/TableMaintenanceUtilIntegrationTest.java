@@ -9,7 +9,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -27,10 +28,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author poirigui
  */
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
+public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private TestAuthenticationUtils testAuthenticationUtils;
 
     @Value("${gemma.gene2cs.path}")
     private Path gene2CsPath;
@@ -67,7 +71,7 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
 
     @Test(expected = AccessDeniedException.class)
     public void testWhenUserIsAnonymous() {
-        this.runAsAnonymous();
+        testAuthenticationUtils.runAsAnonymous();
         tableMaintenanceUtil.updateGene2CsEntries();
     }
 
@@ -83,11 +87,15 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), false );
         assertThatThrownBy( () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), true ) )
                 .isInstanceOf( IllegalArgumentException.class );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, null );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 
     @Test(expected = AccessDeniedException.class)
     public void testUpdateEE2CAsUser() {
-        this.runAsAnonymous();
+        testAuthenticationUtils.runAsAnonymous();
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
@@ -95,5 +103,8 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2ArrayDesignEntries() {
         tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null, false );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( ee );
     }
 }
