@@ -326,6 +326,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByDesignId( Long designId ) {
+        return findOneByProperty( "experimentalDesign.id", designId );
+    }
+
+    @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
@@ -335,6 +340,19 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "ef", ef )
                 .uniqueResult();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef in :factors "
+                        + "group by ee" )
+                .setParameterList( "factors", optimizeIdentifiableParameterList( factors ) )
+                .list();
     }
 
     @Override
@@ -356,21 +374,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> fvs ) {
-        if ( fvs.isEmpty() )
-            return new HashMap<>();
-        Map<ExpressionExperiment, FactorValue> results = new HashMap<>();
+    public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs ) {
+        if ( fvs.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
-        List<Object[]> r2 = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ee, f from ExpressionExperiment ee "
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
                         + "join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f "
-                        + "where f in (:fvs) group by ee, f" )
+                        + "where f in (:fvs) "
+                        + "group by ee" )
                 .setParameterList( "fvs", optimizeIdentifiableParameterList( fvs ) )
                 .list();
-        for ( Object[] row : r2 ) {
-            results.put( ( ExpressionExperiment ) row[0], ( FactorValue ) row[1] );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
+        if ( factorValueIds.isEmpty() ) {
+            return Collections.emptyList();
         }
-        return results;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f "
+                        + "where f.id in (:fvIds) "
+                        + "group by ee" )
+                .setParameterList( "fvIds", optimizeParameterList( factorValueIds ) )
+                .list();
     }
 
     /**

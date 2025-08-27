@@ -502,7 +502,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id ) {
         ExpressionExperiment ee = load( id );
-        if (ee != null) {
+        if ( ee != null ) {
             if ( ee.getPrimaryPublication() != null ) {
                 Hibernate.initialize( ee.getPrimaryPublication() );
                 Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
@@ -511,7 +511,7 @@ public class ExpressionExperimentServiceImpl
             }
             Set<BibliographicReference> pubs = ee.getOtherRelevantPublications();
 
-            for (BibliographicReference pub : pubs) {
+            for ( BibliographicReference pub : pubs ) {
                 Hibernate.initialize( pub );
                 Hibernate.initialize( pub.getMeshTerms() );
                 Hibernate.initialize( pub.getChemicals() );
@@ -580,6 +580,11 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByBioMaterial( bm );
     }
 
+    @Override
+    public Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials ) {
+        return this.expressionExperimentDao.findByBioMaterials( biomaterials );
+    }
+
     /**
      * @see ExpressionExperimentService#findByExpressedGene(Gene, double)
      */
@@ -595,6 +600,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByDesign( ed );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByDesignId( Long designId ) {
+        return this.expressionExperimentDao.findByDesignId( designId );
+    }
+
     /**
      * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
      */
@@ -602,6 +613,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
         return this.expressionExperimentDao.findByFactor( factor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
+        return this.expressionExperimentDao.findByFactors( factors );
     }
 
     /**
@@ -627,8 +644,14 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperiment, FactorValue> findByFactorValues( final Collection<FactorValue> factorValues ) {
+    public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
         return this.expressionExperimentDao.findByFactorValues( factorValues );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
+        return this.expressionExperimentDao.findByFactorValueIds( factorValueIds );
     }
 
     /**
@@ -1032,8 +1055,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
+    public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
         this.expressionExperimentDao.thaw( ee );
         return ee;
     }

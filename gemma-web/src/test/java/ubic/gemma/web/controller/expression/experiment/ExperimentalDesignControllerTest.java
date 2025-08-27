@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -20,11 +22,13 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.util.BaseWebTest;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -108,6 +112,16 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         public AuditTrailService auditTrailService() {
             return mock();
         }
+
+        @Bean
+        public TableMaintenanceUtil tableMaintenanceUtil() {
+            return mock();
+        }
+
+        @Bean
+        public TaskExecutor taskExecutor() {
+            return new SyncTaskExecutor();
+        }
     }
 
     @Autowired
@@ -119,22 +133,29 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     @Autowired
     private FactorValueService factorValueService;
 
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
+
     /* fixtures */
+    private ExpressionExperiment ee;
     private FactorValue fv;
 
     @Before
     public void setUp() {
-        ExpressionExperiment ee = new ExpressionExperiment();
+        ee = new ExpressionExperiment();
         fv = new FactorValue();
         fv.setId( 1L );
         fv.setExperimentalFactor( new ExperimentalFactor() );
         when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
+        when( expressionExperimentService.findByFactorValues( Collections.singleton( fv ) ) ).thenReturn( Collections.singleton( ee ) );
         when( factorValueService.load( fv.getId() ) ).thenReturn( fv );
+        when( factorValueService.loadOrFail( eq( fv.getId() ), any( Function.class ) ) ).thenReturn( fv );
+        when( factorValueService.loadOrFail( eq( Collections.singleton( fv.getId() ) ), any( Function.class ) ) ).thenReturn( Collections.singleton( fv ) );
     }
 
     @After
     public void tearDown() {
-        reset( factorValueService, expressionExperimentService );
+        reset( factorValueService, expressionExperimentService, tableMaintenanceUtil );
     }
 
     @Test
@@ -144,13 +165,14 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         cvo.setCategory( "test" );
         cvo.setValue( "test2" );
         experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo );
-        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         Statement stmt = new Statement();
         stmt.setCategory( "test" );
         stmt.setSubject( "test2" );
-        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         verify( factorValueService ).createStatement( fv, stmt );
         verifyNoMoreInteractions( factorValueService );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 
     @Test
@@ -160,8 +182,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The category cannot be blank" );
-        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         verifyNoMoreInteractions( factorValueService );
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     @Test
@@ -172,8 +195,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         assertThatThrownBy( () -> experimentalDesignController.createFactorValueCharacteristic( fvDelegate, cvo ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "The value cannot be blank" );
-        verify( factorValueService ).load( 1L );
+        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
         verifyNoMoreInteractions( factorValueService );
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     @Test
@@ -184,61 +208,48 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         Statement s2 = new Statement();
         s2.setCategory( "bar" );
         s2.setSubject( "bar" );
-        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
         experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] {
                 new FactorValueValueObject( fv, s1 ),
                 new FactorValueValueObject( fv, s2 ) } );
-        verify( factorValueService, times( 1 ) ).loadOrFail( eq( 1L ), any( Function.class ) );
+        verify( factorValueService, times( 1 ) ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verify( factorValueService ).saveStatement( fv, s1 );
         verify( factorValueService ).saveStatement( fv, s2 );
         verifyNoMoreInteractions( factorValueService );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 
     @Test
     public void testMarkAsNeedsAttention() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setId( 1L );
-        FactorValue fv = new FactorValue();
-        fv.setId( 1L );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
-
         experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "foo" );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verify( factorValueService ).markAsNeedsAttention( fv, "foo" );
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     @Test
     public void testMarkAsNeedsAttentionWhenFactorValueIsAlreadyMarked() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setId( 1L );
-        FactorValue fv = new FactorValue();
-        fv.setId( 1L );
         fv.setNeedsAttention( true );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
         assertThatThrownBy( () -> {
             experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "" );
         } ).isInstanceOf( IllegalArgumentException.class );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verifyNoMoreInteractions( factorValueService );
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     @Test
     public void testClearNeedsAttention() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setId( 1L );
-        FactorValue fv = new FactorValue();
-        fv.setId( 1L );
         fv.setNeedsAttention( true );
-        when( factorValueService.loadOrFail( eq( 1L ), any(), any() ) ).thenReturn( fv );
+        when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
         experimentalDesignController.clearFactorValuesNeedsAttention( new Long[] { fv.getId() }, "" );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any(), any() );
+        verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verify( factorValueService ).clearNeedsAttentionFlag( fv, "" );
         verifyNoMoreInteractions( factorValueService );
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     @Test
     public void testNeedsAttentionIsResetWhenFVIsSaved() {
-        FactorValue fv = new FactorValue();
         fv.setId( 1L );
         fv.setExperimentalFactor( new ExperimentalFactor() );
         fv.setNeedsAttention( true );
@@ -247,9 +258,10 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         fvvo.setValue( "test" );
         when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
         experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
-        verify( factorValueService ).loadOrFail( eq( 1L ), any( Function.class ) );
+        verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verify( factorValueService ).saveStatement( eq( fv ), any() );
         verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
         verifyNoMoreInteractions( factorValueService );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 }

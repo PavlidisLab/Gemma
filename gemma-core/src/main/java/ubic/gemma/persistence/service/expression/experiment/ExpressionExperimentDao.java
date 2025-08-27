@@ -50,6 +50,7 @@ public interface ExpressionExperimentDao
      * <p>
      * The cache mode will be effective for the remainder of the Hibernate session.
      */
+    @Nullable
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
     @Data
@@ -68,6 +69,7 @@ public interface ExpressionExperimentDao
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    @Nullable
     ExpressionExperiment findByShortName( String shortName );
 
     Collection<ExpressionExperiment> findByName( String name );
@@ -84,6 +86,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
+    @Nullable
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
@@ -92,18 +95,30 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
+    @Nullable
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
+    @Nullable
+    ExpressionExperiment findByDesignId( Long designId );
+
+    @Nullable
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
 
+    Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
+
+    @Nullable
     ExpressionExperiment findByFactorValue( FactorValue fv );
 
+    @Nullable
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
-    Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> fvs );
+    Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs );
+
+    Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds );
 
     Collection<ExpressionExperiment> findByGene( Gene gene );
 
+    @Nullable
     ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );

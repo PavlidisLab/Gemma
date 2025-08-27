@@ -47,6 +47,14 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     Collection<O> load( Collection<Long> ids );
 
     /**
+     * Load multiple objects or fail with a {@link NullPointerException} if any of the objects does not exist in the
+     * persistent storage.
+     */
+    Collection<O> loadOrFail( Collection<Long> ids ) throws NullPointerException;
+
+    <T extends Exception> Collection<O> loadOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T;
+
+    /**
      * Loads object with given ID.
      *
      * @param id the ID of entity to be loaded.
