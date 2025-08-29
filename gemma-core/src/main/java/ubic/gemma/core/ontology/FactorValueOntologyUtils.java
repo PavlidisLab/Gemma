@@ -48,6 +48,19 @@ public class FactorValueOntologyUtils {
         }
     }
 
+    public static boolean isFactorValueUri( String uri ) {
+        if ( !uri.startsWith( FactorValueOntologyUtils.URI_PREFIX ) ) {
+            return false;
+        }
+        String t = uri.substring( FactorValueOntologyUtils.URI_PREFIX.length() );
+        try {
+            Long.parseLong( t );
+            return true;
+        } catch ( NumberFormatException e ) {
+            return false;
+        }
+    }
+
     /**
      * Check if a URI refers to an annotation of a factor value.
      */
@@ -149,6 +162,6 @@ public class FactorValueOntologyUtils {
     }
 
     private static String getAnnotationId( Long factorValueId, Long id ) {
-        return URI_PREFIX + factorValueId + "/" + id;
+        return getUri( factorValueId ) + "/" + id;
     }
 }

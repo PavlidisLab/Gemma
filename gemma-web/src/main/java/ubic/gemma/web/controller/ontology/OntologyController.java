@@ -6,26 +6,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.ServiceUnavailableException;
 
-import javax.servlet.ServletContext;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Provide minimal support for exposing Gemma ontology.
@@ -37,9 +43,9 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 @SuppressWarnings("HttpUrlsUsage")
 public class OntologyController {
 
-    private static final String
-            TGEMO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/",
-            TGFVO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
+    public static final String
+            TGEMO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/";
+    public static final String TGFVO_URI_PREFIX = "http://gemma.msl.ubc.ca/ont/TGFVO/";
 
     private static final MediaType RDF_XML = MediaType.parseMediaType( "application/rdf+xml" );
 
@@ -50,22 +56,41 @@ public class OntologyController {
     private GemmaOntologyService gemmaOntologyService;
 
     @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     private FactorValueOntologyService factorValueOntologyService;
 
     @Autowired
-    private ServletContext servletContext;
+    private DownloadUtil downloadUtil;
 
-    @RequestMapping(value = { "/TGEMO", "/TGEMO.OWL" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public RedirectView getOntology() {
+    @Value("${tgfvo.path}")
+    private Path tgfvoPath;
+
+    @RequestMapping(value = { "/TGEMO" }, method = { RequestMethod.GET, RequestMethod.HEAD })
+    public ModelAndView getGemmaOntologyHome() {
+        List<OntologyTerm> terms = gemmaOntologyService.getAllURIs().stream()
+                .sorted()
+                .map( gemmaOntologyService::getTerm )
+                .filter( Objects::nonNull )
+                .filter( term -> term.getUri() != null && term.getUri().startsWith( TGEMO_URI_PREFIX ) )
+                .sorted( Comparator.comparing( OntologyTerm::getLabel, Comparator.nullsFirst( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+        return new ModelAndView( "tgemo" )
+                .addObject( "terms", terms )
+                .addObject( "hostUrl", hostUrl );
+    }
+
+    @RequestMapping(value = { "/TGEMO.OWL" }, method = { RequestMethod.GET, RequestMethod.HEAD })
+    public RedirectView getGemmaOntologyAsRdf() {
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         RedirectView redirectView = new RedirectView( gemmaOntologyUrl );
         redirectView.setStatusCode( HttpStatus.FOUND );
         return redirectView;
     }
 
-    @ResponseBody
     @RequestMapping(value = "/{termId:TGEMO_.*}", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public String getTerm( @PathVariable("termId") String termId ) {
+    public ModelAndView getGemmaOntologyTerm( @PathVariable("termId") String termId ) {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
         }
@@ -75,39 +100,59 @@ public class OntologyController {
             throw new EntityNotFoundException( String.format( "No term with IRI %s in TGEMO.", iri ) );
         }
 
-        StringBuilder s = new StringBuilder( String.format( "<title>%s</title>", escapeHtml4( term.getLabel() ) ) +
-                "<div class=\"padded\"><ul style=\"padding-bottom:0.5em\">" +
-                String.format( "<h2 style=\"padding-bottom:0.5em\">%s: %s</h2>",
-                        escapeHtml4( term.getLocalName() ),
-                        escapeHtml4( term.getLabel() ) ) );
-        if ( term.getUri() != null ) {
-            s.append( String.format( "<li><a href=%s>%s</a></li>",
-                    escapeHtml4( term.getUri()
-                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
-                    escapeHtml4( TGEMO_URI_PREFIX + term.getLocalName() ) ) );
-        }
-
-        for ( AnnotationProperty annot : term.getAnnotations() ) {
-            if ( Arrays.asList( "hasDefinition", "definition" ).contains( annot.getProperty() ) ) {
-                s.append( "<li>" )
-                        .append( annot.getContents() )
-                        .append( "</li>" );
-            }
-        }
-
-
-        s.append( "</ul>" );
-        s.append( String.format( "<p>Ontology IRI: <a href=%s>%s</a></p>",
-                servletContext.getContextPath() + "/ont/TGEMO",
-                TGEMO_URI_PREFIX + "TGEMO" ) );
-        s.append( "</div>" );
-        return s.toString();
-
+        return new ModelAndView( "tgemo.term" )
+                .addObject( "term", term );
     }
 
-    @ResponseBody
+    @RequestMapping(value = "/TGFVO", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    public ModelAndView getFactorValueOntologyHome(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "20") int limit,
+            @RequestHeader(value = "Accept", required = false) String acceptHeader,
+            HttpServletResponse response ) throws IOException {
+        Assert.isTrue( offset >= 0, "The offset must be zero or greater." );
+        Assert.isTrue( limit > 0 && limit <= 100, "The limit must be between 1 and 100." );
+        offset = offset - ( offset % limit ); // round down to the nearest limit
+        MediaType mediaType = Optional.ofNullable( acceptHeader )
+                .map( MediaType::parseMediaTypes )
+                .map( List::stream )
+                .flatMap( Stream::findFirst )
+                .orElse( MediaType.TEXT_HTML );
+        if ( mediaType.isCompatibleWith( RDF_XML ) ) {
+            Slice<String> individualUris = factorValueOntologyService.getFactorValueUris( offset, limit );
+            try ( Writer writer = response.getWriter() ) {
+                factorValueOntologyService.writeToRdfIgnoreAcls( individualUris, writer );
+            }
+            return null;
+        } else {
+            Slice<OntologyIndividual> individuals = factorValueOntologyService.getFactorValues( offset, limit );
+            long count = requireNonNull( individuals.getTotalElements() );
+            return new ModelAndView( "tgfvo" )
+                    .addObject( "individuals", individuals )
+                    .addObject( "hostUrl", hostUrl )
+                    .addObject( "offset", offset )
+                    .addObject( "limit", limit )
+                    .addObject( "count", count );
+        }
+    }
+
+    @RequestMapping(value = "/TGFVO.OWL", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = "application/rdf+xml")
+    public void getFactorValueOntologyAsRdf( HttpServletRequest request, HttpServletResponse response, @RequestParam(value = "download", defaultValue = "false") boolean download ) throws IOException, IOException {
+        String contentType, contentEncoding, downloadName;
+        if ( download ) {
+            contentType = "application/octet-stream";
+            contentEncoding = null;
+            downloadName = "TGFVO.OWL.gz";
+        } else {
+            contentType = "application/rdf+xml";
+            contentEncoding = "gzip";
+            downloadName = "TGFVO.OWL";
+        }
+        downloadUtil.download( tgfvoPath, contentType, contentEncoding, true, downloadName, request, response );
+    }
+
     @RequestMapping(value = "/TGFVO/{factorValueId}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
-    public String getFactorValue( @PathVariable("factorValueId") Long factorValueId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
+    public ModelAndView getFactorValue( @PathVariable("factorValueId") Long factorValueId, @RequestHeader(value = "Accept", required = false) String acceptHeader, HttpServletResponse response ) throws IOException {
         String iri = TGFVO_URI_PREFIX + factorValueId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
@@ -119,34 +164,24 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
-            StringWriter sw = new StringWriter();
-            factorValueOntologyService.writeToRdf( iri, sw );
-            return sw.toString();
+            try ( Writer writer = response.getWriter() ) {
+                factorValueOntologyService.writeToRdf( Collections.singleton( iri ), writer );
+            }
+            return null;
         }
-        StringBuilder s = new StringBuilder();
-        s.append( String.format( "<title>FactorValue #%d: %s</title>", factorValueId, escapeHtml4( oi.getLabel() ) ) );
-        s.append( "<div class=\"padded\">" );
-        s.append( String.format( "<h2 style=\"padding-bottom:0.5em\">FactorValue #%d: %s</h2>", factorValueId, renderOntologyResource( oi ) ) );
-        s.append( "<ul>" );
-        if ( oi.getInstanceOf() != null ) {
-            s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
-        }
-        for ( OntologyIndividual relatedOi : factorValueOntologyService.getFactorValueAnnotations( iri ) ) {
-            s.append( "<li>has annotation " ).append( renderOntologyResource( relatedOi ) ).append( "</li>" );
-        }
-        for ( FactorValueOntologyService.OntologyStatement st : factorValueOntologyService.getFactorValueStatements( iri ) ) {
-            s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
-        }
-        s.append( "</ul>" );
-        s.append( "<p style=\"margin-bottom: 0em;\">Retrieve this in RDF/XML:</p>" );
-        s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
-        s.append( "</div>" );
-        return s.toString();
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValueId );
+        return new ModelAndView( "tgfvo.factorValue" )
+                .addObject( "factorValueId", factorValueId )
+                .addObject( "oi", oi )
+                .addObject( "ee", ee )
+                .addObject( "annotations", factorValueOntologyService.getFactorValueAnnotations( iri ) )
+                .addObject( "statements", factorValueOntologyService.getFactorValueStatements( iri ) )
+                .addObject( "hostUrl", hostUrl );
     }
 
-    @ResponseBody
     @RequestMapping(value = "/TGFVO/{factorValueId}/{annotationId}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
-    public String getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
+    public ModelAndView getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId, @RequestHeader(value = "Accept", required = false) String acceptHeader,
+            HttpServletResponse response ) throws IOException {
         String iri = TGFVO_URI_PREFIX + factorValueId + "/" + annotationId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
         if ( oi == null ) {
@@ -158,39 +193,19 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
-            StringWriter sw = new StringWriter();
-            factorValueOntologyService.writeToRdf( iri, sw );
-            return sw.toString();
-        }
-        StringBuilder s = new StringBuilder();
-        s.append( String.format( "<title>Annotation #%d of FactorValue #%d: %s</title>", annotationId, factorValueId, oi.getLabel() ) );
-        s.append( "<div class=\"padded\">" );
-        s.append( String.format( "<h2>Annotation #%d of FactorValue #%d: %s</h2>", annotationId, factorValueId, renderOntologyResource( oi ) ) );
-        s.append( "<ul>" );
-        if ( oi.getInstanceOf() != null ) {
-            s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
+            try ( Writer writer = response.getWriter() ) {
+                factorValueOntologyService.writeToRdf( Collections.singleton( iri ), writer );
+            }
+            return null;
         }
         OntologyIndividual factorValueOi = factorValueOntologyService.getIndividual( TGFVO_URI_PREFIX + factorValueId );
-        if ( factorValueOi != null ) {
-            s.append( "<li>annotation of " ).append( renderOntologyResource( factorValueOi ) ).append( "</li>" );
-        }
-        s.append( "</ul>" );
-        s.append( "<p>Retrieve this in RDF/XML:</p>" );
-        s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d/%d</pre>", hostUrl, factorValueId, annotationId ) );
-        s.append( "</div>" );
-        return s.toString();
-    }
-
-    private String renderOntologyResource( OntologyResource oi ) {
-        if ( oi.getUri() == null ) {
-            return escapeHtml4( oi.getLabel() );
-        } else {
-            //noinspection SpellCheckingInspection
-            return String.format( "<a href=\"%s\">%s</a>",
-                    escapeHtml4( oi.getUri()
-                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), servletContext.getContextPath() + "/ont/TGFVO/" )
-                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
-                    escapeHtml4( oi.getLabel() ) );
-        }
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValueId );
+        return new ModelAndView( "tgfvo.factorValueAnnotation" )
+                .addObject( "oi", oi )
+                .addObject( "ee", ee )
+                .addObject( "factorValueId", factorValueId )
+                .addObject( "annotationId", annotationId )
+                .addObject( "factorValueOi", factorValueOi )
+                .addObject( "hostUrl", hostUrl );
     }
 }

@@ -18,9 +18,12 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.Map;
@@ -30,6 +33,27 @@ import java.util.Set;
  * @see ubic.gemma.model.expression.experiment.FactorValue
  */
 public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, FactorValueValueObject> {
+
+    /**
+     * Load a slice of {@link FactorValue}s.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     */
+    Slice<FactorValue> loadAll( int offset, int limit );
+
+    /**
+     * Load all factor value IDs.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     */
+    Collection<Long> loadAllIds();
+
+    /**
+     * Load a slice of the factor values IDs.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     */
+    Slice<Long> loadAllIds( int offset, int limit );
 
     /**
      * Locate based on string value of the value.
@@ -50,6 +74,10 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
      */
     @Deprecated
     Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
+
+    Map<FactorValue, Characteristic> getExperimentalFactorCategories( Collection<FactorValue> factorValues );
+
+    Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues );
 
     /**
      * Update a FactorValue without involving ACL advice.

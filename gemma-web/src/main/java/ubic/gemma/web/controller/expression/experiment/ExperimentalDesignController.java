@@ -97,6 +97,8 @@ public class ExperimentalDesignController {
     @Autowired
     private FactorValueService factorValueService;
     @Autowired
+    private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
+    @Autowired
     private SecurityService securityService;
     @Autowired
     private AuditTrailService auditTrailService;
@@ -866,7 +868,7 @@ public class ExperimentalDesignController {
         for ( int i = 0; i < fvs.length; i++ ) {
             statements[i] = factorValueService.saveStatement( fvs[i], statements[i] );
             if ( fvs[i].getNeedsAttention() ) {
-                factorValueService.clearNeedsAttentionFlag( fvs[i], "The dataset does not need attention and all of its factor values were fixed." );
+                factorValueNeedsAttentionService.clearNeedsAttentionFlag( fvs[i], "The dataset does not need attention and all of its factor values were fixed." );
                 log.info( "Reverted needs attention flag for " + fvs[i] );
             }
         }
@@ -944,7 +946,7 @@ public class ExperimentalDesignController {
                     throw new IllegalArgumentException( String.format( "%s is already marked as needs attention.", fv ) );
                 }
             } else {
-                factorValueService.markAsNeedsAttention( fv, note );
+                factorValueNeedsAttentionService.markAsNeedsAttention( fv, note );
                 marked++;
             }
         }
@@ -964,7 +966,7 @@ public class ExperimentalDesignController {
                     throw new IllegalArgumentException( String.format( "%s does not need attention.", fv ) );
                 }
             } else {
-                factorValueService.clearNeedsAttentionFlag( fv, note );
+                factorValueNeedsAttentionService.clearNeedsAttentionFlag( fv, note );
                 cleared++;
             }
         }

@@ -7,20 +7,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.simple.OntologyIndividualSimple;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
-import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.web.util.BaseWebTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.util.BaseWebTest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -40,7 +46,16 @@ public class OntologyControllerTest extends BaseWebTest {
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
             return new TestPropertyPlaceholderConfigurer(
                     "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL",
-                    "gemma.hosturl=https://gemma.msl.ubc.ca" );
+                    "gemma.hosturl=https://gemma.msl.ubc.ca",
+                    "tomcat.sendfile.enabled=false",
+                    "tgfvo.path=test" );
+        }
+
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
         }
 
         @Bean
@@ -56,6 +71,16 @@ public class OntologyControllerTest extends BaseWebTest {
         @Bean
         public FactorValueOntologyService factorValueOntologyService() {
             return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public DownloadUtil downloadUtil() {
+            return new DownloadUtil();
         }
     }
 
@@ -106,7 +131,7 @@ public class OntologyControllerTest extends BaseWebTest {
     }
 
     @Test
-    public void testGetTerm() throws Exception {
+    public void testGetGemmaOntologyTerm() throws Exception {
         perform( get( "/ont/TGEMO_00001" ) )
                 .andExpect( status().isOk() )
                 .andExpect( content().string( containsString( "TGEMO_00001: Homozygous negative" ) ) )
@@ -149,7 +174,7 @@ public class OntologyControllerTest extends BaseWebTest {
                 .andExpect( status().isOk() )
                 .andExpect( content().contentTypeCompatibleWith( "application/rdf+xml" ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
-        verify( factorValueOntologyService ).writeToRdf( eq( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ), any() );
+        verify( factorValueOntologyService ).writeToRdf( eq( Collections.singleton( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) ), any() );
         verifyNoMoreInteractions( factorValueOntologyService );
     }
 }

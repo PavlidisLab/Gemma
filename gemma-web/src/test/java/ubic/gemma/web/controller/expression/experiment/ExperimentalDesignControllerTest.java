@@ -64,6 +64,11 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         }
 
         @Bean
+        public FactorValueNeedsAttentionService factorValueNeedsAttentionService() {
+            return mock();
+        }
+
+        @Bean
         public BioMaterialService bioMaterialService() {
             return mock();
         }
@@ -132,6 +137,9 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
 
     @Autowired
     private FactorValueService factorValueService;
+
+    @Autowired
+    private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -222,7 +230,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
     public void testMarkAsNeedsAttention() {
         experimentalDesignController.markFactorValuesAsNeedsAttention( new Long[] { fv.getId() }, "foo" );
         verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
-        verify( factorValueService ).markAsNeedsAttention( fv, "foo" );
+        verify( factorValueNeedsAttentionService ).markAsNeedsAttention( fv, "foo" );
         verifyNoInteractions( tableMaintenanceUtil );
     }
 
@@ -243,7 +251,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         when( factorValueService.loadOrFail( eq( 1L ), any( Function.class ) ) ).thenReturn( fv );
         experimentalDesignController.clearFactorValuesNeedsAttention( new Long[] { fv.getId() }, "" );
         verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
-        verify( factorValueService ).clearNeedsAttentionFlag( fv, "" );
+        verify( factorValueNeedsAttentionService ).clearNeedsAttentionFlag( fv, "" );
         verifyNoMoreInteractions( factorValueService );
         verifyNoInteractions( tableMaintenanceUtil );
     }
@@ -260,7 +268,7 @@ public class ExperimentalDesignControllerTest extends BaseWebTest {
         experimentalDesignController.updateFactorValueCharacteristics( new FactorValueValueObject[] { fvvo } );
         verify( factorValueService ).loadOrFail( eq( Collections.singleton( 1L ) ), any( Function.class ) );
         verify( factorValueService ).saveStatement( eq( fv ), any() );
-        verify( factorValueService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
+        verify( factorValueNeedsAttentionService ).clearNeedsAttentionFlag( fv, "The dataset does not need attention and all of its factor values were fixed." );
         verifyNoMoreInteractions( factorValueService );
         verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }

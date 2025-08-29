@@ -42,8 +42,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.DownloadUtil;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -102,7 +102,8 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            downloadUtil.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
+            downloadUtil.download( file.getPath(), MediaType.APPLICATION_OCTET_STREAM_VALUE, null,
+                    true, null, request, response );
         }
     }
 
@@ -120,8 +121,10 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            downloadUtil.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
-                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT );
+            downloadUtil.download( file.getPath(), type.getContentType(), null,
+                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT,
+                    type.getDownloadName( ee ),
+                    request, response );
         }
     }
 

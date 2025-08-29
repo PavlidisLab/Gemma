@@ -211,7 +211,8 @@ public class ArrayDesignController {
                             arrayDesign.getShortName(), supportEmail ) );
         }
 
-        downloadUtil.download( f, fileName, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
+        downloadUtil.download( f, MediaType.APPLICATION_OCTET_STREAM_VALUE, null, true,
+                fileName, request, response );
     }
 
     @RequestMapping(value = "/filterArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })

@@ -1,7 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Query;
@@ -11,6 +9,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 
 import java.util.Arrays;
 
@@ -80,7 +80,25 @@ public class AclQueryUtils {
     static final String ANONYMOUS_SID_SQL = "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
-     * Create a HQL restriction clause with the {@link BasePermission#READ} permission.
+     * Indicate if the ACL query requires a {@code count(distinct ...)} clause.
+     * <p>
+     * FIXME: remove the need for a distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
+     */
+    public static boolean requiresCountDistinct() {
+        return !SecurityUtil.isUserAdmin();
+    }
+
+    /**
+     * Indicate if the ACL query requires a {@code group by} clause.
+     * <p>
+     * FIXME: remove the need for a count distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
+     */
+    public static boolean requiresGroupBy() {
+        return !SecurityUtil.isUserAdmin();
+    }
+
+    /**
+     * Create an HQL restriction clause with the {@link BasePermission#READ} permission.
      * @see #formAclRestrictionClause(String, int)
      */
     public static String formAclRestrictionClause( String aoiIdColumn ) {
@@ -94,7 +112,8 @@ public class AclQueryUtils {
      * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.
      * <p>
      * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
-     * entities with multiple ACL entries will be duplicated in the results.
+     * entities with multiple ACL entries will be duplicated in the results. You can use {@link #requiresGroupBy()} to
+     * tell if a {@code group by} clause is required and {@link #requiresCountDistinct()} when counting results.
      * <p>
      * FIXME: this ACL jointure is really annoying because it is one-to-many, maybe handling everything in a sub-query
      *        would be preferable?

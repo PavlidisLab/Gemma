@@ -375,6 +375,16 @@
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
+	<tag>
+		<name>ontologyResource</name>
+		<tag-class>ubic.gemma.web.taglib.OntologyResourceTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>resource</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
 	<function>
 		<name>urlEncode</name>
 		<function-class>java.net.URLEncoder</function-class>

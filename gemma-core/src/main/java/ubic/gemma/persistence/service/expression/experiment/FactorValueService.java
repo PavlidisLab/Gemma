@@ -19,43 +19,89 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author kelsey
  */
-public interface FactorValueService extends BaseService<FactorValue>, FilteringVoEnabledService<FactorValue, FactorValueValueObject> {
+public interface FactorValueService extends SecurableBaseService<FactorValue>, SecurableFilteringVoEnabledService<FactorValue, FactorValueValueObject> {
+
+    /**
+     * Load {@link FactorValue}s by IDs, ignoring ACLs.
+     */
+    Collection<FactorValue> loadIgnoreAcls( Set<Long> ids );
+
+    /**
+     * Load a slice of {@link FactorValue}s.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     * @see FactorValueDao#loadAll(int, int)
+     */
+    // no need to filter on ACLs, this is done in the query
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Slice<FactorValue> loadAll( int offset, int limit );
+
+    /**
+     * Load all factor value IDs.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     * @see FactorValueDao#loadAllIds()
+     */
+    // no need to filter on ACLs, this is done in the query
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Collection<Long> loadAllIds();
+
+    /**
+     * Load a slice of the factor values IDs.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     * @see FactorValueDao#loadAllIds(int, int)
+     */
+    // no need to filter on ACLs, this is done in the query
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Slice<Long> loadAllIds( int offset, int limit );
 
     @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
 
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    FactorValue findOrCreate( FactorValue factorValue );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue load( Long id );
-
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     FactorValue loadWithExperimentalFactor( Long id );
 
     /**
      * Load a {@link FactorValue} with an initialized experimental factor or fail.
      */
+    @Nonnull
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue loadWithExperimentalFactorOrFail( Long id );
+    <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
+
+    /**
+     * Obtain the categories of the given factor values.
+     * <p>
+     * This can be used as a lightweight alternative to loading the full experimental factor.
+     */
+    Map<FactorValue, Characteristic> getExperimentalFactorCategoriesIgnoreAcls( Collection<FactorValue> factorValues );
+
+    /**
+     * For efficiency, only the ID, short name and name of the EEs are populated.
+     */
+    Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues );
 
     /**
      * Load a {@link FactorValue} along with its old-style characteristics.
@@ -76,10 +122,6 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Secured({ "GROUP_ADMIN" })
     // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
     Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( FactorValue factorValue );
 
     /**
      * Create a given statement and add it to the given factor value.
@@ -116,31 +158,4 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeStatement( FactorValue fv, Statement c );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( Collection<FactorValue> factorValues );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( FactorValue factorValue );
-
-    /**
-     * Mark a given factor value as needs attention.
-     * @param factorValue a factor value to mark as needs attention
-     * @param note note to use for the {@link ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent}
-     * @throws IllegalArgumentException if the factor value already needs attention
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void markAsNeedsAttention( FactorValue factorValue, String note );
-
-    /**
-     * Clear a needs attention flag on a given factor value.
-     * @param factorValue a factor value whose needs flag will be cleared
-     * @param note a note to use for the {@link ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent}
-     *             if the dataset does not need attention for any other reason.
-     * @throws IllegalArgumentException if the factor value does not need attention
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void clearNeedsAttentionFlag( FactorValue factorValue, String note );
 }

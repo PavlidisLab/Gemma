@@ -7,8 +7,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.TsvUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -105,7 +106,8 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         getCliContext().getOutputStream().println( "Wrong_label\tCorrect_Label\tURI" );
         for ( Map.Entry<String, OntologyTerm> entry : mismatches.entrySet() ) {
-            getCliContext().getOutputStream().println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
+            getCliContext().getOutputStream().printf( "%s\t%s\t%s%n", TsvUtils.format( entry.getKey() ),
+                    TsvUtils.format( entry.getValue().getLabel() ), TsvUtils.format( entry.getValue().getUri() ) );
         }
 
 

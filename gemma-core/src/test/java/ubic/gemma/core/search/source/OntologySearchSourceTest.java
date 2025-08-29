@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
@@ -157,7 +157,7 @@ public class OntologySearchSourceTest extends BaseTest {
         ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), new SearchContext( null, null ) );
         verify( ontologyService ).findTerms( eq( "1-[(2S)-butan-2-yl]-N-[(4,6-dimethyl-2-oxo-1H-pyridin-3-yl)methyl]-3-methyl-6-[6-(1-piperazinyl)-3-pyridinyl]-4-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         // fallback to an escaped query
-        verify( ontologyService ).findTerms( eq(  "1\\-\\[\\(2S\\)\\-butan\\-2\\-yl\\]\\-N\\-\\[\\(4,6\\-dimethyl\\-2\\-oxo\\-1H\\-pyridin\\-3\\-yl\\)methyl\\]\\-3\\-methyl\\-6\\-\\[6\\-\\(1\\-piperazinyl\\)\\-3\\-pyridinyl\\]\\-4\\-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        verify( ontologyService ).findTerms( eq( "1\\-\\[\\(2S\\)\\-butan\\-2\\-yl\\]\\-N\\-\\[\\(4,6\\-dimethyl\\-2\\-oxo\\-1H\\-pyridin\\-3\\-yl\\)methyl\\]\\-3\\-methyl\\-6\\-\\[6\\-\\(1\\-piperazinyl\\)\\-3\\-pyridinyl\\]\\-4\\-indolecarboxamide" ), eq( 5000 ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
     }
 

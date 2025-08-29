@@ -5,10 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 
 import java.util.Arrays;
 import java.util.Collections;
