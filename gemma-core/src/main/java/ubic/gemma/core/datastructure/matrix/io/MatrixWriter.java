@@ -294,10 +294,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             List<String> ids = new ArrayList<>();
             List<String> ncbiIds = new ArrayList<>();
             for ( Gene gene : genes ) {
-                gs.add( format( gene.getOfficialSymbol() ) );
-                gn.add( format( gene.getOfficialName() ) );
-                ids.add( format( gene.getId() ) );
-                ncbiIds.add( format( gene.getNcbiGeneId() ) );
+                gs.add( gene.getOfficialSymbol() );
+                gn.add( gene.getOfficialName() );
+                ids.add( gene.getId() != null ? String.valueOf( gene.getId() ) : null );
+                ncbiIds.add( gene.getNcbiGeneId() != null ? String.valueOf( gene.getNcbiGeneId() ) : null );
             }
             writer
                     .append( "\t" ).append( format( gs ) )
