@@ -25,16 +25,24 @@
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
-        <property name="value" type="java.lang.String">
-            <column name="`VALUE`" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_VALUE"/>
-        </property>
         <property name="category" type="java.lang.String">
             <column name="CATEGORY" not-null="false" unique="false"
                     sql-type="VARCHAR(255)" index="CHARACTERISTIC_CATEGORY"/>
         </property>
         <property name="categoryUri" type="java.lang.String">
             <column name="CATEGORY_URI" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_CATEGORY_URI"/>
+        </property>
+        <property name="value" type="java.lang.String">
+            <column name="`VALUE`" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_VALUE"/>
+        </property>
+        <property name="valueUri" type="java.lang.String">
+            <column name="VALUE_URI" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)" index="CHARACTERISTIC_VALUE_URI"/>
+        </property>
+        <property name="originalValue" type="java.lang.String">
+            <column name="ORIGINAL_VALUE" not-null="false" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
         <property name="evidenceCode">
@@ -45,14 +53,6 @@
                 <param name="useNamed">true</param>
             </type>
         </property>
-        <property name="valueUri" type="java.lang.String">
-            <column name="VALUE_URI" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
-        </property>
-        <property name="originalValue" type="java.lang.String">
-            <column name="ORIGINAL_VALUE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)"/>
-        </property>
         <property name="migratedToStatement" type="boolean">
             <column name="MIGRATED_TO_STATEMENT" not-null="true" default="false" sql-type="TINYINT"/>
         </property>
@@ -62,25 +62,25 @@
                 <column name="PREDICATE" sql-type="VARCHAR(255)" index="CHARACTERISTIC_PREDICATE"/>
             </property>
             <property name="predicateUri" type="java.lang.String">
-                <column name="PREDICATE_URI" sql-type="VARCHAR(255)"/>
+                <column name="PREDICATE_URI" sql-type="VARCHAR(255)" index="CHARACTERISTIC_PREDICATE_URI"/>
             </property>
             <property name="object" type="java.lang.String">
                 <column name="OBJECT" sql-type="VARCHAR(255)" index="CHARACTERISTIC_OBJECT"/>
             </property>
             <property name="objectUri" type="java.lang.String">
-                <column name="OBJECT_URI" sql-type="VARCHAR(255)"/>
+                <column name="OBJECT_URI" sql-type="VARCHAR(255)" index="CHARACTERISTIC_OBJECT_URI"/>
             </property>
             <property name="secondPredicate" type="java.lang.String">
                 <column name="SECOND_PREDICATE" sql-type="VARCHAR(255)" index="CHARACTERISTIC_SECOND_PREDICATE"/>
             </property>
             <property name="secondPredicateUri" type="java.lang.String">
-                <column name="SECOND_PREDICATE_URI" sql-type="VARCHAR(255)"/>
+                <column name="SECOND_PREDICATE_URI" sql-type="VARCHAR(255)" index="CHARACTERISTIC_SECOND_PREDICATE_URI"/>
             </property>
             <property name="secondObject" type="java.lang.String">
                 <column name="SECOND_OBJECT" sql-type="VARCHAR(255)" index="CHARACTERISTIC_SECOND_OBJECT"/>
             </property>
             <property name="secondObjectUri" type="java.lang.String">
-                <column name="SECOND_OBJECT_URI" sql-type="VARCHAR(255)"/>
+                <column name="SECOND_OBJECT_URI" sql-type="VARCHAR(255)" index="CHARACTERISTIC_SECOND_OBJECT_URI"/>
             </property>
         </subclass>
     </class>

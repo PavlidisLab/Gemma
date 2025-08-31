@@ -434,7 +434,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
-     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int, boolean, boolean)}
+     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean, boolean)}
      * to answer the reverse question: which annotations can be used to filter a given set of datasets?
      *
      * @param expressionExperimentIds IDs of {@link ExpressionExperiment} to use for restricting annotations, or null to

@@ -92,6 +92,14 @@ create table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     CATEGORY_URI                          varchar(255),
     `VALUE`                               varchar(255),
     VALUE_URI                             varchar(255),
+    PREDICATE                             varchar(255),
+    PREDICATE_URI                         varchar(255),
+    OBJECT                                varchar(255),
+    OBJECT_URI                            varchar(255),
+    SECOND_PREDICATE                      varchar(255),
+    SECOND_PREDICATE_URI                  varchar(255),
+    SECOND_OBJECT                         varchar(255),
+    SECOND_OBJECT_URI                     varchar(255),
     ORIGINAL_VALUE                        varchar(255),
     EVIDENCE_CODE                         varchar(255),
     EXPRESSION_EXPERIMENT_FK              bigint,
@@ -106,8 +114,18 @@ alter table EXPRESSION_EXPERIMENT2CHARACTERISTIC
     add constraint EE2C_EXPRESSION_EXPERIMENT_FKC foreign key (EXPRESSION_EXPERIMENT_FK) references INVESTIGATION (id) on update cascade on delete cascade;
 
 -- note: constraint names cannot exceed 64 characters, so we cannot use the usual naming convention
-create index EE2C_VALUE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (`VALUE`);
 create index EE2C_CATEGORY on EXPRESSION_EXPERIMENT2CHARACTERISTIC (CATEGORY);
+create index EE2C_CATEGORY_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (CATEGORY_URI);
+create index EE2C_VALUE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (`VALUE`);
+create index EE2C_VALUE_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (VALUE_URI);
+create index EE2C_PREDICATE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (PREDICATE);
+create index EE2C_PREDICATE_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (PREDICATE_URI);
+create index EE2C_OBJECT on EXPRESSION_EXPERIMENT2CHARACTERISTIC (OBJECT);
+create index EE2C_OBJECT_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (OBJECT_URI);
+create index EE2C_SECOND_PREDICATE on EXPRESSION_EXPERIMENT2CHARACTERISTIC (SECOND_PREDICATE);
+create index EE2C_SECOND_PREDICATE_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (SECOND_PREDICATE_URI);
+create index EE2C_SECOND_OBJECT on EXPRESSION_EXPERIMENT2CHARACTERISTIC (SECOND_OBJECT);
+create index EE2C_SECOND_OBJECT_URI on EXPRESSION_EXPERIMENT2CHARACTERISTIC (SECOND_OBJECT_URI);
 create index EE2C_LEVEL on EXPRESSION_EXPERIMENT2CHARACTERISTIC (LEVEL);
 
 create table EXPRESSION_EXPERIMENT2ARRAY_DESIGN

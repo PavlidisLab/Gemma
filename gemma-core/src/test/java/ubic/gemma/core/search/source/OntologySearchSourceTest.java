@@ -76,7 +76,7 @@ public class OntologySearchSourceTest extends BaseTest {
         ee.setId( 1L );
         when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), anyLong(), any() ) )
                 .thenReturn( term );
-        when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
+        when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), true, true, true, null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment(
@@ -94,7 +94,7 @@ public class OntologySearchSourceTest extends BaseTest {
                 }, null ) );
         verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 1 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ), longThat( l -> l > 0 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), true, true, true, null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
                     .hasFieldOrPropertyWithValue( "resultType", ExpressionExperiment.class )
@@ -108,7 +108,7 @@ public class OntologySearchSourceTest extends BaseTest {
     public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException, TimeoutException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
-        when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
+        when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), true, true, true, null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "http://purl.obolibrary.org/obo/CL_0000129", Collections.singleton( ee ) ) ) );
         Collection<SearchResult<ExpressionExperiment>> results = ontologySearchSource.searchExpressionExperiment(
@@ -128,7 +128,7 @@ public class OntologySearchSourceTest extends BaseTest {
         verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), true, true, true, null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
                     .hasFieldOrPropertyWithValue( "resultType", ExpressionExperiment.class )

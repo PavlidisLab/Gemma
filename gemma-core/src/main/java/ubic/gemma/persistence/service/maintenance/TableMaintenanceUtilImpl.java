@@ -120,7 +120,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String EE_EQUALS = "(I.ID = :eeId or :eeId is null)";
 
     private static final String EE2C_EE_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join CHARACTERISTIC C on I.ID = C.INVESTIGATION_FK "
@@ -130,7 +130,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_BM_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.biomaterial.BioMaterial' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.biomaterial.BioMaterial' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
@@ -142,7 +142,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_CTA_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellTypeAssignment' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellTypeAssignment' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
@@ -156,7 +156,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_CLC_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join BIO_ASSAY BA on I.ID = BA.EXPRESSION_EXPERIMENT_FK "
@@ -176,7 +176,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      */
     @Deprecated
     private static final String EE2C_ED_FACTOR_ANNOTATIONS_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
@@ -188,7 +188,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     private static final String EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY =
-            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
+            "select C.ID, C.NAME, C.DESCRIPTION, C.CATEGORY, C.CATEGORY_URI, C.`VALUE`, C.VALUE_URI, C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, C.ORIGINAL_VALUE, C.EVIDENCE_CODE, I.ID, (" + SELECT_ANONYMOUS_MASK + "), 'ubic.gemma.model.expression.experiment.ExperimentalDesign' "
                     + "from INVESTIGATION I "
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN on I.EXPERIMENTAL_DESIGN_FK = EXPERIMENTAL_DESIGN.ID "
@@ -364,9 +364,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         }
         int updated = sessionFactory.getCurrentSession()
                 .createSQLQuery(
-                        "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
+                        "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, PREDICATE, PREDICATE_URI, OBJECT, OBJECT_URI, SECOND_PREDICATE, SECOND_PREDICATE_URI, SECOND_OBJECT, SECOND_OBJECT_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
                                 + query + " "
-                                + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), `VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
+                                + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), "
+                                + "CATEGORY = VALUES(CATEGORY), CATEGORY_URI = VALUES(CATEGORY_URI), "
+                                + "`VALUE` = VALUES(`VALUE`), VALUE_URI = VALUES(VALUE_URI), "
+                                + "PREDICATE = VALUES(PREDICATE), PREDICATE_URI = VALUES(PREDICATE_URI), "
+                                + "OBJECT = VALUES(OBJECT), OBJECT_URI = VALUES(OBJECT_URI), "
+                                + "SECOND_PREDICATE = VALUES(SECOND_PREDICATE), SECOND_PREDICATE_URI = VALUES(SECOND_PREDICATE_URI), "
+                                + "SECOND_OBJECT = VALUES(SECOND_OBJECT), SECOND_OBJECT_URI = VALUES(SECOND_OBJECT_URI), "
+                                + "ORIGINAL_VALUE = VALUES(ORIGINAL_VALUE), EVIDENCE_CODE = VALUES(EVIDENCE_CODE), "
+                                + "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK = VALUES(ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK), LEVEL = VALUES(LEVEL)" )
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                 .setParameter( "eeId", ee != null ? ee.getId() : null )
                 .setParameter( "since", sinceLastUpdate )

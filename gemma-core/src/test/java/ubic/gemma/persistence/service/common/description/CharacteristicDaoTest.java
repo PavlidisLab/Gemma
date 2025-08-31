@@ -217,7 +217,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), true, true, true, taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
@@ -254,7 +254,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         assertThat( SecurityUtil.isUserAnonymous() ).isTrue();
 
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), true, true, true, taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 
@@ -275,7 +275,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         assertThat( updated ).isEqualTo( 1 );
         sessionFactory.getCurrentSession().flush();
         // ranking by level uses the order by field() which is not supported
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), taxon, 100, false );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), true, true, true, taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
     }
 

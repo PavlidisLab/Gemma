@@ -126,7 +126,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUris() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertEquals( 1, result.keySet().size() );
         assertTrue( result.containsKey( ExpressionExperiment.class ) );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -135,7 +135,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUrisAsProxies() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, false, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, false, true );
         assertEquals( 1, result.size() );
         Collection<ExpressionExperiment> ees = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -145,14 +145,14 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindExperimentsByUrisAsAnonymousUser() {
         runAsAnonymous();
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
     @Test
     public void testFindExperimentsByUrisAsUser() {
         runAsUser( "bob" );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
