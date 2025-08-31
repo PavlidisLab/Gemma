@@ -39,6 +39,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -121,18 +122,23 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                 .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " fv) from FactorValue fv "
                         + "join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
-                        + "and ee.experimentalDesign = ed"
-                );
+                        + "and ee.experimentalDesign = ed" );
         AclQueryUtils.addAclParameters( countQuery, ExpressionExperiment.class );
         return ( Long ) countQuery.uniqueResult();
     }
 
     @Override
-    public Collection<FactorValue> findByValue( String valuePrefix, int maxResults ) {
+    public Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from FactorValue fv join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed "
+                        + "and fv.value like :q"
+                        + ( AclQueryUtils.requiresGroupBy() ? " group by fv" : "" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from FactorValue where value like :q" )
-                .setParameter( "q", valuePrefix + "%" )
+        return query
+                .setParameter( "q", escapeLike( valuePrefix ) + "%" )
                 .setMaxResults( maxResults )
                 .list();
     }

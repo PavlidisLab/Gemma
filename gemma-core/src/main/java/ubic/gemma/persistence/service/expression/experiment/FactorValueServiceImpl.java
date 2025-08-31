@@ -129,8 +129,8 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Override
     @Deprecated
     @Transactional(readOnly = true)
-    public Collection<FactorValue> findByValue( String valuePrefix, int maxResults ) {
-        return this.factorValueDao.findByValue( valuePrefix, maxResults );
+    public Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults ) {
+        return this.factorValueDao.findByValueStartingWith( valuePrefix, maxResults );
     }
 
     @Override

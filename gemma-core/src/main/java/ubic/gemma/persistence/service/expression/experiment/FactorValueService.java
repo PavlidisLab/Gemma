@@ -76,9 +76,16 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Slice<Long> loadAllIds( int offset, int limit );
 
+    /**
+     * Find factor values by their value using a prefix match.
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
+     * @deprecated because {@link FactorValue#getValue()} is deprecated
+     * @see FactorValueDao#findByValueStartingWith(String, int)
+     */
     @Deprecated
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

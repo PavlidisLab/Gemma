@@ -19,6 +19,6 @@ public class FactorValueValueArg extends FactorValueArg<String> {
 
     @Override
     FactorValue getEntity( FactorValueService service ) {
-        return service.findByValue( getValue(), 1 ).iterator().next();
+        return service.findByValueStartingWith( getValue(), 1 ).iterator().next();
     }
 }

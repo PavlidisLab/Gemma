@@ -57,13 +57,14 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
 
     /**
      * Locate based on string value of the value.
-     *
+     * <p>
+     * Results are filtered by ACL on the owning {@link ExpressionExperiment}.
      * @param valuePrefix value prefix
-     * @param maxResults
+     * @param maxResults  maximum number of results to return, or -1 for no limit
      * @return collection of factor values
      */
     @Deprecated
-    Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
+    Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults );
 
     @Deprecated
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
