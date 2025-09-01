@@ -13,7 +13,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -101,6 +100,7 @@ public class OntologyController {
         }
 
         return new ModelAndView( "tgemo.term" )
+                .addObject( "parentTerms", term.getParents( true ) )
                 .addObject( "term", term );
     }
 

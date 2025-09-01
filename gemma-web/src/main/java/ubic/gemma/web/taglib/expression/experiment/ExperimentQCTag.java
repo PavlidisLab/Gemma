@@ -22,21 +22,17 @@ import gemma.gsec.util.SecurityUtil;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
-import ubic.gemma.web.taglib.TagWriterUtils;
+import ubic.gemma.web.taglib.AbstractHtmlElementTag;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.DynamicAttributes;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 
@@ -44,7 +40,7 @@ import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
  * @author paul
  */
 @Setter
-public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttributes {
+public class ExperimentQCTag extends AbstractHtmlElementTag {
 
     /**
      * Amount of padding (vertical and horizontal) to apply to popup windows that display QC images.
@@ -115,8 +111,6 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
     @Nullable
     private SingleCellSparsityHeatmap singleCellSparsityHeatmap;
 
-    private Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
-
     private final Boolean htmlEscape;
 
     @SuppressWarnings("unused")
@@ -135,11 +129,6 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         } else {
             return super.isHtmlEscape();
         }
-    }
-
-    @Override
-    public void setDynamicAttribute( String uri, String localName, Object value ) {
-        dynamicAttributes.put( localName, value );
     }
 
     @Override
@@ -168,7 +157,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         writer.writeAttribute( "class", "eeqc" );
         writer.writeAttribute( "id", "eeqc" );
 
-        TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), writer );
+        writeOptionalAttributes( writer );
 
         writer.startTag( "table" );
         writer.writeAttribute( "class", "smaller" );

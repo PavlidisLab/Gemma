@@ -7,18 +7,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import ubic.basecode.ontology.jena.TdbOntologyService;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 @Configuration
@@ -47,6 +50,11 @@ public class OntologyConfig {
     @Bean
     public TextResourceToSetOfLinesFactoryBean excludedWordsFromStemming() {
         return new TextResourceToSetOfLinesFactoryBean( new ClassPathResource( "/ubic/gemma/core/ontology/excludedWordsFromStemming.txt" ) );
+    }
+
+    @Bean
+    public OntologyExternalLinks ontologyExternalLinks( Environment environment ) throws IOException {
+        return new OntologyExternalLinks( environment.acceptsProfiles( EnvironmentProfiles.DEV ) );
     }
 
     /**

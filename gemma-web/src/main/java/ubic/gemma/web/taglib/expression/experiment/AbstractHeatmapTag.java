@@ -1,25 +1,20 @@
 package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
-import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
-import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.visualization.Heatmap;
 import ubic.gemma.core.visualization.ChartUtils;
-import ubic.gemma.web.taglib.TagWriterUtils;
+import ubic.gemma.core.visualization.Heatmap;
+import ubic.gemma.web.taglib.AbstractHtmlElementTag;
 
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.DynamicAttributes;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Setter
-public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscapingAwareTag implements DynamicAttributes {
+public abstract class AbstractHeatmapTag<T extends Heatmap> extends AbstractHtmlElementTag {
 
     private transient BuildInfo buildInfo;
 
@@ -52,18 +47,11 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
      */
     protected boolean showYLabels = true;
 
-    protected final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
-
     protected BuildInfo getBuildInfo() {
         if ( buildInfo == null ) {
             getRequestContext().getWebApplicationContext().getBean( BuildInfo.class );
         }
         return buildInfo;
-    }
-
-    @Override
-    public void setDynamicAttribute( String uri, String localName, Object value ) {
-        dynamicAttributes.put( localName, value );
     }
 
     @Override
@@ -83,7 +71,7 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
             style += "max-width: " + maxWidth + "px;";
         }
         writer.writeOptionalAttributeValue( "style", style );
-        TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), writer );
+        writeOptionalAttributes( writer );
 
         writer.startTag( "div" );
         writer.writeAttribute( "class", "heatmap-hbox" );
@@ -148,8 +136,4 @@ public abstract class AbstractHeatmapTag<T extends Heatmap> extends HtmlEscaping
     protected abstract void writeXLabels( TagWriter writer ) throws JspException;
 
     protected abstract void writeYLabels( TagWriter writer ) throws JspException;
-
-    protected String htmlEscape( String s ) {
-        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
-    }
 }

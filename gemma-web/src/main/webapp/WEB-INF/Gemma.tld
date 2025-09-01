@@ -309,6 +309,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>title</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>cssClass</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -383,6 +387,33 @@
 			<name>resource</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+	</tag>
+
+	<tag>
+		<name>ontologyHierarchy</name>
+		<tag-class>ubic.gemma.web.taglib.OntologyHierarchyTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>term</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>title</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>cssClass</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>cssStyle</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<function>
