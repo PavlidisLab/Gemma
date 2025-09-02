@@ -17,8 +17,6 @@ import java.util.Collection;
  */
 public interface UserManager extends UserDetailsManager, GroupManager {
 
-    UserDetailsImpl createUser( String username, String email, String password );
-
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     User findByEmail( String s ) throws UsernameNotFoundException;
 
@@ -53,6 +51,9 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     boolean userExists( String username );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    UserDetailsImpl createUser( String username, String email, String password );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
