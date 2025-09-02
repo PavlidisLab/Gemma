@@ -89,7 +89,7 @@ public class OntologyController {
         return redirectView;
     }
 
-    @RequestMapping(value = "/{termId:TGEMO_.*}", method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = "/{termId:TGEMO[:_].*}", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView getGemmaOntologyTerm( @PathVariable("termId") String termId ) {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
