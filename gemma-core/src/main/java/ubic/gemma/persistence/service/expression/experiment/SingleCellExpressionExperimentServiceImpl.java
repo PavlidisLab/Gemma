@@ -1068,7 +1068,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public void removeCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
-        Assert.isNull( clc.getId(), "Cell-level characteristics must be persistent." );
+        Assert.notNull( clc.getId(), "Cell-level characteristics must be persistent." );
         if ( !scd.getCellLevelCharacteristics().remove( clc ) ) {
             throw new IllegalArgumentException( clc + " is not associated to " + scd );
         }
