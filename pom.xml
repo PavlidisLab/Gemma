@@ -529,8 +529,7 @@
 									<version>[3.6.3,)</version>
 								</requireMavenVersion>
 								<requireJavaVersion>
-									<!-- FIXME: remove the upper bound once we migrated to Spring 5 -->
-									<version>[11,19)</version>
+									<version>[11,)</version>
 								</requireJavaVersion>
 								<dependencyConvergence/>
 							</rules>
