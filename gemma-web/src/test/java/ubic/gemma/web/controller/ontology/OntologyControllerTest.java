@@ -12,14 +12,14 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.simple.OntologyIndividualSimple;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
-import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.util.BaseWebTest;
 
 import java.util.Collections;
 
