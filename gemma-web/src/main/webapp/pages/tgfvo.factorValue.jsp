@@ -28,6 +28,6 @@
     </div>
     <p style="margin-bottom: 0"> Other ontologies used by Gemma:</p>
     <ul>
-        <li><a href="${pageContext.request.contextPath}/ont/TGEMO">The Gemma Ontology</a></li>
+        <li><a href="${pageContext.request.contextPath}/ont/TGEMO">Temporary Gemma Ontology</a></li>
     </ul>
 </div>

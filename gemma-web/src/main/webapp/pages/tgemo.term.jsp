@@ -3,7 +3,7 @@
 <title>${fn:escapeXml(term.label)}</title>
 
 <div class="padded" style="padding-bottom: 0.5em;">
-    <h1>The Gemma Ontology</h1>
+    <h1>Temporary Gemma Ontology</h1>
     <p><a href="${pageContext.request.contextPath}/ont/TGEMO">All Terms</a></p>
     <h2 style="padding-bottom: 0.5em">${fn:escapeXml(term.label)}</h2>
     <c:forEach var="annotation" items="${term.annotations}">

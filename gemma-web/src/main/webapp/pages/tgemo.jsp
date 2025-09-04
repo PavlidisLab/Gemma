@@ -1,11 +1,11 @@
 <%@ include file="/common/taglibs.jsp" %>
 
-<title>The Gemma Ontology</title>
+<title>Temporary Gemma Ontology</title>
 
 <div class="padded">
-    <h1>The Gemma Ontology</h1>
+    <h1>Temporary Gemma Ontology</h1>
     <p><a href="${pageContext.request.contextPath}/ont/TGEMO.OWL">Download TGEMO</a></p>
-    <p>The Gemma Ontology (TGEMO) is a manually curated ontology of terms needed by Gemma.</p>
+    <p>The Temporary Gemma Ontology (TGEMO) is a manually curated ontology of terms needed by Gemma.</p>
     <div class="mb-3">
         <p style="margin-bottom: 0;">Retrieve TGEMO in RDF/XML:</p>
         <pre class="mb-3">curl -L -H Accept:application/rdf+xml ${fn:escapeXml(hostUrl)}/ont/TGEMO.OWL</pre>
