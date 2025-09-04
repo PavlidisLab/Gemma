@@ -278,7 +278,16 @@ public class Filter implements PropertyMapping {
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
         if ( requiredValue instanceof Subquery ) {
-            return ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            String s = ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            if ( operator == Operator.inSubquery ) {
+                return "any(" + s + ")";
+            } else if ( operator == Operator.notInSubquery && isNegative( ( ( Subquery ) requiredValue ).getFilter() ) ) {
+                return "all(" + Filter.not( ( ( Subquery ) requiredValue ).getFilter() ).toString( withOriginalProperties ) + ")";
+            } else if ( operator == Operator.notInSubquery ) {
+                return "none(" + s + ")";
+            } else {
+                throw new IllegalStateException( "Unsupported operator for subquery: " + operator );
+            }
         } else if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
@@ -387,5 +396,15 @@ public class Filter implements PropertyMapping {
             default:
                 throw new IllegalArgumentException( "Don't know how to negate " + op + "." );
         }
+    }
+
+    /**
+     * Check if a filter is negative.
+     */
+    public boolean isNegative( Filter f ) {
+        return f.getOperator() == Filter.Operator.notEq
+                || f.getOperator() == Filter.Operator.notIn
+                || f.getOperator() == Filter.Operator.notLike
+                || f.getOperator() == Filter.Operator.notInSubquery;
     }
 }

@@ -19,8 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import lombok.Value;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.CacheMode;
@@ -65,7 +63,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.Thaws;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -78,7 +79,6 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
-import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
 
 /**
  * @author pavlidis
@@ -126,6 +126,8 @@ public class ExpressionExperimentServiceImpl
     private BlacklistedEntityService blacklistedEntityService;
     @Autowired
     private CoexpressionService coexpressionService;
+    @Autowired
+    private ExpressionExperimentFilterInferenceHelperService filterInferenceService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -886,101 +888,9 @@ public class ExpressionExperimentServiceImpl
                 && valueUri != null;
     }
 
-    /**
-     * Only the mention of these properties will result in inferred term expansion.
-     * <p>
-     * Note: we do not apply inference to category URIs as they are (a) too broad and (b) their sub-terms are never used.
-     */
-    private static final String[] PROPERTIES_USED_FOR_ANNOTATIONS = {
-            "allCharacteristics.valueUri",
-            "characteristics.valueUri",
-            "bioAssays.sampleUsed.characteristics.valueUri",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
-    };
-
-    /**
-     * The approach here is to construct a collection for each sub-clause in the expression that regroups all the
-     * predicates that apply to characteristics as well as their inferred terms.
-     * <p>
-     * The transformation only applies to properties that represent {@link Characteristic} objects such as {@code characteristics},
-     * {@code allCharacteristics}, {@code bioAssays.sample.characteristics} and {@code experimentalDesign.experimentalFactors.factorValues.characteristics}
-     * <p>
-     * Given {@code characteristics.valueUri = a}, we construct a collection clause such as
-     * {@code characteristics.valueUri in (a, children of a...)}.
-     * <p>
-     * For efficiency, all the terms mentioned in a sub-clause are grouped by {@link SubClauseKey} and aggregated in a
-     * single collection. If a term is mentioned multiple times, it is simplified as a single appearance in the
-     * collection.
-     * <p>
-     * For example, {@code characteristics.termUri = a or characteristics.termUri = b} will be transformed into {@code characteristics.termUri in (a, b, children of a and b...)}.
-     */
     @Override
     public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
-        StopWatch timer = StopWatch.createStarted();
-        Filters f2 = Filters.empty();
-        // apply inference to terms
-        // collect clauses mentioning terms
-        final Map<SubClauseKey, Set<String>> termUrisBySubClause = new HashMap<>();
-        for ( List<Filter> clause : f ) {
-            Filters.FiltersClauseBuilder clauseBuilder = f2.and();
-            for ( Filter subClause : clause ) {
-                if ( ArrayUtils.contains( PROPERTIES_USED_FOR_ANNOTATIONS, subClause.getOriginalProperty() ) ) {
-                    // handle nested subqueries
-                    subClause = FiltersUtils.unnestSubquery( subClause );
-                    Set<String> it = termUrisBySubClause.computeIfAbsent( SubClauseKey.from( subClause.getObjectAlias(), subClause.getPropertyName(), subClause.getOriginalProperty() ), k -> new HashSet<>() );
-                    // rewrite the clause to contain all the inferred terms
-                    if ( subClause.getRequiredValue() instanceof Collection ) {
-                        //noinspection unchecked
-                        it.addAll( ( Collection<String> ) subClause.getRequiredValue() );
-                    } else if ( subClause.getRequiredValue() instanceof String ) {
-                        it.add( ( String ) subClause.getRequiredValue() );
-                    } else {
-                        clauseBuilder = clauseBuilder.or( subClause );
-                    }
-                } else {
-                    // clause is irrelevant, so we add it as it is
-                    clauseBuilder = clauseBuilder.or( subClause );
-                }
-            }
-            // recreate a clause with inferred terms
-            for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
-                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue(), Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-                if ( mentionedTerms != null ) {
-                    mentionedTerms.addAll( terms );
-                }
-                Set<OntologyTerm> c = ontologyService.getChildren( terms, false, true, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-                if ( inferredTerms != null ) {
-                    inferredTerms.addAll( terms );
-                    inferredTerms.addAll( c );
-                }
-                Set<String> termAndChildrenUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-                termAndChildrenUris.addAll( e.getValue() );
-                termAndChildrenUris.addAll( c.stream()
-                        .map( OntologyTerm::getUri )
-                        .collect( Collectors.toList() ) );
-                for ( List<String> termAndChildrenUrisBatch : org.apache.commons.collections4.ListUtils.partition( new ArrayList<>( termAndChildrenUris ), QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
-                    Filter g;
-                    if ( termAndChildrenUrisBatch.size() == 1 ) {
-                        g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.eq, termAndChildrenUrisBatch.iterator().next(), e.getKey().getOriginalProperty() );
-                    } else if ( termAndChildrenUris.size() > 1 ) {
-                        g = Filter.by( e.getKey().getObjectAlias(), e.getKey().getPropertyName(), String.class, Filter.Operator.in, termAndChildrenUrisBatch, e.getKey().getOriginalProperty() );
-                    } else {
-                        continue; // empty clause, is that even possible?
-                    }
-                    // this is the case for all the properties declared in PROPERTY_USED_FOR_ANNOTATIONS
-                    assert g.getOriginalProperty() != null;
-                    assert g.getObjectAlias() != null;
-                    // nest the filter in a subquery, all the applicable properties are one-to-many
-                    String prefix = g.getOriginalProperty().substring( 0, g.getOriginalProperty().lastIndexOf( '.' ) + 1 );
-                    String objectAlias = g.getObjectAlias();
-                    clauseBuilder = clauseBuilder.or( Filter.by( "ee", "id", Long.class,
-                            Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", guessAliases( prefix, objectAlias ), g ) ) );
-                }
-            }
-            f2 = clauseBuilder.build();
-            termUrisBySubClause.clear();
-        }
-        return f2;
+        return filterInferenceService.getFiltersWithInferredAnnotations( f, "ee", mentionedTerms, inferredTerms, timeout, timeUnit );
     }
 
     @Override
@@ -1082,18 +992,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return expressionExperimentDao.loadValueObjectsWithCache( filters, sort, offset, limit );
-    }
-
-    /**
-     * Identifies a sub-clause in a filter.
-     */
-    @Value(staticConstructor = "from")
-    private static class SubClauseKey {
-        @Nullable
-        String objectAlias;
-        String propertyName;
-        @Nullable
-        String originalProperty;
     }
 
     @Override

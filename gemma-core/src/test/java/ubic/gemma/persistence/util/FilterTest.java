@@ -198,7 +198,7 @@ public class FilterTest {
     @Test
     public void testSubquery() {
         assertThat( Filter.by( "ee", "id", Long.class, Filter.Operator.inSubquery, new Subquery( "ExpressionExperiment", "id", Collections.emptyList(), Filter.by( null, "id", Long.class, Filter.Operator.in, Arrays.asList( 1L, 2L, 3L ), "id" ) ) ) )
-                .hasToString( "id in (1, 2, 3)" );
+                .hasToString( "any(id in (1, 2, 3))" );
     }
 
     @Test
@@ -210,6 +210,6 @@ public class FilterTest {
                                         Filter.by( null, "id", Long.class, Filter.Operator.in, Arrays.asList( 1L, 2L, 3L ),
                                                 "id" ) ) ) ),
                 "id" ) ) ) )
-                .hasToString( "id in (1, 2, 3)" );
+                .hasToString( "any(any(any(id in (1, 2, 3))))" );
     }
 }
