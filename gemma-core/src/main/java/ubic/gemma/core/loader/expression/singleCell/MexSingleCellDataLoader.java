@@ -350,33 +350,13 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
-            int[] nonEmptyCellIndices;
             if ( discardEmptyCells ) {
-                nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
-                int numEmptyCells = matrix.numColumns() - nonEmptyCellIndices.length;
-                if ( numEmptyCells > 0 ) {
-                    // rewrite the column indices to account for discarded empty cells
-                    int[][] nz = new int[matrix.numRows()][];
-                    double[][] nzData = new double[matrix.numRows()][];
-                    for ( int i = 0; i < matrix.numRows(); i++ ) {
-                        nz[i] = new int[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
-                        nzData[i] = new double[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
-                        for ( int w = 0; w < nz[i].length; w++ ) {
-                            int oldColumn = matrix.getColumnIndices()[matrix.getRowPointers()[i] + w];
-                            int newColumn = Arrays.binarySearch( nonEmptyCellIndices, oldColumn );
-                            assert newColumn >= 0;
-                            nz[i][w] = newColumn;
-                            nzData[i][w] = matrix.get( i, oldColumn );
-                        }
-                    }
-                    CompRowMatrix newMatrix = new CompRowMatrix( matrix.numRows(), nonEmptyCellIndices.length, nz );
-                    for ( int i = 0; i < nz.length; i++ ) {
-                        for ( int w = 0; w < nz[i].length; w++ ) {
-                            newMatrix.set( i, nz[i][w], nzData[i][w] );
-                        }
-                    }
-                    matrix = newMatrix;
+                int[] nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
+                if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
+                    matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
                     log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
+                } else {
+                    log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
                 }
             }
 
