@@ -64,8 +64,8 @@ public class OpenApiTest extends BaseTest {
         }
 
         @Bean
-        public CustomModelResolver customModelResolver( SearchService searchService ) {
-            return new CustomModelResolver( searchService );
+        public CustomModelResolver customModelResolver() {
+            return new CustomModelResolver();
         }
 
         @Bean
@@ -270,8 +270,15 @@ public class OpenApiTest extends BaseTest {
                     assertThat( p.getName() ).isEqualTo( "query" );
                     assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
                 } );
+        assertThat( spec.getPaths().get( "/datasets" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getName() ).isEqualTo( "query" );
+                    assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
+                    assertThat( p.getDescription() ).isEqualTo( "If specified, `sort` will default to `-searchResult.score` instead of `+id`. Note that sorting by `searchResult.score` is only valid if a query is specified." );
+                } );
         assertThat( spec.getComponents().getSchemas().get( "QueryArg" ) ).satisfies( s -> {
             assertThat( s.getType() ).isEqualTo( "string" );
+            assertThat( s.getDescription() ).startsWith( "Filter results matching the given full-text query.\n\nThe search query accepts the following syntax:" );
             //noinspection unchecked
             assertThat( s.getExtensions() )
                     .isNotNull()
