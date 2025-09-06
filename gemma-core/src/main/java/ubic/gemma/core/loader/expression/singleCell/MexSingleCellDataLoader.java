@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.sparse.CompRowMatrixUtils;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;

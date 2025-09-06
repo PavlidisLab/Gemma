@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.datastructure.sparse;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 

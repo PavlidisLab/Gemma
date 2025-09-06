@@ -1,6 +1,5 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.core.datastructure.MatrixMask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

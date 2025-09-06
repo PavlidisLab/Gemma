@@ -1,4 +1,4 @@
-package ubic.gemma.core.datastructure;
+package ubic.gemma.core.datastructure.matrix;
 
 import org.springframework.util.Assert;
 
@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * A quasi-universal matrix mask.
  */
-public class MatrixMask {
+class MatrixMask {
     /**
      * Mask individual elements of the given matrix.
      */

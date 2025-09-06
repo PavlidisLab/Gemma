@@ -85,7 +85,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
 import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
-import static ubic.gemma.model.util.SparseListUtils.validateSparseRangeArray;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.validateSparseRangeArray;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;

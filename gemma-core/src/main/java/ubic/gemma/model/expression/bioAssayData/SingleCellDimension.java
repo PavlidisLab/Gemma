@@ -6,13 +6,13 @@ import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.util.SparseListUtils;
+import ubic.gemma.core.datastructure.sparse.SparseListUtils;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
 import java.util.*;
 
-import static ubic.gemma.model.util.SparseListUtils.getSparseRangeArrayElement;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.getSparseRangeArrayElement;
 
 /**
  * Represents a single-cell dimension, holding shared information for a set of {@link SingleCellExpressionDataVector}.

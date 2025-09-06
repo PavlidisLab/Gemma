@@ -1,4 +1,4 @@
-package ubic.gemma.model.util;
+package ubic.gemma.core.datastructure.sparse;
 
 import java.util.List;
 

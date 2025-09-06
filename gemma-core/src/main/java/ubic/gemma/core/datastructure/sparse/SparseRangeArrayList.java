@@ -1,9 +1,9 @@
-package ubic.gemma.model.util;
+package ubic.gemma.core.datastructure.sparse;
 
 import java.util.*;
 
-import static ubic.gemma.model.util.SparseListUtils.getSparseRangeArrayElement;
-import static ubic.gemma.model.util.SparseListUtils.validateSparseRangeArray;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.getSparseRangeArrayElement;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.validateSparseRangeArray;
 
 /**
  * A sparse range array is a data structure that efficiently stores arrays of repeated elements by encoding their
