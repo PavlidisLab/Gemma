@@ -59,6 +59,7 @@ public class GeoBrowserTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testGetRecentGeoRecords() throws Exception {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
         Collection<GeoRecord> res = b.getRecentGeoRecords( GeoRecordType.SERIES, 10, 10 );
@@ -76,6 +77,7 @@ public class GeoBrowserTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchGeoRecords() throws IOException {
         GeoQuery query = b.searchGeoRecords( GeoRecordType.SERIES, "Homo sapiens", GeoSearchField.ORGANISM, null, null, null );
         assertThat( query.getQueryId() ).isNotNull();
@@ -126,6 +128,7 @@ public class GeoBrowserTest {
 
 
     @Test
+    @Category(SlowTest.class)
     public void testGetGeoRecordB() throws IOException {
         assertThat( b.getGeoRecords( GeoRecordType.SERIES, Arrays.asList( "GSE1", "GSE2", "GSE3" ) ) ).hasSize( 3 );
     }
@@ -164,6 +167,7 @@ public class GeoBrowserTest {
      * GEO returns an empty document when retrieving the samples for this document.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGeoEmptyMINiML() throws IOException {
         b.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, "GSE127242", null, null, null, null, 0, 10, true );
     }
@@ -172,6 +176,7 @@ public class GeoBrowserTest {
      * This dataset has MESH headings.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGetGeoRecordWithMeshHeadings() throws IOException {
         assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE171541", GeoRetrieveConfig.DETAILED ) )
                 .satisfies( record -> {
@@ -182,6 +187,7 @@ public class GeoBrowserTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchGeoRecordWithMeshHeadings() throws IOException {
         assertThat( b.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, "GSE171541", GeoSearchField.GEO_ACCESSION, null, null, null, 0, 10, true ) )
                 .singleElement()

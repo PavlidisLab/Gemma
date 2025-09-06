@@ -141,6 +141,7 @@ public class SraFetcherTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testGSE165635() throws IOException {
         SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE165635" );
         assertThat( result.getExperimentPackages() ).hasSize( 3 );

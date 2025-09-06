@@ -103,20 +103,8 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
         ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign );
         assertNotNull( adVO );
 
-        try {
-            Thread.sleep( 1000 );
-        } catch ( InterruptedException e ) {
-            e.printStackTrace();
-        }
-
         ExpressionExperimentValueObject eeVO = this.expressionExperimentService.loadValueObject( expressionExperiment );
         assertNotNull( eeVO );
-
-        try {
-            Thread.sleep( 1000 );
-        } catch ( InterruptedException e ) {
-            e.printStackTrace();
-        }
 
         ExpressionExperimentDetailsValueObject eeDVO = new ExpressionExperimentDetailsValueObject( eeVO );
         eeDVO.setArrayDesigns( Collections.singleton( adVO ) );
