@@ -8,13 +8,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,11 @@ public class FactorValueMigratorServiceTest extends BaseCliTest {
 
         @Bean
         public FactorValueService factorValueService() {
+            return mock();
+        }
+
+        @Bean
+        public FactorValueNeedsAttentionService factorValueNeedsAttentionService() {
             return mock();
         }
 
