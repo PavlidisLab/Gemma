@@ -159,6 +159,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field
     public String getPredicate() {
         return predicate;
     }
@@ -168,6 +169,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getPredicateUri() {
         return predicateUri;
     }
@@ -197,6 +199,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field
     public String getSecondPredicate() {
         return secondPredicate;
     }
@@ -206,6 +209,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @Field(analyze = Analyze.NO)
     public String getSecondPredicateUri() {
         return secondPredicateUri;
     }

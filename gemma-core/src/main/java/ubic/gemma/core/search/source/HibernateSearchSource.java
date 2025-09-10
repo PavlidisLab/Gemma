@@ -74,8 +74,12 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             "experimentalDesign.experimentalFactors.category.category",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.value",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.object",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicateUri",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri"
     };
