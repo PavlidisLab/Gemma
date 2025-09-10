@@ -18,6 +18,6 @@ public class MarkdownUtilsTest {
         assertEquals( "I love \\ \\ Markdown", escapeMarkdown( "I love   Markdown" ) );
         assertEquals( "\\\\", escapeMarkdown( "\\" ) );
         assertEquals( "\\tThis is an indented block", escapeMarkdown( "\tThis is an indented block" ) );
-        assertEquals( "\\<span\\\\>test\\\\<\\\\/span\\\\>", escapeMarkdown( "<span>test</span>" ) );
+        assertEquals( "\\<span\\>test\\<\\/span\\>", escapeMarkdown( "<span>test</span>" ) );
     }
 }
