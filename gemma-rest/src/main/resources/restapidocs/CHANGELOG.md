@@ -1,5 +1,51 @@
 ## Updates
 
+### Update 2.9.2
+
+Subject, predicates and objects of statements are now exposed in the `FilterArgExpressionExperiment` model. Their URIs
+are expanded with ontology inference.
+
+Consequently, the following properties have been added:
+
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.subject`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.predicate`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.object`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri`,
+
+For the `allCharacteristics` special collection, the following properties are now available:
+
+- `allCharacteristics.subject`,
+- `allCharacteristics.subjectUri`,
+- `allCharacteristics.predicate`,
+- `allCharacteristics.predicateUri`,
+- `allCharacteristics.object`,
+- `allCharacteristics.objectUri`,
+
+Filterable properties that are subject to ontology inference are now clearly indicated on the OpenAPI specification.
+
+Filterable properties can now be deprecated in the specification. The `x-gemma-filterable-property` section of the
+specification will contain a `deprecated` field for these.
+
+```yaml
+x-gemma-filterable-properties:
+  - name: "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
+    type: "string[]"
+    description: "will be expanded with ontology inference; use experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri instead; alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri"
+    deprecated: true
+```
+
+The following properties are now deprecated:
+
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.value`,
+  `experimentalDesign.experimentalFactors.factorValues.characteristics.subject` should be used instead
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri`,
+  `experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri` should be used instead
+
+Note that the `allCharacteristics` will retain its `value` and `valueUri` properties as this collection still holds
+regular characteristics.
+
 ### Update 2.9.1
 
 Add a `protocol` parameter to `getDatasetsCellTypeAssignment` endpoint to locate a cell type assignment by the name of
