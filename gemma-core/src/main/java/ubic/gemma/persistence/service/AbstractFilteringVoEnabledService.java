@@ -132,8 +132,13 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
-        return voDao.getFilterablePropertyIsUsingSubquery( property );
+    public boolean isFilterablePropertyUsingSubquery( String property ) {
+        return voDao.isFilterablePropertyUsingSubquery( property );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) {
+        return voDao.isFilterablePropertyDeprecated( property );
     }
 
     /**

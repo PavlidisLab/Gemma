@@ -34,7 +34,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
@@ -3471,6 +3470,12 @@ public class ExpressionExperimentDaoImpl
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
         configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
         configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+        configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" );
+        configurer.describeProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value",
+                "use experimentalDesign.experimentalFactors.factorValues.characteristics.subject instead" );
+        configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" );
+        configurer.describeProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri",
+                "use experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri instead" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicateUri" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject" );
@@ -3504,50 +3509,50 @@ public class ExpressionExperimentDaoImpl
      * {@inheritDoc}
      */
     @Override
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) {
         switch ( propertyName ) {
             // allCharacteristics contains a mixture of statements and characteristics, so we need to clarify which ones
             // are statement-specific
             case "allCharacteristics.subject":
-                return getFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, "value", Statement.class )
+                return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "value" )
                         .withDescription( "only applicable to statements" );
             case "allCharacteristics.subjectUri":
-                return getFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, "valueUri", Statement.class )
+                return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "valueUri" )
                         .withDescription( "only applicable to statements" );
             case "allCharacteristics.predicate":
             case "allCharacteristics.predicateUri":
             case "allCharacteristics.object":
             case "allCharacteristics.objectUri":
-                return super.getFilterablePropertyMeta( propertyName )
+                return super.resolveFilterablePropertyMeta( propertyName )
                         .withDescription( "only applicable to statements" );
 
             // expose statements subject/subjectUri as aliases for value/valueUri
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.subject":
-                return getFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, "value", Statement.class );
+                return resolveFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, "value" );
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri":
-                return getFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, "valueUri", Statement.class );
+                return resolveFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, "valueUri" );
 
             // pretend that value/valueUri are aliases for subject/subjectUri even if it's not really the case in the
             // data model
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.value":
-                return super.getFilterablePropertyMeta( propertyName )
+                return super.resolveFilterablePropertyMeta( propertyName )
                         .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri":
-                return super.getFilterablePropertyMeta( propertyName )
+                return super.resolveFilterablePropertyMeta( propertyName )
                         .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
 
             case "taxon":
-                return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class )
+                return resolveFilterablePropertyMeta( TAXON_ALIAS, Taxon.class, "id" )
                         .withDescription( "alias for taxon.id" );
             case "bioAssayCount":
-                return super.getFilterablePropertyMeta( "bioAssays.size" )
+                return super.resolveFilterablePropertyMeta( "bioAssays.size" )
                         .withDescription( "alias for bioAssays.size" );
             case "geeq.publicQualityScore":
                 return new FilterablePropertyMeta( null, "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)", Double.class, null, null );
             case "geeq.publicSuitabilityScore":
                 return new FilterablePropertyMeta( null, "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)", Double.class, null, null );
             default:
-                return super.getFilterablePropertyMeta( propertyName );
+                return super.resolveFilterablePropertyMeta( propertyName );
         }
     }
 

@@ -45,7 +45,15 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      */
     List<Object> getFilterablePropertyAllowedValues( String p );
 
-    boolean getFilterablePropertyIsUsingSubquery( String p );
+    /**
+     * @see FilteringVoEnabledService#isFilterablePropertyUsingSubquery(String)
+     */
+    boolean isFilterablePropertyUsingSubquery( String p );
+
+    /**
+     * @see FilteringVoEnabledService#isFilterablePropertyDeprecated(String)
+     */
+    boolean isFilterablePropertyDeprecated( String p );
 
     /**
      * @see FilteringVoEnabledService#getFilterablePropertyConfigAttributes(String)

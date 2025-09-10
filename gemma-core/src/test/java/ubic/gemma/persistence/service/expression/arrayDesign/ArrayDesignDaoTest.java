@@ -116,7 +116,7 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
     public void testGetFilterWhenPropertyDoesNotExist() {
         assertThatThrownBy( () -> arrayDesignDao.getFilter( "foo.bar", Filter.Operator.eq, "joe" ) )
                 .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContainingAll( "foo.bar", ArrayDesign.class.getName() );
+                .hasMessageContainingAll( "foo", ArrayDesign.class.getName() );
     }
 
     @Test

@@ -897,6 +897,15 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public String getFilterablePropertyDescription( String property ) {
+        String desc = super.getFilterablePropertyDescription( property );
+        if ( filterRewriteService.supportsInferredAnnotations( property ) ) {
+            return "will be expanded with ontology inference" + ( desc != null ? "; " + desc : "" );
+        }
+        return desc;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment ) {
         return expressionExperimentDao.getNumberOfDesignElementsPerSample( expressionExperiment );

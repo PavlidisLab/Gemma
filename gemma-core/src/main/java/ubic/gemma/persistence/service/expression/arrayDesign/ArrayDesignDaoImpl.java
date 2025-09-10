@@ -1078,13 +1078,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) {
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
-            return getFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, "id", Taxon.class )
+            return resolveFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, Taxon.class, "id" )
                     .withDescription( "alias for taxon.id" );
         }
-        return super.getFilterablePropertyMeta( propertyName );
+        return super.resolveFilterablePropertyMeta( propertyName );
     }
 
     private void populateExternalReferences( Collection<ArrayDesignValueObject> results ) {

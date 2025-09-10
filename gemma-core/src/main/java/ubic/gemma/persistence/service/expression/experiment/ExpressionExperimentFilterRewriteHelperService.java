@@ -92,6 +92,10 @@ class ExpressionExperimentFilterRewriteHelperService {
         return f2;
     }
 
+    public boolean supportsInferredAnnotations( String propertyName ) {
+        return PROPERTIES_USED_FOR_ANNOTATIONS.contains( propertyName );
+    }
+
     /**
      * The approach here is to construct a collection for each sub-clause in the expression that regroups all the
      * predicates that apply to characteristics as well as their inferred terms.

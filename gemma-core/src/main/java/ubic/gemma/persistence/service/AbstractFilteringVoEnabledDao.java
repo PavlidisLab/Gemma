@@ -36,17 +36,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     private static final int FILTERABLE_PROPERTIES_MAX_DEPTH = 3;
 
-    /**
-     * Cached partial filterable properties meta, computed as we go.
-     */
-    private static final Map<Key, PartialFilterablePropertyMeta> partialFilterablePropertiesMeta = new ConcurrentHashMap<>();
-
-    @Value
-    private static class Key {
-        Class<?> clazz;
-        String propertyName;
-    }
-
     private final String objectAlias;
 
     /**
@@ -55,9 +44,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private final Set<String> filterableProperties = new HashSet<>();
 
     /**
+     * Cached filterable properties descriptions.
+     */
+    private final Map<String, String> filterablePropertiesDescriptions = new HashMap<>();
+
+    /**
      * Subset of {@link #filterableProperties} that should use a subquery for filtering.
      */
     private final Set<String> filterablePropertiesViaSubquery = new HashSet<>();
+
+    /**
+     * Mapping of deprecated properties; the values contain the reasons for deprecation.
+     */
+    private final Set<String> deprecatedFilterableProperties = new HashSet<>();
 
     /**
      * Aliases for filterable properties.
@@ -104,9 +103,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if the property is already registered
          */
         public void registerProperty( String propertyName, boolean useSubquery ) {
-            if ( getFilterablePropertyMeta( propertyName ) == null ) {
-                throw new IllegalArgumentException( "Property %s does not have any associated meta information." );
-            }
             if ( filterableProperties.add( propertyName ) ) {
                 if ( useSubquery ) {
                     filterablePropertiesViaSubquery.add( propertyName );
@@ -123,13 +119,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if any of the given properties is already registered
          */
         public void registerProperties( String... propertyNames ) throws IllegalArgumentException {
-            List<String> propsMissingMeta = Arrays.stream( propertyNames )
-                    .filter( p -> getFilterablePropertyMeta( p ) == null )
-                    .collect( Collectors.toList() );
-            if ( !propsMissingMeta.isEmpty() ) {
-                throw new IllegalArgumentException( String.format( "The following properties are missing meta information: %s.",
-                        String.join( ", ", propsMissingMeta ) ) );
-            }
             List<String> props = Arrays.asList( propertyNames );
             if ( CollectionUtils.containsAny( filterableProperties, props ) ) {
                 throw new IllegalArgumentException( String.format( "The following filterable properties are already registered: %s.",
@@ -160,6 +149,32 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 log.trace( String.format( "Unregistered %d properties using a predicate.", sizeBefore - filterableProperties.size() ) );
             } else {
                 throw new IllegalArgumentException( "No filterable properties matched the supplied predicate." );
+            }
+        }
+
+        /**
+         * Deprecate the given property.
+         * <p>
+         * You should indicate a reason and a possible replacement with {@link #describeProperty(String, String)}.
+         */
+        public void deprecateProperty( String propertyName ) {
+            if ( !filterableProperties.contains( propertyName ) ) {
+                throw new IllegalArgumentException( "Cannot deprecate an unknown property: " + propertyName + "." );
+            }
+            if ( !deprecatedFilterableProperties.add( propertyName ) ) {
+                throw new IllegalArgumentException( propertyName + " was already marked as deprecated." );
+            }
+        }
+
+        /**
+         * Provide a description for a given property.
+         */
+        public void describeProperty( String propertyName, String description ) {
+            if ( !filterableProperties.contains( propertyName ) ) {
+                throw new IllegalArgumentException( "Cannot describe an unknown property: " + propertyName + "." );
+            }
+            if ( filterablePropertiesDescriptions.put( propertyName, description ) != null ) {
+                throw new IllegalArgumentException( "Property " + propertyName + " already has a description." );
             }
         }
 
@@ -314,11 +329,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) throws IllegalArgumentException {
+    public boolean isFilterablePropertyUsingSubquery( String property ) throws IllegalArgumentException {
         if ( !filterableProperties.contains( property ) ) {
             throw new IllegalArgumentException( String.format( "Unknown filterable property %s.", property ) );
         }
         return filterablePropertiesViaSubquery.contains( property );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) throws IllegalArgumentException {
+        if ( !filterableProperties.contains( property ) ) {
+            throw new IllegalArgumentException( String.format( "Unknown filterable property %s.", property ) );
+        }
+        return deprecatedFilterableProperties.contains( property );
     }
 
     @Override
@@ -432,6 +455,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          */
         @Nullable
         List<Object> allowedValues;
+
+        public FilterablePropertyMeta withDescription( @Nullable String newDescription ) {
+            if ( newDescription == null ) {
+                return this;
+            }
+            return new FilterablePropertyMeta( objectAlias, propertyName, propertyType,
+                    ( description != null ? description + "; " : "" ) + newDescription, allowedValues );
+        }
+    }
+
+    /**
+     * Cached filterable properties meta, computed as we go.
+     */
+    private final Map<String, FilterablePropertyMeta> filterablePropertyMetaCache = new ConcurrentHashMap<>();
+
+    protected final FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        return filterablePropertyMetaCache.computeIfAbsent( propertyName, this::resolveFilterablePropertyMeta );
     }
 
     @Value
@@ -455,7 +495,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getFilter(String, Filter.Operator, Collection)
      * @see FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)
      */
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         // replace longer prefix first
         List<FilterablePropertyAlias> aliases = filterablePropertyAliases.stream()
                 .sorted( Comparator.comparing( f -> f.prefix.length(), Comparator.reverseOrder() ) )
@@ -463,25 +503,42 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         for ( FilterablePropertyAlias alias : aliases ) {
             if ( propertyName.startsWith( alias.prefix ) && !propertyName.equals( alias.prefix + "size" ) ) {
                 String fieldName = propertyName.replaceFirst( "^" + Pattern.quote( alias.prefix ), "" );
-                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.entityClass )
+                return resolveFilterablePropertyMeta( alias.objectAlias, alias.entityClass, fieldName )
+                        .withDescription( filterablePropertiesDescriptions.get( propertyName ) )
                         .withDescription( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null );
             }
         }
-        return getFilterablePropertyMeta( objectAlias, propertyName, getElementClass() );
+        return resolveFilterablePropertyMeta( objectAlias, getElementClass(), propertyName )
+                .withDescription( filterablePropertiesDescriptions.get( propertyName ) );
     }
 
-    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<? extends Identifiable> clazz ) throws IllegalArgumentException {
-        Key key = new Key( clazz, propertyName );
-        PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta
-                .computeIfAbsent( key, ignored -> resolveFilterablePropertyMetaInternal( propertyName, clazz ) );
+    protected FilterablePropertyMeta resolveFilterablePropertyMeta( @Nullable String objectAlias, Class<? extends Identifiable> clazz, String propertyName ) throws IllegalArgumentException {
+        PartialFilterablePropertyMeta partialMeta = getPartialFilterablePropertyMeta( clazz, propertyName, getSessionFactory() );
         return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.allowedValues );
+    }
+
+    @Value
+    private static class Key {
+        Class<?> clazz;
+        String propertyName;
+    }
+
+    /**
+     * Cached partial filterable properties meta, computed as we go.
+     */
+    private static final Map<Key, PartialFilterablePropertyMeta> partialFilterablePropertiesMetaCache = new ConcurrentHashMap<>();
+
+    private static PartialFilterablePropertyMeta getPartialFilterablePropertyMeta( Class<? extends Identifiable> cls, String property, SessionFactory sessionFactory ) {
+        Key key = new Key( cls, property );
+        return partialFilterablePropertiesMetaCache.computeIfAbsent( key, ignored -> resolvePartialFilterablePropertyMeta( cls, property, sessionFactory ) );
     }
 
     /**
      * Partial property meta.
      * <p>
-     * This is used by {@link #resolveFilterablePropertyMetaInternal(String, Class)} which uses a recursion that
-     * does not need to track information about object alias, full property path, etc.
+     * This is used by {@link AbstractFilteringVoEnabledDao#resolvePartialFilterablePropertyMeta(Class, String, SessionFactory)} which uses a recursion that
+     * does not need to track information about object alias, full property path, etc. that can be shared across
+     * filtering DAOs.
      */
     @Value
     private static class PartialFilterablePropertyMeta {
@@ -491,19 +548,19 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Checks if property of given name exists in the given class. If the given string specifies
-     * nested properties (E.g. curationDetails.troubled), only the substring before the first dot is evaluated and the
-     * rest of the string is processed in a new recursive iteration.
+     * Resolve a partial filterable property meta for a given class and property name.
+     * <p>
+     * If the given string specifies nested properties (e.g. curationDetails.troubled), only the substring before the
+     * first dot is evaluated and the rest of the string is processed in a new recursive iteration.
      *
+     * @param cls      the class to check the property on.
      * @param property the property to check for. If the string contains dot characters ('.'), only the part
      *                 before the first dot will be evaluated. Substring after the dot will be checked against the
      *                 type of the field retrieved from the substring before the dot.
-     * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<? extends Identifiable> cls ) {
-        ClassMetadata classMetadata = getSessionFactory().getClassMetadata( cls );
-
+    private static PartialFilterablePropertyMeta resolvePartialFilterablePropertyMeta( Class<? extends Identifiable> cls, String property, SessionFactory sessionFactory ) {
+        ClassMetadata classMetadata = sessionFactory.getClassMetadata( cls );
         if ( classMetadata == null ) {
             throw new IllegalArgumentException( "Unknown mapped class " + cls.getName() + "." );
         }
@@ -528,7 +585,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( parts.length > 1 ) {
             if ( propertyType.isEntityType() ) {
                 //noinspection unchecked
-                return resolveFilterablePropertyMetaInternal( parts[1], ( Class<? extends Identifiable> ) propertyType.getReturnedClass() );
+                return resolvePartialFilterablePropertyMeta( ( Class<? extends Identifiable> ) propertyType.getReturnedClass(), parts[1], sessionFactory );
             } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
                 return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
             } else {

@@ -23,6 +23,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.MarkdownUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
@@ -186,6 +187,8 @@ public class CustomModelResolver extends ModelResolver {
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)
         SecurityRequirement security;
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        boolean deprecated;
     }
 
     @Value
@@ -214,10 +217,11 @@ public class CustomModelResolver extends ModelResolver {
                 .sorted()
                 .map( p -> new FilterablePropMeta( p,
                         resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) )
-                                + ( filteringService.getFilterablePropertyIsUsingSubquery( p ) ? "[]" : "" ),
+                                + ( filteringService.isFilterablePropertyUsingSubquery( p ) ? "[]" : "" ),
                         filteringService.getFilterablePropertyDescription( p ),
                         resolveAllowedValues( filteringService, p, locale ),
-                        securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ) ) )
+                        securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ),
+                        filteringService.isFilterablePropertyDeprecated( p ) ) )
                 .collect( Collectors.toList() );
     }
 
@@ -251,10 +255,14 @@ public class CustomModelResolver extends ModelResolver {
     private String resolveAvailablePropertiesAsString( Annotated a ) {
         return String.format( "Available properties:\n\n%s",
                 resolveAvailableProperties( a ).stream()
-                        .map( p -> String.format( "- %s `%s`%s",
-                                p.name,
-                                p.type,
-                                resolvePropDescription( p ) ) )
+                        .map( p -> "- "
+                                + ( p.deprecated ? "<s>" : "" )
+                                + MarkdownUtils.escapeMarkdown( p.name )
+                                + ( p.deprecated ? "</s>" : "" )
+                                + " "
+                                + MarkdownUtils.formatMarkdownCodeSpan( p.type )
+                                + MarkdownUtils.escapeMarkdown( resolvePropDescription( p ) )
+                        )
                         .collect( Collectors.joining( "\n" ) ) );
     }
 

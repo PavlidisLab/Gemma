@@ -49,7 +49,12 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
+    public boolean isFilterablePropertyUsingSubquery( String property ) {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) throws IllegalArgumentException {
         throw new UnsupportedOperationException( message );
     }
 

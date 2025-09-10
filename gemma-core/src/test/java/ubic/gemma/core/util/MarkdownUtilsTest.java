@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static ubic.gemma.core.util.MarkdownUtils.escapeMarkdown;
+import static ubic.gemma.core.util.MarkdownUtils.formatMarkdownCodeSpan;
 
 public class MarkdownUtilsTest {
 
@@ -19,5 +20,13 @@ public class MarkdownUtilsTest {
         assertEquals( "\\\\", escapeMarkdown( "\\" ) );
         assertEquals( "\\tThis is an indented block", escapeMarkdown( "\tThis is an indented block" ) );
         assertEquals( "\\<span\\>test\\<\\/span\\>", escapeMarkdown( "<span>test</span>" ) );
+    }
+
+    @Test
+    public void testFormatMarkdownCodeSpan() {
+        assertEquals( "`test`", formatMarkdownCodeSpan( "test" ) );
+        assertEquals( "``te`st``", formatMarkdownCodeSpan( "te`st" ) );
+        assertEquals( "```te``st```", formatMarkdownCodeSpan( "te``st" ) );
+        assertEquals( "``te` `st``", formatMarkdownCodeSpan( "te` `st" ) );
     }
 }
