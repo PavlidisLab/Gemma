@@ -80,12 +80,52 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetFilterableProperties() {
         assertThat( expressionExperimentDao.getFilterableProperties() )
+                .contains( "allCharacteristics.value" )
+                .contains( "allCharacteristics.valueUri" )
+                .contains( "allCharacteristics.subject" )
+                .contains( "allCharacteristics.subjectUri" )
+                .contains( "allCharacteristics.predicate" )
+                .contains( "allCharacteristics.predicateUri" )
+                .contains( "allCharacteristics.object" )
+                .contains( "allCharacteristics.objectUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" )
                 .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.object" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri" )
                 // those are hidden for now (see https://github.com/PavlidisLab/Gemma/pull/789)
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" ) )
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.object." ) )
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" ) )
+                .noneMatch( s -> s.startsWith( "allCharacteristics.secondPredicate." ) )
+                .noneMatch( s -> s.startsWith( "characteristics.secondObject." ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate." ) )
                 .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject." ) );
+    }
+
+    @Test
+    public void testGetFilterWithStatementObject() {
+        Filter f = expressionExperimentDao.getFilter( "allCharacteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "allCharacteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
+                    } );
+                } );
+
+        f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "experimentalDesign", "experimentalFactors", "factorValues", "characteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
+                    } );
+                } );
     }
 
     @Test

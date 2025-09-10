@@ -20,16 +20,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class ExpressionExperimentFilterInferenceHelperServiceTest {
+public class ExpressionExperimentFilterRewriteHelperServiceTest {
 
-    private ExpressionExperimentFilterInferenceHelperService filterInferenceService;
+    private ExpressionExperimentFilterRewriteHelperService filterInferenceService;
     private OntologyService ontologyService;
     private OntologyTerm term, b, c;
 
     @Before
     public void setUp() throws TimeoutException {
         ontologyService = mock();
-        filterInferenceService = new ExpressionExperimentFilterInferenceHelperService( ontologyService );
+        filterInferenceService = new ExpressionExperimentFilterRewriteHelperService( ontologyService );
         term = new OntologyTermSimple( "http://example.com", null );
         b = new OntologyTermSimple( "http://example.com/a", null );
         c = new OntologyTermSimple( "http://example.com/b", null );

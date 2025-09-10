@@ -53,8 +53,8 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
-        public ExpressionExperimentFilterInferenceHelperService expressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
-            return new ExpressionExperimentFilterInferenceHelperService( ontologyService );
+        public ExpressionExperimentFilterRewriteHelperService expressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
+            return new ExpressionExperimentFilterRewriteHelperService( ontologyService );
         }
 
         @Bean
@@ -184,25 +184,42 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     }
 
     @Test
-    public void testGetFiltersWithInferredAnnotations() throws TimeoutException {
+    public void testGetEnhancedFilters() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
+        Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
         assertThat( inferredFilters ).hasToString( "any(c.valueUri = http://example.com/T00001)" );
         verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
-    public void testGetFiltersWithInferredAnnotationsWhenANegativeQueryIsPerformed() throws TimeoutException {
+    public void testGetEnhancedFiltersWhenANegativeQueryIsPerformed() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
-        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
+        Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
         assertThat( inferredFilters ).hasToString( "none(c.valueUri = http://example.com/T00001)" );
         verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+    }
+
+    @Test
+    public void testGetEnhancedFiltersWhenAPredicateOrObjectIsUsed() throws TimeoutException {
+        Filters f = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        Filters inferredFilter = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
+        assertThat( inferredFilter )
+                .hasToString( "ac.object = http://example.com/T00001 or ac.secondObject = http://example.com/T00001" );
+        assertThat( inferredFilter.toOriginalString() )
+                .isEqualTo( "allCharacteristics.object = http://example.com/T00001" );
+        assertThat( inferredFilter )
+                .singleElement()
+                .satisfies( subClause -> {
+                    assertThat( subClause ).hasSize( 2 )
+                            .extracting( Filter::getPropertyName )
+                            .containsExactly( "object", "secondObject" );
+                } );
     }
 
     @Test
@@ -210,7 +227,7 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
-        expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
+        expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
         verifyNoInteractions( ontologyService );
     }
 

@@ -99,14 +99,14 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
         try {
-            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
+            return service.getEnhancedFilters( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
         }
     }
 
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
-        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
+        return service.getEnhancedFilters( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
     }
 
     /**
@@ -260,24 +260,24 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     public List<BibliographicReferenceValueObject> getPublications( DatasetArg<?> datasetArg ) {
         Long eeId = getEntityId( datasetArg );
-        if (eeId == null) {
+        if ( eeId == null ) {
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
         }
         ExpressionExperiment ee = service.loadWithPrimaryPublicationAndOtherRelevantPublications( eeId );
-        if (ee == null){
+        if ( ee == null ) {
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
         }
         BibliographicReference prim_ref = ee.getPrimaryPublication();
         Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
         List<BibliographicReferenceValueObject> out = new ArrayList<>();
-        if (prim_ref != null){
-            out.add(  new BibliographicReferenceValueObject(prim_ref) );
+        if ( prim_ref != null ) {
+            out.add( new BibliographicReferenceValueObject( prim_ref ) );
         }
-        for (BibliographicReference ref : other_refs) {
-            if (prim_ref != null && Objects.equals( ref.getId(), prim_ref.getId() )){
-                    continue;
+        for ( BibliographicReference ref : other_refs ) {
+            if ( prim_ref != null && Objects.equals( ref.getId(), prim_ref.getId() ) ) {
+                continue;
             }
-            out.add( new BibliographicReferenceValueObject(ref));
+            out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
         out.sort( Comparator.comparing( BibliographicReferenceValueObject::getId ) );

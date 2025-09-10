@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,25 @@ import static org.apache.commons.collections4.ListUtils.partition;
 import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
 
 /**
+ * Helper service for rewriting {@link Filters} to provide more rich results.
  * @author poirigui
  */
 @Service
-class ExpressionExperimentFilterInferenceHelperService {
+class ExpressionExperimentFilterRewriteHelperService {
+
+    /**
+     * List of properties that will be rewritten to include an additional sub-clause for the "second" property.
+     */
+    private static final Set<String> PROPERTIES_WITH_SECOND_PROPERTIES = new HashSet<>( Arrays.asList(
+            "allCharacteristics.object",
+            "allCharacteristics.objectUri",
+            "allCharacteristics.predicate",
+            "allCharacteristics.predicateUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.object",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri"
+    ) );
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
@@ -34,16 +50,46 @@ class ExpressionExperimentFilterInferenceHelperService {
      */
     private static final Set<String> PROPERTIES_USED_FOR_ANNOTATIONS = new HashSet<>( Arrays.asList(
             "allCharacteristics.valueUri",
+            "allCharacteristics.subjectUri",
+            "allCharacteristics.predicateUri",
+            "allCharacteristics.objectUri",
             "characteristics.valueUri",
             "bioAssays.sampleUsed.characteristics.valueUri",
-            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri",
+            "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri"
     ) );
 
     private final OntologyService ontologyService;
 
     @Autowired
-    public ExpressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
+    public ExpressionExperimentFilterRewriteHelperService( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
+    }
+
+    public Filters getFiltersWithAdditionalProperties( Filters f ) {
+        Filters f2 = Filters.empty();
+        for ( List<Filter> clause : f ) {
+            Filters.FiltersClauseBuilder builder = f2.and();
+            for ( Filter subClause : clause ) {
+                builder = builder.or( subClause );
+                String originalProperty = FiltersUtils.unnestSubquery( subClause )
+                        .getOriginalProperty();
+                if ( originalProperty == null ) {
+                    continue; // only rewrite clauses that have an original property
+                }
+                String propertyName = FiltersUtils.unnestSubquery( subClause )
+                        .getPropertyName();
+                if ( PROPERTIES_WITH_SECOND_PROPERTIES.contains( originalProperty ) ) {
+                    // keep the original property as it is, the Filter.toOriginalString() only renders distinct clauses,
+                    // so the "second" clause will not show up to the user
+                    builder = builder.or( subClause.withPropertyName( "second" + StringUtils.capitalize( propertyName ), originalProperty ) );
+                }
+            }
+            builder.build();
+        }
+        return f2;
     }
 
     /**

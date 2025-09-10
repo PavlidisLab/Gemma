@@ -163,7 +163,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
         }
 
-        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
+        public void registerEntity( String prefix, Class<? extends Identifiable> entityClass, int maxDepth ) throws IllegalArgumentException {
             registerEntity( prefix, entityClass, maxDepth, false );
         }
 
@@ -180,7 +180,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if no entity of the given type is registered under the given prefix or if
          * the prefix is invalid
          */
-        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth, boolean useSubquery ) throws IllegalArgumentException {
+        public void registerEntity( String prefix, Class<? extends Identifiable> entityClass, int maxDepth, boolean useSubquery ) throws IllegalArgumentException {
             if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
@@ -208,7 +208,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 Type propertyType = propertyTypes[i];
                 if ( propertyType.isEntityType() ) {
                     if ( maxDepth > 1 ) {
-                        registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
+                        //noinspection unchecked
+                        registerEntity( prefix + propertyName + ".", ( Class<? extends Identifiable> ) propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
                     } else {
                         log.trace( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
@@ -265,8 +266,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         /**
          * @see #registerAlias(String, String, Class, String, int, boolean)
          */
-        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
-            registerAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth, false );
+        public void registerAlias( String prefix, @Nullable String objectAlias, Class<? extends Identifiable> entityClass, @Nullable String aliasFor, int maxDepth ) {
+            registerAlias( prefix, objectAlias, entityClass, aliasFor, maxDepth, false );
         }
 
         /**
@@ -276,10 +277,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @param objectAlias internal alias used to refer to the entity as per {@link Filter#getObjectAlias()}.
          * @see #registerEntity(String, Class, int)
          */
-        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
-            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor ) );
-            registerEntity( prefix, propertyType, maxDepth, useSubquery );
-            log.trace( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
+        public void registerAlias( String prefix, @Nullable String objectAlias, Class<? extends Identifiable> entityClass, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
+            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, entityClass, aliasFor ) );
+            registerEntity( prefix, entityClass, maxDepth, useSubquery );
+            log.trace( String.format( "Registered alias for %s (%s) %s.", objectAlias, entityClass.getName(), summarizePrefix( prefix ) ) );
         }
 
         private String summarizePrefix( String prefix ) {
@@ -363,7 +364,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
             return f;
         }
-        String entityName = getSessionFactory().getClassMetadata( getElementClass() ).getEntityName();
         List<Subquery.Alias> aliases;
         if ( f.getObjectAlias() != null ) {
             aliases = null;
@@ -400,7 +400,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             subqueryOp = Filter.Operator.inSubquery;
         }
         return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, subqueryOp,
-                new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
+                new Subquery( getEntityName(), getIdentifierPropertyName(), aliases, f ),
                 propertyName );
     }
 
@@ -440,7 +440,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         String prefix;
         @Nullable
         String objectAlias;
-        Class<?> propertyType;
+        Class<? extends Identifiable> entityClass;
         @Nullable
         String aliasFor;
     }
@@ -463,22 +463,17 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         for ( FilterablePropertyAlias alias : aliases ) {
             if ( propertyName.startsWith( alias.prefix ) && !propertyName.equals( alias.prefix + "size" ) ) {
                 String fieldName = propertyName.replaceFirst( "^" + Pattern.quote( alias.prefix ), "" );
-                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.propertyType )
+                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.entityClass )
                         .withDescription( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null );
             }
         }
         return getFilterablePropertyMeta( objectAlias, propertyName, getElementClass() );
     }
 
-    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) throws IllegalArgumentException {
+    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<? extends Identifiable> clazz ) throws IllegalArgumentException {
         Key key = new Key( clazz, propertyName );
-        PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta.computeIfAbsent( key, ignored -> {
-            try {
-                return resolveFilterablePropertyMetaInternal( propertyName, clazz );
-            } catch ( NoSuchFieldException e ) {
-                throw new IllegalArgumentException( String.format( "Could not resolve property %s on %s.", propertyName, clazz.getName() ), e );
-            }
-        } );
+        PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta
+                .computeIfAbsent( key, ignored -> resolveFilterablePropertyMetaInternal( propertyName, clazz ) );
         return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.allowedValues );
     }
 
@@ -506,8 +501,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<?> cls ) throws NoSuchFieldException {
+    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<? extends Identifiable> cls ) {
         ClassMetadata classMetadata = getSessionFactory().getClassMetadata( cls );
+
+        if ( classMetadata == null ) {
+            throw new IllegalArgumentException( "Unknown mapped class " + cls.getName() + "." );
+        }
 
         String[] parts = property.split( "\\.", 2 );
 
@@ -520,7 +519,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Type[] propertyTypes = classMetadata.getPropertyTypes();
         int i = ArrayUtils.indexOf( propertyNames, parts[0] );
         if ( i == -1 ) {
-            throw new NoSuchFieldException( String.format( "No such field %s in %s.", parts[0], cls.getName() ) );
+            throw new IllegalArgumentException( String.format( "No such field %s in %s. Possible values are: %s.", parts[0], cls.getName(), String.join( ", ", propertyNames ) ) );
         }
 
         Type propertyType = propertyTypes[i];
@@ -528,11 +527,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         // recurse only on entity type
         if ( parts.length > 1 ) {
             if ( propertyType.isEntityType() ) {
-                return resolveFilterablePropertyMetaInternal( parts[1], propertyType.getReturnedClass() );
+                //noinspection unchecked
+                return resolveFilterablePropertyMetaInternal( parts[1], ( Class<? extends Identifiable> ) propertyType.getReturnedClass() );
             } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
                 return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
             } else {
-                throw new NoSuchFieldException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
+                throw new IllegalArgumentException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
             }
         }
 
@@ -551,7 +551,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
             return new PartialFilterablePropertyMeta( actualType, allowedValues );
         } else {
-            throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
+            throw new IllegalArgumentException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
     }
 

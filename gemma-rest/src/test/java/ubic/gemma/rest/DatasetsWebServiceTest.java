@@ -288,7 +288,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( universe.contains( any( String.class ) ) ).thenReturn( true );
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentService.getEnhancedFilters( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( expressionExperimentService.getSort( any(), any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 2 ) ) );
     }
 
@@ -338,7 +338,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
         verify( searchService ).search( argThat( arg -> arg.getQuery().equals( "cerebellum" ) ), argThat( ctx -> ctx.getHighlighter() == null ) );
         verify( searchService ).search( argThat( arg -> arg.getQuery().equals( "cerebellum" ) ), argThat( ctx -> ctx.getHighlighter() != null ) );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), null );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
         verifyNoMoreInteractions( expressionExperimentService );
@@ -370,7 +370,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                     assertThat( s.isFillResults() ).isFalse();
                 } );
         verify( expressionExperimentService ).getSort( "lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( null, "lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST ) );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
         verifyNoMoreInteractions( expressionExperimentService );
@@ -428,7 +428,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         //noinspection unchecked
         when( expressionExperimentService.getFilter( eq( "allCharacteristic.valueUri" ), eq( Filter.Operator.in ), anyCollection() ) )
                 .thenAnswer( a -> Filter.by( "c", "valueUri", String.class, Filter.Operator.in, a.getArgument( 2, Collection.class ) ) );
-        when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) )
+        when( expressionExperimentService.getEnhancedFilters( any(), any(), any(), anyLong(), any() ) )
                 .thenThrow( new TimeoutException( "Inference timed out!" ) );
         when( expressionExperimentService.loadValueObjectsWithCache( any(), any(), anyInt(), anyInt() ) )
                 .thenReturn( new Slice<>( Collections.emptyList(), null, null, null, null ) );
@@ -448,7 +448,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.lessThan, "10" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.by( f ), null, new HashSet<>(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.by( f ), null, new HashSet<>(), 30, TimeUnit.SECONDS );
         verify( expressionExperimentService ).getArrayDesignUsedOrOriginalPlatformUsageFrequency( Filters.by( f ), null, 50 );
     }
 
@@ -464,7 +464,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), eq( Collections.emptySet() ), eq( 100 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
@@ -480,7 +480,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
@@ -499,7 +499,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 10 ), isNull(), eq( 5000 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 

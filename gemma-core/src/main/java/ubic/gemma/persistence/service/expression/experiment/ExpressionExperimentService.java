@@ -453,13 +453,16 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
 
     /**
-     * Apply ontological inference to augment a filter with additional terms.
-     *
+     * Perform various transformation to the provided filters to enhance it.
+     * <ul>
+     *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>
+     *     <li>apply ontological inference to augment a filter with additional terms.</li>
+     * </ul>
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
      * @param inferredTerms  if non-null, all the terms inferred from those mentioned in the filters are added to the
      *                       collection
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * Obtain the number of design elements for the platform of each bioassay in the given experiment.

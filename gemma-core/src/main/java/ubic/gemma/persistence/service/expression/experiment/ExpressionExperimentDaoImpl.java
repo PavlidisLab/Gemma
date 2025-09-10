@@ -84,8 +84,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
-import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 import static ubic.gemma.core.datastructure.sparse.SparseListUtils.validateSparseRangeArray;
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
@@ -124,7 +124,6 @@ public class ExpressionExperimentDaoImpl
     private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
 
     private final CompressedStringListType cellIdsUserType;
-    private SessionRegistryImpl sessionRegistryImpl;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -3469,13 +3468,25 @@ public class ExpressionExperimentDaoImpl
         configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
         configurer.unregisterProperty( "characteristics.migratedToStatement" );
-        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicateUri" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
         configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
-        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerProperty( "allCharacteristics.subject" );
+        configurer.registerProperty( "allCharacteristics.subjectUri" );
+        configurer.unregisterProperty( "allCharacteristics.secondPredicate" );
+        configurer.unregisterProperty( "allCharacteristics.secondPredicateUri" );
+        configurer.unregisterProperty( "allCharacteristics.secondObject" );
+        configurer.unregisterProperty( "allCharacteristics.secondObjectUri" );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
@@ -3495,6 +3506,36 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         switch ( propertyName ) {
+            // allCharacteristics contains a mixture of statements and characteristics, so we need to clarify which ones
+            // are statement-specific
+            case "allCharacteristics.subject":
+                return getFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, "value", Statement.class )
+                        .withDescription( "only applicable to statements" );
+            case "allCharacteristics.subjectUri":
+                return getFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, "valueUri", Statement.class )
+                        .withDescription( "only applicable to statements" );
+            case "allCharacteristics.predicate":
+            case "allCharacteristics.predicateUri":
+            case "allCharacteristics.object":
+            case "allCharacteristics.objectUri":
+                return super.getFilterablePropertyMeta( propertyName )
+                        .withDescription( "only applicable to statements" );
+
+            // expose statements subject/subjectUri as aliases for value/valueUri
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.subject":
+                return getFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, "value", Statement.class );
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri":
+                return getFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, "valueUri", Statement.class );
+
+            // pretend that value/valueUri are aliases for subject/subjectUri even if it's not really the case in the
+            // data model
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.value":
+                return super.getFilterablePropertyMeta( propertyName )
+                        .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri":
+                return super.getFilterablePropertyMeta( propertyName )
+                        .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+
             case "taxon":
                 return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class )
                         .withDescription( "alias for taxon.id" );

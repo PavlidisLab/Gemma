@@ -84,6 +84,13 @@ public class Subquery {
         this.filter = filter;
     }
 
+    /**
+     * Create a new subquery with a different property name for the filter.
+     */
+    public Subquery withFilterPropertyName( String newPropertyName, @Nullable String originalProperty ) {
+        return new Subquery( entityName, propertyName, aliases, filter.withPropertyName( newPropertyName, originalProperty ) );
+    }
+
     public String toString() {
         String rootAlias = getRootAlias();
         String jointures = aliases.stream()

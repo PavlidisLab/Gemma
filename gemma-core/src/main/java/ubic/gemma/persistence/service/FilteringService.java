@@ -17,11 +17,6 @@ import java.util.Set;
 public interface FilteringService<O extends Identifiable> extends BaseReadOnlyService<O> {
 
     /**
-     * @see BaseDao#getIdentifierPropertyName()
-     */
-    String getIdentifierPropertyName();
-
-    /**
      * @see FilteringDao#getFilterableProperties()
      */
     Set<String> getFilterableProperties();

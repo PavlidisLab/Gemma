@@ -135,6 +135,9 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
+    /**
+     * Create a new filter with a subquery right hand side.
+     */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
@@ -263,6 +266,26 @@ public class Filter implements PropertyMapping {
         this.requiredValue = requiredValue;
         this.originalProperty = originalProperty;
         this.checkTypeCorrect();
+    }
+
+    /**
+     * Create a copy of this filter with a new property name and original property.
+     * <p>
+     * If the filter's right hand side is a {@link Subquery}, the operation is propagated to the subquery via {@link }
+     * <p>
+     * This can be used to apply this filter to a different property. For example, if you have a filter on a
+     * {@link ubic.gemma.model.expression.experiment.Statement} over {@code object}, you could create a filter over a
+     * {@code secondObject}.
+     * @throws IllegalArgumentException if the type of the resulting property is not compatible with the required value
+     * @see Subquery#withFilterPropertyName(String, String)
+     */
+    public Filter withPropertyName( String newPropertyName, @Nullable String newOriginalProperty ) {
+        if ( requiredValue instanceof Subquery ) {
+            // in the case of a subquery, rewrite the filter of the subquery instead
+            return new Filter( objectAlias, propertyName, propertyType, operator, ( ( Subquery ) requiredValue ).withFilterPropertyName( newPropertyName, newOriginalProperty ), originalProperty );
+        } else {
+            return new Filter( objectAlias, newPropertyName, propertyType, operator, requiredValue, newOriginalProperty );
+        }
     }
 
     @Override

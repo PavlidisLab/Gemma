@@ -34,17 +34,12 @@ import java.util.stream.Stream;
  * @param <T> type
  * @author paul
  */
-public interface BaseDao<T> {
+public interface BaseDao<T extends Identifiable> {
 
     /**
      * Obtain the element class of {@link T}.
      */
     Class<? extends T> getElementClass();
-
-    /**
-     * Obtain the identifiable property name for {@link T}.
-     */
-    String getIdentifierPropertyName();
 
     /**
      * Crates all the given entities in the persistent storage.
@@ -80,7 +75,7 @@ public interface BaseDao<T> {
     /**
      * Create or update an entity whether it is transient.
      * <p>
-     * Unlike {@link #update(Object)}, this method does not attach the given entity to the persistence context and the
+     * Unlike {@link #update(Identifiable)}, this method does not attach the given entity to the persistence context and the
      * returned value must be used instead.
      *
      * @see org.hibernate.Session#persist(Object)

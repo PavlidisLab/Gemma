@@ -127,7 +127,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private CoexpressionService coexpressionService;
     @Autowired
-    private ExpressionExperimentFilterInferenceHelperService filterInferenceService;
+    private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -889,8 +889,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
-        return filterInferenceService.getFiltersWithInferredAnnotations( f, "ee", mentionedTerms, inferredTerms, timeout, timeUnit );
+    public Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        // do the inference first, some of the terms that we *duplicate* for a second property are subject to inference
+        f = filterRewriteService.getFiltersWithInferredAnnotations( f, "ee", mentionedTerms, inferredTerms, timeout, timeUnit );
+        f = filterRewriteService.getFiltersWithAdditionalProperties( f );
+        return f;
     }
 
     @Override
