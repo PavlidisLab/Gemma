@@ -120,6 +120,7 @@ public class OntologyController {
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
             Slice<String> individualUris = factorValueOntologyService.getFactorValueUris( offset, limit );
+            response.setContentType( "application/rdf+xml" );
             try ( Writer writer = response.getWriter() ) {
                 factorValueOntologyService.writeToRdfIgnoreAcls( individualUris, writer );
             }
@@ -164,6 +165,7 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
+            response.setContentType( "application/rdf+xml" );
             try ( Writer writer = response.getWriter() ) {
                 factorValueOntologyService.writeToRdf( Collections.singleton( iri ), writer );
             }
@@ -193,6 +195,7 @@ public class OntologyController {
                 .flatMap( Stream::findFirst )
                 .orElse( MediaType.TEXT_HTML );
         if ( mediaType.isCompatibleWith( RDF_XML ) ) {
+            response.setContentType( "application/rdf+xml" );
             try ( Writer writer = response.getWriter() ) {
                 factorValueOntologyService.writeToRdf( Collections.singleton( iri ), writer );
             }
