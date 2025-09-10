@@ -67,7 +67,7 @@ public class OntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseCharacteristics();
+        return settings.isUseOntology();
     }
 
     /**

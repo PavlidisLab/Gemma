@@ -239,10 +239,10 @@ public class GeneralSearchController {
                 .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
                 .resultType( BlacklistedEntity.class )
-                .useIndices( settingsValueObject.getUseIndices() )
+                .useFullTextIndex( settingsValueObject.getUseIndices() )
                 .useDatabase( settingsValueObject.getUseDatabase() )
-                .useCharacteristics( settingsValueObject.getUseCharacteristics() )
-                .useGo( settingsValueObject.getUseGo() )
+                .useOntology( settingsValueObject.getUseCharacteristics() )
+                .useGeneOntology( settingsValueObject.getUseGo() )
                 .build();
     }
 

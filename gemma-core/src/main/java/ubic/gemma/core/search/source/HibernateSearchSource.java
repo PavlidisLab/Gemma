@@ -141,7 +141,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseIndices();
+        return settings.isUseFullTextIndex();
     }
 
     @Override

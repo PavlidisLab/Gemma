@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.With;
+import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -158,14 +159,29 @@ public class SearchSettings {
     private Taxon taxonConstraint;
 
     /* sources */
-    @Builder.Default
-    private boolean useCharacteristics = true;
+    /**
+     * Use the database for finding results.
+     */
     @Builder.Default
     private boolean useDatabase = true;
+    /**
+     * Use the ontology and ontology inference for finding results.
+     * <p>
+     * Results from the Gene Ontology (GO) are not included in this setting, use {@link #setUseGeneOntology(boolean)}
+     * for that purpose.
+     */
     @Builder.Default
-    private boolean useGo = true;
+    private boolean useOntology = true;
+    /**
+     * Include results from the Gene Ontology (GO).
+     */
     @Builder.Default
-    private boolean useIndices = true;
+    private boolean useGeneOntology = true;
+    /**
+     * Use the full-text index for finding results.
+     */
+    @Builder.Default
+    private boolean useFullTextIndex = true;
 
     /**
      * Limit for the number of results per result type.
@@ -177,13 +193,16 @@ public class SearchSettings {
     private int maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
 
     /**
-     * Indicate if results should be filled.
+     * Indicate if result objects (i.e. {@link SearchResult#getResultObject()} should be filled, otherwise only the
+     * class and ID will be populated.
      */
     @Builder.Default
     private boolean fillResults = true;
 
     /**
-     * Fast mode, return quickly.
+     * Indicate the search mode to use.
+     * <p>
+     * Defaults to balanced.
      */
     @Builder.Default
     private SearchMode mode = SearchMode.BALANCED;
@@ -194,7 +213,6 @@ public class SearchSettings {
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
     }
-
 
     @Override
     public String toString() {
