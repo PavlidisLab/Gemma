@@ -48,7 +48,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     public SingleCellDataWriterCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     enum MatrixFormat {

@@ -94,7 +94,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
     public SingleCellDataAggregatorCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable

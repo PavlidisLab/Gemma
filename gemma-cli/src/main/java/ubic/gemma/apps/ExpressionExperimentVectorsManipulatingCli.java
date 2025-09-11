@@ -39,8 +39,8 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
      */
     private final Class<T> dataVectorType;
 
-    private boolean quantitationTypeIdentifierRequired = false;
-    private boolean usePreferredQuantitationType = false;
+    private boolean allQuantitationTypes = false;
+    private boolean defaultToPreferredQuantitationType = false;
 
     @Nullable
     private String qtIdentifier;
@@ -50,25 +50,13 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
     }
 
     /**
-     * Makes it so that the quantitation type identifier is required.
-     * <p>
-     * This is incompatible with {@link #setUsePreferredQuantitationType()}.
-     */
-    protected void setQuantitationTypeIdentifierRequired() {
-        Assert.state( !this.quantitationTypeIdentifierRequired, "Quantitation type identifier is already required" );
-        Assert.state( !this.usePreferredQuantitationType, "Preferred quantitation type is enabled, cannot require an identifier." );
-        this.quantitationTypeIdentifierRequired = true;
-    }
-
-    /**
      * Use the preferred QT if no identifier is provided, otherwise process all the QTs.
      * <p>
-     * This is incompatible with {@link #setQuantitationTypeIdentifierRequired()}.
+     * When this is set, an {@code -allQts} option will be added to process all QTs.
      */
-    protected void setUsePreferredQuantitationType() {
-        Assert.state( !this.usePreferredQuantitationType, "Use preferred quantitation type is already set" );
-        Assert.state( !this.quantitationTypeIdentifierRequired, "Quantitation type identifier is required, cannot default the the preferred one." );
-        this.usePreferredQuantitationType = true;
+    protected void setDefaultToPreferredQuantitationType() {
+        Assert.state( !this.defaultToPreferredQuantitationType, "Use preferred quantitation type is already set" );
+        this.defaultToPreferredQuantitationType = true;
     }
 
     @Override
@@ -76,11 +64,13 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
         options.addOption( Option.builder( "qt" )
                 .longOpt( "quantitation-type" )
                 .hasArg()
-                .required( quantitationTypeIdentifierRequired )
-                .desc( "Identifier of the quantitation type to use"
-                        + ( quantitationTypeIdentifierRequired ? ""
-                        : " (defaults to " + ( usePreferredQuantitationType ? "the preferred one" : "all of them" ) + ")" ) )
-                .build() );
+                .required( false )
+                .desc( "Identifier of the quantitation type to process"
+                        + ( " (defaults to " + ( defaultToPreferredQuantitationType ? "the preferred one" : "all of them" ) + ")" ) )
+                .get() );
+        if ( defaultToPreferredQuantitationType ) {
+            options.addOption( "allQts", "all-quantitation-types", false, "Process all quantitation types (defaults to the preferred one)" );
+        }
         buildExperimentVectorsOptions( options );
     }
 
@@ -91,6 +81,7 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
     @Override
     protected final void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         qtIdentifier = commandLine.getOptionValue( "qt" );
+        allQuantitationTypes = commandLine.hasOption( "allQts" );
         processExperimentVectorsOptions( commandLine );
     }
 
@@ -104,7 +95,10 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
         if ( qtIdentifier != null ) {
             Map.Entry<Class<? extends T>, QuantitationType> vqt = entityLocator.locateQuantitationType( expressionExperiment, qtIdentifier, quantitationTypeService.getMappedDataVectorType( dataVectorType ) );
             qts = Collections.singletonMap( vqt.getKey(), Collections.singleton( vqt.getValue() ) );
-        } else if ( usePreferredQuantitationType ) {
+        } else if ( allQuantitationTypes ) {
+            qts = quantitationTypeService.getMappedDataVectorType( dataVectorType ).stream()
+                    .collect( Collectors.toMap( vt -> vt, vt -> quantitationTypeService.findByExpressionExperiment( expressionExperiment, vt ) ) );
+        } else if ( defaultToPreferredQuantitationType ) {
             qts = quantitationTypeService.getMappedDataVectorType( dataVectorType ).stream()
                     .collect( Collectors.toMap( vt -> vt, vt -> Collections.singleton( locatePreferredQuantitationType( expressionExperiment, vt ) ) ) );
         } else {

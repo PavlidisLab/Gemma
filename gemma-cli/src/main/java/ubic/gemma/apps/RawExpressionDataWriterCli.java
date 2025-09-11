@@ -48,7 +48,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     public RawExpressionDataWriterCli() {
         super( RawExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable

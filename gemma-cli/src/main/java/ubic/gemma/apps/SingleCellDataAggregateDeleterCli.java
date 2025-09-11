@@ -18,8 +18,7 @@ public class SingleCellDataAggregateDeleterCli extends ExpressionExperimentVecto
 
     public SingleCellDataAggregateDeleterCli() {
         super( RawExpressionDataVector.class );
-        setSingleExperimentMode();
-        setQuantitationTypeIdentifierRequired();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable

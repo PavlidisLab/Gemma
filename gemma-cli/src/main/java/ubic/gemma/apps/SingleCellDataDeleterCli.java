@@ -44,7 +44,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     public SingleCellDataDeleterCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable
