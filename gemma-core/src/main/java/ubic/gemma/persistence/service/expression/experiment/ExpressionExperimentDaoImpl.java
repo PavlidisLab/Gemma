@@ -3468,8 +3468,8 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "characteristics.originalValue" );
         configurer.unregisterProperty( "characteristics.migratedToStatement" );
         configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
-        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
-        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject", true );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri", true );
         configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" );
         configurer.describeProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value",
                 "use experimentalDesign.experimentalFactors.factorValues.characteristics.subject instead" );
@@ -3486,8 +3486,8 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
         configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
-        configurer.registerProperty( "allCharacteristics.subject" );
-        configurer.registerProperty( "allCharacteristics.subjectUri" );
+        configurer.registerProperty( "allCharacteristics.subject", true );
+        configurer.registerProperty( "allCharacteristics.subjectUri", true );
         configurer.unregisterProperty( "allCharacteristics.secondPredicate" );
         configurer.unregisterProperty( "allCharacteristics.secondPredicateUri" );
         configurer.unregisterProperty( "allCharacteristics.secondObject" );
