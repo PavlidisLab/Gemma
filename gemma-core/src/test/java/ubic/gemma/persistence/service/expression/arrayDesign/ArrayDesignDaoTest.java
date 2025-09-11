@@ -121,16 +121,16 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testGetFilterWhenPropertyExceedsMaxDepth() {
-        // those properties are unlisted, but are still accessible
         assertThat( arrayDesignDao.getFilterableProperties() )
                 .doesNotContain( "primaryTaxon.externalDatabase.databaseSupplier.name" );
-        assertThat( arrayDesignDao.getFilter( "primaryTaxon.externalDatabase.databaseSupplier.name", Filter.Operator.eq, "joe" ) )
-                .isNotNull();
+        assertThatThrownBy( () -> arrayDesignDao.getFilter( "primaryTaxon.externalDatabase.databaseSupplier.name", Filter.Operator.eq, "joe" ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContainingAll( "primaryTaxon.externalDatabase.databaseSupplier.name", ArrayDesign.class.getName() );
     }
 
     @Test
     public void testGetFilterTechnologyType() {
-        arrayDesignDao.getFilterablePropertyType( "technologyType" )
+        assertThat( arrayDesignDao.getFilterablePropertyType( "technologyType" ) )
                 .isAssignableFrom( TechnologyType.class );
         assertThat( arrayDesignDao.getFilterablePropertyDescription( "technologyType" ) )
                 .isNull();

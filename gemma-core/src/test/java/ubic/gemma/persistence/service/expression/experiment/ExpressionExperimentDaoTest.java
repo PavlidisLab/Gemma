@@ -141,7 +141,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         // constructed explicitly
         assertThatThrownBy( () -> expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri", Filter.Operator.eq, "http://purl.org/example" ) )
                 .isInstanceOf( IllegalArgumentException.class )
-                .hasMessage( "Unknown filterable property experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri." );
+                .hasMessage( "Unknown filterable property experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri in ubic.gemma.model.expression.experiment.ExpressionExperiment." );
 
         // Filter provides a useful method for rewriting a filter for a different property
         Filter f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" )

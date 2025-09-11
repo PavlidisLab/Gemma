@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import lombok.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
@@ -335,9 +336,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Nullable
     @Override
     public String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException {
-        return getFilterablePropertyMeta( propertyName ).descriptions.stream()
+        return StringUtils.stripToNull( getFilterablePropertyMeta( propertyName ).descriptions.stream()
                 .filter( Objects::nonNull )
-                .collect( Collectors.joining( "; " ) );
+                .collect( Collectors.joining( "; " ) ) );
     }
 
     @Nullable
@@ -485,7 +486,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     protected final FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( !filterableProperties.contains( propertyName ) ) {
-            throw new IllegalArgumentException( String.format( "Unknown filterable property %s.", propertyName ) );
+            throw new IllegalArgumentException( String.format( "Unknown filterable property %s in %s.", propertyName, getEntityName() ) );
         }
         return filterablePropertyMetaCache.computeIfAbsent( propertyName, k -> this.resolveFilterablePropertyMeta( k ).build() );
     }
