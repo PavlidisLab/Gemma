@@ -63,11 +63,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
-     * Discard empty cells.
-     */
-    private boolean discardEmptyCells;
-
-    /**
      * Allow mapping probe to gene symbols.
      * <p>
      * This is used as fallback if the gene ID cannot be found in the supplied platform. If this is set to true, the
@@ -113,12 +108,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds;
-                if ( discardEmptyCells ) {
-                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyCellColumns( matrixFiles.get( i ) ) );
-                } else {
-                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
-                }
+                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyCellColumns( matrixFiles.get( i ) ) );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }
@@ -238,7 +228,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 MatrixSize size = reader.readMatrixSize( matrixInfo );
-                size.numEntries();
                 int[] row = new int[size.numEntries()];
                 int[] column = new int[size.numEntries()];
                 int[] data = new int[size.numEntries()];
@@ -351,14 +340,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
-            if ( discardEmptyCells ) {
-                int[] nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
-                if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
-                    matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
-                    log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
-                } else {
-                    log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
-                }
+            int[] nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
+            if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
+                matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
+                log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
+            } else {
+                log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
             }
 
             Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),

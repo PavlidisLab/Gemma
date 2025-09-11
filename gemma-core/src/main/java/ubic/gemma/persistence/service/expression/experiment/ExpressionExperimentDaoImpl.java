@@ -861,7 +861,8 @@ public class ExpressionExperimentDaoImpl
             } else {
                 query += " and T.CATEGORY = :category";
             }
-            // no need to filter out excluded categories if a specific one is requested
+            // no need to filter out excluded categories if a specific one is requested or if the requested annotations
+            // are intrinsically uncategorized
             excludeUrisClause = getExcludeUrisClause( valueUriColumn, valueColumn, null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, excludeCategoryOnly );
         } else {
             // all categories are requested, we may filter out excluded ones

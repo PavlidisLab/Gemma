@@ -127,13 +127,13 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
         assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.INT );
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
-        assertThat( dimension.getCellIds() ).hasSize( 10000 );
-        assertThat( dimension.getNumberOfCells() ).isEqualTo( 10000 );
+        assertThat( dimension.getCellIds() ).hasSize( 9996 );
+        assertThat( dimension.getNumberOfCells() ).isEqualTo( 9996 );
         assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
         assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 1000 );
         assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
-                .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 );
+                .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 5998, 6998, 7998, 8996 );
         assertThat( loader.getSequencingMetadata( dimension ) )
                 .containsOnlyKeys( bas )
                 .values()
@@ -187,10 +187,10 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
                 .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
-        assertThat( dimension.getCellIds() ).hasSize( 2000 );
-        assertThat( dimension.getNumberOfCells() ).isEqualTo( 2000 );
+        assertThat( dimension.getCellIds() ).hasSize( 1998 );
+        assertThat( dimension.getNumberOfCells() ).isEqualTo( 1998 );
         assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
-        assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 998 );
         assertThat( dimension.getBioAssays() ).extracting( BioAssay::getName )
                 .containsExactly( "GSM7022370", "GSM7022375" );
         assertThat( dimension.getBioAssaysOffset() )
@@ -236,12 +236,13 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
                                     274, 276, 282, 295, 307, 323, 337, 344, 345, 398, 436, 444, 461, 462, 483, 487, 509,
                                     529, 534, 537, 540, 541, 573, 582, 595, 603, 604, 611, 631, 639, 650, 694, 704, 709,
                                     730, 736, 758, 768, 792, 799, 821, 851, 855, 856, 878, 883, 885, 902, 915, 917, 928,
-                                    931, 972, 993, 1000, 1009, 1031, 1043, 1084, 1087, 1090, 1098, 1123, 1135, 1152, 1177,
-                                    1180, 1189, 1190, 1206, 1208, 1217, 1237, 1242, 1270, 1285, 1296, 1305, 1317, 1326,
-                                    1337, 1366, 1370, 1382, 1383, 1387, 1390, 1395, 1430, 1440, 1446, 1458, 1467, 1481,
-                                    1491, 1513, 1516, 1560, 1568, 1575, 1597, 1628, 1634, 1640, 1641, 1643, 1644, 1645,
-                                    1648, 1649, 1674, 1676, 1695, 1697, 1722, 1736, 1753, 1757, 1762, 1767, 1781, 1796,
-                                    1810, 1827, 1837, 1843, 1858, 1882, 1901, 1906, 1920, 1933, 1950, 1957, 1964, 1984 );
+                                    931, 972, 993, 1000, 1009, 1031, 1043, 1084, 1087, 1090, 1098, 1123, 1135, 1152,
+                                    1177, 1180, 1189, 1190, 1206, 1208, 1217, 1237, 1242, 1270, 1285, 1296, 1305, 1317,
+                                    1326, 1337, 1366, 1370, 1382, 1383, 1387, 1390, 1395, 1430, 1440, 1446, 1458, 1467,
+                                    1481, 1491, 1513, 1516, 1560, 1568, 1575, 1597, 1628, 1634, 1640, 1641, 1643, 1644,
+                                    1645, 1648, 1649, 1674, 1676, 1695, 1697, 1722, 1736, 1753, 1757, 1762, 1767, 1781,
+                                    1796, 1810, 1827, 1837, 1843, 1858, 1881, 1899, 1904, 1918, 1931, 1948, 1955, 1962,
+                                    1982 );
                 } );
     }
 

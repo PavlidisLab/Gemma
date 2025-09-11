@@ -57,47 +57,12 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             }
         }
         MexSingleCellDataLoader loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
-        try {
-            configureDiscardEmptyCell( loader, matrixFiles, config );
-        } catch ( Exception e ) {
-            try {
-                loader.close();
-            } catch ( IOException ex ) {
-                log.error( e );
-            }
-            if ( e instanceof RuntimeException ) {
-                throw ( RuntimeException ) e;
-            } else {
-                throw new RuntimeException( e );
-            }
-        }
         if ( config instanceof MexSingleCellDataLoaderConfig ) {
             MexSingleCellDataLoaderConfig mexConfig = ( MexSingleCellDataLoaderConfig ) config;
             loader.setAllowMappingDesignElementsToGeneSymbols( mexConfig.isAllowMappingDesignElementsToGeneSymbols() );
             loader.setUseDoublePrecision( ( mexConfig.isUseDoublePrecision() ) );
         }
         return loader;
-    }
-
-    /**
-     * Check if the MEX files contain empty cells and configure the loader accordingly.
-     */
-    private void configureDiscardEmptyCell( MexSingleCellDataLoader loader, List<Path> matrixFiles, SingleCellDataLoaderConfig config ) throws IOException {
-        if ( config instanceof MexSingleCellDataLoaderConfig && ( ( MexSingleCellDataLoaderConfig ) config ).getDiscardEmptyCells() != null ) {
-            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).getDiscardEmptyCells() );
-            return;
-        }
-        for ( Path matrixFile : matrixFiles ) {
-            try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( FileUtils.openCompressedFile( matrixFile ) ) ) ) {
-                MatrixInfo info = reader.readMatrixInfo();
-                MatrixSize size = reader.readMatrixSize( info );
-                if ( ( double ) size.numEntries() / ( ( double ) size.numRows() * ( double ) size.numColumns() ) < 0.01 ) {
-                    log.info( matrixFile + " has less than 1% of non-zeroes, this is likely due to empty cells, so we'll discard those." );
-                    loader.setDiscardEmptyCells( true );
-                    break;
-                }
-            }
-        }
     }
 
     protected abstract List<String> getSampleNames();

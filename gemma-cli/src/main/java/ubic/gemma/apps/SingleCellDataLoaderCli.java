@@ -84,7 +84,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
-            MEX_DISCARD_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "DiscardEmptyCells",
             MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
             MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols",
             MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision";
@@ -171,8 +170,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Boolean annDataUseRawX;
 
     // MEX
-    @Nullable
-    private Boolean mexDiscardEmptyCells;
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
     private boolean mexUseDoublePrecision;
 
@@ -282,9 +279,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 ANNDATA_NO_TRANSPOSE_OPTION, "anndata-no-transpose", "Do not transpose the data matrix." );
 
         // for MEX
-        OptionsUtils.addAutoOption( options,
-                MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", "Discard empty cells when loading MEX data.",
-                MEX_KEEP_EMPTY_CELLS_OPTION, "mex-keep-empty-cells", "Keep empty cells when loading MEX data." );
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
         options.addOption( MEX_USE_DOUBLE_PRECISION_OPTION, "mex-use-double-precision", false, "Use double precision (i.e. double and long) for storing vectors" );
 
@@ -378,7 +372,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
         } else if ( dataType == SingleCellDataType.MEX ) {
-            mexDiscardEmptyCells = getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
             mexUseDoublePrecision = commandLine.hasOption( MEX_USE_DOUBLE_PRECISION_OPTION );
         }
@@ -509,7 +502,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .useRawX( annDataUseRawX );
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
-                    .discardEmptyCells( mexDiscardEmptyCells )
                     .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols )
                     .useDoublePrecision( mexUseDoublePrecision );
         } else {

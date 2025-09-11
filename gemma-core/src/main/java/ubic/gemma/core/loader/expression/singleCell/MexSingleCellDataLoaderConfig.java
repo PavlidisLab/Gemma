@@ -9,9 +9,6 @@ import javax.annotation.Nullable;
 @SuperBuilder
 public class MexSingleCellDataLoaderConfig extends SingleCellDataLoaderConfig {
 
-    @Nullable
-    private Boolean discardEmptyCells;
-
     private boolean allowMappingDesignElementsToGeneSymbols;
 
     private boolean useDoublePrecision;
