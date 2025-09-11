@@ -379,7 +379,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .createSQLQuery( "select {G.*} from GENE2CS "
                         + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
                         + "where GENE2CS.AD = :ad "
-                        + "group by G.ID")
+                        + "group by G.ID" )
                 .addEntity( "G", Gene.class )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
@@ -623,7 +623,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .createQuery( "select ad.id from ExpressionExperiment as ee "
                         + "join ee.bioAssays b join b.arrayDesignUsed ad "
                         + "where ee.id = :eeId "
-                        + "group by ad")
+                        + "group by ad" )
                 .setParameter( "eeId", eeId )
                 .setCacheable( true )
                 .list();
@@ -1073,18 +1073,19 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // see https://github.com/PavlidisLab/Gemma/issues/546
         String recursiveProperty = String.join( "|", new String[] { "subsumingArrayDesign", "mergedInto", "alternativeTo" } );
         configurer.unregisterProperties( Pattern.compile( "^(" + recursiveProperty + ")\\.(" + recursiveProperty + ")\\..+$" ).asPredicate() );
-        configurer.registerAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2, true );
-        configurer.registerAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon", 2 );
+        configurer.registerObjectAlias( "externalReferences.", EXTERNAL_REFERENCE_ALIAS, DatabaseEntry.class, null, 2, true );
+        configurer.registerObjectAlias( "taxon.", PRIMARY_TAXON_ALIAS, Taxon.class, "primaryTaxon", 2 );
     }
 
     @Override
-    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) {
         // handle cases such as taxon = 1
         if ( propertyName.equals( "taxon" ) ) {
             return resolveFilterablePropertyMeta( PRIMARY_TAXON_ALIAS, Taxon.class, "id" )
-                    .withDescription( "alias for taxon.id" );
+                    .description( "alias for taxon.id" );
+        } else {
+            return super.resolveFilterablePropertyMeta( propertyName );
         }
-        return super.resolveFilterablePropertyMeta( propertyName );
     }
 
     private void populateExternalReferences( Collection<ArrayDesignValueObject> results ) {

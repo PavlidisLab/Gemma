@@ -3464,10 +3464,10 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
 
         // attached terms
-        configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
         configurer.unregisterProperty( "characteristics.migratedToStatement" );
-        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerObjectAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
         configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject", true );
         configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri", true );
         configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" );
@@ -3482,10 +3482,10 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
-        configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
-        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerObjectAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
         configurer.registerProperty( "allCharacteristics.subject", true );
         configurer.registerProperty( "allCharacteristics.subjectUri", true );
         configurer.unregisterProperty( "allCharacteristics.secondPredicate" );
@@ -3495,7 +3495,7 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
-        configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
+        configurer.registerObjectAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
@@ -3509,22 +3509,22 @@ public class ExpressionExperimentDaoImpl
      * {@inheritDoc}
      */
     @Override
-    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) {
         switch ( propertyName ) {
             // allCharacteristics contains a mixture of statements and characteristics, so we need to clarify which ones
             // are statement-specific
             case "allCharacteristics.subject":
                 return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "value" )
-                        .withDescription( "only applicable to statements" );
+                        .description( "only applicable to statements" );
             case "allCharacteristics.subjectUri":
                 return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "valueUri" )
-                        .withDescription( "only applicable to statements" );
+                        .description( "only applicable to statements" );
             case "allCharacteristics.predicate":
             case "allCharacteristics.predicateUri":
             case "allCharacteristics.object":
             case "allCharacteristics.objectUri":
                 return super.resolveFilterablePropertyMeta( propertyName )
-                        .withDescription( "only applicable to statements" );
+                        .description( "only applicable to statements" );
 
             // expose statements subject/subjectUri as aliases for value/valueUri
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.subject":
@@ -3536,21 +3536,25 @@ public class ExpressionExperimentDaoImpl
             // data model
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.value":
                 return super.resolveFilterablePropertyMeta( propertyName )
-                        .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
+                        .description( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
             case "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri":
                 return super.resolveFilterablePropertyMeta( propertyName )
-                        .withDescription( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+                        .description( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
 
             case "taxon":
                 return resolveFilterablePropertyMeta( TAXON_ALIAS, Taxon.class, "id" )
-                        .withDescription( "alias for taxon.id" );
+                        .description( "alias for taxon.id" );
             case "bioAssayCount":
                 return super.resolveFilterablePropertyMeta( "bioAssays.size" )
-                        .withDescription( "alias for bioAssays.size" );
+                        .description( "alias for bioAssays.size" );
             case "geeq.publicQualityScore":
-                return new FilterablePropertyMeta( null, "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)", Double.class, null, null );
+                return FilterablePropertyMeta.builder()
+                        .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
+                        .propertyType( Double.class );
             case "geeq.publicSuitabilityScore":
-                return new FilterablePropertyMeta( null, "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)", Double.class, null, null );
+                return FilterablePropertyMeta.builder()
+                        .propertyName( "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)" )
+                        .propertyType( Double.class );
             default:
                 return super.resolveFilterablePropertyMeta( propertyName );
         }

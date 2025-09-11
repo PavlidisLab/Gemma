@@ -103,14 +103,18 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testGetFilterWithStatementObject() {
-        Filter f = expressionExperimentDao.getFilter( "allCharacteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
+        Filter f;
+
+        f = expressionExperimentDao.getFilter( "allCharacteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
         assertThat( f.getRequiredValue() )
                 .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.objectUri = http://purl.org/example" )
                 .satisfies( s -> {
                     assertThat( s.getRootAlias() ).isEqualTo( "e" );
                     assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
                             .contains( "allCharacteristics" );
                     assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "ac" );
                         assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
                     } );
                 } );
@@ -118,14 +122,44 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
         assertThat( f.getRequiredValue() )
                 .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.experimentalDesign alias1 join alias1.experimentalFactors alias2 join alias2.factorValues alias3 join alias3.characteristics fvc where fvc.objectUri = http://purl.org/example" )
                 .satisfies( s -> {
                     assertThat( s.getRootAlias() ).isEqualTo( "e" );
                     assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
                             .contains( "experimentalDesign", "experimentalFactors", "factorValues", "characteristics" );
                     assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "fvc" );
                         assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
                     } );
                 } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testFilterWithStatementSecondObject() {
+        // it is not possible to resolve filters on secondObject or secondPredicate, but those are valid filters if
+        // constructed explicitly
+        assertThatThrownBy( () -> expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri", Filter.Operator.eq, "http://purl.org/example" ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Unknown filterable property experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri." );
+
+        // Filter provides a useful method for rewriting a filter for a different property
+        Filter f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" )
+                .withPropertyName( "secondObjectUri", null );
+
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.experimentalDesign alias1 join alias1.experimentalFactors alias2 join alias2.factorValues alias3 join alias3.characteristics fvc where fvc.secondObjectUri = http://purl.org/example" )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "experimentalDesign", "experimentalFactors", "factorValues", "characteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "fvc" );
+                        assertThat( sf.getPropertyName() ).isEqualTo( "secondObjectUri" );
+                    } );
+                } );
+        assertThat( expressionExperimentDao.load( Filters.by( f ), null ) ).isEmpty();
     }
 
     @Test

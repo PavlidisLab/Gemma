@@ -178,10 +178,10 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * curation details.
      */
     @Override
-    protected FilterablePropertyMeta resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         if ( propertyName.equals( "lastUpdated" ) || propertyName.equals( "troubled" ) || propertyName.equals( "needsAttention" ) ) {
             return resolveFilterablePropertyMeta( CURATION_DETAILS_ALIAS, CurationDetails.class, propertyName )
-                    .withDescription( "alias for curationDetails." + propertyName );
+                    .description( "alias for curationDetails." + propertyName );
         }
         return super.resolveFilterablePropertyMeta( propertyName );
     }
