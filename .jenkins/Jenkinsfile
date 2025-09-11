@@ -23,6 +23,7 @@ pipeline {
     agent any
     tools {
         maven 'Maven 3.6.3'
+        jdk 'Java 17'
     }
     parameters {
         string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
