@@ -759,18 +759,22 @@ public class ExpressionExperimentDaoImpl
     public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects ) {
         // we only include category-only terms once, because otherwise they would be repeated for each subsequent queries
         Map<Characteristic, Long> result = getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
-                excludedTermUris, false, retainedTermUris, "`VALUE`", "VALUE_URI" );
-        if ( includePredicates ) {
-            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
-                    excludedTermUris, true, retainedTermUris, "PREDICATE", "PREDICATE_URI" ) );
-            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
-                    excludedTermUris, true, retainedTermUris, "SECOND_PREDICATE", "SECOND_PREDICATE_URI" ) );
+                excludedTermUris, false, retainedTermUris, "`VALUE`", "VALUE_URI", true );
+
+        // predicates and objects do not have their own categories and should be treated as uncategorized, thus we strip
+        // the category constraint and only check if uncategorized terms are excluded
+        boolean excludeUncategorized = excludedCategoryUris != null && excludedCategoryUris.contains( UNCATEGORIZED );
+        if ( includePredicates && !excludeUncategorized ) {
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "PREDICATE", "PREDICATE_URI", false ) );
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "SECOND_PREDICATE", "SECOND_PREDICATE_URI", false ) );
         }
-        if ( includeObjects ) {
-            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
-                    excludedTermUris, true, retainedTermUris, "OBJECT", "OBJECT_URI" ) );
-            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
-                    excludedTermUris, true, retainedTermUris, "SECOND_OBJECT", "SECOND_OBJECT_URI" ) );
+        if ( includeObjects && !excludeUncategorized ) {
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "OBJECT", "OBJECT_URI", false ) );
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "SECOND_OBJECT", "SECOND_OBJECT_URI", false ) );
         }
         if ( includePredicates || includeObjects ) {
             // re-filter results to satisfy the maxResults requirements
@@ -802,7 +806,8 @@ public class ExpressionExperimentDaoImpl
             @Nullable Collection<String> excludedTermUris,
             boolean excludeCategoryOnly,
             @Nullable Collection<String> retainedTermUris,
-            String valueColumn, String valueUriColumn ) {
+            String valueColumn, String valueUriColumn,
+            boolean isCategorized ) {
         boolean doAclFiltering = eeIds == null;
         boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
@@ -832,7 +837,7 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T." + valueColumn + " as `VALUE`, T." + valueUriColumn + " as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
+        String query = "select T." + valueColumn + " as `VALUE`, T." + valueUriColumn + " as VALUE_URI, " + ( isCategorized ? "T.CATEGORY" : "NULL" ) + " as CATEGORY, " + ( isCategorized ? "T.CATEGORY_URI" : "NULL" ) + " as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
         }
@@ -878,7 +883,7 @@ public class ExpressionExperimentDaoImpl
         //language=HQL
         query += " group by "
                 // no need to group by category if a specific one is requested
-                + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
+                + ( category == null && isCategorized ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
                 + "COALESCE(T." + valueUriColumn + ", T." + valueColumn + ")";
         // if there are too many EE IDs, they will be retrieved by batch and filtered in-memory
         if ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ) {
