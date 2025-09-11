@@ -154,10 +154,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.name = bm.getName();
         this.description = bm.getDescription();
 
-        for ( Characteristic ch : bm.getCharacteristics() ) {
-            this.characteristics.add( new CharacteristicValueObject( ch ) );
-        }
-
         this.basicFVs = basic;
         this.factors = new HashMap<>();
         this.factorValues = new HashMap<>();
@@ -186,9 +182,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             }
         }
 
-        // used for display of characteristics in the biomaterial experimental design editor view.
         Set<Characteristic> cs = allFactorValuesAndCharacteristics ? bm.getAllCharacteristics() : bm.getCharacteristics();
         for ( Characteristic c : cs ) {
+            this.characteristics.add( new CharacteristicValueObject( c ) );
+
+            // used for display of characteristics in the biomaterial experimental design editor view.
             if ( StringUtils.isBlank( c.getCategory() ) ) {
                 continue;
             }
