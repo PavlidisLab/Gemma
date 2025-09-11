@@ -490,7 +490,9 @@ public class DatasetsWebService {
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
             @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
-            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms,
+            @Parameter(description = "Include statement predicates in usage statistics.", hidden = true) @QueryParam("includePredicates") @DefaultValue("false") Boolean includePredicates,
+            @Parameter(description = "Include statement objects in usage statistics.", hidden = true) @QueryParam("includeObjects") @DefaultValue("false") Boolean includeObjects
     ) {
         boolean excludeParentTerms = exclude != null && exclude.getValue( ANNOTATION_ALLOWED_EXCLUDE_FIELDS ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
@@ -526,6 +528,7 @@ public class DatasetsWebService {
                     minFrequency != null ? minFrequency : 0,
                     mentionedTerms != null ? mentionedTerms.stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) : null,
                     limit,
+                    includePredicates, includeObjects,
                     Math.max( timeoutMs - timer.getTime(), 0 ),
                     TimeUnit.MILLISECONDS );
         } catch ( TimeoutException e ) {
@@ -648,11 +651,13 @@ public class DatasetsWebService {
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
             @Parameter(description = "Exclude free-text terms (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextTerms") @DefaultValue("false") Boolean excludeFreeTextTerms,
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
-            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
+            @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms,
+            @Parameter(description = "Include statement predicates in usage statistics.", hidden = true) @QueryParam("includePredicates") @DefaultValue("false") Boolean includePredicates,
+            @Parameter(description = "Include statement objects in usage statistics.", hidden = true) @QueryParam("includeObjects") @DefaultValue("false") Boolean includeObjects
     ) {
         tableMaintenanceUtil.evictEe2CQueryCache();
         return Response.created( URI.create( "/datasets/annotations" ) )
-                .entity( getDatasetsAnnotationsUsageStatistics( query, filter, exclude, limitArg, minFrequency, category, excludedCategoryUris, excludeFreeTextCategories, excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms, retainMentionedTerms ) )
+                .entity( getDatasetsAnnotationsUsageStatistics( query, filter, exclude, limitArg, minFrequency, category, excludedCategoryUris, excludeFreeTextCategories, excludedTermUris, excludeFreeTextTerms, excludeUncategorizedTerms, retainMentionedTerms, includePredicates, includeObjects ) )
                 .build();
     }
 

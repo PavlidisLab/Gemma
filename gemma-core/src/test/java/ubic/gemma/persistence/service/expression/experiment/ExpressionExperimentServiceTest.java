@@ -233,17 +233,17 @@ public class ExpressionExperimentServiceTest extends BaseTest {
 
     @Test
     public void testGetAnnotationsUsageFrequency() throws TimeoutException {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null, false, false );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null, false, false );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 

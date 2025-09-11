@@ -530,11 +530,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param minFrequency         minimum occurrences of a term to be included in the results
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
+     * @param includePredicates
+     * @param includeObjects
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets and ordered in descending number of associated experiments
-     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
+     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection, boolean, boolean)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, boolean includePredicates, boolean includeObjects, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * @param expressionExperiment experiment

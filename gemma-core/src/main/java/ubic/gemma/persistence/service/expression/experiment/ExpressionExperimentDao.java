@@ -446,8 +446,10 @@ public interface ExpressionExperimentDao
      * @param category                a category URI or free text category to restrict the results to, or null to
      *                                consider everything, empty string to consider uncategorized terms
      * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
+     * @param includePredicates       include predicates
+     * @param includeObjects          include objects
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
