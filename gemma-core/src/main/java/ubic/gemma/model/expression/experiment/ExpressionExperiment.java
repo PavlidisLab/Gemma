@@ -78,17 +78,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private MeanVarianceRelation meanVarianceRelation;
     @Nullable
     private String metadata;
-    /**
-     * TODO: allow this to be null in case there are no processed vectors
-     */
     private Integer numberOfDataVectors = 0;
-    /**
-     * TODO: rename this to numberOfAssays and add a numberOfSamples field that truly reflect the number of associated
-     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}.
-     */
     private Integer numberOfSamples = 0;
-    @Nullable
-    private Integer numberOfCells;
     @Nullable
     private Taxon taxon;
 
@@ -216,11 +207,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.numberOfDataVectors;
     }
 
-    @Nullable
-    public Integer getNumberOfCells() {
-        return numberOfCells;
-    }
-
     public Set<ExpressionExperiment> getOtherParts() {
         return otherParts;
     }
@@ -307,10 +293,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
         this.numberOfDataVectors = numberOfDataVectors;
-    }
-
-    public void setNumberOfCells( @Nullable Integer numberOfCells ) {
-        this.numberOfCells = numberOfCells;
     }
 
     public void setOtherParts( Set<ExpressionExperiment> otherParts ) {
