@@ -812,7 +812,7 @@
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.108</tomcat.version>
+		<tomcat.version>9.0.109</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
