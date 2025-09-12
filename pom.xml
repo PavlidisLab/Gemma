@@ -586,7 +586,7 @@
 				</configuration>
 				<executions>
 					<execution>
-						<phase>generate-sources</phase>
+						<phase>prepare-package</phase>
 						<goals>
 							<goal>delombok</goal>
 						</goals>
@@ -862,7 +862,7 @@
 		<skipTests>false</skipTests>
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
-		<skipDelombok>false</skipDelombok>
+		<skipDelombok>${skipJavadoc}</skipDelombok>
 		<redirectTestOutputToFile>true</redirectTestOutputToFile>
 		<!-- common JVM options -->
 		<jvmOptions>
