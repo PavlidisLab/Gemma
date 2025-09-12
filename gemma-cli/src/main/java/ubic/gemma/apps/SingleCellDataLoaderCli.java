@@ -87,7 +87,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
             MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols",
-            MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision";
+            MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision",
+            MEX_10X_FILTER_OPTION = MEX_OPTION_PREFIX + "10xFilter",
+            MEX_NO_10X_FILTER_OPTION = MEX_OPTION_PREFIX + "No10xFilter",
+            MEX_10X_CHEMISTRY_OPTION = MEX_OPTION_PREFIX + "Chemistry";
 
     @Autowired
     private SingleCellDataLoaderService singleCellDataLoaderService;
@@ -174,6 +177,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     // MEX
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
     private boolean mexUseDoublePrecision;
+    @Nullable
+    private Boolean mex10xFilter;
+    @Nullable
+    private String mex10xChemistry;
 
     // options for streaming vectors when writing data to disk
     private boolean useStreaming;
@@ -284,6 +291,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         // for MEX
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
         options.addOption( MEX_USE_DOUBLE_PRECISION_OPTION, "mex-use-double-precision", false, "Use double precision (i.e. double and long) for storing vectors" );
+        OptionsUtils.addAutoOption( options,
+                MEX_10X_FILTER_OPTION, "mex-10x-filter", "Apply the 10x MEX filter.",
+                MEX_NO_10X_FILTER_OPTION, "mex-no-10x-filter", "Do not apply the 10x MEX filter." );
+        options.addOption( MEX_10X_CHEMISTRY_OPTION, "mex-10x-chemistry", true, "10x chemistry to use for filtering data." );
 
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with " + formatOption( options, "noStreaming" ) + "." ).build() );
@@ -360,7 +371,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         // sequencing metadata
         sequencingMetadataFile = commandLine.getParsedOptionValue( SEQUENCING_METADATA_FILE_OPTION );
         sequencingReadLength = commandLine.getParsedOptionValue( SEQUENCING_READ_LENGTH_OPTION );
-        sequencingIsPaired = OptionsUtils.getAutoOptionValue( commandLine, SEQUENCING_IS_PAIRED_OPTION, SEQUENCING_IS_SINGLE_END_OPTION );
+        sequencingIsPaired = getAutoOptionValue( commandLine, SEQUENCING_IS_PAIRED_OPTION, SEQUENCING_IS_SINGLE_END_OPTION );
 
         // data-type specific options
         rejectInvalidOptionsForDataType( commandLine, dataType );
@@ -378,6 +389,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else if ( dataType == SingleCellDataType.MEX ) {
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
             mexUseDoublePrecision = commandLine.hasOption( MEX_USE_DOUBLE_PRECISION_OPTION );
+            mex10xFilter = getAutoOptionValue( commandLine, MEX_10X_FILTER_OPTION, MEX_NO_10X_FILTER_OPTION );
+            mex10xChemistry = commandLine.getOptionValue( MEX_10X_CHEMISTRY_OPTION );
         }
 
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {
@@ -507,6 +520,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
                     .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols )
+                    .apply10xFilter( mex10xFilter )
+                    .use10xChemistry( mex10xChemistry )
                     .useDoublePrecision( mexUseDoublePrecision );
         } else {
             configBuilder = SingleCellDataLoaderConfig.builder();
