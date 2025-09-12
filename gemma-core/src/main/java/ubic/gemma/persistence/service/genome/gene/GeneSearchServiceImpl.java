@@ -395,7 +395,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             for ( SearchResultDisplayObject srDo : geneSets ) {
                 Long id = ( srDo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject ) ?
                         ( ( GeneSetValueObject ) srDo.getResultValueObject() ).getId() :
-                        new Long( -1 );
+                        Long.valueOf( -1 );
                 srDo.setUserOwned( isSetOwnedByUser.get( id ) );
             }
         }
@@ -601,7 +601,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
                 Long id = ( srDo.getResultValueObject() instanceof GeneValueObject ) ?
                         ( ( GeneValueObject ) srDo.getResultValueObject() ).getId() :
-                        new Long( -1 );
+                        Long.valueOf( -1 );
                 if ( id != -1 ) {
                     geneIdsByTaxonId.get( srDo.getTaxonId() ).add( id );
                 }

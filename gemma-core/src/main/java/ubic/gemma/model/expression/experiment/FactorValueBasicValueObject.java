@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
  */
 @SuppressWarnings("unused") // Used in json serialization
 @Data
-@EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public class FactorValueBasicValueObject extends AbstractFactorValueValueObject {
 
     private static final long serialVersionUID = 3378801249808036785L;

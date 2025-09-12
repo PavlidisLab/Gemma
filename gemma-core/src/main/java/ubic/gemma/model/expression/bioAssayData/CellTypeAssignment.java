@@ -79,6 +79,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * @deprecated Use {@link #getCellTypes()} instead.
      */
     @Override
+    @Deprecated
     public List<Characteristic> getCharacteristics() {
         return getCellTypes();
     }
@@ -87,6 +88,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * @deprecated Use {@link #getNumberOfCellTypes()} instead.
      */
     @Override
+    @Deprecated
     public int getNumberOfCharacteristics() {
         return getNumberOfCellTypes();
     }
@@ -95,6 +97,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * @deprecated Use {@link #getCellTypeIndices()} instead.
      */
     @Override
+    @Deprecated
     public int[] getIndices() {
         return getCellTypeIndices();
     }

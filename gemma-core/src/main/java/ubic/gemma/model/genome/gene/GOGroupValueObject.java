@@ -73,7 +73,7 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setSize( memberIds.size() );
         this.setTaxon( new TaxonValueObject( taxonId, taxonName ) );
         this.setGeneIds( memberIds );
-        this.setId( new Long( -1 ) );
+        this.setId( Long.valueOf( -1 ) );
         this.setModified( false );
         this.setGoId( goId );
         this.setSearchTerm( searchTerm );

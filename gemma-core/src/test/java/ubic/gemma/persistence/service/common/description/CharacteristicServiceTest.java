@@ -215,11 +215,11 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
     // .getBean( "bibliographicReferenceService" );
     //
-    // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
+    // BibliographicReference bibRef = bibRefService.load( Long.valueOf( 111 ));
     //
     // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
     // assertEquals(1,foundEEs.size());
-    // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
+    // assertEquals(Long.valueOf(8), (Long) foundEEs.iterator().next().getId());
     //
     // }
 
