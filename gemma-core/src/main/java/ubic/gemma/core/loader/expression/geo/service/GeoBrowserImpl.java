@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForSeriesFamily;
 import static ubic.gemma.core.util.XMLUtils.*;
 
@@ -77,7 +78,6 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     private static final long MAX_MINIML_RECORD_SIZE = 100_000_000;
 
-    private static final String GEO_BROWSE = "https://www.ncbi.nlm.nih.gov/geo/browse/";
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
 
     // Get relevant data from the XML file
@@ -175,7 +175,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
         // because of garbled tabbed lines returned
         // from GEO.
-        URL url = new URL( GEO_BROWSE + "?view=series&zsort=date&mode=csv&page=" + start + "&display=" + pageSize );
+        URL url = getUrlForBrowsing( GeoRecordType.SERIES, start, pageSize, GeoFormat.CSV );
 
         List<GeoRecord> records = new ArrayList<>();
         try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
@@ -746,7 +746,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     @Nullable
     Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException {
-        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.QUERY, GeoFormat.MINIML );
+        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.DIRECT, GeoFormat.MINIML );
         return execute( ( ctx ) -> {
             try ( InputStream tis = documentUrl.openStream() ) {
                 log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
