@@ -1,9 +1,10 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
@@ -13,14 +14,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static java.util.Objects.requireNonNull;
 
-@CommonsLog
 public abstract class AbstractPythonScriptBasedAnnDataTransformation implements PythonBasedSingleCellDataTransformation, SingleCellInputOutputFileTransformation {
 
-    public static final Path DEFAULT_PYTHON_EXECUTABLE = Paths.get( "python" );
+    protected final Log log = LogFactory.getLog( getClass() );
 
     private final String scriptName;
 
@@ -78,7 +77,7 @@ public abstract class AbstractPythonScriptBasedAnnDataTransformation implements 
         Assert.isTrue( inputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as input for this transformation." );
         Assert.isTrue( outputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as output for this transformation." );
         log.info( "Using " + getPythonVersion() + " from " + pythonExecutable + "." );
-        try ( InputStream in = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/" + scriptName + "-anndata.py" ) ) ) {
+        try ( InputStream in = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/transform/" + scriptName + "-anndata.py" ) ) ) {
             Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { pythonExecutable.toString(), "-" }, createScriptArgs() ) );
             IOUtils.copy( in, process.getOutputStream() );
             process.getOutputStream().close();

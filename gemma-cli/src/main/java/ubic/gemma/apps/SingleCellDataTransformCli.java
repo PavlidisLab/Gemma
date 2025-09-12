@@ -4,15 +4,19 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
-import ubic.gemma.cli.util.AbstractCLI;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -20,13 +24,17 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Transform various single-cell formats.
  * @author poirigui
  */
 public class SingleCellDataTransformCli extends AbstractCLI {
 
-    private static final String PYTHON_OPTION = "python";
+    private static final String
+            PYTHON_OPTION = "python",
+            INSTALL_PYTHON_DEPENDENCIES_OPTION = "installPythonDeps";
 
     private static final Map<String, Class<? extends SingleCellDataTransformation>> transformationsByName = new LinkedHashMap<>();
 
@@ -40,8 +48,15 @@ public class SingleCellDataTransformCli extends AbstractCLI {
         transformationsByName.put( "sparsify", SingleCellDataSparsify.class );
     }
 
+    enum Mode {
+        INSTALL_PYTHON_DEPENDENCIES,
+        TRANSFORM
+    }
+
     @Value("${python.exe}")
     private Path pythonExecutable;
+
+    private Mode mode;
 
     @Nullable
     private String operation;
@@ -52,9 +67,27 @@ public class SingleCellDataTransformCli extends AbstractCLI {
         setAllowPositionalArguments();
     }
 
+    @Nullable
+    @Override
+    public String getCommandName() {
+        return "transformSingleCellData";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return "Transform single-cell data in various ways";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+
     @Override
     protected void buildOptions( Options options ) {
         options.addOption( PYTHON_OPTION, "python", true, "Override the Python executable to use (defaults to " + pythonExecutable + ")" );
+        options.addOption( INSTALL_PYTHON_DEPENDENCIES_OPTION, "install-python-dependencies", false, "Install (or update) Python dependencies." );
     }
 
     @Override
@@ -62,13 +95,18 @@ public class SingleCellDataTransformCli extends AbstractCLI {
         if ( commandLine.hasOption( PYTHON_OPTION ) ) {
             pythonExecutable = Paths.get( commandLine.getOptionValue( PYTHON_OPTION ) );
         }
-        LinkedList<String> positionalArguments = new LinkedList<>( commandLine.getArgList() );
-        if ( positionalArguments.isEmpty() ) {
-            throw new ParseException( "No operation specified. Possible values are: " + String.join( ", ", transformationsByName.keySet() ) + "." );
-        }
-        transformation = parseNextTransformation( positionalArguments );
-        if ( !positionalArguments.isEmpty() ) {
-            throw new ParseException( "Unused positional arguments: " + String.join( " ", positionalArguments ) );
+        if ( commandLine.hasOption( INSTALL_PYTHON_DEPENDENCIES_OPTION ) ) {
+            mode = Mode.INSTALL_PYTHON_DEPENDENCIES;
+        } else {
+            mode = Mode.TRANSFORM;
+            LinkedList<String> positionalArguments = new LinkedList<>( commandLine.getArgList() );
+            if ( positionalArguments.isEmpty() ) {
+                throw new ParseException( "No operation specified. Possible values are: " + String.join( ", ", transformationsByName.keySet() ) + "." );
+            }
+            transformation = parseNextTransformation( positionalArguments );
+            if ( !positionalArguments.isEmpty() ) {
+                throw new ParseException( "Unused positional arguments: " + String.join( " ", positionalArguments ) );
+            }
         }
     }
 
@@ -113,25 +151,33 @@ public class SingleCellDataTransformCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
+        if ( mode == Mode.INSTALL_PYTHON_DEPENDENCIES ) {
+            installPythonDependencies();
+        } else {
+            transform();
+        }
+    }
+
+    private void installPythonDependencies() throws IOException, InterruptedException {
+        byte[] requirementsFileContent = IOUtils.toByteArray( requireNonNull( getClass().getResourceAsStream( PythonBasedSingleCellDataTransformation.REQUIREMENTS_FILE ) ) );
+        Path requirementsFile = Files.createTempFile( "requirements.txt", null );
+        try {
+            Files.write( requirementsFile, requirementsFileContent );
+            Process proc = new ProcessBuilder( pythonExecutable.toString(), "-m", "pip", "install", "--upgrade", "--upgrade-strategy=eager", "-r", requirementsFile.toString() )
+                    .redirectOutput( ProcessBuilder.Redirect.INHERIT )
+                    .redirectError( ProcessBuilder.Redirect.PIPE )
+                    .start();
+            if ( proc.waitFor() != 0 ) {
+                throw new RuntimeException( IOUtils.toString( proc.getErrorStream(), StandardCharsets.UTF_8 ) );
+            }
+        } finally {
+            Files.delete( requirementsFile );
+        }
+    }
+
+    private void transform() throws IOException {
         Assert.notNull( transformation );
         transformation.perform();
-    }
-
-    @Nullable
-    @Override
-    public String getCommandName() {
-        return "transformSingleCellData";
-    }
-
-    @Nullable
-    @Override
-    public String getShortDesc() {
-        return "Transform single-cell data in various ways";
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
     }
 
     /**
