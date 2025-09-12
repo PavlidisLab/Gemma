@@ -465,7 +465,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), eq( Collections.emptySet() ), eq( 100 ), false, false, longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), eq( Collections.emptySet() ), eq( 100 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -481,7 +481,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
         verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), false, false, longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -500,7 +500,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
         verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 10 ), isNull(), eq( 5000 ), false, false, longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 10 ), isNull(), eq( 5000 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -512,7 +512,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 50 ), false, false, longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 50 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -520,7 +520,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), eq( ExpressionExperimentService.UNCATEGORIZED ), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), false, false, longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), eq( ExpressionExperimentService.UNCATEGORIZED ), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
