@@ -575,12 +575,38 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok-maven-plugin</artifactId>
+				<version>1.18.20.0</version>
+				<configuration>
+					<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+					<outputDirectory>${delombok.output}</outputDirectory>
+					<addOutputDirectory>false</addOutputDirectory>
+					<skip>${skipDelombok}</skip>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>delombok</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.projectlombok</groupId>
+						<artifactId>lombok</artifactId>
+						<version>1.18.40</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
+					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<!-- with lombok, some references are invalid in the original source code -->
-					<doclint>all,-reference,-missing</doclint>
+					<doclint>all,-reference</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -752,6 +778,7 @@
 				<skipJavadoc>true</skipJavadoc>
 				<skipTests>true</skipTests>
 				<skipWebpack>true</skipWebpack>
+				<skipDelombok>true</skipDelombok>
 			</properties>
 		</profile>
 	</profiles>
@@ -771,8 +798,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
+					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference,-missing</doclint>
+					<doclint>all,-reference</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -825,6 +853,7 @@
 		<skipTests>false</skipTests>
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<skipIntegrationTests>${skipTests}</skipIntegrationTests>
+		<skipDelombok>false</skipDelombok>
 		<redirectTestOutputToFile>true</redirectTestOutputToFile>
 		<!-- common JVM options -->
 		<jvmOptions>
@@ -841,5 +870,7 @@
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
 		</testJvmOptions>
+		<delombok.output>${project.build.directory}/delombok</delombok.output>
+		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>
 	</properties>
 </project>
