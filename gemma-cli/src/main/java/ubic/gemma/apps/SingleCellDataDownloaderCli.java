@@ -351,7 +351,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;
-                    Integer numberOfSamples = null, numberOfCells = null, numberOfGenes = null;
+                    Integer numberOfSamples = null, numberOfCellIds = null, numberOfGenes = null;
                     List<String> additionalSupplementaryFiles = new ArrayList<>();
                     String dataInSra = null;
                     String comment = "";
@@ -416,7 +416,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, SingleCellDataLoaderConfig.builder().ignoreSamplesLackingData( true ).build() ) ) {
                                     numberOfSamples = loader.getSampleNames().size();
                                     SingleCellDimension scd = loader.getSingleCellDimension( bas );
-                                    numberOfCells = scd.getNumberOfCells();
+                                    numberOfCellIds = scd.getNumberOfCellIds();
                                     numberOfGenes = loader.getGenes().size();
                                     addSuccessObject( geoAccession );
                                 }
@@ -455,7 +455,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         if ( writer != null ) {
                             try {
                                 writer.printRecord(
-                                        geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
+                                        geoAccession, detectedDataType, numberOfSamples, numberOfCellIds, numberOfGenes,
                                         additionalSupplementaryFiles.stream().map( this::formatFilename ).collect( Collectors.joining( ";" ) ),
                                         dataInSra, comment );
                                 writer.flush(); // for convenience, so that results appear immediately with tail -f

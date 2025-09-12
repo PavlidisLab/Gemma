@@ -84,7 +84,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
                     switch ( type ) {
                         case CELL:
                             if ( assay.getNumberOfCells() != null ) {
-                                z = ( double ) assay.getNumberOfCells() / ( double ) singleCellDimension.getNumberOfCellsBySample( sampleIndex );
+                                z = ( double ) assay.getNumberOfCells() / ( double ) singleCellDimension.getNumberOfCellIdsBySample( sampleIndex );
                             } else {
                                 z = Double.NaN;
                             }
@@ -125,7 +125,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
             switch ( type ) {
                 case CELL:
                     if ( sample.getNumberOfCells() != null ) {
-                        z = ( double ) sample.getNumberOfCells() / singleCellDimension.getNumberOfCellsBySample( sampleIndex );
+                        z = ( double ) sample.getNumberOfCells() / singleCellDimension.getNumberOfCellIdsBySample( sampleIndex );
                     } else {
                         z = Double.NaN;
                     }

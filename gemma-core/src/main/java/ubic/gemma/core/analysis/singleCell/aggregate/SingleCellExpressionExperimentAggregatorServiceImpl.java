@@ -481,7 +481,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             if ( cellsByBioAssay != null ) {
                 cellsByBioAssay.compute( sample, ( k, v ) -> {
                     if ( v == null ) {
-                        v = new boolean[scv.getSingleCellDimension().getNumberOfCells()];
+                        v = new boolean[scv.getSingleCellDimension().getNumberOfCellIds()];
                     }
                     metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, v );
                     return v;

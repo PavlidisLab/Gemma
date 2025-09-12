@@ -134,7 +134,7 @@ public class RandomSingleCellDataUtils {
         vector.setQuantitationType( qt );
         vector.setSingleCellDimension( dimension );
         double density = 1.0 - sparsity;
-        int N = ( int ) Math.ceil( density * dimension.getNumberOfCells() );
+        int N = ( int ) Math.ceil( density * dimension.getNumberOfCellIds() );
         int step = ( int ) ( 1.0 / density );
         switch ( qt.getRepresentation() ) {
             case FLOAT:
@@ -167,7 +167,7 @@ public class RandomSingleCellDataUtils {
         for ( int i = 0; i < numberOfCellTypes; i++ ) {
             cellTypes.add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
         }
-        int[] cellTypeIndices = new int[scd.getNumberOfCells()];
+        int[] cellTypeIndices = new int[scd.getNumberOfCellIds()];
         for ( int i = 0; i < cellTypeIndices.length; i++ ) {
             if ( random.nextDouble() <= sparsity ) {
                 cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
@@ -230,7 +230,7 @@ public class RandomSingleCellDataUtils {
         int numCells = numCellsPerBioAssay * ee.getBioAssays().size();
         SingleCellDimension dimension = new SingleCellDimension();
         dimension.setCellIds( IntStream.rangeClosed( 1, numCells ).mapToObj( Integer::toString ).collect( Collectors.toList() ) );
-        dimension.setNumberOfCells( numCells );
+        dimension.setNumberOfCellIds( numCells );
         dimension.setBioAssays( samples );
         int[] offsets = new int[samples.size()];
         for ( int i = 0; i < samples.size(); i++ ) {

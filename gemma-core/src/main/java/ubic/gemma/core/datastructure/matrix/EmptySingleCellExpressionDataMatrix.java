@@ -24,7 +24,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
         this.expressionExperiment = expressionExperiment;
         this.dimension = dimension;
         this.quantitationType = quantitationType;
-        this.bioAssays = new SparseRangeArrayList<>( dimension.getBioAssays(), dimension.getBioAssaysOffset(), dimension.getNumberOfCells() );
+        this.bioAssays = new SparseRangeArrayList<>( dimension.getBioAssays(), dimension.getBioAssaysOffset(), dimension.getNumberOfCellIds() );
     }
 
     @Override
@@ -49,7 +49,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
 
     @Override
     public int columns() {
-        return dimension.getNumberOfCells();
+        return dimension.getNumberOfCellIds();
     }
 
     @Override

@@ -714,7 +714,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
         CellTypeAssignment cta = new CellTypeAssignment();
-        int[] indices = new int[dimension.getNumberOfCells()];
+        int[] indices = new int[dimension.getNumberOfCellIds()];
         for ( int i = 0; i < indices.length; i++ ) {
             indices[i] = random.nextInt( 4 );
         }
@@ -729,7 +729,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
     }
 
     private CellLevelCharacteristics createMask( SingleCellDimension dimension, double fractionMasked ) {
-        boolean[] mask = new boolean[dimension.getNumberOfCells()];
+        boolean[] mask = new boolean[dimension.getNumberOfCellIds()];
         for ( int i = 0; i < mask.length; i++ ) {
             mask[i] = random.nextDouble() < fractionMasked;
         }

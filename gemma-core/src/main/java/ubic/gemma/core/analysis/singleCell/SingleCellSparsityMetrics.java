@@ -81,7 +81,7 @@ public class SingleCellSparsityMetrics {
      * @param characteristicIndex only cell with the given characteristic index will be considered
      */
     public int getNumberOfCells( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
-        boolean[] isExpressed = new boolean[vectors.iterator().next().getSingleCellDimension().getNumberOfCells()];
+        boolean[] isExpressed = new boolean[vectors.iterator().next().getSingleCellDimension().getNumberOfCellIds()];
         for ( SingleCellExpressionDataVector vector : vectors ) {
             addExpressedCells( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, isExpressed );
         }

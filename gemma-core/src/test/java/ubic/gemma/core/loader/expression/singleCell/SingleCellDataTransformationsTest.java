@@ -68,7 +68,7 @@ public class SingleCellDataTransformationsTest {
         pack.setPythonExecutable( pythonExecutable );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( outputFile, SingleCellDataType.ANNDATA );
-        pack.setNumberOfCells( 100 );
+        pack.setNumberOfCellIds( 100 );
         pack.setNumberOfGenes( 50 );
         pack.perform();
         try ( H5File f = H5File.open( outputFile ) ) {

@@ -112,7 +112,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 throw new IllegalArgumentException( bioAssay + " is not a sample of " + scd );
             }
             sampleStarts[i] = scd.getBioAssaysOffset()[sampleIndex];
-            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellsBySample( sampleIndex );
+            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellIdsBySample( sampleIndex );
             totalCells += sampleEnds[i] - sampleStarts[i];
         }
         return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType ).stream()
@@ -144,7 +144,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 throw new IllegalArgumentException( bioAssay + " is not a sample of " + scd );
             }
             sampleStarts[i] = scd.getBioAssaysOffset()[sampleIndex];
-            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellsBySample( sampleIndex );
+            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellIdsBySample( sampleIndex );
             totalCells += sampleEnds[i] - sampleStarts[i];
         }
         return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() ).stream()
@@ -508,7 +508,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Stream<SingleCellExpressionDataVector> vectors ) {
         SingleCellSparsityMetrics metrics = new SingleCellSparsityMetrics();
         int numberOfSamples = dimension.getBioAssays().size();
-        boolean[] isExpressed = new boolean[dimension.getNumberOfCells()];
+        boolean[] isExpressed = new boolean[dimension.getNumberOfCellIds()];
         int[] numberOfDesignElements = new int[dimension.getBioAssays().size()];
         int[] numberOfCellByDesignElements = new int[dimension.getBioAssays().size()];
         boolean alreadyCheckedForSupport = false;
@@ -548,7 +548,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             }
             int numberOfCells = 0;
             int start = dimension.getBioAssaysOffset()[sampleIndex];
-            int end = start + dimension.getNumberOfCellsBySample( sampleIndex );
+            int end = start + dimension.getNumberOfCellIdsBySample( sampleIndex );
             for ( int i = start; i < end; i++ ) {
                 if ( isExpressed[i] ) {
                     numberOfCells++;
@@ -591,7 +591,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( singleCellDimension.getBioAssays().stream().allMatch( ba -> ba.getArrayDesignUsed().equals( platform ) ),
                 "All the BioAssays must use a platform that match that of the vectors: " + platform );
         // we only support double for storage
-        int numCells = singleCellDimension.getNumberOfCells();
+        int numCells = singleCellDimension.getNumberOfCellIds();
         int sizeInBytes = quantitationType.getRepresentation().getSizeInBytes();
         for ( SingleCellExpressionDataVector vector : vectors ) {
             if ( sizeInBytes != -1 ) {
@@ -855,7 +855,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         cta.setPreferred( true );
         cta.setProtocol( protocol );
         cta.setDescription( description );
-        int[] ct = new int[dimension.getNumberOfCells()];
+        int[] ct = new int[dimension.getNumberOfCellIds()];
         List<String> labels = newCellTypeLabels.stream().sorted().distinct().collect( Collectors.toList() );
         int N = 0;
         for ( int i = 0; i < ct.length; i++ ) {
@@ -950,7 +950,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeCellTypeAssignmentByName( ExpressionExperiment ee,  SingleCellDimension dimension, String name ) {
+    public void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
         List<CellTypeAssignment> toRemove = dimension.getCellTypeAssignments().stream()
                 .filter( cta -> name.equalsIgnoreCase( cta.getName() ) )
                 .collect( Collectors.toList() );

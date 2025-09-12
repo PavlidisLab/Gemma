@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -395,9 +394,9 @@ public class PersistentDummyObjectHelper {
         for ( int i = 0; i < NUM_CELL_TYPES; i++ ) {
             cta.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
         }
-        int[] indices = new int[dimension.getNumberOfCells()];
+        int[] indices = new int[dimension.getNumberOfCellIds()];
         int assigned = 0;
-        for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+        for ( int i = 0; i < dimension.getNumberOfCellIds(); i++ ) {
             if ( randomizer.nextDouble() < PERCENT_UNASSIGNED ) {
                 indices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
             } else {

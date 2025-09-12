@@ -67,7 +67,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
         for ( SingleCellExpressionDataVector v : sortedVectors ) {
             nz[i++] = v.getDataIndices();
         }
-        matrix = new CompRowMatrix( rows, singleCellDimension.getNumberOfCells(), nz );
+        matrix = new CompRowMatrix( rows, singleCellDimension.getNumberOfCellIds(), nz );
         designElements = new ArrayList<>( sortedVectors.size() );
         i = 0;
         for ( SingleCellExpressionDataVector v : sortedVectors ) {
@@ -80,7 +80,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
             i++;
         }
         defaultValue = getDefaultValueAsDouble( quantitationType );
-        bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
+        bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCellIds() );
     }
 
     /**

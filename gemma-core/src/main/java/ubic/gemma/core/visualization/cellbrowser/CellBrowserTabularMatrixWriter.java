@@ -117,7 +117,7 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
 
     private void writeVector( SingleCellExpressionDataVector vector, Object data, PrimitiveType representation, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, String valueIfMissing, Writer writer ) throws IOException {
         writeDesignElement( vector.getDesignElement(), cs2gene, writer );
-        int numCells = vector.getSingleCellDimension().getNumberOfCells();
+        int numCells = vector.getSingleCellDimension().getNumberOfCellIds();
         int k = 0;
         for ( int i = 0; i < numCells; i++ ) {
             writer.write( "\t" );

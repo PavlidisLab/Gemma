@@ -196,7 +196,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             singleCellDimension.setBioAssays( bas );
             singleCellDimension.setBioAssaysOffset( basO );
             singleCellDimension.setCellIds( cellIdsL );
-            singleCellDimension.setNumberOfCells( cellIdsL.size() );
+            singleCellDimension.setNumberOfCellIds( cellIdsL.size() );
         }
         return singleCellDimension;
     }
@@ -377,13 +377,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
             // this column is indexed, so it's very fast to use indexOf
             Dataframe.Column<String, String> cellIds = var.getIndex( String.class );
-            int[] cellPositions = new int[dimension.getNumberOfCells()];
+            int[] cellPositions = new int[dimension.getNumberOfCellIds()];
             for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
                 cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
             }
             int[] codes = cellTypes.getCodes();
             // rewrite the original codes to match the cell positions in the dimension
-            int[] cellTypeIndices = new int[dimension.getNumberOfCells()];
+            int[] cellTypeIndices = new int[dimension.getNumberOfCellIds()];
             for ( int i = 0; i < cellTypeIndices.length; i++ ) {
                 if ( codes[cellPositions[i]] == unknownCellTypeCode ) {
                     cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
@@ -459,14 +459,14 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
                 // this column is indexed, so it's very fast to use indexOf
                 Dataframe.Column<String, String> cellIds = vars.getIndex( String.class );
-                int[] cellPositions = new int[dimension.getNumberOfCells()];
+                int[] cellPositions = new int[dimension.getNumberOfCellIds()];
                 for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
                     cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
                 }
-                int[] indices = new int[dimension.getNumberOfCells()];
+                int[] indices = new int[dimension.getNumberOfCellIds()];
                 Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
-                for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+                for ( int i = 0; i < dimension.getNumberOfCellIds(); i++ ) {
                     String val = values[cellPositions[i]];
                     if ( val != null ) {
                         int j;
@@ -880,7 +880,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
                 "The number of supplied samples does not match the number of columns in the sparse matrix." );
-        Assert.isTrue( scd.getNumberOfCells() <= matrix.getShape()[1],
+        Assert.isTrue( scd.getNumberOfCellIds() <= matrix.getShape()[1],
                 "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
         SampleMetadata m = createSampleMetadata( scd, samples );
@@ -994,7 +994,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             try ( H5Dataset data = matrix.getData() ) {
                 long start = matrix.getIndptr()[i];
                 long end = matrix.getIndptr()[i + 1];
-                if ( end - start > scd.getNumberOfCells() ) {
+                if ( end - start > scd.getNumberOfCellIds() ) {
                     throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
                 }
                 switch ( vector.getQuantitationType().getRepresentation() ) {
@@ -1043,7 +1043,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 sampleEnds[k] = end;
                 sampleIndices[k] = j;
             }
-            if ( nnz > scd.getNumberOfCells() ) {
+            if ( nnz > scd.getNumberOfCellIds() ) {
                 throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
             }
             byte[] vectorData = new byte[vector.getQuantitationType().getRepresentation().getSizeInBytes() * nnz];

@@ -78,10 +78,10 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                 .orElse( null );
         assertThat( scd ).isNotNull();
         assertThat( scd.getCellIds() ).isNotNull().hasSize( 8000 );
-        assertThat( scd.getNumberOfCells() ).isEqualTo( 8000 );
+        assertThat( scd.getNumberOfCellIds() ).isEqualTo( 8000 );
 
         // at some point, we add single cell labels
-        List<String> labels = new ArrayList<>( scd.getNumberOfCells() );
+        List<String> labels = new ArrayList<>( scd.getNumberOfCellIds() );
         for ( int i = 0; i < 8000; i++ ) {
             labels.add( String.valueOf( "ABCD".charAt( random.nextInt( 4 ) ) ) );
         }

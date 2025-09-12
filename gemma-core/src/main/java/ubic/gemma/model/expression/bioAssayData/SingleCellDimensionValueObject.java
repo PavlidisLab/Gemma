@@ -1,16 +1,17 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
      * <p>
      * This is always equal to the length of {@link #cellIds}.
      */
-    private int numberOfCells;
+    private int numberOfCellIds;
 
     /**
      * A list of {@link ubic.gemma.model.expression.bioAssay.BioAssay} IDs that are applicable to the cells.
@@ -74,11 +75,11 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
         } else {
             this.cellIds = singleCellDimension.getCellIds();
         }
-        this.numberOfCells = singleCellDimension.getNumberOfCells();
+        this.numberOfCellIds = singleCellDimension.getNumberOfCellIds();
         if ( !excludeBioAssayIds ) {
-            this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
+            this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCellIds() );
             try {
-                for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
+                for ( int i = 0; i < singleCellDimension.getNumberOfCellIds(); i++ ) {
                     this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
                 }
             } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {
@@ -95,5 +96,14 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
                     .map( ( CellLevelCharacteristics clc ) -> new CellLevelCharacteristicsValueObject( clc, excludeCharacteristicIds ) )
                     .collect( Collectors.toSet() );
         }
+    }
+
+    /**
+     * @deprecated use {@link #getNumberOfCellIds()} instead
+     */
+    @Deprecated
+    @Schema(description = "Use numberOfCellIds instead.", deprecated = true)
+    public int getNumberOfCells() {
+        return numberOfCellIds;
     }
 }

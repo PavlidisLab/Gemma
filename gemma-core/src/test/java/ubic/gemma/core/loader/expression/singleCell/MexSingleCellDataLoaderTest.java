@@ -92,7 +92,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
             assertThat( loader.getSingleCellDimension( Collections.singleton( ba ) ) ).satisfies( dim -> {
                 assertThat( dim.getCellIds() ).isEmpty();
                 assertThat( dim.getBioAssays() ).isEmpty();
-                assertThat( dim.getNumberOfCells() ).isZero();
+                assertThat( dim.getNumberOfCellIds() ).isZero();
             } );
             SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( ba ) );
             QuantitationType qt = loader.getQuantitationTypes().iterator().next();
@@ -128,10 +128,10 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.INT );
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 9996 );
-        assertThat( dimension.getNumberOfCells() ).isEqualTo( 9996 );
-        assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
-        assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 1000 );
-        assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 9996 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 0 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 1 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 5998, 6998, 7998, 8996 );
         assertThat( loader.getSequencingMetadata( dimension ) )
@@ -188,9 +188,9 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 1998 );
-        assertThat( dimension.getNumberOfCells() ).isEqualTo( 1998 );
-        assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
-        assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 998 );
+        assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 1998 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 0 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 1 ) ).isEqualTo( 998 );
         assertThat( dimension.getBioAssays() ).extracting( BioAssay::getName )
                 .containsExactly( "GSM7022370", "GSM7022375" );
         assertThat( dimension.getBioAssaysOffset() )
@@ -262,8 +262,8 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 1000 );
-        assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
-        assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 1000 );
+        assertThat( dimension.getNumberOfCellIdsBySample( 0 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssays() ).extracting( BioAssay::getName )
                 .containsExactly( "GSM7022370" );
         assertThat( dimension.getBioAssaysOffset() )
@@ -313,7 +313,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
         assertThat( dim )
                 .satisfies( scd -> {
-                    assertThat( scd.getNumberOfCells() ).isEqualTo( 561738 );
+                    assertThat( scd.getNumberOfCellIds() ).isEqualTo( 561738 );
                 } );
         assertThat( loader.loadVectors( de, dim, qt ).collect( Collectors.toMap( v -> v.getDesignElement().getName(), v -> v ) ) )
                 .hasEntrySatisfying( "ENSG00000210082.2", vec -> {

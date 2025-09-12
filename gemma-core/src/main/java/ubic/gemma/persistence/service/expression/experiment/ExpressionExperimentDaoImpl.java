@@ -2216,7 +2216,7 @@ public class ExpressionExperimentDaoImpl
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2248,7 +2248,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
@@ -2276,7 +2276,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2306,7 +2306,7 @@ public class ExpressionExperimentDaoImpl
         @Override
         public SingleCellDimension transformTuple( Object[] tuple, String[] aliases ) {
             SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class ).transformTuple( tuple, aliases );
-            result.setCellIds( new UninitializedList<>( result.getNumberOfCells() ) );
+            result.setCellIds( new UninitializedList<>( result.getNumberOfCellIds() ) );
             if ( includeBioAssays ) {
                 //noinspection unchecked
                 List<BioAssay> bas = getSessionFactory().getCurrentSession()
@@ -2470,7 +2470,7 @@ public class ExpressionExperimentDaoImpl
             Assert.isTrue( sampleCellIds.stream().distinct().count() == sampleCellIds.size(),
                     "Cell IDs must be unique for each sample." );
         }
-        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
+        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCellIds(),
                 "The number of cell IDs must match the number of cells." );
         Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
                 "There must be at most one preferred cell type labelling." );
@@ -2478,7 +2478,7 @@ public class ExpressionExperimentDaoImpl
         validateCellLevelCharacteristics( scbad );
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
         Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCellIds() );
     }
 
     private void validateCellTypeAssignments( SingleCellDimension scbad ) {
@@ -2487,8 +2487,8 @@ public class ExpressionExperimentDaoImpl
         }
         for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
             Assert.notNull( labelling.getCellTypes() );
-            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell type assignments (" + labelling.getCellTypeIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
+            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getNumberOfCellIds(),
+                    "The number of cell type assignments (" + labelling.getCellTypeIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCellIds() + ")." );
             int numberOfCellTypeLabels = labelling.getCellTypes().size();
             Assert.isTrue( numberOfCellTypeLabels > 0,
                     "There must be at least one cell type label declared in the cellTypes collection." );
@@ -2518,8 +2518,8 @@ public class ExpressionExperimentDaoImpl
             return; // no need to validate if not initialized
         }
         for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
-            Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell-level characteristic assignments (" + clc.getIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
+            Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCellIds(),
+                    "The number of cell-level characteristic assignments (" + clc.getIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCellIds() + ")." );
             int numberOfCharacteristics = clc.getCharacteristics().size();
             Assert.isTrue( numberOfCharacteristics > 0, "There must be at least one cell-level characteristic." );
             Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),

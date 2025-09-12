@@ -133,7 +133,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
         scd.setCellIds( cellIds );
-        scd.setNumberOfCells( cellIds.size() );
+        scd.setNumberOfCellIds( cellIds.size() );
         scd.setBioAssays( bas );
         scd.setBioAssaysOffset( basO );
         return scd;
@@ -348,9 +348,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
             }
 
-            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),
+            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellIdsBySample( j ),
                     String.format( "Matrix file %s does not have the expected number of columns: %d, found %d.",
-                            matrixFile, scd.getNumberOfCellsBySample( j ), matrix.numColumns() ) );
+                            matrixFile, scd.getNumberOfCellIdsBySample( j ), matrix.numColumns() ) );
             Assert.isTrue( matrix.numRows() == elements.size(),
                     String.format( "Matrix file %s does not have the expected number of rows: %d, found %d.",
                             matrixFile, elements.size(), matrix.numRows() ) );

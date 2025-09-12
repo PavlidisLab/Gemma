@@ -190,7 +190,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         int start = 0;
         for ( int i = 0; i < numSamples; i++ ) {
             int sampleOffset = dimension.getBioAssaysOffset()[i];
-            int nextSampleOffset = sampleOffset + dimension.getNumberOfCellsBySample( i );
+            int nextSampleOffset = sampleOffset + dimension.getNumberOfCellIdsBySample( i );
             // check where the next sample begins, only search past this sample starting point
             int end = Arrays.binarySearch( indices, start, indices.length, nextSampleOffset );
             if ( end < 0 ) {

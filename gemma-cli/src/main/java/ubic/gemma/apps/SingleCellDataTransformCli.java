@@ -104,7 +104,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
                 throw new ParseException( "Two arguments are expected for number of cells and genes." );
             }
             ( ( SingleCellDataSample ) transformation )
-                    .setNumberOfCells( Integer.parseInt( positionalArguments.removeFirst() ) );
+                    .setNumberOfCellIds( Integer.parseInt( positionalArguments.removeFirst() ) );
             ( ( SingleCellDataSample ) transformation )
                     .setNumberOfGenes( Integer.parseInt( positionalArguments.removeFirst() ) );
         }

@@ -37,11 +37,13 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
     private List<String> cellIds = new ArrayList<>();
 
     /**
-     * Number of cells.
+     * Number of cell IDs.
+     * <p>
+     * This is *not* the number of cells
      * <p>
      * This must always be equal to the size of {@link #cellIds}.
      */
-    private int numberOfCells = 0;
+    private int numberOfCellIds = 0;
 
     /**
      * List of {@link BioAssay}s applicable to the cells.
@@ -91,10 +93,10 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
-        if ( cellIndex < 0 || cellIndex > numberOfCells ) {
-            throw new IndexOutOfBoundsException( "Cell index must be in the range [0, " + numberOfCells + "[." );
+        if ( cellIndex < 0 || cellIndex > numberOfCellIds ) {
+            throw new IndexOutOfBoundsException( "Cell index must be in the range [0, " + numberOfCellIds + "[." );
         }
-        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCells, cellIndex );
+        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCellIds, cellIndex );
     }
 
     /**
@@ -106,7 +108,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
         if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
             throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
         }
-        return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
+        return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellIdsBySample( sampleIndex ) ) );
     }
 
     /**
@@ -116,12 +118,12 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      *
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
-    public int getNumberOfCellsBySample( int sampleIndex ) {
+    public int getNumberOfCellIdsBySample( int sampleIndex ) {
         if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
             throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
         }
         if ( sampleIndex == bioAssays.size() - 1 ) {
-            return numberOfCells - bioAssaysOffset[sampleIndex];
+            return numberOfCellIds - bioAssaysOffset[sampleIndex];
         } else {
             return bioAssaysOffset[sampleIndex + 1] - bioAssaysOffset[sampleIndex];
         }
@@ -129,7 +131,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
 
     @Override
     public int hashCode() {
-        return Objects.hash( numberOfCells, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        return Objects.hash( numberOfCellIds, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override
@@ -150,6 +152,6 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
     public String toString() {
         return super.toString()
                 + ( bioAssays != null ? " Number of Assays=" + bioAssays.size() : "" )
-                + " Number of Cells=" + ( cellIds != null ? cellIds.size() : numberOfCells );
+                + " Number of Cell IDs=" + ( cellIds != null ? cellIds.size() : numberOfCellIds );
     }
 }
