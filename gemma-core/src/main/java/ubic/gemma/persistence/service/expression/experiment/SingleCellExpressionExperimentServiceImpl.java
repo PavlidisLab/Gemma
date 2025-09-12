@@ -478,6 +478,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( !isSupported ) {
             log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be all set to null." );
         }
+        int totalNumberOfCells = 0;
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( !isSupported ) {
                 ba.setNumberOfCells( null );
@@ -493,12 +494,15 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 ba.setNumberOfCellsByDesignElements( null );
                 continue;
             }
-            ba.setNumberOfCells( metrics.getNumberOfCells( vectors, sampleIndex, null, -1 ) );
+            int numberOfCells = metrics.getNumberOfCells( vectors, sampleIndex, null, -1 );
+            totalNumberOfCells += numberOfCells;
+            ba.setNumberOfCells( numberOfCells );
             ba.setNumberOfDesignElements( metrics.getNumberOfDesignElements( vectors, sampleIndex, null, -1 ) );
             ba.setNumberOfCellsByDesignElements( metrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null, -1 ) );
             log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
                     ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
         }
+        ee.setNumberOfCells( isSupported ? totalNumberOfCells : null );
     }
 
     /**
