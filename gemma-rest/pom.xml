@@ -209,4 +209,8 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <javadocSourcePaths>${delombok.output};${project.build.directory}/generated-sources/antlr4</javadocSourcePaths>
+    </properties>
+
 </project>
