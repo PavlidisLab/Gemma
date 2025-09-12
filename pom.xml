@@ -756,6 +756,15 @@
 	</repositories>
 	<profiles>
 		<profile>
+			<id>java21</id>
+			<activation>
+				<jdk>[21,)</jdk>
+			</activation>
+			<properties>
+				<maven.compiler.proc>full</maven.compiler.proc>
+			</properties>
+		</profile>
+		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
 			<id>local-deploy</id>
 			<activation>
