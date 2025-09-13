@@ -65,9 +65,6 @@
 					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER"
 							index="INVESTIGATION_NUMBER_OF_SAMPLES"/>
 				</property>
-				<property name="numberOfCells" type="java.lang.Integer">
-					<column name="NUMBER_OF_CELLS" not-null="false" unique="false" sql-type="INTEGER"/>
-				</property>
 				<property name="metadata" type="org.hibernate.type.MaterializedClobType">
 					<column name="METADATA" not-null="false" unique="false"
 							sql-type="text"/>
