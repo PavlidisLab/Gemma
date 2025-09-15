@@ -126,8 +126,6 @@ public class ExpressionExperimentServiceImpl
     private BlacklistedEntityService blacklistedEntityService;
     @Autowired
     private CoexpressionService coexpressionService;
-    @Autowired
-    private ExperimentalDesignService experimentalDesignService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
