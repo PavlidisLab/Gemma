@@ -60,7 +60,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     Collection<ArrayDesign> loadAllGenericGenePlatforms();
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ArrayDesign loadAndThaw( Long id );
 
     /**

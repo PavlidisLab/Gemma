@@ -26,8 +26,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import javax.annotation.CheckReturnValue;
@@ -40,7 +40,7 @@ import java.util.Map;
  * @author kelsey
  */
 @Service
-public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabledService<BioAssay, BioAssayValueObject> {
+public interface BioAssayService extends SecurableBaseService<BioAssay>, SecurableFilteringVoEnabledService<BioAssay, BioAssayValueObject> {
 
     /**
      * Associates a bioMaterial with a specified bioAssay.
@@ -61,7 +61,7 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     BioAssay findByShortName( String shortName );
 
     /**
@@ -79,34 +79,6 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> findSiblings( BioAssay bioAssay );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    BioAssay findOrCreate( BioAssay bioAssay );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioAssay create( BioAssay bioAssay );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    BioAssay load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( BioAssay bioAssay );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( BioAssay bioAssay );
 
     /**
      * Obtain all the {@link BioAssaySet} that contain the given {@link BioAssay}.

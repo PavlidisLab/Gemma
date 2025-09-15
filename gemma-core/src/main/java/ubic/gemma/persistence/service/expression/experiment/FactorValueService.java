@@ -19,12 +19,11 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -35,21 +34,13 @@ import java.util.Set;
 /**
  * @author kelsey
  */
-public interface FactorValueService extends BaseService<FactorValue>, FilteringVoEnabledService<FactorValue, FactorValueValueObject> {
+public interface FactorValueService extends SecurableBaseService<FactorValue>, SecurableFilteringVoEnabledService<FactorValue, FactorValueValueObject> {
 
     @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<FactorValue> findByValue( String valuePrefix, int maxResults );
 
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    FactorValue findOrCreate( FactorValue factorValue );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    FactorValue load( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     FactorValue loadWithExperimentalFactor( Long id );
 
     /**
@@ -77,10 +68,6 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
     @Secured({ "GROUP_ADMIN" })
     // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
     Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( FactorValue factorValue );
 
     /**
      * Create a given statement and add it to the given factor value.
@@ -117,14 +104,6 @@ public interface FactorValueService extends BaseService<FactorValue>, FilteringV
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeStatement( FactorValue fv, Statement c );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( Collection<FactorValue> factorValues );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( FactorValue factorValue );
 
     /**
      * Mark a given factor value as needs attention.

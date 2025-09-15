@@ -25,8 +25,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -37,13 +37,10 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface DifferentialExpressionAnalysisService extends BaseService<DifferentialExpressionAnalysis>, SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisService extends SecurableBaseService<DifferentialExpressionAnalysis>, SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
 
     @Nullable
     DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id );
-
-    @Secured({ "GROUP_USER" })
-    DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> findByName( String name );
@@ -75,10 +72,6 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( DifferentialExpressionAnalysis o );
 
     /**
      * @param differentialExpressionAnalysis analysis

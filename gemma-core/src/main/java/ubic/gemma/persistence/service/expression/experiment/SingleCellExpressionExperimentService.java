@@ -32,7 +32,7 @@ public interface SingleCellExpressionExperimentService {
      * The rest of the experiment is also initialized as per {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}.
      */
     @Nullable
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithSingleCellVectors( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

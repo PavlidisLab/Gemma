@@ -25,10 +25,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
@@ -41,23 +40,7 @@ import java.util.Set;
  * @author kelsey, paul
  */
 @ParametersAreNonnullByDefault
-public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( Collection<GeneSet> sets );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    GeneSet create( GeneSet geneset );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    GeneSet save( GeneSet entity );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<GeneSet> save( Collection<GeneSet> entities );
+public interface GeneSetService extends SecurableBaseService<GeneSet>, SecurableBaseVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     /**
      * Return all sets that contain the given gene.
@@ -71,39 +54,11 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
     Collection<GeneSet> findByGene( Gene gene );
 
     @Nullable
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
-
-    @Nullable
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    DatabaseBackedGeneSetValueObject loadValueObjectById( Long entityId );
-
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<GeneSet> entities );
-
-    /**
-     * Ids of member genes will be filled in
-     *
-     * @param  ids ids
-     * @return gene set value object
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<DatabaseBackedGeneSetValueObject> loadAllValueObjects();
 
     /**
      *
@@ -127,19 +82,6 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> load( Collection<Long> ids );
-
-    @Nonnull
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GeneSet loadOrFail( Long id ) throws NullPointerException;
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GeneSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll();
 
     /**
      *
@@ -308,26 +250,6 @@ public interface GeneSetService extends BaseService<GeneSet>, BaseVoEnabledServi
      * Obtain all the taxa for the members of a given gene set.
      */
     Set<Taxon> getTaxa( GeneSet geneSet );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( GeneSet entity );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( Collection<GeneSet> entities );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( GeneSet entity );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void remove( Collection<GeneSet> entities );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
 
     @Secured({ "GROUP_ADMIN" })
     int removeAll();

@@ -14,17 +14,19 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 public interface UserService extends gemma.gsec.authentication.UserService {
 
     @Override
+    // FIXME: @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     User load( Long id );
 
     @Override
+    // FIXME: @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     User findByUserName( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     User findByEmail( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    // FIXME: @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     UserGroup findGroupByName( String s );
 
     @Override

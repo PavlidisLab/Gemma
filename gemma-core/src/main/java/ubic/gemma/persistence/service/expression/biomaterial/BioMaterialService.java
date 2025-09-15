@@ -26,8 +26,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -38,7 +38,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
+public interface BioMaterialService extends SecurableBaseService<BioMaterial>, SecurableBaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**
      * Copies a bioMaterial.
@@ -66,34 +66,6 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    BioMaterial findOrCreate( BioMaterial bioMaterial );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioMaterial create( BioMaterial bioMaterial );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    BioMaterial load( Long id );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( BioMaterial bioMaterial );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( BioMaterial bioMaterial );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })

@@ -24,43 +24,22 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author kelsey
  */
-public interface ExpressionExperimentSubSetService extends BaseService<ExpressionExperimentSubSet> {
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
+public interface ExpressionExperimentSubSetService extends SecurableBaseService<ExpressionExperimentSubSet> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSubSet load( Long id );
-
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperimentSubSet loadWithBioAssays( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSubSet> loadAll();
 
     /**
      * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is
