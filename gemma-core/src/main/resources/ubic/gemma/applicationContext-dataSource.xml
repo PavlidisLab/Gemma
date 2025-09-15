@@ -25,7 +25,6 @@
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
             <property name="minimumIdle" value="${gemma.db.minimumIdle}"/>
-            <property name="leakDetectionThreshold" value="30"/>
         </bean>
         <!-- dummy bean for production/dev, in a test environment this will initialize the database  -->
         <bean id="dataSourceInitializer" class="java.lang.Object"/>
