@@ -83,12 +83,25 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+    public Collection<ArrayDesign> loadAll() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" ) );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesign ad where ad.name like 'Generic%' and ad.technologyType = :tt" )
-                .setParameter( "tt", TechnologyType.GENELIST )
-                .list();
+        return query.list();
+    }
+
+    @Override
+    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad "
+                        + AclQueryUtils.formAclRestrictionClause( "ad.id" )
+                        + " and ad.name like 'Generic%' and ad.technologyType = :tt" )
+                .setParameter( "tt", TechnologyType.GENELIST );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        //noinspection unchecked
+        return query.list();
     }
 
     @Override

@@ -73,6 +73,12 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
+    public void testLoadAll() {
+        expressionExperimentDao.loadAll();
+    }
+
+    @Test
     public void loadTroubledIds() {
         assertThat( expressionExperimentDao.loadTroubledIds() ).isEmpty();
     }

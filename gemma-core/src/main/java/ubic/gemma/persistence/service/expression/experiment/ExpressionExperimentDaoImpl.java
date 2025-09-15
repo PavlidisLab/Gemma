@@ -148,6 +148,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<ExpressionExperiment> loadAll() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        return query.list();
+    }
+
+    @Override
     public List<Identifiers> loadAllIdentifiers() {
         Query query = getSessionFactory().getCurrentSession()
                 .createQuery( "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession from ExpressionExperiment ee "

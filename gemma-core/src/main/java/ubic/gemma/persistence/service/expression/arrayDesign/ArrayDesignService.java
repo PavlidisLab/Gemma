@@ -47,10 +47,16 @@ import java.util.function.Function;
 public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
         SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
+    @Override
+    // no need for ACL filtering, this is done in the query
+    @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
+    Collection<ArrayDesign> loadAll();
+
     /**
      * Load *generic* gene-based platforms.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    // no need for ACL filtering, this is done in the query
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Collection<ArrayDesign> loadAllGenericGenePlatforms();
 
     @Nullable

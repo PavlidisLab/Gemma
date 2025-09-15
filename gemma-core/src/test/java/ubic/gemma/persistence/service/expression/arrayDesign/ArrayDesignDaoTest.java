@@ -49,6 +49,18 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
     private ArrayDesignDao arrayDesignDao;
 
     @Test
+    @WithMockUser
+    public void testLoadAll() {
+        arrayDesignDao.loadAll();
+    }
+
+    @Test
+    @WithMockUser
+    public void testLoadAllGenericGenePlatforms() {
+        arrayDesignDao.loadAllGenericGenePlatforms();
+    }
+
+    @Test
     @Category(SlowTest.class)
     public void testThaw() {
         Taxon taxon = Taxon.Factory.newInstance( "test" );

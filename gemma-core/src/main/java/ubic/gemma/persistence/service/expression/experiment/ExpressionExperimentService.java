@@ -60,6 +60,11 @@ import java.util.function.Function;
 public interface ExpressionExperimentService extends SecurableBaseService<ExpressionExperiment>,
         SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    @Override
+    // no need for ACL filtering, this is done in the query
+    @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
+    Collection<ExpressionExperiment> loadAll();
+
     @Nonnull
     ExpressionExperiment loadReference( Long id );
 
