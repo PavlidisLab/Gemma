@@ -821,12 +821,15 @@
 				</configuration>
 				<reportSets>
 					<reportSet>
-						<id>aggregate</id>
+						<id>aggregate-javadocs</id>
 						<inherited>false</inherited>
 						<reports>
 							<report>aggregate</report>
-							<report>test-aggregate</report>
 						</reports>
+						<configuration>
+							<!-- FIXME: The aggregated Javadocs report workers by merging the source directories of all the modules, but that won't work since we generate docs from delomboked sources. As a workaround, we provide explicit paths. -->
+							<sourcepath>${project.basedir}/gemma-core/target/delombok:${project.basedir}/gemma-cli/target/delombok:${project.basedir}/gemma-web/target/delombok:${project.basedir}/gemma-rest/target/delombok</sourcepath>
+						</configuration>
 					</reportSet>
 				</reportSets>
 			</plugin>
