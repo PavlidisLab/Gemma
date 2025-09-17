@@ -776,7 +776,7 @@
 			<distributionManagement>
 				<site>
 					<id>pavlab</id>
-					<url>file://${pavlab.repoDir}/${project.groupId}/gemma-${project.version}</url>
+					<url>file://${pavlab.siteDir}/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
 		</profile>
