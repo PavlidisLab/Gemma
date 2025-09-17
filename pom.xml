@@ -820,6 +820,12 @@
 					</additionalJOptions>
 				</configuration>
 				<reportSets>
+					<!--
+					 FIXME: The aggregated Javadocs report workers by merging the source directories of all the modules,
+					        but that won't work since we generate docs from delomboked sources. As a workaround, we
+					        provide explicit paths. See https://github.com/apache/maven-javadoc-plugin/issues/1099 for
+					        more details.
+					-->
 					<reportSet>
 						<id>aggregate-javadocs</id>
 						<inherited>false</inherited>
@@ -827,8 +833,29 @@
 							<report>aggregate</report>
 						</reports>
 						<configuration>
-							<!-- FIXME: The aggregated Javadocs report workers by merging the source directories of all the modules, but that won't work since we generate docs from delomboked sources. As a workaround, we provide explicit paths. -->
-							<sourcepath>${project.basedir}/gemma-core/target/delombok:${project.basedir}/gemma-cli/target/delombok:${project.basedir}/gemma-web/target/delombok:${project.basedir}/gemma-rest/target/delombok</sourcepath>
+							<sourcepath>
+								${project.basedir}/gemma-core/target/delombok
+								:${project.basedir}/gemma-cli/target/delombok
+								:${project.basedir}/gemma-web/target/delombok
+								:${project.basedir}/gemma-rest/target/delombok
+								:${project.basedir}/gemma-rest/target/generated-sources/antlr4
+							</sourcepath>
+						</configuration>
+					</reportSet>
+					<reportSet>
+						<id>aggregate-test-javadocs</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>test-aggregate</report>
+						</reports>
+						<configuration>
+							<sourcepath>
+								${project.basedir}/gemma-core/src/test/java
+								:${project.basedir}/gemma-core/target/generated-test-sources/spring-security-test
+								:${project.basedir}/gemma-cli/src/test/java
+								:${project.basedir}/gemma-web/src/test/java
+								:${project.basedir}/gemma-rest/src/test/java
+							</sourcepath>
 						</configuration>
 					</reportSet>
 				</reportSets>
