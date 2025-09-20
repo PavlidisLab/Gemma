@@ -46,6 +46,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             QT_NEW_NAME_OPTION = "qtNewName",
             QT_NEW_TYPE_OPTION = "qtNewType",
             QT_NEW_SCALE_TYPE_OPTION = "qtNewScaleType",
+            QT_RECOMPUTED_FROM_RAW_DATA_OPTION = "qtRecomputedFromRawData",
             PREFERRED_QT_OPTION = "preferredQt",
             PREFER_SINGLE_PRECISION = "preferSinglePrecision",
             REPLACE_OPTION = "replace",
@@ -121,6 +122,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private StandardQuantitationType newType;
     @Nullable
     private ScaleType newScaleType;
+    private boolean recomputedFromRawData;
     private boolean preferSinglePrecision;
     private boolean preferredQt;
     private boolean replaceQt;
@@ -208,6 +210,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( QT_NEW_NAME_OPTION, "quantitation-type-new-name", true, "New name to use for the imported quantitation type (optional, defaults to the data)" );
         addEnumOption( options, QT_NEW_TYPE_OPTION, "quantitation-type-new-type", "New type to use for the imported quantitation type (optional, defaults to the data)", StandardQuantitationType.class );
         addEnumOption( options, QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", "New scale type to use for the imported quantitation type (optional, defaults to the data)", ScaleType.class );
+        options.addOption( QT_RECOMPUTED_FROM_RAW_DATA_OPTION, "quantitation-type-recomputed-from-raw-data", true, "Mark the loaded QT as recomputed from raw data." );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
@@ -323,6 +326,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else {
             newScaleType = null;
         }
+        recomputedFromRawData = commandLine.hasOption( QT_RECOMPUTED_FROM_RAW_DATA_OPTION );
         preferSinglePrecision = commandLine.hasOption( PREFER_SINGLE_PRECISION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
@@ -520,6 +524,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )
                 .quantitationTypeNewScaleType( newScaleType )
+                .markQuantitationTypeAsRecomputedFromRawData( recomputedFromRawData )
                 .preferSinglePrecision( preferSinglePrecision )
                 .markQuantitationTypeAsPreferred( preferredQt );
         if ( renamingFile != null ) {

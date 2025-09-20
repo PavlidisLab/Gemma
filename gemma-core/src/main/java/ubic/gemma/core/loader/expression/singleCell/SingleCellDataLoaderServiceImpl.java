@@ -327,6 +327,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( "Data will be added for " + qt + "..." );
         }
 
+        if ( config.isMarkQuantitationTypeAsRecomputedFromRawData() ) {
+            log.info( "Marking " + qt + " as recomputed from raw data." );
+            qt.setIsRecomputedFromRawData( true );
+        }
+
         if ( config.isMarkQuantitationTypeAsPreferred() ) {
             log.info( "Marking " + qt + " as preferred for single-cell." );
             qt.setIsSingleCellPreferred( true );
