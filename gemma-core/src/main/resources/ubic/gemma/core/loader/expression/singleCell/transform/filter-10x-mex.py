@@ -150,7 +150,11 @@ def main():
     mtx_dir = sys.argv[1] 
     outdir = sys.argv[2] 
     genome_name = sys.argv[3]
-    chem = sys.argv[4]
+    # make chem optional
+    if len(sys.argv) > 4:
+        chem = sys.argv[4]
+    else:
+        chem = None
     #
     if not mtx_dir and not outdir and not genome_name:
         raise ValueError("Both mtx_dir, outdir and genome_name must be provided.")
@@ -169,7 +173,7 @@ def main():
         genomes=[genome_name],
         sample=sample,
         unique_gem_groups=gem_groups,
-        method=FilterMethod.ORDMAG_NONAMBIENT,  # or FilterMethod.ORDMAG
+        method=FilterMethod.ORDMAG_NONAMBIENT, 
         recovered_cells=None,
         cell_barcodes=None,
         force_cells=None,
@@ -198,7 +202,6 @@ def main():
     for (gem_group, genome), barcodes in filtered_bcs_groups.items():
         filtered_matrix = CountMatrix.select_barcodes_by_seq(mtx, barcodes)
         print(len(filtered_matrix.bcs))
-        #feature_ids = [ensure_binary(fd.id) for fd in filtered_matrix.feature_ref.feature_defs]
         CountMatrix.save_mex(filtered_matrix, base_dir = outdir, save_features_func=save_features_tsv)
         
         
