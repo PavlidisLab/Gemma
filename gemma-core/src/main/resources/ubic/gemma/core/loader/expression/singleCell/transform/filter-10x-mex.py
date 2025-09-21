@@ -1,29 +1,13 @@
-from __future__ import annotations
 import sys
-sys.path.insert(0, "/space/opt/cellranger-9.0.1/lib/python")
-import cellranger
-import os
+
 import numpy as np
-import scipy.io
 from cellranger import cr_io
-from cellranger.feature_ref import FeatureReference
-from cellranger.feature_ref import FeatureDef
-from cellranger.mtx_to_matrix_converter import *
-import pandas as pd
-import scipy.io as sp_io
-from six import ensure_binary, ensure_str
-import cellranger.feature_ref
-from cellranger.feature_ref import FeatureDef, FeatureReference
-from cellranger.library_constants import GENE_EXPRESSION_LIBRARY_TYPE
-from cellranger.matrix import FEATURES_TSV_GZ, CountMatrix 
-import cellranger.cell_calling
-import cellranger.cell_calling_helpers
 from cellranger.cell_calling_helpers import call_initial_cells, call_additional_cells, FilterMethod
+from cellranger.mtx_to_matrix_converter import *
 from cellranger.utils import get_gem_group_from_barcode
-import cellranger.rna.matrix as rna_matrix
+from six import ensure_binary, ensure_str
 
 np.random.seed(42)
-import pickle
 
 GENES_TSV = "genes.tsv"
 
@@ -201,7 +185,7 @@ def main():
 
     for (gem_group, genome), barcodes in filtered_bcs_groups.items():
         filtered_matrix = CountMatrix.select_barcodes_by_seq(mtx, barcodes)
-        print(len(filtered_matrix.bcs))
+        print('Found cells: ' + str(len(filtered_matrix.bcs)))
         CountMatrix.save_mex(filtered_matrix, base_dir = outdir, save_features_func=save_features_tsv)
         
         
