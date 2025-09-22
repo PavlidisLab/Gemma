@@ -14,8 +14,8 @@ public class SingleCellDataSample extends AbstractPythonScriptBasedAnnDataTransf
     }
 
     @Override
-    protected String[] createScriptArgs() {
-        return ArrayUtils.addAll( super.createScriptArgs(), String.valueOf( numberOfCellIds ), String.valueOf( numberOfGenes ) );
+    protected String[] createPythonScriptArgs() {
+        return ArrayUtils.addAll( super.createPythonScriptArgs(), String.valueOf( numberOfCellIds ), String.valueOf( numberOfGenes ) );
     }
 
     @Override

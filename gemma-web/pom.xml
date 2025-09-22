@@ -150,13 +150,6 @@
 			<version>1.0</version>
 		</dependency>
 
-		<!-- JSON -->
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20240303</version>
-		</dependency>
-
 		<!-- AJAX -->
 		<dependency>
 			<groupId>org.directwebremoting</groupId>

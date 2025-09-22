@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.*;
@@ -25,6 +26,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitat
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentGeoService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
@@ -51,6 +53,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
+    private ExpressionExperimentGeoService expressionExperimentGeoService;
+
+    @Autowired
     private BioAssayService bioAssayService;
 
     @Autowired
@@ -58,6 +63,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     @Value("${gemma.download.path}/singleCellData")
     private Path singleCellDataBasePath;
+
+    @Value("${cellranger.dir}")
+    private Path cellRangerPrefix;
 
     @Value("${python.exe}")
     private Path pythonExecutable;
@@ -623,7 +631,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             dir = getMexDir( ee );
         }
-        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper ), bioAssayMapper, config );
+        GeoSeries geoSeries;
+        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( "GEO" ) ) {
+            log.info( ee + " originates from GEO, will include its series metadata." );
+            geoSeries = expressionExperimentGeoService.getGeoSeries( ee );
+        } else {
+            geoSeries = null;
+        }
+        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper, cellRangerPrefix, geoSeries ), bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getLoomLoader() {

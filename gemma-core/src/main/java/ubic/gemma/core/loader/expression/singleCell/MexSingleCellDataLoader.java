@@ -39,6 +39,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ubic.gemma.core.loader.util.MatrixMarketUtils.getNonEmptyColumns;
+import static ubic.gemma.core.loader.util.MatrixMarketUtils.readMatrixMarketFromPath;
+
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
  *
@@ -108,7 +111,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyCellColumns( matrixFiles.get( i ) ) );
+                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyColumns( matrixFiles.get( i ) ) );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }
@@ -340,7 +343,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
-            int[] nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
+            int[] nonEmptyCellIndices = getNonEmptyColumns( matrixFile );
             if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
                 matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
                 log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
@@ -429,14 +432,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     }
 
-    private MatrixVectorReader readMatrixMarketFromPath( Path path ) throws IOException {
-        if ( path.toString().endsWith( ".gz" ) ) {
-            return new MatrixVectorReader( new InputStreamReader( FileUtils.openCompressedFile( path ) ) );
-        } else {
-            return new MatrixVectorReader( Files.newBufferedReader( path ) );
-        }
-    }
-
     private List<String> readLinesFromPath( Path path, int[] linesToKeep ) throws IOException {
         List<String> lines = readLinesFromPath( path );
         return Arrays.stream( linesToKeep )
@@ -451,26 +446,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         } else {
             return Files.readAllLines( path );
-        }
-    }
-
-    /**
-     * Obtain the position of empty cells for a given matrix.
-     */
-    private int[] getNonEmptyCellColumns( Path path ) throws IOException {
-        try ( MatrixVectorReader reader = readMatrixMarketFromPath( path ) ) {
-            MatrixInfo matrixInfo = reader.readMatrixInfo();
-            MatrixSize size = reader.readMatrixSize( matrixInfo );
-            int[] rows = new int[size.numEntries()];
-            int[] columns = new int[size.numEntries()];
-            double[] data = new double[size.numEntries()];
-            reader.readCoordinate( rows, columns, data );
-            return Arrays.stream( columns )
-                    // mtx is 1-based
-                    .map( c -> c - 1 )
-                    .sorted()
-                    .distinct()
-                    .toArray();
         }
     }
 

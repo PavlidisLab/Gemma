@@ -134,6 +134,9 @@
 		<contributor>
 			<name>Frances Liu</name>
 		</contributor>
+		<contributor>
+			<name>Rachel Schwartz</name>
+		</contributor>
 	</contributors>
 	<dependencies>
 		<dependency>
@@ -394,6 +397,13 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
+		</dependency>
+
+		<!-- JSON -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20240303</version>
 		</dependency>
 
 		<!-- XML, XSLT and XPath -->
