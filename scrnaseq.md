@@ -22,7 +22,7 @@ Our single-cell re-annotation pipleine may pass UMI, ribosomal, hemoglobin, mito
 The above metrics are called outliers if 
 
 $$
-\lvert M - \mathrm{median}(M) \rvert
+\lvert M_i - \mathrm{median}(M) \rvert
 \>\
 X \cdot \mathrm{MAD}(M),
 $$
