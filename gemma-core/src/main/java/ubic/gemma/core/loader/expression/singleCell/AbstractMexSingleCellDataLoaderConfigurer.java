@@ -85,8 +85,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             apply10xFilter = detectUnfiltered10xData( usedSampleNames, sampleDirs );
         }
         if ( apply10xFilter ) {
-            SingleCell10xMexFilter filter = create10xFilter();
-            loader = createFilteredMexLoader( filter, usedSampleNames, sampleDirs, config );
+            loader = createFiltered10xMexLoader( usedSampleNames, sampleDirs, config );
         } else {
             loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
         }
@@ -179,17 +178,11 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     @Nullable
     protected abstract String detect10xChemistry( String sampleName, Path sampleDir );
 
-    private SingleCell10xMexFilter create10xFilter() {
-        Assert.notNull( cellRangerPrefix, "A Cell Ranger prefix must be configured to appy the 10x filter." );
-        SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
-        filter.setCellRangerPrefix( cellRangerPrefix );
-        return filter;
-    }
-
     /**
      * Create a MEX loader with filtered data.
      */
-    private MexSingleCellDataLoader createFilteredMexLoader( SingleCell10xMexFilter filter, List<String> usedSampleNames, List<Path> sampleDirs, SingleCellDataLoaderConfig config ) {
+    private MexSingleCellDataLoader createFiltered10xMexLoader( List<String> usedSampleNames, List<Path> sampleDirs, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( cellRangerPrefix, "A Cell Ranger prefix must be configured to appy the 10x filter." );
         List<Path> filteredBarcodeFiles = new ArrayList<>();
         List<Path> filteredGenesFiles = new ArrayList<>();
         List<Path> filteredMatrixFiles = new ArrayList<>();
@@ -201,6 +194,9 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 Path filteredSampleDir;
                 if ( detectUnfiltered10xData( sampleName, sampleDir ) ) {
                     filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
+                    sampleDirsToCleanup.add( filteredSampleDir );
+                    SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
+                    filter.setCellRangerPrefix( cellRangerPrefix );
                     filter.setInputFile( sampleDir, SingleCellDataType.MEX );
                     filter.setOutputFile( filteredSampleDir, SingleCellDataType.MEX );
                     filter.setGenome( detect10xGenome( sampleName, sampleDir ) );
@@ -224,9 +220,9 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 filteredGenesFiles.add( filteredSampleDir.resolve( "features.tsv.gz" ) );
                 filteredMatrixFiles.add( filteredSampleDir.resolve( "matrix.mtx.gz" ) );
             }
-        } catch ( IOException e ) {
+        } catch ( Exception e ) {
             try {
-                cleanupFilteredMexData( sampleDirsToCleanup );
+                cleanupFiltered10xMexData( sampleDirsToCleanup );
             } catch ( IOException ex ) {
                 e.addSuppressed( ex );
             }
@@ -238,7 +234,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 try {
                     super.close();
                 } finally {
-                    cleanupFilteredMexData( sampleDirsToCleanup );
+                    cleanupFiltered10xMexData( sampleDirsToCleanup );
                 }
             }
         };
@@ -247,7 +243,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     /**
      * Remove filtered MEX data.
      */
-    private void cleanupFilteredMexData( List<Path> filteredSampleDirs ) throws IOException {
+    private void cleanupFiltered10xMexData( List<Path> filteredSampleDirs ) throws IOException {
         IOException firstException = null;
         for ( Path filteredSampleDir : filteredSampleDirs ) {
             try {
