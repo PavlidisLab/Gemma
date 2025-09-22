@@ -125,8 +125,13 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
      * Detect if a MEX dataset is using the 10x Chromium Sequencing platform.
      */
     protected boolean detect10x( String sampleName, Path sampleDir ) {
+        Path mexFile = sampleDir.resolve( "matrix.mtx.gz" );
+        if ( !Files.exists( mexFile ) ) {
+            log.warn( sampleName + ": " + mexFile + " does not exist, cannot use it to check if the data is from a 10x Chromium Sequencing platform." );
+            return false;
+        }
         String[] comments;
-        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ) ) ) ) {
             reader.readMatrixInfo();
             comments = reader.readComments();
         } catch ( IOException e ) {
