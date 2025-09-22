@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -12,14 +13,36 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author poirigui
  */
 public abstract class AbstractCellRangerBasedTransformation extends AbstractScriptBasedTransformation implements CellRangerBasedTransformation {
+
+    private static final Path PROCS_CPU_INFO = Paths.get( "/proc/cpuinfo" );
+    private static final Pattern PROCS_CPU_INFO_FLAGS_PATTERN = Pattern.compile( "^flags\\s*:\\s*(.+)$" );
+
+    /**
+     * Check if the current CPU supports AVX instruction set required by Cell Ranger.
+     */
+    public boolean isCpuSupported() {
+        try {
+            return Files.readAllLines( PROCS_CPU_INFO ).stream()
+                    .anyMatch( line -> {
+                        Matcher match = PROCS_CPU_INFO_FLAGS_PATTERN.matcher( line );
+                        return match.matches() && ArrayUtils.contains( match.group( 1 ).split( " " ), "avx" );
+                    } );
+        } catch ( IOException e ) {
+            log.warn( "Could not read /proc/cpuinfo, cannot check if the current CPU supports AVX instructions.", e );
+            return false;
+        }
+    }
 
     /**
      * Installation prefix of Cell Ranger.
@@ -60,6 +83,9 @@ public abstract class AbstractCellRangerBasedTransformation extends AbstractScri
 
     @Override
     public void perform() throws IOException {
+        if ( !isCpuSupported() ) {
+            throw new RuntimeException( "The current CPU does not support AVX instructions. Those are required for running Cell Ranger." );
+        }
         log.info( "Using Cell Ranger " + getCellRangerVersion() + " from " + cellRangerPrefix + "." );
         super.perform();
     }

@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import org.apache.commons.io.file.PathUtils;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,7 @@ public class SingleCell10xMexFilterTest extends BaseTest {
     @Category(SlowTest.class)
     public void testGSE269482() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
         assumeThat( filter.getCellRangerExecutable() ).exists();
         assumeThat( filter.getPythonExecutable() ).exists();
         Path dataPath;
