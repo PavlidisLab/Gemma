@@ -2,8 +2,6 @@
 
 Gemma now supports single-cell data. This is still a work in progress, but the main features for compatibility are now in place and we have started to make data sets available through the Gemma web site and web services.
 
-Here are a few details about our approach:
-
 ## Scope
 
 - We are currently focusing on data sets collected with 10X Genomics platforms. We are not yet re-analyzing the data from FASTQ files. For now, this limits us to data sets where count matrices are provided by the authors. Large numbers of additional data sets will be eligible for inclusion once we have our re-analysis pipeline up and running.
