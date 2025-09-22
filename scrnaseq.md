@@ -56,7 +56,7 @@ $$
 Then mark as outliers those with
 
 $$
-\lvert r_i \rvert > X \cdot \mathrm{MAD}(r).
+\lvert r_i - \mathrm{median}(r) \rvert > X \cdot \mathrm{MAD}(r)
 $$
 
 ### Doublets
