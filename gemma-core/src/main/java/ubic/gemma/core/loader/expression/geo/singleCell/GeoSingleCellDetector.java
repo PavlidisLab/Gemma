@@ -204,6 +204,10 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         this.sraFetcher = sraFetcher;
     }
 
+    public void setCellRangerPrefix( Path cellRangerPrefix ) {
+        mexDetector.setCellRangerPrefix( cellRangerPrefix );
+    }
+
     /**
      * Detects if a GEO series has single-cell data either at the series-level or in individual samples.
      */

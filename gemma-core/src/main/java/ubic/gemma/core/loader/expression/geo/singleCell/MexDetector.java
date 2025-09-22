@@ -63,6 +63,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     private String matrixFileSuffix = DEFAULT_MATRIX_FILE_SUFFIX;
 
     // for the 10x filter (if needed)
+    @Nullable
     private Path cellRangerPrefix;
 
     private long maxEntrySizeInArchiveToSkip = DEFAULT_MAX_ENTRY_SIZE_IN_ARCHIVE_TO_SKIP;

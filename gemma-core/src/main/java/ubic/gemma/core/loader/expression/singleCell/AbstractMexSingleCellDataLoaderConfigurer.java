@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 
 import javax.annotation.Nullable;
@@ -26,9 +27,10 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     protected final Log log = LogFactory.getLog( getClass() );
 
     // needed for the 10x filter
+    @Nullable
     private final Path cellRangerPrefix;
 
-    protected AbstractMexSingleCellDataLoaderConfigurer( Path cellRangerPrefix ) {
+    protected AbstractMexSingleCellDataLoaderConfigurer( @Nullable Path cellRangerPrefix ) {
         this.cellRangerPrefix = cellRangerPrefix;
     }
 
@@ -173,6 +175,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     protected abstract String detect10xChemistry( String sampleName, Path sampleDir );
 
     private SingleCell10xMexFilter create10xFilter() {
+        Assert.notNull( cellRangerPrefix, "A Cell Ranger prefix must be configured to appy the 10x filter." );
         SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
         filter.setCellRangerPrefix( cellRangerPrefix );
         return filter;

@@ -6,6 +6,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.AbstractMexSingleCellDataLoaderConfigurer;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
     private final List<String> sampleNames;
     private final List<Path> sampleDirs;
 
-    public GeoMexSingleCellDataLoaderConfigurer( Path mexDir, GeoSeries series, Path cellRangerPrefix ) {
+    public GeoMexSingleCellDataLoaderConfigurer( Path mexDir, GeoSeries series, @Nullable Path cellRangerPrefix ) {
         super( cellRangerPrefix );
         this.series = series;
         geoSampleBySampleName = new HashMap<>();

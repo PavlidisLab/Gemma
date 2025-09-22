@@ -65,6 +65,9 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
 
+    @Value("${cellranger.dir}")
+    private Path cellRangerPrefix;
+
     private GeoSingleCellDetector detector;
 
     @Before
@@ -72,6 +75,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
+        detector.setCellRangerPrefix( cellRangerPrefix );
     }
 
     @Test
@@ -298,7 +302,9 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
-        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, SingleCellDataLoaderConfig.builder().build() );
+        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
+                .apply10xFilter( false )
+                .build() );
 
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         Collection<CompositeSequence> de = Arrays.asList(

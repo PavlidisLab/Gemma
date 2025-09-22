@@ -94,6 +94,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
+    @Value("${cellranger.dir}")
+    private Path cellRangerPrefix;
+
     private final Set<String> accessions = new HashSet<>();
     @Nullable
     private Path summaryOutputFile;
@@ -335,6 +338,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
+            detector.setCellRangerPrefix( cellRangerPrefix );
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
