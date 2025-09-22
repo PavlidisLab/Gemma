@@ -85,7 +85,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
-            MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
             MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols",
             MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision",
             MEX_10X_FILTER_OPTION = MEX_OPTION_PREFIX + "10xFilter",
