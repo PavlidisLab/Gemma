@@ -28,8 +28,8 @@ We have implemented an optional cell-calling step which mimics Cellranger's [cel
 
 ### Classifying Cells
 
-For details on the methods we are using, please see [our annotation pipeline repository](https://github.com/PavlidisLab/sc-annotation-pipeline). Briefly, cell types are assigned using a random forest classifier trained on scVI latent embeddings from the CELLxGENE Discover Census data corpus [1][2][3]. Our automated Nextflow pipeline downloads scVI model based on provided organism and Census version and generates embeddings for query data using the pre-trained model. Reference datasets and model embeddings are sub-sampled from Census for a given and organism and set of collection names.
-A Random Forest classifier trained on reference embeddings is then used to predict unknown cell types.
+For details on the methods we are using, please see [our annotation pipeline repository](https://github.com/PavlidisLab/sc-annotation-pipeline). Briefly, cell types are assigned using a random forest classifier trained on scVI latent embeddings from the CELLxGENE Discover Census data corpus [1][2][3]. Our automated Nextflow pipeline downloads a trained scVI model based on provided organism and Census version. Embeddings are generated for query data using the pre-trained model. Reference cells and latent embeddings are sub-sampled from the Census for a given and organism and set of collection names.
+A Random Forest classifier trained on reference embeddings is then used to predict unknown cell types in the query data.
 
 ### Defining Outliers
 
