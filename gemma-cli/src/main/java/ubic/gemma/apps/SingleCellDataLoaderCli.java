@@ -210,7 +210,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .hasArg()
                 .type( Path.class )
                 .desc( "Load single-cell data from the given path instead of looking up the download directory. For AnnData and Seurat Disk, it is a file. For MEX it is a directory. Requires the " + formatOption( options, DATA_TYPE_OPTION ) + " option to be set." )
-                .build() );
+                .get() );
         addGenericPlatformOption( options, PLATFORM_OPTION, "platform", "Target platform (must already exist in the system)" );
         options.addOption( QT_NAME_OPTION, "quantitation-type-name", true, "Quantitation type to import (optional, use if more than one is present in data)" );
         options.addOption( QT_NEW_NAME_OPTION, "quantitation-type-new-name", true, "New name to use for the imported quantitation type (optional, defaults to the data)" );
@@ -227,33 +227,33 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .longOpt( "renaming-file" )
                 .hasArg().type( Path.class )
                 .desc( "File containing sample a renaming scheme. The format is a two-column TSV with the first column containing author-provided sample names and the second column suitable assay identifiers (i.e. name, GEO accessions)." )
-                .build() );
+                .get() );
 
         // for the generic metadata loader
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_FILE_OPTION )
                 .longOpt( "cell-type-assignment-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a cell type assignment file. If missing, cell type importing will be delegated to the loader implementation." )
-                .build() );
+                .get() );
         options.addOption( CELL_TYPE_ASSIGNMENT_NAME_OPTION, "cell-type-assignment-name", true, "Name to use for the cell type assignment. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( CELL_TYPE_ASSIGNMENT_DESCRIPTION_OPTION, "cell-type-assignment-description", true, "Description to use for the cell type assignment. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION )
                 .longOpt( "cell-type-assignment-protocol" ).hasArg()
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PROTOCOL ) ) )
                 .desc( "An identifier for a protocol describing the cell type assignment. This require the " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option to be set." )
-                .build() );
+                .get() );
         options.addOption( REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, "replace-cell-type-assignment", false, String.format( "Replace an existing cell type assignment with the same name. The %s and %s options must be set.", formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ), formatOption( options, CELL_TYPE_ASSIGNMENT_NAME_OPTION ) ) );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing additional cell-level characteristics to import." )
-                .build() );
+                .get() );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ).longOpt( "cell-level-characteristics-name" )
                 .hasArgs()
                 .valueSeparator( ',' )
                 .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
-                .build() );
+                .get() );
         options.addOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics", false,
                 String.format( "Replace existing cell-level characteristics with the same names. The %s and %s options must be set.", formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) );
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
@@ -263,7 +263,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .longOpt( "sequencing-read-length" )
                 .hasArg().type( Integer.class )
                 .desc( "Read length to use for the imported sequencing metadata." )
-                .build() );
+                .get() );
         OptionsUtils.addAutoOption( options,
                 SEQUENCING_IS_PAIRED_OPTION, "sequencing-is-paired",
                 "Indicate that the sequencing data is paired.",
@@ -273,7 +273,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .longOpt( "sequencing-metadata-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing sequencing metadata to import. These values will override defaults set by " + formatOption( options, SEQUENCING_READ_LENGTH_OPTION ) + " and " + formatOption( options, SEQUENCING_IS_PAIRED_OPTION ) + "." )
-                .build() );
+                .get() );
 
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
@@ -296,7 +296,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( MEX_10X_CHEMISTRY_OPTION, "mex-10x-chemistry", true, "10x chemistry to use for filtering data." );
 
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
-        options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with " + formatOption( options, "noStreaming" ) + "." ).build() );
+        options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with " + formatOption( options, "noStreaming" ) + "." ).get() );
         options.addOption( "noCursorFetch", "no-cursor-fetch", false, "Disable cursor fetching on the database server and produce results immediately. This is incompatible with " + formatOption( options, "noStreaming" ) + "." );
     }
 
@@ -505,7 +505,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         return platform;
     }
 
-    @SuppressWarnings("DataFlowIssue") // nullable interferes with Lombok's generated builder methods
     private SingleCellDataLoaderConfig getConfigForDataType( @Nullable SingleCellDataType dataType ) {
         SingleCellDataLoaderConfig.SingleCellDataLoaderConfigBuilder<?, ?> configBuilder;
         if ( dataType == SingleCellDataType.ANNDATA ) {
