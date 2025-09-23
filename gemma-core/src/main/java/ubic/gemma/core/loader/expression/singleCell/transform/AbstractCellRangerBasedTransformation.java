@@ -7,39 +7,33 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.runtime.ExtendedRuntime;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author poirigui
  */
 public abstract class AbstractCellRangerBasedTransformation extends AbstractScriptBasedTransformation implements CellRangerBasedTransformation {
 
-    private static final Path PROCS_CPU_INFO = Paths.get( "/proc/cpuinfo" );
-    private static final Pattern PROCS_CPU_INFO_FLAGS_PATTERN = Pattern.compile( "^flags\\s*:\\s*(.+)$" );
 
     /**
      * Check if the current CPU supports AVX instruction set required by Cell Ranger.
      */
     public boolean isCpuSupported() {
         try {
-            return Files.readAllLines( PROCS_CPU_INFO ).stream()
-                    .anyMatch( line -> {
-                        Matcher match = PROCS_CPU_INFO_FLAGS_PATTERN.matcher( line );
-                        return match.matches() && ArrayUtils.contains( match.group( 1 ).split( " " ), "avx" );
-                    } );
+            return Arrays.stream( ExtendedRuntime.getRuntime().getCpuInfo() )
+                    .allMatch( cpu -> ArrayUtils.contains( cpu.getFlags(), "avx" ) );
         } catch ( IOException e ) {
-            log.warn( "Could not read /proc/cpuinfo, cannot check if the current CPU supports AVX instructions.", e );
+            log.warn( "Failed to detect if CPU supports AVX instruction set.", e );
             return false;
         }
     }
