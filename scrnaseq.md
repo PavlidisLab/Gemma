@@ -12,7 +12,7 @@ While we store cell-level data, the presentation in Gemma is primarily based on 
 
 ## API Support
 
-Support for single-cell experiment access is implemented in the R and python packages.
+Support for single-cell experiment access is implemented in the [R](https://www.bioconductor.org/packages/release/bioc/html/gemma.R.html) and [Python](https://pypi.org/project/gemmapy/) packages.
 We are especially keen to get feedback on the features, data and analysis results. Please contact us through pavlab-support@msl.ubc.ca with any questions or comments.
 
 
