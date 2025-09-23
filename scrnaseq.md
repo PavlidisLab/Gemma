@@ -23,7 +23,7 @@ We are re-annotating cell types in many data sets. This is necessitated because 
 
 ### Cell Calling
 
-We have implemented an optional cell-calling step which mimics Cellranger's [cell-calling algorithm](https://www.10xgenomics.com/support/software/cell-ranger/latest/algorithms-overview/cr-gex-algorithm). The intended use case is unfiltered 10x Genomics MEX data from GEO which contains "empty" cell barcodes presumed to contain ambient RNA molecules instead of true cellular content.
+We have implemented an optional cell-calling step which applies Cellranger's [cell-calling algorithm](https://www.10xgenomics.com/support/software/cell-ranger/latest/algorithms-overview/cr-gex-algorithm). The intended use case is unfiltered 10x Genomics MEX data from GEO which contains "empty" cell barcodes presumed to contain ambient RNA molecules instead of true cellular content.
 
 
 ### Classifying Cells
