@@ -10,12 +10,14 @@ import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
@@ -46,9 +48,11 @@ public class ExpressionExperimentGeoServiceImpl implements ExpressionExperimentG
         geoFetcher.setFileLockManager( fileLockManager );
         try {
             Path geoSeriesFile = geoFetcher.fetchSeriesFamilySoftFile( ee.getAccession().getAccession() );
-            GeoFamilyParser gfp = new GeoFamilyParser();
-            gfp.parse( geoSeriesFile.toFile() );
-            return requireNonNull( gfp.getUniqueResult() ).getSeries().get( ee.getAccession().getAccession() );
+            try ( InputStream is = FileUtils.openCompressedFile( geoSeriesFile ) ) {
+                GeoFamilyParser gfp = new GeoFamilyParser();
+                gfp.parse( is );
+                return requireNonNull( gfp.getUniqueResult() ).getSeries().get( ee.getAccession().getAccession() );
+            }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
