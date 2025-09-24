@@ -3,15 +3,17 @@ Gemma (pronounced: _Jemma_) is database of curated and re-analyzed gene expressi
 
 ## Key features:
 - All data sets are manually curated and QC'd in a standardized pipeline.
-- Support for a variety of expression technologies, including RNA-seq, Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays.
+- Support for a variety of expression technologies, including scRNA-seq, bulk RNA-seq, Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays.
 - Re-annotated microarray platforms at the sequence level, which allows for more consistent cross-platform comparisons.
+- Re-processed raw sequencing data (single cell and bulk tissue RNA-seq).
 - Re-analysis of data sets for differential expression
 - GUI and programmatic access
 - As of May 2025, Gemma includes **[single cell RNA sequencing experiments](scrnaseq.md)**
 
-## Terms and Conditions 
+## Explore topics: 
 
-Please refer to the **[Terms and conditions](terms.md)** page!
+ - **[Terms and conditions](terms.md)**
+ - Glossary
 
 ## Glossary
 
