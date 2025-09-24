@@ -1,5 +1,5 @@
 # Overview
-Gemma (pronounced: _Jemma_) is database of curated and re-analyzed gene expression studies. 
+Gemma (pronounced: _Jemma_) is an open-source and open-data project for the curation, re-analysis and re-use of transcriptomic data. Gemma database provides harmonized data, experimental design annotations, and differential analysis results for over 20,000 diverse microarray and RNA-seq experiments for human, mouse and rat. 
 
 ## Key features:
 - All data sets are manually curated and QC'd in a standardized pipeline.
