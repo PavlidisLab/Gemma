@@ -8,7 +8,6 @@ Gemma (pronounced: _Jemma_) is database of curated and re-analyzed gene expressi
 - Re-processed raw sequencing data (single cell and bulk tissue RNA-seq).
 - Re-analysis of data sets for differential expression
 - GUI and programmatic access
-- As of May 2025, Gemma includes **[single cell RNA sequencing experiments](scrnaseq.md)**
 
 ## Explore topics: 
 
@@ -18,7 +17,7 @@ Gemma (pronounced: _Jemma_) is database of curated and re-analyzed gene expressi
  - **[Data curation](curation.md)**
  - **RNA-seq processing pipeline**
  - **[single cell RNA-seq](scrnaseq.md)**
- - **Programmatic use of Gemma**
+ - **[Programmatic use of Gemma](programmatic.md)**
 
 
 ## Programmatic use of Gemma
