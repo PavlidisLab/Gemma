@@ -12,11 +12,25 @@
 
 <img src="/assets/img/gemma-workflow.jpg" height="400" width="auto" alt="Gemma workflow"/>
 
-The figure aboves outlines key steps that are taken to gather data and prepare it for use in Gemma.  In addition to the expression values, our data loaders attempt to import annotations and meta-data about the study where possible. The platform (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. Microarray platforms are reannotated. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
+The figure above outlines the key steps taken to gather data and prepare it for use in Gemma. These steps include dataset selection, platform processing, expression data processing, metadata curation and downstream analyses. Many of these steps are automated, with some human intervention and manual curation at key stages. 
+
+When selecting which datasets to import into Gemma, we mainly focus on studies relating to the nervous system and conducted in human, mouse or rat. We de-prioritize datasets that have small sample sizes as these are less suitable for the downstream analyses implemented in Gemma. We also prioritize studies that have biological replication and a clear experimental design affording specific comparisons between contrasting conditions (e.g. disease vs control). 
+
+##Platform Processing
+
+Gemma supports a wide variety of microarray platforms, including Affymetrix GeneChips, Agilent spotted arrays, Illumina BeadArrays and many two-color platforms, as well as short-read RNA-seq and single-cell RNA-seq data. A key step in platform processing is linking expression data to genes, especially for microarray platforms, where the probe sequences on the arrays were often designed prior to the availability of high-quality reference genome sequences and annotations. 
+
+
+
+
+
+
+
+The platform (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. Microarray platforms are reannotated. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
 
 ## Data Sources
 
-Gemma imports GEO series (GSE*), and obtains annotations from the associated dataset(s) (GDS*) if available. Along with these, the ‘platform’ (array design or microarray type, GPL*) is also imported. It is common for a GEO experiment to use more than one platform. The data for the different platforms is combined in Gemma. The way this is done depends on how the experiment was designed. In some cases, the same samples were each run on more than one platform. In this case, the platforms are “stacked” so each sample’s expression vector includes the elements (probes) from all the platforms. In other cases, the samples were each run on just one platform, but the platform varied for sample to sample. For example, in some studies the Affymetrix HGU133A platform was used for some samples, and for other the Plus 2 array was used. The data for the elements in common are combined in Gemma, so the “stacking” is at the probe/sequence level.
+Gemma imports GEO series (GSE*), and obtains annotations from the associated dataset(s) (GDS*) if available. Along with these, the ‘platform’ (array design or microarray type, GPL*) is also imported. It is common for a GEO experiment to use more than one platform. The data for the different platforms are combined in Gemma. The way this is done depends on how the experiment was designed. In some cases, the same samples were each run on more than one platform. In this case, the platforms are “stacked” so each sample’s expression vector includes the elements (probes) from all the platforms. In other cases, the samples were each run on just one platform, but the platform varied for sample to sample. For example, in some studies the Affymetrix HGU133A platform was used for some samples, and for other the Plus 2 array was used. The data for the elements in common are combined in Gemma, so the “stacking” is at the probe/sequence level.
 
 Note that unlike the situation in GEO, a sample can only appear in one Gemma experiment (based on the “GSM” identifier). This means that some experiments imported from GEO do not have the same samples as the corresponding GEO entry, because samples that appear in experiments already in Gemma are removed at load time. For example, in GEO, ‘series’ are sometimes assembled into ‘super-series’; similarly, in GEO some samples appear in multiple overlapping studies. We also tend to use the super-series if the super-series is sufficiently cohesive (in our opinion), but in other cases we import only the constituent series independently.
 
