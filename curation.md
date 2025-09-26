@@ -12,35 +12,20 @@
 
 <img src="/assets/img/gemma-workflow.jpg" height="400" width="auto" alt="Gemma workflow"/>
 
-The figure above outlines the key steps taken to gather data and prepare it for use in Gemma. These steps include dataset selection, platform processing, expression data processing, metadata curation and downstream analyses. Many of these steps are automated, with some human intervention and manual curation at key stages. 
+The figure above outlines the key steps taken to gather data and prepare it for use in Gemma. These steps include dataset selection, platform processing, expression data processing, metadata curation and downstream analyses. Many of these steps are automated, with some human intervention and manual curation at key stages. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
 
-When selecting which datasets to import into Gemma, we mainly focus on studies relating to the nervous system and conducted in human, mouse or rat. We de-prioritize datasets that have small sample sizes as these are less suitable for the downstream analyses implemented in Gemma. We also prioritize studies that have biological replication and a clear experimental design affording specific comparisons between contrasting conditions (e.g. disease vs control). 
+### Dataset selection
+When selecting which datasets to import into Gemma, we mainly focus on studies relating to the nervous system conducted in human, mouse or rat. We de-prioritize datasets that have small sample sizes as these are less suitable for the downstream analyses implemented in Gemma. We also prioritize studies that have biological replication and a clear experimental design affording specific comparisons between contrasting conditions (e.g. disease vs control). 
 
-##Platform Processing
+Gemma imports data primarily from the NCBI's [Gene Expression Omnibus](https://www.ncbi.nlm.nih.gov/geo/)(GEO). Data is imported at the GEO series (GSE*) level. A GEO sample (GSM*) can only appear in one Gemma experiment, unlike in GEO. This means that some experiments imported from GEO do not have the same samples as the corresponding GEO entry, because samples that appear in experiments already in Gemma are removed at load time. 
 
+## Platform Processing
 Gemma supports a wide variety of microarray platforms, including Affymetrix GeneChips, Agilent spotted arrays, Illumina BeadArrays and many two-color platforms, as well as short-read RNA-seq and single-cell RNA-seq data. A key step in platform processing is linking expression data to genes, especially for microarray platforms, where the probe sequences on the arrays were often designed prior to the availability of high-quality reference genome sequences and annotations. 
 
+For microarray platforms, we first have to obtain the nucleotide sequences of the probes. We typically acquire them from the manufacturers’ websites, as they are often not available from GEO. Next, we align the probe sequences against the appropriate reference genome using [BLAT](https://genome.cshlp.org/content/12/4/656.long). Whenever a new genome assembly is available, the probes are realigned. Probes are then mapped to transcripts using genome annotations from [UCSC GoldenPath](https://genome.ucsc.edu/). 
 
+For RNA-seq data, we define a ‘pseudo-platform’ for each taxon, where the entire platform’s elements are the set of known genes recorded in the reference genome annotations. The output of our [RNA-seq data processing pipeline](rnaseq.md) can then be linked to these ‘generic’ platforms based on NCBI gene IDs.
 
-
-
-
-
-The platform (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. Microarray platforms are reannotated. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections, and additional information is available in [Lim et al. 2021](https://pubmed.ncbi.nlm.nih.gov/33599246/).
-
-## Data Sources
-
-Gemma imports GEO series (GSE*), and obtains annotations from the associated dataset(s) (GDS*) if available. Along with these, the ‘platform’ (array design or microarray type, GPL*) is also imported. It is common for a GEO experiment to use more than one platform. The data for the different platforms are combined in Gemma. The way this is done depends on how the experiment was designed. In some cases, the same samples were each run on more than one platform. In this case, the platforms are “stacked” so each sample’s expression vector includes the elements (probes) from all the platforms. In other cases, the samples were each run on just one platform, but the platform varied for sample to sample. For example, in some studies the Affymetrix HGU133A platform was used for some samples, and for other the Plus 2 array was used. The data for the elements in common are combined in Gemma, so the “stacking” is at the probe/sequence level.
-
-Note that unlike the situation in GEO, a sample can only appear in one Gemma experiment (based on the “GSM” identifier). This means that some experiments imported from GEO do not have the same samples as the corresponding GEO entry, because samples that appear in experiments already in Gemma are removed at load time. For example, in GEO, ‘series’ are sometimes assembled into ‘super-series’; similarly, in GEO some samples appear in multiple overlapping studies. We also tend to use the super-series if the super-series is sufficiently cohesive (in our opinion), but in other cases we import only the constituent series independently.
-
-## Sequence analysis and annotation
-
-**Microarray platforms**: Each expression platform (i.e. microarray type or “array design”) was re-annotated at the sequence level using methods essentially as described in [Barnes et al. 2005](https://pubmed.ncbi.nlm.nih.gov/16237126/). Briefly, the sequences were aligned to the appropriate genome assembly using BLAT. Repeatmasker was used to mask aligned regions containing repeats. The [UCSC GoldenPath](https://genome.ucsc.edu/) genome annotation database was then used to map high-quality alignments to genes based on the “known gene” and “Refseq” tracks, with the use of additional information from other tracks. Gene information including Gene Ontology annotation was imported from NCBI’s gene database with additional data from GoldenPath. Because our methods require sequence-level analysis, platforms which lack probe level sequence information are currently not usable for analysis in Gemma. All the tools for interfacing with sequence analysis resources are provided as part of the Gemma source code distribution.
-
-**RNA-seq data**: We reanalyze raw read data using standard alignment and quantification approaches such as STAR and RSEM. 
-
-Information on the current versions of reference databases used in Gemma are available via the "About" menu.
 
 ## Data Annotation
 
