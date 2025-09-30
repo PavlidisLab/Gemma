@@ -4,8 +4,11 @@ import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.ResourceUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
@@ -29,6 +32,12 @@ public abstract class AbstractPythonScriptBasedTransformation extends AbstractSc
     }
 
     protected abstract String[] createPythonScriptArgs();
+
+    @Override
+    protected String createErrorMessage( InputStream errorStream, URL scriptUrl ) throws IOException {
+        return super.createErrorMessage( errorStream, scriptUrl )
+                .replaceAll( "<stdin>", ResourceUtils.getSourceCodeLocation( scriptUrl ) );
+    }
 
     /**
      * Check if a Python package is installed.

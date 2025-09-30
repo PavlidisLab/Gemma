@@ -7,10 +7,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.ResourceUtils;
 import ubic.gemma.core.util.runtime.ExtendedRuntime;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,6 +85,12 @@ public abstract class AbstractCellRangerBasedTransformation extends AbstractScri
         }
         log.info( "Using Cell Ranger " + getCellRangerVersion() + " from " + cellRangerPrefix + "." );
         super.perform();
+    }
+
+    @Override
+    protected String createErrorMessage( InputStream errorStream, URL scriptUrl ) throws IOException {
+        return super.createErrorMessage( errorStream, scriptUrl )
+                .replaceAll( "<stdin>", ResourceUtils.getSourceCodeLocation( scriptUrl ) );
     }
 
     private String getCellRangerVersion() {

@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -28,8 +29,8 @@ public abstract class AbstractScriptBasedTransformation implements SingleCellDat
     @Override
     public void perform() throws IOException {
         String scriptPath = "/ubic/gemma/core/loader/expression/singleCell/transform/" + scriptName;
-        try ( InputStream in = requireNonNull( getClass().getResourceAsStream( scriptPath ),
-                "Could not locate script under classpath:" + scriptPath ) ) {
+        URL scriptUrl = getClass().getResource( scriptPath );
+        try ( InputStream in = requireNonNull( scriptUrl, "Could not locate script under " + scriptUrl ).openStream() ) {
             ProcessBuilder processBuilder = new ProcessBuilder( createScriptArgs() )
                     .redirectOutput( ProcessBuilder.Redirect.PIPE )
                     .redirectError( ProcessBuilder.Redirect.PIPE );
@@ -41,12 +42,19 @@ public abstract class AbstractScriptBasedTransformation implements SingleCellDat
                 reader.lines().forEach( log::info );
             }
             if ( process.waitFor() != 0 ) {
-                throw new RuntimeException( "Transformation failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
+                throw new RuntimeException( "Transformation failed:\n" + createErrorMessage( process.getErrorStream(), scriptUrl ) );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( "Transformation was interrupted.", e );
         }
+    }
+
+    /**
+     * Create an error message from a failing script.
+     */
+    protected String createErrorMessage( InputStream errorStream, URL scriptUrl ) throws IOException {
+        return IOUtils.toString( errorStream, StandardCharsets.UTF_8 );
     }
 
     protected abstract String[] createScriptArgs();
