@@ -23,12 +23,14 @@ import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundExc
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -58,7 +60,7 @@ public class SingleCell10xMexFilterTest extends BaseTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testGSE269482() throws IOException, NoSingleCellDataFoundException {
+    public void testGSM8316309() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
         Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
         assumeThat( filter.getCellRangerExecutable() ).exists();
@@ -85,6 +87,49 @@ public class SingleCell10xMexFilterTest extends BaseTest {
                     .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
                     .isDirectoryContaining( "glob:**/features.tsv.gz" )
                     .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 3484 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
+    /**
+     * This example uses 3 GEMs.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSM4871780() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE149931" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM4871780" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 19157 );
         } finally {
             PathUtils.delete( outputFile );
         }
