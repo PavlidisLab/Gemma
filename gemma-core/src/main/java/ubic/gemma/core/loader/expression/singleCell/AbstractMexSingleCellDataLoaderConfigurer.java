@@ -85,20 +85,30 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
 
         MexSingleCellDataLoader loader;
         boolean apply10xFilter;
-        if ( config instanceof MexSingleCellDataLoaderConfig ) {
-            MexSingleCellDataLoaderConfig mexConfig = ( ( MexSingleCellDataLoaderConfig ) config );
-            if ( mexConfig.getApply10xFilter() != null ) {
-                apply10xFilter = mexConfig.getApply10xFilter();
+        if ( config.isSkipTransformations() ) {
+            log.warn( "The skipTransformations flag is set in the configuration, will not check if filtering 10x MEX data is necessary." );
+            apply10xFilter = false;
+        } else {
+            if ( config instanceof MexSingleCellDataLoaderConfig ) {
+                MexSingleCellDataLoaderConfig mexConfig = ( ( MexSingleCellDataLoaderConfig ) config );
+                if ( mexConfig.getApply10xFilter() != null ) {
+                    apply10xFilter = mexConfig.getApply10xFilter();
+                } else {
+                    apply10xFilter = detectUnfiltered10xData( usedSampleNames, usedSampleDirs );
+                }
             } else {
                 apply10xFilter = detectUnfiltered10xData( usedSampleNames, usedSampleDirs );
             }
-        } else {
-            apply10xFilter = detectUnfiltered10xData( usedSampleNames, usedSampleDirs );
         }
         if ( apply10xFilter ) {
             loader = createFiltered10xMexLoader( usedSampleNames, usedSampleDirs, config );
         } else {
             loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
+        }
+
+        if ( config.isSkipTransformations() ) {
+            log.warn( "The skipTransformations flag is set in the configuration, will not discard empty cells in MEX data." );
+            loader.setDiscardEmptyCells( false );
         }
 
         if ( config instanceof MexSingleCellDataLoaderConfig ) {

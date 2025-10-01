@@ -79,6 +79,11 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      */
     private boolean useDoublePrecision = false;
 
+    /**
+     * This can be disabled for faster loading.
+     */
+    private boolean discardEmptyCells = true;
+
     public MexSingleCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
         Assert.isTrue( sampleNames.size() == barcodeFiles.size()
                         && barcodeFiles.size() == genesFiles.size()
@@ -111,7 +116,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyColumns( matrixFiles.get( i ) ) );
+                List<String> sampleCellIds = discardEmptyCells ?
+                        readLinesFromPath( barcodeFiles.get( i ), getNonEmptyColumns( matrixFiles.get( i ) ) ) :
+                        readLinesFromPath( barcodeFiles.get( i ) );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }
@@ -343,12 +350,14 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
-            int[] nonEmptyCellIndices = getNonEmptyColumns( matrixFile );
-            if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
-                matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
-                log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
-            } else {
-                log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
+            if ( discardEmptyCells ) {
+                int[] nonEmptyCellIndices = getNonEmptyColumns( matrixFile );
+                if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
+                    matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
+                    log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
+                } else {
+                    log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
+                }
             }
 
             Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellIdsBySample( j ),

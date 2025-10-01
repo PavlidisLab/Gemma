@@ -130,6 +130,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private boolean preferSinglePrecision;
 
     /**
+     * Skip single-cell data transformations, unless they are absolutely necessary.
+     */
+    private boolean skipTransformations;
+
+    /**
      * Executor service to use to transform single-cell data.
      */
     @Nullable

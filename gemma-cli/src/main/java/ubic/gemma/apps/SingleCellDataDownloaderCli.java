@@ -26,8 +26,6 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,8 +62,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private static final String
             SAMPLE_ACCESSIONS_OPTION = "sampleAccessions",
             DATA_TYPE_OPTION = "dataType",
-            SUPPLEMENTARY_FILE_OPTION = "supplementaryFile",
-            TRANSFORM_THREADS_OPTION = "transformThreads";
+            SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
 
     /**
      * Only applicable if dataType is set to MEX.
@@ -97,12 +93,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
-
-    @Value("${cellranger.dir}")
-    private Path cellRangerPrefix;
-
-    @Nullable
-    private Integer transformThreads;
 
     private final Set<String> accessions = new HashSet<>();
     @Nullable
@@ -163,7 +153,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
-        options.addOption( Option.builder( TRANSFORM_THREADS_OPTION ).longOpt( "transform-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for transforming single-cell data (e.g. transposing AnnData, filtering low quality cells from 10x MEX)." ).build() );
         options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Only works if -dataType/--data-type is set to MEX." ).build() );
         options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Only works if -dataType/--data-type is set to MEX." ).build() );
         options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Only works if -dataType/--data-type is set to MEX." ).build() );
@@ -306,7 +295,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ).toUpperCase() );
         }
-        transformThreads = commandLine.getParsedOptionValue( TRANSFORM_THREADS_OPTION );
         if ( commandLine.hasOption( MEX_BARCODES_FILE_SUFFIX ) || commandLine.hasOption( MEX_FEATURES_FILE_SUFFIX ) || commandLine.hasOption( MEX_MATRIX_FILE_SUFFIX ) ) {
             if ( dataType != SingleCellDataType.MEX ) {
                 throw new IllegalArgumentException( "The -mexBarcodes, -mexFeatures and -mexMatrix options are only available if -dataType is set to MEX." );
@@ -342,19 +330,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             Files.write( summaryOutputFile, linesToKeep );
         }
 
-        ExecutorService transformExecutor;
-        if ( transformThreads != null ) {
-            log.info( "Using " + transformThreads + " for transforming single-cell data." );
-            transformExecutor = Executors.newFixedThreadPool( transformThreads, new SimpleThreadFactory( "gemma-single-cell-transform-thread-" ) );
-        } else {
-            transformExecutor = null;
-        }
         try ( GeoSingleCellDetector detector = new GeoSingleCellDetector();
                 CSVPrinter writer = getSummaryOutputFilePrinter() ) {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
-            detector.setCellRangerPrefix( cellRangerPrefix );
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
@@ -417,7 +397,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         throw new UnsupportedOperationException( "MEX files were found, but single-cell data is not supported at the series level." );
                                     }
                                 }
-                                addSuccessObject( geoAccession, "Download was skipped." );
                             } else {
                                 if ( dataType != null && supplementaryFile != null ) {
                                     detector.downloadSingleCellData( series, dataType,
@@ -433,16 +412,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         .map( GeoSample::getGeoAccession )
                                         .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
                                         .collect( Collectors.toList() );
-                                SingleCellDataLoaderConfig.SingleCellDataLoaderConfigBuilder<?, ?> configBuilder = SingleCellDataLoaderConfig.builder()
+                                SingleCellDataLoaderConfig config = SingleCellDataLoaderConfig.builder()
                                         .ignoreSamplesLackingData( true )
-                                        .transformExecutor( transformExecutor );
-                                SingleCellDataLoaderConfig config = configBuilder.build();
+                                        .skipTransformations( true ) // transforming is simply too expensive
+                                        .build();
                                 try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config ) ) {
                                     numberOfSamples = loader.getSampleNames().size();
                                     SingleCellDimension scd = loader.getSingleCellDimension( bas );
                                     numberOfCellIds = scd.getNumberOfCellIds();
                                     numberOfGenes = loader.getGenes().size();
-                                    addSuccessObject( geoAccession );
                                 }
                             }
                         } else {
@@ -453,6 +431,18 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                         }
+
+                        addSuccessObject( geoAccession, String.format( "Data Type=%s%s%s%s",
+                                dataType,
+                                numberOfSamples != null ? "Number of samples=" + numberOfSamples : "",
+                                numberOfCellIds != null ? " Number of cell IDs=" + numberOfCellIds : "",
+                                numberOfGenes != null ? " Number of genes=" + numberOfGenes : "" ) );
+
+                        // don't bother looking up SRA if we're not writing a summary file
+                        if ( writer == null ) {
+                            return;
+                        }
+
                         Collection<String> sraAccessions = new ArrayList<>();
                         Collection<String> otherDataInSra = new ArrayList<>();
                         if ( detector.hasSingleCellDataInSra( series, sraAccessions, otherDataInSra ) ) {
@@ -491,10 +481,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 } );
             }
             awaitBatchExecutorService();
-        } finally {
-            if ( transformExecutor != null ) {
-                transformExecutor.shutdown();
-            }
         }
     }
 
