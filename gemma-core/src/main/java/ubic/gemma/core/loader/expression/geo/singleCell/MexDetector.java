@@ -606,7 +606,13 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
         MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, cellRangerPrefix )
                 .configureLoader( config );
         if ( loader.getSampleNames().isEmpty() ) {
-            throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            NoSingleCellDataFoundException ex = new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            try {
+                loader.close();
+            } catch ( Exception e ) {
+                ex.addSuppressed( e );
+            }
+            throw ex;
         }
         return loader;
     }
