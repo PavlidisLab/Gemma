@@ -10,6 +10,8 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.util.concurrent.Executors;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -27,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
 import static ubic.gemma.cli.util.OptionsUtils.*;
@@ -51,7 +54,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFER_SINGLE_PRECISION = "preferSinglePrecision",
             REPLACE_OPTION = "replace",
             RENAMING_FILE_OPTION = "renamingFile",
-            IGNORE_SAMPLES_LACKING_DATA_OPTION = "ignoreSamplesLackingData";
+            IGNORE_SAMPLES_LACKING_DATA_OPTION = "ignoreSamplesLackingData",
+            TRANSFORM_THREADS_OPTION = "transformThreads";
 
     private static final String
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
@@ -151,6 +155,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean ignoreUnmatchedCellIds;
     @Nullable
     private Path renamingFile;
+    @Nullable
+    private Integer transformThreads;
 
     // sequencing metadata
     @Nullable
@@ -187,6 +193,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean useCursorFetchIfSupported;
 
     @Nullable
+    private ExecutorService transformExecutor;
+
+    @Nullable
     @Override
     public String getCommandName() {
         return "loadSingleCellData";
@@ -221,6 +230,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
         options.addOption( IGNORE_SAMPLES_LACKING_DATA_OPTION, "ignore-samples-lacking-data", false, "Ignore samples that lack data. Those samples will not be included in the single-cell dimension." );
+        options.addOption( Option.builder( TRANSFORM_THREADS_OPTION ).longOpt( "transform-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for preprocessing (e.g. filtering low quality cells) single-cell data." ).get() );
 
         // for all loaders
         options.addOption( Option.builder( RENAMING_FILE_OPTION )
@@ -301,6 +311,24 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
+    protected void doAuthenticatedWork() throws Exception {
+        if ( transformThreads != null ) {
+            log.info( "Using " + transformThreads + " for transforming single-cell data." );
+            transformExecutor = Executors.newFixedThreadPool( transformThreads, new SimpleThreadFactory( "gemma-single-cell-transform-thread-" ) );
+        } else {
+            transformExecutor = null;
+        }
+        try {
+            super.doAuthenticatedWork();
+        } finally {
+            if ( transformExecutor != null ) {
+                transformExecutor.shutdown();
+                transformExecutor = null;
+            }
+        }
+    }
+
+    @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( hasOption( commandLine, LOAD_CELL_TYPE_ASSIGNMENT_OPTION,
                 noneOf( toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
@@ -342,6 +370,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
         renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
         ignoreSamplesLackingData = commandLine.hasOption( IGNORE_SAMPLES_LACKING_DATA_OPTION );
+        transformThreads = commandLine.getParsedOptionValue( TRANSFORM_THREADS_OPTION );
 
         // CTAs
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
@@ -539,7 +568,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .quantitationTypeNewScaleType( newScaleType )
                 .markQuantitationTypeAsRecomputedFromRawData( recomputedFromRawData )
                 .preferSinglePrecision( preferSinglePrecision )
-                .markQuantitationTypeAsPreferred( preferredQt );
+                .markQuantitationTypeAsPreferred( preferredQt )
+                .transformExecutor( transformExecutor );
         if ( renamingFile != null ) {
             configBuilder.renamingFile( renamingFile );
         }

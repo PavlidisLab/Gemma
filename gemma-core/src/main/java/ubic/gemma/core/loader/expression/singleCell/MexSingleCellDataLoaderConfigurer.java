@@ -27,9 +27,9 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
     private final GeoSeries geoSeries;
 
     /**
-     * @param geoSeries GEO series metadata, optional, but can be used to infer the 10x chemistry
+     * @param geoSeries         GEO series metadata, optional, but can be used to infer the 10x chemistry
      */
-    public MexSingleCellDataLoaderConfigurer( Path mexDir, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper, Path cellRangerPrefix, @Nullable GeoSeries geoSeries ) {
+    public MexSingleCellDataLoaderConfigurer( Path mexDir, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper, @Nullable Path cellRangerPrefix, @Nullable GeoSeries geoSeries ) {
         super( cellRangerPrefix );
         this.bioAssayMapper = bioAssayMapper;
         this.geoSeries = geoSeries;

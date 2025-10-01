@@ -638,6 +638,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             geoSeries = null;
         }
+
         return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper, cellRangerPrefix, geoSeries ), bioAssayMapper, config );
     }
 

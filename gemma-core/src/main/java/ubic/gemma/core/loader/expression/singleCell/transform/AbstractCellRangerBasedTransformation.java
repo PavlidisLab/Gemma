@@ -27,7 +27,6 @@ import java.util.Set;
  */
 public abstract class AbstractCellRangerBasedTransformation extends AbstractScriptBasedTransformation implements CellRangerBasedTransformation {
 
-
     /**
      * Check if the current CPU supports AVX instruction set required by Cell Ranger.
      */

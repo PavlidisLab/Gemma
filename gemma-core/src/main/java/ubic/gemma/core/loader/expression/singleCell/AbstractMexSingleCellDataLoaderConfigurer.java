@@ -16,20 +16,26 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.loader.util.MatrixMarketUtils.getNonEmptyColumns;
 import static ubic.gemma.core.loader.util.MatrixMarketUtils.readMatrixMarketFromPath;
+import static ubic.gemma.core.util.concurrent.FutureUtils.parallelMapRange;
 
 public abstract class AbstractMexSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<MexSingleCellDataLoader> {
 
     protected final Log log = LogFactory.getLog( getClass() );
 
-    // needed for the 10x filter
     @Nullable
     private final Path cellRangerPrefix;
 
+    /**
+     *
+     * @param cellRangerPrefix path to an installation of Cell Ranger, required if 10x filtering is deemed necessary,
+     * {@link MexSingleCellDataLoaderConfig#getApply10xFilter()}.
+     */
     protected AbstractMexSingleCellDataLoaderConfigurer( @Nullable Path cellRangerPrefix ) {
         this.cellRangerPrefix = cellRangerPrefix;
     }
@@ -188,42 +194,37 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
      */
     private MexSingleCellDataLoader createFiltered10xMexLoader( List<String> usedSampleNames, List<Path> sampleDirs, SingleCellDataLoaderConfig config ) {
         Assert.notNull( cellRangerPrefix, "A Cell Ranger prefix must be configured to appy the 10x filter." );
-        List<Path> filteredBarcodeFiles = new ArrayList<>();
-        List<Path> filteredGenesFiles = new ArrayList<>();
-        List<Path> filteredMatrixFiles = new ArrayList<>();
-        List<Path> sampleDirsToCleanup = new ArrayList<>();
+        List<Path> filteredBarcodeFiles = new ArrayList<>( usedSampleNames.size() );
+        List<Path> filteredGenesFiles = new ArrayList<>( usedSampleNames.size() );
+        List<Path> filteredMatrixFiles = new ArrayList<>( usedSampleNames.size() );
+        List<Path> sampleDirsToCleanup = Collections.synchronizedList( new ArrayList<>( usedSampleNames.size() ) );
+
         try {
-            for ( int i = 0; i < sampleDirs.size(); i++ ) {
-                String sampleName = usedSampleNames.get( i );
-                Path sampleDir = sampleDirs.get( i );
-                Path filteredSampleDir;
-                if ( detectUnfiltered10xData( sampleName, sampleDir ) ) {
-                    filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
-                    sampleDirsToCleanup.add( filteredSampleDir );
-                    SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
-                    filter.setCellRangerPrefix( cellRangerPrefix );
-                    filter.setInputFile( sampleDir, SingleCellDataType.MEX );
-                    filter.setOutputFile( filteredSampleDir, SingleCellDataType.MEX );
-                    filter.setGenome( detect10xGenome( sampleName, sampleDir ) );
-                    String chemistry;
-                    if ( config instanceof MexSingleCellDataLoaderConfig ) {
-                        if ( ( ( MexSingleCellDataLoaderConfig ) config ).getUse10xChemistry() != null ) {
-                            chemistry = ( ( MexSingleCellDataLoaderConfig ) config ).getUse10xChemistry();
-                        } else {
-                            chemistry = detect10xChemistry( sampleName, sampleDir );
-                        }
-                    } else {
-                        chemistry = detect10xChemistry( sampleName, sampleDir );
+            if ( config.getTransformExecutor() != null ) {
+                List<Path> filteredSampleDirs = parallelMapRange( i -> {
+                    String sampleName = usedSampleNames.get( i );
+                    Path sampleDir = sampleDirs.get( i );
+                    try {
+                        return filter10xSample( sampleName, sampleDir, sampleDirsToCleanup, config );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
                     }
-                    filter.setChemistry( chemistry );
-                    filter.perform();
-                } else {
-                    log.info( sampleDir + " does not appear to be unfiltered 10x data, using as-is." );
-                    filteredSampleDir = sampleDir;
+                }, 0, usedSampleNames.size(), config.getTransformExecutor(), true );
+                for ( Path filteredSampleDir : filteredSampleDirs ) {
+                    filteredBarcodeFiles.add( filteredSampleDir.resolve( "barcodes.tsv.gz" ) );
+                    filteredGenesFiles.add( filteredSampleDir.resolve( "features.tsv.gz" ) );
+                    filteredMatrixFiles.add( filteredSampleDir.resolve( "matrix.mtx.gz" ) );
                 }
-                filteredBarcodeFiles.add( filteredSampleDir.resolve( "barcodes.tsv.gz" ) );
-                filteredGenesFiles.add( filteredSampleDir.resolve( "features.tsv.gz" ) );
-                filteredMatrixFiles.add( filteredSampleDir.resolve( "matrix.mtx.gz" ) );
+            } else {
+                log.warn( "Transforming 10x single-cell data serially, you should specify executor to speed up the process (i.e. by passing -transformThreads/--transform-threads from the CLI)." );
+                for ( int i = 0; i < sampleDirs.size(); i++ ) {
+                    String sampleName = usedSampleNames.get( i );
+                    Path sampleDir = sampleDirs.get( i );
+                    Path filteredSampleDir = filter10xSample( sampleName, sampleDir, sampleDirsToCleanup, config );
+                    filteredBarcodeFiles.add( filteredSampleDir.resolve( "barcodes.tsv.gz" ) );
+                    filteredGenesFiles.add( filteredSampleDir.resolve( "features.tsv.gz" ) );
+                    filteredMatrixFiles.add( filteredSampleDir.resolve( "matrix.mtx.gz" ) );
+                }
             }
         } catch ( Exception e ) {
             try {
@@ -233,6 +234,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             }
             throw new RuntimeException( e );
         }
+
         return new MexSingleCellDataLoader( usedSampleNames, filteredBarcodeFiles, filteredGenesFiles, filteredMatrixFiles ) {
             @Override
             public void close() throws IOException {
@@ -243,6 +245,36 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 }
             }
         };
+    }
+
+    private Path filter10xSample( String sampleName, Path sampleDir, List<Path> sampleDirsToCleanup, SingleCellDataLoaderConfig config ) throws IOException {
+        Assert.notNull( cellRangerPrefix );
+        Path filteredSampleDir;
+        if ( detectUnfiltered10xData( sampleName, sampleDir ) ) {
+            filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
+            sampleDirsToCleanup.add( filteredSampleDir );
+            SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
+            filter.setCellRangerPrefix( cellRangerPrefix );
+            filter.setInputFile( sampleDir, SingleCellDataType.MEX );
+            filter.setOutputFile( filteredSampleDir, SingleCellDataType.MEX );
+            filter.setGenome( detect10xGenome( sampleName, sampleDir ) );
+            String chemistry;
+            if ( config instanceof MexSingleCellDataLoaderConfig ) {
+                if ( ( ( MexSingleCellDataLoaderConfig ) config ).getUse10xChemistry() != null ) {
+                    chemistry = ( ( MexSingleCellDataLoaderConfig ) config ).getUse10xChemistry();
+                } else {
+                    chemistry = detect10xChemistry( sampleName, sampleDir );
+                }
+            } else {
+                chemistry = detect10xChemistry( sampleName, sampleDir );
+            }
+            filter.setChemistry( chemistry );
+            filter.perform();
+        } else {
+            log.info( sampleDir + " does not appear to be unfiltered 10x data, using as-is." );
+            filteredSampleDir = sampleDir;
+        }
+        return filteredSampleDir;
     }
 
     /**

@@ -9,6 +9,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Basic configuration for loading single-cell data.
@@ -127,4 +128,10 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      * This reduces the size of vectors and thus the storage requirement.
      */
     private boolean preferSinglePrecision;
+
+    /**
+     * Executor service to use to transform single-cell data.
+     */
+    @Nullable
+    public ExecutorService transformExecutor;
 }
