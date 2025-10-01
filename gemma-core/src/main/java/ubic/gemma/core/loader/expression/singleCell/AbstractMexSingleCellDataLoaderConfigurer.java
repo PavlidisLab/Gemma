@@ -37,11 +37,15 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     @Override
     public MexSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         List<String> sampleNames = getSampleNames();
+        List<Path> sampleDirs = getSampleDirs();
+
+        // not all samples might be used, so these arrays keep track of the used ones
         List<String> usedSampleNames = new ArrayList<>();
+        List<Path> usedSampleDirs = new ArrayList<>();
         List<Path> barcodeFiles = new ArrayList<>();
         List<Path> genesFiles = new ArrayList<>();
         List<Path> matrixFiles = new ArrayList<>();
-        List<Path> sampleDirs = getSampleDirs();
+
         for ( int i = 0; i < sampleDirs.size(); i++ ) {
             String sampleName = sampleNames.get( i );
             Path sampleDir = sampleDirs.get( i );
@@ -59,6 +63,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             Path m = sampleDir.resolve( "matrix.mtx.gz" );
             if ( Files.exists( b ) && Files.exists( f ) && Files.exists( m ) ) {
                 usedSampleNames.add( sampleName );
+                usedSampleDirs.add( sampleDir );
                 barcodeFiles.add( b );
                 genesFiles.add( f );
                 matrixFiles.add( m );
@@ -79,13 +84,13 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             if ( mexConfig.getApply10xFilter() != null ) {
                 apply10xFilter = mexConfig.getApply10xFilter();
             } else {
-                apply10xFilter = detectUnfiltered10xData( usedSampleNames, sampleDirs );
+                apply10xFilter = detectUnfiltered10xData( usedSampleNames, usedSampleDirs );
             }
         } else {
-            apply10xFilter = detectUnfiltered10xData( usedSampleNames, sampleDirs );
+            apply10xFilter = detectUnfiltered10xData( usedSampleNames, usedSampleDirs );
         }
         if ( apply10xFilter ) {
-            loader = createFiltered10xMexLoader( usedSampleNames, sampleDirs, config );
+            loader = createFiltered10xMexLoader( usedSampleNames, usedSampleDirs, config );
         } else {
             loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
         }
