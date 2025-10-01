@@ -13,7 +13,7 @@ Gemma (pronounced: _Jemma_) is an open-source and open-data project for the cura
 
  - **[Terms and conditions](terms.md)**
  - **[Glossary](glossary.md)**
- - **Using the Gemma website**
+ - **[Using the Gemma website](website.md)**
  - **[Data curation](curation.md)**
  - **[RNA-seq processing pipeline](rnaseq.md)**
  - **[Single cell RNA-seq](scrnaseq.md)**
