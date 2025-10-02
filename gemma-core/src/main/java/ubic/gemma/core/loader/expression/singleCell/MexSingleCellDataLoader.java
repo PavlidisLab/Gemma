@@ -80,6 +80,8 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private boolean useDoublePrecision = false;
 
     /**
+     * Discard empty cells by removing columns from MTX file that have no gene-associated counts.
+     * <p>
      * This can be disabled for faster loading.
      */
     private boolean discardEmptyCells = true;

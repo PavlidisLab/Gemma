@@ -260,7 +260,8 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     private Path filter10xSample( String sampleName, Path sampleDir, List<Path> sampleDirsToCleanup, SingleCellDataLoaderConfig config ) throws IOException {
         Assert.notNull( cellRangerPrefix );
         Path filteredSampleDir;
-        if ( detectUnfiltered10xData( sampleName, sampleDir ) ) {
+        if ( ( config instanceof MexSingleCellDataLoaderConfig && Boolean.TRUE.equals( ( ( MexSingleCellDataLoaderConfig ) config ).getApply10xFilter() ) )
+                || detectUnfiltered10xData( sampleName, sampleDir ) ) {
             filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
             sampleDirsToCleanup.add( filteredSampleDir );
             SingleCell10xMexFilter filter = new SingleCell10xMexFilter();

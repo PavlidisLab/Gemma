@@ -17,6 +17,9 @@ public class MexSingleCellDataLoaderConfig extends SingleCellDataLoaderConfig {
      * <p>
      * Default is to auto-detect.
      * <p>
+     * If set to true, the filter will be applied to every sample. If set to {@code null}, detection logic will be
+     * applied on a per-sample basis. If set to false, no filtering will be performed.
+     * <p>
      * This should only be applied to unfiltered MEX data from 10x Chromium platform.
      * @see SingleCell10xMexFilter
      */
@@ -27,9 +30,19 @@ public class MexSingleCellDataLoaderConfig extends SingleCellDataLoaderConfig {
      * Chemistry used for single-cell sequencing.
      * <p>
      * This affects the 10x MEX data filter.
+     * <p>
+     * Default is to auto-detect.
+     * @see SingleCell10xMexFilter
      */
     @Nullable
     private String use10xChemistry;
 
+    /**
+     * Use double precision for loading MEX data.
+     * <p>
+     * Default is to use single precision for storage efficiency.
+     *
+     * @see MexSingleCellDataLoader#setUseDoublePrecision(boolean)
+     */
     private boolean useDoublePrecision;
 }
