@@ -230,7 +230,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
         options.addOption( IGNORE_SAMPLES_LACKING_DATA_OPTION, "ignore-samples-lacking-data", false, "Ignore samples that lack data. Those samples will not be included in the single-cell dimension." );
-        options.addOption( Option.builder( TRANSFORM_THREADS_OPTION ).longOpt( "transform-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for preprocessing (e.g. filtering low quality cells) single-cell data." ).get() );
+        options.addOption( Option.builder( TRANSFORM_THREADS_OPTION ).longOpt( "transform-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for transforming single-cell data (e.g. filtering low quality cells)." ).get() );
 
         // for all loaders
         options.addOption( Option.builder( RENAMING_FILE_OPTION )
