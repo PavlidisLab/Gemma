@@ -272,7 +272,7 @@ public class PlatformsWebService {
             description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. Older files might still use ProbeName instead of ElementName.",
             responses = {
                     @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(type = "string", format = "binary"),
+                            content = @Content(schema = @Schema(type = "string"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") }))
             })
     public Response getPlatformAnnotations( // Params:

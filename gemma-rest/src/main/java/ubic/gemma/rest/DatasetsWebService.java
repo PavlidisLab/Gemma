@@ -895,7 +895,7 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
@@ -932,7 +932,7 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
@@ -1327,7 +1327,7 @@ public class DatasetsWebService {
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
-                            schema = @Schema(type = "string", format = "binary"),
+                            schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -1356,7 +1356,7 @@ public class DatasetsWebService {
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
-                            schema = @Schema(type = "string", format = "binary"),
+                            schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -1422,7 +1422,7 @@ public class DatasetsWebService {
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
-                            schema = @Schema(type = "string", format = "binary"),
+                            schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -1475,7 +1475,7 @@ public class DatasetsWebService {
                             content = {
                                     @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")),
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.mex") }),
-                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"),
+                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string"),
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
                             }),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
@@ -1571,7 +1571,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
                     examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
