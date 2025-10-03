@@ -128,6 +128,7 @@ public class ExpressionExperimentEditController {
     }
 
     @Data
+    @NoArgsConstructor
     public static class SingleCellDimensionEditForm {
         private Long id;
         private List<CellTypeAssignmentEditForm> cellTypeAssignments;
