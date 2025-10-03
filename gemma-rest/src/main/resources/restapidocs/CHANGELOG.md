@@ -46,6 +46,10 @@ The following properties are now deprecated:
 Note that the `allCharacteristics` will retain its `value` and `valueUri` properties as this collection still holds
 regular characteristics.
 
+Endpoints that produce`text/tab-separated-values` no-longer use the `binary` encoding. This is to avoid confusion in the
+client because no decoding is actually necessary. The encoding is still used by actual binary endpoints such as the one
+producing `application/vnd.10xgenomics.mex` for single-cell data.
+
 ### Update 2.9.1
 
 Add a `protocol` parameter to `getDatasetsCellTypeAssignment` endpoint to locate a cell type assignment by the name of
