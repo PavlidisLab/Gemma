@@ -198,6 +198,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * Add an auto option that is only available in single-experiment mode.
+     *
+     * @see OptionsUtils#addAutoOption(Options, String, String, String, String, String, String)
+     */
+    protected void addSingleExperimentAutoOption( Options options, String opt, String longOpt, String description,
+            String noOpt, String longNoOpt, String noDescription ) {
+        OptionsUtils.addAutoOption( options, opt, longOpt, description, noOpt, longNoOpt, noDescription );
+        singleExperimentOptions.add( opt );
+    }
+
+    /**
      * Add an enumerated option that is only available in single-experiment mode.
      * @see OptionsUtils#addEnumOption(Options, String, String, String, Class, EnumMap)
      */
