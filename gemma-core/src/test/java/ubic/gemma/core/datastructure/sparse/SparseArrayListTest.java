@@ -1,7 +1,6 @@
-package ubic.gemma.model.util;
+package ubic.gemma.core.datastructure.sparse;
 
 import org.junit.Test;
-import ubic.gemma.core.datastructure.sparse.SparseArrayList;
 
 import java.util.Arrays;
 
