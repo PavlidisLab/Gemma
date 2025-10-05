@@ -24,13 +24,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
-import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.printMapping;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.printMapping;
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 @Service
 @CommonsLog
-public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCellExpressionExperimentSplitService {
+public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCellExpressionExperimentSubSetService {
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
@@ -49,20 +49,20 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
 
     @Transactional
-    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, SplitConfig config ) {
+    public List<ExpressionExperimentSubSet> createSubSetsByCellType( ExpressionExperiment ee, SingleCellExperimentSubSetsCreationConfig config ) {
         // the characteristics from the CTA have to be mapped with the statements from the factor values
         CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
                 .orElseThrow( IllegalStateException::new );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
         Map<Characteristic, FactorValue> mappedCellTypeFactors = createMappingByFactorValueCharacteristics( cta, cellTypeFactor );
-        return split( ee, cta, cellTypeFactor, mappedCellTypeFactors, config );
+        return createSubSets( ee, cta, cellTypeFactor, mappedCellTypeFactors, config );
     }
 
     @Override
     @Transactional
-    public List<ExpressionExperimentSubSet> split( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> mappedCellTypeFactors,
-            SplitConfig config ) {
+    public List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> mappedCellTypeFactors,
+            SingleCellExperimentSubSetsCreationConfig config ) {
         Set<FactorValue> unmappedFactorValues = new HashSet<>( factor.getFactorValues() );
         unmappedFactorValues.removeAll( mappedCellTypeFactors.values() );
         if ( !unmappedFactorValues.isEmpty() ) {

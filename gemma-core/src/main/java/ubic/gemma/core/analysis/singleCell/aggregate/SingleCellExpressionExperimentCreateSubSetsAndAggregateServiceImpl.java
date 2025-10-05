@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 @Service
-public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implements SingleCellExpressionExperimentSplitAndAggregateService {
+public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl implements SingleCellExpressionExperimentCreateSubSetsAndAggregateService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private SingleCellExpressionExperimentSplitService singleCellExpressionExperimentSplitService;
+    private SingleCellExpressionExperimentSubSetService singleCellExpressionExperimentSubSetService;
 
     @Autowired
-    private SingleCellExpressionExperimentAggregatorService singleCellExpressionExperimentAggregatorService;
+    private SingleCellExpressionExperimentAggregateService singleCellExpressionExperimentAggregateService;
 
     @Autowired
     private EntityUrlBuilder entityUrlBuilder;
@@ -46,8 +46,8 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
 
     @Override
     @Transactional
-    public QuantitationType splitAndAggregateByCellType( ExpressionExperiment expressionExperiment, SplitConfig splitConfig, AggregateConfig config ) {
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, splitConfig );
+    public QuantitationType createSubSetsAndAggregateByCellType( ExpressionExperiment expressionExperiment, SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig, SingleCellAggregationConfig config ) {
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSetsByCellType( expressionExperiment, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
         log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
@@ -57,15 +57,15 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
                     .sorted( Comparator.comparing( BioAssay::getName ) )
                     .forEach( cellBAs::add );
         }
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
+        QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
         log.info( "Aggregated single-cell data for the preferred single-cell QT into pseudo-bulks with quantitation type " + newQt + "." );
         return newQt;
     }
 
     @Override
     @Transactional
-    public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f, SplitConfig splitConfig, AggregateConfig config ) {
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.split( expressionExperiment, clc, cellTypeFactor, c2f, splitConfig );
+    public QuantitationType createSubSetsAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f, SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig, SingleCellAggregationConfig config ) {
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSets( expressionExperiment, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
         log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
@@ -77,14 +77,14 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
                     .forEach( cellBAs::add );
         }
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( expressionExperiment, scQt, cellBAs, clc, cellTypeFactor, c2f, config );
+        QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectors( expressionExperiment, scQt, cellBAs, clc, cellTypeFactor, c2f, config );
         log.info( "Aggregated single-cell data for " + scQt + " into pseudo-bulks with quantitation type " + newQt + "." );
         return newQt;
     }
 
     @Override
     @Transactional
-    public QuantitationType redoAggregateByCellType( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config ) {
+    public QuantitationType redoAggregateByCellType( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, @Nullable QuantitationType previousQt, SingleCellAggregationConfig config ) {
         if ( previousQt != null ) {
             // when removing a previous QT, check if we should keep its dimension for re-aggregating
             BioAssayDimension previousBad = expressionExperimentService.getBioAssayDimension( expressionExperiment, previousQt, RawExpressionDataVector.class );
@@ -92,18 +92,18 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
                 log.warn( "No BioAssayDimension found for " + previousQt );
             }
             boolean keepDimension = previousBad != null && previousBad.equals( dimension );
-            singleCellExpressionExperimentAggregatorService.removeAggregatedVectors( expressionExperiment, previousQt, keepDimension );
+            singleCellExpressionExperimentAggregateService.removeAggregatedVectors( expressionExperiment, previousQt, keepDimension );
         }
         dimension = bioAssayDimensionService.thaw( dimension );
         List<BioAssay> cellBAs = dimension.getBioAssays();
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
+        QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
         log.info( "Aggregated single-cell data for the preferred single-cell QT into pseudo-bulks with quantitation type " + newQt + "." );
         return newQt;
     }
 
     @Override
     @Transactional
-    public QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> c2f, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config ) {
+    public QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> c2f, BioAssayDimension dimension, @Nullable QuantitationType previousQt, SingleCellAggregationConfig config ) {
         if ( previousQt != null ) {
             // when removing a previous QT, check if we should keep its dimension for re-aggregating
             BioAssayDimension previousBad = expressionExperimentService.getBioAssayDimension( expressionExperiment, previousQt, RawExpressionDataVector.class );
@@ -111,11 +111,11 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
                 log.warn( "No BioAssayDimension found for " + previousQt );
             }
             boolean keepDimension = previousBad != null && previousBad.equals( dimension );
-            singleCellExpressionExperimentAggregatorService.removeAggregatedVectors( expressionExperiment, previousQt, keepDimension );
+            singleCellExpressionExperimentAggregateService.removeAggregatedVectors( expressionExperiment, previousQt, keepDimension );
         }
         dimension = bioAssayDimensionService.thaw( dimension );
         List<BioAssay> cellBAs = dimension.getBioAssays();
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( expressionExperiment, scQt, cellBAs, clc, factor, c2f, config );
+        QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectors( expressionExperiment, scQt, cellBAs, clc, factor, c2f, config );
         log.info( "Aggregated single-cell data for " + scQt + " into pseudo-bulks with quantitation type " + newQt + "." );
         return newQt;
     }

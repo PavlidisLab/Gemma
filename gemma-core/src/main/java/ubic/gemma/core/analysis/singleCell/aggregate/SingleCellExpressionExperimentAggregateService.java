@@ -17,8 +17,9 @@ import java.util.Map;
 
 /**
  * Aggregate single-cell vectors.
+ * @author poirigui
  */
-public interface SingleCellExpressionExperimentAggregatorService {
+public interface SingleCellExpressionExperimentAggregateService {
 
     /**
      * Aggregate preferred single-cell data vectors by the preferred cell type assignment and the only cell type
@@ -27,7 +28,7 @@ public interface SingleCellExpressionExperimentAggregatorService {
      * the experimental design
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    QuantitationType aggregateVectorsByCellType( ExpressionExperiment ee, List<BioAssay> cellBAs, AggregateConfig config ) throws AggregationException;
+    QuantitationType aggregateVectorsByCellType( ExpressionExperiment ee, List<BioAssay> cellBAs, SingleCellAggregationConfig config ) throws SingleCellAggregationException;
 
     /**
      * Aggregate preferred single-cell data vectors by the given cell-level characteristics.
@@ -48,13 +49,13 @@ public interface SingleCellExpressionExperimentAggregatorService {
      * @param cellLevelCharacteristics cell-level characteristics to use to aggregate
      * @param cellTypeMapping          association between cell-level characteristics and factor values
      * @return the quantitation type of the newly created vectors
-     * @throws UnsupportedScaleTypeForAggregationException if data of the given scale type cannot be aggregated
+     * @throws UnsupportedScaleTypeForSingleCellAggregationException if data of the given scale type cannot be aggregated
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs,
             CellLevelCharacteristics cellLevelCharacteristics, ExperimentalFactor factor,
             Map<Characteristic, FactorValue> cellTypeMapping,
-            AggregateConfig config ) throws AggregationException;
+            SingleCellAggregationConfig config ) throws SingleCellAggregationException;
 
     /**
      * Remove aggregated vectors for the given quantitation type.

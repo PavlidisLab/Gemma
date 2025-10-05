@@ -16,7 +16,10 @@ from cellranger.utils import get_gem_group_from_barcode
 def detect_gem_groups(mtx):
     gem_groups = set()
     for bc in mtx.bcs:
-        gem_group = get_gem_group_from_barcode(bc)
+        try:
+            gem_group = get_gem_group_from_barcode(bc)
+        except ValueError:
+            gem_group = None
         gem_groups.add(gem_group)
         
     gem_groups = sorted(gem_groups)

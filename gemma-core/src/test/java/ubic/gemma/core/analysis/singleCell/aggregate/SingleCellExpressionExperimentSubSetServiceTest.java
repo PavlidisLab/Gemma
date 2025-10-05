@@ -29,15 +29,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class SingleCellExpressionExperimentSplitServiceTest extends BaseTest {
+public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent
     static class SingleCellExpressionExperimentSplitServiceTestContextConfiguration {
 
         @Bean
-        public SingleCellExpressionExperimentSplitService service() {
-            return new SingleCellExpressionExperimentSplitServiceImpl();
+        public SingleCellExpressionExperimentSubSetService service() {
+            return new SingleCellExpressionExperimentSubSetServiceImpl();
         }
 
         @Bean
@@ -67,7 +67,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends BaseTest {
     }
 
     @Autowired
-    private SingleCellExpressionExperimentSplitService service;
+    private SingleCellExpressionExperimentSubSetService service;
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
@@ -116,7 +116,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends BaseTest {
                 .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
-        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, SplitConfig.builder().build() );
+        List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
         assertThat( subsets )
                 .hasSize( 10 )
                 .allSatisfy( subset -> {
@@ -163,7 +163,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends BaseTest {
     }
 
     @Test
-    public void testSplitWhenMissingFactorValue() {
+    public void testCreateSubSetsWhenMissingFactorValue() {
         CellTypeAssignment cta = new CellTypeAssignment();
         ExpressionExperiment ee = new ExpressionExperiment();
         ExperimentalFactor cf = new ExperimentalFactor();
@@ -196,8 +196,8 @@ public class SingleCellExpressionExperimentSplitServiceTest extends BaseTest {
                 .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
-        SplitConfig config = SplitConfig.builder().ignoreUnmatchedCharacteristics( true ).build();
-        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, config );
+        SingleCellExperimentSubSetsCreationConfig config = SingleCellExperimentSubSetsCreationConfig.builder().ignoreUnmatchedCharacteristics( true ).build();
+        List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, config );
         assertThat( subsets )
                 .hasSize( 5 )
                 .allSatisfy( subset -> {

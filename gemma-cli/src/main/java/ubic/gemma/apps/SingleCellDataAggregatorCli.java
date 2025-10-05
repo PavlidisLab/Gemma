@@ -8,10 +8,10 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.singleCell.aggregate.AggregateConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitAndAggregateService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SplitConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentCreateSubSetsAndAggregateService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForSingleCellAggregationException;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.OptionsUtils.*;
-import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.*;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.*;
 
 @CommonsLog
 public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
@@ -63,7 +63,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private SingleCellExpressionExperimentSplitAndAggregateService splitAndAggregateService;
+    private SingleCellExpressionExperimentCreateSubSetsAndAggregateService splitAndAggregateService;
 
     @Autowired
     private PreprocessorService preprocessorService;
@@ -194,12 +194,12 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                     .orElseThrow( () -> new IllegalStateException( finalExpressionExperiment1 + " does not have a cell type factor." ) );
         }
 
-        SplitConfig splitConfig = SplitConfig.builder()
+        SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig = SingleCellExperimentSubSetsCreationConfig.builder()
                 .ignoreUnmatchedCharacteristics( allowUnmappedCharacteristics )
                 .ignoreUnmatchedFactorValues( allowUnmappedFactorValues )
                 .build();
 
-        AggregateConfig config = AggregateConfig.builder()
+        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder()
                 .mask( mask )
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
@@ -292,7 +292,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             try {
                 newQt = splitAndAggregateService.redoAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, dimension, previousQt, config );
                 addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
-            } catch ( UnsupportedScaleTypeForAggregationException e ) {
+            } catch ( UnsupportedScaleTypeForSingleCellAggregationException e ) {
                 addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;
@@ -319,9 +319,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             }
 
             try {
-                newQt = splitAndAggregateService.splitAndAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, splitConfig, config );
+                newQt = splitAndAggregateService.createSubSetsAndAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig, config );
                 addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
-            } catch ( UnsupportedScaleTypeForAggregationException e ) {
+            } catch ( UnsupportedScaleTypeForSingleCellAggregationException e ) {
                 addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;

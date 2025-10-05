@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression;
 
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -21,7 +21,7 @@ public interface DataDeleterService {
     void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * @see SingleCellExpressionExperimentAggregatorService#removeAggregatedVectors(ExpressionExperiment, QuantitationType)
+     * @see SingleCellExpressionExperimentAggregateService#removeAggregatedVectors(ExpressionExperiment, QuantitationType)
      * @see ExpressionDataFileService#deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      */
     void deleteSingleCellDataAggregate( ExpressionExperiment ee, QuantitationType qt );

@@ -1,4 +1,4 @@
-package ubic.gemma.core.analysis.singleCell.aggregate;
+package ubic.gemma.core.analysis.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVFormat;
@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -30,6 +31,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
  * <p>
  * The most common use case for this is to map the cell type assigmnents from a {@link ubic.gemma.model.expression.bioAssayData.CellTypeAssignment}
  * to a cell type factor.
+ * @author poirigui
  */
 @CommonsLog
 public class CellLevelCharacteristicsMappingUtils {
@@ -41,7 +43,7 @@ public class CellLevelCharacteristicsMappingUtils {
      * <p>
      * There is a possibility that no factor value is found for a given cell type, in which case it is ignored.
      * <p>
-     * TODO: this should be private, but we reuse the same logic for aggregating in {@link SingleCellExpressionExperimentAggregatorServiceImpl}.
+     * TODO: this should be private, but we reuse the same logic for aggregating in {@link SingleCellExpressionExperimentAggregateServiceImpl}.
      * @throws IllegalStateException if there is more than one factor value mapping a given cell type
      */
     public static Map<Characteristic, FactorValue> createMappingByFactorValueCharacteristics( CellLevelCharacteristics cta, ExperimentalFactor factor ) {

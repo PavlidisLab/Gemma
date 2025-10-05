@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 @Getter
 @Builder
 public
-class AggregateConfig {
+class SingleCellAggregationConfig {
     /**
      * Categorical mask to use on data.
      * <p>

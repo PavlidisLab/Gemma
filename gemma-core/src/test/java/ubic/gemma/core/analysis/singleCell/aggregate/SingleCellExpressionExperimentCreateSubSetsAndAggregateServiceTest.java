@@ -15,13 +15,13 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SingleCellExpressionExperimentSplitAndAggregateServiceTest extends BaseIntegrationTest {
+public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private SingleCellExpressionExperimentSplitAndAggregateService splitAndAggregateService;
+    private SingleCellExpressionExperimentCreateSubSetsAndAggregateService splitAndAggregateService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -51,9 +51,9 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceTest extends 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 100 );
 
-        SplitConfig splitConfig = SplitConfig.builder().build();
-        AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
-        QuantitationType qt = splitAndAggregateService.splitAndAggregateByCellType( ee, splitConfig, config );
+        SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig = SingleCellExperimentSubSetsCreationConfig.builder().build();
+        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder().makePreferred( true ).build();
+        QuantitationType qt = splitAndAggregateService.createSubSetsAndAggregateByCellType( ee, singleCellExperimentSubSetsCreationConfig, config );
 
         ee = expressionExperimentService.thawLite( ee );
         assertThat( ee.getQuantitationTypes() ).contains( qt );

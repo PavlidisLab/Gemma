@@ -20,7 +20,7 @@ import java.util.function.Function;
 /**
  * Utilities for aggregating single-cell data vectors.
  * <p>
- * TODO: reuse these in {@link SingleCellExpressionExperimentAggregatorServiceImpl}
+ * TODO: reuse these in {@link SingleCellExpressionExperimentAggregateServiceImpl}
  * @author poirigui
  */
 public class SingleCellDataVectorAggregatorUtils {

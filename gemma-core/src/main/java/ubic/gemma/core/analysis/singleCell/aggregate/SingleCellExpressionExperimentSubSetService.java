@@ -14,23 +14,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Split a single-cell expression experiment into sub-experiments by cell type.
+ * Service to create single-cell expression experiment subsets.
  * @author poirigui
  */
-public interface SingleCellExpressionExperimentSplitService {
+public interface SingleCellExpressionExperimentSubSetService {
 
     /**
-     * Split a single-cell dataset by cell type.
+     * Subset a single-cell dataset by preferred cell type assignment the cell type factor and the
      * <p>
      * The dataset must have a preferred {@link ubic.gemma.model.expression.bioAssayData.CellTypeAssignment} and a cell
      * type factor in its experimental design.
      * @throws IllegalStateException if there is no preferred cell type assignment, no (or multiple) cell type factor
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, SplitConfig config );
+    List<ExpressionExperimentSubSet> createSubSetsByCellType( ExpressionExperiment ee, SingleCellExperimentSubSetsCreationConfig config );
 
     /**
-     * Split biomaterials and bioassays by the given {@link CellLevelCharacteristics}.
+     * Subset biomaterials and bioassays by the given {@link CellLevelCharacteristics}.
      * <p>
      * This method will:
      * <ul>
@@ -42,5 +42,5 @@ public interface SingleCellExpressionExperimentSplitService {
      * @return a list of subsets representing subpopulations of cells
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> split( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellTypeMapping, SplitConfig config );
+    List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellTypeMapping, SingleCellExperimentSubSetsCreationConfig config );
 }

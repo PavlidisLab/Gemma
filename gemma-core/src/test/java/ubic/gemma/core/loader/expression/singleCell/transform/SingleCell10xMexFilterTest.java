@@ -173,6 +173,42 @@ public class SingleCell10xMexFilterTest extends BaseTest {
         }
     }
 
+    @Test
+    public void testGSM6925121() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE222510" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM6925121" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 1468 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         URL url = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
         try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {

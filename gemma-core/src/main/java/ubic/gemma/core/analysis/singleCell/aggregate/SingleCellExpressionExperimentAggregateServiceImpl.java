@@ -30,16 +30,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
-import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
 
-/**
- * Aggregates single-cell expression data.
- */
 @Service
 @CommonsLog
-public class SingleCellExpressionExperimentAggregatorServiceImpl implements SingleCellExpressionExperimentAggregatorService {
+public class SingleCellExpressionExperimentAggregateServiceImpl implements SingleCellExpressionExperimentAggregateService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -64,7 +61,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
     @Override
     @Transactional
-    public QuantitationType aggregateVectorsByCellType( ExpressionExperiment ee, List<BioAssay> cellBAs, AggregateConfig config ) {
+    public QuantitationType aggregateVectorsByCellType( ExpressionExperiment ee, List<BioAssay> cellBAs, SingleCellAggregationConfig config ) {
         QuantitationType qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred set of single-cell vectors." ) );
         CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
@@ -77,7 +74,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
     @Override
     @Transactional
-    public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, CellLevelCharacteristics cellLevelCharacteristics, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellType2Factor, AggregateConfig config ) throws UnsupportedScaleTypeForAggregationException {
+    public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, CellLevelCharacteristics cellLevelCharacteristics, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellType2Factor, SingleCellAggregationConfig config ) throws UnsupportedScaleTypeForSingleCellAggregationException {
         // FIXME: this is needed because if EE is not in the session, getSingleCellDataVectors() will retrieve
         //        a distinct QT than that of ee.getQuantitationTypes()
         ee = expressionExperimentService.reload( ee );
@@ -114,7 +111,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 method = SingleCellExpressionAggregationMethod.LOG_SUM;
                 break;
             default:
-                throw new UnsupportedScaleTypeForAggregationException( qt.getScale() );
+                throw new UnsupportedScaleTypeForSingleCellAggregationException( qt.getScale() );
         }
 
         log.info( "Aggregating single-cell data with scale " + qt.getScale() + " using " + method + "." );

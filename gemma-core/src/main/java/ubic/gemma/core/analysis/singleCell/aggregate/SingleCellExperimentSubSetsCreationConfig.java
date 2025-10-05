@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.Getter;
 
 /**
- * Configuration for splitting single-cell expression data in pseudo-bulks.
+ * Configuration for subsetting single-cell expression data in pseudo-bulks.
+ * @author poirigui
  */
 @Getter
 @Builder
-public class SplitConfig {
+public class SingleCellExperimentSubSetsCreationConfig {
     /**
      * Whether to allow unmapped characteristics.
      */
