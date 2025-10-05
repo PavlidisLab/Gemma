@@ -632,7 +632,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             dir = getMexDir( ee );
         }
         GeoSeries geoSeries;
-        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( "GEO" ) ) {
+        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
             log.info( ee + " originates from GEO, will include its series metadata." );
             geoSeries = expressionExperimentGeoService.getGeoSeries( ee );
         } else {

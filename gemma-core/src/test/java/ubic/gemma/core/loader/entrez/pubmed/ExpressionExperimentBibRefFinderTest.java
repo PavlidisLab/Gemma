@@ -26,6 +26,7 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class ExpressionExperimentBibRefFinderTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( "GEO" );
+        ed.setName( ExternalDatabases.GEO );
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
@@ -71,7 +72,7 @@ public class ExpressionExperimentBibRefFinderTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( "GEO" );
+        ed.setName( ExternalDatabases.GEO );
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );

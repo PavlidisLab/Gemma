@@ -28,6 +28,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.*;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -182,7 +183,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", "GEO" ) );
+        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", ExternalDatabases.GEO ) );
 
         metaData.getArrayDesigns().add( SimplePlatformMetadata.forId( ad.getId() ) );
 
@@ -191,7 +192,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
             sampleMetadata.setName( "sample" + i );
             sampleMetadata.setDescription( "sample description " + i );
             sampleMetadata.setPlatformUsed( SimplePlatformMetadata.forId( ad.getId() ) );
-            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, "GEO" ) );
+            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, ExternalDatabases.GEO ) );
             metaData.getSamples().add( sampleMetadata );
         }
 
@@ -201,7 +202,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( ee.getAccession().getAccession() ).isEqualTo( "GSE109291" );
-        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( "GEO" );
+        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( ExternalDatabases.GEO );
         assertThat( ee.getBioAssays() )
                 .hasSize( 8 )
                 .allSatisfy( ba -> {

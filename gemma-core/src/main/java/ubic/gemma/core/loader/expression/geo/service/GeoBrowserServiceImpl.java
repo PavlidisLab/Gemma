@@ -36,6 +36,7 @@ import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -196,7 +197,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     }
 
     private List<GeoRecord> filterGeoRecords( Slice<GeoRecord> records ) {
-        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
         return records.stream()
                 .filter( record -> {
                     if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {

@@ -21,13 +21,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
-import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,7 +52,6 @@ public class BibliographicReferenceServiceImpl
         extends AbstractVoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceService, InitializingBean {
 
-    private static final String PUB_MED_DATABASE_NAME = "PubMed";
     private final BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
@@ -113,7 +112,7 @@ public class BibliographicReferenceServiceImpl
     public BibliographicReference findByExternalId( String id ) {
 
         return this.bibliographicReferenceDao
-                .findByExternalId( id, BibliographicReferenceServiceImpl.PUB_MED_DATABASE_NAME );
+                .findByExternalId( id, ExternalDatabases.PUBMED );
 
     }
 
@@ -198,7 +197,7 @@ public class BibliographicReferenceServiceImpl
         }
 
         BibliographicReference existingBibRef = this
-                .findByExternalId( pubMedId, BibliographicReferenceServiceImpl.PUB_MED_DATABASE_NAME );
+                .findByExternalId( pubMedId, ExternalDatabases.PUBMED );
 
         if ( existingBibRef == null ) {
             return null;

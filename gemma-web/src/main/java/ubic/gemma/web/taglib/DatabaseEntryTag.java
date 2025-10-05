@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.description.ExternalDatabases;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
@@ -54,7 +55,7 @@ public class DatabaseEntryTag extends TagSupport {
 
             if ( databaseEntry.getExternalDatabase() != null ) {
 
-                if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
+                if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( ExternalDatabases.GEO ) ) {
 
                     accession = accession.replaceAll( "\\.[1-9]$", "" );
                     buf.append( accession ).append( "&nbsp;<a title='NCBI page for this entry'" )

@@ -11,6 +11,7 @@ import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -93,9 +94,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
         dea = differentialExpressionAnalysisService.create( dea );
 
-        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
         assertNotNull( geo );
-        assertEquals( "GEO", geo.getName() );
+        assertEquals( ExternalDatabases.GEO, geo.getName() );
 
         DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance();
         databaseEntry.setAccession( "GEO123123" );

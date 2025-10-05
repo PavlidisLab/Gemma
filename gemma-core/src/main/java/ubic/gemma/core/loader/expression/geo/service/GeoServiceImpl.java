@@ -72,7 +72,6 @@ import static java.util.Objects.requireNonNull;
 public class GeoServiceImpl implements GeoService, InitializingBean {
 
     static final Log log = LogFactory.getLog( GeoServiceImpl.class );
-    private static final String GEO_DB_NAME = "GEO";
     @Autowired
     private PersisterHelper persisterHelper;
     @Autowired
@@ -573,7 +572,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 String sampleId = sample.getGeoAccession();
                 String existingAcc = acc.getAccession();
                 if ( existingAcc.equals( sampleId ) && acc.getExternalDatabase().getName()
-                        .equals( GeoServiceImpl.GEO_DB_NAME ) ) {
+                        .equals( ExternalDatabases.GEO ) ) {
                     GeoServiceImpl.log
                             .debug( sampleId + " appears in an expression experiment already in the system, skipping" );
                     toSkip.add( sample );

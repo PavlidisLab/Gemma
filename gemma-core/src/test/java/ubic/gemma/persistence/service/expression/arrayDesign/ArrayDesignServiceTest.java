@@ -24,10 +24,10 @@ import org.hibernate.UnresolvableObjectException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -432,7 +432,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     private void assignExternalReference( ArrayDesign toFind, String accession ) {
-        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
         assert geo != null;
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();

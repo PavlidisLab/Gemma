@@ -20,12 +20,12 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import org.mockito.Mock;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +47,7 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
         svc = new BibliographicReferenceServiceImpl( brdao );
 
         ExternalDatabase extDB = ExternalDatabase.Factory.newInstance();
-        extDB.setName( "PUBMED" );
+        extDB.setName( ExternalDatabases.PUBMED );
 
         de = DatabaseEntry.Factory.newInstance();
         de.setAccession( "12345" );
@@ -60,10 +60,10 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
         BibliographicReference mockBR = BibliographicReference.Factory.newInstance();
         mockBR.setPubAccession( de );
         mockBR.setTitle( "My Title" );
-        when( brdao.findByExternalId( "12345", "PUBMED" ) ).thenReturn( mockBR );
+        when( brdao.findByExternalId( "12345", ExternalDatabases.PUBMED ) ).thenReturn( mockBR );
 
-        svc.findByExternalId( "12345", "PUBMED" );
-        verify( brdao ).findByExternalId( "12345", "PUBMED" );
+        svc.findByExternalId( "12345", ExternalDatabases.PUBMED );
+        verify( brdao ).findByExternalId( "12345", ExternalDatabases.PUBMED );
     }
 
 }

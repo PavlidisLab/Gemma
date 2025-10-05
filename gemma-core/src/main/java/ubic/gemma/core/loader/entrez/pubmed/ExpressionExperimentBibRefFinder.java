@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.BufferedReader;
@@ -66,7 +67,7 @@ public class ExpressionExperimentBibRefFinder {
 
         ExternalDatabase ed = accession.getExternalDatabase();
 
-        if ( !ed.getName().equals( "GEO" ) ) {
+        if ( !ed.getName().equals( ExternalDatabases.GEO ) ) {
             ExpressionExperimentBibRefFinder.log.warn( "Don't know how to get references for non-GEO data sets" );
             return null;
         }

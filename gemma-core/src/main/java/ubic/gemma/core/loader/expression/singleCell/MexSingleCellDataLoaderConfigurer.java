@@ -108,7 +108,7 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
         if ( geoSeries == null ) {
             return Optional.empty();
         }
-        if ( assay.getAccession() == null || !assay.getAccession().getExternalDatabase().getName().equals( "GEO" ) ) {
+        if ( assay.getAccession() == null || !assay.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
             // sample has no accession or is not from GEO
             return Optional.empty();
         }

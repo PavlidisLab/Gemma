@@ -1547,7 +1547,7 @@ public class GeoConverterImpl implements GeoConverter {
             DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
             pubAccession.setAccession( string );
             ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( "PubMed" );
+            ed.setName( ExternalDatabases.PUBMED );
             pubAccession.setExternalDatabase( ed );
             bibRef.setPubAccession( pubAccession );
             if ( expExp.getPrimaryPublication() == null ) {
@@ -2850,13 +2850,13 @@ public class GeoConverterImpl implements GeoConverter {
     private void initGeoExternalDatabase() {
         if ( geoDatabase == null ) {
             if ( externalDatabaseService != null ) {
-                ExternalDatabase ed = externalDatabaseService.findByName( "GEO" );
+                ExternalDatabase ed = externalDatabaseService.findByName( ExternalDatabases.GEO );
                 if ( ed != null ) {
                     geoDatabase = ed;
                 }
             } else {
                 geoDatabase = ExternalDatabase.Factory.newInstance();
-                geoDatabase.setName( "GEO" );
+                geoDatabase.setName( ExternalDatabases.GEO );
                 geoDatabase.setType( DatabaseType.EXPRESSION );
             }
         }

@@ -28,6 +28,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -170,7 +171,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
             pubAccession.setAccession( pubmedId );
             ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( "PubMed" );
+            ed.setName( ExternalDatabases.PUBMED );
             pubAccession.setExternalDatabase( ed );
 
             publication.setPubAccession( pubAccession );

@@ -633,7 +633,7 @@ public class PersistentDummyObjectHelper {
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
         if ( pubmed == null ) {
-            pubmed = externalDatabaseService.findByName( "PubMed" );
+            pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
         }
         br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed ) );
         return ( BibliographicReference ) persisterHelper.persist( br );
@@ -787,9 +787,9 @@ public class PersistentDummyObjectHelper {
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
         switch ( databaseName ) {
-            case "GEO":
+            case ExternalDatabases.GEO:
                 return this.getTestPersistentDatabaseEntry( accession, geo );
-            case "PubMed":
+            case ExternalDatabases.PUBMED:
                 return this.getTestPersistentDatabaseEntry( accession, pubmed );
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
@@ -1072,7 +1072,7 @@ public class PersistentDummyObjectHelper {
         bm.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH )
                 + "_testbiomaterial" );
         if ( geo == null ) {
-            geo = externalDatabaseService.findByName( "GEO" );
+            geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
             assert geo != null;
         }
         bm.setSourceTaxon( getTestNonPersistentTaxon() );
@@ -1088,7 +1088,7 @@ public class PersistentDummyObjectHelper {
         bm.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH )
                 + "_testbiomaterial" );
         if ( geo == null ) {
-            geo = externalDatabaseService.findByName( "GEO" );
+            geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
             assert geo != null;
         }
         bm.setSourceTaxon( tax );
