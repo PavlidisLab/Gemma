@@ -42,6 +42,7 @@ public class ExpressionExperimentGeoServiceImpl implements ExpressionExperimentG
     public GeoSeries getGeoSeries( ExpressionExperiment ee ) {
         if ( ee.getAccession() == null || !ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
             log.warn( ee + " does not originate from GEO, no GEO series metadata will be retrieved." );
+            return null;
         }
         GeoFetcher geoFetcher = new GeoFetcher( retryPolicy, geoSeriesDownloadPath );
         geoFetcher.setFtpClientFactory( ftpClientFactory );
