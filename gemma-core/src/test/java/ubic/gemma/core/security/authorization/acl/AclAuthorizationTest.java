@@ -49,13 +49,13 @@ import static org.junit.Assert.*;
  */
 public class AclAuthorizationTest extends BaseSpringContextTest {
 
-    private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
+    private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.insecure().nextAlphabetic( 5 );
     private final String arrayDesignName =
-            "AD_" + RandomStringUtils.randomAlphabetic( 10 );
+            "AD_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
     private final String compositeSequenceName1 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
+            "Design Element_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
     private final String compositeSequenceName2 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
+            "Design Element_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -101,7 +101,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
             userManager.loadUserByUsername( aDifferentUsername );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", aDifferentUsername, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
 
     }

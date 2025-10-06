@@ -41,7 +41,7 @@ class TaskUtils {
          */
         int keepTrying = 0;
         while ( ++keepTrying < TaskUtils.MAX_ATTEMPTS ) {
-            String id = RandomStringUtils.randomAlphanumeric( TaskUtils.KEY_LENGTH ).toUpperCase();
+            String id = RandomStringUtils.secure().nextAlphanumeric( TaskUtils.KEY_LENGTH ).toUpperCase();
             if ( TaskUtils.usedIds.isEmpty() || !TaskUtils.usedIds.contains( id ) ) {
                 TaskUtils.usedIds.add( id );
                 return id;

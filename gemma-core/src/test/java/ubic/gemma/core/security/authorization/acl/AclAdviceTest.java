@@ -123,7 +123,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     public void testSignup() {
         try {
             super.runAsAnonymous();
-            String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
+            String userName = "testuser" + RandomStringUtils.insecure().nextAlphabetic( 3 );
             this.makeUser( userName );
             this.runAsUser( userName );
         } finally {
@@ -134,7 +134,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Test
     public void testArrayDesignAclsUser() {
 
-        String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
+        String userName = "testuser" + RandomStringUtils.insecure().nextAlphabetic( 3 );
         this.makeUser( userName );
         this.runAsUser( userName );
         ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false );
@@ -183,7 +183,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
 
         // logged-in user can also see both
-        String user = RandomStringUtils.randomAlphabetic( 10 );
+        String user = RandomStringUtils.insecure().nextAlphabetic( 10 );
         this.makeUser( user );
         this.runAsUser( user );
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
@@ -209,7 +209,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         // create a new user group, add user to it, make ee2 private to group
         this.runAsAdmin();
-        String group = RandomStringUtils.randomAlphabetic( 10 );
+        String group = RandomStringUtils.insecure().nextAlphabetic( 10 );
         securityService.createGroup( group );
         securityService.addUserToGroup( user, group );
         securityService.makeReadableByGroup( ee2, group );
@@ -370,7 +370,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+                    RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 

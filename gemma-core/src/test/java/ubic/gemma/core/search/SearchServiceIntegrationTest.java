@@ -131,7 +131,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
         gene = this.getTestPersistentGene();
 
-        this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
+        this.geneNcbiId = RandomStringUtils.insecure().nextNumeric( 8 );
         gene.setNcbiGeneId( Integer.valueOf( geneNcbiId ) );
         geneService.update( gene );
 

@@ -69,8 +69,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoad() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
@@ -78,8 +78,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setDescription( "Simple expression data loader service test - load" );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "testing" );
@@ -105,16 +105,16 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoadB() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         metaData.setDescription( "Simple expression data loader service test - load B" );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
@@ -144,9 +144,9 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoadDuplicatedRow() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
 
@@ -154,7 +154,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "testing" );
@@ -180,8 +180,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public void testLoadWithSampleMetadata() {
         ArrayDesign ad = getTestPersistentArrayDesign( 10, true );
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", ExternalDatabases.GEO ) );
 

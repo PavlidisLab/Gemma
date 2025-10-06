@@ -208,7 +208,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             }
         }
 
-        ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        ee.setShortName( RandomStringUtils.insecure().nextAlphabetic( 12 ) );
         expressionExperimentService.update( ee );
         ee = expressionExperimentService.thaw( ee );
         processedDataVectorService.createProcessedDataVectors( ee, false );
@@ -227,7 +227,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 blata.setGeneProduct( g.getProducts().iterator().next() );
                 BlatResult br = BlatResult.Factory.newInstance();
                 BioSequence bs = BioSequence.Factory.newInstance();
-                bs.setName( RandomStringUtils.random( 10 ) );
+                bs.setName( RandomStringUtils.insecure().next( 10 ) );
                 bs.setTaxon( taxon );
                 bs = ( BioSequence ) persisterHelper.persist( bs );
 

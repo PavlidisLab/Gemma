@@ -174,7 +174,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public String generateSignupToken( String username ) {
-        return RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
+        return RandomStringUtils.secureStrong().nextAlphanumeric( 32 ).toUpperCase();
     }
 
     @Override

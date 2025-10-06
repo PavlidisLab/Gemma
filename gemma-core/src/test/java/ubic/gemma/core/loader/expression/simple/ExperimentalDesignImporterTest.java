@@ -57,7 +57,7 @@ import static org.junit.Assert.*;
 @Category(SlowTest.class)
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
-    private final String adName = RandomStringUtils.randomAlphabetic( 10 );
+    private final String adName = RandomStringUtils.insecure().nextAlphabetic( 10 );
     private ExpressionExperiment ee;
     @Autowired
     private ExpressionExperimentService eeService;
@@ -92,7 +92,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
-        String eeShortName = RandomStringUtils.randomAlphabetic( 11 );
+        String eeShortName = RandomStringUtils.insecure().nextAlphabetic( 11 );
         metaData.setShortName( eeShortName );
         metaData.setName( "foo" );
         metaData.setDescription( "bar" );

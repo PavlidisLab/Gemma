@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
  */
 public class GeneServiceTest extends BaseSpringContextTest {
 
-    private static final String TEST_GENE_NAME = "test_genedao" + RandomStringUtils.random( 3 );
+    private static final String TEST_GENE_NAME = "test_genedao" + RandomStringUtils.insecure().next( 3 );
 
     @Autowired
     private ExternalDatabaseService edbs;
@@ -63,7 +63,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testFindByAccessionNcbi() {
 
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
@@ -83,7 +83,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
         Gene gene = Gene.Factory.newInstance();
 
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
         ExternalDatabase ncbi = edbs.findByName( "Entrez Gene" );
@@ -107,7 +107,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testFindByAccessionOther() {
 
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
         ExternalDatabase ensembl = edbs.findByName( "Ensembl" );
@@ -131,7 +131,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testFindByNcbiId() {
 
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
@@ -150,7 +150,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testFindEvenThoughHaveSameSymbol() {
         Gene gene = Gene.Factory.newInstance();
 
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
         gene.setOfficialName( GeneServiceTest.TEST_GENE_NAME );
@@ -202,7 +202,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     @Test
     public void testGetByGeneAlias() {
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
@@ -222,7 +222,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testGetMicroRnaByTaxon() {
 
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
@@ -248,7 +248,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
 
         Gene gene = Gene.Factory.newInstance();
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
         gene.setName( "Ma_Gene" );

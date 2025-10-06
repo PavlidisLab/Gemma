@@ -44,14 +44,14 @@ public class TaxaWebServiceTest extends BaseJerseyIntegrationTest {
         taxon = new Taxon();
         taxon.setNcbiId( 1000 + random.nextInt( Integer.MAX_VALUE - 1000 ) );
         taxon.setCommonName( "common_name_" + random.nextInt() );
-        taxon.setScientificName( "scientific_name_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        taxon.setScientificName( "scientific_name_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         taxon.setIsGenesUsable( false );
         taxon = taxonService.create( taxon );
         gene = new Gene();
         gene.setTaxon( taxon );
         gene.setNcbiGeneId( random.nextInt() );
-        gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene = geneService.create( gene );
     }
 

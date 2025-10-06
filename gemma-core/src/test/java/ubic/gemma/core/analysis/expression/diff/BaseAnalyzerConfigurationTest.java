@@ -165,13 +165,13 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseTest {
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
-        arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
+        arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.insecure().nextAlphanumeric( 12 ) );
         arrayDesign.setPrimaryTaxon( taxon );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
-        expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
+        expressionExperiment.setName( "analysistest_" + RandomStringUtils.insecure().nextAlphanumeric( 12 ) );
         expressionExperiment.setId( 100009L );
-        expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );
+        expressionExperiment.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 12 ) );
 
         /* experimental factor "area" */
         experimentalFactorA_Area = ExperimentalFactor.Factory.newInstance();

@@ -64,25 +64,25 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void setUp() throws Exception {
 
         e1 = ExpressionExperiment.Factory.newInstance();
-        e1.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
+        e1.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         e1 = expressionExperimentService.create( e1 );
 
         e2 = ExpressionExperiment.Factory.newInstance();
-        e2.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
+        e2.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         e2 = expressionExperimentService.create( e2 );
 
         e3 = ExpressionExperiment.Factory.newInstance();
-        e3.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
+        e3.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         e3 = expressionExperimentService.create( e3 );
 
         ExpressionExperiment e4 = ExpressionExperiment.Factory.newInstance();
-        e4.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
+        e4.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         expressionExperimentService.create( e4 );
 
         // //////////////////
         DifferentialExpressionAnalysis eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis1.setExperimentAnalyzed( e1 );
-        dea1_name = RandomStringUtils.randomAlphabetic( 6 );
+        dea1_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis1.setName( dea1_name );
         eAnalysis1.setDescription( "An analysis Test 1" );
         analysisService.create( eAnalysis1 );
@@ -91,7 +91,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         DifferentialExpressionAnalysis eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis2.setExperimentAnalyzed( e2 );
-        dea2_name = RandomStringUtils.randomAlphabetic( 6 );
+        dea2_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis2.setName( dea2_name );
         eAnalysis2.setDescription( "An analysis Test 2" );
         analysisService.create( eAnalysis2 );
@@ -100,7 +100,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         DifferentialExpressionAnalysis eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis3.setExperimentAnalyzed( e3 );
-        this.testAnalysisName = RandomStringUtils.randomAlphabetic( 6 );
+        this.testAnalysisName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
         analysisService.create( eAnalysis3 );
@@ -108,7 +108,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         // ////
         DifferentialExpressionAnalysis eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis4.setExperimentAnalyzed( e3 );
-        testEESetName = RandomStringUtils.randomAlphabetic( 6 );
+        testEESetName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis4.setName( testEESetName );
         eAnalysis4.setDescription( "An analysis Test 4" );
         analysisService.create( eAnalysis4 );

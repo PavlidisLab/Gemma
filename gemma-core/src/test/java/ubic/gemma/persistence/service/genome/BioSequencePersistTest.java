@@ -61,9 +61,9 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setExternalDatabase( ed );
-        de.setAccession( RandomStringUtils.randomAlphanumeric( 10 ) );
+        de.setAccession( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
 
-        bs.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
+        bs.setName( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
         bs.setSequenceDatabaseEntry( de );
         bs.setType( SequenceType.WHOLE_CHROMOSOME );
     }

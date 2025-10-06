@@ -17,7 +17,7 @@ public class SingleCellDimensionTest {
     @Test
     public void testGetBioAssay() {
         SingleCellDimension scd = new SingleCellDimension();
-        List<String> cellIds = IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.randomAlphanumeric( 10 ) )
+        List<String> cellIds = IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.insecure().nextAlphanumeric( 10 ) )
                 .collect( Collectors.toList() );
         scd.setCellIds( cellIds );
         scd.setNumberOfCellIds( cellIds.size() );

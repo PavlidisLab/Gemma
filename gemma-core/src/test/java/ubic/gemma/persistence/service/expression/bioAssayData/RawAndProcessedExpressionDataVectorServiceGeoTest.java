@@ -84,7 +84,7 @@ public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractG
             }
         }
 
-        newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        newee.setShortName( RandomStringUtils.insecure().nextAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
         newee = this.expressionExperimentService.thawLite( newee );

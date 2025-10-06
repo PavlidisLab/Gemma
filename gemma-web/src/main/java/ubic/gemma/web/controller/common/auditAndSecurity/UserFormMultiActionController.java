@@ -172,7 +172,8 @@ public class UserFormMultiActionController {
             }
 
             /* Change the password. */
-            String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
+            String pwd = RandomStringUtils.secureStrong()
+                    .nextAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
 
             String token = userManager.changePasswordForUser( email, username, pwd );

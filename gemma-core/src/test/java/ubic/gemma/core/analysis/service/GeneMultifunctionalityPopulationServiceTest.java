@@ -96,8 +96,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
         Random random = new Random( 123L );
         testTaxon = taxonService.findOrCreate( Taxon.Factory
-                .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
-                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), random.nextInt( 5000 ), true ) );
+                .newInstance( "foobly" + RandomStringUtils.insecure().nextAlphabetic( 2 ),
+                        "doobly" + RandomStringUtils.insecure().nextAlphabetic( 2 ), random.nextInt( 5000 ), true ) );
 
         /*
          * Create genes

@@ -733,7 +733,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     private SingleCellDimension createSingleCellDimension() {
         SingleCellDimension scd = new SingleCellDimension();
-        scd.setCellIds( IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.randomAlphanumeric( 10 ) ).collect( Collectors.toList() ) );
+        scd.setCellIds( IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.insecure().nextAlphanumeric( 10 ) ).collect( Collectors.toList() ) );
         scd.setNumberOfCellIds( 100 );
         int[] ct = new int[100];
         for ( int i = 0; i < ct.length; i++ ) {
