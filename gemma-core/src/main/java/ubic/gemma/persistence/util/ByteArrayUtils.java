@@ -1,9 +1,11 @@
 package ubic.gemma.persistence.util;
 
+import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.io.ByteArrayConverter;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Utilities for working with byte arrays.
@@ -105,6 +107,11 @@ public class ByteArrayUtils {
 
     public static <T> byte[] objectArrayToBytes( T[] objects ) {
         return byteArrayConverter.objectArrayToBytes( objects, StandardCharsets.UTF_8 );
+    }
+
+    public static <T> byte[] objectListToBytes( List<T> objects ) {
+        // TODO: add an objectListToBytes
+        return byteArrayConverter.objectArrayToBytes( objects.toArray(), StandardCharsets.UTF_8 );
     }
 
     public static <T> T[] byteArrayToObjects( byte[] bytes, Class<T> type ) {

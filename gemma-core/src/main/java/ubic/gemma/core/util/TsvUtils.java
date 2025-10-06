@@ -93,6 +93,19 @@ public class TsvUtils {
         }
     }
 
+    public static double parseFloat( @Nullable String val ) {
+        val = StringUtils.stripToNull( val );
+        if ( val == null ) {
+            return Float.NaN;
+        } else if ( val.equals( "inf" ) ) {
+            return Float.POSITIVE_INFINITY;
+        } else if ( val.equals( "-inf" ) ) {
+            return Float.NEGATIVE_INFINITY;
+        } else {
+            return Float.parseFloat( StringUtils.strip( val ) );
+        }
+    }
+
     @Nullable
     public static Long parseLong( @Nullable String val ) {
         return StringUtils.isNotBlank( val ) ? Long.parseLong( StringUtils.strip( val ) ) : null;
