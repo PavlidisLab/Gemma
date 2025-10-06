@@ -11,8 +11,10 @@ public class ResourceUtilsTest {
     @Test
     public void test() {
         assertThat( getSourceCodeLocation( requireNonNull( getClass().getResource( "/ubic/gemma/core/util/ResourceUtils.class" ) ) ) )
+                .startsWith( "file://" )
                 .endsWith( "gemma-core/src/main/java/ubic/gemma/core/util/ResourceUtils.java" );
         assertThat( getSourceCodeLocation( requireNonNull( getClass().getResource( "/sql/init-data.sql" ) ) ) )
+                .startsWith( "file://" )
                 .endsWith( "gemma-core/src/main/resources/sql/init-data.sql" );
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,6 +49,12 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Transactional(readOnly = true)
     public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.auditEventDao.getEvents( auditable );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuditEvent> getEvents( Auditable auditable, Class<? extends AuditEventType> type ) {
+        return auditEventDao.getEvents( auditable, type );
     }
 
     @Override
@@ -82,13 +89,26 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public <T extends Auditable> Map<Class<? extends AuditEventType>, AuditEvent> getLastEvents( T auditable, Collection<Class<? extends AuditEventType>> types ) {
+        Map<Class<? extends AuditEventType>, AuditEvent> results = new HashMap<>();
+        for ( Class<? extends AuditEventType> ti : types ) {
+            Map<T, AuditEvent> results2 = auditEventDao.getLastEvents( Collections.singleton( auditable ), ti );
+            if ( results2.containsKey( auditable ) ) {
+                results.put( ti, results2.get( auditable ) );
+            }
+        }
+        return results;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Auditable> Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> getLastEvents(
             Collection<T> auditables, Collection<Class<? extends AuditEventType>> types ) {
         Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> results = new HashMap<>();
         for ( Class<? extends AuditEventType> ti : types ) {
             Map<T, AuditEvent> results2 = auditEventDao.getLastEvents( auditables, ti );
             results.put( ti, results2.entrySet().stream()
-                    .filter( e -> ti.isAssignableFrom( e.getValue().getEventType().getClass() ) )
+                    .filter( e -> ti.isInstance( e.getValue().getEventType() ) )
                     .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) ) );
         }
         return results;

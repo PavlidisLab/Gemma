@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -34,50 +35,82 @@ import java.util.Map;
  */
 public interface AuditEventService {
 
+    /**
+     * @see AuditEventDao#getEvents(Auditable)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<AuditEvent> getEvents( Auditable auditable );
 
+    /**
+     * @see AuditEventDao#getEvents(Auditable, Class)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<AuditEvent> getEvents( Auditable auditable, Class<? extends AuditEventType> type );
+
+    /**
+     * @see AuditEventDao#getCreateEvents(Collection)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditable );
 
+    /**
+     * @see AuditEventDao#getLastEvent(Auditable)
+     */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable );
 
+    /**
+     * @see AuditEventDao#getLastEvent(Auditable, Class)
+     */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
+    /**
+     * @see AuditEventDao#getLastEvent(Auditable, Class, Collection)
+     */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
 
+    /**
+     * @see AuditEventDao#getLastEvents(Class, Class)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
 
     /**
-     * Fast method to retrieve auditEventTypes of multiple classes.
+     * For each event type, retrieve the latest event.
      *
-     * @param types      types
-     * @param auditables auditables
-     * @return map of AuditEventType to a Map of Auditable to the AuditEvent matching that type.
-     * Note: cannot secure this very easily since map key is a Class.
+     * @see AuditEventDao#getLastEvent(Auditable, Class)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    <T extends Auditable> Map<Class<? extends AuditEventType>, AuditEvent> getLastEvents( T auditable, Collection<Class<? extends AuditEventType>> types );
+
+    /**
+     * For each auditable and event type, retrieve the latest event.
+     *
+     * @see AuditEventDao#getLastEvents(Collection, Class)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     <T extends Auditable> Map<Class<? extends AuditEventType>, Map<T, AuditEvent>> getLastEvents(
             Collection<T> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
+     * Note that this security setting works even though auditables aren't necessarily securable; non-securable
+     * auditables will be returned. See {@link AclEntryAfterInvocationCollectionFilteringProvider} and
+     * {@code applicationContext-security.xml}.
+     * @see AuditEventDao#getNewSinceDate(Class, Date)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date );
 
     /**
-     * @param date date
-     * @return a collection of Auditable objects that were updated since the date entered.
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
-     * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
-     * applicationContext-security.xml
+     * auditables will be returned. See {@link AclEntryAfterInvocationCollectionFilteringProvider} and
+     * {@code applicationContext-security.xml}.
+     * @see AuditEventDao#getUpdatedSinceDate(Class, Date)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date );

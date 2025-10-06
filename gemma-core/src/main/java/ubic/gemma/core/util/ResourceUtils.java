@@ -11,7 +11,7 @@ public class ResourceUtils {
         if ( resourceUrl.getProtocol().equals( "file" ) ) {
             String s = resourceUrl
                     .toString()
-                    .replaceFirst( "^file:", "" );
+                    .replaceFirst( "^file:", "file://" );
             if ( s.endsWith( ".class" ) ) {
                 return s
                         .replaceFirst( "\\.class$", ".java" )

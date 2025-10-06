@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -382,6 +380,55 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
             log.info( "New batch effect for " + ee + ": " + effectSummary );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentDataProcessingReport generateDataProcessingReport( ExpressionExperiment ee ) {
+        Map<Class<? extends AuditEventType>, AuditEvent> latestEvents = auditEventService.getLastEvents( ee, Arrays.asList(
+                SingleCellSubSetsCreatedEvent.class,
+                ProcessedVectorComputationEvent.class ) );
+        List<AuditEvent> dataAddedEvents = auditEventService.getEvents( ee, DataAddedEvent.class );
+
+        // FIXME
+        ExpressionExperimentDataProcessingReport.Details odd = null;
+        ExpressionExperimentDataProcessingReport.Details ad = null;
+        for ( int i = dataAddedEvents.size() - 1; i >= 0; i-- ) {
+            AuditEvent e = dataAddedEvents.get( i );
+            if ( e.getEventType() instanceof SingleCellDataAddedEvent ) {
+                //
+                odd = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( e.getEventType() instanceof AggregatedSingleDataAddedEvent ) {
+                ad = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( odd == null && e.getNote() != null && e.getNote().matches( "Added \\d+ vectors for %s with dimension .+\\." ) ) {
+                odd = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( ad == null && e.getNote() != null && e.getNote().matches( "Created \\d+ aggregated raw vectors for .+\\." ) ) {
+                ad = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else {
+                log.info( e.getNote() );
+            }
+        }
+
+        ExpressionExperimentDataProcessingReport.Details sd;
+        if ( latestEvents.containsKey( SingleCellSubSetsCreatedEvent.class ) ) {
+            AuditEvent se = latestEvents.get( SingleCellSubSetsCreatedEvent.class );
+            sd = new ExpressionExperimentDataProcessingReport.Details( se.getDetail(), se.getDate() );
+        } else {
+            sd = null;
+        }
+        ExpressionExperimentDataProcessingReport.Details pd;
+        if ( latestEvents.containsKey( ProcessedVectorComputationEvent.class ) ) {
+            AuditEvent pe = latestEvents.get( ProcessedVectorComputationEvent.class );
+            pd = new ExpressionExperimentDataProcessingReport.Details( pe.getDetail(), pe.getDate() );
+        } else {
+            pd = null;
+        }
+        return ExpressionExperimentDataProcessingReport.builder()
+                .originalData( odd )
+                .subsetting( sd )
+                .aggregation( ad )
+                .preprocessing( pd )
+                .build();
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {

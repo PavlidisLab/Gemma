@@ -374,7 +374,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 removeCellTypeFactorIfExists( ee );
             }
         }
-        auditTrailService.addUpdateEvent( ee, DataAddedEvent.class,
+        auditTrailService.addUpdateEvent( ee, SingleCellDataAddedEvent.class,
                 String.format( "Added %d vectors for %s with dimension %s.", numVectorsAdded, quantitationType, scd ), details );
         return numVectorsAdded;
     }
@@ -426,7 +426,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 removeCellTypeFactorIfExists( ee );
             }
         }
-        auditTrailService.addUpdateEvent( ee, DataReplacedEvent.class,
+        auditTrailService.addUpdateEvent( ee, SingleCellDataReplacedEvent.class,
                 String.format( "Replaced %d vectors with %d vectors for %s with dimension %s.", numVectorsRemoved, vectors.size(), quantitationType, scd ) );
         return numVectorsRemoved;
     }
@@ -644,7 +644,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         expressionExperimentDao.update( ee );
         if ( removedVectors > 0 ) {
-            auditTrailService.addUpdateEvent( ee, DataRemovedEvent.class,
+            auditTrailService.addUpdateEvent( ee, SingleCellDataRemovedEvent.class,
                     String.format( "Removed %d vectors for %s with dimension %s.", removedVectors, quantitationType, scd ) );
         }
         return removedVectors;

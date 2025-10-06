@@ -59,7 +59,18 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
                 .createQuery( "select e from AuditTrail t join t.events e where t = :at order by e.date,e.id " )
                 .setParameter( "at", auditable.getAuditTrail() )
                 .list();
+    }
 
+    @Override
+    public List<AuditEvent> getEvents( Auditable auditable, Class<? extends AuditEventType> type ) {
+        Assert.notNull( auditable.getAuditTrail(), "Auditable did not have an audit trail: " + auditable );
+        Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from AuditTrail t join t.events e join e.eventType et where t = :at and type(et) in :classes order by e.date,e.id " )
+                .setParameter( "at", auditable.getAuditTrail() )
+                .setParameterList( "classes", getClassHierarchy( type, null ) )
+                .list();
     }
 
     @Nullable
