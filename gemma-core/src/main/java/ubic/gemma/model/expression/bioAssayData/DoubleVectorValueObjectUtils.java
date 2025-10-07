@@ -116,7 +116,9 @@ public class DoubleVectorValueObjectUtils {
         BioAssay ba = BioAssay.Factory.newInstance();
         ba.setId( bavo.getId() );
         ba.setShortName( bavo.getShortName() );
-        ba.setAccession( toDatabaseEntry( bavo.getAccession(), edvo2ed, DatabaseType.EXPRESSION ) );
+        if ( bavo.getAccession() != null ) {
+            ba.setAccession( toDatabaseEntry( bavo.getAccession(), edvo2ed, DatabaseType.EXPRESSION ) );
+        }
         ba.setName( bavo.getName() );
         ba.setDescription( bavo.getDescription() );
         ba.setIsOutlier( bavo.isOutlier() );
