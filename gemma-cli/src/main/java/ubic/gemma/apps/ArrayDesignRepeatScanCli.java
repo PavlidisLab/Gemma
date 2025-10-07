@@ -53,16 +53,15 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     private String repeatMaskerExe;
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().argName( ".out file" )
-                .desc( "RepeatScan file to use as input" ).longOpt( "file" ).type( Path.class ).build();
+                .desc( "RepeatScan file to use as input" ).longOpt( "file" ).type( Path.class )
+                .get();
         options.addOption( fileOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'f' ) ) {
             this.inputFileName = commandLine.getParsedOptionValue( 'f' );
         }
@@ -74,25 +73,25 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
-            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+        if ( !arrayDesignsToProcess.isEmpty() ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
                     log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
                     return;
                 }
 
-                arrayDesign = getArrayDesignService().thaw( arrayDesign );
+                arrayDesign = arrayDesignService.thaw( arrayDesign );
 
                 this.processArrayDesign( arrayDesign );
             }
         } else if ( skipIfLastRunLaterThan != null ) {
             log.warn( "*** Running Repeatmasker for all Array designs *** " );
 
-            Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().loadAll();
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
@@ -111,7 +110,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    design = getArrayDesignService().thaw( design );
+                    design = arrayDesignService.thaw( design );
                     this.processArrayDesign( design );
                     addSuccessObject( design );
                     this.audit( design, "" );
@@ -130,12 +129,9 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         return "Run RepeatMasker on sequences for an Array design";
     }
 
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignRepeatAnalysisEvent.class, note );
-    }
-
-    private void processArrayDesign( ArrayDesign design ) {
-        ArrayDesign thawed = getArrayDesignService().thaw( design );
+    @Override
+    protected void processArrayDesign( ArrayDesign design ) {
+        ArrayDesign thawed = arrayDesignService.thaw( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( thawed );
@@ -159,4 +155,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         log.info( "Done with " + thawed );
     }
 
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignRepeatAnalysisEvent.class, note );
+    }
 }

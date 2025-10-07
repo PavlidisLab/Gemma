@@ -21,14 +21,13 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +43,7 @@ import static ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceP
 @Deprecated
 public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingCli {
 
-    private static String FILE_OPT = "f";
+    private static final String FILE_OPT = "f";
 
     private String fileName;
 
@@ -53,15 +52,8 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         return "probeRename";
     }
 
-    @Nullable
     @Override
-    public String getShortDesc() {
-        return null;
-    }
-
-    @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         options.addOption( Option.builder( FILE_OPT )
                 .longOpt( "file" )
                 .required()
@@ -71,36 +63,35 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) {
         this.fileName = commandLine.getOptionValue( FILE_OPT );
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         if ( fileName == null ) {
             throw new IllegalArgumentException( "filename cannot be null" );
         }
 
-        if ( this.getArrayDesignsToProcess().size() > 1 ) {
+        if ( arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        arrayDesign = getArrayDesignService().thaw( arrayDesign );
+        ArrayDesign arrayDesign = arrayDesignsToProcess.iterator().next();
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         File file = new File( fileName );
         if ( !file.canRead() ) {
-            throw new IOException( "Cannot read from " + fileName );
+            throw new RuntimeException( "Cannot read from " + fileName );
         }
         try ( InputStream newIdFile = new FileInputStream( file ) ) {
 
             this.rename( arrayDesign, newIdFile );
             newIdFile.close();
             this.audit( arrayDesign, "Probes renamed using file " + fileName );
-        } catch ( Exception ex ) {
-            throw ex;
+        } catch ( IOException ex ) {
+            throw new RuntimeException( ex );
         }
     }
 
@@ -133,11 +124,11 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
         }
 
-        getArrayDesignService().update( arrayDesign );
+        arrayDesignService.update( arrayDesign );
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignProbeRenamingEvent.class, note );
     }
 

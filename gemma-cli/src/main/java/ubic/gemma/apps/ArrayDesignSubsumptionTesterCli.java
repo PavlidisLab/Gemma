@@ -55,8 +55,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
                 .longOpt( "other" )
@@ -69,8 +68,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'o' ) ) {
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
@@ -81,14 +79,14 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        if ( this.getArrayDesignsToProcess().size() > 1 ) {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
+        if ( arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        arrayDesign = getArrayDesignService().thaw( arrayDesign );
+        ArrayDesign arrayDesign = arrayDesignsToProcess.iterator().next();
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
             throw new IllegalArgumentException( // note that GENELIST is also invalid but this is the likely case that could be encountered
                     "This tool is only for microarray platforms; " + arrayDesign.getShortName() + " is a sequencing platform" );
@@ -104,7 +102,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 continue;
             }
 
-            otherArrayDesign = getArrayDesignService().thaw( otherArrayDesign );
+            otherArrayDesign = arrayDesignService.thaw( otherArrayDesign );
 
             if ( otherArrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
                 throw new IllegalArgumentException(
@@ -114,7 +112,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             if ( allWays ) {
                 allToCompare.add( otherArrayDesign );
             } else {
-                Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
+                Boolean aSubsumes = arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
             }
 //            if ( !aSubsumes ) {
 //                // test other way around, but only if first way failed (to avoid cycles)
@@ -137,7 +135,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
                     log.info( "--- comparing " + a.getShortName() + " to " + b.getShortName() );
 
-                    boolean subsumes = this.getArrayDesignService().updateSubsumingStatus( a, b );
+                    boolean subsumes = arrayDesignService.updateSubsumingStatus( a, b );
 
                     if ( subsumes ) {
                         done.add( b );

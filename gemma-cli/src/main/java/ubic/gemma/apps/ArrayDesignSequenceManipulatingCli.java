@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
@@ -41,9 +40,11 @@ import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.cli.util.EntityOptionsUtils.addPlatformOption;
+import static ubic.gemma.cli.util.EntityOptionsUtils.addCommaDelimitedPlatformOption;
 
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
@@ -54,9 +55,9 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.addPlatformOption;
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSeekingCLI<ArrayDesign> {
 
     @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
+    protected ArrayDesignReportService arrayDesignReportService;
     @Autowired
-    private ArrayDesignService arrayDesignService;
+    protected ArrayDesignService arrayDesignService;
     @Autowired
     protected AuditTrailService auditTrailService;
     @Autowired
@@ -64,7 +65,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     @Autowired
     protected EntityLocator entityLocator;
 
-    private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
+    private Set<String> platformIdentifiers;
 
     protected ArrayDesignSequenceManipulatingCli() {
         super( ArrayDesign.class );
@@ -76,47 +77,81 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
         return CommandGroup.PLATFORM;
     }
 
-    protected Collection<ArrayDesign> getArrayDesignsToProcess() {
-        return arrayDesignsToProcess;
-    }
-
     @Override
-    protected void buildOptions( Options options ) {
-        addPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
-
-        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "File containing platform identifiers" )
+    protected final void buildOptions( Options options ) {
+        addCommaDelimitedPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
+        options.addOption( Option.builder( "f" )
+                .hasArg().argName( "File containing platform identifiers" )
                 .desc( "File with list of short names or IDs of platforms (one per line; use instead of '-a')" )
-                .longOpt( "adListFile" ).build();
-        options.addOption( eeFileListOption );
-
+                .longOpt( "adListFile" )
+                .type( Path.class )
+                .get() );
         this.addLimitingDateOption( options );
         this.addAutoOption( options );
         this.addBatchOption( options );
+        buildArrayDesignOptions( options );
+    }
+
+    protected void buildArrayDesignOptions( Options options ) {
+
     }
 
     @Override
     @OverridingMethodsMustInvokeSuper
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
+        this.platformIdentifiers = new HashSet<>();
         if ( commandLine.hasOption( 'a' ) ) {
-            this.arraysFromCliList( commandLine );
-        } else if ( commandLine.hasOption( 'f' ) ) {
-            String experimentListFile = commandLine.getOptionValue( 'f' );
+            String[] shortNames = commandLine.getOptionValues( 'a' );
+            this.platformIdentifiers.addAll( Arrays.asList( shortNames ) );
+        }
+        if ( commandLine.hasOption( 'f' ) ) {
+            Path experimentListFile = commandLine.getParsedOptionValue( 'f' );
             log.info( "Reading arrayDesigns list from " + experimentListFile );
             try {
-                this.arrayDesignsToProcess = this.readListFile( experimentListFile );
+                this.platformIdentifiers.addAll( FileUtils.readListFileToStrings( experimentListFile ) );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         }
+        processArrayDesignOptions( commandLine );
     }
 
-    protected ArrayDesignReportService getArrayDesignReportService() {
-        return arrayDesignReportService;
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
+
     }
 
-    protected ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
+    @Override
+    protected final void doAuthenticatedWork() throws Exception {
+        Collection<ArrayDesign> arrayDesignsToProcess = platformIdentifiers.stream()
+                .map( entityLocator::locateArrayDesign )
+                .collect( Collectors.toSet() );
+        if ( arrayDesignsToProcess.isEmpty() ) {
+            throw new RuntimeException( "No platforms matched the given options." );
+        } else if ( arrayDesignsToProcess.size() == 1 ) {
+            setEstimatedMaxTasks( 1 );
+            log.info( "Final platform: " + arrayDesignsToProcess.iterator().next() );
+            // TODO: bypass processArrayDesigns and call processArrayDesign() directly
+            processArrayDesigns( arrayDesignsToProcess );
+        } else {
+            log.info( String.format( "Final list: %d platforms", arrayDesignsToProcess.size() ) );
+            setEstimatedMaxTasks( arrayDesignsToProcess.size() );
+            processArrayDesigns( arrayDesignsToProcess );
+        }
+    }
+
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        for ( ArrayDesign arrayDesign : arrayDesigns ) {
+            try {
+                processArrayDesign( arrayDesign );
+            } catch ( Exception e ) {
+                addErrorObject( arrayDesign, e );
+            }
+        }
+    }
+
+    protected void processArrayDesign( ArrayDesign arrayDesign ) {
+
     }
 
     protected Serializable toBatchObject( @Nullable ArrayDesign object ) {
@@ -149,7 +184,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
-            addErrorObject( design, "Skipped because it is not a microarray platform." );
+            addWarningObject( design, "Skipped because it is not a microarray platform." );
             return false;
         }
 
@@ -159,15 +194,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
-            addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
+            addWarningObject( design, "Skipped because it is subsumed by or merged into another design." );
             return false;
         }
 
         if ( !this.needToRun( skipIfLastRunLaterThan, design, cls ) ) {
             if ( skipIfLastRunLaterThan != null ) {
-                addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                addWarningObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
             } else {
-                addErrorObject( design, "Seems to be up to date or is not ready to run" );
+                addWarningObject( design, "Seems to be up to date or is not ready to run" );
             }
             return false;
         }
@@ -180,7 +215,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
      * @param design a platform
      * @return related platforms
      */
-    Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+    protected Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
         Collection<ArrayDesign> toUpdate = new HashSet<>();
         toUpdate.addAll( design.getMergees() );
         toUpdate.addAll( design.getSubsumedArrayDesigns() );
@@ -195,7 +230,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( @Nullable Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( isAutoSeek() ) {
@@ -215,26 +250,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     }
 
-    private void arraysFromCliList( CommandLine commandLine ) {
-        String arrayShortNames = commandLine.getOptionValue( 'a' );
-        String[] shortNames = arrayShortNames.split( "," );
-
-        for ( String shortName : shortNames ) {
-            if ( StringUtils.isBlank( shortName ) )
-                continue;
-            ArrayDesign ad = entityLocator.locateArrayDesign( shortName );
-            arrayDesignsToProcess.add( ad );
-        }
-        if ( arrayDesignsToProcess.isEmpty() ) {
-            throw new RuntimeException( "There were no valid platforms specified" );
-        }
-    }
-
     /**
      * @param eventClass if null, then all events are added.
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            @Nullable Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditEventService.getEvents( arrayDesign ) ) {
@@ -280,7 +300,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
         if ( lastEventOfCurrentType.getEventType() != null && eventClass.isAssignableFrom( lastEventOfCurrentType.getEventType().getClass() ) ) {
             // then definitely don't run it. The last event was the same as the one we're trying to renew.
-            log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
+            log.debug( String.format( "Last event on %s was also a %s, skipping.", arrayDesign, eventClass ) );
             return false;
         }
 
@@ -300,43 +320,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             }
 
             if ( currentEvent.getDate().after( lastEventOfCurrentType.getDate() ) ) {
-                log
-                        .info( arrayDesign + " needs update, last " + eventClass.getSimpleName() + " was before last "
-                                + currentEvent.getEventType().getClass().getSimpleName() );
+                log.info( String.format( "%s needs update, last %s was before last %s", arrayDesign,
+                        eventClass.getSimpleName(), currentEvent.getEventType().getClass().getSimpleName() ) );
                 return true;
             }
-            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last " + currentEvent
-                    .getEventType().getClass().getSimpleName() + " (OK)" );
+            log.debug( String.format( "%s %s was after last %s (OK)", arrayDesign, eventClass.getSimpleName(),
+                    currentEvent.getEventType().getClass().getSimpleName() ) );
 
         }
         log.debug( arrayDesign + " does not need an update" );
         return false;
-    }
-
-    /**
-     * Load expression experiments based on a list of short names or IDs in a file.
-     */
-    private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
-        Set<ArrayDesign> ees = new HashSet<>();
-        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
-            ArrayDesign ee = arrayDesignService.findByShortName( eeName );
-            if ( ee == null ) {
-
-                try {
-                    Long id = Long.parseLong( eeName );
-                    ee = arrayDesignService.load( id );
-                    if ( ee == null ) {
-                        addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
-                        continue;
-                    }
-                } catch ( NumberFormatException e ) {
-                    addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
-                    continue;
-                }
-
-            }
-            ees.add( ee );
-        }
-        return ees;
     }
 }

@@ -80,8 +80,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private boolean deleteOtherFiles = true; // should other files that incorporate the annotations be deleted?
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
 
         Option fileLoading = Option.builder( "l" ).desc( ArrayDesignAnnotationFileCli.FILE_LOAD_DESC ).hasArg()
                 .argName( "file of short names" ).build();
@@ -110,7 +109,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
 
         if ( isAutoSeek() ) {
             throw new IllegalArgumentException( "This CLI doesn't support the auto option" );
@@ -161,8 +160,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
 //        if ( commandLine.hasOption( 'o' ) )
 //            this.overWrite = true;
-
-        super.processOptions( commandLine );
     }
 
     @Override
@@ -176,9 +173,13 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
         if ( this.useGO ) {
-            OntologyUtils.ensureInitialized( goService );
+            try {
+                OntologyUtils.ensureInitialized( goService );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
         }
 
         log.info( "***** Annotation file(s) will be written to " + arrayDesignAnnotationService.getAnnotDataDir()+ " ******" );
@@ -193,20 +194,22 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         } else if ( this.taxonName != null ) {
             this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
         } else {
-            if ( this.getArrayDesignsToProcess().isEmpty() ) {
+            if ( arrayDesigns.isEmpty() ) {
                 throw new IllegalArgumentException( "You must specify a platform, a taxon, or batch." );
             }
-            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
-
-                this.processAD( arrayDesign );
-
+            for ( ArrayDesign arrayDesign : arrayDesigns ) {
+                try {
+                    this.processAD( arrayDesign );
+                } catch ( Exception e ) {
+                    addErrorObject( arrayDesign, e );
+                }
             }
         }
     }
 
     private void processAD( ArrayDesign arrayDesign ) throws IOException {
 
-        ArrayDesign thawed = getArrayDesignService().thawLite( arrayDesign );
+        ArrayDesign thawed = arrayDesignService.thawLite( arrayDesign );
 
         if ( thawed.getCurationDetails().getTroubled() ) {
             log.warn( "Troubled, will not generate annotation file: " + arrayDesign );
@@ -243,10 +246,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }
-            candidates = this.getArrayDesignService().findByTaxon( taxon );
+            candidates = arrayDesignService.findByTaxon( taxon );
 
         } else {
-            candidates = this.getArrayDesignService().loadAll();
+            candidates = arrayDesignService.loadAll();
         }
 
         if ( candidates.isEmpty() ) {
@@ -260,7 +263,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         int numSkippedUnneeded = 0;
         for ( ArrayDesign ad : candidates ) {
 
-            ad = getArrayDesignService().thawLite( ad );
+            ad = arrayDesignService.thawLite( ad );
 
             if ( ad.getTechnologyType().equals( TechnologyType.SEQUENCING )
                     || ( ad.getTechnologyType().equals( TechnologyType.GENELIST ) ) ) {
@@ -318,14 +321,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
     }
 
-    /**
-     * @throws IOException used for batch processing
-     */
-    private void processFromListInFile() throws IOException {
-
+    private void processFromListInFile() {
         log.info( "Loading platforms to annotate from " + this.batchFileName );
-        InputStream is = new FileInputStream( this.batchFileName );
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+        try ( InputStream is = new FileInputStream( this.batchFileName ); BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             int lineNumber = 0;
@@ -356,6 +354,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 }
 
             }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 //

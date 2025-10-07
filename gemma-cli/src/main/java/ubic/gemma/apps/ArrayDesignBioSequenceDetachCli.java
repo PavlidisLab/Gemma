@@ -61,33 +61,29 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
-        Option fileOption = Option.builder( "delete" )
-                .desc( "Delete sequences instead of detaching them - use with care" ).build();
-
-        options.addOption( fileOption );
+    protected void buildArrayDesignOptions( Options options ) {
+        options.addOption( Option.builder( "delete" )
+                .desc( "Delete sequences instead of detaching them - use with care" )
+                .get() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         this.delete = commandLine.hasOption( "delete" );
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        if ( this.getArrayDesignsToProcess().isEmpty() ) {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        if ( arrayDesigns.isEmpty() ) {
             throw new IllegalArgumentException( "You must provide at least one platform to process" );
         }
 
-        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+        for ( ArrayDesign arrayDesign : arrayDesigns ) {
             try {
                 if ( this.delete ) {
                     log.info( "Detaching and deleting sequences for " + arrayDesign );
-                    Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
-                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    Map<CompositeSequence, BioSequence> bioSequences = arrayDesignService.getBioSequences( arrayDesign );
+                    arrayDesignService.removeBiologicalCharacteristics( arrayDesign );
                     Collection<BioSequence> seqs = new HashSet<>( bioSequences.values() );
                     while ( seqs.remove( null ) ) {
                         //no-op
@@ -99,11 +95,11 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
                 } else {
                     log.info( "Detaching sequences for " + arrayDesign );
 
-                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    arrayDesignService.removeBiologicalCharacteristics( arrayDesign );
                     this.audit( arrayDesign, "Removed sequence associations with CLI" );
                     this.addSuccessObject( arrayDesign, "Sequences detached" );
                 }
-                this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+                arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
             } catch ( Exception e ) {
                 log.info( "Failure for " + arrayDesign + " " + e.getMessage() );
                 this.addErrorObject( arrayDesign, e.getMessage() );
@@ -114,7 +110,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String message ) {
-        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceRemoveEvent.class, message );
     }
 

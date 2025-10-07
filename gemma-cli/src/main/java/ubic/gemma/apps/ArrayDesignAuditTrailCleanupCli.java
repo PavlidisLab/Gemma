@@ -24,11 +24,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * work in progress
@@ -42,16 +38,10 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         return "adATcleanup";
     }
 
-    @Nullable
     @Override
-    public String getShortDesc() {
-        return null;
-    }
-
-    @Override
-    protected void doAuthenticatedWork() throws Exception {
-        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
-            arrayDesign = getArrayDesignService().thawLite( arrayDesign );
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
+        for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
             List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
 

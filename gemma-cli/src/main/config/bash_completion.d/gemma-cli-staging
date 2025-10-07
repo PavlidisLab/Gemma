@@ -798,7 +798,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -806,7 +806,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -827,26 +827,20 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.AffyProbeCollapseCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -affyProbeFile -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
-        fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        if ! [[ "$current_option" =~ (-affyProbeFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -affyProbeFile -h" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' affyCollapse ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-affyProbeFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -affyProbeFile -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
-        fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        if ! [[ "$current_option" =~ (-affyProbeFile) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -affyProbeFile -h" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ArrayDesignBlatCli ' ]]; then
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--blatfile|--scoreThresh|--taxon|-a|-b|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-s|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --blatfile --help --scoreThresh --taxon -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -s -sensitive -t" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -854,7 +848,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--blatfile|--scoreThresh|--taxon|-a|-b|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-s|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --blatfile --help --scoreThresh --taxon -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -s -sensitive -t" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -878,7 +872,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -delete -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -886,7 +880,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -delete -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -904,7 +898,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-l|-mdate|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --batch-format --batch-output-file --batch-report-frequency --dontDeleteOtherFiles --help --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -912,7 +906,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-l|-mdate|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch --batch-format --batch-output-file --batch-report-frequency --dontDeleteOtherFiles --help --nogo --taxon -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -f -h -k -l -mdate -nogo -t" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -920,7 +914,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--identityThreshold|--overlapThreshold|--scoreThreshold|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --identityThreshold --overlapThreshold --scoreThreshold --taxon -a -auto -batchFormat -batchOutputFile -batchReportFrequency -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -928,7 +922,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--identityThreshold|--overlapThreshold|--scoreThreshold|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-config|-f|-i|-import|-mdate|-o|-probes|-s|-source|-t) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --identityThreshold --overlapThreshold --scoreThreshold --taxon -a -auto -batchFormat -batchOutputFile -batchReportFrequency -config -f -force -h -i -import -mdate -mirna -ncbi -nodb -o -probes -s -source -t -usePred" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -936,7 +930,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-n|-o|-s) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -n -o -s" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -944,7 +938,23 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-n|-o|-s) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -n -o -s" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' ubic.gemma.apps.ArrayDesignMapSummaryCli ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
+        fi
+    fi
+    if [[ " $words " =~ ' platformMapSummary ' ]]; then
+        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -968,7 +978,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--other|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --other -a -all -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -o" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -976,7 +986,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--other|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --other -a -all -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -o" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -1000,7 +1010,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --file --help -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -dryrun -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -1008,7 +1018,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --file --help -a -auto -b -batchFormat -batchOutputFile -batchReportFrequency -dryrun -f -h -mdate" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -1050,22 +1060,6 @@ function __gemma_cli_staging_complete() {
     if [[ " $words " =~ ' dumpForNIF ' ]]; then
         if ! [[ "$current_option" =~ (--limit|-l) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dataset --diffexpression --help --limit --tissue -d -h -l -t -x" -- "$2")
-        fi
-    fi
-    if [[ " $words " =~ ' ubic.gemma.apps.ArrayDesignMapSummaryCli ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
-        fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
-        fi
-    fi
-    if [[ " $words " =~ ' platformMapSummary ' ]]; then
-        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help -a -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate" -- "$2")
-        fi
-        if [[ "$current_option" =~ (--batch-output-file|-batchOutputFile) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExperimentalDesignViewCli ' ]]; then
