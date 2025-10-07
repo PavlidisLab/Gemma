@@ -65,6 +65,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     @Autowired
     protected EntityLocator entityLocator;
 
+    private boolean all;
     private Set<String> platformIdentifiers;
 
     protected ArrayDesignSequenceManipulatingCli() {
@@ -79,6 +80,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     @Override
     protected final void buildOptions( Options options ) {
+        options.addOption( "all", "all", false, "Process all platforms." );
         addCommaDelimitedPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
         options.addOption( Option.builder( "f" )
                 .hasArg().argName( "File containing platform identifiers" )
@@ -100,6 +102,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     @OverridingMethodsMustInvokeSuper
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
+        this.all = commandLine.hasOption( "all" );
         this.platformIdentifiers = new HashSet<>();
         if ( commandLine.hasOption( 'a' ) ) {
             String[] shortNames = commandLine.getOptionValues( 'a' );
@@ -123,9 +126,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     @Override
     protected final void doAuthenticatedWork() throws Exception {
-        Collection<ArrayDesign> arrayDesignsToProcess = platformIdentifiers.stream()
-                .map( entityLocator::locateArrayDesign )
-                .collect( Collectors.toSet() );
+        Collection<ArrayDesign> arrayDesignsToProcess;
+        if ( all ) {
+            log.info( "Loading all platforms, this might take a while..." );
+            arrayDesignsToProcess = arrayDesignService.loadAll();
+        } else {
+            arrayDesignsToProcess = platformIdentifiers.stream()
+                    .map( entityLocator::locateArrayDesign )
+                    .collect( Collectors.toSet() );
+        }
         if ( arrayDesignsToProcess.isEmpty() ) {
             throw new RuntimeException( "No platforms matched the given options." );
         } else if ( arrayDesignsToProcess.size() == 1 ) {
