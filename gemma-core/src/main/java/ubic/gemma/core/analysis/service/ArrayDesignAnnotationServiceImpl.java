@@ -555,7 +555,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 .append( "\n" );
         writer.append( "# " ).append( arrayDesign.getPrimaryTaxon().getScientificName() ).append( "\n" );
 
-        writer.write( writer.toString() );
         writer.write( "ElementName\tGeneSymbols\tGeneNames\tGOTerms" + ( useGO ? "" : ".omitted" ) + "\tGemmaIDs\tNCBIids\tEnsemblIds\n" );
 
         return writer;
