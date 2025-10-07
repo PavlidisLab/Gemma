@@ -323,19 +323,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException {
-        Path reportFile = copyMetadataFile( ee, existingFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, forceWrite );
+    public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType fileType, boolean forceWrite ) throws IOException {
+        Assert.isTrue( fileType.isMultiQC(), "The file type must be a MultiQC report." );
+        Path reportFile = copyMetadataFile( ee, existingFile, fileType, forceWrite );
         Path multiQcDataDir = existingFile.resolveSibling( "multiqc_data" );
         if ( Files.exists( multiQcDataDir ) ) {
             Path dataFile = multiQcDataDir.resolve( "multiqc_data.json" );
             if ( Files.exists( dataFile ) ) {
-                copyMetadataFile( ee, dataFile, ExpressionExperimentMetaFileType.MULTIQC_DATA, true );
+                copyMetadataFile( ee, dataFile, fileType.getMultiQCDataFileType(), true );
             } else {
                 log.warn( "Could not find MultiQC JSON data output file: " + dataFile );
             }
             Path logFile = multiQcDataDir.resolve( "multiqc.log" );
             if ( Files.exists( logFile ) ) {
-                copyMetadataFile( ee, logFile, ExpressionExperimentMetaFileType.MULTIQC_LOG, true );
+                copyMetadataFile( ee, logFile, fileType.getMultiQCLogFileType(), true );
             } else {
                 log.warn( "Could not find MultiQC log output file: " + logFile );
             }

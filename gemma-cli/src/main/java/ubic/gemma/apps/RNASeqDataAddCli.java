@@ -30,6 +30,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -227,7 +228,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         /* copy metadata files */
         if ( qualityControlReportFile != null ) {
             try {
-                Path dest = expressionDataFileService.copyMultiQCReport( ee, qualityControlReportFile, true );
+                Path dest = expressionDataFileService.copyMultiQCReport( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, true );
                 expressionMetadataChangelogFileService.addChangelogEntry( ee, "Added a QC report file." );
                 log.info( "Copied QC report file to " + dest + "." );
             } catch ( IOException e ) {

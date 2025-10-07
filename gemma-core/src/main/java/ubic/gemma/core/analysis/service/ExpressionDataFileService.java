@@ -143,8 +143,10 @@ public interface ExpressionDataFileService {
      * <p>
      * This is a helper based on {@link #copyMetadataFile(ExpressionExperiment, Path, String, boolean)} that will
      * automatically copy the main HTML report file as well as the log and JSON data files if they exist.:w
+     * @param type must be a MultiQC report (i.e. {@link ExpressionExperimentMetaFileType#RNASEQ_PIPELINE_REPORT} or
+     * {@link ExpressionExperimentMetaFileType#CELL_TYPE_ANNOTATION_PIPELINE_REPORT})
      */
-    Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException;
+    Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
 
     /**
      * Delete a metadata file.

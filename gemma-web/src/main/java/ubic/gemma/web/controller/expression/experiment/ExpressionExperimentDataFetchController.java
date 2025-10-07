@@ -122,7 +122,7 @@ public class ExpressionExperimentDataFetchController {
                 throw new EntityNotFoundException( missingMessage );
             }
             downloadUtil.download( file.getPath(), type.getContentType(), null,
-                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT,
+                    type != ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT,
                     type.getDownloadName( ee ),
                     request, response );
         }
@@ -139,7 +139,7 @@ public class ExpressionExperimentDataFetchController {
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
         List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
-            if ( type == ExpressionExperimentMetaFileType.MULTIQC_DATA || type == ExpressionExperimentMetaFileType.MULTIQC_LOG ) {
+            if ( type == ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT_DATA || type == ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT_LOG ) {
                 // don't display these in the GUI
                 continue;
             }

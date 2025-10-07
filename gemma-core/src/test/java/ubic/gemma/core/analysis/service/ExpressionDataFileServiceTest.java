@@ -172,7 +172,7 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         PathUtils.touch( reportFile );
         assertThat( reportFile ).exists();
 
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValueSatisfying( p -> {
                     assertThat( p )
@@ -182,12 +182,12 @@ public class ExpressionDataFileServiceTest extends BaseTest {
 
         // ensure that metadata of a split is stored in its original directory
         ee.setShortName( "test.1" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
 
         ee.setShortName( "test.1.2" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( appdataHome.resolve( "metadata/test.1.2/MultiQCReports/multiqc_report.html" ) );
     }
@@ -197,9 +197,9 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setShortName( "test" );
         Path tmpReportFile = Files.createTempFile( null, "multiqc_report.html" );
-        expressionDataFileService.copyMetadataFile( ee, tmpReportFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false );
+        expressionDataFileService.copyMetadataFile( ee, tmpReportFile, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false );
         Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
     }
@@ -211,11 +211,11 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
         PathUtils.createParentDirectories( reportFile );
         PathUtils.touch( reportFile );
-        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT ) )
+        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT ) )
                 .isTrue();
-        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT ) )
+        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT ) )
                 .isFalse();
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MULTIQC_REPORT, false )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
     }
