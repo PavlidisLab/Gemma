@@ -68,7 +68,8 @@ public class OntologyConfig {
             @Value("${gemma.ontology.unified.enabled}") boolean enabled,
             @Value("${gemma.ontology.unified.tdb.dir}") Path tdbDir
     ) {
-        TdbOntologyService ontology = new TdbOntologyService( "Gemma Unified Ontology", tdbDir, null, enabled, "unified" );
+        TdbOntologyService ontology = new TdbOntologyService( "Gemma Unified Ontology", tdbDir,
+                null, enabled, "unified", true );
         OntologyServiceFactory<TdbOntologyService> factory = new OntologyServiceFactory<>( ontology );
         factory.setAutoLoad( loadOntologies );
         factory.setTaskExecutor( ontologyTaskExecutor() );

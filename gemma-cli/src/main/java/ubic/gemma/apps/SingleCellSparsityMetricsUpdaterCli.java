@@ -20,7 +20,7 @@ public class SingleCellSparsityMetricsUpdaterCli extends ExpressionExperimentMan
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update sparsity metrics for single cell datasets";
+        return "Update sparsity metrics for single-cell datasets";
     }
 
     @Override

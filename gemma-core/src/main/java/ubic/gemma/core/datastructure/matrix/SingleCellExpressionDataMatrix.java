@@ -15,7 +15,7 @@ import java.util.List;
  * <p>
  * Note that the matrix implementation does not deal with all the complication that you may encounter in
  * {@link MultiAssayBulkExpressionDataMatrix}. For example, a single-cell data matrix may only hold vectors from one
- * given quantitation type and single cell dimension at a time.
+ * given quantitation type and single-cell dimension at a time.
  *
  * @author poirigui
  */

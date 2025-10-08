@@ -266,7 +266,7 @@ public interface ExpressionExperimentDao
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred quantitation type for single cell data, if available.
+     * Obtain the preferred quantitation type for single-cell data, if available.
      */
     @Nullable
     QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
@@ -561,12 +561,12 @@ public interface ExpressionExperimentDao
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
     /**
-     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     * Obtain all the single-cell dimensions used by the single-cell vectors of a given experiment.
      */
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
-     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     * Obtain all the single-cell dimensions used by the single-cell vectors of a given experiment.
      * <p>
      * Cell IDs are not loaded.
      */
@@ -590,7 +590,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
-     * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
+     * Obtain the preferred single-cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */
     @Nullable
     SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
@@ -617,7 +617,7 @@ public interface ExpressionExperimentDao
     void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
-     * Delete the given single cell dimension.
+     * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
@@ -724,12 +724,12 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
     /**
-     * Obtain all cell-level characteristics from all single cell dimensions.
+     * Obtain all cell-level characteristics from all single-cell dimensions.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
 
     /**
-     * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
+     * Obtain all cell-level characteristics from all single-cell dimensions matching the given category.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
 

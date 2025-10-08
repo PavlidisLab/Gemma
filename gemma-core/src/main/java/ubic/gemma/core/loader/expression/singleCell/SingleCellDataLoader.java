@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * Common interface for all single cell data loaders.
+ * Common interface for all single-cell data loaders.
  *
  * @author poirigui
  */

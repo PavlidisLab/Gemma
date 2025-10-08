@@ -1,5 +1,5 @@
 /**
- * This package contains classes for loading single cell expression data.
+ * This package contains classes for loading single-cell expression data.
  * @author poirigui
  */
 @ParametersAreNonnullByDefault

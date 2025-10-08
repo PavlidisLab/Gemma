@@ -1,5 +1,5 @@
 /**
- * This package contains classes for transforming single cell expression data.
+ * This package contains classes for transforming single-cell expression data.
  * @author poirigui
  */
 @ParametersAreNonnullByDefault

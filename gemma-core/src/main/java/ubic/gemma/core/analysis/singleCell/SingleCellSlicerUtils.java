@@ -18,7 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Utilities for slicing single cell data.
+ * Utilities for slicing single-cell data.
  * @author poirigui
  * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */

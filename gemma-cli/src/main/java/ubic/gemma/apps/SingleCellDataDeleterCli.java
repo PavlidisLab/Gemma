@@ -56,7 +56,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Delete single cell data and any related data files";
+        return "Delete single-cell data and any related data files";
     }
 
     @Override
@@ -83,7 +83,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
         switch ( mode ) {
             case DELETE_ALL:
                 dataDeleterService.deleteSingleCellData( ee, qt );
-                addSuccessObject( ee, qt, "Deleted single cell data." );
+                addSuccessObject( ee, qt, "Deleted single-cell data." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );

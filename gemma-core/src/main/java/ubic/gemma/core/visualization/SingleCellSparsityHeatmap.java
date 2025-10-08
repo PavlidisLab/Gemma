@@ -41,7 +41,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
     /**
      *
      * @param expressionExperiment    an experiment containing single-cell data
-     * @param singleCellDimension     a single cell dimension
+     * @param singleCellDimension     a single-cell dimension
      * @param dimension               a regular dimension for aggregated data
      * @param subSets                 a set of subsets containing aggregated data
      * @param designElementsPerSample the number of design elements for the platform of each sample

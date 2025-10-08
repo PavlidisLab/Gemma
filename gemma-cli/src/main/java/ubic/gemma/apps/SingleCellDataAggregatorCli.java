@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentCreateSubSetsAndAggregateService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentCreateSubSetsAndAggregateService;
 import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForSingleCellAggregationException;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.description.Characteristic;
@@ -106,7 +106,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Aggregate single cell data into pseudo-bulks";
+        return "Aggregate single-cell data into pseudo-bulks";
     }
 
     @Override
@@ -158,7 +158,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
-        log.info( "Splitting single cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
+        log.info( "Subsetting single-cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
 
         expressionExperiment = eeService.thawLite( expressionExperiment );
 

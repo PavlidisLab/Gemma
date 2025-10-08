@@ -130,7 +130,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Download single cell data.\nFor the moment, only GEO series accessions are supported.";
+        return "Download single-cell data.\nFor the moment, only GEO series accessions are supported.";
     }
 
     @Override
@@ -275,7 +275,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             throw new IllegalArgumentException( "The -" + RETRY_OPTION + " option requires the -" + RESUME_OPTION + " option to be provided." );
         }
         if ( commandLine.hasOption( SKIP_DOWNLOAD_OPTION ) ) {
-            log.info( "Download of single cell data will be skipped." );
+            log.info( "Download of single-cell data will be skipped." );
             skipDownload = true;
         } else {
             skipDownload = false;
@@ -347,7 +347,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 }
                 detector.setNumberOfFetchThreads( fetchThreads );
             }
-            log.info( "Downloading single cell data to " + singleCellDataBasePath + "..." );
+            log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;

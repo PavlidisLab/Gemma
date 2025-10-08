@@ -18,7 +18,7 @@ import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.get
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 /**
- * Descriptive statistics for single cell data.
+ * Descriptive statistics for single-cell data.
  * <p>
  * The utilities here extend {@link DataVectorDescriptive} by providing per-assay statistics.
  * @author poirigui

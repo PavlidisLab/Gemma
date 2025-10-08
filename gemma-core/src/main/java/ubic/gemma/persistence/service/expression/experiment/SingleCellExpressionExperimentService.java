@@ -39,7 +39,7 @@ public interface SingleCellExpressionExperimentService {
     Collection<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred single cell quantitation type.
+     * Obtain the preferred single-cell quantitation type.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<QuantitationType> getPreferredSingleCellQuantitationType( ExpressionExperiment ee );

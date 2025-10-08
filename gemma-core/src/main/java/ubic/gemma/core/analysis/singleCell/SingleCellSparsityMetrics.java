@@ -15,7 +15,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
 
 /**
- * Compute sparsity metrics for single cell data.
+ * Compute sparsity metrics for single-cell data.
  * @author poirigui
  */
 @Component

@@ -421,7 +421,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         } else if ( loomDetector.hasSingleCellData( sample ) ) {
             return downloadSingleCellData( series, sample, SingleCellDataType.LOOM );
         } else {
-            throw new NoSingleCellDataFoundException( series.getGeoAccession() + ": No single cell data found for " + sample.getGeoAccession() + " at the sample-level." );
+            throw new NoSingleCellDataFoundException( series.getGeoAccession() + ": No single-cell data found for " + sample.getGeoAccession() + " at the sample-level." );
         }
     }
 
@@ -443,7 +443,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         } else if ( loomDetector.hasSingleCellData( sample ) ) {
             return downloadSingleCellData( sample, SingleCellDataType.LOOM );
         } else {
-            throw new NoSingleCellDataFoundException( "No single cell data found for " + sample.getGeoAccession() + " at the sample-level." );
+            throw new NoSingleCellDataFoundException( "No single-cell data found for " + sample.getGeoAccession() + " at the sample-level." );
         }
     }
 

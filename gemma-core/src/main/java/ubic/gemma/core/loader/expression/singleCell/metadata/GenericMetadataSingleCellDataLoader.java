@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A generic loader that can be used to load single cell with a tabular metadata file.
+ * A generic loader that can be used to load single-cell data with a tabular metadata file.
  * <p>
  * This loader supports cell type assignments and generic cell-level characteristics and fallback to a delegate if the
  * corresponding path is unset.
