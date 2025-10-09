@@ -17,6 +17,12 @@ public enum ExpressionExperimentMetaFileType {
     ALIGNMENT_METADATA( 2, ".alignment.metadata", false, true, "Alignment statistics", ".alignment.statistics.txt",
             "text/plain" ),
 
+    /**
+     * This is reserved for a future use by <a href="https://github.com/PavlidisLab/Gemma/pull/1530">#1529</a>.
+     */
+    DATA_PROCESSING_REPORT( 10, "dataProcessingReport.md", false, false,
+            "Data Processing Report", ".data.processing.report.md", "text/markdown" ),
+
     // TODO: rename the directory to RNASeqPipelineMultiQCReports
     RNASEQ_PIPELINE_REPORT( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "RNA-Seq Pipeline Report",
             ".multiqc.report.html", 5, 6 ),
