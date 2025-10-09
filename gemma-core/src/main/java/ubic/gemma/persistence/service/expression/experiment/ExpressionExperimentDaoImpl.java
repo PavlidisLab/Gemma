@@ -3068,6 +3068,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) > 0 from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()

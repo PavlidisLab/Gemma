@@ -851,6 +851,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Taxon getTaxon( ExpressionExperiment expressionExperiment );
 
     /**
+     * Indicate if the given experiment is a single-cell experiment.
+     * <p>
+     * Gemma does not treat single-cell experiments differently from other experiments, so we need to rely on various
+     * aspect of the dataset to determine if it is a single-cell experiment.
+     */
+    boolean isSingleCell( ExpressionExperiment ee );
+
+    /**
      * @param expressionExperiment ee
      * @return true if this experiment was run on a sequencing-based platform.
      */

@@ -78,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 
 /**
@@ -828,7 +829,7 @@ public class ExpressionExperimentServiceImpl
     private boolean filterFactorValueAnnotation( Statement c ) {
         return filterAnnotation( c )
                 // ignore baseline conditions
-                && !BaselineSelection.isBaselineCondition( c ) && !CharacteristicUtils.hasCategory( c, Categories.BLOCK )
+                && !BaselineSelection.isBaselineCondition( c ) && !hasCategory( c, Categories.BLOCK )
                 // ignore timepoints
                 && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
                 // DE_include/exclude
@@ -1577,6 +1578,23 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Taxon getTaxon( final ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getTaxon( ee );
+    }
+
+    @Override
+    public boolean isSingleCell( ExpressionExperiment ee ) {
+        return ( ee.getCharacteristics().stream()
+                .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
+                        Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
+                        Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY,
+                        Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS,
+                        Values.SINGLE_NUCLEUS_RNA_SEQUENCING,
+                        Values.SINGLE_CELL_RNA_SEQUENCING
+                ) )
+                // exclude FAC-sorted single-cell datasets
+                && ee.getCharacteristics().stream()
+                .noneMatch( c -> hasCategory( c, Categories.ASSAY )
+                        && hasValue( c, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) ) )
+                || expressionExperimentDao.hasSingleCellQuantitationTypes( ee );
     }
 
     @Override

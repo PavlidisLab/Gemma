@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -31,9 +30,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,6 +45,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
@@ -287,7 +287,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( sampleRemovalEvents.containsKey( id ) ) {
                 Collection<AuditEvent> removalEvents = sampleRemovalEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
-                eeVo.auditEvents2SampleRemovedFlags( removalEvents );
+                Collection<AuditEventValueObject> converted = removalEvents.stream()
+                        .map( AuditEventValueObject::new )
+                        .collect( Collectors.toSet() );
+                eeVo.setSampleRemovedFlags( converted );
 
             }
         }

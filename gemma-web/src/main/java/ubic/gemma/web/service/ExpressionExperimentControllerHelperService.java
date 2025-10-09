@@ -19,6 +19,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
+import ubic.gemma.core.visualization.cellbrowser.CellBrowserService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CitationValueObject;
@@ -86,6 +87,9 @@ public class ExpressionExperimentControllerHelperService {
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
+    private CellBrowserService cellBrowserService;
+
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
 
     @Autowired
@@ -144,6 +148,13 @@ public class ExpressionExperimentControllerHelperService {
         }
 
         finalResult.setSuitableForDEA( expressionExperimentService.isSuitableForDEA( ee ) );
+
+        if ( expressionExperimentService.isSingleCell( ee ) ) {
+            finalResult.setIsSingleCell( true );
+            finalResult.setNumberOfCells( ee.getNumberOfCells() );
+            finalResult.setHasCellBrowser( cellBrowserService.hasBrowser( ee ) );
+            finalResult.setCellBrowserUrl( cellBrowserService.getBrowserUrl( ee ) );
+        }
 
         finalResult.setFont( font );
 

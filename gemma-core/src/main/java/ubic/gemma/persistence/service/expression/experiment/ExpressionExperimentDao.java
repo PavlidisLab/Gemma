@@ -764,6 +764,11 @@ public interface ExpressionExperimentDao
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
     /**
+     * Indicate if the given experiment has single-cell quantitation types.
+     */
+    boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    /**
      * Obtain a set of single-cell data vectors for the given quantitation type.
      */
     List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
