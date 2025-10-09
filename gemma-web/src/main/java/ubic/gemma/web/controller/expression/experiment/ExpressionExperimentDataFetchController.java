@@ -122,7 +122,7 @@ public class ExpressionExperimentDataFetchController {
                 throw new EntityNotFoundException( missingMessage );
             }
             downloadUtil.download( file.getPath(), type.getContentType(), null,
-                    type != ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT,
+                    !type.isMultiQC(),
                     type.getDownloadName( ee ),
                     request, response );
         }
