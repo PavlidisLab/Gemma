@@ -502,7 +502,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
                     ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
         }
-        ee.setNumberOfCells( isSupported ? totalNumberOfCells : null );
+        if ( isSupported ) {
+            log.info( "Total number of cells: " + totalNumberOfCells );
+            ee.setNumberOfCells( totalNumberOfCells );
+        } else {
+            log.info( "Sparsity metrics is not supported, clearing the total number of cells." );
+            ee.setNumberOfCells( null );
+        }
     }
 
     /**
@@ -517,6 +523,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         int[] numberOfCellByDesignElements = new int[dimension.getBioAssays().size()];
         boolean alreadyCheckedForSupport = false;
         boolean isSupported = true;
+        int totalNumberOfCells = 0;
         Iterator<SingleCellExpressionDataVector> it = vectors.iterator();
         while ( it.hasNext() ) {
             SingleCellExpressionDataVector vec = it.next();
@@ -561,6 +568,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             ba.setNumberOfCells( numberOfCells );
             ba.setNumberOfDesignElements( numberOfDesignElements[sampleIndex] );
             ba.setNumberOfCellsByDesignElements( numberOfCellByDesignElements[sampleIndex] );
+            totalNumberOfCells += numberOfCells;
+        }
+        if ( isSupported ) {
+            log.info( "Total number of cells: " + totalNumberOfCells );
+            ee.setNumberOfCells( totalNumberOfCells );
+        } else {
+            log.info( "Sparsity metrics is not supported, clearing the total number of cells." );
+            ee.setNumberOfCells( null );
         }
     }
 
@@ -570,6 +585,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             ba.setNumberOfDesignElements( null );
             ba.setNumberOfCellsByDesignElements( null );
         }
+        ee.setNumberOfCells( null );
     }
 
     private void validateSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
