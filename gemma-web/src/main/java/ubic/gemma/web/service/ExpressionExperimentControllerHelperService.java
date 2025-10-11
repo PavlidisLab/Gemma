@@ -152,6 +152,8 @@ public class ExpressionExperimentControllerHelperService {
         if ( expressionExperimentService.isSingleCell( ee ) ) {
             finalResult.setIsSingleCell( true );
             finalResult.setNumberOfCells( ee.getNumberOfCells() );
+            singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
+                    .ifPresent( scd -> finalResult.setNumberOfCellIds( scd.getNumberOfCellIds() ) );
             finalResult.setHasCellBrowser( cellBrowserService.hasBrowser( ee ) );
             finalResult.setCellBrowserUrl( cellBrowserService.getBrowserUrl( ee ) );
         }

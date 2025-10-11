@@ -141,7 +141,12 @@ Gemma.ExpressionExperimentDetails = Ext
 
            renderSingleCellMetadata : function( ee ) {
               let result = '';
-              if ( ee.numberOfCells !== null ) {
+              if ( ee.numberOfCellsIds !== null ) {
+                 result += formatNumber( ee.numberOfCellIds );
+                 if ( ee.numberOfCells !== null && ee.numberOfCells < 0.9 * ee.numberOfCellIds ) {
+                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."/> ';
+                 }
+              } else if ( ee.numberOfCells !== null ) {
                  result += formatNumber( ee.numberOfCells );
               } else {
                  result += '</i>Unknown</i>';

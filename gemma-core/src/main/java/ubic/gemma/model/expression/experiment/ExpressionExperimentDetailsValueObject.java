@@ -27,6 +27,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -143,6 +144,11 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @Nullable
     private Integer numberOfCells;
+    /**
+     * The number of cell IDs that the preferred single-cell dimension has.
+     * @see SingleCellDimension#getNumberOfCellIds()
+     */
+    private Integer numberOfCellIds;
     /**
      * Indicate if this experiment has a Cell Browser associated with it.
      */
