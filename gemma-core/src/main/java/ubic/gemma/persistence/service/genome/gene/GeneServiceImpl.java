@@ -22,11 +22,13 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -327,7 +329,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = AsyncFactoryBeanUtils.getSilently( this.homologeneService, HomologeneServiceFactory.class ).getHomologues( gene );
+        Collection<Gene> geneHomologues = FutureUtils.get( this.homologeneService ).getHomologues( gene );
         geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 

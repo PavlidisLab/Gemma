@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
@@ -57,7 +58,7 @@ public class OpenApiTest extends BaseTest {
         }
 
         @Bean
-        public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+        public AsyncFactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
             OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
             factory.setModelConverters( Collections.singletonList( customModelResolver ) );
             return factory;

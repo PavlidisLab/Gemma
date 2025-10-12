@@ -104,7 +104,7 @@ public class AsyncFactoryTest extends BaseTest {
     }
 
     @Test
-    public void testGetBeanAsyncThenCancel() {
+    public void testGetBeanAsyncThenCancel() throws Exception {
         MyServiceFactory factory = beanFactory.getBean( MyServiceFactory.class );
         List<Future<MyService>> futures = new ArrayList<>();
         for ( int i = 0; i < 100; i++ ) {

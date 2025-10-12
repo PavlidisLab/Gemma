@@ -20,6 +20,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedErrorBody;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Future;
 
 /**
  * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
@@ -42,10 +44,10 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
 
     private final ObjectMapper objectMapper;
-    private final OpenAPI openAPI;
+    private final Future<OpenAPI> openAPI;
     private final BuildInfo buildInfo;
 
-    public RestAuthEntryPoint( ObjectMapper objectMapper, OpenAPI openAPI, BuildInfo buildInfo ) {
+    public RestAuthEntryPoint( ObjectMapper objectMapper, Future<OpenAPI> openAPI, BuildInfo buildInfo ) {
         this.objectMapper = objectMapper;
         this.openAPI = openAPI;
         this.buildInfo = buildInfo;
@@ -56,11 +58,18 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
             final AuthenticationException authException ) throws IOException {
         String realm;
         String version;
-        if ( openAPI.getInfo() != null ) {
-            realm = openAPI.getInfo().getTitle();
-            version = openAPI.getInfo().getVersion();
+        if ( openAPI.isDone() ) {
+            OpenAPI oa = FutureUtils.get( openAPI );
+            if ( oa.getInfo() != null ) {
+                realm = oa.getInfo().getTitle();
+                version = oa.getInfo().getVersion();
+            } else {
+                log.error( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
+                realm = "Gemma RESTful API";
+                version = null;
+            }
         } else {
-            log.error( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
+            log.warn( "The OpenAPI specification hasn't fully loaded yet, will not include version in the error response." );
             realm = "Gemma RESTful API";
             version = null;
         }

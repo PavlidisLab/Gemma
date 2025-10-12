@@ -5,6 +5,7 @@ import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
@@ -18,6 +19,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatc
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.core.visualization.cellbrowser.CellBrowserService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -53,6 +55,7 @@ import javax.servlet.jsp.JspException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
@@ -107,9 +110,9 @@ public class ExpressionExperimentControllerHelperService {
     @Autowired
     private ServletContext servletContext;
 
-    private final UserAgentAnalyzer uaa = UserAgentAnalyzer
-            .newBuilder()
-            .build();
+    @Autowired
+    @Qualifier("userAgentAnalyzer")
+    private Future<UserAgentAnalyzer> uaa;
 
     @Nullable
     @Transactional(readOnly = true)
@@ -416,7 +419,7 @@ public class ExpressionExperimentControllerHelperService {
         if ( StringUtils.isBlank( userAgent ) ) {
             return null;
         }
-        UserAgent ua = uaa.parse( userAgent );
+        UserAgent ua = FutureUtils.get( uaa ).parse( userAgent );
         String osName = ua.getValue( UserAgent.OPERATING_SYSTEM_NAME );
         if ( osName.equals( "Mac OS" ) || osName.equals( "iOS" ) ) {
             return "Avenir";

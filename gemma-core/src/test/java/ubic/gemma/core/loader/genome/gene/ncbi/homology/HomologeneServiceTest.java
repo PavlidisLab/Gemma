@@ -104,7 +104,7 @@ public class HomologeneServiceTest extends BaseTest {
     }
 
     @Test
-    public void testGetServiceAsyncThenCancel() {
+    public void testGetServiceAsyncThenCancel() throws Exception {
         assertThat( hgs.isInitialized() ).isFalse();
         Future<HomologeneService> service = hgs.getObject();
         assertThat( service ).isNotDone().isNotCancelled();
@@ -138,7 +138,7 @@ public class HomologeneServiceTest extends BaseTest {
     }
 
     @Test
-    public final void testHomologeneFromFtpServerThenCancel() {
+    public final void testHomologeneFromFtpServerThenCancel() throws Exception {
         hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
         Future<HomologeneService> homologeneService = hgs.getObject();
         assertThat( homologeneService ).isNotCancelled().isNotDone();

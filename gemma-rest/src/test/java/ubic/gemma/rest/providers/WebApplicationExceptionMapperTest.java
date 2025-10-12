@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
@@ -44,7 +45,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
         }
 
         @Bean
-        public FactoryBean<OpenAPI> openApi() {
+        public AsyncFactoryBean<OpenAPI> openApi() {
             return new OpenApiFactory( "ubic.gemma.rest.WebApplicationExceptionMapperTest" );
         }
 

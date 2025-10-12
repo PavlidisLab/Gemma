@@ -43,7 +43,7 @@ import java.util.function.Function;
  * @author klc
  * @see ArrayDesignService
  */
-@Service
+@Service("arrayDesignService")
 public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject>
         implements ArrayDesignService {
 

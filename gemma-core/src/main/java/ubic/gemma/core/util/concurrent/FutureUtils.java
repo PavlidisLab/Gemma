@@ -14,6 +14,17 @@ import java.util.stream.Stream;
 public class FutureUtils {
 
     /**
+     * Resolve a future silently, turning any exception into an unchecked {@link RuntimeException}.
+     */
+    public static <T> T get( Future<T> future ) {
+        try {
+            return future.get();
+        } catch ( Exception e ) {
+            throw handleException( e );
+        }
+    }
+
+    /**
      * Map a function over a collection in parallel.
      * <p>
      * If any of the call fails, all the pending jobs are cancelled. When that happens, you may control whether to
@@ -70,6 +81,9 @@ public class FutureUtils {
     private static RuntimeException handleException( Throwable e ) {
         if ( e instanceof ExecutionException ) {
             return handleException( e.getCause() );
+        } else if ( e instanceof InterruptedException ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
         } else if ( e instanceof RuntimeException ) {
             return ( RuntimeException ) e;
         } else {
