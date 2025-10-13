@@ -32,6 +32,7 @@ import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisFilter;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -129,6 +130,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean ignoreFailingSubsets = false;
 
+    private DifferentialExpressionAnalysisFilter.Mode filterMode;
+    @Nullable
+    private Integer filterMinAssays;
+    @Nullable
+    private Double filterMinUniqueValues;
+
     private ExpressionDataFileResult result;
 
     enum FactorSelectionMode {
@@ -170,7 +177,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "Multiple factors can be provided using comma-delimited IDs or by passing the option multiple times. "
                         + "If omitted, factors will be selected automatically. "
                         + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." )
-                .build() );
+                .get() );
 
         addSingleExperimentOption( options, Option.builder( "subset" )
                 .longOpt( "subset" )
@@ -180,7 +187,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "The factor must be categorical. "
                         + "If used without specifying  " + formatOption( options, "factors" ) + ", factors will be selected automatically among the remaining one in the design. "
                         + "If the experiment already has subsets for the factor, those will be reused. "
-                        + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." ).build() );
+                        + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." ).get() );
 
         options.addOption( "usebatch", "use-batch-factor", false, "If a batch factor is available, use it. Otherwise, batch information can/will be ignored in the analysis. This is incompatible with " + formatOption( options, "factors" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
         options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
@@ -204,13 +211,28 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .desc( "Re-run a specific analysis for the experiment. "
                         + "Try to base analysis on previous analysis's choice of statistical model. "
                         + "Multiple analysis can be provided using comma-delimited IDs or by passing the option multiple times." )
-                .build() );
+                .get() );
         addSingleExperimentOption( options, Option.builder( "redoSubset" ).longOpt( "redo-subset" )
                 .hasArg().argName( "ID" ).valueSeparator( ',' )
                 .desc( "Re-run all analyses for a subset of the experiment. "
                         + "Try to base analysis on previous analysis's choice of statistical model. "
                         + "Multiple subsets can be provided using comma-delimited IDs or by passing the option multiple times." )
-                .build() );
+                .get() );
+
+        // filter options
+        addEnumOption( options, "filterMode", "filter-mode", "Mode to use for filtering repetitive values. Default is to auto-detect.", DifferentialExpressionAnalysisFilter.Mode.class );
+        options.addOption( Option.builder( "filterMinAssays" )
+                .longOpt( "filter-minimum-assays" )
+                .hasArg( true )
+                .type( Integer.class )
+                .desc( "Minimum number of assays to apply the repetitive values filter. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER + "." )
+                .get() );
+        options.addOption( Option.builder( "filterMinUniqueValues" )
+                .longOpt( "filter-minimum-unique-values" )
+                .hasArg( true )
+                .type( Double.class )
+                .desc( "Minimum fraction of unique values to retain a design element. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES + "." )
+                .get() );
 
         // delete mode
         options.addOption( "delete", "delete", false, "Remove all the existing analyses for the specified experiment(s). Use with care!" );
@@ -222,7 +244,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .desc( "Remove the specified analysis for the specified experiment. "
                         + "Multiple analyses can be provided using comma-delimited IDs or by passing the option multiple times. "
                         + "Use with care!" )
-                .build() );
+                .get() );
         addSingleExperimentOption( options, Option.builder( "deleteSubset" )
                 .longOpt( "delete-subset" )
                 .hasArgs()
@@ -231,20 +253,20 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .desc( "Remove all analyses for the specified subset of the experiment. "
                         + "Multiple subsets can be provided using comma-delimited IDs or by passing the option multiple times. "
                         + "Use with care!" )
-                .build() );
+                .get() );
 
         // complete modes
         addSingleExperimentOption( options, Option.builder( "completeAnalyses" )
                 .longOpt( "complete-analyses" )
-                .desc( "Provide completions for existing analyses." ).build() );
+                .desc( "Provide completions for existing analyses." ).get() );
         addSingleExperimentOption( options, Option.builder( "completeSubsets" )
                 .longOpt( "complete-subsets" )
-                .desc( "Provide completions for existing subsets with analysis." ).build() );
+                .desc( "Provide completions for existing subsets with analysis." ).get() );
         addSingleExperimentOption( options, Option.builder( "completeSubsetFactors" )
                 .longOpt( "complete-subset-factors" )
-                .desc( "Provide completions for subset factors." ).build() );
+                .desc( "Provide completions for subset factors." ).get() );
         addSingleExperimentOption( options, Option.builder( "completeFactors" ).longOpt( "complete-factors" )
-                .desc( "Provide completions for factors and interactions. If a subset factor is set via " + formatOption( options, "subset" ) + ", it will not be suggested." ).build() );
+                .desc( "Provide completions for factors and interactions. If a subset factor is set via " + formatOption( options, "subset" ) + ", it will not be suggested." ).get() );
     }
 
     private EnumMap<AnalysisType, MessageSourceResolvable> getAnalysisTypeDescriptions() {
@@ -304,6 +326,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
         this.result = getExpressionDataFileResult( commandLine, false, false, true );
+        this.filterMode = getEnumOptionValue( commandLine, "filterMode" );
+        this.filterMinAssays = commandLine.getParsedOptionValue( "filterMinAssays" );
+        this.filterMinUniqueValues = commandLine.getParsedOptionValue( "filterMinUniqueValues" );
         // TODO: check if the analysis being redone is a subset analysis
         this.ignoreFailingSubsets = hasOption( commandLine, "ignoreFailingSubsets",
                 requires( anyOf( toBeSet( "subset" ), toBeSet( "redo" ) ) ) );
@@ -380,6 +405,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setMakeArchiveFile( this.persist && this.makeArchiveFiles );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
         config.setUseWeights( super.eeService.isRNASeq( ee ) );
+
+        // filtering
+        config.setFilterMode( this.filterMode );
+        config.setMinimumNumberOfAssaysToApplyFilter( this.filterMinAssays );
+        config.setMinimumFractionOfUniqueValues( this.filterMinUniqueValues );
 
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {
             // selection of factors will be based on the existing analysis

@@ -36,28 +36,57 @@ import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConver
 @CommonsLog
 public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix> {
 
-    private int minimumColumnsToApplyUniqueValuesFilter = 4;
+    public static final int DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER = 4;
+    public static final double DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES = 0.3;
 
-    private double minimumUniqueValuesFractionPerElement = 0.3;
+    public enum Mode {
+        /**
+         * Automatically detect based on the {@link QuantitationType}.
+         */
+        AUTODETECT,
+        /**
+         * Use nominal values to filter for repetitive values.
+         */
+        NOMINAL,
+        /**
+         * Use ranks to filter for repetitive values.
+         */
+        RANK
+    }
+
+    private Mode mode = Mode.AUTODETECT;
+
+    private int minimumNumberOfAssaysToApplyFilter = DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER;
+
+    private double minimumFractionOfUniqueValues = DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES;
 
     /**
-     * Minimum number of samples (columns) in the matrix to apply the unique values filter.
+     * Set the mode of operation for detecting repetitive values.
+     * <p>
+     * Defaults to {@link Mode#AUTODETECT}.
+     */
+    public void setMode( Mode mode ) {
+        this.mode = mode;
+    }
+
+    /**
+     * Minimum number of assays (columns) in the matrix to apply the unique values filter.
      * <p>
      * We don't apply the "unique values" filter to matrices with fewer columns than this.
      */
-    public void setMinimumColumnsToApplyUniqueValuesFilter( int minimumColumnsToApplyUniqueValuesFilter ) {
-        Assert.isTrue( minimumColumnsToApplyUniqueValuesFilter >= 0 );
-        this.minimumColumnsToApplyUniqueValuesFilter = minimumColumnsToApplyUniqueValuesFilter;
+    public void setMinimumNumberOfAssaysToApplyFilter( int minimumNumberOfAssaysToApplyFilter ) {
+        Assert.isTrue( minimumNumberOfAssaysToApplyFilter >= 0 );
+        this.minimumNumberOfAssaysToApplyFilter = minimumNumberOfAssaysToApplyFilter;
     }
 
     /**
      * This threshold is used to determine if a row has too many identical value; a value of N means that the number of
      * distinct values in the expression vector of length M must be at least N * M.
      */
-    public void setMinimumUniqueValuesFractionPerElement( double minimumUniqueValuesFractionPerElement ) {
-        Assert.isTrue( minimumUniqueValuesFractionPerElement >= 0 && minimumUniqueValuesFractionPerElement <= 1.0,
+    public void setMinimumFractionOfUniqueValues( double minimumFractionOfUniqueValues ) {
+        Assert.isTrue( minimumFractionOfUniqueValues >= 0 && minimumFractionOfUniqueValues <= 1.0,
                 "Minimum unique values fraction per element must be between 0 and 1." );
-        this.minimumUniqueValuesFractionPerElement = minimumUniqueValuesFractionPerElement;
+        this.minimumFractionOfUniqueValues = minimumFractionOfUniqueValues;
     }
 
     /**
@@ -77,6 +106,12 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dmatrix ) throws FilteringException {
         QuantitationType qt = dmatrix.getQuantitationType();
+
+        if ( mode == Mode.RANK ) {
+            return filterDistinctValuesByRanks( filterZeroVariance( dmatrix ), rank( dmatrix ) );
+        } else if ( mode == Mode.NOMINAL ) {
+            return filterDistinctValues( dmatrix );
+        }
 
         if ( qt.getIsNormalized() ) {
             log.info( "Matrix contains normalized expression data, filtering of repetitive values will be based on ranks." );
@@ -183,13 +218,13 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
      */
     private ExpressionDataDoubleMatrix filterDistinctValues( ExpressionDataDoubleMatrix dmatrix ) throws NoDesignElementsException {
         ExpressionDataDoubleMatrix filteredMatrix = dmatrix;
-        if ( dmatrix.columns() >= minimumColumnsToApplyUniqueValuesFilter ) {
+        if ( dmatrix.columns() >= minimumNumberOfAssaysToApplyFilter ) {
             int r = filteredMatrix.rows();
             /* This threshold had been 10^-5, but it's probably too stringent. Also remember
              * the data are log transformed the threshold should be transformed as well (it's not that simple),
              * but that's a minor effect.
              * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            TooFewDistinctValuesFilter distinctValuesFilter = new TooFewDistinctValuesFilter( minimumUniqueValuesFractionPerElement );
+            TooFewDistinctValuesFilter distinctValuesFilter = new TooFewDistinctValuesFilter( minimumFractionOfUniqueValues );
             filteredMatrix = distinctValuesFilter.filter( filteredMatrix );
             if ( filteredMatrix.rows() == 0 ) {
                 throw new NoDesignElementsException( "No rows left after filtering for repetitive values with " + distinctValuesFilter + "." );
@@ -202,7 +237,9 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
 
     @Override
     public String toString() {
-        return String.format( "RepetitiveValuesFilter Minimum Samples To Apply Filter=%d Minimum Distinct Values=%f%%",
-                minimumColumnsToApplyUniqueValuesFilter, 100 * minimumUniqueValuesFractionPerElement );
+        return String.format( "RepetitiveValuesFilter Mode=%s Minimum Samples To Apply Filter=%d Minimum Distinct Values=%f%%",
+                mode,
+                minimumNumberOfAssaysToApplyFilter,
+                100 * minimumFractionOfUniqueValues );
     }
 }

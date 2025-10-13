@@ -39,7 +39,6 @@ import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
@@ -881,7 +880,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      */
     private ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix expressionData, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         try {
-            expressionData = new RepetitiveValuesFilter().filter( QuantitationTypeConversionUtils.ensureLog2Scale( expressionData ) );
+            expressionData = new DifferentialExpressionAnalysisFilter( config )
+                    .filter( QuantitationTypeConversionUtils.ensureLog2Scale( expressionData ) );
         } catch ( QuantitationTypeConversionException e ) {
             throw new InvalidQuantitationTypeConversionException( e, config );
         } catch ( FilteringException e ) {
