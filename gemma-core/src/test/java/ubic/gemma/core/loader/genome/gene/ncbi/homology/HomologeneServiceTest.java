@@ -60,7 +60,7 @@ public class HomologeneServiceTest extends BaseTest {
 
         @Bean
         public HomologeneServiceFactory homologeneServiceFactory() {
-            return new HomologeneServiceFactory() {
+            return new HomologeneServiceFactory( geneService(), taxonService() ) {
                 @Override
                 protected HomologeneService createObject() throws Exception {
                     // otherwise some test might fail because the object is created too quickly

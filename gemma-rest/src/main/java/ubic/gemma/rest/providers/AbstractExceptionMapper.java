@@ -12,6 +12,7 @@ import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;

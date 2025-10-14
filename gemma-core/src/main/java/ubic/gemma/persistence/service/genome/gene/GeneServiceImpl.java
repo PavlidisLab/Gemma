@@ -20,6 +20,7 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
@@ -59,7 +60,7 @@ import java.util.concurrent.Future;
 /**
  * @author pavlidis
  * @author keshav
- * @see    GeneService
+ * @see GeneService
  */
 @Service
 @ParametersAreNonnullByDefault
@@ -84,6 +85,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private TaxonService taxonService;
     @Autowired
+    @Qualifier("homologeneService")
     private Future<HomologeneService> homologeneService;
 
     @Autowired
@@ -441,7 +443,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     /**
      * Search for genes (by name or symbol)
      *
-     * @param  taxonId, can be null to not constrain by taxon
+     * @param taxonId, can be null to not constrain by taxon
      * @return Collection of Gene entity objects
      */
     @Override

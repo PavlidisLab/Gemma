@@ -47,9 +47,11 @@ import ubic.gemma.rest.util.args.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -124,8 +126,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public OpenAPI openAPI() {
-            return mock();
+        public Future<OpenAPI> openApi() {
+            return constantFuture( mock() );
         }
 
         @Bean

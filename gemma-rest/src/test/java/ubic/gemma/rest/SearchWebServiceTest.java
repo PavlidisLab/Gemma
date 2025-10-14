@@ -44,8 +44,10 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -64,8 +66,8 @@ public class SearchWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public OpenAPI openApi() {
-            return mock();
+        public Future<OpenAPI> openApi() {
+            return constantFuture( mock() );
         }
 
         @Bean

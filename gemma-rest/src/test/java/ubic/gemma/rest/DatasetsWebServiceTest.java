@@ -4,6 +4,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,11 +71,13 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
@@ -96,9 +99,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public OpenAPI openApi() {
-            return new OpenAPI()
-                    .info( new Info().version( "1.0.0" ) );
+        public Future<OpenAPI> openApi() {
+            return constantFuture( new OpenAPI()
+                    .info( new Info().version( "1.0.0" ) ) );
         }
 
         @Bean

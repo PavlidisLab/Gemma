@@ -12,17 +12,18 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
-import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -40,13 +41,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class OpenApiTest extends BaseTest {
+public class OpenApiTest extends BaseTest implements InitializingBean {
 
     @Configuration
     @TestComponent
@@ -58,7 +60,7 @@ public class OpenApiTest extends BaseTest {
         }
 
         @Bean
-        public AsyncFactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+        public OpenApiFactory openApi( CustomModelResolver customModelResolver ) {
             OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
             factory.setModelConverters( Collections.singletonList( customModelResolver ) );
             return factory;
@@ -121,7 +123,14 @@ public class OpenApiTest extends BaseTest {
     }
 
     @Autowired
+    private BeanFactory beanFactory;
+
     private OpenAPI spec;
+
+    @Override
+    public void afterPropertiesSet() {
+        spec = FutureUtils.get( ( Future<OpenAPI> ) beanFactory.getBean( "openApi", Future.class ) );
+    }
 
     @Test
     public void testExternalDocumentationUrlIsReplaced() {
