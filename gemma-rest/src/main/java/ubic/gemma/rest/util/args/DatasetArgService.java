@@ -190,12 +190,17 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
         ExpressionExperiment ee = service.thawLite( getEntity( datasetArg ) );
-        BioAssayDimension bad = service.getBioAssayDimensionWithAssays( ee, qt );
-        if ( bad == null ) {
+        List<BioAssay> bad = service.getBioAssayDimensionsWithAssays( ee, qt ).stream()
+                .map( BioAssayDimension::getBioAssays )
+                .flatMap( Collection::stream )
+                .distinct()
+                .sorted( Comparator.comparing( BioAssay::getName ) )
+                .collect( Collectors.toList() );
+        if ( bad.isEmpty() ) {
             throw new NotFoundException( "There are no assays associated to " + qt + "." );
         }
-        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad.getBioAssays() );
-        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad.getBioAssays(), assay2sourceAssayMap, true, true );
+        Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad, assay2sourceAssayMap, true, true );
         populateOutliers( ee, bioAssayValueObjects );
         return bioAssayValueObjects;
     }

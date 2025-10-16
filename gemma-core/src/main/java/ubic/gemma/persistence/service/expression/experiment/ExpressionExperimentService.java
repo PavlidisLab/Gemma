@@ -609,11 +609,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * Obtain a {@link BioAssayDimension} with its assays initialized as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     * Obtain all {@link BioAssayDimension}s with their assays initialized as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}
+     * associated to a particular {@link QuantitationType}.
+     * <p>
+     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}.
      */
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt );
+    Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

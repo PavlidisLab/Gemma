@@ -1281,12 +1281,11 @@ public class ExpressionExperimentServiceImpl
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt ) {
-        BioAssayDimension bad = expressionExperimentDao.getBioAssayDimension( ee, qt );
-        if ( bad != null ) {
-            Thaws.thawBioAssayDimension( bad );
-        }
+    public Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment ee, QuantitationType qt ) {
+        Collection<BioAssayDimension> bad = expressionExperimentDao.getBioAssayDimensions( ee, qt );
+        bad.forEach( Thaws::thawBioAssayDimension );
         return bad;
     }
 
