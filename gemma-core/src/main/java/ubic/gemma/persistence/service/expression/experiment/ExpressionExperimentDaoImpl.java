@@ -1283,6 +1283,32 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt ) {
+        Set<Collection<BioAssayDimension>> dimensions = bulkDataVectorTypes.stream()
+                .map( vectorType -> getBioAssayDimensions( ee, qt, vectorType ) )
+                .filter( c -> !c.isEmpty() )
+                .collect( Collectors.toSet() );
+        if ( dimensions.size() == 1 ) {
+            return dimensions.iterator().next();
+        } else if ( dimensions.size() > 1 ) {
+            throw new NonUniqueResultException( dimensions.size() );
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .add( Restrictions.eq( "quantitationType", qt ) )
+                .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
+                .list();
+    }
+
+    @Override
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
         return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )

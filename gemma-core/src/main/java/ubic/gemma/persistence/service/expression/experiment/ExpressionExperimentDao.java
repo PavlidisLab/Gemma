@@ -223,10 +223,15 @@ public interface ExpressionExperimentDao
 
     /**
      * Retrieve a dimension for a given experiment and quantitation type.
+     *
      * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
+
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
 
     /**
      * Obtain a bioassay dimension by ID.
