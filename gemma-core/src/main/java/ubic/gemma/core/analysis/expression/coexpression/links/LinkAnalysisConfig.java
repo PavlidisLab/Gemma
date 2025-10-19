@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,12 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean upperCdfCutUsed = false;
     private double upperTailCut = 0.01;
     private boolean useDb = true;
+    /**
+     * If true, perform a log-transformation of the data prior to analysis. The default is to use the data as-is.
+     * <p>
+     * If the data is already on a log scale, nothing is done.
+     */
+    private boolean logTransform = false;
 
     public boolean isCheckForBatchEffect() {
         return checkForBatchEffect;
@@ -325,6 +331,14 @@ public class LinkAnalysisConfig implements Serializable {
 
     public void setUseDb( boolean useDb ) {
         this.useDb = useDb;
+    }
+
+    public boolean isLogTransform() {
+        return logTransform;
+    }
+
+    public void setLogTransform( boolean logTransform ) {
+        this.logTransform = logTransform;
     }
 
     /**

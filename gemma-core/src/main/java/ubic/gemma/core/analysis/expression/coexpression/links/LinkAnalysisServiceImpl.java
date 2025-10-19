@@ -29,15 +29,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
-import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
+import ubic.gemma.core.analysis.preprocess.filter.*;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -50,6 +47,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -57,6 +55,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -105,6 +104,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
     @Override
     public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig ) {
@@ -139,8 +141,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException {
+        ArrayDesign ad = arrayDesignService.findByShortName( linkAnalysisConfig.getArrayName() );
+        if ( ad == null ) {
+            throw new IllegalArgumentException( "No platform named '" + linkAnalysisConfig.getArrayName() + "'" );
+        }
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
-                .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
+                .getFilteredMatrix( dataVectors, ad, filterConfig, linkAnalysisConfig.isLogTransform() );
 
         this.checkDatamatrix( datamatrix );
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
@@ -164,14 +170,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-    private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) throws InsufficientProbesException {
+    private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) throws InsufficientDesignElementsException {
         if ( datamatrix.rows() == 0 ) {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(), "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( datamatrix.getExpressionExperiment(),
+            throw new InsufficientDesignElementsException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < ExpressionExperimentFilter.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientDesignElementsException(
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
-                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
+                            + ExpressionExperimentFilter.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }
     }
 
@@ -201,7 +207,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         this.qcCheck( linkAnalysisConfig, ee );
 
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
-                .getFilteredMatrix( ee, filterConfig, dataVectors );
+                .getFilteredMatrix( ee, dataVectors, filterConfig, linkAnalysisConfig.isLogTransform() );
 
         this.setUpForAnalysis( ee, la, dataVectors, datamatrix );
 
@@ -325,7 +331,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      */
     private ExpressionDataDoubleMatrix filterUnmappedProbes( ExpressionDataDoubleMatrix dataMatrix,
             Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
-        return new ExpressionDataDoubleMatrix( dataMatrix, new ArrayList<>( probeToGeneMap.keySet() ) );
+        return dataMatrix.sliceRows( new ArrayList<>( probeToGeneMap.keySet() ) );
     }
 
     /**
@@ -399,7 +405,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         if ( e instanceof InsufficientSamplesException ) {
             this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.class );
-        } else if ( e instanceof InsufficientProbesException ) {
+        } else if ( e instanceof InsufficientDesignElementsException ) {
             this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.class );
         } else {
             LinkAnalysisServiceImpl.log.error( "While processing " + expressionExperiment, e );

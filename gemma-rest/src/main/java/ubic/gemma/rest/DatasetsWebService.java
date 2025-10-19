@@ -46,7 +46,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -1401,7 +1401,7 @@ public class DatasetsWebService {
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new InternalServerErrorException( e );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
+        } catch ( NoDesignElementsException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
             throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );

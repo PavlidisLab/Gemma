@@ -110,6 +110,8 @@ public interface ExpressionDataMatrix<T> {
     @Nullable
     int[] getRowIndices( CompositeSequence designElement );
 
+    ExpressionDataMatrix<T> sliceRows( List<CompositeSequence> designElements );
+
     /**
      * @return list of elements representing the row 'labels'.
      * @deprecated use {@link #getDesignElements()} instead

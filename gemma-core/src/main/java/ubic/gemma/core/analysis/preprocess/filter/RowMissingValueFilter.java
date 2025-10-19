@@ -140,7 +140,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 .info( "Retaining " + kept.size() + " rows that meet criterion of at least " + minPresentCount
                         + " non-missing values" );
 
-        return new ExpressionDataDoubleMatrix( data, kept );
+        return data.sliceRows( kept );
 
     }
 
@@ -189,5 +189,10 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             throw new IllegalArgumentException( "Min present fraction must be between 0 and 1, got " + k );
         minPresentFractionIsSet = true;
         minPresentFraction = k;
+    }
+
+    @Override
+    public String toString() {
+        return "RowMissingValueFilter";
     }
 }

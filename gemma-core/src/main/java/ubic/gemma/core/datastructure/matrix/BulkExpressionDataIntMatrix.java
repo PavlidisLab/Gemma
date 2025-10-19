@@ -1,10 +1,15 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -22,6 +27,15 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
             BulkExpressionDataVector vector = vectors.get( i );
             this.matrix[i] = vector.getDataAsInts();
         }
+    }
+
+    private BulkExpressionDataIntMatrix( @Nullable ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, QuantitationType quantitationType, List<CompositeSequence> designElements, int[][] matrix ) {
+        super( expressionExperiment, bioAssayDimension, quantitationType, designElements );
+        Assert.isTrue( matrix.length == 0 || bioAssayDimension.getBioAssays().size() == matrix[0].length,
+                "Number of bioassays must match the number of columns in the matrix." );
+        Assert.isTrue( designElements.size() == matrix.length,
+                "Number of design elements must match the number of rows in the matrix." );
+        this.matrix = matrix;
     }
 
     @Override
@@ -69,6 +83,22 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
     @Override
     public Integer[] getRow( int index ) {
         return ArrayUtils.toObject( getRowAsInts( index ) );
+    }
+
+    @Override
+    public ExpressionDataMatrix<Integer> sliceRows( List<CompositeSequence> designElements ) {
+        int[][] slicedMatrix = new int[designElements.size()][];
+        for ( int i = 0; i < designElements.size(); i++ ) {
+            CompositeSequence de = designElements.get( i );
+            int rowIndex = getRowIndex( de );
+            if ( rowIndex == -1 ) {
+                throw new IllegalArgumentException( de + " is not found in the matrix." );
+            }
+            // this is immutable, so slicing rows is very efficient :)
+            slicedMatrix[i] = matrix[rowIndex];
+        }
+        return new BulkExpressionDataIntMatrix( getExpressionExperiment(), getBioAssayDimension(),
+                getQuantitationType(), designElements, slicedMatrix );
     }
 
     @Override
