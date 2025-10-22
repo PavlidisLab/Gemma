@@ -5,13 +5,11 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.AbstractMexSingleCellDataLoaderConfigurer;
+import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -54,12 +52,12 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
             return true;
         }
         // rely on additional heuristics
-        return TenXCellRangerUtils.detect10x( getGeoSample( sampleName ) );
+        return TenXCellRangerUtils.detect10x( getGeoSample( sampleName ).getDataProcessing() );
     }
 
     @Override
     protected boolean detectUnfiltered( String sampleName, Path sampleDir ) {
-        return TenXCellRangerUtils.detect10xUnfiltered( getGeoSample( sampleName ) );
+        return TenXCellRangerUtils.detect10xUnfiltered( getGeoSample( sampleName ).getDataProcessing() );
     }
 
     @Override
@@ -69,12 +67,10 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
 
     @Override
     protected String detect10xChemistry( String sampleName, Path sampleDir ) {
-        String chemistry;
-        if ( ( chemistry = TenXCellRangerUtils.detect10xChemistry( getGeoSample( sampleName ) ) ) != null ) {
-            return chemistry;
-        } else {
-            return null;
-        }
+        return getGeoSample( sampleName ).getChannels().stream()
+                .map( channel -> TenXCellRangerUtils.detect10xChemistry( channel.getExtractProtocol() ) )
+                .filter( Objects::nonNull )
+                .findFirst().orElse( null );
     }
 
     private GeoSample getGeoSample( String sampleName ) {

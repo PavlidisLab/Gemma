@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -15,6 +15,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Configure a {@link MexSingleCellDataLoader} for a given directory and collection of {@link BioAssay}s.
+ *
  * @author poirigui
  */
 public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellDataLoaderConfigurer {
@@ -27,7 +28,7 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
     private final GeoSeries geoSeries;
 
     /**
-     * @param geoSeries         GEO series metadata, optional, but can be used to infer the 10x chemistry
+     * @param geoSeries GEO series metadata, optional, but can be used to infer the 10x chemistry
      */
     public MexSingleCellDataLoaderConfigurer( Path mexDir, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper, @Nullable Path cellRangerPrefix, @Nullable GeoSeries geoSeries ) {
         super( cellRangerPrefix );
@@ -71,7 +72,7 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
         BioAssay assay = requireNonNull( bioAssayBySampleName.get( sampleName ),
                 "No BioAssay with name " + sampleName + " found." );
         return super.detect10x( sampleName, sampleDir )
-                || getGeoSample( assay ).map( TenXCellRangerUtils::detect10x ).orElse( false );
+                || getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10x ).orElse( false );
     }
 
     @Override
@@ -79,7 +80,7 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
         BioAssay assay = requireNonNull( bioAssayBySampleName.get( sampleName ),
                 "No BioAssay with name " + sampleName + " found." );
         return super.detectUnfiltered( sampleName, sampleDir )
-                || getGeoSample( assay ).map( TenXCellRangerUtils::detect10xUnfiltered ).orElse( false );
+                || getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10xUnfiltered ).orElse( false );
     }
 
     @Override
@@ -97,7 +98,12 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
         if ( geoSeries != null && assay.getAccession() != null && Objects.equals( assay.getAccession().getExternalDatabase().getName(), ExternalDatabases.GEO ) ) {
             log.info( assay + " appears to originate from GEO, will use its GEO sample metadata to infer the chemistry." );
             return getGeoSample( assay )
-                    .map( TenXCellRangerUtils::detect10xChemistry )
+                    .map( GeoSample::getChannels )
+                    .flatMap( channels -> channels.stream()
+                            .map( GeoChannel::getExtractProtocol )
+                            .map( TenXCellRangerUtils::detect10xChemistry )
+                            .filter( Objects::nonNull )
+                            .findFirst() )
                     .orElse( null );
         } else {
             return null;

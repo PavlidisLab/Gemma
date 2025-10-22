@@ -3,10 +3,11 @@ package ubic.gemma.core.loader.expression.singleCell;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.io.file.PathUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 
@@ -34,7 +35,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     /**
      *
      * @param cellRangerPrefix path to an installation of Cell Ranger, required if 10x filtering is deemed necessary,
-     * {@link MexSingleCellDataLoaderConfig#getApply10xFilter()}.
+     *                         {@link MexSingleCellDataLoaderConfig#getApply10xFilter()}.
      */
     protected AbstractMexSingleCellDataLoaderConfigurer( @Nullable Path cellRangerPrefix ) {
         this.cellRangerPrefix = cellRangerPrefix;
@@ -150,21 +151,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             log.warn( sampleName + ": " + mexFile + " does not exist, cannot use it to check if the data is from a 10x Chromium Sequencing platform." );
             return false;
         }
-        String[] comments;
-        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ) ) ) ) {
-            reader.readMatrixInfo();
-            comments = reader.readComments();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        // The comment is in the following form:
-        // %metadata_json: {"software_version": "Cell Ranger cellranger-7.1.0", "format_version": 2}
-        for ( String comment : comments ) {
-            if ( StringUtils.containsAny( comment, "Cell Ranger", "cellranger" ) ) {
-                return true;
-            }
-        }
-        return false;
+        return TenXCellRangerUtils.detect10xFromMexFile(mexFile);
     }
 
     /**

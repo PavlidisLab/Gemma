@@ -19,6 +19,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoSource;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
@@ -65,8 +66,8 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
         GeoSample sample = readSeriesFromGeo( "GSE269482" ).getSamples().stream()
                 .findFirst()
                 .get();
-        assertTrue( TenXCellRangerUtils.detect10x( sample ) );
-        assertTrue( TenXCellRangerUtils.detect10xUnfiltered( sample ) );
+        assertTrue( TenXCellRangerUtils.detect10x( sample.getDataProcessing() ) );
+        assertTrue( TenXCellRangerUtils.detect10xUnfiltered( sample.getDataProcessing() ) );
     }
 
     @Test
@@ -88,6 +89,29 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
         assertTrue( configurer.detectUnfiltered( "GSM8316309", dataDir ) );
         assertEquals( "Mus musculus", configurer.detect10xGenome( "GSM8316309", dataDir ) );
         assertEquals( "SC3Pv3-polyA", configurer.detect10xChemistry( "GSM8316309", dataDir ) );
+    }
+
+    /**
+     * This is an older single-cell dataset with many typos in the GEO record.
+     */
+    @Test
+    public void testGSE217511() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE217511" );
+        GeoSample sample = series.getSamples().stream()
+                .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM6720852" ) )
+                .findFirst()
+                .get();
+        Path dataDir;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            dataDir = detector.downloadSingleCellData( sample );
+        }
+        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( dataDir, series, cellRangerPrefix );
+        assertTrue( configurer.detect10x( "GSM6720852", dataDir ) );
+        // FIXME: assertTrue( configurer.detectUnfiltered( "GSM6720852", dataDir ) );
+        assertEquals( "Homo sapiens", configurer.detect10xGenome( "GSM6720852", dataDir ) );
+        // FIXME: assertEquals( "SC3Pv3-polyA", configurer.detect10xChemistry( "GSM6720852", dataDir ) );
     }
 
     @Test

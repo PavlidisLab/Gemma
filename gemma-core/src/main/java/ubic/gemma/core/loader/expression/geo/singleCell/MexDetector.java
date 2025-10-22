@@ -15,6 +15,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.util.ProgressInputStream;
 
 import javax.annotation.Nullable;
