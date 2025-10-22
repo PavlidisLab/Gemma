@@ -71,16 +71,22 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
     protected boolean detect10x( String sampleName, Path sampleDir ) {
         BioAssay assay = requireNonNull( bioAssayBySampleName.get( sampleName ),
                 "No BioAssay with name " + sampleName + " found." );
-        return super.detect10x( sampleName, sampleDir )
-                || getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10x ).orElse( false );
+        return getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10x ).orElse( false )
+                || super.detect10x( sampleName, sampleDir );
     }
 
     @Override
     protected boolean detectUnfiltered( String sampleName, Path sampleDir ) {
         BioAssay assay = requireNonNull( bioAssayBySampleName.get( sampleName ),
                 "No BioAssay with name " + sampleName + " found." );
-        return super.detectUnfiltered( sampleName, sampleDir )
-                || getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10xUnfiltered ).orElse( false );
+        if ( getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10xUnfiltered ).orElse( false ) ) {
+            return true;
+        } else if ( getGeoSample( assay ).map( GeoSample::getDataProcessing ).map( TenXCellRangerUtils::detect10xFiltered ).orElse( false ) ) {
+            return false;
+        } else {
+            log.warn( "Failed to detect if " + sampleName + " is unfiltered from its GEO metadata, will have to lookup the MEX file." );
+            return super.detectUnfiltered( sampleName, sampleDir );
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,7 +91,7 @@ public class TenXCellRangerUtils {
      */
     @Nullable
     public static String detect10xChemistry( String description ) {
-        if ( Strings.CI.contains( description, "Single Cell 3′ Gene Expression kit v3" )
+        if ( ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v3" ) )
                 || Strings.CS.containsAny( description,
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/chromium-next-gem-automated-single-cell-3-reagent-kits-user-guide-v-3-1-chemistry
                 "1000141", "1000147", "1000136", "1000146", "1000213", "1000215",
@@ -102,7 +103,7 @@ public class TenXCellRangerUtils {
         ) ) {
             return "SC3Pv3" + ( isHighThroughput( description ) ? "HT" : "" ) + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
         }
-        if ( Strings.CI.contains( description, "Single Cell 3′ Gene Expression kit v4" )
+        if ( ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v4" ) )
                 || Strings.CS.containsAny( description,
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/gem-x-universal-3-prime-gene-expression-v-4-4-plex-reagent-kits
                 "1000779", "1000747", "1000215",
@@ -111,6 +112,10 @@ public class TenXCellRangerUtils {
             return "SC3Pv4" + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
         }
         return null;
+    }
+
+    private static boolean containsNormalizeSpaceAndSingleQuoteCaseInsensitive( String s, String t ) {
+        return Strings.CI.contains( StringUtils.normalizeSpace( s.replaceAll( "[ʼ’′]", "'" ) ), t );
     }
 
     private static boolean isHighThroughput( String description ) {

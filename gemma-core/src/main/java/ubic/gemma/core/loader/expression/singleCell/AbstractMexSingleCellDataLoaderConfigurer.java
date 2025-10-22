@@ -1,25 +1,22 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import no.uib.cipr.matrix.io.MatrixInfo;
+import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.loader.util.MatrixMarketUtils.getNonEmptyColumns;
 import static ubic.gemma.core.loader.util.MatrixMarketUtils.readMatrixMarketFromPath;
@@ -151,7 +148,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             log.warn( sampleName + ": " + mexFile + " does not exist, cannot use it to check if the data is from a 10x Chromium Sequencing platform." );
             return false;
         }
-        return TenXCellRangerUtils.detect10xFromMexFile(mexFile);
+        return TenXCellRangerUtils.detect10xFromMexFile( mexFile );
     }
 
     /**
@@ -159,10 +156,12 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
      */
     protected boolean detectUnfiltered( String sampleName, Path sampleDir ) {
         Path matrixFile = sampleDir.resolve( "matrix.mtx.gz" );
-        CompRowMatrix matrix;
+        log.info( "Computing the number of used columns from " + matrixFile + "..." );
+        int numColumns;
         try ( MatrixVectorReader mvr = readMatrixMarketFromPath( matrixFile ) ) {
-            log.info( "Reading " + matrixFile + "..." );
-            matrix = new CompRowMatrix( mvr );
+            MatrixInfo matrixInfo = mvr.readMatrixInfo();
+            MatrixSize size = mvr.readMatrixSize( matrixInfo );
+            numColumns = size.numColumns();
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to read " + matrixFile + ": " + ExceptionUtils.getRootCauseMessage( e ), e );
         }
@@ -172,7 +171,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to read " + matrixFile + ": " + ExceptionUtils.getRootCauseMessage( e ), e );
         }
-        return nonEmptyCellIndices.length < matrix.numColumns();
+        return nonEmptyCellIndices.length < numColumns;
     }
 
     /**

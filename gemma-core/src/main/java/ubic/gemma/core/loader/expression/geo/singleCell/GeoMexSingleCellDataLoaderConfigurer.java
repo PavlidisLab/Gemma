@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.AbstractMexSingleCellDataLoaderConfigurer;
@@ -48,16 +49,20 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
 
     @Override
     protected boolean detect10x( String sampleName, Path sampleDir ) {
-        if ( super.detect10x( sampleName, sampleDir ) ) {
-            return true;
-        }
-        // rely on additional heuristics
-        return TenXCellRangerUtils.detect10x( getGeoSample( sampleName ).getDataProcessing() );
+        return TenXCellRangerUtils.detect10x( getGeoSample( sampleName ).getDataProcessing() )
+                || super.detect10x( sampleName, sampleDir );
     }
 
     @Override
     protected boolean detectUnfiltered( String sampleName, Path sampleDir ) {
-        return TenXCellRangerUtils.detect10xUnfiltered( getGeoSample( sampleName ).getDataProcessing() );
+        if ( TenXCellRangerUtils.detect10xUnfiltered( getGeoSample( sampleName ).getDataProcessing() ) ) {
+            return true;
+        } else if ( TenXCellRangerUtils.detect10xFiltered( getGeoSample( sampleName ).getDataProcessing() ) ) {
+            return false;
+        } else {
+            log.warn( "Failed to detect if " + sampleName + " is unfiltered from its GEO metadata, will have to lookup the MEX file." );
+            return super.detectUnfiltered( sampleName, sampleDir );
+        }
     }
 
     @Override
@@ -68,7 +73,8 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
     @Override
     protected String detect10xChemistry( String sampleName, Path sampleDir ) {
         return getGeoSample( sampleName ).getChannels().stream()
-                .map( channel -> TenXCellRangerUtils.detect10xChemistry( channel.getExtractProtocol() ) )
+                .map( GeoChannel::getExtractProtocol )
+                .map( TenXCellRangerUtils::detect10xChemistry )
                 .filter( Objects::nonNull )
                 .findFirst().orElse( null );
     }

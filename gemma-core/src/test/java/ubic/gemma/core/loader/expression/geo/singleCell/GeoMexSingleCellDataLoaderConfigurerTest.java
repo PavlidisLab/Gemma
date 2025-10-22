@@ -71,34 +71,68 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    public void testDetect10xUnfiltered10XDataDownload() throws IOException, NoSingleCellDataFoundException {
-        GeoSeries series = readSeriesFromGeo( "GSE269482" );
-        GeoSample sample = series.getSamples().stream()
-                .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM8316309" ) )
-                .findFirst()
-                .get();
-        Path dataDir;
-        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
-            detector.setFTPClientFactory( ftpClientFactory );
-            detector.setDownloadDirectory( downloadDir );
-            dataDir = detector.downloadSingleCellData( sample );
-        }
-        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( dataDir, series, cellRangerPrefix );
-        assertTrue( configurer.detect10x( "GSM8316309", dataDir ) );
-        assertTrue( configurer.detectUnfiltered( "GSM8316309", dataDir ) );
-        assertEquals( "Mus musculus", configurer.detect10xGenome( "GSM8316309", dataDir ) );
-        assertEquals( "SC3Pv3-polyA", configurer.detect10xChemistry( "GSM8316309", dataDir ) );
+    public void testGSE269482() throws IOException, NoSingleCellDataFoundException {
+        testUnfiltered10xDataset( "GSE269482", "GSM8316309", "Mus musculus", "SC3Pv3-polyA" );
     }
 
     /**
      * This is an older single-cell dataset with many typos in the GEO record.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE217511() throws IOException, NoSingleCellDataFoundException {
-        GeoSeries series = readSeriesFromGeo( "GSE217511" );
+        testUnfiltered10xDataset( "GSE217511", "GSM6720852", "Homo sapiens", "SC3Pv3-polyA" );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE178226() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE178226", "GSM5384778", "Mus musculus", "SC3Pv3-polyA" );
+    }
+
+    public void testGSE280175() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE280175", "GSM8591175", "Homo sapiens", "SC3Pv3-polyA" );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE221042() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE221042", "GSM6841143", "Homo sapiens", "SC3Pv3-polyA" );
+    }
+
+    @Test
+    public void testGSE223423() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE223423", "GSM6948202", "Mus musculus", "SC3Pv3-polyA" );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE143355() throws NoSingleCellDataFoundException, IOException {
+        // the extraction protocol does not specify if it's 3' or 5' v3
+        testUnfiltered10xDataset( "GSE143355", "GSM4257550", "Mus musculus", null );
+    }
+
+    @Test
+    public void testGSE198033() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE198033", "GSM5936167", "Homo sapiens", "SC3Pv3-polyA" );
+    }
+
+    @Test
+    public void testGSE132355() throws NoSingleCellDataFoundException, IOException {
+        testUnfiltered10xDataset( "GSE132355", "GSM3860733", "Mus musculus", null );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE295078() throws NoSingleCellDataFoundException, IOException {
+        // TODO: this is a dataset with a 5' chemistry
+        testUnfiltered10xDataset( "GSE295078", "GSM8941791", "Mus musculus", null );
+    }
+
+    private void testUnfiltered10xDataset( String seriesName, String sampleName, String expectedTaxa, String expectedChemistry ) throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( seriesName );
         GeoSample sample = series.getSamples().stream()
-                .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM6720852" ) )
+                .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( sampleName ) )
                 .findFirst()
                 .get();
         Path dataDir;
@@ -108,10 +142,10 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
             dataDir = detector.downloadSingleCellData( sample );
         }
         GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( dataDir, series, cellRangerPrefix );
-        assertTrue( configurer.detect10x( "GSM6720852", dataDir ) );
-        // FIXME: assertTrue( configurer.detectUnfiltered( "GSM6720852", dataDir ) );
-        assertEquals( "Homo sapiens", configurer.detect10xGenome( "GSM6720852", dataDir ) );
-        // FIXME: assertEquals( "SC3Pv3-polyA", configurer.detect10xChemistry( "GSM6720852", dataDir ) );
+        assertTrue( configurer.detect10x( sampleName, dataDir ) );
+        assertTrue( configurer.detectUnfiltered( sampleName, dataDir ) );
+        assertEquals( expectedTaxa, configurer.detect10xGenome( sampleName, dataDir ) );
+        assertEquals( expectedChemistry, configurer.detect10xChemistry( sampleName, dataDir ) );
     }
 
     @Test
