@@ -157,7 +157,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         }
         result.setAfterInitialFilter( afterAffyControlsFilter );
 
-        if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
+        if ( !config.isIgnoreMinimumSampleThreshold() ) {
             ExpressionExperimentFilter.log.debug( "Filtering for missing data" );
             filteredMatrix = this.filterMissingValues( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
@@ -182,7 +182,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
         /*
          * Filtering lowly expressed genes.
          */
-        if ( config.isLowExpressionCutIsSet() ) {
+        if ( config.getLowExpressionCut() > 0.0 ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low or too high expression" );
             Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = this.filterLowExpression( filteredMatrix, ranks );
@@ -204,7 +204,7 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
          * The variance is probably the safest bet and seems to be what others use. For example see Hackstadt and Hess,
          * BMC Bioinformatics 2009 10:11 (http://www.ncbi.nlm.nih.gov/pubmed/19133141)
          */
-        if ( config.isLowVarianceCutIsSet() ) {
+        if ( config.getLowVarianceCut() > 0.0 ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low variance " );
             filteredMatrix = this.filterLowVariance( filteredMatrix );
             afterLowVarianceCut = filteredMatrix.rows();
@@ -226,12 +226,12 @@ public class ExpressionExperimentFilter implements Filter<ExpressionDataDoubleMa
                 buf.append( "After Seq\t" ).append( afterSequenceRemovalRows ).append( "\n" );
             if ( this.usesAffymetrix() )
                 buf.append( "After removing Affy controls\t" ).append( afterAffyControlsFilter ).append( "\n" );
-            if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )
+            if ( !config.isIgnoreMinimumSampleThreshold() )
                 buf.append( "After MinPresent\t" ).append( afterMinPresentFilter ).append( "\n" );
             buf.append( "After ZeroVar\t" ).append( afterZeroVarianceCut ).append( "\n" );
-            if ( config.isLowExpressionCutIsSet() )
+            if ( config.getLowExpressionCut() > 0.0 )
                 buf.append( "After LowExpr\t" ).append( afterLowExpressionCut ).append( "\n" );
-            if ( config.isLowVarianceCutIsSet() )
+            if ( config.getLowVarianceCut() > 0.0 )
                 buf.append( "After LowVar\t" ).append( afterLowVarianceCut ).append( "\n" );
             buf.append( "================================================================\n" );
             ExpressionExperimentFilter.log.info( buf.toString() );

@@ -13,13 +13,44 @@ import java.io.Serializable;
 public class FilterConfig implements Serializable {
 
     public static final double DEFAULT_DISTINCTVALUE_FRACTION = 0.5;
-    public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
+    public static final double DEFAULT_HIGHEXPRESSION_CUT = 1.0;
     // changed from 0.3, because now we remove the "no-gene" probes by default.
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.2;
     public static final double DEFAULT_LOWVARIANCECUT = 0.05;
     public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
 
+    /**
+     * Low cut for expression.
+     * <p>
+     * Design elements expressed below the cut will be filtered out.
+     * <p>
+     * This threshold applies on the rank. A value of 0.9 will drop the top 10% of the data.
+     * <p>
+     * Set this to one to disable.
+     */
+    private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
+
+    /**
+     * High cut for expression.
+     * <p>
+     * Design elements expressed above the cut will be filtered out.
+     * <p>
+     * This threshold applies on the rank of gene expression. A value of 0.1 will drop the bottom 10% of the data.
+     * <p>
+     * Set this to zero to disable.
+     */
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+
+    /**
+     * This threshold applies on the variance of the row.
+     * <p>
+     * Set this to zero disable.
+     */
+    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
+
+    private double lowDistinctValueCut = DEFAULT_DISTINCTVALUE_FRACTION;
+
+    private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
 
     /**
      * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
@@ -30,37 +61,11 @@ public class FilterConfig implements Serializable {
      * If true, MINIMUM_SAMPLE is ignored.
      */
     private boolean ignoreMinimumSampleThreshold = false;
-    private double lowDistinctValueCut = DEFAULT_DISTINCTVALUE_FRACTION;
-    private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
-    private boolean lowExpressionCutIsSet = true;
-    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
-    private boolean lowVarianceCutIsSet = true;
-    private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
-    private boolean minPresentFractionIsSet = true;
     /**
      * Set to true if rows lacking associated BioSequences for the element should be removed.
      */
     private boolean requireSequences = true;
     private boolean lowDistinctValueIsSet = false;
-
-    public void setLowDistinctValueCut( double lowDistinctValueCut ) {
-        this.lowDistinctValueCut = lowDistinctValueCut;
-        this.lowDistinctValueIsSet = true;
-    }
-
-    public void setLowExpressionCut( double lowExpressionCut ) {
-        this.lowExpressionCut = lowExpressionCut;
-    }
-
-    public void setLowVarianceCut( double lowVarianceCut ) {
-        this.lowVarianceCut = lowVarianceCut;
-        this.lowVarianceCutIsSet = true;
-    }
-
-    public void setMinPresentFraction( double minPresentFraction ) {
-        this.minPresentFraction = minPresentFraction;
-        this.minPresentFractionIsSet = true;
-    }
 
     @Override
     public String toString() {
