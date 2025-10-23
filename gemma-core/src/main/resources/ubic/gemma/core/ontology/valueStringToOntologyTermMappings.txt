@@ -984,7 +984,7 @@ Parahippocampal Gyrus	parahippocampal gyrus	http://purl.obolibrary.org/obo/UBERO
 paraventricular hypothalamus	paraventricular nucleus of hypothalamus	http://purl.obolibrary.org/obo/UBERON_0001930	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 parietal cortex	parietal cortex	http://purl.obolibrary.org/obo/UBERON_0016530	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Parkinson's disease	Parkinson disease	http://purl.obolibrary.org/obo/MONDO_0005180	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-parvalbumin (PV) neurons	pvalb GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023018	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+parvalbumin (PV) neurons	pvalb GABAergic interneuron	http://purl.obolibrary.org/obo/CL_4023018	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Patient Primary Pancreatic Tumor	pancreatic neoplasm	http://purl.obolibrary.org/obo/MONDO_0021040	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Patient-matched nontumor control	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 PBMC	peripheral blood mononuclear cell	http://purl.obolibrary.org/obo/CL_2000001	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
