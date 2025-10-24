@@ -16,7 +16,7 @@ public class FilterConfig implements Serializable {
     public static final double DEFAULT_HIGHEXPRESSION_CUT = 1.0;
     // changed from 0.3, because now we remove the "no-gene" probes by default.
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.2;
-    public static final double DEFAULT_LOWVARIANCECUT = 0.05;
+    public static final double DEFAULT_LOWVARIANCECUT = 0.01;
     public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
 
     /**
@@ -43,6 +43,9 @@ public class FilterConfig implements Serializable {
 
     /**
      * This threshold applies on the variance of the row.
+     * <p>
+     * The threshold applies to data on a log2-scale, so a value of 0.01 will retain values with a standard deviation of
+     * 0.1.
      * <p>
      * Set this to zero disable.
      */
