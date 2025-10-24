@@ -52,9 +52,6 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Autowired
-    private AnalysisSelectionAndExecutionService analysisService = null;
-
-    @Autowired
     private DiffExAnalyzer analyzer;
 
     @Autowired
@@ -83,6 +80,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         assertEquals( AnalysisType.GENERICLM, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFilterMode( DifferentialExpressionAnalysisFilter.Mode.NOMINAL );
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
