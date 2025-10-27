@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -206,6 +207,12 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawLiter( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
+    }
+
+    @Test
+    public void testLoadWithRefreshCacheMode() {
+        ee = createExpressionExperiment();
+        assertNotNull( expressionExperimentDao.load( ee.getId(), CacheMode.REFRESH ) );
     }
 
     @Test

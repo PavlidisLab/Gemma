@@ -61,18 +61,18 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.AffyDataFromCelCli ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--apt-file|--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--apt-file --batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--apt-file|--batch-output-file|--eeListfile|--excludeEEFile|-aptFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' affyFromCel ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--apt-file|--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-aptFile|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--apt-file --batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --taxon -all -aptFile -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -q -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--apt-file|--batch-output-file|--eeListfile|--excludeEEFile|-aptFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -634,7 +634,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--array|--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-count|-e|-eeset|-f|-multiqc|-q|-rlen|-rpkm|-t|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --taxon -a -all -allowMissing -batchFormat -batchOutputFile -batchReportFrequency -count -e -eeset -f -h -log2cpm -multiqc -q -rlen -rpkm -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-count|-f|-multiqc|-rpkm|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -642,7 +642,7 @@ function __gemma_cli_staging_complete() {
         if ! [[ "$current_option" =~ (--array|--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--taxon|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-count|-e|-eeset|-f|-multiqc|-q|-rlen|-rpkm|-t|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--array --batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --taxon -a -all -allowMissing -batchFormat -batchOutputFile -batchReportFrequency -count -e -eeset -f -h -log2cpm -multiqc -q -rlen -rpkm -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-count|-f|-multiqc|-rpkm|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi

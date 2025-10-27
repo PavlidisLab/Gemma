@@ -512,6 +512,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     log.info( "Adding a non-preferred QT, no need to generate MEX files." );
                 }
                 addSuccessObject( ee, "Loaded vectors for " + qt );
+                try {
+                    refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+                } catch ( Exception e ) {
+                    addWarningObject( ee, "Failed to refresh dataset from Gemma Web", e );
+                }
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown operation mode " + mode );

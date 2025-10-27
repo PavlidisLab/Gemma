@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,6 +53,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private static final String METADATAOPT = "rlen";
     private static final String RPKM_FILE_OPT = "rpkm";
     private static final String MULTIQC_METADATA_FILE_OPT = "multiqc";
+    private static final String BACKFILL_LOG2CPM_OPTION = "log2cpm";
 
     @Autowired
     private DataUpdater serv;
@@ -62,12 +62,12 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     @Autowired
     private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
+    private Path countFile = null;
+    private Path rpkmFile = null;
     private boolean allowMissingSamples = false;
-    private String countFile = null;
-    private Boolean isPairedReads = null;
     private String platformName = null;
+    private Boolean isPairedReads = null;
     private Integer readLength = null;
-    private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
     private Path qualityControlReportFile = null;
 
@@ -83,74 +83,70 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption( Option.builder( RNASeqDataAddCli.RPKM_FILE_OPT ).longOpt( null ).desc( "File with RPKM data" ).argName( "file path" ).hasArg().build() );
-        options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
-
-        options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
+        addSingleExperimentOption( options, Option.builder( RNASeqDataAddCli.RPKM_FILE_OPT ).longOpt( null ).desc( "File with RPKM data" ).argName( "file path" ).type( Path.class ).hasArg().get() );
+        addSingleExperimentOption( options, Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).type( Path.class ).hasArg().get() );
         options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
         addGenericPlatformOption( options, "a", "array", "Target platform (must already exist in the system)" );
+        addSingleExperimentOption( options, Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36:unpaired' or simply '36' if pairedness is unknown" ).argName( "length" ).hasArg().get() );
 
-        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36:unpaired' or simply '36' if pairedness is unknown" ).argName( "length" ).hasArg().build() );
-
-        options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
+        options.addOption( BACKFILL_LOG2CPM_OPTION, "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
         // RNA-Seq pipeline QC report
-        options.addOption( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT, true, "File containing a MultiQC report" );
+        addSingleExperimentOption( options, Option.builder( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ).hasArg( true ).type( Path.class ).desc( "File containing a MultiQC report" ).get() );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( "log2cpm" ) ) {
+        if ( commandLine.hasOption( BACKFILL_LOG2CPM_OPTION ) ) {
             this.justbackfillLog2cpm = true;
 
             if ( commandLine.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) || commandLine.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
                 throw new IllegalArgumentException(
                         "Don't use the log2cpm option when loading new data; just use it to backfill old experiments." );
             }
-            return;
-        }
-
-        if ( commandLine.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) ) {
-            this.rpkmFile = commandLine.getOptionValue( RNASeqDataAddCli.RPKM_FILE_OPT );
-        }
-
-        if ( commandLine.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
-            this.countFile = commandLine.getOptionValue( RNASeqDataAddCli.COUNT_FILE_OPT );
-        }
-
-        if ( commandLine.hasOption( RNASeqDataAddCli.METADATAOPT ) ) {
-            String metaString = commandLine.getOptionValue( RNASeqDataAddCli.METADATAOPT );
-            String[] msf = metaString.split( ":", 2 );
-
-            try {
-                this.readLength = Integer.parseInt( msf[0] );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException(
-                        RNASeqDataAddCli.METADATAOPT + " must be supplied with string in format 'N:{unpaired|paired}' or simply 'N' if pairedness is unknown." );
+        } else {
+            if ( commandLine.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) ) {
+                this.rpkmFile = commandLine.getParsedOptionValue( RNASeqDataAddCli.RPKM_FILE_OPT );
             }
 
-            if ( msf.length == 2 ) {
-                if ( msf[1].equalsIgnoreCase( "paired" ) ) {
-                    this.isPairedReads = true;
-                } else if ( msf[1].equalsIgnoreCase( "unpaired" ) ) {
-                    this.isPairedReads = false;
-                } else {
-                    throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or omitted if unknown" );
+            if ( commandLine.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
+                this.countFile = commandLine.getParsedOptionValue( RNASeqDataAddCli.COUNT_FILE_OPT );
+            }
+
+            this.allowMissingSamples = commandLine.hasOption( RNASeqDataAddCli.ALLOW_MISSING );
+
+            if ( rpkmFile == null && countFile == null )
+                throw new IllegalArgumentException( "Must provide either RPKM (-rpkm) or count (-count) data (or both)" );
+
+            if ( !commandLine.hasOption( "a" ) ) {
+                throw new IllegalArgumentException( "Must provide target platform (-a)" );
+            }
+
+            this.platformName = commandLine.getOptionValue( "a" );
+
+            if ( commandLine.hasOption( RNASeqDataAddCli.METADATAOPT ) ) {
+                String metaString = commandLine.getOptionValue( RNASeqDataAddCli.METADATAOPT );
+                String[] msf = metaString.split( ":", 2 );
+
+                try {
+                    this.readLength = Integer.parseInt( msf[0] );
+                } catch ( NumberFormatException e ) {
+                    throw new IllegalArgumentException(
+                            RNASeqDataAddCli.METADATAOPT + " must be supplied with string in format 'N:{unpaired|paired}' or simply 'N' if pairedness is unknown." );
                 }
+
+                if ( msf.length == 2 ) {
+                    if ( msf[1].equalsIgnoreCase( "paired" ) ) {
+                        this.isPairedReads = true;
+                    } else if ( msf[1].equalsIgnoreCase( "unpaired" ) ) {
+                        this.isPairedReads = false;
+                    } else {
+                        throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or omitted if unknown" );
+                    }
+                }
+
             }
-
         }
-
-        this.allowMissingSamples = commandLine.hasOption( RNASeqDataAddCli.ALLOW_MISSING );
-
-        if ( rpkmFile == null && countFile == null )
-            throw new IllegalArgumentException( "Must provide either RPKM (-rpkm) or count (-count) data (or both)" );
-
-        if ( !commandLine.hasOption( "a" ) ) {
-            throw new IllegalArgumentException( "Must provide target platform (-a)" );
-        }
-
-        this.platformName = commandLine.getOptionValue( "a" );
 
         if ( commandLine.hasOption( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) ) {
             qualityControlReportFile = Paths.get( commandLine.getOptionValue( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) );
@@ -161,79 +157,85 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processExpressionExperiments( Collection<ExpressionExperiment> bas ) {
-        if ( !justbackfillLog2cpm ) {
-            throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool, unless -log2cpm is used." );
-        }
-        super.processExpressionExperiments( bas );
-    }
-
-    @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         ee = eeService.thawLite( ee );
 
         if ( this.justbackfillLog2cpm ) {
             try {
-                ExpressionExperiment finalEe = ee;
-                QuantitationType qt = this.eeService.getPreferredQuantitationType( ee )
-                        .orElseThrow( () -> new IllegalArgumentException( "No preferred quantitation type for " + finalEe.getShortName() ) );
-                if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
-                    log.warn( "Preferred data is not counts for " + ee );
-                    addErrorObject( ee.getShortName(), "Preferred data is not counts" );
-                }
-                serv.log2cpmFromCounts( ee, qt );
-                addSuccessObject( ee, "Back-filled log2cpm from " + qt + "." );
+                backfillLog2cpm( ee );
             } catch ( Exception e ) {
                 addErrorObject( ee, e );
             }
-            return;
-        }
-
-        /*
-         * Usual cases.
-         */
-        ArrayDesign targetArrayDesign = entityLocator.locateArrayDesign( this.platformName );
-
-        try {
-            DoubleMatrixReader reader = new DoubleMatrixReader();
-            DoubleMatrix<String, String> countMatrix = null;
-            DoubleMatrix<String, String> rpkmMatrix = null;
-            if ( this.countFile != null ) {
-                countMatrix = reader.read( countFile );
+        } else {
+            try {
+                loadCountsAndRpkm( ee );
+            } catch ( IOException e ) {
+                addErrorObject( ee, "Failed to add count and RPKM data.", e );
             }
-
-            if ( this.rpkmFile != null ) {
-                rpkmMatrix = reader.read( rpkmFile );
-            }
-
-            // TODO: support per-assay read length and pairedness
-            // TODO: support supplying library size from the CLI
-            Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                sequencingMetadata.put( ba, SequencingMetadata.builder()
-                        .readLength( readLength )
-                        .isPaired( isPairedReads )
-                        .build() );
-            }
-
-            serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, allowMissingSamples );
-            addSuccessObject( ee, String.format( "Added%s%s.",
-                    countFile != null ? " count data from " + countFile : "",
-                    rpkmMatrix != null ? " RPKM data from " + rpkmFile : "" ) );
-        } catch ( IOException e ) {
-            addErrorObject( ee, "Failed to add count and RPKM data.", e );
-            return;
         }
 
         /* copy metadata files */
         if ( qualityControlReportFile != null ) {
             try {
-                Path dest = expressionDataFileService.copyMultiQCReport( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, true );
-                expressionMetadataChangelogFileService.addChangelogEntry( ee, "Added a QC report file." );
-                log.info( "Copied QC report file to " + dest + "." );
+                loadMultiQcReport( ee );
             } catch ( IOException e ) {
                 addErrorObject( ee, "Could not copy the MultiQC report.", e );
             }
         }
+
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh vectors from Gemma Web", e );
+        }
+    }
+
+    /**
+     * Usual cases.
+     */
+    private void loadCountsAndRpkm( ExpressionExperiment ee ) throws IOException {
+        ArrayDesign targetArrayDesign = entityLocator.locateArrayDesign( this.platformName );
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+        DoubleMatrix<String, String> countMatrix = null;
+        DoubleMatrix<String, String> rpkmMatrix = null;
+        if ( this.countFile != null ) {
+            countMatrix = reader.read( countFile.toString() );
+        }
+
+        if ( this.rpkmFile != null ) {
+            rpkmMatrix = reader.read( rpkmFile.toString() );
+        }
+
+        // TODO: support per-assay read length and pairedness
+        // TODO: support supplying library size from the CLI
+        Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            sequencingMetadata.put( ba, SequencingMetadata.builder()
+                    .readLength( readLength )
+                    .isPaired( isPairedReads )
+                    .build() );
+        }
+
+        serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, allowMissingSamples );
+        addSuccessObject( ee, String.format( "Added%s%s.",
+                countFile != null ? " count data from " + countFile : "",
+                rpkmMatrix != null ? " RPKM data from " + rpkmFile : "" ) );
+    }
+
+    private void backfillLog2cpm( ExpressionExperiment ee ) {
+        QuantitationType qt = this.eeService.getPreferredQuantitationType( ee )
+                .orElseThrow( () -> new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() ) );
+        if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
+            log.warn( "Preferred data is not counts for " + ee );
+            addErrorObject( ee.getShortName(), "Preferred data is not counts" );
+        }
+        serv.log2cpmFromCounts( ee, qt );
+        addSuccessObject( ee, "Back-filled log2cpm from " + qt + "." );
+    }
+
+    private void loadMultiQcReport( ExpressionExperiment ee ) throws IOException {
+        Path dest = expressionDataFileService.copyMultiQCReport( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, true );
+        expressionMetadataChangelogFileService.addChangelogEntry( ee, "Added a QC report file." );
+        log.info( "Copied QC report file to " + dest + "." );
     }
 }

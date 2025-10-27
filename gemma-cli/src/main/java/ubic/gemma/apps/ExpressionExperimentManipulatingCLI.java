@@ -210,6 +210,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Add an enumerated option that is only available in single-experiment mode.
+     *
      * @see OptionsUtils#addEnumOption(Options, String, String, String, Class, EnumMap)
      */
     protected <T extends Enum<T>> void addSingleExperimentEnumOption( Options options, String opt, String longOpt, String description, Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
@@ -240,14 +241,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     /**
      * Add options for writing expression data files, such as raw or processed data files.
      *
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
      * @param allowStandardLocation if true, the standard location option will be added
      * @param allowFile             if true, the output file option will be added, otherwise only the output directory
      *                              will be added
      * @param allowDirectory        if true, the output directory option will be added
      * @param allowCurrentDirectory if true, writing to the current directory will be allowed
      * @param allowStdout           if true, the standard output option will be added
+     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
+     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
      */
     protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
         Assert.isTrue( !allowCurrentDirectory || allowDirectory, "Cannot allow current directory without allowing output directory." );
@@ -752,14 +753,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Refresh a dataset for Gemma Web.
-     * @param refreshProcessedVectors if true, refresh processed vectors from the caches
+     *
+     * @param refreshVectors if true, refresh vectors from the caches, that include raw, single-cell, processed and also
+     *                       cached processed vectors in the form of {@link ubic.gemma.model.expression.bioAssayData.DataVectorValueObject}.
      */
-    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshProcessedVectors, boolean refreshReports ) throws Exception {
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
         GemmaRestApiClient.Response response = gemmaRestApiClient
                 .perform( "/datasets/" + ee.getId() + "/refresh",
-                        "refreshVectors", refreshProcessedVectors,
+                        "refreshVectors", refreshVectors,
                         "refreshReports", refreshReports );
         if ( response instanceof GemmaRestApiClient.DataResponse ) {
             log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
@@ -867,6 +870,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Read a changelog entry from the console.
+     *
      * @param defaultText a default text to be shown in the editor, or null to keep the file empty
      */
     protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {
