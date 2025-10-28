@@ -303,7 +303,7 @@ public interface SingleCellExpressionExperimentService {
     void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt );
+    long removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
@@ -387,7 +387,7 @@ public interface SingleCellExpressionExperimentService {
     void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
+    long removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)

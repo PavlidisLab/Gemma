@@ -88,6 +88,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        long removed;
         switch ( mode ) {
             case DELETE_ALL:
                 dataDeleterService.deleteSingleCellData( ee, qt );
@@ -95,8 +96,8 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
                 break;
             case DELETE_ALL_CELL_TYPE_ASSIGNMENTS:
                 ee = eeService.thawLite( ee );
-                singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt );
-                addSuccessObject( ee, qt, "Deleted all cell type assignments." );
+                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt );
+                addSuccessObject( ee, qt, "Deleted " + removed + " cell type assignments." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );
@@ -105,8 +106,8 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:
-                singleCellExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt );
-                addSuccessObject( ee, qt, "Deleted all cell-level characteristics." );
+                removed = singleCellExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt );
+                addSuccessObject( ee, qt, "Deleted " + removed + " cell-level characteristics." );
                 break;
             case DELETE_CELL_LEVEL_CHARACTERISTICS:
                 ee = eeService.thawLite( ee );

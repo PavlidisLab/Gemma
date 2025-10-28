@@ -988,14 +988,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt ) {
+    public long removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt ) {
         SingleCellDimension dim = getSingleCellDimension( ee, qt );
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        for ( CellTypeAssignment cta : dim.getCellTypeAssignments() ) {
+        long removed = 0;
+        List<CellTypeAssignment> ctasToRemove = new ArrayList<>( dim.getCellTypeAssignments() );
+        for ( CellTypeAssignment cta : ctasToRemove ) {
             removeCellTypeAssignment( ee, dim, cta );
+            removed++;
         }
+        return removed;
     }
 
     private void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean alsoRemoveFactor ) {
@@ -1138,14 +1142,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+    public long removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
         SingleCellDimension dim = getSingleCellDimension( ee, qt );
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        for ( CellLevelCharacteristics clc : dim.getCellLevelCharacteristics() ) {
+        long removed = 0;
+        List<CellLevelCharacteristics> clcsToRemove = new ArrayList<>( dim.getCellLevelCharacteristics() );
+        for ( CellLevelCharacteristics clc : clcsToRemove ) {
             removeCellLevelCharacteristics( ee, dim, clc );
+            removed++;
         }
+        return removed;
     }
 
     @Override
