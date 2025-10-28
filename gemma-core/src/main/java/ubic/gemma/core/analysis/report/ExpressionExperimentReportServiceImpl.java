@@ -387,6 +387,55 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentDataProcessingReport generateDataProcessingReport( ExpressionExperiment ee ) {
+        Map<Class<? extends AuditEventType>, AuditEvent> latestEvents = auditEventService.getLastEvents( ee, Arrays.asList(
+                SingleCellSubSetsCreatedEvent.class,
+                ProcessedVectorComputationEvent.class ) );
+        List<AuditEvent> dataAddedEvents = auditEventService.getEvents( ee, DataAddedEvent.class );
+
+        // FIXME
+        ExpressionExperimentDataProcessingReport.Details odd = null;
+        ExpressionExperimentDataProcessingReport.Details ad = null;
+        for ( int i = dataAddedEvents.size() - 1; i >= 0; i-- ) {
+            AuditEvent e = dataAddedEvents.get( i );
+            if ( e.getEventType() instanceof SingleCellDataAddedEvent ) {
+                //
+                odd = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( e.getEventType() instanceof AggregatedSingleDataAddedEvent ) {
+                ad = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( odd == null && e.getNote() != null && e.getNote().matches( "Added \\d+ vectors for %s with dimension .+\\." ) ) {
+                odd = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else if ( ad == null && e.getNote() != null && e.getNote().matches( "Created \\d+ aggregated raw vectors for .+\\." ) ) {
+                ad = new ExpressionExperimentDataProcessingReport.Details( e.getDetail(), e.getDate() );
+            } else {
+                log.info( e.getNote() );
+            }
+        }
+
+        ExpressionExperimentDataProcessingReport.Details sd;
+        if ( latestEvents.containsKey( SingleCellSubSetsCreatedEvent.class ) ) {
+            AuditEvent se = latestEvents.get( SingleCellSubSetsCreatedEvent.class );
+            sd = new ExpressionExperimentDataProcessingReport.Details( se.getDetail(), se.getDate() );
+        } else {
+            sd = null;
+        }
+        ExpressionExperimentDataProcessingReport.Details pd;
+        if ( latestEvents.containsKey( ProcessedVectorComputationEvent.class ) ) {
+            AuditEvent pe = latestEvents.get( ProcessedVectorComputationEvent.class );
+            pd = new ExpressionExperimentDataProcessingReport.Details( pe.getDetail(), pe.getDate() );
+        } else {
+            pd = null;
+        }
+        return ExpressionExperimentDataProcessingReport.builder()
+                .originalData( odd )
+                .subsetting( sd )
+                .aggregation( ad )
+                .preprocessing( pd )
+                .build();
+    }
+
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService

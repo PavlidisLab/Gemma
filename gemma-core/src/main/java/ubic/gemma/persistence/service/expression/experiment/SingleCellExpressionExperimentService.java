@@ -125,6 +125,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Add single-cell data vectors.
+     * @param details details to include in the {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent}
      * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -133,7 +134,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Replace existing single-cell data vectors for the given quantitation type.
-     * @param details additional details to include in the audit event
+     * @param details additional details to include in the {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent}
      * @return the number of vectors that were replaced
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

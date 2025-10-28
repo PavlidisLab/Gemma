@@ -1,0 +1,37 @@
+#* @vtlvariable name="dataset" type="ubic.gemma.model.expression.experiment.ExpressionExperiment" *#
+#* @vtlvariable name="report" type="ubic.gemma.core.analysis.report.ExpressionExperimentDataProcessingReport" *#
+
+## '##' is treated as a comment by Velocity, so this is for allowing level-2 header
+#set( $H2 = '##' )
+
+# Data processing report for ${dataset.shortName}: ${dataset.name}
+
+#if ($report.originalData)
+$H2 Original data details
+$report.originalData.details
+#end
+
+#if ($report.geneMapping)
+$H2 Gene mapping details
+$report.geneMapping.details
+#end
+
+#if ($report.sampleMapping)
+$H2 Sample mapping details
+$report.sampleMapping
+#end
+
+#if ($report.subsetting)
+$H2 Subsetting details
+$report.subsetting.details
+#end
+
+#if ($report.aggregation)
+$H2 Aggregation details
+$report.aggregation.details
+#end
+
+#if ($report.preprocessing)
+$H2 Preprocessing details
+$report.preprocessing.details
+#end

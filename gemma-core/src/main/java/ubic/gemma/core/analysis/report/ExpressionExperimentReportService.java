@@ -81,4 +81,11 @@ public interface ExpressionExperimentReportService {
      */
     @Secured({ "GROUP_AGENT" })
     void recalculateExperimentBatchInfo( ExpressionExperiment ee );
+
+    /**
+     * Generate a report that describes all the data processing that was performed on a given {@link ExpressionExperiment}
+     * to ultimately produce its procssed data vectors.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentDataProcessingReport generateDataProcessingReport( ExpressionExperiment ee );
 }
