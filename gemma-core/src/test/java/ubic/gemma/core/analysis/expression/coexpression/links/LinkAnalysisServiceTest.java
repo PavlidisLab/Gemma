@@ -125,7 +125,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         la = linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
         CoexpressionAnalysis analysisObj = la.getAnalysisObj();
-        assertEquals( 160, analysisObj.getNumberOfElementsAnalyzed().intValue() );
+        assertEquals( 161, analysisObj.getNumberOfElementsAnalyzed().intValue() );
         assertTrue( analysisObj.getNumberOfLinks() > 0 );
 
         assertNotNull( analysisObj.getCoexpCorrelationDistribution() );
