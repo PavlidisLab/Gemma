@@ -2,8 +2,18 @@ package ubic.gemma.core.visualization.cellbrowser;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 public class CellBrowserUtils {
+
+    /**
+     * Regex matching disallowed characters in dataset names and other identifiers used by the Cell Browser.
+     */
+    private static final String DISALLOWED_CHARS = "[^A-Za-z0-9_]";
+
+    public static String constructDatasetName( ExpressionExperiment ee ) {
+        return ee.getShortName().replaceAll( DISALLOWED_CHARS, "_" );
+    }
 
     /**
      * Construct a cell ID for the Cell Browser.

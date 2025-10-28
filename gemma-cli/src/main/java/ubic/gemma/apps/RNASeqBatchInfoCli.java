@@ -28,6 +28,7 @@ import java.util.Collection;
  * @author tesar
  * @deprecated this should not be necessary and the regular batch population tool can be used instead.
  */
+@Deprecated
 public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired

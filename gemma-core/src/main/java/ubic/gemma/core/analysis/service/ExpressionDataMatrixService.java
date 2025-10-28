@@ -19,6 +19,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -50,15 +51,15 @@ public interface ExpressionDataMatrixService {
      * Provide a filtered expression data matrix.
      *
      * @param ee           the expression experiment.
-     * @param filterConfig the configuration.
      * @param dataVectors  data vectors
+     * @param filterConfig the configuration.
+     * @param logTransform perform a log transformation on the data, this is ignored if the data is already on a log
+     *                     scale, the default is to return the data as is.
      * @return data matrix
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
-    ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, FilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
     /**
      * Obtain the processed expression data matrix for a given experiment.

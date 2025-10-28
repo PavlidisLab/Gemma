@@ -22,9 +22,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.category.GeoTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
@@ -40,13 +42,14 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 public class ExpressionExperimentBibRefFinderTest {
 
     @Test
+    @Category(SlowTest.class)
     public void testLocatePrimaryReference() {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( "GEO" );
+        ed.setName( ExternalDatabases.GEO );
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
@@ -62,13 +65,14 @@ public class ExpressionExperimentBibRefFinderTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testLocatePrimaryReferenceInvalidGSE() {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( "GEO" );
+        ed.setName( ExternalDatabases.GEO );
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );

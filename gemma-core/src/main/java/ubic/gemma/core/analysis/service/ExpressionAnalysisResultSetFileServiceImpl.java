@@ -147,11 +147,11 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
     }
 
     private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
-        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
+        return format( genes.stream().map( func ).map( l -> l != null ? String.valueOf( l ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
-        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
+        return format( genes.stream().map( func ).map( i -> i != null ? String.valueOf( i ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {

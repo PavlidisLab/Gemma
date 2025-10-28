@@ -80,7 +80,7 @@ public class GeoFetcher {
     Path fetchSeriesFamilySoftFileFromGeoQuery( String accession ) throws IOException {
         Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
         // last resort, ask GEO to generate the file
-        URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.QUERY, GeoFormat.SOFT );
+        URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.DIRECT, GeoFormat.SOFT );
         Path uncompressedDest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft" );
         simpleDownloader.download( resource, uncompressedDest, false );
         try {

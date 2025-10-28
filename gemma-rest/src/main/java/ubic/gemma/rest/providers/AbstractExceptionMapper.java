@@ -6,30 +6,33 @@ import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.List;
+import java.util.concurrent.Future;
 
 public abstract class AbstractExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {
 
     protected final Log log = LogFactory.getLog( getClass() );
 
     private final String hostUrl;
-    private final OpenAPI spec;
+    private final Future<OpenAPI> spec;
     private final BuildInfo buildInfo;
 
     @Context
     private ResourceContext ctx;
 
-    protected AbstractExceptionMapper( String hostUrl, OpenAPI spec, BuildInfo buildInfo ) {
+    protected AbstractExceptionMapper( String hostUrl, Future<OpenAPI> spec, BuildInfo buildInfo ) {
         this.hostUrl = hostUrl;
         this.spec = spec;
         this.buildInfo = buildInfo;
@@ -70,8 +73,8 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
             requestUri = null;
         }
         String version;
-        if ( spec.getInfo() != null ) {
-            version = spec.getInfo().getVersion();
+        if ( FutureUtils.get( spec ).getInfo() != null ) {
+            version = FutureUtils.get( spec ).getInfo().getVersion();
         } else {
             log.warn( "The 'info' field in the OpenAPI spec is null, will not include version in the error response." );
             version = null;

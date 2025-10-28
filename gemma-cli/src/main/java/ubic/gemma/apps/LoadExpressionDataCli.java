@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -285,7 +286,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
         acDbe.setAccession( accession );
         ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
-        geo.setName( "GEO" );
+        geo.setName( ExternalDatabases.GEO );
         acDbe.setExternalDatabase( geo );
         Collection<ExpressionExperiment> existing = eeService.findByAccession( acDbe );
 

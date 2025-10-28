@@ -18,7 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Utilities for slicing single cell data.
+ * Utilities for slicing single-cell data.
  * @author poirigui
  * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */
@@ -160,12 +160,12 @@ public class SingleCellSlicerUtils {
         for ( int i = 0; i < assays.size(); i++ ) {
             bioAssayOffsets[i] = numCells;
             starts[i] = singleCellDimension.getBioAssaysOffset()[sampleIndices[i]];
-            ends[i] = starts[i] + singleCellDimension.getNumberOfCellsBySample( sampleIndices[i] );
+            ends[i] = starts[i] + singleCellDimension.getNumberOfCellIdsBySample( sampleIndices[i] );
             numCells += ends[i] - starts[i];
         }
         newDimension.setBioAssaysOffset( bioAssayOffsets );
         newDimension.setCellIds( cellIds != null ? cellIds : sliceCellIds( singleCellDimension, assays, starts, ends, numCells ) );
-        newDimension.setNumberOfCells( numCells );
+        newDimension.setNumberOfCellIds( numCells );
         newDimension.setCellTypeAssignments( ctas != null ? ctas : sliceCtas( singleCellDimension, assays, starts, ends, numCells ) );
         newDimension.setCellLevelCharacteristics( clcs != null ? clcs : sliceClcs( singleCellDimension, assays, starts, ends, numCells ) );
         log.info( "Sliced " + singleCellDimension + " to " + newDimension );

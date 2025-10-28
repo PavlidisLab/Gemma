@@ -47,15 +47,15 @@ public class GenomePersisterTest extends BaseSpringContextTest {
     public void testPersistGene() {
 
         Gene gene = Gene.Factory.newInstance();
-        gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 8 ) ) );
+        gene.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 8 ) ) );
 
         Set<GeneProduct> gps = new HashSet<>();
         for ( int i = 0; i < 10; i++ ) {
             GeneProduct gp = GeneProduct.Factory.newInstance();
-            gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );
+            gp.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
             gp.setGene( gene );
-            gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
+            gp.setNcbiGi( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
             gps.add( gp );
         }
 
@@ -79,13 +79,13 @@ public class GenomePersisterTest extends BaseSpringContextTest {
     @Test
     public void testPersistGeneProduct() {
         Gene gene = Gene.Factory.newInstance();
-        gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 8 ) ) );
+        gene.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 8 ) ) );
 
         GeneProduct gp = GeneProduct.Factory.newInstance();
-        gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );
+        gp.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gp.setGene( gene );
-        gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
+        gp.setNcbiGi( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
         gp = ( GeneProduct ) this.persisterHelper.persist( gp );

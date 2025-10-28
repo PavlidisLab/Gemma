@@ -60,7 +60,7 @@ public class QuantitationTypeUtilsTest {
 
     private QuantitationType createQt( StandardQuantitationType type, ScaleType scaleType, PrimitiveType representation ) {
         QuantitationType qt = new QuantitationType();
-        qt.setName( RandomStringUtils.randomAlphabetic( 10 ) );
+        qt.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         qt.setType( type );
         qt.setScale( scaleType );
         qt.setRepresentation( representation );

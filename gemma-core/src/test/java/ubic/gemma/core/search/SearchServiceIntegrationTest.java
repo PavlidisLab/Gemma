@@ -131,7 +131,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
         gene = this.getTestPersistentGene();
 
-        this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
+        this.geneNcbiId = RandomStringUtils.insecure().nextNumeric( 8 );
         gene.setNcbiGeneId( Integer.valueOf( geneNcbiId ) );
         geneService.update( gene );
 
@@ -162,9 +162,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         SearchSettings settings = SearchSettings.builder()
                 .query( "Brain" ) // should hit 'cavity of brain'.
                 .resultType( ExpressionExperiment.class )
-                .useCharacteristics( true )
+                .useOntology( true )
                 .useDatabase( false )
-                .useIndices( false )
+                .useFullTextIndex( false )
                 .build();
 
         Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100, 5000, TimeUnit.MILLISECONDS );
@@ -355,8 +355,8 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .query( SearchServiceIntegrationTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )
                 .useDatabase( false )
-                .useIndices( false )
-                .useCharacteristics( true )
+                .useFullTextIndex( false )
+                .useOntology( true )
                 .build();
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );

@@ -18,6 +18,11 @@ public class TGFVO {
      */
     public static String NS = "http://gemma.msl.ubc.ca/ont/TGFVO#";
 
+    public static Resource Dataset = ResourceFactory.createResource( NS + "Dataset" );
+    /**
+     * Relate a {@link ubic.gemma.model.expression.experiment.FactorValue} to the {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} that owns it.
+     */
+    public static Property belongsTo = ResourceFactory.createProperty( NS + "belongsTo" );
     /**
      * Relates a {@link ubic.gemma.model.expression.experiment.FactorValue} to one of its annotation which can be either
      * a subject or an object of one if its {@link ubic.gemma.model.expression.experiment.Statement} or its measurement.

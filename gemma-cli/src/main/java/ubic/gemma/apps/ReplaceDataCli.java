@@ -98,5 +98,11 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
         addSuccessObject( ee, "Replaced data." );
+
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web." );
+        }
     }
 }

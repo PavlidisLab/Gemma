@@ -88,8 +88,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "whatever" );

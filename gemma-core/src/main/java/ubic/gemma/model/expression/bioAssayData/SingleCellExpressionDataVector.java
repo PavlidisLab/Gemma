@@ -24,7 +24,7 @@ public class SingleCellExpressionDataVector extends DesignElementDataVector {
     private String originalDesignElement;
 
     /**
-     * The dimension of the single cell data which is shared among all the vectors.
+     * The dimension of the single-cell data which is shared among all the vectors.
      * <p>
      * This is shared among all the single-cell vectors of the associated {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
      */

@@ -128,12 +128,12 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
     }
 
     /**
-     * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
+     * Convenience shortcut for RandomStringUtils.insecure().nextAlphabetic( 10 ) (or something similar to that)
      *
      * @return random alphabetic string
      */
     public String randomName() {
-        return RandomStringUtils.randomAlphabetic( 10 );
+        return RandomStringUtils.insecure().nextAlphabetic( 10 );
     }
 
     /**
@@ -216,7 +216,7 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
     protected ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon taxon ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
-        ad.setShortName( "Generic_" + taxon.getCommonName() + "_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        ad.setShortName( "Generic_" + taxon.getCommonName() + "_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         ad.setName( "Generic test platform for " + taxon.getCommonName() );
         ad.setTechnologyType( TechnologyType.GENELIST );
         ad.setPrimaryTaxon( taxon );
@@ -372,7 +372,7 @@ public abstract class BaseSpringContextTest extends BaseIntegrationTest {
      * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry() {
-        return this.getTestPersistentDatabaseEntry( null, RandomStringUtils.randomAlphabetic( 10 ) );
+        return this.getTestPersistentDatabaseEntry( null, RandomStringUtils.insecure().nextAlphabetic( 10 ) );
     }
 
     /**

@@ -1,6 +1,14 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
+const NUMBER_FORMATTER = Intl.NumberFormat();
+
+let htmlEncode = Ext.util.Format.htmlEncode;
+
+function formatNumber( n ) {
+   return NUMBER_FORMATTER.format( n );
+}
+
 /**
  *
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
@@ -120,7 +128,7 @@ Gemma.ExpressionExperimentDetails = Ext
              *
              */
             renderSamples: function (ee) {
-                var result = ee.bioAssayCount;
+               var result = formatNumber( ee.bioAssayCount );
                 if (this.editable) {
                     result = result
                         + '&nbsp;&nbsp<a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
@@ -130,6 +138,24 @@ Gemma.ExpressionExperimentDetails = Ext
                 return '' + result; // hack for possible problem with extjs 3.1 - bare
                 // number not displayed, coerce to string.
             },
+
+           renderSingleCellMetadata : function( ee ) {
+              let result = '';
+              if ( ee.numberOfCellsIds !== null ) {
+                 result += formatNumber( ee.numberOfCellIds );
+                 if ( ee.numberOfCells !== null && ee.numberOfCells < 0.9 * ee.numberOfCellIds ) {
+                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."/> ';
+                 }
+              } else if ( ee.numberOfCells !== null ) {
+                 result += formatNumber( ee.numberOfCells );
+              } else {
+                 result += '</i>Unknown</i>';
+              }
+              if ( ee.hasCellBrowser ) {
+                 result += ' <a href="' + ee.cellBrowserUrl + '" target="_blank" ext:qtip="View ' + htmlEncode( ee.shortName ) + ' in Cell Browser.">View in Cell Browser</a>';
+              }
+              return result;
+           },
 
             renderStatus: function (ee) {
 
@@ -299,7 +325,7 @@ Gemma.ExpressionExperimentDetails = Ext
              //  }
            },
             renderProcessedExpressionVectorCount: function (e) {
-                return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
+               return e.processedExpressionVectorCount ? formatNumber( e.processedExpressionVectorCount ) : ' [count not available] ';
             },
             renderEESets: function (eeSets) {
                 eeSets.sort(function (a, b) {
@@ -788,6 +814,11 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: this.renderSamples(e),
                                         width: 60
                                     },
+                                   {
+                                      fieldLabel : 'Number of cells',
+                                      html : this.renderSingleCellMetadata( e ),
+                                      hidden : !e.isSingleCell,
+                                   },
                                     {
                                         fieldLabel: 'Profiles',
                                         // id: 'processedExpressionVectorCount-region',

@@ -69,7 +69,7 @@ public class BioMaterialController {
     @SuppressWarnings("unused")
     public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator<FactorValue> factorValueId ) {
         Collection<BioMaterial> bms = bioMaterialService.load( bmIds );
-        FactorValue factorVToAdd = factorValueService.loadWithExperimentalFactorOrFail( factorValueId.getId() );
+        FactorValue factorVToAdd = factorValueService.loadWithExperimentalFactorOrFail( factorValueId.getId(), EntityNotFoundException::new );
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
         for ( BioMaterial material : bms ) {

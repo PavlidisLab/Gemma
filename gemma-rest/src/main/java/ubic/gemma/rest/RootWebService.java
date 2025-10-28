@@ -7,11 +7,13 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -29,6 +31,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.respond;
@@ -54,7 +57,8 @@ public class RootWebService {
     private UserManager userManager;
 
     @Autowired
-    private OpenAPI openApi;
+    @Qualifier("openApi")
+    private Future<OpenAPI> openApi;
 
     @Autowired
     private BuildInfo buildInfo;
@@ -91,7 +95,7 @@ public class RootWebService {
                 .scheme( null ).host( null ).port( -1 )
                 .path( "/openapi.json" )
                 .build();
-        return respond( new ApiInfoValueObject( MSG_WELCOME, openApi, apiDocsUrl, specUrl, versioned, buildInfo ) );
+        return respond( new ApiInfoValueObject( MSG_WELCOME, FutureUtils.get( openApi ), apiDocsUrl, specUrl, versioned, buildInfo ) );
     }
 
     /**

@@ -128,7 +128,7 @@ public class DifferentialExpressionAnalysisTaskImpl
         AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( ee, config );
 
         if ( analyzer == null ) {
-            throw new IllegalStateException( "Data set cannot be analyzed" );
+            throw new IllegalStateException( "Dataset cannot be analyzed" );
         }
 
         config.setAnalysisType( analyzer );

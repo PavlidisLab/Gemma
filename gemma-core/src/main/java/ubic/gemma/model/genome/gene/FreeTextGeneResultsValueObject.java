@@ -77,7 +77,7 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
         this.setTaxon( new TaxonValueObject( taxonId, taxonName ) );
 
         this.setGeneIds( geneIds );
-        this.setId( new Long( -1 ) );
+        this.setId( Long.valueOf( -1 ) );
         this.setModified( false );
         this.setQueryString( queryString );
     }

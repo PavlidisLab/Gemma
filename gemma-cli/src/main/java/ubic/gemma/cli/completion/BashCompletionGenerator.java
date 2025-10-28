@@ -2,6 +2,8 @@ package ubic.gemma.cli.completion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -27,6 +29,7 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     private String indent = "";
 
     public BashCompletionGenerator( String executableName, Set<String> subcommands ) {
+        Assert.isTrue( StringUtils.isNotBlank( executableName ), "Executable name cannot be blank." );
         this.executableName = executableName;
         this.subcommands = new TreeSet<>( subcommands );
     }

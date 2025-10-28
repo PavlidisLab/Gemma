@@ -18,6 +18,7 @@ public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCl
 
     public RawDataDeleterCli() {
         super( RawExpressionDataVector.class );
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable

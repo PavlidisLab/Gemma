@@ -74,8 +74,8 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             String buf = generateChangelog( expressionExperiment );
-            if ( fileType == ExpressionExperimentMetaFileType.MULTIQC_REPORT ) {
-                expressionDataFileService.copyMultiQCReport( expressionExperiment, filename, isForce() );
+            if ( fileType != null && fileType.isMultiQC() ) {
+                expressionDataFileService.copyMultiQCReport( expressionExperiment, filename, fileType, isForce() );
             } else if ( fileType != null ) {
                 expressionDataFileService.copyMetadataFile( expressionExperiment, filename, fileType, isForce() );
             } else {

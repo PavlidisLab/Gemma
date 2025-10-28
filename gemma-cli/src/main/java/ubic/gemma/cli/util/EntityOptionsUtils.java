@@ -21,7 +21,7 @@ public class EntityOptionsUtils {
     /**
      * Add an option for supplying an EE set.
      */
-    public static void addExperimentSetOption( Options options, String optionName, String longOpt, String description ) {
+    public static void addDatasetGroupOption( Options options, String optionName, String longOpt, String description ) {
         addOption( options, optionName, longOpt, "ID, name", description, CompletionType.EESET );
     }
 

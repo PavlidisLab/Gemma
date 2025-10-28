@@ -7,23 +7,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.basecode.ontology.simple.OntologyIndividualSimple;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
-import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.web.util.BaseWebTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.util.BaseWebTest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,6 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ContextConfiguration
 public class OntologyControllerTest extends BaseWebTest {
+
+    @Autowired
+    private HandlerExceptionResolver handlerExceptionResolver;
 
     @Configuration
     @TestComponent
@@ -40,7 +50,16 @@ public class OntologyControllerTest extends BaseWebTest {
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
             return new TestPropertyPlaceholderConfigurer(
                     "url.gemmaOntology=http://gemma.msl.ubc.ca/ont/TGEMO.OWL",
-                    "gemma.hosturl=https://gemma.msl.ubc.ca" );
+                    "gemma.hosturl=https://gemma.msl.ubc.ca",
+                    "tomcat.sendfile.enabled=false",
+                    "tgfvo.path=test" );
+        }
+
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
         }
 
         @Bean
@@ -56,6 +75,16 @@ public class OntologyControllerTest extends BaseWebTest {
         @Bean
         public FactorValueOntologyService factorValueOntologyService() {
             return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public DownloadUtil downloadUtil() {
+            return new DownloadUtil();
         }
     }
 
@@ -106,12 +135,19 @@ public class OntologyControllerTest extends BaseWebTest {
     }
 
     @Test
-    public void testGetTerm() throws Exception {
+    public void testGetGemmaOntologyHome() throws Exception {
+        perform( get( "/ont/TGEMO" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "tgemo" ) )
+                .andExpect( model().attributeExists( "terms" ) );
+    }
+
+    @Test
+    public void testGetGemmaOntologyTerm() throws Exception {
         perform( get( "/ont/TGEMO_00001" ) )
                 .andExpect( status().isOk() )
-                .andExpect( content().string( containsString( "TGEMO_00001: Homozygous negative" ) ) )
-                .andExpect( content().string( containsString( "Double negative allele" ) ) )
-                .andExpect( content().string( containsString( "http://gemma.msl.ubc.ca/ont/TGEMO" ) ) );
+                .andExpect( view().name( "tgemo.term" ) )
+                .andExpect( model().attributeExists( "term" ) );
     }
 
     @Test
@@ -123,6 +159,21 @@ public class OntologyControllerTest extends BaseWebTest {
     }
 
     @Test
+    public void testGetTgfvoHome() throws Exception {
+        when( factorValueOntologyService.getFactorValues( 0, 20 ) )
+                .thenReturn( new Slice<>( Collections.emptyList(), null, 0, 20, 1000L ) );
+        perform( get( "/ont/TGFVO" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "tgfvo" ) )
+                .andExpect( model().attributeExists( "individuals" ) )
+                .andExpect( model().attribute( "hostUrl", "https://gemma.msl.ubc.ca" ) )
+                .andExpect( model().attribute( "offset", 0 ) )
+                .andExpect( model().attribute( "limit", 20 ) )
+                .andExpect( model().attribute( "count", 1000L ) );
+        verify( factorValueOntologyService ).getFactorValues( 0, 20 );
+    }
+
+    @Test
     public void testGetTgfvoAsHtml() throws Exception {
         OntologyTermSimple fvClass = new OntologyTermSimple( "http://gemma.msl.ubc.ca/ont/TGEMO_0000001", "bar" );
         OntologyIndividual oi = new OntologyIndividualSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1", "foo", fvClass );
@@ -130,11 +181,10 @@ public class OntologyControllerTest extends BaseWebTest {
                 .thenReturn( oi );
         perform( get( "/ont/TGFVO/1" ) )
                 .andExpect( status().isOk() )
-                .andExpect( content().string( containsString( "FactorValue #1: foo" ) ) )
-                .andExpect( content().string( containsString( "instance of" ) ) )
-                .andExpect( content().string( containsString( "TGEMO_0000001" ) ) )
-                .andExpect( content().string( containsString( "bar" ) ) )
-                .andExpect( content().string( containsString( "curl -H Accept:application/rdf+xml https://gemma.msl.ubc.ca/ont/TGFVO/1" ) ) );
+                .andExpect( view().name( "tgfvo.factorValue" ) )
+                .andExpect( model().attribute( "factorValueId", 1L ) )
+                .andExpect( model().attribute( "oi", oi ) )
+                .andExpect( model().attribute( "hostUrl", "https://gemma.msl.ubc.ca" ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
         verify( factorValueOntologyService ).getFactorValueAnnotations( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
     }
@@ -149,7 +199,7 @@ public class OntologyControllerTest extends BaseWebTest {
                 .andExpect( status().isOk() )
                 .andExpect( content().contentTypeCompatibleWith( "application/rdf+xml" ) );
         verify( factorValueOntologyService ).getIndividual( "http://gemma.msl.ubc.ca/ont/TGFVO/1" );
-        verify( factorValueOntologyService ).writeToRdf( eq( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ), any() );
+        verify( factorValueOntologyService ).writeToRdf( eq( Collections.singleton( "http://gemma.msl.ubc.ca/ont/TGFVO/1" ) ), any() );
         verifyNoMoreInteractions( factorValueOntologyService );
     }
 }

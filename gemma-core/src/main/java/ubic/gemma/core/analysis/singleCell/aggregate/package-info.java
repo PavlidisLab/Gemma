@@ -1,5 +1,5 @@
 /**
- * This package contains classes for splitting and aggregating single-cell data.
+ * This package contains classes for subsetting and aggregating single-cell data.
  * @author poirigui
  */
 @ParametersAreNonnullByDefault

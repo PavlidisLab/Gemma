@@ -323,19 +323,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException {
-        Path reportFile = copyMetadataFile( ee, existingFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, forceWrite );
+    public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType fileType, boolean forceWrite ) throws IOException {
+        Assert.isTrue( fileType.isMultiQC(), "The file type must be a MultiQC report." );
+        Path reportFile = copyMetadataFile( ee, existingFile, fileType, forceWrite );
         Path multiQcDataDir = existingFile.resolveSibling( "multiqc_data" );
         if ( Files.exists( multiQcDataDir ) ) {
             Path dataFile = multiQcDataDir.resolve( "multiqc_data.json" );
             if ( Files.exists( dataFile ) ) {
-                copyMetadataFile( ee, dataFile, ExpressionExperimentMetaFileType.MULTIQC_DATA, true );
+                copyMetadataFile( ee, dataFile, fileType.getMultiQCDataFileType(), true );
             } else {
                 log.warn( "Could not find MultiQC JSON data output file: " + dataFile );
             }
             Path logFile = multiQcDataDir.resolve( "multiqc.log" );
             if ( Files.exists( logFile ) ) {
-                copyMetadataFile( ee, logFile, ExpressionExperimentMetaFileType.MULTIQC_LOG, true );
+                copyMetadataFile( ee, logFile, fileType.getMultiQCLogFileType(), true );
             } else {
                 log.warn( "Could not find MultiQC log output file: " + logFile );
             }
@@ -547,7 +548,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
-            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.streamSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
                 return matrixWriter.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, numVecs.get() ) ), cs2gene, writer );
             }
         } else {
@@ -569,7 +570,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
-            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, null, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.streamSingleCellVectors( ee, null, qt, cs2gene, numVecs, fetchSize, useCursorFetchIfSupported ) ) {
                 return matrixWriter.write( vectors.peek( createStreamMonitor( ee, qt, ExpressionDataFileServiceImpl.class.getName(), 100, numVecs.get() ) ), cs2gene, writer );
             }
         } else {
@@ -657,7 +658,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( fetchSize > 0 ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();
-                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, nnzBySample, fetchSize, useCursorFetchIfSupported ) ) {
+                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.streamSingleCellVectors( ee, samples, qt, cs2gene, numVecs, nnzBySample, fetchSize, useCursorFetchIfSupported ) ) {
                     if ( Files.exists( destDir ) ) {
                         log.info( destDir + " already exists, removing..." );
                         PathUtils.deleteDirectory( destDir );

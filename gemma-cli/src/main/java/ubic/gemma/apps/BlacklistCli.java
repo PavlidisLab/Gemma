@@ -35,6 +35,7 @@ import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -122,7 +123,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
-        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
 
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );

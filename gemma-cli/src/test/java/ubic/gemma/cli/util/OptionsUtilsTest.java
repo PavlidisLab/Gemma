@@ -1,5 +1,7 @@
 package ubic.gemma.cli.util;
 
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -82,5 +84,22 @@ public class OptionsUtilsTest {
         c.apply( "two weeks ago" );
         c.apply( "one month ago" );
         c.apply( "two months ago" );
+    }
+
+    @Test
+    public void testAutoOption() throws org.apache.commons.cli.ParseException {
+        Options options = new Options();
+        OptionsUtils.addAutoOption( options, "filter", "filter", "Filter data",
+                "noFilter", "no-filter", "Do not filter data" );
+        DefaultParser parser = new DefaultParser();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] { "--filter" } ),
+                "filter", "noFilter" ) )
+                .isTrue();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] { "--no-filter" } ),
+                "filter", "noFilter" ) )
+                .isFalse();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] {} ),
+                "filter", "noFilter" ) )
+                .isNull();
     }
 }

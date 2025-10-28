@@ -61,13 +61,18 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String p ) {
-        return service.getFilterablePropertyIsUsingSubquery( p );
+    public boolean isFilterablePropertyUsingSubquery( String p ) {
+        return service.isFilterablePropertyUsingSubquery( p );
     }
 
     @Override
     public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String p ) {
         return service.getFilterablePropertyConfigAttributes( p );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String p ) {
+        return service.isFilterablePropertyDeprecated( p );
     }
 
     @Override

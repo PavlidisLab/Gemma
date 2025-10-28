@@ -222,6 +222,7 @@ public class Filters implements Iterable<List<Filter>> {
                 .filter( conjunction -> !conjunction.isEmpty() )
                 .map( conjunction -> conjunction.stream()
                         .map( f -> withOriginalProperties ? f.toOriginalString() : f.toString() )
+                        .distinct()
                         .collect( Collectors.joining( " or " ) ) )
                 .collect( Collectors.joining( " and " ) );
     }

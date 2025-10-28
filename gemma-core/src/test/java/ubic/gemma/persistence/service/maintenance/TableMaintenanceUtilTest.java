@@ -19,6 +19,7 @@ import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
@@ -96,7 +97,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
     @Value("${gemma.gene2cs.path}")
     private Path gene2csInfoPath;
 
-    private final ExternalDatabase gene2csDatabaseEntry = ExternalDatabase.Factory.newInstance( "gene2cs", DatabaseType.OTHER );
+    private final ExternalDatabase gene2csDatabaseEntry = ExternalDatabase.Factory.newInstance( ExternalDatabases.GENE2CS, DatabaseType.OTHER );
 
     private Session session;
 
@@ -104,7 +105,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
 
     @Before
     public void setUp() throws IOException {
-        when( externalDatabaseService.findByNameWithAuditTrail( "gene2cs" ) ).thenReturn( gene2csDatabaseEntry );
+        when( externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS ) ).thenReturn( gene2csDatabaseEntry );
         query = mock( SQLQuery.class, RETURNS_SELF );
         session = mock( Session.class );
         when( session.createSQLQuery( any() ) ).thenReturn( query );
@@ -129,7 +130,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
         verify( session ).createSQLQuery( startsWith( "insert into GENE2CS" ) );
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
-        verify( externalDatabaseService ).findByNameWithAuditTrail( "gene2cs" );
+        verify( externalDatabaseService ).findByNameWithAuditTrail( ExternalDatabases.GENE2CS );
         verify( externalDatabaseService ).updateReleaseLastUpdated( eq( gene2csDatabaseEntry ), eq( "No Gene2Cs status exists on disk." ), any() );
         verify( mailEngine ).sendMessageToAdmin( any(), any() );
     }

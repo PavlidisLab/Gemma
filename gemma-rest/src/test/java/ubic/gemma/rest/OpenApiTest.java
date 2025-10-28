@@ -12,7 +12,8 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
-import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -39,13 +41,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class OpenApiTest extends BaseTest {
+public class OpenApiTest extends BaseTest implements InitializingBean {
 
     @Configuration
     @TestComponent
@@ -57,15 +60,15 @@ public class OpenApiTest extends BaseTest {
         }
 
         @Bean
-        public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver ) {
+        public OpenApiFactory openApi( CustomModelResolver customModelResolver ) {
             OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest.OpenApiTest" );
             factory.setModelConverters( Collections.singletonList( customModelResolver ) );
             return factory;
         }
 
         @Bean
-        public CustomModelResolver customModelResolver( SearchService searchService ) {
-            return new CustomModelResolver( searchService );
+        public CustomModelResolver customModelResolver() {
+            return new CustomModelResolver();
         }
 
         @Bean
@@ -120,7 +123,14 @@ public class OpenApiTest extends BaseTest {
     }
 
     @Autowired
+    private BeanFactory beanFactory;
+
     private OpenAPI spec;
+
+    @Override
+    public void afterPropertiesSet() {
+        spec = FutureUtils.get( ( Future<OpenAPI> ) beanFactory.getBean( "openApi", Future.class ) );
+    }
 
     @Test
     public void testExternalDocumentationUrlIsReplaced() {
@@ -270,8 +280,15 @@ public class OpenApiTest extends BaseTest {
                     assertThat( p.getName() ).isEqualTo( "query" );
                     assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
                 } );
+        assertThat( spec.getPaths().get( "/datasets" ).getGet().getParameters() )
+                .anySatisfy( p -> {
+                    assertThat( p.getName() ).isEqualTo( "query" );
+                    assertThat( p.getSchema().get$ref() ).isEqualTo( "#/components/schemas/QueryArg" );
+                    assertThat( p.getDescription() ).isEqualTo( "If specified, `sort` will default to `-searchResult.score` instead of `+id`. Note that sorting by `searchResult.score` is only valid if a query is specified." );
+                } );
         assertThat( spec.getComponents().getSchemas().get( "QueryArg" ) ).satisfies( s -> {
             assertThat( s.getType() ).isEqualTo( "string" );
+            assertThat( s.getDescription() ).startsWith( "Filter results matching the given full-text query.\n\nThe search query accepts the following syntax:" );
             //noinspection unchecked
             assertThat( s.getExtensions() )
                     .isNotNull()

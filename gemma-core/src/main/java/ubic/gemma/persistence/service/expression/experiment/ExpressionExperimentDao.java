@@ -50,6 +50,7 @@ public interface ExpressionExperimentDao
      * <p>
      * The cache mode will be effective for the remainder of the Hibernate session.
      */
+    @Nullable
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
     @Data
@@ -68,6 +69,7 @@ public interface ExpressionExperimentDao
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    @Nullable
     ExpressionExperiment findByShortName( String shortName );
 
     Collection<ExpressionExperiment> findByName( String name );
@@ -84,6 +86,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
+    @Nullable
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
@@ -92,18 +95,30 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
+    @Nullable
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
+    @Nullable
+    ExpressionExperiment findByDesignId( Long designId );
+
+    @Nullable
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
 
+    Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
+
+    @Nullable
     ExpressionExperiment findByFactorValue( FactorValue fv );
 
+    @Nullable
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
-    Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> fvs );
+    Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs );
+
+    Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds );
 
     Collection<ExpressionExperiment> findByGene( Gene gene );
 
+    @Nullable
     ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
@@ -208,10 +223,15 @@ public interface ExpressionExperimentDao
 
     /**
      * Retrieve a dimension for a given experiment and quantitation type.
+     *
      * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
+
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
 
     /**
      * Obtain a bioassay dimension by ID.
@@ -251,7 +271,7 @@ public interface ExpressionExperimentDao
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred quantitation type for single cell data, if available.
+     * Obtain the preferred quantitation type for single-cell data, if available.
      */
     @Nullable
     QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
@@ -412,14 +432,14 @@ public interface ExpressionExperimentDao
      * <p>
      * Uncategorized terms (or the uncategorized category) has both null URI and label.
      */
-    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.randomAlphanumeric( 10 ) + "]";
+    String UNCATEGORIZED = "[uncategorized_" + RandomStringUtils.insecure().nextAlphanumeric( 10 ) + "]";
 
     Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
 
     /**
      * Obtain annotations usage frequency for a set of given {@link ExpressionExperiment} IDs.
      * <p>
-     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, Taxon, int, boolean, boolean)}
+     * This is meant as a counterpart to {@link ubic.gemma.persistence.service.common.description.CharacteristicService#findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean, boolean)}
      * to answer the reverse question: which annotations can be used to filter a given set of datasets?
      *
      * @param expressionExperimentIds IDs of {@link ExpressionExperiment} to use for restricting annotations, or null to
@@ -431,8 +451,10 @@ public interface ExpressionExperimentDao
      * @param category                a category URI or free text category to restrict the results to, or null to
      *                                consider everything, empty string to consider uncategorized terms
      * @param retainedTermUris        a collection of term to retain even if they don't meet the minimum frequency criteria
+     * @param includePredicates       include predicates
+     * @param includeObjects          include objects
      */
-    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris );
+    Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects );
 
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
@@ -544,12 +566,12 @@ public interface ExpressionExperimentDao
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
 
     /**
-     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     * Obtain all the single-cell dimensions used by the single-cell vectors of a given experiment.
      */
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
-     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     * Obtain all the single-cell dimensions used by the single-cell vectors of a given experiment.
      * <p>
      * Cell IDs are not loaded.
      */
@@ -573,7 +595,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
-     * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
+     * Obtain the preferred single-cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */
     @Nullable
     SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
@@ -600,7 +622,7 @@ public interface ExpressionExperimentDao
     void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
-     * Delete the given single cell dimension.
+     * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
@@ -707,12 +729,12 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
     /**
-     * Obtain all cell-level characteristics from all single cell dimensions.
+     * Obtain all cell-level characteristics from all single-cell dimensions.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
 
     /**
-     * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
+     * Obtain all cell-level characteristics from all single-cell dimensions matching the given category.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
 
@@ -745,6 +767,11 @@ public interface ExpressionExperimentDao
      * Obtain a list of single-cell QTs.
      */
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    /**
+     * Indicate if the given experiment has single-cell quantitation types.
+     */
+    boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee );
 
     /**
      * Obtain a set of single-cell data vectors for the given quantitation type.

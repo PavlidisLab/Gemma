@@ -87,8 +87,8 @@ public class SingleCellExpressionDataVectorUtils {
      */
     public static int getSampleEnd( SingleCellDimension dimension, int[] dataIndices, int sampleIndex, int after ) {
         int sampleOffset = dimension.getBioAssaysOffset()[sampleIndex];
-        int numberOfCells = dimension.getNumberOfCellsBySample( sampleIndex );
-        int nextSampleOffset = sampleOffset + numberOfCells;
+        int numberOfCellIds = dimension.getNumberOfCellIdsBySample( sampleIndex );
+        int nextSampleOffset = sampleOffset + numberOfCellIds;
         // check where the next sample begins, only search past this sample starting point
         int end = Arrays.binarySearch( dataIndices, after, dataIndices.length, nextSampleOffset );
         if ( end < 0 ) {

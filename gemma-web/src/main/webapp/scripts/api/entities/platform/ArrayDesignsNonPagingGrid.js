@@ -367,7 +367,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                     if (record.get('isAffymetrixAltCdf')) {
                                         statusString += '&nbsp;<i class="orange fa fa-exclamation-circle fa-lg" ext:qtip="'
                                             + "This platform is an alternative to a 'standard' gene-level Affymetrix probe layout. " +
-                                            "Data sets using it will be switched to the canonical one when raw data are available." + '"></i>';
+                                            "Datasets using it will be switched to the canonical one when raw data are available." + '"></i>';
                                     }
                                     if (record.get('switchedExpressionExperimentCount') > 0) {
                                        statusString += '&nbsp;<i style="color:#3366cc" class="fa fa-exclamation-circle fa-lg" ext:qtip="'

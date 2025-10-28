@@ -1,11 +1,12 @@
 package ubic.gemma.core.ontology;
 
-import lombok.Value;
 import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyProperty;
+import ubic.basecode.ontology.model.OntologyStatement;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -27,25 +28,36 @@ public interface FactorValueOntologyService {
     OntologyIndividual getIndividual( String uri );
 
     /**
+     * Obtain all the factor value in the ontology.
+     */
+    Slice<OntologyIndividual> getFactorValues( int offset, int limit );
+
+    Collection<String> getFactorValueUris();
+
+    /**
+     * Obtain all the factor value URIs in the ontology.
+     */
+    Slice<String> getFactorValueUris( int offset, int limit );
+
+    /**
      * Obtain annotations belonging to the given URI representing a factor value.
      */
     Set<OntologyIndividual> getFactorValueAnnotations( String uri );
-
-    /**
-     * Represents an ontology statement.
-     * TODO: move this into baseCode.
-     */
-    @Value
-    class OntologyStatement {
-        OntologyIndividual subject;
-        OntologyProperty predicate;
-        OntologyIndividual object;
-    }
 
     /**
      * Obtain statements related to the given URI representing a factor value.
      */
     Set<OntologyStatement> getFactorValueStatements( String uri );
 
-    void writeToRdf( String iri, Writer writer );
+    /**
+     * Write multiple individuals represented by the given URIs to RDF.
+     */
+    void writeToRdf( Collection<String> uri, Writer writer );
+
+    /**
+     * Write multiple individuals represented by the given URIs to RDF, ignoring ACLs.
+     * <p>
+     * use this only if the FVs were prefiltered with {@link #getFactorValueUris()} or {@link #getFactorValues(int, int)}
+     */
+    void writeToRdfIgnoreAcls( Collection<String> uri, Writer writer );
 }

@@ -561,7 +561,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     private String getOutputFilePath( ExpressionExperiment ee ) {
         File tmpDir = new File( Settings.getDownloadPath() );
-        return tmpDir + File.separator + ee.getId() + "_" + RandomStringUtils.randomAlphanumeric( 4 ) + "_"
+        return tmpDir + File.separator + ee.getId() + "_" + RandomStringUtils.secure().nextAlphanumeric( 4 ) + "_"
                 + "apt-output";
     }
 

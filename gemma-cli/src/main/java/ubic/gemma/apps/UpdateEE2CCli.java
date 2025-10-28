@@ -5,8 +5,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
-import ubic.gemma.cli.util.CLI;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -16,12 +14,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Date;
 
 import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
 import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
 
-public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
+public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String
             LEVEL_OPTION = "l",
@@ -43,6 +42,11 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
         }
     }
 
+    public UpdateEE2CCli() {
+        setDefaultToAll();
+        setAllIsLazy();
+    }
+
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
@@ -52,6 +56,8 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     private Level level;
     private Date sinceLastUpdate;
     private boolean truncate;
+
+    private int updated = 0;
 
     @Nullable
     @Override
@@ -66,19 +72,14 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
-    }
-
-    @Override
-    protected void buildOptions( Options options ) {
+    protected void buildExperimentOptions( Options options ) {
         addEnumOption( options, LEVEL_OPTION, "level", "Only update characteristic at the given level.", Level.class );
-        addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date", options );
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
+        addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date.", options );
+        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it." );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         level = commandLine.getParsedOptionValue( LEVEL_OPTION );
         if ( commandLine.hasOption( SINCE_OPTION ) ) {
             sinceLastUpdate = commandLine.getParsedOptionValue( SINCE_OPTION );
@@ -89,13 +90,22 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        int updated;
+    protected void processAllExpressionExperiments() {
         if ( level != null ) {
-            updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( level.getLevelClass(), sinceLastUpdate, truncate );
+            updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( level.getLevelClass(), sinceLastUpdate, truncate );
         } else {
-            updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
+            updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
         }
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( expressionExperiment,
+                level != null ? level.getLevelClass() : null );
+    }
+
+    @Override
+    protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/annotations/refresh" );

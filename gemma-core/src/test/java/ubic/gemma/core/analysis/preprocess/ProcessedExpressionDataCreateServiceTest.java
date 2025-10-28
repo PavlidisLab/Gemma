@@ -132,7 +132,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         Collection<ArrayDesign> designs = eeService.getArrayDesignsUsed( ee );
         ArrayDesign one = designs.iterator().next();
         arrayDesignMergeService.merge( one, designs, "mergedTESTFORGSE5949", "mergedTESTFOR_GSE5949_" +
-                RandomStringUtils.randomAlphabetic( 5 ), false );
+                RandomStringUtils.insecure().nextAlphabetic( 5 ), false );
         expressionExperimentPlatformSwitchService.switchExperimentToMergedPlatform( ee );
         ee = this.eeService.thawLite( ee ); // essential.
 

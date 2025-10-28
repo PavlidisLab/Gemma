@@ -12,6 +12,7 @@ import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 
@@ -46,7 +47,7 @@ public class ExpressionExperimentSetDaoTest extends BaseDatabaseTest {
     @Test
     public void testCreateSetWithAccession() {
         ExternalDatabase geo = new ExternalDatabase();
-        geo.setName( "GEO" );
+        geo.setName( ExternalDatabases.GEO );
         sessionFactory.getCurrentSession().persist( geo );
         ExpressionExperimentSet expressionExperimentSet = new ExpressionExperimentSet();
         expressionExperimentSet.setAccession( DatabaseEntry.Factory.newInstance( "GSE000123", geo ) );

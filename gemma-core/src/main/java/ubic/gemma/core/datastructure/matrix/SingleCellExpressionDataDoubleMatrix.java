@@ -3,6 +3,7 @@ package ubic.gemma.core.datastructure.matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.sparse.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -11,7 +12,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.util.SparseRangeArrayList;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -67,7 +67,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
         for ( SingleCellExpressionDataVector v : sortedVectors ) {
             nz[i++] = v.getDataIndices();
         }
-        matrix = new CompRowMatrix( rows, singleCellDimension.getNumberOfCells(), nz );
+        matrix = new CompRowMatrix( rows, singleCellDimension.getNumberOfCellIds(), nz );
         designElements = new ArrayList<>( sortedVectors.size() );
         i = 0;
         for ( SingleCellExpressionDataVector v : sortedVectors ) {
@@ -80,7 +80,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
             i++;
         }
         defaultValue = getDefaultValueAsDouble( quantitationType );
-        bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
+        bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCellIds() );
     }
 
     /**
@@ -219,6 +219,11 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
             indices[k - i] = k;
         }
         return indices;
+    }
+
+    @Override
+    public ExpressionDataMatrix<Double> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing single-cell integer matrices is not supported." );
     }
 
     @Override

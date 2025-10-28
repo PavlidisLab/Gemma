@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.util.ModelUtils;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
+@EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
 public abstract class AbstractFactorValueValueObject extends IdentifiableValueObject<FactorValue> {
 
     /**

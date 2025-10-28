@@ -20,12 +20,14 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -36,17 +38,27 @@ import java.util.HashSet;
  * @author paul
  */
 @SuppressWarnings("unused") // ValueObject accessed from JS
+@Getter
+@Setter
 public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
     private static final long serialVersionUID = -1219449523930648392L;
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
     private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
 
+    @Nullable
     private Collection<ArrayDesignValueObject> arrayDesigns;
-    private String batchFetchEventType;
-    // Pulled from base EEVO
+    /**
+     * The date the platform associated with the experiment was last updated.
+     * <p>
+     * If there are multiple platforms this should be the date of the most recent modification of them. This is
+     * used to help flag experiments that need re-analysis due to changes in the underlying array design(s).
+     */
     private Date dateArrayDesignLastUpdated;
     private Date dateBatchFetch;
+    /**
+     * The date this object was generated.
+     */
     private Date dateCached;
     private Date dateDifferentialAnalysis;
     private Date dateLinkAnalysis;
@@ -54,45 +66,99 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Date datePcaAnalysis;
     private Date dateProcessedDataVectorComputation;
     private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
+    /**
+     * EE sets this experiment is part of.
+     */
+    @Nullable
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
     /**
      * FIXME: rename this to hasUsableBatchInformation
      */
     private boolean hasBatchInformation;
-    private Boolean hasBothIntensities = false;
-    private Boolean hasCoexpressionAnalysis = false;
-    private Boolean hasDifferentialExpressionAnalysis = false;
-    private Boolean hasEitherIntensity = false;
+    private boolean hasBothIntensities = false;
+    private boolean hasCoexpressionAnalysis = false;
+    private boolean hasDifferentialExpressionAnalysis = false;
+    /**
+     * Indicate if the experiment has any intensity information available. Relevant for two-channel studies.
+     */
+    private boolean hasEitherIntensity = false;
+    private boolean hasMultiplePreferredQuantitationTypes = false;
+    private boolean hasMultipleTechnologyTypes = false;
+    private boolean isRNASeq = false;
+    private boolean isReprocessedFromRawData;
 
-    private Boolean hasMultiplePreferredQuantitationTypes = false;
-
-    private Boolean hasMultipleTechnologyTypes = false;
-
-    private Boolean isRNASeq = false;
+    // audit events
+    private String batchFetchEventType;
+    private String pcaAnalysisEventType;
+    private String processedDataVectorComputationEventType;
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
     private String missingValueAnalysisEventType;
+    /**
+     * Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
+     * of data set, so this is a collection of AuditEvents.
+     */
+    private Collection<AuditEventValueObject> sampleRemovedFlags;
+
+    /**
+     * The number of terms (Characteristics) the experiment has to describe it.
+     */
     private Long numAnnotations;
+    /**
+     * The number of experimental factors the experiment has (counting those that are populated with biomaterials).
+     */
     private Long numPopulatedFactors;
+
     // if it was switched
     private Collection<ArrayDesignValueObject> originalPlatforms;
 
     // if it was split.
+    /**
+     * Experiments that are related to this one via the splitting of a source experiment.
+     */
     private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
 
-    private String pcaAnalysisEventType;
-
     private CitationValueObject primaryCitation;
-
-    private String processedDataVectorComputationEventType;
+    @Nullable
     private Integer pubmedId;
-    private String QChtml;
-    private boolean reprocessedFromRawData;
-    //   private Integer coexpressionLinkCount = null;
-    private Collection<AuditEventValueObject> sampleRemovedFlags;
+    /**
+     * Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
+     * this might be a link to the ArrayExpress version.
+     */
+    @Nullable
     private String secondaryAccession;
+    @Nullable
     private String secondaryExternalDatabase;
+    @Nullable
     private String secondaryExternalUri;
+
+    private String QChtml;
+
+    /**
+     * Indicate if this experiment is a single-cell experiment.
+     */
+    private boolean isSingleCell;
+    /**
+     * The number of cells this experiment has.
+     * @see ExpressionExperiment#getNumberOfCells()
+     */
+    @Nullable
+    private Integer numberOfCells;
+    /**
+     * The number of cell IDs that the preferred single-cell dimension has.
+     * @see SingleCellDimension#getNumberOfCellIds()
+     */
+    private Integer numberOfCellIds;
+    /**
+     * Indicate if this experiment has a Cell Browser associated with it.
+     */
+    private boolean hasCellBrowser;
+    /**
+     * URL for the Cell Browser, if available.
+     */
+    @Nullable
+    private String cellBrowserUrl;
+    private String cellBrowserDatasetName;
 
     /**
      * Font to use when rendering diagnostic plots, etc.
@@ -111,9 +177,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         super( ee );
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
             AclSid sid ) {
         super( ee, aoi, sid );
@@ -123,178 +186,62 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         super( vo );
     }
 
-    public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
-        Collection<AuditEventValueObject> converted = new HashSet<>();
-
-        for ( AuditEvent ae : s ) {
-            converted.add( new AuditEventValueObject( ae ) );
-        }
-
-        this.sampleRemovedFlags = converted;
-    }
-
     /**
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
-    public Boolean getActuallyTroubled() {
+    public boolean getActuallyTroubled() {
         return super.getTroubled();
     }
 
-    public Collection<ArrayDesignValueObject> getArrayDesigns() {
-        return arrayDesigns;
+    public boolean getHasBatchInformation() {
+        return hasBatchInformation;
     }
 
-    public String getBatchFetchEventType() {
-        return batchFetchEventType;
-    }
-
-    /**
-     * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
-     * this should be the date of the most recent modification of any of them. This is used to help flag experiments
-     * that need re-analysis due to changes in the underlying array design(s)
-     */
-    public Date getDateArrayDesignLastUpdated() {
-        return this.dateArrayDesignLastUpdated;
-    }
-
-    public Date getDateBatchFetch() {
-        return dateBatchFetch;
-    }
-
-    /**
-     * @return The date this object was generated.
-     */
-    public Date getDateCached() {
-        return this.dateCached;
-    }
-
-    public Date getDateDifferentialAnalysis() {
-        return this.dateDifferentialAnalysis;
-    }
-
-    //    public Integer getCoexpressionLinkCount() {
-    //        return this.coexpressionLinkCount;
-    //    }
-    //
-    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-    //        this.coexpressionLinkCount = coexpressionLinkCount;
-    //    }
-
-    public Date getDateLinkAnalysis() {
-        return this.dateLinkAnalysis;
-    }
-
-    public Date getDateMissingValueAnalysis() {
-        return this.dateMissingValueAnalysis;
-    }
-
-    public Date getDatePcaAnalysis() {
-        return datePcaAnalysis;
-    }
-
-    public Date getDateProcessedDataVectorComputation() {
-        return this.dateProcessedDataVectorComputation;
-    }
-
-    @Override
-    public String getDescription() {
-        return this.description;
-    }
-
-    public Collection<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
-        return differentialExpressionAnalyses;
-    }
-
-    /**
-     * @return the expressionExperimentSets
-     */
-    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
-        return expressionExperimentSets;
-    }
-
-    public Boolean getHasBothIntensities() {
+    public boolean getHasBothIntensities() {
         return hasBothIntensities;
     }
 
-    public Boolean getHasCoexpressionAnalysis() {
+    public boolean getHasCoexpressionAnalysis() {
         return hasCoexpressionAnalysis;
     }
 
-    public Boolean getHasDifferentialExpressionAnalysis() {
+    public boolean getHasDifferentialExpressionAnalysis() {
         return hasDifferentialExpressionAnalysis;
     }
 
-    /**
-     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
-     */
-    public Boolean getHasEitherIntensity() {
+    public boolean getHasEitherIntensity() {
         return hasEitherIntensity;
     }
 
-    public Boolean getHasMultiplePreferredQuantitationTypes() {
+    public boolean getHasMultiplePreferredQuantitationTypes() {
         return hasMultiplePreferredQuantitationTypes;
     }
 
-    public Boolean getHasMultipleTechnologyTypes() {
+    public boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
     }
 
-    public Boolean getIsRNASeq() {
+    public boolean getIsSingleCell() {
+        return isSingleCell;
+    }
+
+    public void setIsSingleCell( boolean isSingleCell ) {
+        this.isSingleCell = isSingleCell;
+    }
+
+    public boolean getIsRNASeq() {
         return isRNASeq;
     }
 
-    public String getLastArrayDesignUpdateDate() {
-        return lastArrayDesignUpdateDate;
-    }
-
-    public String getLinkAnalysisEventType() {
-        return this.linkAnalysisEventType;
-    }
-
-    public String getMissingValueAnalysisEventType() {
-        return this.missingValueAnalysisEventType;
-    }
-
-    /**
-     * @return The number of terms (Characteristics) the experiment has to describe it.
-     */
-    public Long getNumAnnotations() {
-        return this.numAnnotations;
-    }
-
-    /**
-     * @return The number of experimental factors the experiment has (counting those that are populated with
-     * biomaterials)
-     */
-    public Long getNumPopulatedFactors() {
-        return this.numPopulatedFactors;
-    }
-
-    public Collection<ArrayDesignValueObject> getOriginalPlatforms() {
-        return originalPlatforms;
-    }
-
-    /**
-     * @return IDs of experiments that are related to this one via the splitting of a source experiment.
-     */
-    public Collection<ExpressionExperimentValueObject> getOtherParts() {
-        return otherParts;
-    }
-
-    public void setOtherParts( Collection<ExpressionExperimentValueObject> otherParts ) {
-        this.otherParts = otherParts;
-    }
-
-    public String getPcaAnalysisEventType() {
-        return pcaAnalysisEventType;
+    public void setIsRNASeq( boolean isRNASeq ) {
+        this.isRNASeq = isRNASeq;
     }
 
     /**
      * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
-     * troubled.
+     * troubled. May return null if the arrayDesigns are not set.
      */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
+    @Nullable
     public Boolean getPlatformTroubled() {
         if ( this.arrayDesigns == null ) {
             return null; // Just because dwr accesses this even when arrayDesigns is not set.
@@ -307,56 +254,16 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return false;
     }
 
-    public CitationValueObject getPrimaryCitation() {
-        return primaryCitation;
-    }
-
-    public String getProcessedDataVectorComputationEventType() {
-        return this.processedDataVectorComputationEventType;
-    }
-
-    public Integer getPubmedId() {
-        return this.pubmedId;
-    }
-
-    public String getQChtml() {
-        return QChtml;
-    }
-
     public boolean getReprocessedFromRawData() {
-        return reprocessedFromRawData;
-    }
-
-    /**
-     * @return Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
-     * of data set, so this is a collection of AuditEvents.
-     */
-    public Collection<AuditEventValueObject> getSampleRemovedFlags() {
-        return this.sampleRemovedFlags;
-    }
-
-    /**
-     * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
-     * this might be a link to the ArrayExpress version.
-     */
-    public String getSecondaryAccession() {
-        return this.secondaryAccession;
-    }
-
-    public String getSecondaryExternalDatabase() {
-        return this.secondaryExternalDatabase;
-    }
-
-    public String getSecondaryExternalUri() {
-        return this.secondaryExternalUri;
+        return isReprocessedFromRawData;
     }
 
     /**
      * @return true if the EE, or any of its Array Designs is troubled.
      */
     @Override
-    public Boolean getTroubled() {
-        Boolean troubled = super.getTroubled();
+    public boolean getTroubled() {
+        boolean troubled = super.getTroubled();
         if ( !troubled && this.arrayDesigns != null ) {
             for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
                 if ( ad.getTroubled() )
@@ -416,10 +323,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return htmlEscape ? StringEscapeUtils.escapeHtml4( finalTroubleDetails ) : finalTroubleDetails;
     }
 
-    public boolean isHasBatchInformation() {
-        return hasBatchInformation;
-    }
-
     /**
      * As a side effect, sets the technology type and taxon of this based on the first arrayDesign.
      *
@@ -437,164 +340,5 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         setArrayDesignCount( ( long ) arrayDesigns.size() );
         this.setTechnologyType( ad.getTechnologyType() );
         this.setTaxonObject( ad.getTaxonObject() ); // FIXME still need the ID of the taxon, don't we?
-    }
-
-    public void setBatchFetchEventType( String batchFetchEventType ) {
-        this.batchFetchEventType = batchFetchEventType;
-    }
-
-    public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
-        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
-    }
-
-    public void setDateBatchFetch( Date dateBatchFetch ) {
-        this.dateBatchFetch = dateBatchFetch;
-    }
-
-    public void setDateCached( Date dateCached ) {
-        this.dateCached = dateCached;
-    }
-
-    public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
-        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-    }
-
-    public void setDateLinkAnalysis( Date dateLinkAnalysis ) {
-        this.dateLinkAnalysis = dateLinkAnalysis;
-    }
-
-    public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
-        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
-    }
-
-    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
-        this.datePcaAnalysis = datePcaAnalysis;
-    }
-
-    public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {
-        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
-    }
-
-    @Override
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setDifferentialExpressionAnalyses(
-            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
-        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
-    }
-
-    /**
-     * @param expressionExperimentSets the expressionExperimentSets to set
-     */
-    public void setExpressionExperimentSets( Collection<ExpressionExperimentSetValueObject> expressionExperimentSets ) {
-        this.expressionExperimentSets = expressionExperimentSets;
-    }
-
-    public void setHasBatchInformation( boolean hasBatchInformation ) {
-        this.hasBatchInformation = hasBatchInformation;
-    }
-
-    public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
-    }
-
-    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
-        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
-    }
-
-    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
-        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
-    }
-
-    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
-        this.hasEitherIntensity = hasEitherIntensity;
-    }
-
-    public void setHasMultiplePreferredQuantitationTypes( Boolean hasMultiplePreferredQuantitationTypes ) {
-        this.hasMultiplePreferredQuantitationTypes = hasMultiplePreferredQuantitationTypes;
-    }
-
-    public void setHasMultipleTechnologyTypes( Boolean hasMultipleTechnologyTypes ) {
-        this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
-    }
-
-    public void setIsRNASeq( Boolean isRNASeq ) {
-        this.isRNASeq = isRNASeq;
-    }
-
-    public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
-        this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
-    }
-
-    public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
-        this.linkAnalysisEventType = linkAnalysisEventType;
-    }
-
-    public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {
-        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
-    }
-
-    public void setNumAnnotations( Long numAnnotations ) {
-        this.numAnnotations = numAnnotations;
-    }
-
-    public void setNumPopulatedFactors( Long numPopulatedFactors ) {
-        this.numPopulatedFactors = numPopulatedFactors;
-    }
-
-    public void setOriginalPlatforms( Collection<ArrayDesignValueObject> originalPlatforms ) {
-        this.originalPlatforms = originalPlatforms;
-    }
-
-    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
-        this.pcaAnalysisEventType = pcaAnalysisEventType;
-    }
-
-    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
-        this.primaryCitation = primaryCitation;
-    }
-
-    public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
-        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
-    }
-
-    public void setPubmedId( Integer pubmedId ) {
-        this.pubmedId = pubmedId;
-    }
-
-    public void setQChtml( String qChtml ) {
-        QChtml = qChtml;
-    }
-
-    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
-        this.reprocessedFromRawData = reprocessedFromRawData;
-    }
-
-    public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
-
-        this.sampleRemovedFlags = sampleRemovedFlags;
-    }
-
-    public void setSecondaryAccession( String secondaryAccession ) {
-        this.secondaryAccession = secondaryAccession;
-    }
-
-    public void setSecondaryExternalDatabase( String secondaryExternalDatabase ) {
-        this.secondaryExternalDatabase = secondaryExternalDatabase;
-    }
-
-    public void setSecondaryExternalUri( String secondaryExternalUri ) {
-        this.secondaryExternalUri = secondaryExternalUri;
-    }
-
-    @Nullable
-    public String getFont() {
-        return font;
-    }
-
-    public void setFont( @Nullable String font ) {
-        this.font = font;
     }
 }

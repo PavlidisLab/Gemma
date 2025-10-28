@@ -42,8 +42,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.DownloadUtil;
+import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -102,7 +102,8 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
-            downloadUtil.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, request, response, true );
+            downloadUtil.download( file.getPath(), MediaType.APPLICATION_OCTET_STREAM_VALUE, null,
+                    true, null, request, response );
         }
     }
 
@@ -120,8 +121,10 @@ public class ExpressionExperimentDataFetchController {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( missingMessage );
             }
-            downloadUtil.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), request, response,
-                    type != ExpressionExperimentMetaFileType.MULTIQC_REPORT );
+            downloadUtil.download( file.getPath(), type.getContentType(), null,
+                    !type.isMultiQC(),
+                    type.getDownloadName( ee ),
+                    request, response );
         }
     }
 
@@ -136,7 +139,12 @@ public class ExpressionExperimentDataFetchController {
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
         List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
-            if ( type == ExpressionExperimentMetaFileType.MULTIQC_DATA || type == ExpressionExperimentMetaFileType.MULTIQC_LOG ) {
+            if ( type == ExpressionExperimentMetaFileType.MULTIQC_REPORT
+                    || type == ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT_DATA
+                    || type == ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT_LOG
+                    || type == ExpressionExperimentMetaFileType.CELL_TYPE_ANNOTATION_PIPELINE_REPORT_DATA
+                    || type == ExpressionExperimentMetaFileType.CELL_TYPE_ANNOTATION_PIPELINE_REPORT_LOG
+            ) {
                 // don't display these in the GUI
                 continue;
             }

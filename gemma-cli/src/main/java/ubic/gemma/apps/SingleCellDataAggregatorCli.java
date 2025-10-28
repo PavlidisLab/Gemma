@@ -8,10 +8,10 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.singleCell.aggregate.AggregateConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitAndAggregateService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SplitConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentCreateSubSetsAndAggregateService;
+import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForSingleCellAggregationException;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.OptionsUtils.*;
-import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.*;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.*;
 
 @CommonsLog
 public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
@@ -63,7 +63,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private SingleCellExpressionExperimentSplitAndAggregateService splitAndAggregateService;
+    private SingleCellExpressionExperimentCreateSubSetsAndAggregateService splitAndAggregateService;
 
     @Autowired
     private PreprocessorService preprocessorService;
@@ -94,7 +94,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
     public SingleCellDataAggregatorCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable
@@ -106,15 +106,16 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Aggregate single cell data into pseudo-bulks";
+        return "Aggregate single-cell data into pseudo-bulks";
     }
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( CTA_OPTION, "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one). Incompatible with -" + CLC_OPTION + "." );
         addSingleExperimentOption( options, CLC_OPTION, "cell-level-characteristics", true, "Identifier of the cell-level characteristics to use. Incompatible with -" + CTA_OPTION + "." );
-        addSingleExperimentOption( options, MASK_OPTION, "mask", true, "Identifier of the cell-level characteristics to use to mask. Defaults to auto-detecting the mask." );
-        addSingleExperimentOption( options, NO_MASK_OPTION, "--no-mask", true, "Do not use a mask if one is auto-detected for aggregating single-cell data. Incompatible with -" + MASK_OPTION + "." );
+        addSingleExperimentAutoOption( options,
+                MASK_OPTION, "mask", "Identifier of the cell-level characteristics to use to mask.",
+                NO_MASK_OPTION, "no-mask", "Do not use a mask if one is auto-detected for aggregating single-cell data." );
         options.addOption( FACTOR_OPTION, "factor", true, "Identifier of the factor to use (defaults to the cell type factor)" );
         addSingleExperimentOption( options, Option.builder( MAPPING_FILE_OPTION ).longOpt( "mapping-file" ).hasArg().type( Path.class ).desc( "File containing explicit mapping between cell-level characteristics and factor values" ).build() );
         options.addOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION, "allow-unmapped-characteristics", false, "Allow unmapped characteristics from the cell-level characteristics." );
@@ -157,7 +158,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
-        log.info( "Splitting single cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
+        log.info( "Subsetting single-cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
 
         expressionExperiment = eeService.thawLite( expressionExperiment );
 
@@ -193,12 +194,12 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                     .orElseThrow( () -> new IllegalStateException( finalExpressionExperiment1 + " does not have a cell type factor." ) );
         }
 
-        SplitConfig splitConfig = SplitConfig.builder()
+        SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig = SingleCellExperimentSubSetsCreationConfig.builder()
                 .ignoreUnmatchedCharacteristics( allowUnmappedCharacteristics )
                 .ignoreUnmatchedFactorValues( allowUnmappedFactorValues )
                 .build();
 
-        AggregateConfig config = AggregateConfig.builder()
+        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder()
                 .mask( mask )
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
@@ -291,7 +292,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             try {
                 newQt = splitAndAggregateService.redoAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, dimension, previousQt, config );
                 addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
-            } catch ( UnsupportedScaleTypeForAggregationException e ) {
+            } catch ( UnsupportedScaleTypeForSingleCellAggregationException e ) {
                 addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;
@@ -318,9 +319,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
             }
 
             try {
-                newQt = splitAndAggregateService.splitAndAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, splitConfig, config );
+                newQt = splitAndAggregateService.createSubSetsAndAggregate( expressionExperiment, qt, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig, config );
                 addSuccessObject( expressionExperiment, qt, "Aggregated single-cell data into " + newQt + "." );
-            } catch ( UnsupportedScaleTypeForAggregationException e ) {
+            } catch ( UnsupportedScaleTypeForSingleCellAggregationException e ) {
                 addErrorObject( expressionExperiment, qt, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                         qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
                 return;

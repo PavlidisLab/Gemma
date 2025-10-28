@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.Data;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -97,6 +98,29 @@ public class DifferentialExpressionAnalysisConfig {
      * Set true for RNA-seq data sets
      */
     private boolean useWeights = false;
+
+    /**
+     * Override the default mode of operation for the {@link RepetitiveValuesFilter}.
+     */
+    @Nullable
+    private DifferentialExpressionAnalysisFilter.Mode filterMode = null;
+
+    /**
+     * Override the minimum number of assays to apply the repetitive value filter.
+     *
+     * @see DifferentialExpressionAnalysisFilter#setMinimumNumberOfAssaysToApplyFilter(int)
+     */
+    @Nullable
+    private Integer minimumNumberOfAssaysToApplyFilter = null;
+
+    /**
+     * Override the minimum number of unique values (as a fraction of the number of assays) for a particular design
+     * element to apply the filter.
+     *
+     * @see DifferentialExpressionAnalysisFilter#setMinimumFractionOfUniqueValues(double)
+     */
+    @Nullable
+    private Double minimumFractionOfUniqueValues = null;
 
     /**
      * Whether to create archive files.

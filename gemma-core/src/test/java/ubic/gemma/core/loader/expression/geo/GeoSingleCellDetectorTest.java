@@ -114,7 +114,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         bas.add( BioAssay.Factory.newInstance( "P-13281", null, BioMaterial.Factory.newInstance( "P-13281" ) ) );
 
         SingleCellDimension dim = loader.getSingleCellDimension( bas );
-        assertThat( dim.getNumberOfCells() ).isEqualTo( 3598 );
+        assertThat( dim.getNumberOfCellIds() ).isEqualTo( 3598 );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
@@ -191,7 +191,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                             new String[] { "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" } ) );
                     List<BioAssay> bas = Collections.singletonList( BioAssay.Factory.newInstance( "Patient_G", null, BioMaterial.Factory.newInstance( "Patient_G" ) ) );
                     SingleCellDimension dim = loader.getSingleCellDimension( bas );
-                    assertThat( dim.getNumberOfCells() ).isEqualTo( 413 );
+                    assertThat( dim.getNumberOfCellIds() ).isEqualTo( 413 );
                     assertThat( loader.getQuantitationTypes() )
                             .extracting( QuantitationType::getName )
                             .containsExactlyInAnyOrder( "AnnData", "AnnData from layer counts" );

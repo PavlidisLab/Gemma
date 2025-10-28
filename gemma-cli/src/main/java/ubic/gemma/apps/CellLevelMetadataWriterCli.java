@@ -36,7 +36,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
     public CellLevelMetadataWriterCli() {
         super( SingleCellExpressionDataVector.class );
         setSingleExperimentMode();
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Override

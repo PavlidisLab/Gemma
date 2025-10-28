@@ -31,7 +31,7 @@ public class RequestAttributesBasedClientIdRetrievalStrategy implements ClientId
         if ( clientId instanceof String && isValidClientId( ( String ) clientId ) ) {
             return ( String ) clientId;
         } else if ( clientId == null ) {
-            clientId = RandomStringUtils.randomNumeric( 10 ) + "." + RandomStringUtils.randomNumeric( 10 );
+            clientId = RandomStringUtils.secure().nextNumeric( 10 ) + "." + RandomStringUtils.secure().nextNumeric( 10 );
             try {
                 requestAttributes.setAttribute( "clientId", clientId, scope );
             } catch ( IllegalStateException e ) {

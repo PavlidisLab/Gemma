@@ -21,10 +21,10 @@ package ubic.gemma.persistence.service.common.description;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -50,7 +50,7 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
 
         testBibRef = BibliographicReference.Factory.newInstance();
 
-        de = this.getTestPersistentDatabaseEntry( "PubMed" );
+        de = this.getTestPersistentDatabaseEntry( ExternalDatabases.PUBMED );
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );

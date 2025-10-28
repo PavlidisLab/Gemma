@@ -474,7 +474,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         configurer.unregisterEntity( "analysis.protocol.", Protocol.class );
 
         // use the characteristics instead
-        configurer.registerAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
+        configurer.registerObjectAlias( "analysis.subsetFactorValue.characteristics.", "sfvc", Characteristic.class, null, 1 );
         configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.characteristics.originalValue" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.isBaseline" );
@@ -482,7 +482,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         configurer.unregisterProperty( "analysis.subsetFactorValue.oldStyleCharacteristics.size" );
         configurer.unregisterProperty( "analysis.subsetFactorValue.value" );
 
-        configurer.registerAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
+        configurer.registerObjectAlias( "baselineGroup.characteristics.", "bc", Characteristic.class, null, 1 );
         configurer.unregisterProperty( "baselineGroup.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "baselineGroup.characteristics.originalValue" );
         configurer.unregisterProperty( "baselineGroup.experimentalFactor.annotations.size" );

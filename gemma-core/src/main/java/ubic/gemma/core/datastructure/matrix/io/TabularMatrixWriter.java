@@ -122,10 +122,12 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         return written;
     }
 
-    private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
-        String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString() : null;
-        appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, new Date(), pwriter );
-        pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
+    private void writeHeader( @Nullable ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
+        if ( ee != null ) {
+            String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString() : null;
+            appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, new Date(), pwriter );
+            pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
+        }
         pwriter.append( "# Single-cell dimension: " ).append( format( scd ) ).append( "\n" );
         pwriter.append( "# Quantitation type: " ).append( formatQuantitationType( qt, SingleCellExpressionDataVector.class ) ).append( "\n" );
         pwriter.append( "# Samples: " ).append( scd.getBioAssays().stream().map( TsvUtils::format ).collect( Collectors.joining( ", " ) ) ).append( "\n" );
@@ -188,7 +190,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         int start = 0;
         for ( int i = 0; i < numSamples; i++ ) {
             int sampleOffset = dimension.getBioAssaysOffset()[i];
-            int nextSampleOffset = sampleOffset + dimension.getNumberOfCellsBySample( i );
+            int nextSampleOffset = sampleOffset + dimension.getNumberOfCellIdsBySample( i );
             // check where the next sample begins, only search past this sample starting point
             int end = Arrays.binarySearch( indices, start, indices.length, nextSampleOffset );
             if ( end < 0 ) {
@@ -229,7 +231,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
             start = end;
         }
         pwriter.append( '\n' );
-        if (autoFlush) {
+        if ( autoFlush ) {
             pwriter.flush();
         }
     }
@@ -251,11 +253,11 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
-        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
+        return format( genes.stream().map( func ).map( l -> l != null ? String.valueOf( l ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
-        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
+        return format( genes.stream().map( func ).map( i -> i != null ? String.valueOf( i ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {

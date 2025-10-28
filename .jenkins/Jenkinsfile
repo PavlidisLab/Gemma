@@ -203,6 +203,9 @@ pipeline {
                     }
                 }
                 stage('SonarQube Analysis') {
+                    tools {
+                        jdk 'Java 17'
+                    }
                     when {
                         anyOf {
                             branch 'master'

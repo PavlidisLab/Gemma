@@ -1,6 +1,8 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
@@ -15,14 +17,16 @@ import java.util.Date;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 @CommonsLog
+@Getter
+@Setter
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {
 
     private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
     private Date lastUpdated;
-    private Boolean troubled = false;
+    private boolean troubled = false;
     private AuditEventValueObject lastTroubledEvent;
-    private Boolean needsAttention = false;
+    private boolean needsAttention = false;
     private AuditEventValueObject lastNeedsAttentionEvent;
     private String curationNote;
     private AuditEventValueObject lastNoteUpdateEvent;
@@ -67,15 +71,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         }
     }
 
-    public Date getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public void setLastUpdated( Date lastUpdated ) {
-        this.lastUpdated = lastUpdated;
-    }
-
-    public Boolean getTroubled() {
+    public boolean getTroubled() {
         return troubled;
     }
 
@@ -83,44 +79,12 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         this.troubled = troubled;
     }
 
-    public AuditEventValueObject getLastTroubledEvent() {
-        return lastTroubledEvent;
-    }
-
-    public void setLastTroubledEvent( AuditEventValueObject lastTroubledEvent ) {
-        this.lastTroubledEvent = lastTroubledEvent;
-    }
-
-    public Boolean getNeedsAttention() {
+    public boolean getNeedsAttention() {
         return needsAttention;
     }
 
     public void setNeedsAttention( Boolean needsAttention ) {
         this.needsAttention = needsAttention;
-    }
-
-    public AuditEventValueObject getLastNeedsAttentionEvent() {
-        return lastNeedsAttentionEvent;
-    }
-
-    public void setLastNeedsAttentionEvent( AuditEventValueObject lastNeedsAttentionEvent ) {
-        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
-    }
-
-    public String getCurationNote() {
-        return curationNote;
-    }
-
-    public void setCurationNote( String curationNote ) {
-        this.curationNote = curationNote;
-    }
-
-    public AuditEventValueObject getLastNoteUpdateEvent() {
-        return lastNoteUpdateEvent;
-    }
-
-    public void setLastNoteUpdateEvent( AuditEventValueObject lastNoteUpdateEvent ) {
-        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
     }
 
     /**

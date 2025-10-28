@@ -64,7 +64,7 @@ import static org.junit.Assert.*;
  */
 public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContextTest {
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
+    private static final String EE_NAME = RandomStringUtils.insecure().nextAlphanumeric( 20 );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -452,7 +452,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
 
         // add the term to the dataset and update the pivot table
@@ -461,12 +461,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( c.getId() ).isNotNull();
 
         // the table is out-of-date
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
 
         // update the pivot table
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
                 .satisfiesOnlyOnce( consumer );
 
         // remove the term, which must evict the query cache
@@ -479,7 +479,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 } );
 
         // since deletions are cascaded, the change will be reflected immediatly
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
     }
 

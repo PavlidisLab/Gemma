@@ -46,7 +46,7 @@ public class GeneSearchTest extends BaseSpringContextTest {
     public void testSearchGenes() throws SearchException {
         Gene gene = Gene.Factory.newInstance();
 
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
         gene.setNcbiGeneId( id );
         gene.setName( "test_search" );
         gene.setOfficialName( "test_search" );

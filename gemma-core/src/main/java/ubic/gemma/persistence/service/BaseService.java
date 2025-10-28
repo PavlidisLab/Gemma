@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;

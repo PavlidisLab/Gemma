@@ -214,7 +214,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             matrices = new FastMatrixVectorWriter[dimension.getBioAssays().size()];
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
-                int numberOfCells = dimension.getNumberOfCellsBySample( i );
+                int numberOfCells = dimension.getNumberOfCellIdsBySample( i );
                 matrices[i] = new FastMatrixVectorWriter( newWriter( Files.newOutputStream( outputDir.resolve( formatBioAssayFilename( ba ) ).resolve( "matrix.mtx.gz" ) ) ), autoFlush );
                 MatrixInfo.MatrixField field;
                 if ( scaleType != null ) {
@@ -312,28 +312,28 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, Writer out, boolean autoFlush ) {
         if ( mat instanceof SingleCellExpressionDataDoubleMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellIdsBySample( sampleIndex );
             writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
         } else if ( mat instanceof SingleCellExpressionDataIntMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            int numberOfCellIds = mat.getSingleCellDimension().getNumberOfCellIdsBySample( sampleIndex );
             if ( scaleType != null ) {
                 // conversions always produce double data vectors
-                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
+                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCellIds, out, autoFlush );
             } else {
-                writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+                writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCellIds, out );
             }
         } else {
             throw new UnsupportedOperationException( "Unsupported matrix type " + mat.getClass().getName() );
         }
     }
 
-    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCells, Writer out, boolean autoFlush ) {
+    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCellIds, Writer out, boolean autoFlush ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
 
-        int nextSampleOffset = sampleOffset + numberOfCells;
+        int nextSampleOffset = sampleOffset + numberOfCellIds;
 
         int sampleNnz = 0;
         for ( int j : colind ) {
@@ -373,7 +373,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
         try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out, autoFlush ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Real, MatrixInfo.MatrixSymmetry.General ) );
-            writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
+            writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCellIds, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
         }
     }

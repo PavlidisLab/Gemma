@@ -100,7 +100,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private boolean resume;
     private String[] retry;
     @Nullable
-    private Number fetchThreads;
+    private Integer fetchThreads;
     private boolean skipDownload;
 
     // single-accession options
@@ -130,7 +130,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Download single cell data.\nFor the moment, only GEO series accessions are supported.";
+        return "Download single-cell data.\nFor the moment, only GEO series accessions are supported.";
     }
 
     @Override
@@ -149,7 +149,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
         options.addOption( Option.builder( RETRY_COUNT_OPTION ).longOpt( "retry-count" ).hasArg().type( Integer.class ).desc( "Number of times to retry a download operation." ).build() );
         options.addOption( SKIP_DOWNLOAD_OPTION, "skip-download", false, "Skip download of single-cell data." );
-        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
+        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
         options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
@@ -275,7 +275,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             throw new IllegalArgumentException( "The -" + RETRY_OPTION + " option requires the -" + RESUME_OPTION + " option to be provided." );
         }
         if ( commandLine.hasOption( SKIP_DOWNLOAD_OPTION ) ) {
-            log.info( "Download of single cell data will be skipped." );
+            log.info( "Download of single-cell data will be skipped." );
             skipDownload = true;
         } else {
             skipDownload = false;
@@ -343,15 +343,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             if ( fetchThreads != null ) {
                 // ensure that each thread can utilize a FTP connection
                 if ( ftpClientFactory instanceof FTPClientFactoryImpl ) {
-                    ( ( FTPClientFactoryImpl ) ftpClientFactory ).setMaxTotalConnections( fetchThreads.intValue() );
+                    ( ( FTPClientFactoryImpl ) ftpClientFactory ).setMaxTotalConnections( fetchThreads );
                 }
-                detector.setNumberOfFetchThreads( fetchThreads.intValue() );
+                detector.setNumberOfFetchThreads( fetchThreads );
             }
-            log.info( "Downloading single cell data to " + singleCellDataBasePath + "..." );
+            log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;
-                    Integer numberOfSamples = null, numberOfCells = null, numberOfGenes = null;
+                    Integer numberOfSamples = null, numberOfCellIds = null, numberOfGenes = null;
                     List<String> additionalSupplementaryFiles = new ArrayList<>();
                     String dataInSra = null;
                     String comment = "";
@@ -397,7 +397,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         throw new UnsupportedOperationException( "MEX files were found, but single-cell data is not supported at the series level." );
                                     }
                                 }
-                                addSuccessObject( geoAccession, "Download was skipped." );
                             } else {
                                 if ( dataType != null && supplementaryFile != null ) {
                                     detector.downloadSingleCellData( series, dataType,
@@ -413,12 +412,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         .map( GeoSample::getGeoAccession )
                                         .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
                                         .collect( Collectors.toList() );
-                                try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, SingleCellDataLoaderConfig.builder().ignoreSamplesLackingData( true ).build() ) ) {
+                                SingleCellDataLoaderConfig config = SingleCellDataLoaderConfig.builder()
+                                        .ignoreSamplesLackingData( true )
+                                        .skipTransformations( true ) // transforming is simply too expensive
+                                        .build();
+                                try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config ) ) {
                                     numberOfSamples = loader.getSampleNames().size();
                                     SingleCellDimension scd = loader.getSingleCellDimension( bas );
-                                    numberOfCells = scd.getNumberOfCells();
+                                    numberOfCellIds = scd.getNumberOfCellIds();
                                     numberOfGenes = loader.getGenes().size();
-                                    addSuccessObject( geoAccession );
                                 }
                             }
                         } else {
@@ -429,6 +431,18 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                         }
+
+                        addSuccessObject( geoAccession, String.format( "Data Type=%s%s%s%s",
+                                dataType,
+                                numberOfSamples != null ? "Number of samples=" + numberOfSamples : "",
+                                numberOfCellIds != null ? " Number of cell IDs=" + numberOfCellIds : "",
+                                numberOfGenes != null ? " Number of genes=" + numberOfGenes : "" ) );
+
+                        // don't bother looking up SRA if we're not writing a summary file
+                        if ( writer == null ) {
+                            return;
+                        }
+
                         Collection<String> sraAccessions = new ArrayList<>();
                         Collection<String> otherDataInSra = new ArrayList<>();
                         if ( detector.hasSingleCellDataInSra( series, sraAccessions, otherDataInSra ) ) {
@@ -455,7 +469,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         if ( writer != null ) {
                             try {
                                 writer.printRecord(
-                                        geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
+                                        geoAccession, detectedDataType, numberOfSamples, numberOfCellIds, numberOfGenes,
                                         additionalSupplementaryFiles.stream().map( this::formatFilename ).collect( Collectors.joining( ";" ) ),
                                         dataInSra, comment );
                                 writer.flush(); // for convenience, so that results appear immediately with tail -f

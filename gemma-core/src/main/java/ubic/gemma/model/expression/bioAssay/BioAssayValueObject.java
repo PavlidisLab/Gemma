@@ -42,6 +42,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private String name;
     private String description;
     private String metadata;
+    @Nullable
     private DatabaseEntryValueObject accession;
     private ArrayDesignValueObject arrayDesign;
     @Nullable

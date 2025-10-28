@@ -24,10 +24,10 @@ import org.hibernate.UnresolvableObjectException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -69,16 +69,16 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         // Create Array design, don't persist it.
         ad = ArrayDesign.Factory.newInstance();
-        ad.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign" );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_arraydesign" );
         ad.setShortName( ad.getName() );
 
         // Create the composite Sequences
         CompositeSequence c1 = CompositeSequence.Factory.newInstance();
-        c1.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_cs" );
+        c1.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_cs" );
         CompositeSequence c2 = CompositeSequence.Factory.newInstance();
-        c2.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_cs" );
+        c2.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_cs" );
         CompositeSequence c3 = CompositeSequence.Factory.newInstance();
-        c3.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_cs" );
+        c3.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_cs" );
 
         // Fill in associations between compositeSequences and arrayDesign
         c1.setArrayDesign( ad );
@@ -90,8 +90,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad.setPrimaryTaxon( tax );
 
         BioSequence bs = BioSequence.Factory.newInstance( tax );
-        bs.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+        bs.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        bs.setSequence( RandomStringUtils.insecure().next( 40, "ATCG" ) );
         bs.setTaxon( tax );
 
         c1.setBiologicalCharacteristic( bs );
@@ -161,7 +161,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindWithExternalReference() {
         ad = ArrayDesign.Factory.newInstance();
-        String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
+        String name = RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
@@ -191,7 +191,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ArrayDesign.Factory.newInstance();
         this.assignExternalReference( ad, this.getGpl() );
         this.assignExternalReference( ad, this.getGpl() );
-        String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
+        String name = RandomStringUtils.insecure().nextAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
@@ -222,20 +222,20 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGetTaxaMultipleTaxonForArray() {
-        String taxonName2 = "Fish_" + RandomStringUtils.randomAlphabetic( 4 );
+        String taxonName2 = "Fish_" + RandomStringUtils.insecure().nextAlphabetic( 4 );
 
         Taxon secondTaxon = Taxon.Factory.newInstance();
         secondTaxon.setScientificName( taxonName2 );
-        secondTaxon.setNcbiId( Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) ) );
+        secondTaxon.setNcbiId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) ) );
         secondTaxon.setIsGenesUsable( true );
 
         for ( int i = 0; i < 3; i++ ) {
 
             CompositeSequence c1 = CompositeSequence.Factory.newInstance();
-            c1.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+            c1.setName( RandomStringUtils.insecure().nextAlphabetic( 20 ) );
             BioSequence bs = BioSequence.Factory.newInstance( secondTaxon );
-            bs.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-            bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+            bs.setName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+            bs.setSequence( RandomStringUtils.insecure().next( 40, "ATCG" ) );
 
             c1.setBiologicalCharacteristic( bs );
 
@@ -432,7 +432,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     private void assignExternalReference( ArrayDesign toFind, String accession ) {
-        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
         assert geo != null;
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -444,7 +444,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     private String getGpl() {
-        return "GPL" + RandomStringUtils.randomNumeric( 4 );
+        return "GPL" + RandomStringUtils.insecure().nextNumeric( 4 );
     }
 
 }

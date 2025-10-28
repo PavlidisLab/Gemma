@@ -144,7 +144,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param rowsToUse rows
      * @param sourceMatrix matrix
      */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
+    private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
@@ -341,6 +341,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
+    public ExpressionDataDoubleMatrix sliceRows( List<CompositeSequence> designElements ) {
+        return new ExpressionDataDoubleMatrix( this, designElements );
+    }
+
+    @Override
     public double[] getRowAsDoubles( int index ) {
         return matrix.getRow( index );
     }
@@ -364,7 +369,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     /**
-     * Modifying the matrix directly is not recommended, make a copy instead.
+     * @deprecated modifying the matrix directly is not recommended, make a copy instead.
      */
     @Deprecated
     public void set( int row, int column, @Nullable Double value ) {
@@ -391,10 +396,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         return this.getMatrix().getRowNames();
     }
 
+    @Deprecated
     public void set( CompositeSequence designElement, BioAssay bioAssay, Double value ) {
         int row = this.getRowIndex( designElement );
         int column = this.getColumnIndex( bioAssay );
-        matrix.set( row, column, value );
+        set( row, column, value );
     }
 
     @Override

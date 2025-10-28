@@ -1547,7 +1547,7 @@ public class GeoConverterImpl implements GeoConverter {
             DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
             pubAccession.setAccession( string );
             ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( "PubMed" );
+            ed.setName( ExternalDatabases.PUBMED );
             pubAccession.setExternalDatabase( ed );
             bibRef.setPubAccession( pubAccession );
             if ( expExp.getPrimaryPublication() == null ) {
@@ -2037,15 +2037,15 @@ public class GeoConverterImpl implements GeoConverter {
                 boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
                 for ( GeoSample sample : series.getSamples() ) {
                     if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
-                        return Characteristic.Factory.newInstance( Categories.ASSAY, "single-nucleus RNA sequencing assay", "http://purl.obolibrary.org/obo/OBI_0003109" );
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY );
                     } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
                         // check for evidence of conding RNA
                         if ( isCodingRNA( series ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS );
                         } else if ( isNonCodingRNA( series ) ) {
                             return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
                         } else {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "single-cell RNA sequencing assay", "http://purl.obolibrary.org/obo/OBI_0002631" );
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY );
                         }
                     }
                 }
@@ -2850,13 +2850,13 @@ public class GeoConverterImpl implements GeoConverter {
     private void initGeoExternalDatabase() {
         if ( geoDatabase == null ) {
             if ( externalDatabaseService != null ) {
-                ExternalDatabase ed = externalDatabaseService.findByName( "GEO" );
+                ExternalDatabase ed = externalDatabaseService.findByName( ExternalDatabases.GEO );
                 if ( ed != null ) {
                     geoDatabase = ed;
                 }
             } else {
                 geoDatabase = ExternalDatabase.Factory.newInstance();
-                geoDatabase.setName( "GEO" );
+                geoDatabase.setName( ExternalDatabases.GEO );
                 geoDatabase.setType( DatabaseType.EXPRESSION );
             }
         }

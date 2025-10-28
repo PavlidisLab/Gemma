@@ -126,7 +126,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUris() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertEquals( 1, result.keySet().size() );
         assertTrue( result.containsKey( ExpressionExperiment.class ) );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -135,7 +135,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUrisAsProxies() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, false, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, false, true );
         assertEquals( 1, result.size() );
         Collection<ExpressionExperiment> ees = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -145,14 +145,14 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindExperimentsByUrisAsAnonymousUser() {
         runAsAnonymous();
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
     @Test
     public void testFindExperimentsByUrisAsUser() {
         runAsUser( "bob" );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
@@ -161,8 +161,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
-            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
+            c.setValue( RandomStringUtils.insecure().nextNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.insecure().nextAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }
@@ -174,8 +174,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Statement c = Statement.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
-            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.randomAlphabetic( 7 ) );
+            c.setValue( RandomStringUtils.insecure().nextNumeric( 10 ) );
+            c.setValueUri( "http://www.ebi.ac.uk/efo/EFO_" + RandomStringUtils.insecure().nextAlphabetic( 7 ) );
             characteristicService.create( c );
             chars.add( c );
         }
@@ -215,11 +215,11 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
     // .getBean( "bibliographicReferenceService" );
     //
-    // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
+    // BibliographicReference bibRef = bibRefService.load( Long.valueOf( 111 ));
     //
     // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
     // assertEquals(1,foundEEs.size());
-    // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
+    // assertEquals(Long.valueOf(8), (Long) foundEEs.iterator().next().getId());
     //
     // }
 

@@ -1,6 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.model.util.SparseRangeArrayList;
+import ubic.gemma.core.datastructure.sparse.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -24,7 +24,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
         this.expressionExperiment = expressionExperiment;
         this.dimension = dimension;
         this.quantitationType = quantitationType;
-        this.bioAssays = new SparseRangeArrayList<>( dimension.getBioAssays(), dimension.getBioAssaysOffset(), dimension.getNumberOfCells() );
+        this.bioAssays = new SparseRangeArrayList<>( dimension.getBioAssays(), dimension.getBioAssaysOffset(), dimension.getNumberOfCellIds() );
     }
 
     @Override
@@ -49,7 +49,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
 
     @Override
     public int columns() {
-        return dimension.getNumberOfCells();
+        return dimension.getNumberOfCellIds();
     }
 
     @Override
@@ -59,7 +59,7 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
 
     @Override
     public Object[] getColumn( int column ) {
-        if (column >= 0 && column < columns()) {
+        if ( column >= 0 && column < columns() ) {
             return EMPTY_COLUMN;
         } else {
             throw new IndexOutOfBoundsException();
@@ -89,6 +89,14 @@ public class EmptySingleCellExpressionDataMatrix implements SingleCellExpression
     @Override
     public int[] getRowIndices( CompositeSequence designElement ) {
         return null;
+    }
+
+    @Override
+    public ExpressionDataMatrix<Object> sliceRows( List<CompositeSequence> designElements ) {
+        if ( designElements.isEmpty() ) {
+            return this;
+        }
+        throw new IndexOutOfBoundsException();
     }
 
     @Override

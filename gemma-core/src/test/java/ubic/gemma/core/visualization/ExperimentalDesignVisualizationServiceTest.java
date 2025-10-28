@@ -179,8 +179,8 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         for ( int i = 0; i < 4; i++ ) {
             cts.add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
         }
-        int[] indices = new int[dimension.getNumberOfCells()];
-        for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+        int[] indices = new int[dimension.getNumberOfCellIds()];
+        for ( int i = 0; i < dimension.getNumberOfCellIds(); i++ ) {
             if ( random.nextDouble() < 0.1 ) {
                 indices[i] = -1;
             } else {

@@ -390,3 +390,7 @@ i[class*=icon] {
     padding: 15px;
     font-size: smaller;
 }
+
+.list-styled ul {
+    margin-left: 1em;
+}

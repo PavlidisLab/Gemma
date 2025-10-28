@@ -15,6 +15,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.util.ProgressInputStream;
 
 import javax.annotation.Nullable;
@@ -32,9 +33,12 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
- * Detects 10X MEX data from GEO series and samples.
+ * Detects MEX data from GEO series and samples.
  * <p>
- * Older MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
+ * This detector is not specific to 10x MEX data since MEX itself is a widely used format in single-cell studies. Logic
+ * specific to 10x are stored in {@link TenXCellRangerUtils}.
+ * <p>
+ * Older 10x MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
  * naming scheme into the download directory.
  * <p>
  * MEX data is only supported at the sample-level. However, we do support detecting its presence at the series-level,
@@ -58,6 +62,10 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     @Nullable
     private String genesFileSuffix = DEFAULT_GENES_FILE_SUFFIX;
     private String matrixFileSuffix = DEFAULT_MATRIX_FILE_SUFFIX;
+
+    // for the 10x filter (if needed)
+    @Nullable
+    private Path cellRangerPrefix;
 
     private long maxEntrySizeInArchiveToSkip = DEFAULT_MAX_ENTRY_SIZE_IN_ARCHIVE_TO_SKIP;
     private long maxNumberOfEntriesToSkip = DEFAULT_MAX_NUMBER_OF_ENTRIES_TO_SKIP;
@@ -596,10 +604,16 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series )
+        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, cellRangerPrefix )
                 .configureLoader( config );
         if ( loader.getSampleNames().isEmpty() ) {
-            throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            NoSingleCellDataFoundException ex = new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            try {
+                loader.close();
+            } catch ( Exception e ) {
+                ex.addSuppressed( e );
+            }
+            throw ex;
         }
         return loader;
     }

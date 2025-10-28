@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.maintenance;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -102,6 +103,12 @@ public interface TableMaintenanceUtil {
     int updateExpressionExperiment2CharacteristicEntries( Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate );
 
     /**
+     * Update the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table for a specific experiment.
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateExpressionExperiment2CharacteristicEntries( ExpressionExperiment ee, @Nullable Class<?> level );
+
+    /**
      * Update the {@code EXPRESSION_EXPERIMENT2_ARRAY_DESIGN} table.
      * @param sinceLastUpdate only update entries for platforms updated since this date
      * @param truncate        if true, the table will be truncated before the update
@@ -109,6 +116,9 @@ public interface TableMaintenanceUtil {
      */
     @Secured({ "GROUP_AGENT" })
     int updateExpressionExperiment2ArrayDesignEntries( @Nullable Date sinceLastUpdate, boolean truncate );
+
+    @Secured({ "GROUP_AGENT" })
+    int updateExpressionExperiment2ArrayDesignEntries( ExpressionExperiment ee );
 
     /**
      * Evict the query cache for the {@code GENE2CS} table.

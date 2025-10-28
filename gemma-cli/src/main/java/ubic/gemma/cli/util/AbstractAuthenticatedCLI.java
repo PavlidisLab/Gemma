@@ -26,6 +26,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.authentication.CLIAuthenticationManager;
 
 import java.io.BufferedReader;
@@ -70,6 +71,8 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
     private boolean requireLogin = false;
 
+    private boolean authenticateAnonymously = false;
+
     private Environment environment;
 
     @Override
@@ -91,7 +94,18 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
      * Indicate that the command requires authentication.
      */
     protected void setRequireLogin() {
+        Assert.state( !authenticateAnonymously, "Cannot set both requireLogin and authenticateAnonymously to true." );
         this.requireLogin = true;
+    }
+
+    /**
+     * Indicate that the command should authenticate anonymously, i.e. without requiring a username and password.
+     * <p>
+     * This can be used for commands that are intended to access public data.
+     */
+    protected void setAuthenticateAnonymously() {
+        Assert.state( !requireLogin, "Cannot set both requireLogin and authenticateAnonymously to true." );
+        this.authenticateAnonymously = true;
     }
 
     @Override
@@ -119,6 +133,12 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
             // already authenticated
             log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
             return authentication;
+        } else if ( authenticateAnonymously ) {
+            Authentication anonymousAuthentication = getApplicationContext()
+                    .getBean( CLIAuthenticationManager.class )
+                    .authenticateAnonymously();
+            log.info( "Logged in as anonymous guest with limited privileges" );
+            return anonymousAuthentication;
         } else if ( requireLogin || getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
             String username = getUsername();
             String password = getPassword();

@@ -31,7 +31,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ), createBioAssay( "B" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 20 );
+        dim.setNumberOfCellIds( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
@@ -81,7 +81,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 10 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 10 );
+        dim.setNumberOfCellIds( 10 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
@@ -114,7 +114,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ), createBioAssay( "B" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 20 );
+        dim.setNumberOfCellIds( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-without-sample-id.tsv" ) ).toURI() ),
@@ -144,7 +144,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ), createBioAssay( "B" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 20 );
+        dim.setNumberOfCellIds( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids.tsv" ) ).toURI() ),
@@ -174,7 +174,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ), createBioAssay( "B" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 20 );
+        dim.setNumberOfCellIds( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids-but-different-values.tsv" ) ).toURI() ),
@@ -193,7 +193,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         // make c1 and c11 collide
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + ( c == 11 ? 1 : c ) ).collect( Collectors.toList() ) );
-        dim.setNumberOfCells( 20 );
+        dim.setNumberOfCellIds( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-barcode-collisions.tsv" ) ).toURI() ),

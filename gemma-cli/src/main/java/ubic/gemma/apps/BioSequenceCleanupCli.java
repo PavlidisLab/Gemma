@@ -73,9 +73,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildArrayDesignOptions( Options options ) {
         Option justTestingOption = Option.builder( "dryrun" )
                 .desc( "Set to run without any database modifications" )
                 .build();
@@ -89,8 +87,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "dryrun" ) ) {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
@@ -102,11 +99,11 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doAuthenticatedWork() {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
 
         Collection<ArrayDesign> ads;
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
-            ads = new HashSet<>( this.getArrayDesignsToProcess() );
+        if ( !arrayDesigns.isEmpty() ) {
+            ads = new HashSet<>( arrayDesigns );
         } else if ( file != null ) {
             try ( InputStream is = new FileInputStream( file );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) ); ) {
@@ -128,10 +125,10 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 return;
             }
         } else {
-            ads = this.getArrayDesignService().loadAll();
+            ads = arrayDesignService.loadAll();
         }
 
-        ads = getArrayDesignService().thaw( ads );
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign design : ads ) {
             log.info( design );
 

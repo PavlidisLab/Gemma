@@ -17,10 +17,10 @@ public class SingleCellDimensionTest {
     @Test
     public void testGetBioAssay() {
         SingleCellDimension scd = new SingleCellDimension();
-        List<String> cellIds = IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.randomAlphanumeric( 10 ) )
+        List<String> cellIds = IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.insecure().nextAlphanumeric( 10 ) )
                 .collect( Collectors.toList() );
         scd.setCellIds( cellIds );
-        scd.setNumberOfCells( cellIds.size() );
+        scd.setNumberOfCellIds( cellIds.size() );
         BioAssay ba1, ba2, ba3, ba4;
         ba1 = new BioAssay();
         ba1.setName( "a" );
@@ -43,7 +43,7 @@ public class SingleCellDimensionTest {
         assertEquals( ba4, scd.getBioAssay( 99 ) );
         assertThrows( IndexOutOfBoundsException.class, () -> scd.getBioAssay( -1 ) );
         assertThrows( IndexOutOfBoundsException.class, () -> scd.getBioAssay( 100 ) );
-        assertEquals( 25, scd.getNumberOfCellsBySample( 0 ) );
+        assertEquals( 25, scd.getNumberOfCellIdsBySample( 0 ) );
         assertEquals( cellIds.subList( 0, 25 ), scd.getCellIdsBySample( 0 ) );
     }
 }

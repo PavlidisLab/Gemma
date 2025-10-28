@@ -13,14 +13,15 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.io.IOException;
@@ -50,6 +51,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
         @Bean
         public FactorValueService factorValueService() {
+            return mock();
+        }
+
+        @Bean
+        public FactorValueNeedsAttentionService factorValueNeedsAttentionService() {
             return mock();
         }
 
@@ -147,8 +153,8 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
 
     private Characteristic createCharacteristic( Long id ) {
         Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( RandomStringUtils.randomAlphanumeric( 10 ) );
-        c.setValue( RandomStringUtils.randomAlphanumeric( 10 ) );
+        c.setCategory( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
+        c.setValue( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
         c.setId( id );
         return c;
     }

@@ -135,6 +135,9 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
+    /**
+     * Create a new filter with a subquery right hand side.
+     */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
@@ -265,6 +268,26 @@ public class Filter implements PropertyMapping {
         this.checkTypeCorrect();
     }
 
+    /**
+     * Create a copy of this filter with a new property name and original property.
+     * <p>
+     * If the filter's right hand side is a {@link Subquery}, the operation is propagated to the subquery via {@link }
+     * <p>
+     * This can be used to apply this filter to a different property. For example, if you have a filter on a
+     * {@link ubic.gemma.model.expression.experiment.Statement} over {@code object}, you could create a filter over a
+     * {@code secondObject}.
+     * @throws IllegalArgumentException if the type of the resulting property is not compatible with the required value
+     * @see Subquery#withFilterPropertyName(String, String)
+     */
+    public Filter withPropertyName( String newPropertyName, @Nullable String newOriginalProperty ) {
+        if ( requiredValue instanceof Subquery ) {
+            // in the case of a subquery, rewrite the filter of the subquery instead
+            return new Filter( objectAlias, propertyName, propertyType, operator, ( ( Subquery ) requiredValue ).withFilterPropertyName( newPropertyName, newOriginalProperty ), originalProperty );
+        } else {
+            return new Filter( objectAlias, newPropertyName, propertyType, operator, requiredValue, newOriginalProperty );
+        }
+    }
+
     @Override
     public String toString() {
         return toString( false );
@@ -278,7 +301,16 @@ public class Filter implements PropertyMapping {
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
         if ( requiredValue instanceof Subquery ) {
-            return ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            String s = ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            if ( operator == Operator.inSubquery ) {
+                return "any(" + s + ")";
+            } else if ( operator == Operator.notInSubquery && isNegative( ( ( Subquery ) requiredValue ).getFilter() ) ) {
+                return "all(" + Filter.not( ( ( Subquery ) requiredValue ).getFilter() ).toString( withOriginalProperties ) + ")";
+            } else if ( operator == Operator.notInSubquery ) {
+                return "none(" + s + ")";
+            } else {
+                throw new IllegalStateException( "Unsupported operator for subquery: " + operator );
+            }
         } else if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
@@ -387,5 +419,15 @@ public class Filter implements PropertyMapping {
             default:
                 throw new IllegalArgumentException( "Don't know how to negate " + op + "." );
         }
+    }
+
+    /**
+     * Check if a filter is negative.
+     */
+    public boolean isNegative( Filter f ) {
+        return f.getOperator() == Filter.Operator.notEq
+                || f.getOperator() == Filter.Operator.notIn
+                || f.getOperator() == Filter.Operator.notLike
+                || f.getOperator() == Filter.Operator.notInSubquery;
     }
 }

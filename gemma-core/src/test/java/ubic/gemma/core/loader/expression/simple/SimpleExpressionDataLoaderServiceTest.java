@@ -28,6 +28,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.*;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -68,8 +69,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoad() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
@@ -77,8 +78,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setDescription( "Simple expression data loader service test - load" );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "testing" );
@@ -104,16 +105,16 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoadB() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         metaData.setDescription( "Simple expression data loader service test - load B" );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
@@ -143,9 +144,9 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public final void testLoadDuplicatedRow() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         SimplePlatformMetadata ad = new SimplePlatformMetadata();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
 
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
 
@@ -153,7 +154,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "testing" );
@@ -179,10 +180,10 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     public void testLoadWithSampleMetadata() {
         ArrayDesign ad = getTestPersistentArrayDesign( 10, true );
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
+        metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", "GEO" ) );
+        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", ExternalDatabases.GEO ) );
 
         metaData.getArrayDesigns().add( SimplePlatformMetadata.forId( ad.getId() ) );
 
@@ -191,7 +192,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
             sampleMetadata.setName( "sample" + i );
             sampleMetadata.setDescription( "sample description " + i );
             sampleMetadata.setPlatformUsed( SimplePlatformMetadata.forId( ad.getId() ) );
-            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, "GEO" ) );
+            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, ExternalDatabases.GEO ) );
             metaData.getSamples().add( sampleMetadata );
         }
 
@@ -201,7 +202,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( ee.getAccession().getAccession() ).isEqualTo( "GSE109291" );
-        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( "GEO" );
+        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( ExternalDatabases.GEO );
         assertThat( ee.getBioAssays() )
                 .hasSize( 8 )
                 .allSatisfy( ba -> {

@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.association;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.util.QueuingParser;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -27,9 +28,9 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.config.Settings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -101,7 +102,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      */
     public NCBIGene2GOAssociationParser( Collection<Taxon> taxa ) {
         ExternalDatabase goDb = ExternalDatabase.Factory.newInstance();
-        goDb.setName( "GO" );
+        goDb.setName( ExternalDatabases.GO );
         goDb.setType( DatabaseType.ONTOLOGY );
 
         ExternalDatabase ncbiGeneDb = ExternalDatabase.Factory.newInstance();

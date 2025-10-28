@@ -164,7 +164,7 @@ public class SearchServiceTest extends BaseTest {
         searchService.search( settings );
         verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/DOID_14602" ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 10, true, false );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), true, true, true, null, 10, true, false );
     }
 
     @Test
@@ -177,13 +177,13 @@ public class SearchServiceTest extends BaseTest {
                 .fillResults( false )
                 .build();
         ExpressionExperiment ee = mock( ExpressionExperiment.class );
-        when( characteristicService.findExperimentsByUris( any(), any(), anyInt(), eq( false ), anyBoolean() ) )
+        when( characteristicService.findExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), eq( false ), anyBoolean() ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
                         Collections.singletonMap( "test", Collections.singleton( ee ) ) ) );
         SearchService.SearchResultMap results = searchService.search( settings );
         verify( databaseSearchSource ).accepts( settings );
         verify( databaseSearchSource ).searchExpressionExperiment( settings, new SearchContext( null, null ) );
-        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), null, 5000, false, false );
+        verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/DOID_14602" ), true, true, true, null, 5000, false, false );
         assertNull( results.getByResultObjectType( ExpressionExperiment.class ).iterator().next().getResultObject() );
         // since EE is a proxy, only its ID should be accessed
         verify( ee, VerificationModeFactory.atLeastOnce() ).getId();

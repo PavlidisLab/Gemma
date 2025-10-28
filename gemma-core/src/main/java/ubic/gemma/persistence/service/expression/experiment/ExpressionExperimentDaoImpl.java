@@ -34,7 +34,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
@@ -84,8 +83,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.validateSparseRangeArray;
 import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
-import static ubic.gemma.model.util.SparseListUtils.validateSparseRangeArray;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
@@ -124,7 +123,6 @@ public class ExpressionExperimentDaoImpl
     private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
 
     private final CompressedStringListType cellIdsUserType;
-    private SessionRegistryImpl sessionRegistryImpl;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -326,6 +324,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByDesignId( Long designId ) {
+        return findOneByProperty( "experimentalDesign.id", designId );
+    }
+
+    @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
@@ -335,6 +338,19 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "ef", ef )
                 .uniqueResult();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef in :factors "
+                        + "group by ee" )
+                .setParameterList( "factors", optimizeIdentifiableParameterList( factors ) )
+                .list();
     }
 
     @Override
@@ -356,21 +372,33 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> fvs ) {
-        if ( fvs.isEmpty() )
-            return new HashMap<>();
-        Map<ExpressionExperiment, FactorValue> results = new HashMap<>();
+    public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs ) {
+        if ( fvs.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
-        List<Object[]> r2 = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ee, f from ExpressionExperiment ee "
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
                         + "join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f "
-                        + "where f in (:fvs) group by ee, f" )
+                        + "where f in (:fvs) "
+                        + "group by ee" )
                 .setParameterList( "fvs", optimizeIdentifiableParameterList( fvs ) )
                 .list();
-        for ( Object[] row : r2 ) {
-            results.put( ( ExpressionExperiment ) row[0], ( FactorValue ) row[1] );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
+        if ( factorValueIds.isEmpty() ) {
+            return Collections.emptyList();
         }
-        return results;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f "
+                        + "where f.id in (:fvIds) "
+                        + "group by ee" )
+                .setParameterList( "fvIds", optimizeParameterList( factorValueIds ) )
+                .list();
     }
 
     /**
@@ -656,7 +684,7 @@ public class ExpressionExperimentDaoImpl
         } else {
             query += "where T.EXPRESSION_EXPERIMENT_FK is not null";
         }
-        String excludeUrisClause = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
+        String excludeUrisClause = getExcludeUrisClause( "VALUE_URI", "`VALUE`", excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, false );
         if ( excludeUrisClause != null ) {
             query += " and (";
             query += "(" + excludeUrisClause + ")";
@@ -728,7 +756,58 @@ public class ExpressionExperimentDaoImpl
      * the same characteristic at multiple levels to make counting more efficient.
      */
     @Override
-    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris ) {
+    public Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects ) {
+        // we only include category-only terms once, because otherwise they would be repeated for each subsequent queries
+        Map<Characteristic, Long> result = getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, category, excludedCategoryUris,
+                excludedTermUris, false, retainedTermUris, "`VALUE`", "VALUE_URI", true );
+
+        // predicates and objects do not have their own categories and should be treated as uncategorized, thus we strip
+        // the category constraint and only check if uncategorized terms are excluded
+        boolean excludeUncategorized = excludedCategoryUris != null && excludedCategoryUris.contains( UNCATEGORIZED );
+        if ( includePredicates && !excludeUncategorized ) {
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "PREDICATE", "PREDICATE_URI", false ) );
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "SECOND_PREDICATE", "SECOND_PREDICATE_URI", false ) );
+        }
+        if ( includeObjects && !excludeUncategorized ) {
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "OBJECT", "OBJECT_URI", false ) );
+            mergeUsageFrequencies( result, getAnnotationsUsageFrequencyInternal( eeIds, level, maxResults, minFrequency, null, null,
+                    excludedTermUris, true, retainedTermUris, "SECOND_OBJECT", "SECOND_OBJECT_URI", false ) );
+        }
+        if ( includePredicates || includeObjects ) {
+            // re-filter results to satisfy the maxResults requirements
+            if ( maxResults > 0 && result.size() > maxResults ) {
+                result = result.entrySet().stream()
+                        .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
+                        .limit( maxResults )
+                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Merge the usage frequencies from two different queries.
+     * <p>
+     * We take the sum with the assumption that a dataset would not use the same characteristic as a subject, predicate
+     * or object.
+     */
+    private void mergeUsageFrequencies( Map<Characteristic, Long> result, Map<Characteristic, Long> annotationsUsageFrequencyInternal ) {
+        for ( Map.Entry<Characteristic, Long> entry : annotationsUsageFrequencyInternal.entrySet() ) {
+            result.merge( entry.getKey(), entry.getValue(), Long::sum );
+        }
+    }
+
+    public Map<Characteristic, Long> getAnnotationsUsageFrequencyInternal(
+            @Nullable Collection<Long> eeIds, @Nullable Class<? extends Identifiable> level, int maxResults,
+            int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris,
+            @Nullable Collection<String> excludedTermUris,
+            boolean excludeCategoryOnly,
+            @Nullable Collection<String> retainedTermUris,
+            String valueColumn, String valueUriColumn,
+            boolean isCategorized ) {
         boolean doAclFiltering = eeIds == null;
         boolean useRetainedTermUris = false;
         if ( eeIds != null && eeIds.isEmpty() ) {
@@ -758,7 +837,7 @@ public class ExpressionExperimentDaoImpl
                 excludedTermUris = excludedTermUris.stream().filter( Objects::nonNull ).collect( Collectors.toList() );
             }
         }
-        String query = "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
+        String query = "select T." + valueColumn + " as `VALUE`, T." + valueUriColumn + " as VALUE_URI, " + ( isCategorized ? "T.CATEGORY" : "NULL" ) + " as CATEGORY, " + ( isCategorized ? "T.CATEGORY_URI" : "NULL" ) + " as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
         if ( doAclFiltering ) {
             query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
         }
@@ -782,17 +861,18 @@ public class ExpressionExperimentDaoImpl
             } else {
                 query += " and T.CATEGORY = :category";
             }
-            // no need to filter out excluded categories if a specific one is requested
-            excludeUrisClause = getExcludeUrisClause( null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
+            // no need to filter out excluded categories if a specific one is requested or if the requested annotations
+            // are intrinsically uncategorized
+            excludeUrisClause = getExcludeUrisClause( valueUriColumn, valueColumn, null, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, excludeCategoryOnly );
         } else {
             // all categories are requested, we may filter out excluded ones
-            excludeUrisClause = getExcludeUrisClause( excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized );
+            excludeUrisClause = getExcludeUrisClause( valueUriColumn, valueColumn, excludedCategoryUris, excludedTermUris, excludeFreeTextCategories, excludeFreeTextTerms, excludeUncategorized, excludeCategoryOnly );
         }
         if ( excludeUrisClause != null ) {
             query += " and (";
             query += "(" + excludeUrisClause + ")";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
-                query += " or T.VALUE_URI in (:retainedTermUris)";
+                query += " or T." + valueUriColumn + " in (:retainedTermUris)";
                 useRetainedTermUris = true;
             }
             query += ")";
@@ -804,13 +884,13 @@ public class ExpressionExperimentDaoImpl
         //language=HQL
         query += " group by "
                 // no need to group by category if a specific one is requested
-                + ( category == null ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
-                + "COALESCE(T.VALUE_URI, T.`VALUE`)";
+                + ( category == null && isCategorized ? "COALESCE(T.CATEGORY_URI, T.CATEGORY), " : "" )
+                + "COALESCE(T." + valueUriColumn + ", T." + valueColumn + ")";
         // if there are too many EE IDs, they will be retrieved by batch and filtered in-memory
         if ( minFrequency > 1 && ( eeIds == null || eeIds.size() <= MAX_PARAMETER_LIST_SIZE ) ) {
             query += " having EE_COUNT >= :minFrequency";
             if ( retainedTermUris != null && !retainedTermUris.isEmpty() ) {
-                query += " or VALUE_URI in (:retainedTermUris)";
+                query += " or " + valueUriColumn + " in (:retainedTermUris)";
                 useRetainedTermUris = true;
             }
         }
@@ -899,26 +979,34 @@ public class ExpressionExperimentDaoImpl
      * @param excludeFreeTextCategories whether to exclude free-text categories
      * @param excludeFreeTextTerms      whether to exclude free-text terms
      * @param excludeUncategorized      whether to exclude uncategorized terms
+     * @param excludeCategoryOnly       whether to exclude terms that are only categories (i.e. no value nor value URI)
      * @return a SQL clause for excluding terms and categories or null if no clause is necessary
      */
     @Nullable
-    private String getExcludeUrisClause( @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories, boolean excludeFreeTextTerms, boolean excludeUncategorized ) {
-        List<String> clauses = new ArrayList<>( 5 );
+    private String getExcludeUrisClause( String valueUriColumn, String valueColumn,
+            @Nullable Collection<String> excludedCategoryUris,
+            @Nullable Collection<String> excludedTermUris, boolean excludeFreeTextCategories,
+            boolean excludeFreeTextTerms, boolean excludeUncategorized,
+            boolean excludeCategoryOnly ) {
+        List<String> clauses = new ArrayList<>( 6 );
         if ( excludedCategoryUris != null && !excludedCategoryUris.isEmpty() ) {
             clauses.add( "T.CATEGORY_URI is null or T.CATEGORY_URI not in (:excludedCategoryUris)" );
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
-            clauses.add( "T.VALUE_URI is null or T.VALUE_URI not in (:excludedTermUris)" );
+            clauses.add( "T." + valueUriColumn + " is null or T." + valueColumn + " not in (:excludedTermUris)" );
         }
         if ( excludeFreeTextCategories ) {
             // we don't want to exclude "uncategorized" terms when excluding free-text categories
             clauses.add( "T.CATEGORY_URI is not null or T.CATEGORY is null" );
         }
         if ( excludeFreeTextTerms ) {
-            clauses.add( "T.VALUE_URI is not null" );
+            clauses.add( "T." + valueUriColumn + " is not null" );
         }
         if ( excludeUncategorized ) {
             clauses.add( "COALESCE(T.CATEGORY_URI, T.CATEGORY) is not null" );
+        }
+        if ( excludeCategoryOnly ) {
+            clauses.add( "COALESCE(T." + valueUriColumn + ", T." + valueColumn + ") is not null" );
         }
         if ( !clauses.isEmpty() ) {
             return "(" + String.join( ") and (", clauses ) + ")";
@@ -1191,6 +1279,32 @@ public class ExpressionExperimentDaoImpl
                         + "where eb = bba and eess.sourceExperiment = :ee "
                         + "group by b" )
                 .setParameter( "ee", expressionExperiment )
+                .list();
+    }
+
+    @Override
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt ) {
+        Set<Collection<BioAssayDimension>> dimensions = bulkDataVectorTypes.stream()
+                .map( vectorType -> getBioAssayDimensions( ee, qt, vectorType ) )
+                .filter( c -> !c.isEmpty() )
+                .collect( Collectors.toSet() );
+        if ( dimensions.size() == 1 ) {
+            return dimensions.iterator().next();
+        } else if ( dimensions.size() > 1 ) {
+            throw new NonUniqueResultException( dimensions.size() );
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .add( Restrictions.eq( "quantitationType", qt ) )
+                .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
                 .list();
     }
 
@@ -2128,7 +2242,7 @@ public class ExpressionExperimentDaoImpl
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2160,7 +2274,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
@@ -2188,7 +2302,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2218,7 +2332,7 @@ public class ExpressionExperimentDaoImpl
         @Override
         public SingleCellDimension transformTuple( Object[] tuple, String[] aliases ) {
             SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class ).transformTuple( tuple, aliases );
-            result.setCellIds( new UninitializedList<>( result.getNumberOfCells() ) );
+            result.setCellIds( new UninitializedList<>( result.getNumberOfCellIds() ) );
             if ( includeBioAssays ) {
                 //noinspection unchecked
                 List<BioAssay> bas = getSessionFactory().getCurrentSession()
@@ -2382,7 +2496,7 @@ public class ExpressionExperimentDaoImpl
             Assert.isTrue( sampleCellIds.stream().distinct().count() == sampleCellIds.size(),
                     "Cell IDs must be unique for each sample." );
         }
-        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
+        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCellIds(),
                 "The number of cell IDs must match the number of cells." );
         Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
                 "There must be at most one preferred cell type labelling." );
@@ -2390,7 +2504,7 @@ public class ExpressionExperimentDaoImpl
         validateCellLevelCharacteristics( scbad );
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
         Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCellIds() );
     }
 
     private void validateCellTypeAssignments( SingleCellDimension scbad ) {
@@ -2399,8 +2513,8 @@ public class ExpressionExperimentDaoImpl
         }
         for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
             Assert.notNull( labelling.getCellTypes() );
-            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell type assignments (" + labelling.getCellTypeIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
+            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getNumberOfCellIds(),
+                    "The number of cell type assignments (" + labelling.getCellTypeIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCellIds() + ")." );
             int numberOfCellTypeLabels = labelling.getCellTypes().size();
             Assert.isTrue( numberOfCellTypeLabels > 0,
                     "There must be at least one cell type label declared in the cellTypes collection." );
@@ -2430,8 +2544,8 @@ public class ExpressionExperimentDaoImpl
             return; // no need to validate if not initialized
         }
         for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
-            Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCells(),
-                    "The number of cell-level characteristic assignments (" + clc.getIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCells() + ")." );
+            Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCellIds(),
+                    "The number of cell-level characteristic assignments (" + clc.getIndices().length + ") must match the number of cell IDs (" + scbad.getNumberOfCellIds() + ")." );
             int numberOfCharacteristics = clc.getCharacteristics().size();
             Assert.isTrue( numberOfCharacteristics > 0, "There must be at least one cell-level characteristic." );
             Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),
@@ -2980,6 +3094,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) > 0 from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
@@ -3436,20 +3559,38 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
 
         // attached terms
-        configurer.registerAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "characteristics.originalValue" );
         configurer.unregisterProperty( "characteristics.migratedToStatement" );
-        configurer.registerAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "experimentalDesign.experimentalFactors.factorValues.characteristics.", FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subject", true );
+        configurer.registerProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri", true );
+        configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" );
+        configurer.describeProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.value",
+                "use experimentalDesign.experimentalFactors.factorValues.characteristics.subject instead" );
+        configurer.deprecateProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" );
+        configurer.describeProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri",
+                "use experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri instead" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicateUri" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject" );
+        configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.originalValue" );
         configurer.unregisterProperty( "experimentalDesign.experimentalFactors.factorValues.characteristics.migratedToStatement" );
-        configurer.registerAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "bioAssays.sampleUsed.characteristics.", BIO_MATERIAL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.migratedToStatement" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.characteristics.originalValue" );
-        configurer.registerAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
+        configurer.registerObjectAlias( "allCharacteristics.", ALL_CHARACTERISTIC_ALIAS, Statement.class, null, 1, true );
+        configurer.registerProperty( "allCharacteristics.subject", true );
+        configurer.registerProperty( "allCharacteristics.subjectUri", true );
+        configurer.unregisterProperty( "allCharacteristics.secondPredicate" );
+        configurer.unregisterProperty( "allCharacteristics.secondPredicateUri" );
+        configurer.unregisterProperty( "allCharacteristics.secondObject" );
+        configurer.unregisterProperty( "allCharacteristics.secondObjectUri" );
         configurer.unregisterProperty( "allCharacteristics.originalValue" );
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
-        configurer.registerAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
+        configurer.registerObjectAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
         configurer.unregisterProperty( "bioAssays.accession.Uri" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
@@ -3463,20 +3604,54 @@ public class ExpressionExperimentDaoImpl
      * {@inheritDoc}
      */
     @Override
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) {
         switch ( propertyName ) {
+            // allCharacteristics contains a mixture of statements and characteristics, so we need to clarify which ones
+            // are statement-specific
+            case "allCharacteristics.subject":
+                return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "value" )
+                        .description( "only applicable to statements" );
+            case "allCharacteristics.subjectUri":
+                return resolveFilterablePropertyMeta( ALL_CHARACTERISTIC_ALIAS, Statement.class, "valueUri" )
+                        .description( "only applicable to statements" );
+            case "allCharacteristics.predicate":
+            case "allCharacteristics.predicateUri":
+            case "allCharacteristics.object":
+            case "allCharacteristics.objectUri":
+                return super.resolveFilterablePropertyMeta( propertyName )
+                        .description( "only applicable to statements" );
+
+            // expose statements subject/subjectUri as aliases for value/valueUri
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.subject":
+                return resolveFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, "value" );
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri":
+                return resolveFilterablePropertyMeta( FACTOR_VALUE_CHARACTERISTIC_ALIAS, Statement.class, "valueUri" );
+
+            // pretend that value/valueUri are aliases for subject/subjectUri even if it's not really the case in the
+            // data model
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.value":
+                return super.resolveFilterablePropertyMeta( propertyName )
+                        .description( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subject" );
+            case "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri":
+                return super.resolveFilterablePropertyMeta( propertyName )
+                        .description( "alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri" );
+
             case "taxon":
-                return getFilterablePropertyMeta( TAXON_ALIAS, "id", Taxon.class )
-                        .withDescription( "alias for taxon.id" );
+                return resolveFilterablePropertyMeta( TAXON_ALIAS, Taxon.class, "id" )
+                        .description( "alias for taxon.id" );
             case "bioAssayCount":
-                return super.getFilterablePropertyMeta( "bioAssays.size" )
-                        .withDescription( "alias for bioAssays.size" );
+                return super.resolveFilterablePropertyMeta( "bioAssays.size" )
+                        .description( "alias for bioAssays.size" );
             case "geeq.publicQualityScore":
-                return new FilterablePropertyMeta( null, "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)", Double.class, null, null );
+                return FilterablePropertyMeta.builder()
+                        .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
+                        .propertyType( Double.class );
             case "geeq.publicSuitabilityScore":
-                return new FilterablePropertyMeta( null, "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)", Double.class, null, null );
+                return FilterablePropertyMeta.builder()
+                        .propertyName( "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)" )
+                        .propertyType( Double.class );
             default:
-                return super.getFilterablePropertyMeta( propertyName );
+                return super.resolveFilterablePropertyMeta( propertyName );
         }
     }
 

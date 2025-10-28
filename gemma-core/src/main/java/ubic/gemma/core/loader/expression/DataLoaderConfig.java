@@ -55,6 +55,12 @@ public class DataLoaderConfig {
     private ScaleType quantitationTypeNewScaleType;
 
     /**
+     * Mark the quantitation type as recomputed from raw data.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationType#setIsRecomputedFromRawData(boolean)
+     */
+    private boolean markQuantitationTypeAsRecomputedFromRawData;
+
+    /**
      * Mark the QT as preferred.
      * <p>
      * All other QTs of the same kind will be set to non-preferred as a result.

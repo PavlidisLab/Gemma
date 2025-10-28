@@ -195,7 +195,7 @@ public class CharacteristicBrowserController {
 
         // This might not do anything
         if ( results.size() < maxResults && searchFVVs ) { // non-characteristics.
-            Collection<FactorValue> factorValues = factorValueService.findByValue( queryString, maxResults - results.size() );
+            Collection<FactorValue> factorValues = factorValueService.findByValueStartingWith( queryString, maxResults - results.size() );
             for ( FactorValue factorValue : factorValues ) {
                 if ( !factorValue.getCharacteristics().isEmpty() )
                     continue;

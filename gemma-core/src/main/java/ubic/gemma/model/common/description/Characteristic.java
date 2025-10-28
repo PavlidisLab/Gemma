@@ -333,6 +333,10 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
         public static Characteristic newInstance( Category category, String value, @Nullable String valueUri ) {
             return newInstance( category.getCategory(), category.getCategoryUri(), value, valueUri );
         }
+
+        public static Characteristic newInstance( Category category, Value value ) {
+            return newInstance( category.getCategory(), category.getCategoryUri(), value.getValue(), value.getValueUri() );
+        }
     }
 
 }

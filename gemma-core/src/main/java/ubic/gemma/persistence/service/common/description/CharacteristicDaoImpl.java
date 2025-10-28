@@ -177,32 +177,40 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
         // no need to rank if there is no limit since we're collecting in a mapping
-        List<Object[]> result = findExperimentsByUrisInternal( uris, taxon, limit > 0 && rankByLevel, limit );
+        Map<Class<? extends Identifiable>, Map<String, Set<Long>>> result = findExperimentsByUrisInternal( uris, includeSubjects, includePredicates, includeObjects, taxon, limit > 0 && rankByLevel, limit );
         if ( result.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Set<Long> ids = result.stream().map( row -> ( Long ) row[2] ).collect( Collectors.toSet() );
+        Set<Long> ids = result.values().stream()
+                .map( Map::values )
+                .flatMap( Collection::stream )
+                .flatMap( Collection::stream )
+                .collect( Collectors.toSet() );
         //noinspection unchecked
         List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionExperiment.class )
                 .add( Restrictions.in( "id", ids ) )
                 .list();
+
         Map<Long, ExpressionExperiment> eeById = IdentifiableUtils.getIdMap( ees );
-        //noinspection unchecked
-        return result.stream()
-                .filter( row -> eeById.containsKey( ( Long ) row[2] ) )
-                .collect( Collectors.groupingBy(
-                        row -> ( Class<? extends Identifiable> ) row[0],
-                        Collectors.groupingBy(
-                                row -> ( String ) row[1],
-                                Collectors.mapping(
-                                        row -> eeById.get( ( Long ) row[2] ),
-                                        Collectors.toCollection( HashSet::new ) ) ) ) );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result2 = new HashMap<>();
+        for ( Map.Entry<Class<? extends Identifiable>, Map<String, Set<Long>>> entry : result.entrySet() ) {
+            Class<? extends Identifiable> clazz = entry.getKey();
+            for ( Map.Entry<String, Set<Long>> subEntry : entry.getValue().entrySet() ) {
+                String uri = subEntry.getKey();
+                result2.computeIfAbsent( clazz, k -> new HashMap<>() )
+                        .computeIfAbsent( uri, row -> subEntry.getValue().stream()
+                                .map( eeById::get )
+                                .filter( Objects::nonNull )
+                                .collect( toIdentifiableSet() ) );
+            }
+        }
+        return result2;
     }
 
     /**
@@ -210,25 +218,32 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
      * initialization by accessing {@link Object#hashCode()}. Thus we need to create a {@link TreeSet} over the EE IDs.
      */
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
-        //noinspection unchecked
-        return findExperimentsByUrisInternal( uris, taxon, limit > 0 && rankByLevel, limit ).stream().collect( Collectors.groupingBy(
-                row -> ( Class<? extends Identifiable> ) row[0],
-                Collectors.groupingBy(
-                        row -> ( String ) row[1],
-                        Collectors.mapping(
-                                row -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, ( Long ) row[2] ),
-                                toIdentifiableSet() ) ) ) );
+        Map<Class<? extends Identifiable>, Map<String, Set<Long>>> result = findExperimentsByUrisInternal( uris, includeSubjects, includePredicates, includeObjects, taxon, limit > 0 && rankByLevel, limit );
+
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result2 = new HashMap<>();
+        for ( Map.Entry<Class<? extends Identifiable>, Map<String, Set<Long>>> entry : result.entrySet() ) {
+            Class<? extends Identifiable> clazz = entry.getKey();
+            for ( Map.Entry<String, Set<Long>> subEntry : entry.getValue().entrySet() ) {
+                String uri = subEntry.getKey();
+                result2.computeIfAbsent( clazz, k -> new HashMap<>() )
+                        .computeIfAbsent( uri, row -> subEntry.getValue().stream()
+                                .map( eeId -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, eeId ) )
+                                .collect( toIdentifiableSet() ) );
+            }
+        }
+        return result2;
     }
 
-    private List<Object[]> findExperimentsByUrisInternal( Collection<String> uris, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
-        String qs = "select T.`LEVEL`, T.VALUE_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
+    private Map<Class<? extends Identifiable>, Map<String, Set<Long>>> findExperimentsByUrisInternal( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
+        String qs = "select T.`LEVEL`, T.VALUE_URI, T.PREDICATE_URI, T.OBJECT_URI, T.SECOND_PREDICATE_URI, T.SECOND_OBJECT_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
                 + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
                 + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where T.VALUE_URI in :uris"
+                + "where "
+                + createPredicates( "T", "uris", includeSubjects, includePredicates, includeObjects )
                 + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
                 + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
@@ -236,6 +251,10 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "OBJECT_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_OBJECT_URI", StandardBasicTypes.STRING )
                 .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
                 // invalidate the cache when the EE2C table is updated
                 .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
@@ -277,7 +296,44 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                     .list();
         }
 
-        return result;
+        Map<Class<? extends Identifiable>, Map<String, Set<Long>>> result2 = new HashMap<>();
+
+        TreeSet<String> urisIgnoreCase = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        urisIgnoreCase.addAll( uris );
+        for ( Object[] row : result ) {
+            //noinspection unchecked
+            Class<? extends Identifiable> clazz = ( Class<? extends Identifiable> ) row[0];
+            Long eeId = ( Long ) row[6];
+            for ( int i = 1; i < 6; i++ ) {
+                if ( row[i] != null ) {
+                    String uri = ( String ) row[i];
+                    if ( urisIgnoreCase.contains( uri ) ) {
+                        result2.computeIfAbsent( clazz, k -> new HashMap<>() )
+                                .computeIfAbsent( uri, k -> new HashSet<>() )
+                                .add( eeId );
+                    }
+                }
+            }
+        }
+
+        return result2;
+    }
+
+    private String createPredicates( String tableAlias, String paramName, boolean includeSubjects, boolean includePredicates, boolean includeObjects ) {
+        Assert.isTrue( includeSubjects || includePredicates || includeObjects, "At least one of the source URIs must be included." );
+        List<String> p = new ArrayList<>();
+        if ( includeSubjects ) {
+            p.add( tableAlias + ".VALUE_URI in (:" + paramName + ")" );
+        }
+        if ( includePredicates ) {
+            p.add( tableAlias + ".PREDICATE_URI in (:uris)" );
+            p.add( tableAlias + ".SECOND_PREDICATE_URI in (:" + paramName + ")" );
+        }
+        if ( includeObjects ) {
+            p.add( tableAlias + ".OBJECT_URI in (:uris)" );
+            p.add( tableAlias + ".SECOND_OBJECT_URI in (:" + paramName + ")" );
+        }
+        return "(" + String.join( " or ", p ) + ")";
     }
 
     private int rankClass( Class<?> clazz ) {

@@ -1,21 +1,19 @@
 package ubic.gemma.web.taglib;
 
+import lombok.Setter;
 import org.springframework.web.servlet.tags.form.TagWriter;
 
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.DynamicAttributes;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Write a {@code <style/>} tag.
  * @author poirigui
  */
-public class ScriptTag extends AbstractStaticAssetTag implements DynamicAttributes {
+@Setter
+public class ScriptTag extends AbstractStaticAssetTag {
 
     private boolean async;
     private boolean defer;
-    private final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
 
     public ScriptTag() {
         super( "src" );
@@ -28,21 +26,8 @@ public class ScriptTag extends AbstractStaticAssetTag implements DynamicAttribut
         writeSrcAttribute( tagWriter );
         TagWriterUtils.writeBooleanAttribute( "async", async, tagWriter );
         TagWriterUtils.writeBooleanAttribute( "defer", defer, tagWriter );
-        TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), tagWriter );
+        writeOptionalAttributes( tagWriter );
         tagWriter.endTag( true );
         return SKIP_BODY;
-    }
-
-    public void setAsync( boolean async ) {
-        this.async = async;
-    }
-
-    public void setDefer( boolean defer ) {
-        this.defer = defer;
-    }
-
-    @Override
-    public void setDynamicAttribute( String uri, String localName, Object value ) {
-        this.dynamicAttributes.put( localName, value );
     }
 }

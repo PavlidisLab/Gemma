@@ -152,7 +152,7 @@ public class AnalysisResultSetsWebService {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8_Q9,
-                                    schema = @Schema(type = "string", format = "binary"),
+                                    schema = @Schema(type = "string"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/result-set.tsv") })
                     }),
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",

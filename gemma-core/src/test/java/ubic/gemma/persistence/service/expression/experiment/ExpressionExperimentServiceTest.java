@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -49,6 +50,11 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         @Bean
         public ExpressionExperimentService expressionExperimentService( ExpressionExperimentDao expressionExperimentDao ) {
             return new ExpressionExperimentServiceImpl( expressionExperimentDao );
+        }
+
+        @Bean
+        public ExpressionExperimentFilterRewriteHelperService expressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
+            return new ExpressionExperimentFilterRewriteHelperService( ontologyService );
         }
 
         @Bean
@@ -178,13 +184,42 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     }
 
     @Test
-    public void testGetFiltersWithInferredAnnotations() throws TimeoutException {
+    public void testGetEnhancedFilters() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        Filters inferredFilters = expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
+        Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
+        assertThat( inferredFilters ).hasToString( "any(c.valueUri = http://example.com/T00001)" );
         verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+    }
+
+    @Test
+    public void testGetEnhancedFiltersWhenANegativeQueryIsPerformed() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
+        Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
+        assertThat( inferredFilters ).hasToString( "none(c.valueUri = http://example.com/T00001)" );
+        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+    }
+
+    @Test
+    public void testGetEnhancedFiltersWhenAPredicateOrObjectIsUsed() throws TimeoutException {
+        Filters f = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        Filters inferredFilter = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
+        assertThat( inferredFilter )
+                .hasToString( "ac.object = http://example.com/T00001 or ac.secondObject = http://example.com/T00001" );
+        assertThat( inferredFilter.toOriginalString() )
+                .isEqualTo( "allCharacteristics.object = http://example.com/T00001" );
+        assertThat( inferredFilter )
+                .singleElement()
+                .satisfies( subClause -> {
+                    assertThat( subClause ).hasSize( 2 )
+                            .extracting( Filter::getPropertyName )
+                            .containsExactly( "object", "secondObject" );
+                } );
     }
 
     @Test
@@ -192,23 +227,23 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         OntologyTerm term = mock( OntologyTerm.class );
         when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "categoryUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.categoryUri" );
-        expressionExperimentService.getFiltersWithInferredAnnotations( f, null, null, 30, TimeUnit.SECONDS );
+        expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
         verifyNoInteractions( ontologyService );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequency() throws TimeoutException {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null );
+        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null, false, false );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, 5000, TimeUnit.MILLISECONDS );
+        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentDao ).loadIdsWithCache( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null );
+        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null, false, false );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 

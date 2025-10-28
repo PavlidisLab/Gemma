@@ -28,6 +28,9 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
     private FactorValueService factorValueService;
 
     @Autowired
+    private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
+
+    @Autowired
     private PlatformTransactionManager platformTransactionManager;
 
     @Override
@@ -152,7 +155,7 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
         if ( !results.isEmpty() && !fv.getNeedsAttention() ) {
             String note = "Marked as needs attention because some if its old-style characteristics were automatically migrated.";
             if ( !noop ) {
-                factorValueService.markAsNeedsAttention( fv, note );
+                factorValueNeedsAttentionService.markAsNeedsAttention( fv, note );
             }
             log.warn( "FactorValue #" + fv.getId() + ": " + note );
         }
@@ -213,7 +216,7 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
                             if ( !results.isEmpty() && !fv.getNeedsAttention() ) {
                                 String note = String.format( "Marked as needs attention because %d of its old-style characteristics were automatically migrated to subject-only statements.", results.size() );
                                 if ( !noop ) {
-                                    factorValueService.markAsNeedsAttention( fv, note );
+                                    factorValueNeedsAttentionService.markAsNeedsAttention( fv, note );
                                 }
                                 log.warn( "FactorValue #" + fv.getId() + ": " + note );
                             }

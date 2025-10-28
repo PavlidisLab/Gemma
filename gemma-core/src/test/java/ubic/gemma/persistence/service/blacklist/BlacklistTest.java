@@ -27,6 +27,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
 import static org.junit.Assert.*;
@@ -55,11 +56,11 @@ public class BlacklistTest extends BaseSpringContextTest {
         blee.setReason( "no good" );
         blee.setName( "the experiment" );
 
-        String acc = "GSE" + RandomStringUtils.randomNumeric( 10 );
+        String acc = "GSE" + RandomStringUtils.insecure().nextNumeric( 10 );
 
         blee.setShortName( acc );
 
-        ExternalDatabase geo = externalDatabaseService.findByName( "geo" );
+        ExternalDatabase geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
 
         DatabaseEntry d = DatabaseEntry.Factory.newInstance( acc, geo );
         blee.setExternalAccession( d );

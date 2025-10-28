@@ -88,12 +88,12 @@ public abstract class BaseSpringWebTest extends BaseWebIntegrationTest {
     }
 
     /**
-     * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
+     * Convenience shortcut for RandomStringUtils.insecure().nextAlphabetic( 10 ) (or something similar to that)
      *
      * @return random alphabetic string
      */
     public String randomName() {
-        return RandomStringUtils.randomAlphabetic( 10 );
+        return RandomStringUtils.insecure().nextAlphabetic( 10 );
     }
 
     /**

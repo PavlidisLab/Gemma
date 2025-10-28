@@ -3,7 +3,6 @@ package ubic.gemma.rest.util;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiContextLocator;
-import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
@@ -14,12 +13,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.context.ServletConfigAware;
+import ubic.gemma.core.context.AbstractAsyncFactoryBean;
 
 import javax.servlet.ServletConfig;
 import java.io.IOException;
@@ -28,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * Factory for {@link OpenAPI}.
@@ -36,7 +35,7 @@ import java.util.Map;
  */
 @Setter
 @CommonsLog
-public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware, DisposableBean, BeanFactoryAware {
+public class OpenApiFactory extends AbstractAsyncFactoryBean<OpenAPI> implements ServletConfigAware, BeanFactoryAware {
 
     /**
      * A context identifier for retrieving the OpenAPI context from {@link OpenApiContextLocator}.
@@ -51,7 +50,7 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
     private List<Server> servers;
 
     /**
-     * A list of additional model converters to register.
+     * A list of model converters to register.
      */
     private List<ModelConverter> modelConverters;
 
@@ -64,14 +63,12 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
 
     private OpenApiContext ctx = null;
 
-    private OpenAPIConfiguration config;
-
     public OpenApiFactory( String contextId ) {
         this.contextId = contextId;
     }
 
     @Override
-    public OpenAPI getObject() throws Exception {
+    protected OpenAPI createObject() throws Exception {
         Assert.state( OpenApiContextLocator.getInstance().getOpenApiContext( contextId ) == ctx,
                 "OpenAPI context for " + contextId + " does not match the context managed by this factory, is there another factory involved?" );
         if ( ctx == null ) {
@@ -108,17 +105,12 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
     }
 
     @Override
-    public Class<?> getObjectType() {
-        return OpenAPI.class;
-    }
-
-    @Override
     public boolean isSingleton() {
         return true;
     }
 
     @Override
-    public void destroy() {
+    protected void destroyObject( OpenAPI object ) {
         Field map = ReflectionUtils.findField( OpenApiContextLocator.class, "map" );
         ReflectionUtils.makeAccessible( map );
         ( ( Map<?, ?> ) ReflectionUtils.getField( map, OpenApiContextLocator.getInstance() ) )

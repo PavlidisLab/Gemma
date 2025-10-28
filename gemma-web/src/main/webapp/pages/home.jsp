@@ -101,8 +101,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         <div class="flex flex-wrap flex-lg-nowrap justify-space-around g-3 mb-10">
             <p>
                 We invite you to try out the new <a href="${appConfig['gemma.gemBrow.url']}">Gemma
-                Browser</a>, our new interface for exploring and searching Gemma's data holdings. It's still in beta,
-                and more features and improvements are planned, but we'd love to hear your feedback.
+                Browser</a>, our new interface for exploring and searching Gemma's data holdings. We'd love to hear your feedback.
             </p>
             <a href="${appConfig['gemma.gemBrow.url']}">
                 <Gemma:img cssStyle="width: 100%; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"

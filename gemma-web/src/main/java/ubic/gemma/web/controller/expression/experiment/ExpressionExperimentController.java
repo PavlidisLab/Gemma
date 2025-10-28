@@ -1672,7 +1672,7 @@ public class ExpressionExperimentController {
                     DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
                     pubAccession.setAccession( pubmedId );
                     ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-                    ed.setName( "PubMed" );
+                    ed.setName( ExternalDatabases.PUBMED );
                     pubAccession.setExternalDatabase( ed );
 
                     publication.setPubAccession( pubAccession );

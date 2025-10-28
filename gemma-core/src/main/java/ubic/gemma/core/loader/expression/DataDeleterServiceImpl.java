@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -20,7 +20,7 @@ public class DataDeleterServiceImpl implements DataDeleterService {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Autowired
-    private SingleCellExpressionExperimentAggregatorService singleCellExpressionExperimentAggregatorService;
+    private SingleCellExpressionExperimentAggregateService singleCellExpressionExperimentAggregateService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -39,7 +39,7 @@ public class DataDeleterServiceImpl implements DataDeleterService {
 
     @Override
     public void deleteSingleCellDataAggregate( ExpressionExperiment ee, QuantitationType qt ) {
-        singleCellExpressionExperimentAggregatorService.removeAggregatedVectors( ee, qt );
+        singleCellExpressionExperimentAggregateService.removeAggregatedVectors( ee, qt );
         expressionDataFileService.deleteAllDataFiles( ee, qt );
     }
 

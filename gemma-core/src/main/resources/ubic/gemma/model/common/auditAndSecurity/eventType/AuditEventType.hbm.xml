@@ -101,13 +101,27 @@
             </subclass>
             <subclass abstract="false" discriminator-value="DataReplacedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent">
+                <subclass abstract="false" discriminator-value="RawDataReplacedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.RawDataReplacedEvent"/>
+                <subclass abstract="false" discriminator-value="SingleCellDataReplacedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellDataReplacedEvent"/>
                 <subclass abstract="false" discriminator-value="FailedDataReplacedEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent"/>
             </subclass>
             <subclass abstract="false" discriminator-value="DataAddedEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent"/>
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent">
+                <subclass abstract="false" discriminator-value="SingleCellDataAddedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellDataAddedEvent"/>
+                <subclass abstract="false" discriminator-value="RawDataAddedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.RawDataAddedEvent"/>
+            </subclass>
             <subclass abstract="false" discriminator-value="DataRemovedEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent"/>
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent">
+                <subclass abstract="false" discriminator-value="SingleCellDataRemovedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellDataRemovedEvent"/>
+                <subclass abstract="false" discriminator-value="RawDataRemovedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.RawDataRemovedEvent"/>
+            </subclass>
             <subclass abstract="false" discriminator-value="SampleRemovalReversionEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent"/>
             <subclass abstract="false" discriminator-value="MeanVarianceUpdateEvent"

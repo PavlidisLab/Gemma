@@ -1,8 +1,9 @@
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import javax.annotation.Nullable;
+import java.util.stream.Stream;
 
 public class CharacteristicUtils {
 
@@ -46,6 +47,20 @@ public class CharacteristicUtils {
     }
 
     /**
+     * Check if the given characteristic has a particular value.
+     */
+    public static boolean hasValue( Characteristic c, Value value ) {
+        return equals( c.getValue(), c.getValueUri(), value.getValue(), value.getValueUri() );
+    }
+
+    /**
+     * Check if the given characteristic has any of the specified values.
+     */
+    public static boolean hasAnyValue( Characteristic c, Value... values ) {
+        return Stream.of( values ).anyMatch( v -> hasValue( c, v ) );
+    }
+
+    /**
      * Check if the given characteristic is uncategorized.
      */
     public static boolean isUncategorized( Characteristic c ) {
@@ -73,7 +88,7 @@ public class CharacteristicUtils {
         if ( aUri != null ^ bUri != null ) {
             return false; // free-text v.s. ontology term, always false
         }
-        return aUri != null ? StringUtils.equalsIgnoreCase( aUri, bUri ) : StringUtils.equalsIgnoreCase( a, b );
+        return aUri != null ? Strings.CI.equals( aUri, bUri ) : Strings.CI.equals( a, b );
     }
 
     /**

@@ -50,11 +50,15 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
 
     /**
      * Indicate if the given property is using a subquery for filtering.
-     * <p>
-     * When this is the case, the filter will only check if at least one related entity is matching.
      * @throws IllegalArgumentException if the property does not exist
      */
-    boolean getFilterablePropertyIsUsingSubquery( String property ) throws IllegalArgumentException;
+    boolean isFilterablePropertyUsingSubquery( String property ) throws IllegalArgumentException;
+
+    /**
+     * Indicate if the given property is deprecated.
+     * @throws IllegalArgumentException if the property does not exist
+     */
+    boolean isFilterablePropertyDeprecated( String property ) throws IllegalArgumentException;
 
     /**
      * Obtain an {@link Filter} for the entity this DAO is providing.

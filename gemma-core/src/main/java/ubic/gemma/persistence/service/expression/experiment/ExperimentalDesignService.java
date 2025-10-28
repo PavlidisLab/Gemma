@@ -20,59 +20,18 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface ExperimentalDesignService extends BaseService<ExperimentalDesign> {
+public interface ExperimentalDesignService extends SecurableBaseService<ExperimentalDesign> {
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign find( ExperimentalDesign experimentalDesign );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign load( Long id );
-
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign loadWithExperimentalFactors( Long id );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    Collection<ExperimentalDesign> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( Collection<ExperimentalDesign> entities );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExperimentalDesign experimentalDesign );
-
-    /**
-     * Gets the expression experiment for the specified experimental design object
-     *
-     * @param experimentalDesign experimental design
-     * @return experiment the given design belongs to
-     */
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
-
-    /**
-     * Gets the expression experiment for the specified experimental design object
-     *
-     * @param experimentalDesignId experimental design ID
-     * @return experiment the given design belongs to
-     */
-    @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId );
 
     /**
      * Obtain a random experimental design that needs attention.

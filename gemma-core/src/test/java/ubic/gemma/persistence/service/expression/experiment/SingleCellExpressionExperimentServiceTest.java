@@ -172,12 +172,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( scd2.getCellIds() )
                     .isInstanceOf( UninitializedList.class )
                     .hasSize( 100 );
-            assertThat( scd2.getNumberOfCells() ).isEqualTo( 100 );
+            assertThat( scd2.getNumberOfCellIds() ).isEqualTo( 100 );
             assertThat( scd2.getBioAssays() ).containsExactlyElementsOf( scd.getBioAssays() );
-            assertThat( scd2.getNumberOfCellsBySample( 0 ) ).isEqualTo( 25 );
-            assertThat( scd2.getNumberOfCellsBySample( 1 ) ).isEqualTo( 25 );
-            assertThat( scd2.getNumberOfCellsBySample( 2 ) ).isEqualTo( 25 );
-            assertThat( scd2.getNumberOfCellsBySample( 3 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellIdsBySample( 0 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellIdsBySample( 1 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellIdsBySample( 2 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellIdsBySample( 3 ) ).isEqualTo( 25 );
             assertThat( scd2.getCellTypeAssignments() ).hasSize( 1 );
             assertThat( scd2.getCellLevelCharacteristics() ).isEmpty();
         };
@@ -733,8 +733,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     private SingleCellDimension createSingleCellDimension() {
         SingleCellDimension scd = new SingleCellDimension();
-        scd.setCellIds( IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.randomAlphanumeric( 10 ) ).collect( Collectors.toList() ) );
-        scd.setNumberOfCells( 100 );
+        scd.setCellIds( IntStream.range( 0, 100 ).mapToObj( i -> RandomStringUtils.insecure().nextAlphanumeric( 10 ) ).collect( Collectors.toList() ) );
+        scd.setNumberOfCellIds( 100 );
         int[] ct = new int[100];
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 50 ? 0 : 1;

@@ -113,7 +113,7 @@ public class OutlierDetectionServiceTest extends BaseTest {
     private DoubleMatrix<BioAssay, BioAssay> createMockMatrix() {
         DoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( OutlierDetectionServiceTest.MATRIX_SIZE, OutlierDetectionServiceTest.MATRIX_SIZE );
         for ( int i = 0; i < OutlierDetectionServiceTest.MATRIX_SIZE; i++ ) {
-            BioAssay sample = BioAssay.Factory.newInstance( RandomStringUtils.randomAlphabetic( 8 ) );
+            BioAssay sample = BioAssay.Factory.newInstance( RandomStringUtils.insecure().nextAlphabetic( 8 ) );
             sample.setId( i + 1L );
             matrix.setRowName( sample, i );
             matrix.setColumnName( sample, i );

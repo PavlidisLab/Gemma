@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -80,12 +81,86 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetFilterableProperties() {
         assertThat( expressionExperimentDao.getFilterableProperties() )
+                .contains( "allCharacteristics.value" )
+                .contains( "allCharacteristics.valueUri" )
+                .contains( "allCharacteristics.subject" )
+                .contains( "allCharacteristics.subjectUri" )
+                .contains( "allCharacteristics.predicate" )
+                .contains( "allCharacteristics.predicateUri" )
+                .contains( "allCharacteristics.object" )
+                .contains( "allCharacteristics.objectUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.value" )
                 .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.object" )
+                .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri" )
                 // those are hidden for now (see https://github.com/PavlidisLab/Gemma/pull/789)
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" ) )
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.object." ) )
-                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate" ) )
+                .noneMatch( s -> s.startsWith( "allCharacteristics.secondPredicate." ) )
+                .noneMatch( s -> s.startsWith( "characteristics.secondObject." ) )
+                .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondPredicate." ) )
                 .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject." ) );
+    }
+
+    @Test
+    public void testGetFilterWithStatementObject() {
+        Filter f;
+
+        f = expressionExperimentDao.getFilter( "allCharacteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.objectUri = http://purl.org/example" )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "allCharacteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "ac" );
+                        assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
+                    } );
+                } );
+
+        f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" );
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.experimentalDesign alias1 join alias1.experimentalFactors alias2 join alias2.factorValues alias3 join alias3.characteristics fvc where fvc.objectUri = http://purl.org/example" )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "experimentalDesign", "experimentalFactors", "factorValues", "characteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "fvc" );
+                        assertThat( sf.getPropertyName() ).isEqualTo( "objectUri" );
+                    } );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testFilterWithStatementSecondObject() {
+        // it is not possible to resolve filters on secondObject or secondPredicate, but those are valid filters if
+        // constructed explicitly
+        assertThatThrownBy( () -> expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri", Filter.Operator.eq, "http://purl.org/example" ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Unknown filterable property experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri in ubic.gemma.model.expression.experiment.ExpressionExperiment." );
+
+        // Filter provides a useful method for rewriting a filter for a different property
+        Filter f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri", Filter.Operator.eq, "http://purl.org/example" )
+                .withPropertyName( "secondObjectUri", null );
+
+        assertThat( f.getRequiredValue() )
+                .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
+                .hasToString( "select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.experimentalDesign alias1 join alias1.experimentalFactors alias2 join alias2.factorValues alias3 join alias3.characteristics fvc where fvc.secondObjectUri = http://purl.org/example" )
+                .satisfies( s -> {
+                    assertThat( s.getRootAlias() ).isEqualTo( "e" );
+                    assertThat( s.getAliases() ).extracting( Subquery.Alias::getPropertyName )
+                            .contains( "experimentalDesign", "experimentalFactors", "factorValues", "characteristics" );
+                    assertThat( s.getFilter() ).satisfies( sf -> {
+                        assertThat( sf.getObjectAlias() ).isEqualTo( "fvc" );
+                        assertThat( sf.getPropertyName() ).isEqualTo( "secondObjectUri" );
+                    } );
+                } );
+        assertThat( expressionExperimentDao.load( Filters.by( f ), null ) ).isEmpty();
     }
 
     @Test
@@ -132,6 +207,12 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawLiter( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
+    }
+
+    @Test
+    public void testLoadWithRefreshCacheMode() {
+        ee = createExpressionExperiment();
+        assertNotNull( expressionExperimentDao.load( ee.getId(), CacheMode.REFRESH ) );
     }
 
     @Test
@@ -206,14 +287,14 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetAnnotationUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null, false, false ) )
                 .containsEntry( c, 1L );
     }
 
     @Test
     @WithMockUser
     public void testGetAnnotationUsageFrequencyAsAnonymous() {
-        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null );
+        expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null, false, false );
     }
 
     @Test
@@ -221,7 +302,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyWithLargeBatch() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         List<Long> ees = LongStream.range( 0, 10000 ).boxed().collect( Collectors.toList() );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null, false, false ) )
                 .containsEntry( c, 1L );
     }
 
@@ -230,7 +311,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyRetainMentionedTerm() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", "bar" );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 2, null, null, null, Collections.singleton( "http://bar" ) ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 2, null, null, null, Collections.singleton( "http://bar" ), false, false ) )
                 .containsEntry( c, 1L ) // bypasses the minimum frequency requirement
                 .doesNotContainKey( c1 );
     }
@@ -240,7 +321,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyExcludingFreeTextTerms() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
-        Map<Characteristic, Long> cs = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null );
+        Map<Characteristic, Long> cs = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null, false, false );
         assertThat( cs )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 );
@@ -252,7 +333,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "foo", null, "bar", null );
         Characteristic c2 = createCharacteristic( null, null, "bar", null );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null, false, false ) )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .containsEntry( c2, 1L ); // uncategorized is not a free-text category
@@ -264,7 +345,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "bar", null, "bar", "http://bar" );
         Characteristic c2 = createCharacteristic( null, null, "bar", "http://bar" );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null, false, false ) )
                 .containsEntry( c, 1L )
                 .containsEntry( c1, 1L ) // free-text category is not uncategorized
                 .doesNotContainKey( c2 );
@@ -276,7 +357,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( null, null, "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
         Characteristic c2 = createCharacteristic( "foo", null, "bar", null );
-        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, ExpressionExperimentDao.UNCATEGORIZED, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, ExpressionExperimentDao.UNCATEGORIZED, null, null, null, false, false ) )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .doesNotContainKey( c2 );
@@ -287,7 +368,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
      */
     @Test
     public void testGetAnnotationUsageFrequencyWithIds() {
-        expressionExperimentDao.getAnnotationsUsageFrequency( Collections.singleton( 1L ), null, 10, 1, null, null, null, null );
+        expressionExperimentDao.getAnnotationsUsageFrequency( Collections.singleton( 1L ), null, 10, 1, null, null, null, null, false, false );
     }
 
     private Characteristic createCharacteristic( @Nullable String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {

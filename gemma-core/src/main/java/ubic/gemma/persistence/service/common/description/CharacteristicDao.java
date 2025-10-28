@@ -23,6 +23,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
@@ -76,28 +77,31 @@ public interface CharacteristicDao
      * Resulting EEs are filtered by ACLs.
      * <p>
      * The returned collection of EEs is effectively a {@link Set}, but since we cannot use since this should be
-     * interchangable with {@link #findExperimentReferencesByUris(Collection, Taxon, int, boolean)}.
+     * interchangable with {@link #findExperimentReferencesByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean)}.
      * <p>
      * Ranking results by level guarantees correctness if a limit is used as datasets matched by direct annotation will
      * be considered before those matched by factor values or biomaterials. It is however expensive.
      *
-     * @param uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
-     * @param taxon      taxon to restrict EEs to, or null to ignore
-     * @param limit      limit how many results to return. Set to -1 for no limit.
-     * @param rankByLevel rank results by level before limiting, has no effect if limit is -1
+     * @param uris              collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
+     * @param includeSubjects   lookup subjects (or values for regular characteristics)
+     * @param includePredicates lookup predicates (only applicable to {@link Statement}s)
+     * @param includeObjects    lookup objects (only applicable to {@link Statement}s)
+     * @param taxon             taxon to restrict EEs to, or null to ignore
+     * @param limit             limit how many results to return. Set to -1 for no limit.
+     * @param rankByLevel       rank results by level before limiting, has no effect if limit is -1
      * @return map of classes ({@link ExpressionExperiment}, {@link ubic.gemma.model.expression.experiment.FactorValue},
      * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to EEs which have an associated
      * characteristic using the given URI. The class lets us track where the annotation was.
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
-     * Similar to {@link #findExperimentsByUris(Collection, Taxon, int, boolean)}, but returns proxies with instead of
+     * Similar to {@link #findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean)}, but returns proxies with instead of
      * initializing all the EEs in bulk.
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
      * Find characteristics with the given URI.

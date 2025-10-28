@@ -55,7 +55,7 @@ public class GeneOntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseGo();
+        return settings.isUseGeneOntology();
     }
 
     @Override

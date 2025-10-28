@@ -37,11 +37,16 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.*;
+import ubic.basecode.ontology.model.AnnotationProperty;
+import ubic.basecode.ontology.model.OntologyProperty;
+import ubic.basecode.ontology.model.OntologyResource;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.basecode.ontology.simple.OntologyPropertySimple;
+import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.*;
@@ -732,7 +737,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
 
-                    if ( !term.getLabel().equals( ch.getValue() ) ) {
+                    if ( term.getLabel() != null && !term.getLabel().equals( ch.getValue() ) ) {
                         mismatchedTerms.put( ch.getValue(), term );
                         lastFixedLabel = ch.getValue();
                         ch.setValue( term.getLabel() );
@@ -757,7 +762,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             continue;
                         }
 
-                        if ( !term.getLabel().equals( statement.getObject() ) ) {
+                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getObject() ) ) {
                             lastFixedLabel = statement.getObject();
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
@@ -777,7 +782,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             continue;
                         }
 
-                        if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
+                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getSecondObject() ) ) {
                             lastFixedLabel = statement.getSecondObject();
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );

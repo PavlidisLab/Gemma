@@ -50,10 +50,10 @@ public class RandomExperimentalDesignUtils {
     public ExperimentalDesign randomExperimentalDesign( Collection<BioMaterial> samples, int numCategoricalFactors, int numContinuousFactors ) {
         ExperimentalDesign design = new ExperimentalDesign();
         for ( int i = 0; i < numCategoricalFactors; i++ ) {
-            randomCategoricalFactor( design, samples, RandomStringUtils.randomAlphanumeric( 12 ), random().nextInt( 5 ) + 2 );
+            randomCategoricalFactor( design, samples, RandomStringUtils.insecure().nextAlphanumeric( 12 ), random().nextInt( 5 ) + 2 );
         }
         for ( int i = 0; i < numContinuousFactors; i++ ) {
-            randomContinuousFactor( design, samples, RandomStringUtils.randomAlphanumeric( 12 ) );
+            randomContinuousFactor( design, samples, RandomStringUtils.insecure().nextAlphanumeric( 12 ) );
         }
         return design;
     }
@@ -79,7 +79,7 @@ public class RandomExperimentalDesignUtils {
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( name, FactorType.CATEGORICAL );
         List<FactorValue> fvs = new ArrayList<>( numValues );
         for ( int i = 0; i < numValues; i++ ) {
-            fvs.add( FactorValue.Factory.newInstance( factor, Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, RandomStringUtils.randomAlphanumeric( 12 ), null ) ) );
+            fvs.add( FactorValue.Factory.newInstance( factor, Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, RandomStringUtils.insecure().nextAlphanumeric( 12 ), null ) ) );
         }
         factor.getFactorValues().addAll( fvs );
         for ( BioMaterial sample : samples ) {

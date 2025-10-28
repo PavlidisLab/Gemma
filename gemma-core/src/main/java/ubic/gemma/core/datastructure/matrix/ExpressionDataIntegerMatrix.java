@@ -12,10 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Warning, not fully tested.
@@ -66,6 +63,11 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
     @Override
     public Integer[] getRow( int index ) {
         return this.matrix.getRow( index );
+    }
+
+    @Override
+    public ExpressionDataMatrix<Integer> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing multi-assay integer matrices is not supported." );
     }
 
     @Override

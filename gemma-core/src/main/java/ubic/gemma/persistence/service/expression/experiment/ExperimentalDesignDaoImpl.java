@@ -23,7 +23,6 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import javax.annotation.Nullable;
@@ -45,32 +44,6 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
         return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class )
                 .add( Restrictions.eq( "name", experimentalDesign.getName() ) )
                 .uniqueResult();
-    }
-
-    @Override
-    public ExperimentalDesign loadWithExperimentalFactors( Long id ) {
-        return ( ExperimentalDesign ) getSessionFactory().getCurrentSession().createQuery( "select ed from ExperimentalDesign ed "
-                        + "left join fetch ed.experimentalFactors "
-                        + "where ed.id = :id" )
-                .setParameter( "id", id )
-                .uniqueResult();
-    }
-
-    /**
-     * @see ExperimentalDesignDao#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed" )
-                .setParameter( "ed", experimentalDesign ).uniqueResult();
-    }
-
-    @Override
-    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ee FROM ExpressionExperiment as ee where ee.experimentalDesign.id = :edId" )
-                .setParameter( "edId", experimentalDesignId ).uniqueResult();
     }
 
     @Nullable

@@ -192,8 +192,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertNull( firstaa.getMergedInto() );
 
-        mergedAA = arrayDesignMergeService.merge( firstaa, taas, "testMerge" + RandomStringUtils.randomAlphabetic( 5 ),
-                "merged" + RandomStringUtils.randomAlphabetic( 5 ), false );
+        mergedAA = arrayDesignMergeService.merge( firstaa, taas, "testMerge" + RandomStringUtils.insecure().nextAlphabetic( 5 ),
+                "merged" + RandomStringUtils.insecure().nextAlphabetic( 5 ), false );
 
         assertEquals( 72, mergedAA.getCompositeSequences().size() );
 

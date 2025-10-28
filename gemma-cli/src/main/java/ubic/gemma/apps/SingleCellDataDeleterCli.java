@@ -14,8 +14,6 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 
 import javax.annotation.Nullable;
 
-import static ubic.gemma.cli.util.OptionsUtils.*;
-
 /**
  * @author poirigui
  */
@@ -23,7 +21,9 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     private static final String
             DELETE_CELL_TYPE_ASSIGNMENT = "deleteCta",
-            DELETE_CELL_LEVEL_CHARACTERISTICS = "deleteClc";
+            DELETE_ALL_CELL_TYPE_ASSIGNMENT = "deleteCtas",
+            DELETE_CELL_LEVEL_CHARACTERISTICS = "deleteClc",
+            DELETE_ALL_CELL_LEVEL_CHARACTERISTICS = "deleteClcs";
 
     @Autowired
     private DataDeleterService dataDeleterService;
@@ -36,7 +36,9 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     enum Mode {
         DELETE_ALL,
+        DELETE_ALL_CELL_TYPE_ASSIGNMENTS,
         DELETE_CELL_TYPE_ASSIGNMENT,
+        DELETE_ALL_CELL_LEVEL_CHARACTERISTICS,
         DELETE_CELL_LEVEL_CHARACTERISTICS
     }
 
@@ -44,7 +46,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     public SingleCellDataDeleterCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Nullable
@@ -56,23 +58,29 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Delete single cell data and any related data files";
+        return "Delete single-cell data and any related data files";
     }
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( DELETE_CELL_TYPE_ASSIGNMENT, "delete-cell-type-assignment", true, "Delete a cell type assignment." );
+        options.addOption( DELETE_ALL_CELL_TYPE_ASSIGNMENT, "delete-all-cell-type-assignments", false, "Delete all cell type assignments." );
         options.addOption( DELETE_CELL_LEVEL_CHARACTERISTICS, "delete-cell-level-characteristics", true, "Delete cell-level characteristics" );
+        options.addOption( DELETE_ALL_CELL_LEVEL_CHARACTERISTICS, "delete-all-cell-level-characteristics", false, "Delete all cell-level characteristics" );
     }
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        if ( hasOption( commandLine, DELETE_CELL_TYPE_ASSIGNMENT, requires( toBeUnset( DELETE_CELL_LEVEL_CHARACTERISTICS ) ) ) ) {
+        if ( commandLine.hasOption( DELETE_CELL_TYPE_ASSIGNMENT ) ) {
             mode = Mode.DELETE_CELL_TYPE_ASSIGNMENT;
             ctaIdentifier = commandLine.getOptionValue( DELETE_CELL_TYPE_ASSIGNMENT );
-        } else if ( hasOption( commandLine, DELETE_CELL_LEVEL_CHARACTERISTICS, requires( toBeUnset( DELETE_CELL_TYPE_ASSIGNMENT ) ) ) ) {
+        } else if ( commandLine.hasOption( DELETE_ALL_CELL_TYPE_ASSIGNMENT ) ) {
+            mode = Mode.DELETE_ALL_CELL_TYPE_ASSIGNMENTS;
+        } else if ( commandLine.hasOption( DELETE_CELL_LEVEL_CHARACTERISTICS ) ) {
             mode = Mode.DELETE_CELL_LEVEL_CHARACTERISTICS;
             clcIdentifier = commandLine.getOptionValue( DELETE_CELL_LEVEL_CHARACTERISTICS );
+        } else if ( commandLine.hasOption( DELETE_ALL_CELL_LEVEL_CHARACTERISTICS ) ) {
+            mode = Mode.DELETE_ALL_CELL_LEVEL_CHARACTERISTICS;
         } else {
             mode = Mode.DELETE_ALL;
         }
@@ -80,16 +88,26 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        long removed;
         switch ( mode ) {
             case DELETE_ALL:
                 dataDeleterService.deleteSingleCellData( ee, qt );
-                addSuccessObject( ee, qt, "Deleted single cell data." );
+                addSuccessObject( ee, qt, "Deleted single-cell data." );
+                break;
+            case DELETE_ALL_CELL_TYPE_ASSIGNMENTS:
+                ee = eeService.thawLite( ee );
+                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt );
+                addSuccessObject( ee, qt, "Deleted " + removed + " cell type assignments." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );
                 CellTypeAssignment cta = entityLocator.locateCellTypeAssignment( ee, qt, ctaIdentifier );
                 singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta );
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
+                break;
+            case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:
+                removed = singleCellExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt );
+                addSuccessObject( ee, qt, "Deleted " + removed + " cell-level characteristics." );
                 break;
             case DELETE_CELL_LEVEL_CHARACTERISTICS:
                 ee = eeService.thawLite( ee );

@@ -48,7 +48,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     public SingleCellDataWriterCli() {
         super( SingleCellExpressionDataVector.class );
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     enum MatrixFormat {
@@ -295,16 +295,14 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( useStreaming ) {
             log.info( "Single-cell data will be streamed by batch of " + fetchSize + " vectors." );
             long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
-            Stream<SingleCellExpressionDataVector> scVecs;
-            if ( assays != null ) {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, useCursorFetchIfSupported, true, config );
-            } else {
-                scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true, config );
+            try ( Stream<SingleCellExpressionDataVector> scVecs = assays != null ?
+                    singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, useCursorFetchIfSupported, true, config ) :
+                    singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize, useCursorFetchIfSupported, true, config ) ) {
+                vecs = scVecs
+                        .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, numberOfVectors ) )
+                        .map( createAggregator( aggregationMethod, cellLevelCharacteristics, aggregateUnknownCharacteristics ) )
+                        .collect( Collectors.toList() );
             }
-            vecs = scVecs
-                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, numberOfVectors ) )
-                    .map( createAggregator( aggregationMethod, cellLevelCharacteristics, aggregateUnknownCharacteristics ) )
-                    .collect( Collectors.toList() );
         } else {
             log.info( "Single-cell data will be loaded into memory. This process can use a lot of memory, press Ctrl-C at any time to interrupt." );
             Collection<SingleCellExpressionDataVector> scVecs;

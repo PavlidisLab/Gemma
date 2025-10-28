@@ -1,6 +1,5 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import ubic.gemma.core.datastructure.MatrixMask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -151,6 +150,11 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
     @Override
     public int[] getRowIndices( CompositeSequence designElement ) {
         return matrix.getRowIndices( designElement );
+    }
+
+    @Override
+    public ExpressionDataMatrix<T> sliceRows( List<CompositeSequence> designElements ) {
+        throw new UnsupportedOperationException( "Slicing masked matrices is not supported." );
     }
 
     @Override

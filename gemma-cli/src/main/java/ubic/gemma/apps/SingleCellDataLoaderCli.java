@@ -10,6 +10,8 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.util.concurrent.Executors;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -27,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
 import static ubic.gemma.cli.util.OptionsUtils.*;
@@ -46,11 +49,13 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             QT_NEW_NAME_OPTION = "qtNewName",
             QT_NEW_TYPE_OPTION = "qtNewType",
             QT_NEW_SCALE_TYPE_OPTION = "qtNewScaleType",
+            QT_RECOMPUTED_FROM_RAW_DATA_OPTION = "qtRecomputedFromRawData",
             PREFERRED_QT_OPTION = "preferredQt",
             PREFER_SINGLE_PRECISION = "preferSinglePrecision",
             REPLACE_OPTION = "replace",
             RENAMING_FILE_OPTION = "renamingFile",
-            IGNORE_SAMPLES_LACKING_DATA_OPTION = "ignoreSamplesLackingData";
+            IGNORE_SAMPLES_LACKING_DATA_OPTION = "ignoreSamplesLackingData",
+            TRANSFORM_THREADS_OPTION = "transformThreads";
 
     private static final String
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
@@ -84,10 +89,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
-            MEX_DISCARD_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "DiscardEmptyCells",
-            MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
             MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols",
-            MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision";
+            MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision",
+            MEX_10X_FILTER_OPTION = MEX_OPTION_PREFIX + "10xFilter",
+            MEX_NO_10X_FILTER_OPTION = MEX_OPTION_PREFIX + "No10xFilter",
+            MEX_10X_CHEMISTRY_OPTION = MEX_OPTION_PREFIX + "Chemistry";
 
     @Autowired
     private SingleCellDataLoaderService singleCellDataLoaderService;
@@ -122,6 +128,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private StandardQuantitationType newType;
     @Nullable
     private ScaleType newScaleType;
+    private boolean recomputedFromRawData;
     private boolean preferSinglePrecision;
     private boolean preferredQt;
     private boolean replaceQt;
@@ -148,6 +155,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean ignoreUnmatchedCellIds;
     @Nullable
     private Path renamingFile;
+    @Nullable
+    private Integer transformThreads;
 
     // sequencing metadata
     @Nullable
@@ -171,15 +180,20 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Boolean annDataUseRawX;
 
     // MEX
-    @Nullable
-    private Boolean mexDiscardEmptyCells;
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
     private boolean mexUseDoublePrecision;
+    @Nullable
+    private Boolean mex10xFilter;
+    @Nullable
+    private String mex10xChemistry;
 
     // options for streaming vectors when writing data to disk
     private boolean useStreaming;
     private int fetchSize;
     private boolean useCursorFetchIfSupported;
+
+    @Nullable
+    private ExecutorService transformExecutor;
 
     @Nullable
     @Override
@@ -205,49 +219,51 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .hasArg()
                 .type( Path.class )
                 .desc( "Load single-cell data from the given path instead of looking up the download directory. For AnnData and Seurat Disk, it is a file. For MEX it is a directory. Requires the " + formatOption( options, DATA_TYPE_OPTION ) + " option to be set." )
-                .build() );
+                .get() );
         addGenericPlatformOption( options, PLATFORM_OPTION, "platform", "Target platform (must already exist in the system)" );
         options.addOption( QT_NAME_OPTION, "quantitation-type-name", true, "Quantitation type to import (optional, use if more than one is present in data)" );
         options.addOption( QT_NEW_NAME_OPTION, "quantitation-type-new-name", true, "New name to use for the imported quantitation type (optional, defaults to the data)" );
         addEnumOption( options, QT_NEW_TYPE_OPTION, "quantitation-type-new-type", "New type to use for the imported quantitation type (optional, defaults to the data)", StandardQuantitationType.class );
         addEnumOption( options, QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", "New scale type to use for the imported quantitation type (optional, defaults to the data)", ScaleType.class );
+        options.addOption( QT_RECOMPUTED_FROM_RAW_DATA_OPTION, "quantitation-type-recomputed-from-raw-data", false, "Mark the loaded QT as recomputed from raw data." );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
         options.addOption( IGNORE_SAMPLES_LACKING_DATA_OPTION, "ignore-samples-lacking-data", false, "Ignore samples that lack data. Those samples will not be included in the single-cell dimension." );
+        options.addOption( Option.builder( TRANSFORM_THREADS_OPTION ).longOpt( "transform-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for transforming single-cell data (e.g. filtering low quality cells)." ).get() );
 
         // for all loaders
         options.addOption( Option.builder( RENAMING_FILE_OPTION )
                 .longOpt( "renaming-file" )
                 .hasArg().type( Path.class )
                 .desc( "File containing sample a renaming scheme. The format is a two-column TSV with the first column containing author-provided sample names and the second column suitable assay identifiers (i.e. name, GEO accessions)." )
-                .build() );
+                .get() );
 
         // for the generic metadata loader
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_FILE_OPTION )
                 .longOpt( "cell-type-assignment-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a cell type assignment file. If missing, cell type importing will be delegated to the loader implementation." )
-                .build() );
+                .get() );
         options.addOption( CELL_TYPE_ASSIGNMENT_NAME_OPTION, "cell-type-assignment-name", true, "Name to use for the cell type assignment. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( CELL_TYPE_ASSIGNMENT_DESCRIPTION_OPTION, "cell-type-assignment-description", true, "Description to use for the cell type assignment. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION )
                 .longOpt( "cell-type-assignment-protocol" ).hasArg()
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PROTOCOL ) ) )
                 .desc( "An identifier for a protocol describing the cell type assignment. This require the " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option to be set." )
-                .build() );
+                .get() );
         options.addOption( REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, "replace-cell-type-assignment", false, String.format( "Replace an existing cell type assignment with the same name. The %s and %s options must be set.", formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ), formatOption( options, CELL_TYPE_ASSIGNMENT_NAME_OPTION ) ) );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing additional cell-level characteristics to import." )
-                .build() );
+                .get() );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ).longOpt( "cell-level-characteristics-name" )
                 .hasArgs()
                 .valueSeparator( ',' )
                 .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
-                .build() );
+                .get() );
         options.addOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics", false,
                 String.format( "Replace existing cell-level characteristics with the same names. The %s and %s options must be set.", formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) );
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
@@ -257,7 +273,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .longOpt( "sequencing-read-length" )
                 .hasArg().type( Integer.class )
                 .desc( "Read length to use for the imported sequencing metadata." )
-                .build() );
+                .get() );
         OptionsUtils.addAutoOption( options,
                 SEQUENCING_IS_PAIRED_OPTION, "sequencing-is-paired",
                 "Indicate that the sequencing data is paired.",
@@ -267,7 +283,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .longOpt( "sequencing-metadata-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing sequencing metadata to import. These values will override defaults set by " + formatOption( options, SEQUENCING_READ_LENGTH_OPTION ) + " and " + formatOption( options, SEQUENCING_IS_PAIRED_OPTION ) + "." )
-                .build() );
+                .get() );
 
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
@@ -282,15 +298,34 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 ANNDATA_NO_TRANSPOSE_OPTION, "anndata-no-transpose", "Do not transpose the data matrix." );
 
         // for MEX
-        OptionsUtils.addAutoOption( options,
-                MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", "Discard empty cells when loading MEX data.",
-                MEX_KEEP_EMPTY_CELLS_OPTION, "mex-keep-empty-cells", "Keep empty cells when loading MEX data." );
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
         options.addOption( MEX_USE_DOUBLE_PRECISION_OPTION, "mex-use-double-precision", false, "Use double precision (i.e. double and long) for storing vectors" );
+        OptionsUtils.addAutoOption( options,
+                MEX_10X_FILTER_OPTION, "mex-10x-filter", "Apply the 10x MEX filter.",
+                MEX_NO_10X_FILTER_OPTION, "mex-no-10x-filter", "Do not apply the 10x MEX filter." );
+        options.addOption( MEX_10X_CHEMISTRY_OPTION, "mex-10x-chemistry", true, "10x chemistry to use for filtering data." );
 
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead of streaming for retrieving and writing vectors." );
-        options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with " + formatOption( options, "noStreaming" ) + "." ).build() );
+        options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with " + formatOption( options, "noStreaming" ) + "." ).get() );
         options.addOption( "noCursorFetch", "no-cursor-fetch", false, "Disable cursor fetching on the database server and produce results immediately. This is incompatible with " + formatOption( options, "noStreaming" ) + "." );
+    }
+
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
+        if ( transformThreads != null ) {
+            log.info( "Using " + transformThreads + " for transforming single-cell data." );
+            transformExecutor = Executors.newFixedThreadPool( transformThreads, new SimpleThreadFactory( "gemma-single-cell-transform-thread-" ) );
+        } else {
+            transformExecutor = null;
+        }
+        try {
+            super.doAuthenticatedWork();
+        } finally {
+            if ( transformExecutor != null ) {
+                transformExecutor.shutdown();
+                transformExecutor = null;
+            }
+        }
     }
 
     @Override
@@ -329,11 +364,13 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else {
             newScaleType = null;
         }
+        recomputedFromRawData = commandLine.hasOption( QT_RECOMPUTED_FROM_RAW_DATA_OPTION );
         preferSinglePrecision = commandLine.hasOption( PREFER_SINGLE_PRECISION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
         renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
         ignoreSamplesLackingData = commandLine.hasOption( IGNORE_SAMPLES_LACKING_DATA_OPTION );
+        transformThreads = commandLine.getParsedOptionValue( TRANSFORM_THREADS_OPTION );
 
         // CTAs
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
@@ -362,7 +399,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         // sequencing metadata
         sequencingMetadataFile = commandLine.getParsedOptionValue( SEQUENCING_METADATA_FILE_OPTION );
         sequencingReadLength = commandLine.getParsedOptionValue( SEQUENCING_READ_LENGTH_OPTION );
-        sequencingIsPaired = OptionsUtils.getAutoOptionValue( commandLine, SEQUENCING_IS_PAIRED_OPTION, SEQUENCING_IS_SINGLE_END_OPTION );
+        sequencingIsPaired = getAutoOptionValue( commandLine, SEQUENCING_IS_PAIRED_OPTION, SEQUENCING_IS_SINGLE_END_OPTION );
 
         // data-type specific options
         rejectInvalidOptionsForDataType( commandLine, dataType );
@@ -378,9 +415,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
         } else if ( dataType == SingleCellDataType.MEX ) {
-            mexDiscardEmptyCells = getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
             mexUseDoublePrecision = commandLine.hasOption( MEX_USE_DOUBLE_PRECISION_OPTION );
+            mex10xFilter = getAutoOptionValue( commandLine, MEX_10X_FILTER_OPTION, MEX_NO_10X_FILTER_OPTION );
+            mex10xChemistry = commandLine.getOptionValue( MEX_10X_CHEMISTRY_OPTION );
         }
 
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {
@@ -474,6 +512,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     log.info( "Adding a non-preferred QT, no need to generate MEX files." );
                 }
                 addSuccessObject( ee, "Loaded vectors for " + qt );
+                try {
+                    refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+                } catch ( Exception e ) {
+                    addWarningObject( ee, "Failed to refresh dataset from Gemma Web", e );
+                }
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown operation mode " + mode );
@@ -496,7 +539,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         return platform;
     }
 
-    @SuppressWarnings("DataFlowIssue") // nullable interferes with Lombok's generated builder methods
     private SingleCellDataLoaderConfig getConfigForDataType( @Nullable SingleCellDataType dataType ) {
         SingleCellDataLoaderConfig.SingleCellDataLoaderConfigBuilder<?, ?> configBuilder;
         if ( dataType == SingleCellDataType.ANNDATA ) {
@@ -509,8 +551,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .useRawX( annDataUseRawX );
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
-                    .discardEmptyCells( mexDiscardEmptyCells )
                     .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols )
+                    .apply10xFilter( mex10xFilter )
+                    .use10xChemistry( mex10xChemistry )
                     .useDoublePrecision( mexUseDoublePrecision );
         } else {
             configBuilder = SingleCellDataLoaderConfig.builder();
@@ -528,8 +571,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )
                 .quantitationTypeNewScaleType( newScaleType )
+                .markQuantitationTypeAsRecomputedFromRawData( recomputedFromRawData )
                 .preferSinglePrecision( preferSinglePrecision )
-                .markQuantitationTypeAsPreferred( preferredQt );
+                .markQuantitationTypeAsPreferred( preferredQt )
+                .transformExecutor( transformExecutor );
         if ( renamingFile != null ) {
             configBuilder.renamingFile( renamingFile );
         }

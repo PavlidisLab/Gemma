@@ -1,9 +1,9 @@
 package ubic.gemma.core.util.test;
 
 import org.apache.commons.io.FileUtils;
+import ubic.gemma.core.util.runtime.ExtendedRuntime;
 
 import javax.net.ssl.SSLException;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
@@ -52,29 +52,8 @@ public class Assumptions {
     }
 
     private static long getSystemFreeMemory() {
-        try ( BufferedReader br = Files.newBufferedReader( Paths.get( "/proc/meminfo" ) ) ) {
-            return br
-                    .lines()
-                    .filter( l -> l.startsWith( "MemAvailable:" ) )
-                    .map( l -> {
-                        String[] pieces = l.split( "\\s+" );
-                        long m = Long.parseLong( pieces[1] );
-                        String unit = pieces[2];
-                        switch ( unit.charAt( 0 ) ) {
-                            case 'B':
-                                return m;
-                            case 'k':
-                                assert unit.charAt( 1 ) == 'B';
-                                return 1000 * m;
-                            case 'm':
-                                assert unit.charAt( 1 ) == 'B';
-                                return 1000000 * m;
-                            default:
-                                throw new RuntimeException();
-                        }
-                    } )
-                    .findFirst()
-                    .orElse( 0L );
+        try {
+            return ExtendedRuntime.getRuntime().getMemInfo().getAvailableMemory();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

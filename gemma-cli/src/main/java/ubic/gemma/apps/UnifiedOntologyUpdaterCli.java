@@ -195,7 +195,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
 
     private void verifyTdbDataset( Path newDir ) {
         log.info( "Verifying TDB dataset at " + newDir + "..." );
-        try ( TdbOntologyService os = new TdbOntologyService( "Test", newDir, null, true, null ) ) {
+        try ( TdbOntologyService os = new TdbOntologyService( "Test", newDir, null, true, null, true ) ) {
             os.initialize( false, false );
         } catch ( Exception e ) {
             throw new RuntimeException( e );

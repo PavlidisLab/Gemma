@@ -60,9 +60,9 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     /**
-     * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int, boolean)
+     * @see CharacteristicDao#findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
      * Find characteristics that have a particular parent class or lack thereof.

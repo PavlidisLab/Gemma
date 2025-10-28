@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.sparse.CompRowMatrixUtils;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
@@ -38,6 +39,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ubic.gemma.core.loader.util.MatrixMarketUtils.getNonEmptyColumns;
+import static ubic.gemma.core.loader.util.MatrixMarketUtils.readMatrixMarketFromPath;
+
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
  *
@@ -62,11 +66,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
-     * Discard empty cells.
-     */
-    private boolean discardEmptyCells;
-
-    /**
      * Allow mapping probe to gene symbols.
      * <p>
      * This is used as fallback if the gene ID cannot be found in the supplied platform. If this is set to true, the
@@ -79,6 +78,13 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * integers.
      */
     private boolean useDoublePrecision = false;
+
+    /**
+     * Discard empty cells by removing columns from MTX file that have no gene-associated counts.
+     * <p>
+     * This can be disabled for faster loading.
+     */
+    private boolean discardEmptyCells = true;
 
     public MexSingleCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
         Assert.isTrue( sampleNames.size() == barcodeFiles.size()
@@ -112,12 +118,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds;
-                if ( discardEmptyCells ) {
-                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyCellColumns( matrixFiles.get( i ) ) );
-                } else {
-                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
-                }
+                List<String> sampleCellIds = discardEmptyCells ?
+                        readLinesFromPath( barcodeFiles.get( i ), getNonEmptyColumns( matrixFiles.get( i ) ) ) :
+                        readLinesFromPath( barcodeFiles.get( i ) );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }
@@ -142,7 +145,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
         scd.setCellIds( cellIds );
-        scd.setNumberOfCells( cellIds.size() );
+        scd.setNumberOfCellIds( cellIds.size() );
         scd.setBioAssays( bas );
         scd.setBioAssaysOffset( basO );
         return scd;
@@ -237,7 +240,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 MatrixSize size = reader.readMatrixSize( matrixInfo );
-                size.numEntries();
                 int[] row = new int[size.numEntries()];
                 int[] column = new int[size.numEntries()];
                 int[] data = new int[size.numEntries()];
@@ -350,39 +352,19 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
-            int[] nonEmptyCellIndices;
             if ( discardEmptyCells ) {
-                nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
-                int numEmptyCells = matrix.numColumns() - nonEmptyCellIndices.length;
-                if ( numEmptyCells > 0 ) {
-                    // rewrite the column indices to account for discarded empty cells
-                    int[][] nz = new int[matrix.numRows()][];
-                    double[][] nzData = new double[matrix.numRows()][];
-                    for ( int i = 0; i < matrix.numRows(); i++ ) {
-                        nz[i] = new int[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
-                        nzData[i] = new double[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
-                        for ( int w = 0; w < nz[i].length; w++ ) {
-                            int oldColumn = matrix.getColumnIndices()[matrix.getRowPointers()[i] + w];
-                            int newColumn = Arrays.binarySearch( nonEmptyCellIndices, oldColumn );
-                            assert newColumn >= 0;
-                            nz[i][w] = newColumn;
-                            nzData[i][w] = matrix.get( i, oldColumn );
-                        }
-                    }
-                    CompRowMatrix newMatrix = new CompRowMatrix( matrix.numRows(), nonEmptyCellIndices.length, nz );
-                    for ( int i = 0; i < nz.length; i++ ) {
-                        for ( int w = 0; w < nz[i].length; w++ ) {
-                            newMatrix.set( i, nz[i][w], nzData[i][w] );
-                        }
-                    }
-                    matrix = newMatrix;
+                int[] nonEmptyCellIndices = getNonEmptyColumns( matrixFile );
+                if ( nonEmptyCellIndices.length < matrix.numColumns() ) {
+                    matrix = CompRowMatrixUtils.selectColumns( matrix, nonEmptyCellIndices );
                     log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
+                } else {
+                    log.info( "All cells have data in " + sampleName + ", no empty cells to discard." );
                 }
             }
 
-            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),
+            Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellIdsBySample( j ),
                     String.format( "Matrix file %s does not have the expected number of columns: %d, found %d.",
-                            matrixFile, scd.getNumberOfCellsBySample( j ), matrix.numColumns() ) );
+                            matrixFile, scd.getNumberOfCellIdsBySample( j ), matrix.numColumns() ) );
             Assert.isTrue( matrix.numRows() == elements.size(),
                     String.format( "Matrix file %s does not have the expected number of rows: %d, found %d.",
                             matrixFile, elements.size(), matrix.numRows() ) );
@@ -461,14 +443,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     }
 
-    private MatrixVectorReader readMatrixMarketFromPath( Path path ) throws IOException {
-        if ( path.toString().endsWith( ".gz" ) ) {
-            return new MatrixVectorReader( new InputStreamReader( FileUtils.openCompressedFile( path ) ) );
-        } else {
-            return new MatrixVectorReader( Files.newBufferedReader( path ) );
-        }
-    }
-
     private List<String> readLinesFromPath( Path path, int[] linesToKeep ) throws IOException {
         List<String> lines = readLinesFromPath( path );
         return Arrays.stream( linesToKeep )
@@ -483,26 +457,6 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         } else {
             return Files.readAllLines( path );
-        }
-    }
-
-    /**
-     * Obtain the position of empty cells for a given matrix.
-     */
-    private int[] getNonEmptyCellColumns( Path path ) throws IOException {
-        try ( MatrixVectorReader reader = readMatrixMarketFromPath( path ) ) {
-            MatrixInfo matrixInfo = reader.readMatrixInfo();
-            MatrixSize size = reader.readMatrixSize( matrixInfo );
-            int[] rows = new int[size.numEntries()];
-            int[] columns = new int[size.numEntries()];
-            double[] data = new double[size.numEntries()];
-            reader.readCoordinate( rows, columns, data );
-            return Arrays.stream( columns )
-                    // mtx is 1-based
-                    .map( c -> c - 1 )
-                    .sorted()
-                    .distinct()
-                    .toArray();
         }
     }
 

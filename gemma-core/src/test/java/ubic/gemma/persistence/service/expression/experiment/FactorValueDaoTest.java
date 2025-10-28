@@ -1,11 +1,16 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import gemma.gsec.acl.domain.AclObjectIdentity;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.acls.model.MutableAclService;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
@@ -25,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class FactorValueDaoTest extends BaseDatabaseTest {
 
     @Configuration
@@ -39,6 +45,9 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private FactorValueDao factorValueDao;
+
+    @Autowired
+    private MutableAclService aclService;
 
     @Test
     public void testFind() {
@@ -77,6 +86,30 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         fv = FactorValue.Factory.newInstance( factor );
         fv.setValue( "1.0" );
         assertEquals( fv2, factorValueDao.find( fv ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindByValueStartingWith() {
+        ExperimentalDesign ed = new ExperimentalDesign();
+        sessionFactory.getCurrentSession().persist( ed );
+
+        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( "test", FactorType.CATEGORICAL );
+        factor.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( factor );
+
+        FactorValue fv2 = FactorValue.Factory.newInstance( factor );
+        fv2.setValue( "foo" );
+        fv2 = factorValueDao.create( fv2 );
+
+        // for ACLs to work, we need an owning EE with an ACL identity
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ee ) );
+        sessionFactory.getCurrentSession().flush();
+
+        assertTrue( factorValueDao.findByValueStartingWith( "fo", -1 ).contains( fv2 ) );
     }
 
     @Test

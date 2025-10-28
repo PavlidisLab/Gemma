@@ -103,6 +103,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
         }
 
         @Bean
+        public ExpressionExperimentFilterRewriteHelperService expressionExperimentFilterInferenceHelperService() {
+            return mock( ExpressionExperimentFilterRewriteHelperService.class );
+        }
+
+        @Bean
         public ExpressionExperimentSubSetService expressionExperimentSubSetService() {
             return mock( ExpressionExperimentSubSetService.class );
         }

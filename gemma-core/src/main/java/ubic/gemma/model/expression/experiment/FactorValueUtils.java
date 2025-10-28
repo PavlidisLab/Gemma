@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.annotation.Nullable;
@@ -53,10 +54,14 @@ public class FactorValueUtils {
     }
 
     public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
+        return getSummaryString( fv, fv.getExperimentalFactor() != null ? fv.getExperimentalFactor().getCategory() : null, statementDelimiter );
+    }
+
+    public static String getSummaryString( FactorValue fv, @Nullable Characteristic category, String statementDelimiter ) {
         StringBuilder buf = new StringBuilder();
         if ( fv.getMeasurement() != null ) {
-            if ( fv.getExperimentalFactor() != null && fv.getExperimentalFactor().getCategory() != null ) {
-                buf.append( defaultIfBlank( fv.getExperimentalFactor().getCategory().getCategory(), "?" ) )
+            if ( category != null && category.getCategory() != null ) {
+                buf.append( defaultIfBlank( category.getCategory(), "?" ) )
                         .append( ": " );
             }
             Measurement measurement = fv.getMeasurement();

@@ -47,7 +47,6 @@ import java.util.*;
 public class PubMedXMLParser {
 
     protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
-    private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
     private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
     private static final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
     private static final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
@@ -67,7 +66,7 @@ public class PubMedXMLParser {
 
     private static Collection<BibliographicReference> extractBibRefs( Document document ) {
         ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
-        exDb.setName( PubMedXMLParser.PUB_MED_EXTERNAL_DB_NAME );
+        exDb.setName( ExternalDatabases.PUBMED );
 
         NodeList articles = document.getElementsByTagName( "MedlineCitation" );
 

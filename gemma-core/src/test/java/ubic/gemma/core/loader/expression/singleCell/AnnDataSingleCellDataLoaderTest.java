@@ -55,7 +55,7 @@ public class AnnDataSingleCellDataLoaderTest {
                             "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
                             "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
                             "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
-            assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
+            assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 1000 );
 
             assertThat( loader.getGenes() )
                     .hasSize( 1000 )
@@ -216,7 +216,7 @@ public class AnnDataSingleCellDataLoaderTest {
                             "TCAGGGCAGGTCACCC_3",
                             "TCGTAGAGTGGGCTCT_3",
                             "ATCGCCTCATCAGTGT_3" );
-            assertThat( dimension.getNumberOfCells() ).isEqualTo( 81 );
+            assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 81 );
 
             assertThat( loader.getGenes() )
                     .hasSize( 1000 )
@@ -409,7 +409,7 @@ public class AnnDataSingleCellDataLoaderTest {
                             "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
                             "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
                             "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
-            assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
+            assertThat( dimension.getNumberOfCellIds() ).isEqualTo( 1000 );
 
             //  reverse the BAs
             ArrayList<BioAssay> reversedBas = new ArrayList<>( dimension.getBioAssays() );
@@ -563,7 +563,7 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( loader.getSampleNames() ).containsExactlyInAnyOrder( "0", "1", "2", "3" );
             SingleCellDimension dim = loader.getSingleCellDimension( bioAssays );
             assertThat( dim.getBioAssays() ).hasSize( 4 );
-            assertThat( dim.getNumberOfCells() ).isEqualTo( 100 );
+            assertThat( dim.getNumberOfCellIds() ).isEqualTo( 100 );
             Collection<QuantitationType> qts = loader.getQuantitationTypes();
             assertThat( qts ).singleElement()
                     .satisfies( qt -> {

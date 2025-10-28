@@ -21,7 +21,6 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -29,8 +28,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
-import javax.annotation.Nullable;
 import java.io.*;
+import java.util.Collection;
 
 /**
  * Delete design elements (probes) that are invalid for one reason or another. The impetus for this was to remove probes
@@ -47,8 +46,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     private String file;
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
                 .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
                 .build();
@@ -58,8 +56,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) {
         if ( commandLine.hasOption( 'f' ) ) {
             file = commandLine.getOptionValue( 'f' );
         }
@@ -70,25 +67,19 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         return "deletePlatformElements";
     }
 
-    @Nullable
     @Override
-    public String getShortDesc() {
-        return null;
-    }
-
-    @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         File f = new File( file );
         if ( !f.canRead() ) {
             throw new RuntimeException( "Cannot read from " + file );
         }
 
-        if ( this.getArrayDesignsToProcess().size() > 1 ) {
+        if ( arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one platform given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
+        ArrayDesign arrayDesign = arrayDesignsToProcess.iterator().next();
         try ( InputStream is = new FileInputStream( f );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
@@ -113,6 +104,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
                 }
             }
             log.info( String.format( "Deleted %d probes and %d corresponding data vectors.", removedProbes, removedVectors ) );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 }

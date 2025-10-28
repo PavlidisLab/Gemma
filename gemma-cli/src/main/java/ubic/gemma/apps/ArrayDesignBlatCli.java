@@ -68,8 +68,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
 
         Option blatResultOption = Option.builder( "b" ).hasArg().argName( "PSL file" ).desc(
                         "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
@@ -96,8 +95,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
 
         if ( commandLine.hasOption( "sensitive" ) ) {
             this.sensitive = true;
@@ -122,23 +120,23 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
+        if ( !arrayDesignsToProcess.isEmpty() ) {
 
-            if ( this.blatResultFile != null && this.getArrayDesignsToProcess().size() > 1 ) {
+            if ( this.blatResultFile != null && arrayDesignsToProcess.size() > 1 ) {
                 throw new IllegalArgumentException(
                         "Cannot provide a blat result file when multiple arrays are being analyzed" );
             }
 
-            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                     log.warn( arrayDesign + " does not meet criteria to be processed" );
                     return;
                 }
 
-                arrayDesign = getArrayDesignService().thaw( arrayDesign );
+                arrayDesign = arrayDesignService.thaw( arrayDesign );
                 log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
                 Collection<BlatResult> persistedResults;
                 try {
@@ -171,7 +169,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         } else if ( taxon != null ) {
 
-            Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().findByTaxon( taxon );
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
             log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
                     + allArrayDesigns.size() + " items]" );
 
@@ -185,7 +183,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceAnalysisEvent.class, note );
     }
 
@@ -209,7 +207,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return parser.getResults();
     }
 
-    private void processArrayDesign( ArrayDesign design ) {
+    @Override
+    protected void processArrayDesign( ArrayDesign design ) {
 
         log.info( "============== Start processing: " + design.getShortName() + " ==================" );
         try {
@@ -239,7 +238,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         for ( ArrayDesign ad : toUpdate ) {
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)" );
-            getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
+            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
 
@@ -261,7 +260,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                 return;
             }
-            arrayDesign = getArrayDesignService().thaw( arrayDesign );
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
             ArrayDesignBlatCli.this.processArrayDesign( arrayDesign );
             addSuccessObject( arrayDesign );
         }

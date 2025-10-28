@@ -37,6 +37,7 @@ public class EutilFetchTest {
     private static final String ncbiApiKey = Settings.getString( "ncbi.efetch.apikey" );
 
     @Test
+    @Category(SlowTest.class)
     public void testFetch() throws Exception {
         assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Document result = EutilFetch.summary( "gds", "GSE4595", 2, ncbiApiKey );

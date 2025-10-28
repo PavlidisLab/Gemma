@@ -26,7 +26,7 @@ public class SingleCellSlicerUtilsTest {
                 .allSatisfy( vec -> {
                     assertThat( vec.getExpressionExperiment() ).isNotNull();
                     assertThat( vec.getSingleCellDimension().getCellIds() ).hasSize( 2000 );
-                    assertThat( vec.getSingleCellDimension().getNumberOfCells() ).isEqualTo( 2000 );
+                    assertThat( vec.getSingleCellDimension().getNumberOfCellIds() ).isEqualTo( 2000 );
                     assertThat( vec.getSingleCellDimension().getBioAssays() ).containsExactlyElementsOf( assays );
                     assertThat( vec.getDataAsDoubles() ).hasSize( 200 );
                     assertThat( vec.getDataIndices() )
@@ -42,7 +42,7 @@ public class SingleCellSlicerUtilsTest {
         RandomSingleCellDataUtils.setSeed( 123L );
         List<SingleCellExpressionDataVector> vecs = RandomSingleCellDataUtils.randomSingleCellVectors();
         SingleCellDimension dimension = vecs.iterator().next().getSingleCellDimension();
-        dimension.setCellIds( new UninitializedList<>( dimension.getNumberOfCells() ) );
+        dimension.setCellIds( new UninitializedList<>( dimension.getNumberOfCellIds() ) );
         dimension.setCellTypeAssignments( new UninitializedSet<>() );
         dimension.setCellLevelCharacteristics( new UninitializedSet<>() );
         List<BioAssay> assays = Arrays.asList( dimension.getBioAssays().get( 1 ),
@@ -58,7 +58,7 @@ public class SingleCellSlicerUtilsTest {
                             .isInstanceOf( UninitializedSet.class );
                     assertThat( vec.getSingleCellDimension().getCellLevelCharacteristics() )
                             .isInstanceOf( UninitializedSet.class );
-                    assertThat( vec.getSingleCellDimension().getNumberOfCells() ).isEqualTo( 2000 );
+                    assertThat( vec.getSingleCellDimension().getNumberOfCellIds() ).isEqualTo( 2000 );
                     assertThat( vec.getSingleCellDimension().getBioAssays() ).containsExactlyElementsOf( assays );
                     assertThat( vec.getDataAsDoubles() ).hasSize( 200 );
                     assertThat( vec.getDataIndices() )

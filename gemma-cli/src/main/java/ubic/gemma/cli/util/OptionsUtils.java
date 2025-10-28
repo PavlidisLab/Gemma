@@ -132,7 +132,7 @@ public class OptionsUtils {
         if ( commandLine.hasOption( optionName ) ) {
             return true;
         } else if ( commandLine.hasOption( noOptionName ) ) {
-            return true;
+            return false;
         } else {
             return null;
         }

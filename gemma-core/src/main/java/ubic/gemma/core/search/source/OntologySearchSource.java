@@ -67,7 +67,7 @@ public class OntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseCharacteristics();
+        return settings.isUseOntology();
     }
 
     /**
@@ -305,7 +305,7 @@ public class OntologySearchSource implements SearchSource {
         // ranking results by level is costly
         boolean rankByLevel = settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
 
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxonConstraint(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, true, true, true, settings.getTaxonConstraint(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         // collect all direct tags
         if ( hits.containsKey( ExpressionExperiment.class ) ) {

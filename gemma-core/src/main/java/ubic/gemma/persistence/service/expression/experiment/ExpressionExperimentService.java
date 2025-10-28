@@ -284,7 +284,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * and message.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
+    <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
     List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 
@@ -339,8 +339,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param bm bio material
      * @return experiment the given biomaterial is associated with
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials );
 
     /**
      * @param gene gene
@@ -351,21 +354,34 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findByDesignId( Long designId );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactor( ExperimentalFactor factor );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-        // slight security overkill, if they got the factorvalue...
-    Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> factorValues );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds );
 
     /**
      * @param gene gene
@@ -437,13 +453,16 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
 
     /**
-     * Apply ontological inference to augment a filter with additional terms.
-     *
+     * Perform various transformation to the provided filters to enhance it.
+     * <ul>
+     *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>
+     *     <li>apply ontological inference to augment a filter with additional terms.</li>
+     * </ul>
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
      * @param inferredTerms  if non-null, all the terms inferred from those mentioned in the filters are added to the
      *                       collection
      */
-    Filters getFiltersWithInferredAnnotations( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * Obtain the number of design elements for the platform of each bioassay in the given experiment.
@@ -511,11 +530,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param minFrequency         minimum occurrences of a term to be included in the results
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
+     * @param includePredicates
+     * @param includeObjects
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets and ordered in descending number of associated experiments
-     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection)
+     * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection, boolean, boolean)
      */
-    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+    List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, boolean includePredicates, boolean includeObjects, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
      * @param expressionExperiment experiment
@@ -588,11 +609,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * Obtain a {@link BioAssayDimension} with its assays initialized as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     * Obtain all {@link BioAssayDimension}s with their assays initialized as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}
+     * associated to a particular {@link QuantitationType}.
+     * <p>
+     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}.
      */
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    BioAssayDimension getBioAssayDimensionWithAssays( ExpressionExperiment ee, QuantitationType qt );
+    Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -828,6 +851,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Indicate if the given experiment is a single-cell experiment.
+     * <p>
+     * Gemma does not treat single-cell experiments differently from other experiments, so we need to rely on various
+     * aspect of the dataset to determine if it is a single-cell experiment.
+     */
+    boolean isSingleCell( ExpressionExperiment ee );
 
     /**
      * @param expressionExperiment ee

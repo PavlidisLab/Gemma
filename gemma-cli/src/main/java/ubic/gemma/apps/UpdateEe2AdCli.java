@@ -4,16 +4,17 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Date;
 
 import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
 
-public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
+public class UpdateEe2AdCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String
             SINCE_OPTION = "s",
@@ -28,6 +29,11 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
 
+    public UpdateEe2AdCli() {
+        setDefaultToAll();
+        setAllIsLazy();
+    }
+
     @Nullable
     @Override
     public String getCommandName() {
@@ -41,18 +47,13 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    protected void buildExperimentOptions( Options options ) {
+        addDateOption( SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date.", options );
+        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it." );
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        addDateOption( SINCE_OPTION, "since", "Only update platforms from experiments updated since the given date", options );
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( SINCE_OPTION ) ) {
             sinceLastUpdate = commandLine.getParsedOptionValue( SINCE_OPTION );
         } else {
@@ -61,9 +62,20 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
         truncate = commandLine.hasOption( TRUNCATE_OPTION );
     }
 
+    private int updated = 0;
+
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate, truncate );
+    protected void processAllExpressionExperiments() {
+        updated += tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate, truncate );
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        updated += tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( expressionExperiment );
+    }
+
+    @Override
+    protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/platforms/refresh" );

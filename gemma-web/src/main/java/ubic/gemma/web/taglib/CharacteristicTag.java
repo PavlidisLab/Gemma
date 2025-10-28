@@ -48,7 +48,7 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
                 if ( external ) {
                     tagWriter.writeAttribute( "href", htmlEscape( characteristic.getValueUri() ) );
                     tagWriter.writeAttribute( "target", "_blank" );
-                    tagWriter.writeAttribute( "rel", "noreferred noopener" );
+                    tagWriter.writeAttribute( "rel", "noopener noreferrer" );
                 } else {
                     tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getValueUri() ) ) );
                 }
@@ -66,7 +66,7 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
                 if ( external ) {
                     tagWriter.writeAttribute( "href", htmlEscape( characteristic.getCategoryUri() ) );
                     tagWriter.writeAttribute( "target", "_blank" );
-                    tagWriter.writeAttribute( "rel", "noreferred noopener" );
+                    tagWriter.writeAttribute( "rel", "noopener noreferrer" );
                 } else {
                     tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getCategoryUri() ) ) );
                 }

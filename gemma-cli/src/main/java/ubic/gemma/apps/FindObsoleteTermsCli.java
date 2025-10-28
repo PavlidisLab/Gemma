@@ -1,15 +1,15 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.CLI;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.TsvUtils;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,10 +56,6 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-    }
-
-    @Override
     protected void doAuthenticatedWork() throws Exception {
         if ( autoLoadOntologies ) {
             throw new IllegalArgumentException( "Auto-loading of ontologies is enabled, disable it by setting load.ontologies=false in Gemma.properties." );
@@ -98,7 +94,8 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
         getCliContext().getOutputStream().println( "Value\tValueUri\tCount" );
         for ( Map.Entry<OntologyTerm, Long> vo : vos.entrySet() ) {
-            getCliContext().getOutputStream().println( vo.getKey().getLabel() + "\t" + vo.getKey().getUri() + "\t" + vo.getValue() );
+            getCliContext().getOutputStream().printf( "%s\t%s\t%s%n", TsvUtils.format( vo.getKey().getLabel() ),
+                    TsvUtils.format( vo.getKey().getUri() ), TsvUtils.format( vo.getValue() ) );
         }
     }
 }

@@ -13,10 +13,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.FiltersUtils;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -109,11 +106,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * Using "distinct" otherwise has a steep performance penalty when combined with "order by".
      * <p>
      * Note that non-admin users always need a group by because of the jointure on ACL entries.
-     * <p>
-     * FIXME: remove the need for a distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     protected String distinctIfNecessary() {
-        if ( !SecurityUtil.isUserAdmin() ) {
+        if ( AclQueryUtils.requiresCountDistinct() ) {
             return "distinct ";
         } else {
             return "";
@@ -123,12 +118,10 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Similar logic to {@link #distinctIfNecessary()}, but using a group by since it's more efficient. It does
      * not work for the counting queries, however.
-     * <p>
-     * FIXME: remove the need for a group by altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     @Nullable
     protected String groupByIfNecessary( @Nullable Sort sort, String... oneToManyAliases ) {
-        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) || !SecurityUtil.isUserAdmin() ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) || AclQueryUtils.requiresGroupBy() ) {
             return objectAlias;
         } else {
             return null;
@@ -185,11 +178,11 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * curation details.
      */
     @Override
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         if ( propertyName.equals( "lastUpdated" ) || propertyName.equals( "troubled" ) || propertyName.equals( "needsAttention" ) ) {
-            return getFilterablePropertyMeta( CURATION_DETAILS_ALIAS, propertyName, CurationDetails.class )
-                    .withDescription( "alias for curationDetails." + propertyName );
+            return resolveFilterablePropertyMeta( CURATION_DETAILS_ALIAS, CurationDetails.class, propertyName )
+                    .description( "alias for curationDetails." + propertyName );
         }
-        return super.getFilterablePropertyMeta( propertyName );
+        return super.resolveFilterablePropertyMeta( propertyName );
     }
 }
