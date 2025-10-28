@@ -91,8 +91,25 @@ public class TenXCellRangerUtils {
      */
     @Nullable
     public static String detect10xChemistry( String description ) {
-        if ( ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v3" ) )
-                || Strings.CS.containsAny( description,
+        if ( isV3( description ) ) {
+            return "SC3Pv3" + ( isHighThroughput( description ) && !isOcm( description ) ? "HT" : "" ) + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
+        } else if ( isV4( description ) ) {
+            return "SC3Pv4" + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
+        } else if ( isCompatibleWithV3( description ) && isCompatibleWithV4( description ) ) {
+            log.warn( "Detected chemistry is ambiguous between v3 and v4, returning null." );
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean isV3( String description ) {
+        return ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v3" ) )
+                || ( isCompatibleWithV3( description ) && !isCompatibleWithV4( description ) );
+    }
+
+    private static boolean isCompatibleWithV3( String description ) {
+        return Strings.CS.containsAny( description,
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/chromium-next-gem-automated-single-cell-3-reagent-kits-user-guide-v-3-1-chemistry
                 "1000141", "1000147", "1000136", "1000146", "1000213", "1000215",
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/chromium-next-gem-single-cell-3-ht-reagent-kits-v-3-1-dual-index
@@ -111,12 +128,16 @@ public class TenXCellRangerUtils {
                 "1000268", "1000269", "1000262", "1000261", "1000120", "1000127", "1000215", "1000243", "1000242",
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/chromium-single-cell-3-reagent-kits-user-guide-v-3-1-chemistry-dual-index-with-feature-barcoding-technology-for-cell-surface-protein-and-cell-multiplexing
                 "1000268", "1000269", "1000262", "1000261", "1000120", "1000127", "1000215", "1000243", "1000242"
+        );
+    }
 
-        ) ) {
-            return "SC3Pv3" + ( isHighThroughput( description ) && !isOcm( description ) ? "HT" : "" ) + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
-        }
-        if ( ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v4" ) )
-                || Strings.CS.containsAny( description,
+    private static boolean isV4( String description ) {
+        return ( containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "10x" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "3'" ) && containsNormalizeSpaceAndSingleQuoteCaseInsensitive( description, "v4" ) )
+                || ( isCompatibleWithV4( description ) && !isCompatibleWithV3( description ) );
+    }
+
+    private static boolean isCompatibleWithV4( String description ) {
+        return Strings.CS.containsAny( description,
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/gem-x-universal-3-prime-gene-expression-v-4-4-plex-reagent-kits
                 "1000779", "1000747", "1000215",
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/chromium-gem-x-single-cell-3-v4-gene-expression-user-guide
@@ -125,11 +146,7 @@ public class TenXCellRangerUtils {
                 "1000691", "1000686", "1000690", "1000702", "1000215", "1000242",
                 // https://www.10xgenomics.com/support/universal-three-prime-gene-expression/documentation/steps/library-prep/gem-x-universal-3-prime-gene-expression-v-4-4-plex-reagent-kits-with-feature-barcode-technology-for-cell-surface-protein
                 "1000779", "1000747", "1000702", "1000215", "1000242"
-
-        ) ) {
-            return "SC3Pv4" + ( isCs1( description ) ? "-CS1" : "-polyA" ) + ( isOcm( description ) ? "-OCM" : "" );
-        }
-        return null;
+        );
     }
 
     private static boolean containsNormalizeSpaceAndSingleQuoteCaseInsensitive( String s, String t ) {

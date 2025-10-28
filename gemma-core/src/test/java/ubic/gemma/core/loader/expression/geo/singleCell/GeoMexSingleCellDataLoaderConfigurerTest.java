@@ -73,7 +73,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
 
     @Test
     public void testGSE269482() throws IOException, NoSingleCellDataFoundException {
-        testUnfiltered10xDataset( "GSE269482", "GSM8316309", "Mus musculus", "SC3Pv3-polyA" );
+        testUnfiltered10xDataset( "GSE269482", "GSM8316309", "Mus musculus", "SC3Pv3-polyA-OCM" );
     }
 
     /**
