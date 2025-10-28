@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -949,7 +950,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
         Assert.notNull( cellTypeAssignment.getId(), "The cell type assignment must be persistent." );
         Assert.isTrue( ee.getBioAssays().containsAll( dimension.getBioAssays() ), "Single-cell dimension does not belong to the dataset." );
-        boolean alsoRemoveFactor = getPreferredCellTypeAssignment( ee ).map( cellTypeAssignment::equals ).orElse( false );
+        boolean alsoRemoveFactor;
+        try {
+            alsoRemoveFactor = getPreferredCellTypeAssignment( ee ).map( cellTypeAssignment::equals ).orElse( false );
+        } catch ( NonUniqueResultException e ) {
+            log.warn( "There is more than one preferred CTA for " + ee + ", cannot automatically remove the cell type factor." );
+            alsoRemoveFactor = false;
+        }
         removeCellTypeAssignment( ee, dimension, cellTypeAssignment, alsoRemoveFactor );
     }
 
