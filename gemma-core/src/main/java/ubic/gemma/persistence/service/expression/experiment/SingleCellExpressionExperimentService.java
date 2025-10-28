@@ -93,6 +93,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Obtain a single single-cell vector without initializing cell IDs.
+     *
      * @see #getSingleCellDimensionWithoutCellIds(ExpressionExperiment, QuantitationType)
      */
     @Nullable
@@ -125,6 +126,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Add single-cell data vectors.
+     *
      * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -133,6 +135,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Replace existing single-cell data vectors for the given quantitation type.
+     *
      * @param details additional details to include in the audit event
      * @return the number of vectors that were replaced
      */
@@ -150,6 +153,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Remove single-cell data vectors for the given quantitation type.
+     *
      * @return the number of vectors that were removed
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -289,6 +293,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Remove the given cell type assignment by QT.
+     *
      * @see #removeCellTypeAssignment(ExpressionExperiment, SingleCellDimension, CellTypeAssignment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -296,6 +301,9 @@ public interface SingleCellExpressionExperimentService {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
@@ -308,6 +316,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Obtain a cell type assignment by ID.
+     *
      * @return that cell type assignmente, or null if none is found
      */
     @Nullable
@@ -317,6 +326,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Obtain a cell type assignment by name.
+     *
      * @return that cell type assignmente, or null if none is found
      */
     @Nullable
@@ -376,6 +386,9 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
      */
@@ -429,6 +442,7 @@ public interface SingleCellExpressionExperimentService {
 
     /**
      * Obtain the cell type factor.
+     *
      * @return a cell type factor, or null of none exist
      * @throws IllegalStateException if there is more than one such factor
      */

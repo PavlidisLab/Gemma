@@ -979,6 +979,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
     }
 
+    @Override
+    @Transactional
+    public void removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
+        }
+        for ( CellTypeAssignment cta : dim.getCellTypeAssignments() ) {
+            removeCellTypeAssignment( ee, dim, cta );
+        }
+    }
+
     private void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean alsoRemoveFactor ) {
         if ( !dimension.getCellTypeAssignments().remove( cellTypeAssignment ) ) {
             throw new IllegalArgumentException( cellTypeAssignment + " is not associated to " + dimension );
@@ -1114,6 +1126,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .collect( Collectors.toList() );
         for ( CellLevelCharacteristics clc : toRemove ) {
             removeCellLevelCharacteristics( ee, dimension, clc );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
+        }
+        for ( CellLevelCharacteristics clc : dim.getCellLevelCharacteristics() ) {
+            removeCellLevelCharacteristics( ee, dim, clc );
         }
     }
 
