@@ -414,9 +414,9 @@ complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.Si
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o qt -l quantitation-type -r -f --description 'Identifier of the quantitation type to process (defaults to the preferred one)'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o allQts -l all-quantitation-types -f --description 'Process all quantitation types (defaults to the preferred one)'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteCta -l delete-cell-type-assignment -r -f --description 'Delete a cell type assignment.'
-complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteCtas -l delete-all-cell-type-assignments -r -f --description 'Delete all cell type assignments.'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteCtas -l delete-all-cell-type-assignments -f --description 'Delete all cell type assignments.'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteClc -l delete-cell-level-characteristics -r -f --description 'Delete cell-level characteristics'
-complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteClcs -l delete-all-cell-level-characteristics -r -f --description 'Delete all cell-level characteristics'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDeleterCli' -o deleteClcs -l delete-all-cell-level-characteristics -f --description 'Delete all cell-level characteristics'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a deleteSingleCellData --description 'Delete single-cell data and any related data files'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -s h -l help -f --description 'Print this message'
@@ -433,9 +433,9 @@ complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellDa
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o qt -l quantitation-type -r -f --description 'Identifier of the quantitation type to process (defaults to the preferred one)'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o allQts -l all-quantitation-types -f --description 'Process all quantitation types (defaults to the preferred one)'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteCta -l delete-cell-type-assignment -r -f --description 'Delete a cell type assignment.'
-complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteCtas -l delete-all-cell-type-assignments -r -f --description 'Delete all cell type assignments.'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteCtas -l delete-all-cell-type-assignments -f --description 'Delete all cell type assignments.'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteClc -l delete-cell-level-characteristics -r -f --description 'Delete cell-level characteristics'
-complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteClcs -l delete-all-cell-level-characteristics -r -f --description 'Delete all cell-level characteristics'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from deleteSingleCellData' -o deleteClcs -l delete-all-cell-level-characteristics -f --description 'Delete all cell-level characteristics'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.SingleCellDataAggregateDeleterCli --description 'Delete a single-cell data aggregate'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregateDeleterCli' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataAggregateDeleterCli' -s h -l help -f --description 'Print this message'

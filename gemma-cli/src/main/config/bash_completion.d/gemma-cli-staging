@@ -189,7 +189,7 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.SingleCellDataDeleterCli ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--delete-all-cell-level-characteristics|--delete-all-cell-type-assignments|--delete-cell-level-characteristics|--delete-cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-deleteClc|-deleteClcs|-deleteCta|-deleteCtas|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--delete-cell-level-characteristics|--delete-cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-deleteClc|-deleteCta|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--all-quantitation-types --batch-format --batch-output-file --batch-report-frequency --delete-all-cell-level-characteristics --delete-all-cell-type-assignments --delete-cell-level-characteristics --delete-cell-type-assignment --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type --taxon -all -allQts -batchFormat -batchOutputFile -batchReportFrequency -deleteClc -deleteClcs -deleteCta -deleteCtas -e -eeset -f -h -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
@@ -197,7 +197,7 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' deleteSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--delete-all-cell-level-characteristics|--delete-all-cell-type-assignments|--delete-cell-level-characteristics|--delete-cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-deleteClc|-deleteClcs|-deleteCta|-deleteCtas|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--delete-cell-level-characteristics|--delete-cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-deleteClc|-deleteCta|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--all-quantitation-types --batch-format --batch-output-file --batch-report-frequency --delete-all-cell-level-characteristics --delete-all-cell-type-assignments --delete-cell-level-characteristics --delete-cell-type-assignment --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --quantitation-type --taxon -all -allQts -batchFormat -batchOutputFile -batchReportFrequency -deleteClc -deleteClcs -deleteCta -deleteCtas -e -eeset -f -h -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
