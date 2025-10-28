@@ -31,6 +31,7 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPInputStream;
@@ -127,6 +128,23 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     public void testGSE295078() throws NoSingleCellDataFoundException, IOException {
         // TODO: this is a dataset with a 5' chemistry
         testUnfiltered10xDataset( "GSE295078", "GSM8941791", "Mus musculus", null );
+    }
+
+    @Test
+    public void testGSE255369() throws NoSingleCellDataFoundException, IOException {
+        // data is not in GEO, so just use an empty placeholder
+        Path mexDir = Files.createTempDirectory( "GSE255369" );
+        Path sampleDir = mexDir.resolve( "GSM8070652" );
+        GeoSeries series = readSeriesFromGeo( "GSE255369" );
+        GeoSample sample = series.getSamples().stream()
+                .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM8070652" ) )
+                .findFirst()
+                .get();
+        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( mexDir, series, cellRangerPrefix );
+        assertTrue( configurer.detect10x( "GSM8070652", sampleDir ) );
+        assertTrue( configurer.detectUnfiltered( "GSM8070652", sampleDir ) );
+        assertEquals( "Mus musculus", configurer.detect10xGenome( "GSM8070652", sampleDir ) );
+        assertEquals( "SC3Pv3-polyA-OCM", configurer.detect10xChemistry( "GSM8070652", sampleDir ) );
     }
 
     private void testUnfiltered10xDataset( String seriesName, String sampleName, String expectedTaxa, String expectedChemistry ) throws IOException, NoSingleCellDataFoundException {
