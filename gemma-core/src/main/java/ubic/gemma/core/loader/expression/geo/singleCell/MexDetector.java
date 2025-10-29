@@ -22,8 +22,10 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,8 +43,13 @@ import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
  * Older 10x MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
  * naming scheme into the download directory.
  * <p>
+ * Glob patterns may be used in the suffixes for matching files as per {@link java.nio.file.FileSystem#getPathMatcher}.
+ * The {@code .gz} extension is optional.
+ * optional.
+ * <p>
  * MEX data is only supported at the sample-level. However, we do support detecting its presence at the series-level,
  * but not downloading.
+ *
  * @author poirigui
  */
 @Setter
@@ -120,6 +127,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     /**
      * Check if a GEO sample contains single-cell data.
+     *
      * @param allowArchiveLookup allow looking into archives for MEX files
      */
     public boolean hasSingleCellData( GeoSample sample, boolean allowArchiveLookup ) {
@@ -129,6 +137,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     /**
      * Check if a sample or series has single-cell data.
+     *
      * @param geoAccession       GEO accession of the sample or series
      * @param supplementaryFiles list of supplementary file
      * @param allowArchiveLookup allow looking up archives for MEX data, use this with parsimony because it requires
@@ -141,7 +150,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
             if ( isMexFile( file, MexFileType.BARCODES ) ) {
                 barcodes = file;
             } else if ( isMexFile( file, MexFileType.FEATURES ) ) {
-                if ( genesFileSuffix != null && ( endsWith( file, genesFileSuffix ) ) ) {
+                if ( genesFileSuffix != null && endsWith( file, genesFileSuffix ) ) {
                     log.info( geoAccession + ": Found an old-style MEX file " + file + ", treating it as features.tsv." );
                 }
                 features = file;
@@ -191,7 +200,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                         break;
                                     }
                                 } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) ) {
-                                    if ( genesFileSuffix != null && ( endsWith( te.getName(), genesFileSuffix ) ) ) {
+                                    if ( genesFileSuffix != null && endsWith( te.getName(), genesFileSuffix ) ) {
                                         log.info( geoAccession + ": Found an old-style MEX file " + te.getName() + " in an archive, treating it as features.tsv." );
                                     }
                                     featuresT = te.getName();
@@ -432,7 +441,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 if ( barcodesT != null ) {
                                     throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodesT, fullEntryName ) );
                                 }
-                                if ( barcodeMetadataFileSuffix != null && ( te.getName().endsWith( barcodeMetadataFileSuffix ) || te.getName().endsWith( barcodeMetadataFileSuffix + ".gz" ) ) ) {
+                                if ( barcodeMetadataFileSuffix != null && endsWith( te.getName(), barcodeMetadataFileSuffix ) ) {
                                     throw new UnsupportedOperationException( "Barcode metadata files are not supported." );
                                 }
                                 dest = sampleDirectory.resolve( "barcodes.tsv.gz" );
@@ -642,7 +651,9 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     }
 
     private boolean endsWith( String filename, String suffix ) {
-        return filename.endsWith( suffix ) || filename.endsWith( suffix + ".gz" );
+        return FileSystems.getDefault()
+                .getPathMatcher( "glob:**/*" + suffix + "{,.gz}" )
+                .matches( Paths.get( filename ) );
     }
 
     /**

@@ -165,7 +165,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( features.equals( DEFAULT_FEATURES_FILE_SUFFIX ) ) {
             mexDetector.setGenesFileSuffix( DEFAULT_GENES_FILE_SUFFIX );
         } else {
-            log.warn( "Disabling detection of old-style genes.tsv since nce custom suffixes are used for detecting MEX features files." );
+            log.warn( "Disabling detection of old-style genes.tsv since custom suffixes are used for detecting MEX features files." );
             mexDetector.setGenesFileSuffix( null );
         }
         mexDetector.setMatrixFileSuffix( matrix );

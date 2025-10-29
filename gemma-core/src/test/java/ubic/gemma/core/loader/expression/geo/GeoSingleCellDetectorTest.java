@@ -834,6 +834,13 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    public void testGSE251724() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE251724" );
+        detector.setMexFileSuffixes( "raw_*_barcodes.tsv.gz", "raw_*_features.tsv.gz", "raw_*_matrix.mtx.gz" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+    }
+
+    @Test
     public void testHasSingleCellDataInSra() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE278619" );
         assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();
