@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +32,8 @@ public class CellBrowserServiceImpl implements CellBrowserService {
     private Path cellBrowserDir;
 
     @Override
-    public String getBrowserUrl( ExpressionExperiment ee ) {
-        return baseUrl + "?ds=" + urlEncode( constructDatasetName( ee ) );
+    public String getBrowserUrl( ExpressionExperiment ee, @Nullable String meta ) {
+        return baseUrl + "?ds=" + urlEncode( constructDatasetName( ee ) ) + ( meta != null ? "&meta=" + urlEncode( meta ) : "" );
     }
 
     @Override

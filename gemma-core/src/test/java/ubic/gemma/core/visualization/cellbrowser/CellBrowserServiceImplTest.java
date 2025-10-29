@@ -57,8 +57,8 @@ public class CellBrowserServiceImplTest extends BaseTest {
     public void testGetDatasetUrl() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( "GSE109281" );
-        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281", cellBrowserService.getBrowserUrl( ee ) );
+        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281", cellBrowserService.getBrowserUrl( ee, null ) );
         ee.setShortName( "GSE109281.1" );
-        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281_1", cellBrowserService.getBrowserUrl( ee ) );
+        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281_1", cellBrowserService.getBrowserUrl( ee, null ) );
     }
 }

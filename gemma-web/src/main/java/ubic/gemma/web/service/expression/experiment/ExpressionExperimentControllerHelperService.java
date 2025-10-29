@@ -132,7 +132,6 @@ public class ExpressionExperimentControllerHelperService {
                     } );
             if ( cellBrowserService.hasBrowser( ee ) ) {
                 finalResult.setHasCellBrowser( true );
-                finalResult.setCellBrowserUrl( cellBrowserService.getBrowserUrl( ee ) );
                 Collection<CellBrowserMapping> mapping = cellBrowserService.getCellBrowserMapping( ee, true );
                 Map<Long, String> f2m = new HashMap<>();
                 Map<Long, String> cta2m = new HashMap<>();

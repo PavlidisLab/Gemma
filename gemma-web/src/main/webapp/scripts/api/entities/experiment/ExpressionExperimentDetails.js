@@ -149,7 +149,7 @@ Gemma.ExpressionExperimentDetails = Ext
                             const name = cta.name || cta.protocol?.name || 'Unnamed';
                             if ( ee.hasCellBrowser && cta.id in ee.cellBrowserCellTypeAssignmentMetaNamesMap ) {
                                 const metaId = ee.cellBrowserCellTypeAssignmentMetaNamesMap[cta.id]
-                                result += ' <a href="' + ee.cellBrowserUrl + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank" ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">' + htmlEncode( name ) + '</a>' + ':';
+                                result += ' <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showCellBrowser.html?id=' + ee.id + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank" ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">' + htmlEncode( name ) + '</a>' + ':';
                             } else {
                                 result += '<b>' + htmlEncode( name ) + ':</b> '
                             }
@@ -182,7 +182,7 @@ Gemma.ExpressionExperimentDetails = Ext
                             }
                             if ( ee.hasCellBrowser && clc.id in ee.cellBrowserCellLevelCharacteristicsMetaNamesMap ) {
                                 const metaId = ee.cellBrowserCellLevelCharacteristicsMetaNamesMap[clc.id]
-                                result += ' <a href="' + ee.cellBrowserUrl + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank"  ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">View</a>';
+                                result += ' <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showCellBrowser.html?id=' + ee.id + '&meta=' + encodeURIComponent( metaId ) + '" target="_blank"  ext:qtip="View ' + htmlEncode( name ) + ' in Cell Browser.">View</a>';
                             }
                             // TODO: result += ' <a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/cellLevelCharacteristics?quantitationType=' + ee.singleCellQuantitationType.id + '&cellLevelCharacteristics=' + clc.id + '&download=true" ext:qtip="Download ' + htmlEncode( name ) + ' in a tab-delimited format.">Download</a>';
                             result += '</li>';
@@ -190,7 +190,7 @@ Gemma.ExpressionExperimentDetails = Ext
                         result += '</ul>'
                     }
                     if ( ee.hasCellBrowser ) {
-                        result += '<a href="' + ee.cellBrowserUrl + '" target="_blank" ext:qtip="View ' + ee.shortName + ' in Cell Browser.">View in Cell Browser</a>'
+                        result += '<a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showCellBrowser.html?id=' + ee.id + '" target="_blank" ext:qtip="View ' + ee.shortName + ' in Cell Browser.">View in Cell Browser</a>'
                         result += ' '
                     }
                     result += '<a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + ee.id + '/singleCellDimension' + '?quantitationType=' + ee.singleCellQuantitationType.id + '&download=true" target="_blank" ext:qtip="Download all single-cell annotations for ' + htmlEncode( ee.shortName ) + ' in a tab-delimited format. This include all cell-type assignments and cell-level characteristics.">Download all single-cell annotations</a>'

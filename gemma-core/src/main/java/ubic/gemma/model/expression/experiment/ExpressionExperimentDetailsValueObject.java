@@ -154,11 +154,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * Indicate if this experiment has a Cell Browser associated with it.
      */
     private boolean hasCellBrowser;
-    /**
-     * URL for the Cell Browser, if available.
-     */
-    @Nullable
-    private String cellBrowserUrl;
     private String cellBrowserDatasetName;
     /**
      * Mapping of experimental factor IDs to names for the Cell Browser.

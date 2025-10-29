@@ -19,7 +19,6 @@ if ( typeof ExpressionExperimentDetailsValueObject != "function" ) {
       this.singleCellQuantitationType = null;
       this.singleCellDimension = null;
       this.hasCellBrowser = false;
-      this.cellBrowserUrl = null;
       this.cellBrowserFactorMetaNamesMap = {};
       this.cellBrowserCellTypeAssignmentMetaNamesMap = {};
       this.cellBrowserCellLevelCharacteristicsMetaNamesMap = {};
