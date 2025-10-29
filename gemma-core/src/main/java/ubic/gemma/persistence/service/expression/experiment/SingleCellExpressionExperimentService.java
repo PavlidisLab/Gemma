@@ -53,6 +53,10 @@ public interface SingleCellExpressionExperimentService {
     @Getter
     @Builder
     class SingleCellVectorInitializationConfig {
+        /**
+         * Initialize {@link CompositeSequence#getBiologicalCharacteristic()}.
+         */
+        private boolean includeBiologicalCharacteristics;
         private boolean includeCellIds;
         private boolean includeData;
         private boolean includeDataIndices;
