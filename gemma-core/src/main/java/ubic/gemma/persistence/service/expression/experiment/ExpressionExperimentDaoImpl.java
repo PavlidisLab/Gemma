@@ -974,6 +974,7 @@ public class ExpressionExperimentDaoImpl
      * <p>
      * FIXME: There's a bug in Hibernate that that prevents it from producing proper tuples the excluded URIs and
      *        retained term URIs
+     *
      * @param excludedCategoryUris      list of category URIs to exclude
      * @param excludedTermUris          list of URIs to exclude
      * @param excludeFreeTextCategories whether to exclude free-text categories
@@ -2689,6 +2690,7 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * Stream the characteristics of a given CLC.
+     *
      * @param clc                    CLC to stream characteristics from
      * @param tableName              name of the table that stored the CLC
      * @param indicesColumn          column that contain indices
@@ -3114,7 +3116,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+    public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeBiologicalCharacteristics, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         if ( dimension == null ) {
             throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
@@ -3125,7 +3127,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
-                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) )
+                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices ) )
                 .list();
     }
 
@@ -3152,7 +3154,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeBiologicalCharacteristics, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
         SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         if ( dimension == null ) {
             throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
@@ -3167,7 +3169,7 @@ public class ExpressionExperimentDaoImpl
                                     + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                             .setParameter( "ee", ee )
                             .setParameter( "qt", quantitationType )
-                            .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) );
+                            .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices ) );
                 },
                 SingleCellExpressionDataVector.class,
                 fetchSize,
@@ -3196,7 +3198,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .setParameter( "de", designElement )
-                .setResultTransformer( new SingleCellDataVectorInitializer( ee, designElement, quantitationType, dimension, true, true ) )
+                .setResultTransformer( new SingleCellDataVectorInitializer( ee, designElement, quantitationType, dimension, false, true, true ) )
                 .uniqueResult();
     }
 
@@ -3215,14 +3217,16 @@ public class ExpressionExperimentDaoImpl
         private final CompositeSequence designElement;
         private final QuantitationType qt;
         private final SingleCellDimension dimension;
+        private final boolean includeBiologicalCharacteristics;
         private final boolean includeData;
         private final boolean includeDataIndices;
 
-        public SingleCellDataVectorInitializer( ExpressionExperiment ee, @Nullable CompositeSequence designElement, QuantitationType qt, SingleCellDimension dimension, boolean includeData, boolean includeDataIndices ) {
+        public SingleCellDataVectorInitializer( ExpressionExperiment ee, @Nullable CompositeSequence designElement, QuantitationType qt, SingleCellDimension dimension, boolean includeBiologicalCharacteristics, boolean includeData, boolean includeDataIndices ) {
             this.ee = ee;
             this.designElement = designElement;
             this.qt = qt;
             this.dimension = dimension;
+            this.includeBiologicalCharacteristics = includeBiologicalCharacteristics;
             this.includeData = includeData;
             this.includeDataIndices = includeDataIndices;
         }
@@ -3233,6 +3237,9 @@ public class ExpressionExperimentDaoImpl
             vector.setExpressionExperiment( ee );
             if ( designElement != null ) {
                 vector.setDesignElement( designElement );
+            }
+            if ( includeBiologicalCharacteristics ) {
+                Hibernate.initialize( vector.getDesignElement().getBiologicalCharacteristic() );
             }
             vector.setQuantitationType( qt );
             vector.setSingleCellDimension( dimension );

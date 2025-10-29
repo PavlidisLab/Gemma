@@ -89,7 +89,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
             return getSingleCellDataVectors( ee, quantitationType );
         }
-        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeBiologicalCharacteristics(), config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
     }
 
     @Override
@@ -148,7 +148,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellIdsBySample( sampleIndex );
             totalCells += sampleEnds[i] - sampleStarts[i];
         }
-        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() ).stream()
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeBiologicalCharacteristics(), config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() ).stream()
                 .map( createSlicer( samples,
                         config.isIncludeCellIds() ? sliceCellIds( scd, samples, sampleStarts, sampleEnds, totalCells ) : null,
                         sliceCtas( scd, samples, sampleStarts, sampleEnds, totalCells ),
@@ -223,7 +223,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
             return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeBiologicalCharacteristics(), config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
     }
 
     @Override
@@ -233,7 +233,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession )
                     .map( createSlicer( samples ) );
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, useCursorFetchIfSupported, createNewSession, config.isIncludeBiologicalCharacteristics(), config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
                 .map( createSlicer( samples ) );
     }
 

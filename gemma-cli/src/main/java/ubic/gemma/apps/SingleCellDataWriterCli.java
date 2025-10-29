@@ -287,6 +287,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 samples != null ? " for the following samples: " + Arrays.toString( samples ) : "" ) );
         Collection<RawExpressionDataVector> vecs;
         SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig config = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.builder()
+                .includeBiologicalCharacteristics( true )
                 .includeCellIds( false )
                 // COUNT_FAST does not even need the data!
                 .includeData( aggregationMethod != SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST )
