@@ -20,6 +20,8 @@ import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.FileLockManagerImpl;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Slice;
@@ -85,6 +87,11 @@ public class OntologyControllerTest extends BaseWebTest {
         @Bean
         public DownloadUtil downloadUtil() {
             return new DownloadUtil();
+        }
+
+        @Bean
+        public FileLockManager fileLockManager() {
+            return new FileLockManagerImpl();
         }
     }
 

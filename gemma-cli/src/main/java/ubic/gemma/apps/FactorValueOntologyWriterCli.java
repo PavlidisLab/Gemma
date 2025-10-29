@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
+import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -21,6 +22,9 @@ public class FactorValueOntologyWriterCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
+
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Value("${tgfvo.path}")
     private Path tgfvoPath;
@@ -73,8 +77,9 @@ public class FactorValueOntologyWriterCli extends AbstractAuthenticatedCLI {
             throw new IllegalArgumentException( "Output file already exists: " + outputFile + ". Use -force,--force to overwrite it." );
         }
         PathUtils.createParentDirectories( outputFile );
+
         if ( outputFile.getFileName().toString().endsWith( ".gz" ) ) {
-            return new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( outputFile ) ) );
+            return new OutputStreamWriter( new GZIPOutputStream( fileLockManager.newOutputStream( outputFile ) ) );
         } else {
             return Files.newBufferedWriter( outputFile );
         }
