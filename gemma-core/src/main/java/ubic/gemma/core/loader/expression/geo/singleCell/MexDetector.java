@@ -490,7 +490,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 if ( ctx.getAttempt() > 0 ) {
                                     what += " (attempt #" + ( ctx.getAttempt() + 1 ) + ")";
                                 }
-                                long c = IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
+                                long c = IOUtils.copyLarge( new ProgressInputStream( tis, getProgressReporterFactory().createProgressReporter( what, MexDetector.class.getName() ), te.getSize() ), os );
                                 os.close();
                                 log.info( String.format( "%s: Done copying %s to %s.", geoAccession, fullEntryName, dest ) );
                                 if ( !existsAndHasExpectedSize( dest, fullEntryName, te.getSize(), false, true ) ) {

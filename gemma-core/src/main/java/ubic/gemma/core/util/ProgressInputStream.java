@@ -10,17 +10,15 @@ public class ProgressInputStream extends FilterInputStream {
 
     private final ProgressReporter progressReporter;
     private long progressInBytes = 0;
-    private long maxSizeInBytes = -1;
+    private final long maxSizeInBytes;
     private boolean reportedAtEof = false;
 
     /**
-     * @param what           an object describing what is being processed, it will be used for logging purposes
-     * @param logCategory    a log category to report progress to
      * @param maxSizeInBytes the maximum size in bytes
      */
-    public ProgressInputStream( InputStream in, Object what, String logCategory, long maxSizeInBytes ) {
+    public ProgressInputStream( InputStream in, ProgressReporter progressReporter, long maxSizeInBytes ) {
         super( in );
-        progressReporter = new ProgressReporter( what, logCategory );
+        this.progressReporter = progressReporter;
         this.maxSizeInBytes = maxSizeInBytes;
     }
 
@@ -37,6 +35,15 @@ public class ProgressInputStream extends FilterInputStream {
     @Override
     public long skip( long n ) throws IOException {
         return recordProgress( super.skip( n ), false );
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            super.close();
+        } finally {
+            progressReporter.close();
+        }
     }
 
     private int recordProgress( int read, boolean oneByte ) {

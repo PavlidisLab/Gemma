@@ -13,6 +13,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -335,6 +336,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
+            if ( getCliContext().getConsole() != null ) {
+                detector.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+            }
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
@@ -540,6 +544,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         GeoFetcher geoFetcher = new GeoFetcher( retryPolicy, geoSeriesDownloadPath );
         geoFetcher.setFtpClientFactory( ftpClientFactory );
         geoFetcher.setFileLockManager( fileLockManager );
+        if ( getCliContext().getConsole() != null ) {
+            geoFetcher.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+        }
         Path dest = geoFetcher.fetchSeriesFamilySoftFile( accession );
         try ( InputStream is = FileUtils.openCompressedFile( dest ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();

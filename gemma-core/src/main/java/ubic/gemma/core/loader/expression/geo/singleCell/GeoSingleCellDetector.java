@@ -20,6 +20,7 @@ import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
@@ -41,6 +42,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
  * <p>
  * Samples can be loaded in parallel when retrieving a GEO series with {@link #downloadSingleCellData(GeoSeries)}. The
  * number of threads used is controlled by {@link #setNumberOfFetchThreads(int)} and defaults to 4.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -147,6 +149,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     public void setRetryPolicy( SimpleRetryPolicy retryPolicy ) {
         for ( SingleCellDetector detector : this.detectors ) {
             detector.setRetryPolicy( retryPolicy );
+        }
+    }
+
+    @Override
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        for ( SingleCellDetector detector : this.detectors ) {
+            detector.setProgressReporterFactory( progressReporterFactory );
         }
     }
 
@@ -346,6 +355,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      * Download single-cell data from a GEO series to disk.
      * <p>
      * This has to be done prior to {@link #getSingleCellDataLoader(GeoSeries)}.
+     *
      * @throws NoSingleCellDataFoundException if no single-cell data is found either at the series level or in individual samples
      * @throws UnsupportedOperationException  if single-cell data is found at the series level
      */
@@ -566,8 +576,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      * Obtain a single-cell data loader.
      * <p>
      * Only local files previously retrieved with {@link #downloadSingleCellData(GeoSeries)} are inspected.
+     *
      * @throws NoSingleCellDataFoundException if no single-cell data was found on-disk
-     * @throws UnsupportedOperationException if single-cell data was found, but cannot be loaded
+     * @throws UnsupportedOperationException  if single-cell data was found, but cannot be loaded
      */
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
@@ -789,6 +800,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     /**
      * Check if a GEO sample is single-cell by looking up its metadata.
+     *
      * @param hasSingleCellDataInSeries indicate if the series has single-cell data, this is used as a last resort to
      *                                  determine if a given sample is single-cell, use {@link #hasSingleCellDataInSeries(GeoSeries)}
      *                                  to compute and reuse this value.

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.LoggingProgressReporter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -277,7 +278,7 @@ public class SingleCellExpressionDataVectorUtils {
      * Create a consumer for a {@link java.util.stream.Stream} that will report progress of retrieving single-cell
      * vectors.
      * <p>
-     * The logging is similar to that of {@link ubic.gemma.core.util.ProgressReporter}.
+     * The logging is similar to that of {@link LoggingProgressReporter}.
      */
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( ExpressionExperiment ee, QuantitationType qt, String logCategory, int reportFrequency, long numVecs ) {
         String what = "single-cell vectors of " + qt.getName() + " in " + ee.getShortName();

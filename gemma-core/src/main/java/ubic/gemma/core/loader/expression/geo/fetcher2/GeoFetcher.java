@@ -7,6 +7,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -44,6 +45,10 @@ public class GeoFetcher {
 
     public void setFileLockManager( FileLockManager fileLockManager ) {
         this.simpleDownloader.setFileLockManager( fileLockManager );
+    }
+
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        this.simpleDownloader.setProgressReporterFactory( progressReporterFactory );
     }
 
     public void setTaskExecutor( ExecutorService taskExecutor ) {
