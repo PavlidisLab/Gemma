@@ -1082,6 +1082,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignmentWithoutIndices( ee ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
         return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignmentWithoutIndices( ee, qt ) );
     }
@@ -1247,9 +1253,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee ) {
-        return getPreferredCellTypeAssignment( ee )
-                .map( ctl -> recreateCellTypeFactor( ee, ctl ) )
-                .orElseThrow( () -> new IllegalStateException( "There must be a preferred cell type labelling for " + ee + " to update the cell type factor." ) );
+        // if the ED is not from this session, removing the cell type factor will cause the subsequent update(ee) to
+        // fail
+        ExpressionExperiment finalEe = expressionExperimentDao.reload( ee );
+        return getPreferredCellTypeAssignmentWithoutIndices( ee ) // we only need the characteristics
+                .map( ctl -> recreateCellTypeFactor( finalEe, ctl ) )
+                .orElseThrow( () -> new IllegalStateException( "There must be a preferred cell type labelling for " + finalEe + " to update the cell type factor." ) );
     }
 
     private ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl ) {
