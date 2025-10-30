@@ -9,6 +9,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
@@ -46,6 +47,9 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     @Nullable
     private final Path otherCellCharacteristicsMetadataFile;
 
+    @Nullable
+    private final Path otherCellLevelMeasurementsMetadataFile;
+
     private BioAssayMapper bioAssayToSampleNameMapper;
 
     private boolean inferSamplesFromCellIdsOverlap;
@@ -56,11 +60,12 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedCellIds;
 
-    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable List<String> otherCellLevelCharacteristicsNames, @Nullable Path otherCellCharacteristicsMetadataFile ) {
+    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable List<String> otherCellLevelCharacteristicsNames, @Nullable Path otherCellCharacteristicsMetadataFile, @Nullable Path otherCellLevelMeasurementsMetadataFile ) {
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
         this.otherCellLevelCharacteristicsNames = otherCellLevelCharacteristicsNames;
         this.otherCellCharacteristicsMetadataFile = otherCellCharacteristicsMetadataFile;
+        this.otherCellLevelMeasurementsMetadataFile = otherCellLevelMeasurementsMetadataFile;
     }
 
     /**
@@ -121,7 +126,18 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
         return parser.parse( otherCellCharacteristicsMetadataFile );
     }
 
-    private void configureParser( AbstractCellLevelCharacteristicsMetadataParser<?> parser ) {
+    @Override
+    public Set<CellLevelMeasurements> getOtherCellLevelMeasurements( SingleCellDimension dimension ) throws IOException {
+        if ( otherCellLevelMeasurementsMetadataFile == null ) {
+            return super.getOtherCellLevelMeasurements( dimension );
+        }
+        Assert.notNull( bioAssayToSampleNameMapper, "A bioAssayToSampleNameMatcher must be set" );
+        GenericCellLevelMeasurementsMetadataParser parser = new GenericCellLevelMeasurementsMetadataParser( dimension, bioAssayToSampleNameMapper );
+        configureParser( parser );
+        return parser.parse( otherCellLevelMeasurementsMetadataFile );
+    }
+
+    private void configureParser( CellLevelFeaturesMetadataParser parser ) {
         parser.setUseCellIdsIfSampleNameIsMissing( useCellIdsIfSampleNameIsMissing );
         parser.setInferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );
         parser.setIgnoreUnmatchedSamples( ignoreUnmatchedSamples );

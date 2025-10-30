@@ -6,10 +6,7 @@ import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -73,6 +70,11 @@ public class NullSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<CellLevelMeasurements> getOtherCellLevelMeasurements( SingleCellDimension dimension ) throws IOException {
         return Collections.emptySet();
     }
 

@@ -82,6 +82,7 @@ public class Thaws {
     public static void thawSingleCellDimension( SingleCellDimension singleCellDimension ) {
         singleCellDimension.getCellTypeAssignments().forEach( Thaws::thawCellTypeAssignment );
         Hibernate.initialize( singleCellDimension.getCellLevelCharacteristics() );
+        Hibernate.initialize( singleCellDimension.getCellLevelMeasurements() );
     }
 
     public static void thawCellTypeAssignment( CellTypeAssignment cellTypeAssignment ) {

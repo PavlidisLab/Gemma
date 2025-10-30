@@ -22,13 +22,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpda
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -38,6 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.measurement.UnitService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 
@@ -47,6 +46,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVector;
 
@@ -103,6 +103,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         @Bean
         public SingleCellSparsityMetrics singleCellSparsityMetrics() {
             return new SingleCellSparsityMetrics();
+        }
+
+        @Bean
+        public UnitService unitService() {
+            return mock();
         }
     }
 
@@ -208,6 +213,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .includeBioAssays( true )
                 .includeCtas( true )
                 .includeClcs( true )
+                .includeClms( true )
                 .includeProtocol( true )
                 .includeCharacteristics( true )
                 .includeIndices( false )
@@ -729,6 +735,65 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( ba.getNumberOfDesignElements() ).isNotNull();
             assertThat( ba.getNumberOfCellsByDesignElements() ).isNotNull();
         } );
+    }
+
+    @Test
+    public void testCellLevelMeasurements() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, "" );
+
+        CellLevelMeasurements clm = CellLevelMeasurements.Factory.newInstance( Categories.MASK );
+        clm.setType( MeasurementType.ABSOLUTE );
+        clm.setRepresentation( PrimitiveType.BITSET );
+        BitSet bs = new BitSet();
+        bs.set( 99 );
+        assertFalse( bs.get( 256 ) );
+        assertEquals( 128, bs.size() );
+        clm.setDataAsBitSet( bs );
+        scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm );
+
+        CellLevelMeasurements clm3 = CellLevelMeasurements.Factory.newInstance( Categories.UNCATEGORIZED );
+        clm3.setType( MeasurementType.ABSOLUTE );
+        clm3.setRepresentation( PrimitiveType.DOUBLE );
+        clm3.setDataAsDoubles( new double[100] );
+        scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm3 );
+
+        sessionFactory.getCurrentSession().flush();
+        SingleCellDimension dim = scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt );
+        assertNotNull( dim );
+        assertThat( dim.getCellLevelMeasurements() )
+                .hasSize( 2 )
+                .satisfiesOnlyOnce( clm2 -> {
+                    assertThat( clm2.getRepresentation() ).isEqualTo( PrimitiveType.BITSET );
+                    assertThat( clm2.getDataAsBitSet() ).isEqualTo( bs );
+                } )
+                .satisfiesOnlyOnce( clm2 -> {
+                    assertThat( clm2.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                    assertThat( clm2.getDataAsDoubles() ).isEqualTo( new double[100] );
+                } );
+
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig config = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeClms( true )
+                .includeValues( false )
+                .build();
+        SingleCellDimension dim2 = scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, config );
+        assertThat( dim2 ).isNotNull();
+        assertThat( dim2.getCellLevelMeasurements() )
+                .hasSize( 2 )
+                .allSatisfy( clm2 -> {
+                    assertThat( clm2.getCategory() ).isNotNull();
+                    assertThat( clm2.getData() ).isNull();
+                } );
+
+        assertThat( ( Double ) scExpressionExperimentService.getCellLevelMeasurementAt( ee, qt, clm3.getId(), 50 ) )
+                .isEqualTo( 0.0 );
+        assertThat( ( Double[] ) scExpressionExperimentService.getCellLevelMeasurementAt( ee, qt, clm3.getId(), 50, 60 ) )
+                .containsExactly( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 );
+        assertThat( scExpressionExperimentService.streamCellLevelMeasurements( ee, qt, clm3.getId(), false ) )
+                .hasSize( 100 );
+
+        scExpressionExperimentService.removeCellLevelMeasurements( ee, qt, clm3 );
     }
 
     private SingleCellDimension createSingleCellDimension() {

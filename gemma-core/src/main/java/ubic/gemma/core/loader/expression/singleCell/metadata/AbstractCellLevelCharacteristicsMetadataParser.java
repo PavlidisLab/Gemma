@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.util.mapper.*;
-import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -23,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellDimensionUtils.createReverseIndex;
@@ -32,9 +32,11 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellDimensionUtils.
  * @author poirigui
  */
 @Setter
-abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLevelCharacteristics> {
+abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLevelCharacteristics> implements CellLevelFeaturesMetadataParser<T> {
 
     private static final int MAXIMUM_COLLISION_TO_REPORT = 5;
+
+    private static final CSVFormat TSV_FORMAT = CSVFormat.TDF.builder().setHeader().setSkipHeaderRecord( true ).get();
 
     protected final Log log = LogFactory.getLog( getClass() );
 
@@ -340,13 +342,9 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {
-            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ) ) );
+            return TSV_FORMAT.parse( new InputStreamReader( new GZIPInputStream( Files.newInputStream( metadataFile ) ) ) );
         } else {
-            return getTsvFormat().parse( Files.newBufferedReader( metadataFile ) );
+            return TSV_FORMAT.parse( Files.newBufferedReader( metadataFile ) );
         }
-    }
-
-    private CSVFormat getTsvFormat() {
-        return CSVFormat.TDF.withFirstRecordAsHeader();
     }
 }

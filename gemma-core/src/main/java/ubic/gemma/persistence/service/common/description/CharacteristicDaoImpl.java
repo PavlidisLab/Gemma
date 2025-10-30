@@ -37,6 +37,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -95,6 +96,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             new OwningEntity( GeneSet.class, "GENE_SET", "GENE_SET_FK", true, null ),
             new OwningEntity( CellTypeAssignment.class, "INVESTIGATION", "CELL_TYPE_ASSIGNMENT_FK", true, null ),
             new OwningEntity( GenericCellLevelCharacteristics.class, "CELL_LEVEL_CHARACTERISTICS", "CELL_LEVEL_CHARACTERISTICS_FK", true, null ),
+            new OwningEntity( CellLevelMeasurements.class, "CELL_LEVEL_MEASUREMENTS", "CATEGORY_FK", false, null ),
             new OwningEntity( Gene2GOAssociation.class, "GENE2GO_ASSOCIATION", "ONTOLOGY_ENTRY_FK", false, null )
     };
 
