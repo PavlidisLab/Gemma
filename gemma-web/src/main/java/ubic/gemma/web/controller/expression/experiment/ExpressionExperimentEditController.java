@@ -342,8 +342,12 @@ public class ExpressionExperimentEditController {
                     .addAllObjects( getReferenceData() );
         }
 
+        // fetch the previous CTA in case the preferred single-cell QT changes
+        Optional<CellTypeAssignment> previousCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment );
+
         boolean reprocess = false;
         boolean recomputeSingleCellSparsityMetrics = false;
+        boolean recreateCellTypeFactor = false;
         if ( form.getQuantitationTypes() != null ) {
             Map<QuantitationType, QuantitationTypeUpdateStatus> status = updateQuantitationTypes( expressionExperiment, form.getQuantitationTypes() );
             for ( Entry<QuantitationType, QuantitationTypeUpdateStatus> entry : status.entrySet() ) {
@@ -351,7 +355,7 @@ public class ExpressionExperimentEditController {
                     continue;
                 }
                 if ( entry.getKey().getIsPreferred() ) {
-                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, reprocessing will be performed." );
+                    this.messageUtil.saveMessage( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." );
                     reprocess = true;
                 } else if ( preferredQuantitationTypes.contains( entry.getKey() )
                         && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsPreferred ) ) {
@@ -359,8 +363,13 @@ public class ExpressionExperimentEditController {
                     this.messageUtil.saveMessage( "There is no preferred quantitation type, however existing processed data will be kept." );
                 }
                 if ( entry.getKey().getIsSingleCellPreferred() ) {
-                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." );
                     recomputeSingleCellSparsityMetrics = true;
+                    // recreate the cell type factor only if the new preferred QT has a preferred CTA that differs from
+                    // the previous preferred CTA; the previous CTA might be missing.
+                    Optional<CellTypeAssignment> newCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment, entry.getKey() );
+                    recreateCellTypeFactor = newCta.isPresent() && !newCta.equals( previousCta );
+                    this.messageUtil.saveMessage( String.format( "Preferred single-cell quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed%s.",
+                            recreateCellTypeFactor ? " and the cell type factor will be re-created based on " + newCta.get() : "" ) );
                 } else if ( preferredSingleCellQuantitationTypes.contains( entry.getKey() )
                         && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsSingleCellPreferred ) ) {
                     // sparsity metrics will be cleared if there are no other preferred SC QTs
@@ -375,6 +384,10 @@ public class ExpressionExperimentEditController {
                 this.messageUtil.saveMessage( "Assay to sample associations have been changed; reprocessing will be performed." );
                 reprocess = true;
             }
+        }
+
+        if ( recreateCellTypeFactor ) {
+            singleCellExpressionExperimentService.recreateCellTypeFactor( expressionExperiment );
         }
 
         if ( recomputeSingleCellSparsityMetrics ) {

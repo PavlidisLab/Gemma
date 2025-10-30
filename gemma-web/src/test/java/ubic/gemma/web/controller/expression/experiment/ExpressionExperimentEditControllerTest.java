@@ -173,7 +173,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
         verify( preprocessorService ).process( ee );
@@ -197,7 +197,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
         verify( preprocessorService ).process( ee );
@@ -272,7 +272,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isSingleCellPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred single-cell quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." ) ) );
 
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
         verify( singleCellExpressionExperimentService ).updateSparsityMetrics( ee );

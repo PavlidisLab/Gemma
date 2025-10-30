@@ -367,6 +367,9 @@ public interface SingleCellExpressionExperimentService {
     Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
 
     /**
@@ -439,7 +442,7 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Obtain the cell types of a given single-cell dataset.
      * <p>
-     * Only the cell types applicable to the preferred single-cell vectors and labelling are returned.
+     * Only the cell types applicable to the preferred single-cell vectors and cell type assignment are returned.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
@@ -447,22 +450,24 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Obtain the cell type factor.
      *
-     * @return a cell type factor, or null of none exist
-     * @throws IllegalStateException if there is more than one such factor
+     * @return a cell type factor, or {@link Optional#empty()} if none exist or if there is more than one cell type
+     * factor.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<ExperimentalFactor> getCellTypeFactor( ExpressionExperiment ee );
 
     /**
-     * Recreate the cell type factor based on the preferred labelling of the preferred single-cell vectors.
+     * Recreate the cell type factor based on the preferred cell type assignment of the preferred single-cell vectors.
      * <p>
      * Analyses involving the factor are removed and samples mentioning the factor values are updated as per
      * {@link ExperimentalFactorService#remove(ExperimentalFactor)}.
+     * <p>
+     * Note that the cell type factor will not be deleted if there is more than one such factor present as per
+     * {@link #getCellTypeFactor(ExpressionExperiment)}.
      *
      * @return the created cell type factor
      * @throws IllegalStateException if the dataset does not have a preferred cell type labelling for its preferred set
-     *                               of single-cell vectors or if there is more than one cell type factor present in the
-     *                               dataset
+     *                               of single-cell vectors.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee );
