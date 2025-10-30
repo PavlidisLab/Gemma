@@ -21,7 +21,7 @@
   "dependencies": {
     "bean": "^1.0.15",
     "flotr2": "^0.1.0",
-    "jquery": "^2.1.1",
+    "jquery": "^3.7.1",
     "jquery-sparkline": "^2.1.2",
     "jquery-ui": "^1.10.4",
     "qtip2": "^2.2.0",
