@@ -41,6 +41,9 @@ public class Thaws {
      * The corresponding biomaterial is also thawed with {@link #thawBioMaterial(BioMaterial)}.
      */
     public static void thawBioAssay( BioAssay ba ) {
+        for ( DatabaseEntry de : ba.getOtherAccessions() ) {
+            Thaws.thawDatabaseEntry( de );
+        }
         Hibernate.initialize( ba.getArrayDesignUsed() );
         Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
         if ( ba.getOriginalPlatform() != null ) {
@@ -65,6 +68,9 @@ public class Thaws {
 
     private static void thawBioMaterial( BioMaterial bm2, boolean initializeBioAssaysUsedIn ) {
         visitBioMaterials( bm2, bm -> {
+            for ( DatabaseEntry de : bm.getOtherExternalAccessions() ) {
+                Thaws.thawDatabaseEntry( de );
+            }
             Hibernate.initialize( bm.getSourceTaxon() );
             Hibernate.initialize( bm.getTreatments() );
             for ( FactorValue fv : bm.getFactorValues() ) {
