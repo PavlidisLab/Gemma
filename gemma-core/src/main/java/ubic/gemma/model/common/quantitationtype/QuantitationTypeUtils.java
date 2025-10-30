@@ -4,12 +4,47 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class QuantitationTypeUtils {
+
+    /**
+     * Check if a value is considered a default value for the given quantitation type.
+     * <p>
+     * This is more robust than using {@link Object#equals(Object)} against {@link #getDefaultValue(QuantitationType)},
+     * because it will handle edge cases such as {@link Double#NaN}.
+     */
+    public static boolean isDefaultValue( @Nullable Object value, QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    return value instanceof Double && isDefaultCountValueAsDouble( ( Double ) value, quantitationType );
+                }
+                return value instanceof Double && Double.isNaN( ( Double ) value );
+            case FLOAT:
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    return value instanceof Float && isDefaultCountValueAsFloat( ( Float ) value, quantitationType );
+                }
+                return value instanceof Float && Float.isNaN( ( Float ) value );
+            case STRING:
+                return "".equals( value );
+            case CHAR:
+                return value instanceof Character && ( Character ) value == ( char ) 0;
+            case INT:
+                return value instanceof Integer && ( Integer ) value == 0;
+            case LONG:
+                return value instanceof Long && ( Long ) value == 0L;
+            case BOOLEAN:
+                return value instanceof Boolean && !( ( Boolean ) value );
+            default:
+                throw new UnsupportedOperationException( "Default values in data vectors of type " + quantitationType + " is not supported." );
+        }
+    }
 
     /**
      * Obtain the default to use for a given quantitation type.
@@ -47,7 +82,7 @@ public class QuantitationTypeUtils {
             case BOOLEAN:
                 return false;
             default:
-                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+                throw new UnsupportedOperationException( "Default values in data vectors of type " + quantitationType + " is not supported." );
         }
     }
 
@@ -70,7 +105,7 @@ public class QuantitationTypeUtils {
             case LONG:
                 return 0L;
             default:
-                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+                throw new UnsupportedOperationException( "Default values in data vectors of type " + quantitationType + " is not supported." );
         }
     }
 
@@ -82,6 +117,10 @@ public class QuantitationTypeUtils {
         } else {
             return 0;
         }
+    }
+
+    public static boolean isDefaultCountValueAsDouble( double val, QuantitationType quantitationType ) {
+        return val == getDefaultCountValueAsDouble( quantitationType );
     }
 
     /**
@@ -104,6 +143,10 @@ public class QuantitationTypeUtils {
             default:
                 return 0;
         }
+    }
+
+    public static boolean isDefaultCountValueAsFloat( float val, QuantitationType quantitationType ) {
+        return val == getDefaultCountValueAsFloat( quantitationType );
     }
 
     /**
