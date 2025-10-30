@@ -652,8 +652,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     private boolean endsWith( String filename, String suffix ) {
         return FileSystems.getDefault()
-                .getPathMatcher( "glob:**/*" + suffix + "{,.gz}" )
-                .matches( Paths.get( filename ) );
+                .getPathMatcher( "glob:*" + suffix + "{,.gz}" )
+                .matches( Paths.get( filename ).getFileName() );
     }
 
     /**
