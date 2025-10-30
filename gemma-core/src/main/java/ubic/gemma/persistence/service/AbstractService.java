@@ -12,6 +12,7 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -87,6 +88,28 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional(readOnly = true)
     public Collection<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<O> loadOrFail( Collection<Long> ids ) throws NullPointerException {
+        return loadOrFail( ids, NullPointerException::new );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> Collection<O> loadOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T {
+        ids = new HashSet<>( ids );
+        Collection<O> result = load( ids );
+        if ( result.size() < ids.size() ) {
+            for ( O o : result ) {
+                ids.remove( o.getId() );
+            }
+            throw exceptionSupplier.apply( String.format( "No %s with IDs %s found.",
+                    mainDao.getElementClass().getName(),
+                    ids.stream().sorted().map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
+        }
+        return result;
     }
 
     @Override

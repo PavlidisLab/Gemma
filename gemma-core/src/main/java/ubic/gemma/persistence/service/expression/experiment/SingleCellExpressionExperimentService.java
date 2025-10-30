@@ -422,9 +422,10 @@ public interface SingleCellExpressionExperimentService {
      *
      * @return the created cell type factor
      * @throws IllegalStateException if the dataset does not have a preferred cell type labelling for its preferred set
-     *                               of single-cell vectors or if there is more than one cell type factor present in the
-     *                               dataset
+     *                               of single-cell vectors, if there is more than one cell type factor present in the
+     *                               dataset or if the cell type factor was manually curated.
      */
+    @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee );
 }

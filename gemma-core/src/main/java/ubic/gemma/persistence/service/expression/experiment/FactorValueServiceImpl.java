@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -74,6 +75,24 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
             Hibernate.initialize( fv.getExperimentalFactor() );
         }
         return fv;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        FactorValue fv = loadOrFail( id, exceptionSupplier );
+        Hibernate.initialize( fv.getExperimentalFactor() );
+        return fv;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> Collection<FactorValue> loadWithExperimentalFactorOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T {
+        Collection<FactorValue> fvs = loadOrFail( ids, exceptionSupplier );
+        for ( FactorValue fv : fvs ) {
+            Hibernate.initialize( fv.getExperimentalFactor() );
+        }
+        return fvs;
     }
 
     @Override

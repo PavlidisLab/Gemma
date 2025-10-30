@@ -18,11 +18,11 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
 
 /**
@@ -48,19 +48,11 @@ public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalD
     @Override
     @Transactional(readOnly = true)
     public ExperimentalDesign loadWithExperimentalFactors( Long id ) {
-        return experimentalDesignDao.loadWithExperimentalFactors( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign ) {
-        return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
-        return this.experimentalDesignDao.getExpressionExperimentById( experimentalDesignId );
+        ExperimentalDesign ed = experimentalDesignDao.load( id );
+        if ( ed != null ) {
+            ed.getExperimentalFactors().forEach( Hibernate::initialize );
+        }
+        return ed;
     }
 
     @Override

@@ -85,7 +85,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
         for ( FactorValue f : testHelper.getFactorValues( ef ) ) {
-            eeService.addFactorValue( ee, f );
+            eeService.addFactorValue( ee, f, false );
         }
 
         FactorValue fv = ef.getFactorValues().iterator().next();

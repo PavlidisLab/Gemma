@@ -336,6 +336,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByDesignId( Long designId ) {
+        return findOneByProperty( "experimentalDesign.id", designId );
+    }
+
+    @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ee from ExpressionExperiment as ee "
@@ -344,6 +349,21 @@ public class ExpressionExperimentDaoImpl
                         + "where ef = :ef" )
                 .setParameter( "ef", ef )
                 .uniqueResult();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
+        if ( factors.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef in :efs" )
+                .setParameter( "efs", factors )
+                .list();
     }
 
     @Override
@@ -379,6 +399,17 @@ public class ExpressionExperimentDaoImpl
             results.put( ( ExpressionExperiment ) row[0], ( FactorValue ) row[1] );
         }
         return results;
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "join ee.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues f "
+                        + "where f.id in (:fvs) group by ee" )
+                .setParameterList( "fvs", optimizeParameterList( factorValueIds ) )
+                .list();
     }
 
     @Override
@@ -2875,7 +2906,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment = :ee and c.name = :clcName "
                         + "group by clc" )
                 .setParameter( "ee", ee )
-                .setParameter( "clcName", clcName)
+                .setParameter( "clcName", clcName )
                 .uniqueResult();
     }
 

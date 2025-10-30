@@ -254,7 +254,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         fv.setValue( "ack" );
         fv = FactorValue.Factory.newInstance( ef );
         fv.setValue( "adddck" );
-        expressionExperimentService.addFactorValue( ee, fv );
+        expressionExperimentService.addFactorValue( ee, fv, false );
 
         securityService.makePrivate( ee );
 

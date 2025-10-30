@@ -12,9 +12,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.util.ModelUtils;
+
+import javax.annotation.Nullable;
 
 /**
  * Each {@link FactorValue} can be associated with multiple characteristics (or with a measurement). However, for
@@ -51,6 +53,7 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
+    @Nullable
     @GemmaWebOnly
     private Long charId;
     @GemmaWebOnly
