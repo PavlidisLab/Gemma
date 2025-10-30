@@ -13,7 +13,7 @@ public class Values {
     public static final Value SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY = new Value(
             "single-nucleus RNA sequencing assay", "http://purl.obolibrary.org/obo/OBI_0003109" );
     public static final Value SINGLE_CELL_RNA_SEQUENCING_ASSAY = new Value(
-            "http://purl.obolibrary.org/obo/OBI_0002631", "single-cell RNA sequencing assay" );
+            "single-cell RNA sequencing assay", "http://purl.obolibrary.org/obo/OBI_0002631" );
 
     // from EFO
     /**
