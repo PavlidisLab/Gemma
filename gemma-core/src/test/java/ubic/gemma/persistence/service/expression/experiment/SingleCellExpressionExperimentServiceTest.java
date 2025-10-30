@@ -620,7 +620,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     public void testRecreateCellTypeFactor() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
-        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
                 .orElseThrow( AssertionError::new );
         assertThat( ee.getExperimentalDesign() ).isNotNull();
         ExperimentalFactor factor = ee.getExperimentalDesign().getExperimentalFactors().stream()
