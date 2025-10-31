@@ -7,19 +7,24 @@ import java.util.Iterator;
 
 /**
  * A collection that is intentionally not initialized.
+ *
  * @author poirigui
  */
-public class UninitializedCollection<T> implements Collection<T> {
+public abstract class UninitializedCollection<T> implements Collection<T> {
 
     @Nullable
     private final Integer size;
 
-    public UninitializedCollection() {
+    protected UninitializedCollection() {
         size = null;
     }
 
-    public UninitializedCollection( int size ) {
+    protected UninitializedCollection( int size ) {
         this.size = size;
+    }
+
+    public boolean sized() {
+        return size != null;
     }
 
     @Override
@@ -93,6 +98,16 @@ public class UninitializedCollection<T> implements Collection<T> {
 
     @Override
     public void clear() {
+        throw uninitializedException();
+    }
+
+    @Override
+    public int hashCode() {
+        throw uninitializedException();
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
         throw uninitializedException();
     }
 
