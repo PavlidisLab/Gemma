@@ -2815,18 +2815,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
-        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
-                        + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
-                .setParameter( "ee", ee )
-                .uniqueResult();
-    }
-
-    @Override
     public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select cta from SingleCellExpressionDataVector scedv "
@@ -2836,19 +2824,6 @@ public class ExpressionExperimentDaoImpl
                         + "group by cta" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .uniqueResult();
-    }
-
-    @Override
-    public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee ) throws NonUniqueResultException {
-        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
-                        + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
-                .setParameter( "ee", ee )
-                .setResultTransformer( new CtaInitializer( true, true ) )
                 .uniqueResult();
     }
 
