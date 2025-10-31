@@ -2262,14 +2262,16 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer(
+                includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( initializer )
                 .list();
     }
 
@@ -2295,14 +2297,15 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( initializer )
                 .uniqueResult();
     }
 
@@ -2323,17 +2326,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCellIds as numberOfCellIds, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( initializer )
                 .uniqueResult();
     }
 
-    private class SingleCellDimensionWithoutCellIdsInitializer implements TypedResultTransformer<SingleCellDimension> {
+    private class SingleCellDimensionWithoutCellIdsInitializer implements TypedResultTransformer<Object> {
+
+        private final String[] props = { "id", "numberOfCellIds", "bioAssaysOffset" };
 
         private final boolean includeBioAssays;
         private final boolean includeCtas;
@@ -2351,9 +2357,33 @@ public class ExpressionExperimentDaoImpl
             this.includeIndices = includeIndices;
         }
 
+        /**
+         * Create a query for selecting {@link SingleCellDimension} that can be used with a {@link SingleCellDimensionWithoutCellIdsInitializer}.
+         */
+        public String createSelectSingleCellDimension( String alias ) {
+            return "select " + Arrays.stream( props )
+                    .map( p -> alias + "." + p + " as " + p )
+                    .collect( Collectors.joining( ", " ) );
+        }
+
         @Override
-        public SingleCellDimension transformTuple( Object[] tuple, String[] aliases ) {
-            SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class ).transformTuple( tuple, aliases );
+        public Object transformTuple( Object[] tuple, String[] aliases ) {
+            Object[] scdTuple = new Object[props.length];
+            String[] scdAliases = new String[props.length];
+            Object[] unassignedTuple = new Object[tuple.length - props.length];
+            int k = 0;
+            for ( int i = 0; i < aliases.length; i++ ) {
+                String alias = aliases[i];
+                int j;
+                if ( ( j = ArrayUtils.indexOf( props, alias ) ) != -1 ) {
+                    scdTuple[j] = tuple[i];
+                    scdAliases[j] = alias;
+                } else {
+                    unassignedTuple[k++] = tuple[i];
+                }
+            }
+            SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class )
+                    .transformTuple( scdTuple, scdAliases );
             result.setCellIds( new UninitializedList<>( result.getNumberOfCellIds() ) );
             if ( includeBioAssays ) {
                 //noinspection unchecked
@@ -2417,11 +2447,18 @@ public class ExpressionExperimentDaoImpl
             } else {
                 result.setCellLevelCharacteristics( new UninitializedSet<>() );
             }
-            return result;
+            if ( unassignedTuple.length > 0 ) {
+                Object[] resultArr = new Object[1 + unassignedTuple.length];
+                resultArr[0] = result;
+                System.arraycopy( unassignedTuple, 0, resultArr, 1, unassignedTuple.length );
+                return resultArr;
+            } else {
+                return result;
+            }
         }
 
         @Override
-        public List<SingleCellDimension> transformListTyped( List<SingleCellDimension> collection ) {
+        public List<Object> transformListTyped( List<Object> collection ) {
             return collection;
         }
     }
@@ -3107,6 +3144,21 @@ public class ExpressionExperimentDaoImpl
                         + "group by scedv.quantitationType" )
                 .setParameter( "ee", ee )
                 .list();
+    }
+
+    @Override
+    public Map<SingleCellDimension, Set<QuantitationType>> getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( initializer.createSelectSingleCellDimension( "scd" ) + ", qt from SingleCellExpressionDataVector scedv "
+                        + "join scedv.quantitationType as qt join scedv.singleCellDimension as scd "
+                        + "where scedv.expressionExperiment = :ee "
+                        + "group by scd, qt" )
+                .setParameter( "ee", ee )
+                .setResultTransformer( initializer )
+                .list();
+        return results.stream().collect( Collectors.groupingBy( row -> ( SingleCellDimension ) row[0], Collectors.mapping( row -> ( QuantitationType ) row[1], Collectors.toSet() ) ) );
     }
 
     @Override

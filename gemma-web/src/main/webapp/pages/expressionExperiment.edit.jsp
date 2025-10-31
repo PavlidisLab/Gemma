@@ -28,6 +28,7 @@
 
         <table class="detail">
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Preferred</th>
@@ -48,7 +49,7 @@
                 <c:set var="vectorType" value="${e.key}" />
                 <c:set var="quantitationTypes" value="${e.value}" />
                 <tr>
-                    <td colspan="13">
+                    <td colspan="14">
                         <c:choose>
                             <c:when test="${vectorType != null}">
                                 <h4><spring:message code="${vectorType.simpleName}.title"
@@ -66,6 +67,9 @@
                         <tr>
                             <td>
                                 <form:hidden path="id" />
+                                    ${qt.id}
+                            </td>
+                            <td>
                                 <form:input path="name" size="20" cssErrorClass="error" />
                                 <form:errors path="name" cssClass="error" />
                             </td>
@@ -127,13 +131,16 @@
             </c:forEach>
         </table>
 
-        <c:if test="${!expressionExperiment.singleCellDimensions.isEmpty()}">
-        <hr class="normal">
-        <h3>Single-Cell Metadata</h3>
-            <p>The values here cannot be modified for now.</p>
-        </c:if>
-
         <c:forEach items="${expressionExperiment.singleCellDimensions}" var="scd" varStatus="scdIndex">
+            <hr class="normal">
+            <h3>Single-Cell Dimension #${scd.id}</h3>
+            <p>The values here cannot be modified for now.</p>
+            <c:if test="${not empty scd.quantitationTypes}">
+                Used by the following quantitation types:
+                <c:forEach items="${scd.quantitationTypes}" var="qt">
+                    ${fn:escapeXml(qt.name)} (#${qt.id})
+                </c:forEach>
+            </c:if>
             <spring:nestedPath path="singleCellDimensions[${scdIndex.index}]">
                 <form:hidden path="id" />
                 <c:if test="${!scd.cellTypeAssignments.isEmpty()}">
