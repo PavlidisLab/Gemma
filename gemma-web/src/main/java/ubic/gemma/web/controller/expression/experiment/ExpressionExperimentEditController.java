@@ -131,11 +131,16 @@ public class ExpressionExperimentEditController {
     @NoArgsConstructor
     public static class SingleCellDimensionEditForm {
         private Long id;
+        private List<QuantitationTypeValueObject> quantitationTypes;
         private List<CellTypeAssignmentEditForm> cellTypeAssignments;
         private List<CellLevelCharacteristicsEditForm> cellLevelCharacteristics;
 
-        public SingleCellDimensionEditForm( SingleCellDimension scd ) {
+        public SingleCellDimensionEditForm( SingleCellDimension scd, Set<QuantitationType> quantitationTypes ) {
             this.id = scd.getId();
+            this.quantitationTypes = quantitationTypes.stream()
+                    .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( QuantitationType::getId ) )
+                    .map( QuantitationTypeValueObject::new )
+                    .collect( Collectors.toList() );
             this.cellTypeAssignments = scd.getCellTypeAssignments().stream().map( CellTypeAssignmentEditForm::new ).collect( Collectors.toList() );
             this.cellLevelCharacteristics = scd.getCellLevelCharacteristics().stream().map( CellLevelCharacteristicsEditForm::new ).collect( Collectors.toList() );
         }
@@ -438,8 +443,11 @@ public class ExpressionExperimentEditController {
                 .includeProtocol( true )
                 .includeCharacteristics( true )
                 .build();
+        Map<SingleCellDimension, Set<QuantitationType>> dim2qts = singleCellExpressionExperimentService.getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( expressionExperiment,
+                // minimal config, we only care about the mapping keys
+                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder().build() );
         List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
-        form.setSingleCellDimensions( scds.stream().map( SingleCellDimensionEditForm::new ).collect( Collectors.toList() ) );
+        form.setSingleCellDimensions( scds.stream().map( scd -> new SingleCellDimensionEditForm( scd, dim2qts.getOrDefault( scd, Collections.emptySet() ) ) ).collect( Collectors.toList() ) );
     }
 
     private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
