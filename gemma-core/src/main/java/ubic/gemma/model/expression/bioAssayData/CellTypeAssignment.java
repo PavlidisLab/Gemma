@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 /**
  * Represents a cell type assignment where cells from a given dataset are assigned cell types.
+ *
  * @author poirigui
  * @see SingleCellDimension
  */
@@ -136,7 +137,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
         return super.toString()
                 + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
                 + ( " Number of Cell Types=" + numberOfCellTypes )
-                + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : null )
+                + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : "" )
                 + ( preferred ? " [Preferred]" : "" );
     }
 
