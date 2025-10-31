@@ -2803,7 +2803,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and scedv.expressionExperiment = :ee "
@@ -2842,7 +2842,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee ) throws NonUniqueResultException {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee "
@@ -2855,7 +2855,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
@@ -2883,7 +2883,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee "
@@ -2937,7 +2937,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee "
