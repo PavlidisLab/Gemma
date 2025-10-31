@@ -768,6 +768,8 @@ public interface ExpressionExperimentDao
      */
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
+    Map<SingleCellDimension, Set<QuantitationType>> getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Indicate if the given experiment has single-cell quantitation types.
      */
