@@ -1071,7 +1071,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
-        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee ) );
+        return getPreferredSingleCellQuantitationType( ee )
+                .flatMap( qt -> Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee, qt ) ) );
     }
 
     @Override
@@ -1083,7 +1084,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee ) {
-        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignmentWithoutIndices( ee ) );
+        return getPreferredSingleCellQuantitationType( ee )
+                .flatMap( qt -> Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignmentWithoutIndices( ee, qt ) ) );
     }
 
     @Override

@@ -681,28 +681,12 @@ public interface ExpressionExperimentDao
     Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * Obtain the preferred assignment of the preferred single-cell vectors.
-     *
-     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
-     */
-    @Nullable
-    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
-
-    /**
      * Obtain the preferred assignment for the given quantitation type.
      *
      * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
      */
     @Nullable
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException;
-
-    /**
-     * Obtain the preferred assignment for the preferred single-cell vectors without loading the indices.
-     *
-     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
-     */
-    @Nullable
-    CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee ) throws NonUniqueResultException;
 
     /**
      * Obtain the preferred assignment for the given quantitation type without loading the indices.
