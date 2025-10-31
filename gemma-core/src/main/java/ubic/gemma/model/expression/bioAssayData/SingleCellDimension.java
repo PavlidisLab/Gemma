@@ -2,11 +2,12 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.core.datastructure.sparse.SparseListUtils;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.core.datastructure.sparse.SparseListUtils;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
@@ -131,7 +132,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
 
     @Override
     public int hashCode() {
-        return Objects.hash( numberOfCellIds, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        // bioAssays may be uninitialized, so it's not safe to include in the hashcode
+        return Objects.hash( numberOfCellIds, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override
@@ -143,7 +145,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
         SingleCellDimension scd = ( SingleCellDimension ) obj;
         if ( id != null && scd.id != null )
             return id.equals( scd.id );
-        return Objects.equals( bioAssays, scd.bioAssays )
+        // bioAssays might be uninitialized, ignore it when comparing
+        return ModelUtils.equals( bioAssays, scd.bioAssays ) == ModelUtils.EqualityOutcome.EQUAL
                 && Arrays.equals( bioAssaysOffset, scd.bioAssaysOffset )
                 && Objects.equals( cellIds, scd.cellIds );  // this is the most expensive to compare
     }
