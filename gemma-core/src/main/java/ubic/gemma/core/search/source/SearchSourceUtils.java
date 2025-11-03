@@ -1,4 +1,4 @@
-package ubic.gemma.core.search;
+package ubic.gemma.core.search.source;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchResult;
@@ -6,7 +6,12 @@ import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.Collection;
 
-public class SearchSettingsUtils {
+/**
+ * Shared utilities for {@link ubic.gemma.core.search.SearchSource}s.
+ *
+ * @author poirigui
+ */
+class SearchSourceUtils {
 
     /**
      * Check if a collection of search results is already filled.

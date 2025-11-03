@@ -26,7 +26,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.Set;
 
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.isGoId;
-import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
+import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.quote;
 

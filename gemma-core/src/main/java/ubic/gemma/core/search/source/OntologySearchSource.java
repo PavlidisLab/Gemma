@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
+import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 
@@ -342,7 +342,7 @@ public class OntologySearchSource implements SearchSource {
      *
      * @return the difference between the maximum results and the collection size or -1 if the settings are for
      * unlimited results
-     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSettingsUtils#isFilled(Collection, SearchSettings)}
+     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSourceUtils#isFilled(Collection, SearchSettings)}
      */
     private static <T extends Identifiable> int getLimit( Collection<SearchResult<T>> results, SearchSettings settings ) {
         if ( isFilled( results, settings ) ) {
