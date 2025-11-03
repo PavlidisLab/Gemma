@@ -8,6 +8,10 @@ Ignore the `offset` and `limit` parameters of `getDatasetDifferentialExpressionA
 the 2.10 release. This parameter was not really necessary given the few number of analyses per dataset and was causing
 issues with the pagination over the result sets.
 
+Add a `dataset` parameter to the `search` endpoint to constraint results to be related to a specific dataset.
+
+Add a `resultObjectUrl` and `resultObjectUrlExternal` fields to the `SearchResultValueObject` model.
+
 ### Update 2.9.2
 
 Subject, predicates and objects of statements are now exposed in the `FilterArgExpressionExperiment` model. Their URIs

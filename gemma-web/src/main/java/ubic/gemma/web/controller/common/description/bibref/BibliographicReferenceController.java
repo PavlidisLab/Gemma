@@ -44,8 +44,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.util.ListBatchCommand;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
+import ubic.gemma.web.controller.util.ListBatchCommand;
 import ubic.gemma.web.controller.util.MessageUtil;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 
@@ -236,7 +236,8 @@ public class BibliographicReferenceController implements InitializingBean {
 
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         try {
-            List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
+            List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings.getQuery(),
+                    settings.isSearchExperiments(), settings.isSearchBibrefs() );
             return new JsonReaderResponse<>( vos, vos.size() );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( "Invalid search settings.", e );

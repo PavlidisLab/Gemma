@@ -28,6 +28,7 @@ import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -95,7 +96,8 @@ public class OpenApiTest extends BaseTest implements InitializingBean {
         public SearchService searchService() {
             SearchService searchService = mock( SearchService.class );
             when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( ExpressionExperiment.class ) );
-            when( searchService.getFields( ExpressionExperiment.class ) ).thenReturn( Collections.singleton( "shortName" ) );
+            when( searchService.getFields( ExpressionExperiment.class, SearchSettings.SearchMode.ACCURATE ) )
+                    .thenReturn( Collections.singleton( "shortName" ) );
             return searchService;
         }
 

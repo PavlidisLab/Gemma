@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -34,10 +35,14 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
 
     boolean isBlacklisted( String accession );
 
+    @Nullable
+    BlacklistedEntity findByShortName( String shortName );
+
     /**
-     * @param  accession accession to search for (typically either a GPL or GSE)
+     * @param accession accession to search for (typically either a GPL or GSE)
      * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
      */
+    @Nullable
     BlacklistedEntity findByAccession( String accession );
 
     boolean isBlacklisted( ArrayDesign platform );

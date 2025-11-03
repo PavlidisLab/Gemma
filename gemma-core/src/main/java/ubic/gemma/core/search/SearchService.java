@@ -16,11 +16,14 @@ package ubic.gemma.core.search;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import static ubic.gemma.model.common.search.SearchSettings.SearchMode;
 
 /**
  * @author paul
@@ -44,9 +47,12 @@ public interface SearchService {
     }
 
     /**
-     * Obtain a list of fields that can be searched on for the given result type.
+     * Obtain a list of fields that can be searched on for the given result type and search mode.
+     * <p>
+     * The search mode can affect which fields will be looked-up by the search sources. To get all possible fields, use
+     * the {@link SearchMode#ACCURATE} mode.
      */
-    Set<String> getFields( Class<? extends Identifiable> resultType );
+    Set<String> getFields( Class<? extends Identifiable> resultType, SearchMode searchMode );
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
@@ -62,7 +68,6 @@ public interface SearchService {
      * </ul>
      *
      * @param settings settings
-     * @param context
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     SearchResultMap search( SearchSettings settings, SearchContext context ) throws SearchException;
@@ -85,6 +90,7 @@ public interface SearchService {
      * The conversion logic is mainly defined by the corresponding {@link ubic.gemma.persistence.service.BaseVoEnabledService}
      * that match the result type. See {@link #getSupportedResultTypes()} for a set of supported result types this o
      * function can handle.
+     *
      * @throws IllegalArgumentException if the passed search result is not supported for VO conversion
      */
     <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException;
@@ -96,12 +102,11 @@ public interface SearchService {
      * advantage of grouping result by types in order to use {@link ubic.gemma.persistence.service.BaseVoEnabledService#loadValueObjects(Collection)},
      * which is generally more efficient than loading each result individually.
      *
-     * @see ubic.gemma.persistence.service.BaseVoEnabledService#loadValueObjects(Collection)
-     *
      * @param searchResults a collection of {@link SearchResult}, which may contain a mixture of different {@link Identifiable}
      *                      result objects
-     * @throws IllegalArgumentException if any of the supplied search results cannot be converted to VO
      * @return converted search results as per {@link #loadValueObject(SearchResult)}
+     * @throws IllegalArgumentException if any of the supplied search results cannot be converted to VO
+     * @see ubic.gemma.persistence.service.BaseVoEnabledService#loadValueObjects(Collection)
      */
     List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjects( Collection<SearchResult<?>> searchResults ) throws IllegalArgumentException;
 }

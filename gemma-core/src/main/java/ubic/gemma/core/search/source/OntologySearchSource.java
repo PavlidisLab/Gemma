@@ -16,6 +16,8 @@ import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -29,9 +31,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
+import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 
 @Component
 @CommonsLog
@@ -67,7 +69,9 @@ public class OntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseOntology();
+        return settings.isUseOntology()
+                && settings.hasResultType( ExpressionExperiment.class )
+                && settings.getMode().isAtLeast( SearchSettings.SearchMode.FAST );
     }
 
     /**
@@ -120,8 +124,8 @@ public class OntologySearchSource implements SearchSource {
      * Parkinson's
      * AND neuron finds items tagged with both of those terms. The use of OR is handled by the caller.
      *
-     * @param settings      search settings
-     * @param clause        a conjunctive clause
+     * @param settings search settings
+     * @param clause   a conjunctive clause
      * @return SearchResults of Experiments
      */
     private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, SearchContext context, Set<String> clause, long timeoutMs ) throws SearchException {
@@ -340,7 +344,7 @@ public class OntologySearchSource implements SearchSource {
      *
      * @return the difference between the maximum results and the collection size or -1 if the settings are for
      * unlimited results
-     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSettingsUtils#isFilled(Collection, SearchSettings)}
+     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSourceUtils#isFilled(Collection, SearchSettings)}
      */
     private static <T extends Identifiable> int getLimit( Collection<SearchResult<T>> results, SearchSettings settings ) {
         if ( isFilled( results, settings ) ) {
@@ -398,6 +402,7 @@ public class OntologySearchSource implements SearchSource {
 
     /**
      * Highlight a given ontology term.
+     *
      * @return a highlight, or null if no provider is set or the provider returns null
      */
     @Nullable

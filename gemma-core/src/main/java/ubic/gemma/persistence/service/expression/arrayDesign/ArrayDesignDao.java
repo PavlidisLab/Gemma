@@ -49,6 +49,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     @Nullable
     ArrayDesign findOneByName( String name );
 
+    Collection<ArrayDesign> findByCompositeSequenceName( String name );
+
     Collection<ArrayDesign> findByAlternateName( String queryString );
 
     @Nullable

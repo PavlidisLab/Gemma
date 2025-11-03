@@ -18,14 +18,15 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.genome.gene.GOGroupValueObject;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -104,7 +105,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * GeneValueObject, GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and
      * SearchObjects containing an object of any of those types
      *
-     * @param  results a collection of SearchResult objects to create SearchResultDisplayObjects for
+     * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
      * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
      */
     public static <T extends Identifiable> List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
@@ -113,7 +114,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         // collection of SearchResultDisplayObjects to return
         List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<>();
 
-        if ( results != null && results.size() > 0 ) {
+        if ( results != null && !results.isEmpty() ) {
             // for every object passed in, create a SearchResultDisplayObject
             for ( SearchResult<T> result : results ) {
                 searchResultDisplayObjects.add( new SearchResultDisplayObject( result ) );
@@ -176,7 +177,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     /**
      * @return the resultValueObject, which will be (for the example of genes) a GeneValueObject or a
-     *         GeneSetValueObject, which also has several subclasses (SessionBound etc.)
+     * GeneSetValueObject, which also has several subclasses (SessionBound etc.)
      */
     public Object getResultValueObject() {
         return resultValueObject;

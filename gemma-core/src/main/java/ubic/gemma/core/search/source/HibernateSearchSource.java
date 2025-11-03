@@ -17,11 +17,14 @@ import org.hibernate.search.Search;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.FieldAwareSearchSource;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -39,6 +42,7 @@ import static ubic.gemma.core.search.lucene.LuceneQueryUtils.parseSafely;
 
 /**
  * Search source based on Hibernate Search.
+ *
  * @author poirigui
  */
 @Component
@@ -59,9 +63,12 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     };
 
     private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
+    private static final String[] PLATFORM_EXACT_FIELDS = { "shortName", "name", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PUBLICATION_FIELDS = new String[] { "name", "abstractText",
             "authorList", "chemicals.name", "chemicals.registryNumber",
             "fullTextUri", "keywords.term", "meshTerms.term", "pubAccession.accession", "title" };
+    // TODO: check if name is suitable
+    private static final String[] PUBLICATION_EXACT_FIELDS = new String[] { "name", "fullTextUri", "pubAccession.accession" };
 
     private static String[] DATASET_FIELDS = {
             "shortName", "name", "description", "accession.accession",
@@ -83,24 +90,37 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObject",
             "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri"
     };
+    private static String[] DATASET_EXACT_FIELDS = {
+            "shortName", "name", "accession.accession",
+    };
 
     private static final String[] GENE_FIELDS = {
             "name", "accessions.accession", "aliases.alias",
             "ensemblId", "ncbiGeneId", "officialName", "officialSymbol", "products.name",
             "products.ncbiGi", "products.accessions.accession", "products.previousNcbiId"
     };
+    private static final String[] GENE_EXACT_FIELDS = {
+            "name", "accessions.accession", "aliases.alias", "ensemblId", "ncbiGeneId", "officialName", "officialSymbol"
+    };
 
     private static String[] GENE_SET_FIELDS = {
             "name", "description", "characteristics.value", "characteristics.valueUri", "sourceAccession.accession"
     };
+    private final static String[] GENE_SET_EXACT_FIELDS = {
+            "name"
+    };
 
     private static final String[] EXPERIMENT_SET_FIELDS = { "name", "description" };
+    private static final String[] EXPERIMENT_SET_EXACT_FIELDS = { "name" };
 
     private static final String[] BIO_SEQUENCE_FIELDS = { "name", "sequenceDatabaseEntry.accession" };
+    private static final String[] BIO_SEQUENCE_EXACT_FIELDS = { "name", "sequenceDatabaseEntry.accession" };
 
     private static String[] COMPOSITE_SEQUENCE_FIELDS = { "name", "description" };
+    private final static String[] COMPOSITE_SEQUENCE_EXACT_FIELDS = { "name" };
 
     private static final Map<Class<?>, Set<String>> ALL_FIELDS = new HashMap<>();
+    private static final Map<Class<?>, Set<String>> ALL_EXACT_FIELDS = new HashMap<>();
 
     static {
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "primaryPublication.", PUBLICATION_FIELDS ) );
@@ -115,6 +135,15 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         ALL_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_FIELDS ) ) );
         ALL_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_FIELDS ) ) );
         ALL_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_FIELDS ) ) );
+
+        DATASET_EXACT_FIELDS = ArrayUtils.addAll( DATASET_EXACT_FIELDS, prefix( "primaryPublication.", PUBLICATION_EXACT_FIELDS ) );
+        DATASET_EXACT_FIELDS = ArrayUtils.addAll( DATASET_EXACT_FIELDS, prefix( "otherRelevantPublications.", PUBLICATION_EXACT_FIELDS ) );
+        ALL_EXACT_FIELDS.put( ExpressionExperiment.class, new HashSet<>( Arrays.asList( DATASET_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( ArrayDesign.class, new HashSet<>( Arrays.asList( PLATFORM_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( CompositeSequence.class, new HashSet<>( Arrays.asList( COMPOSITE_SEQUENCE_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_EXACT_FIELDS ) ) );
     }
 
     private static String[] prefix( String p, String... fields ) {
@@ -139,53 +168,55 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Override
-    public Set<String> getFields( Class<? extends Identifiable> entityClass ) {
-        return ALL_FIELDS.getOrDefault( entityClass, Collections.emptySet() );
+    public Set<String> getFields( Class<? extends Identifiable> resultType, SearchSettings.SearchMode searchMode ) {
+        return searchMode == SearchSettings.SearchMode.EXACT ?
+                ALL_EXACT_FIELDS.getOrDefault( resultType, Collections.emptySet() ) :
+                ALL_FIELDS.getOrDefault( resultType, Collections.emptySet() );
     }
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseFullTextIndex();
+        return settings.isUseFullTextIndex() && settings.getMode().isAtLeast( SearchSettings.SearchMode.FAST );
     }
 
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, ArrayDesign.class, PLATFORM_FIELDS );
+        return searchFor( settings, context, ArrayDesign.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PLATFORM_EXACT_FIELDS : PLATFORM_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, BibliographicReference.class, PUBLICATION_FIELDS );
+        return searchFor( settings, context, BibliographicReference.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PUBLICATION_EXACT_FIELDS : PUBLICATION_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, ExpressionExperimentSet.class, EXPERIMENT_SET_FIELDS );
+        return searchFor( settings, context, ExpressionExperimentSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? EXPERIMENT_SET_EXACT_FIELDS : EXPERIMENT_SET_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, BioSequence.class, BIO_SEQUENCE_FIELDS );
+        return searchFor( settings, context, BioSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? BIO_SEQUENCE_EXACT_FIELDS : BIO_SEQUENCE_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, CompositeSequence.class, COMPOSITE_SEQUENCE_FIELDS );
+        return searchFor( settings, context, CompositeSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? COMPOSITE_SEQUENCE_EXACT_FIELDS : COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, ExpressionExperiment.class, DATASET_FIELDS );
+        return searchFor( settings, context, ExpressionExperiment.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? DATASET_EXACT_FIELDS : DATASET_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, Gene.class, GENE_FIELDS );
+        return searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
     }
 
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, GeneSet.class, GENE_SET_FIELDS );
+        return searchFor( settings, context, GeneSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_SET_EXACT_FIELDS : GENE_SET_FIELDS );
     }
 
     private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, SearchContext context, Class<T> clazz, String... fields ) throws SearchException {

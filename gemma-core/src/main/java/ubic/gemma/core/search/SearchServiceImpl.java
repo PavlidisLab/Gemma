@@ -42,6 +42,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -163,10 +165,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     @Override
-    public Set<String> getFields( Class<? extends Identifiable> resultType ) {
+    public Set<String> getFields( Class<? extends Identifiable> resultType, SearchSettings.SearchMode searchMode ) {
         return searchSources.stream()
                 .filter( s -> s instanceof FieldAwareSearchSource )
-                .map( s -> ( ( FieldAwareSearchSource ) s ).getFields( resultType ) )
+                .map( s -> ( ( FieldAwareSearchSource ) s ).getFields( resultType, searchMode ) )
                 .flatMap( Set::stream )
                 .collect( Collectors.toSet() );
     }
@@ -419,8 +421,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * If the search matches a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
      * free-text indices and ontology annotations.
      *
-     * @param settings      object; the maximum results can be set here but also has a default value defined by
-     *                      SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
+     * @param settings object; the maximum results can be set here but also has a default value defined by
+     *                 SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE
      * @return {@link Collection} of SearchResults
      */
     private SearchResultSet<ExpressionExperiment> expressionExperimentSearch( final SearchSettings settings, SearchContext context ) throws SearchException {
@@ -438,8 +440,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             SearchServiceImpl.log.warn( String.format( "Expression Experiment database search for %s took %d ms, %d hits.",
                     settings, watch.getTime(), results.size() ) );
 
-        // in fast mode, stop now
-        if ( settings.getMode().equals( SearchSettings.SearchMode.FAST ) ) {
+        // in exact or fast mode, stop now even if there are no results
+        if ( settings.getMode().isAtMost( SearchSettings.SearchMode.FAST ) ) {
             return results;
         }
 

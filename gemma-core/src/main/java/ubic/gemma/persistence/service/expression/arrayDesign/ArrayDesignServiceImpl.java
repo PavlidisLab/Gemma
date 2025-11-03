@@ -141,6 +141,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesign> findByCompositeSequenceName( String name ) {
+        return arrayDesignDao.findByCompositeSequenceName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ArrayDesign findOneByName( String name ) {
         return arrayDesignDao.findOneByName( name );
     }

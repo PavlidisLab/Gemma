@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.MarkdownUtils;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
@@ -168,7 +169,12 @@ public class CustomModelResolver extends ModelResolver {
     private Map<String, List<String>> getSearchableProperties() {
         Map<String, List<String>> sp = new HashMap<>();
         for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
-            List<String> fields = searchService.getFields( resultType ).stream().sorted( FIELD_COMPARATOR ).collect( Collectors.toList() );
+            List<String> fields = searchService
+                    // use accurate search mode to make sure we capture all the fields
+                    .getFields( resultType, SearchSettings.SearchMode.ACCURATE )
+                    .stream()
+                    .sorted( FIELD_COMPARATOR )
+                    .collect( Collectors.toList() );
             if ( !fields.isEmpty() ) {
                 sp.put( resultType.getName(), fields );
             }

@@ -690,7 +690,7 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene"/>
 
-        <dwr:convert type="bean" class="ubic.gemma.web.controller.search.GeneralSearchController$SearchResultValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.common.search.SearchResultValueObject"/>
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject"/>

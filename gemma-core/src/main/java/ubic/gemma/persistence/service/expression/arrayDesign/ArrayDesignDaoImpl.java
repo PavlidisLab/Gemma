@@ -257,6 +257,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Collection<ArrayDesign> findByCompositeSequenceName( String name ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad join ad.compositeSequences cs where cs.name = :name group by ad" )
+                .setParameter( "name", name )
+                .list();
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );

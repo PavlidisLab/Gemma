@@ -49,12 +49,16 @@ import ubic.basecode.ontology.simple.OntologyPropertySimple;
 import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -1160,11 +1164,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Poll the next available future from the given completion service.
      *
-     * @param completionService  the completion service to poll from
-     * @param description        a description of the task being waited for logging purposes
-     * @param futures            the list of futures being awaited
-     * @param objects            the list of objects corresponding to the futures for logging purposes
-     * @param timeoutMs          the amount of time to wait until a {@link TimeoutException} is raised, in milliseconds
+     * @param completionService the completion service to poll from
+     * @param description       a description of the task being waited for logging purposes
+     * @param futures           the list of futures being awaited
+     * @param objects           the list of objects corresponding to the futures for logging purposes
+     * @param timeoutMs         the amount of time to wait until a {@link TimeoutException} is raised, in milliseconds
      */
     private <T> T pollCompletionService( ExecutorCompletionService<T> completionService, String description, List<Future<T>> futures, List<?> objects, long timeoutMs ) throws InterruptedException, ExecutionException, TimeoutException {
         Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );

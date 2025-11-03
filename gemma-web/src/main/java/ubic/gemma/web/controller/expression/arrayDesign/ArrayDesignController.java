@@ -42,11 +42,11 @@ import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -654,7 +654,6 @@ public class ArrayDesignController {
             ArrayDesign ad = arrayDesignService.loadOrFail( getTaskCommand().getEntityId(),
                     EntityNotFoundException::new, "Could not load platform with id=" + getTaskCommand().getEntityId() );
             arrayDesignService.remove( ad );
-            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
             return newTaskResult( "Array " + ad.getShortName() + " removed from Database." );
         }
     }

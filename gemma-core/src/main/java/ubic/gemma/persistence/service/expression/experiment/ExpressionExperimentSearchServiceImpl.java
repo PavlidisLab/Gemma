@@ -27,10 +27,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -125,7 +125,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException {
+    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, @Nullable Long taxonId ) throws SearchException {
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
@@ -345,7 +345,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
      * sets called by ubic.gemma.web.controller .expression.experiment.ExpressionExperimentController.
      * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
      */
-    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
+    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( @Nullable Long taxonId ) {
         boolean taxonLimited = taxonId != null;
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<>();

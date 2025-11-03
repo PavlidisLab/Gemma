@@ -3,11 +3,15 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -36,6 +40,7 @@ import java.util.stream.IntStream;
  * It also supports logging of the time spent by each source and the number of results found. This is done at the DEBUG
  * level unless the value set by {@link #setWarningThresholdMills(int)} or {@link #setFastWarningThresholdMillis(int)}
  * is exceeded in which case WARNING is used.
+ *
  * @author poirigui
  */
 @CommonsLog
