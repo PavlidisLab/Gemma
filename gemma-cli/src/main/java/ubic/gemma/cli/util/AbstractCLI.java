@@ -54,6 +54,7 @@ import static java.util.Objects.requireNonNull;
  * Use {@link AbstractAuthenticatedCLI} if you need to authenticate the user.
  *
  * @author pavlidis
+ * @author poirigui
  */
 public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
