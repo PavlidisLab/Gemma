@@ -1,5 +1,7 @@
 package ubic.gemma.cli.util;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 import java.io.Console;
 import java.io.InputStream;
@@ -9,6 +11,7 @@ import java.util.Map;
 
 /**
  * A context for the CLI based on {@link System}.
+ *
  * @author poirigui
  */
 public class SystemCLIContext implements CLIContext {
@@ -19,6 +22,7 @@ public class SystemCLIContext implements CLIContext {
     private final String[] arguments;
 
     private int exitStatus = 0;
+    @Getter
     @Nullable
     private Exception exitCause = null;
 
@@ -67,11 +71,6 @@ public class SystemCLIContext implements CLIContext {
     @Override
     public int getExitStatus() {
         return exitStatus;
-    }
-
-    @Override
-    public Exception getExitCause() {
-        return null;
     }
 
     @Override
