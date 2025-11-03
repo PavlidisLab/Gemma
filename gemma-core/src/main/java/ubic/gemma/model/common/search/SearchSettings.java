@@ -154,10 +154,19 @@ public class SearchSettings {
     private Set<Class<? extends Identifiable>> resultTypes;
 
     /* optional search constraints */
+    /**
+     * Constraint results to be related to the given platform.
+     */
     @Nullable
     private ArrayDesign platformConstraint;
+    /**
+     * Constraint results to be related to the given dataset.
+     */
     @Nullable
-    private ExpressionExperiment experimentConstraint;
+    private ExpressionExperiment datasetConstraint;
+    /**
+     * Constraint results to to be related to the given taxon.
+     */
     @Nullable
     private Taxon taxonConstraint;
 
@@ -221,12 +230,32 @@ public class SearchSettings {
     public String toString() {
         StringBuilder s = new StringBuilder( "'" + query + "'" );
         s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( datasetConstraint != null ) {
+            s.append( " " ).append( "[" ).append( datasetConstraint ).append( "]" );
+        }
         if ( platformConstraint != null ) {
             s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
         }
         if ( taxonConstraint != null ) {
             s.append( " " ).append( "[" ).append( taxonConstraint ).append( "]" );
         }
+        if ( useDatabase ) {
+            s.append( " [Use Database]" );
+        }
+        if ( useOntology ) {
+            s.append( " [Use Ontology]" );
+        }
+        if ( useGeneOntology ) {
+            s.append( " [Use Gene Ontology]" );
+        }
+        if ( useFullTextIndex ) {
+            s.append( " [Use Full-Text Index]" );
+        }
+        s.append( " Max Results=" ).append( maxResults );
+        if ( fillResults ) {
+            s.append( " [Fill Results]" );
+        }
+        s.append( " Mode=" ).append( mode );
         return s.toString();
     }
 }
