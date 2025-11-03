@@ -2,6 +2,8 @@ package ubic.gemma.core.search;
 
 import org.assertj.core.data.Index;
 import org.junit.Test;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

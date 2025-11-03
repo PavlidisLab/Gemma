@@ -33,12 +33,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.DefaultHighlighter;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -47,8 +52,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -85,7 +93,7 @@ public class GeneralSearchController {
     /**
      * List of supported scopes (or result types) for searching.
      */
-    private static final Scope[] scopes = {
+    private static final Scope[] SCOPES = {
             new Scope( 'G', Gene.class ),
             new Scope( 'E', ExpressionExperiment.class ),
             new Scope( 'P', CompositeSequence.class ),
@@ -97,13 +105,158 @@ public class GeneralSearchController {
     @Autowired
     private SearchService searchService;
     @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
     private TaxonService taxonService;
     @Autowired
     private MessageSource messageSource;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     @Autowired
     private HttpServletRequest request;
 
+    @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public Object search(
+            @RequestParam(value = "dataset", required = false) String dataset,
+            @RequestParam(value = "platform", required = false) String platform,
+            @RequestParam(value = "taxon", required = false) String taxon,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "searchDatabase", required = false, defaultValue = "true") boolean useDatabase,
+            @RequestParam(value = "searchIndices", required = false, defaultValue = "true") boolean useFullTextIndex,
+            @RequestParam(value = "searchCharacteristics", required = false, defaultValue = "true") boolean useOntology,
+            @RequestParam(value = "searchGO", required = false, defaultValue = "false") boolean useGeneOntology,
+            @RequestParam(value = "noRedirect", required = false, defaultValue = "false") boolean noRedirect ) {
+        return search( null, null, dataset, platform, taxon, scope, useDatabase, useFullTextIndex, useOntology, useGeneOntology, noRedirect );
+    }
+
+    @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = "query")
+    public Object searchByQuery(
+            @RequestParam(value = "query") String query,
+            @RequestParam(value = "dataset", required = false) String dataset,
+            @RequestParam(value = "platform", required = false) String platform,
+            @RequestParam(value = "taxon", required = false) String taxon,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "searchDatabase", required = false, defaultValue = "true") boolean useDatabase,
+            @RequestParam(value = "searchIndices", required = false, defaultValue = "true") boolean useFullTextIndex,
+            @RequestParam(value = "searchCharacteristics", required = false, defaultValue = "true") boolean useOntology,
+            @RequestParam(value = "searchGO", required = false, defaultValue = "false") boolean useGeneOntology,
+            @RequestParam(value = "noRedirect", required = false, defaultValue = "false") boolean noRedirect ) {
+        return search( query, null, dataset, platform, taxon, scope, useDatabase, useFullTextIndex, useOntology, useGeneOntology, noRedirect );
+    }
+
+    @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = "termUri")
+    public Object searchByUri(
+            @RequestParam(value = "termUri") String termUri,
+            @RequestParam(value = "dataset", required = false) String dataset,
+            @RequestParam(value = "platform", required = false) String platform,
+            @RequestParam(value = "taxon", required = false) String taxon,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "searchDatabase", required = false, defaultValue = "true") boolean useDatabase,
+            @RequestParam(value = "searchIndices", required = false, defaultValue = "true") boolean useFullTextIndex,
+            @RequestParam(value = "searchCharacteristics", required = false, defaultValue = "true") boolean useOntology,
+            @RequestParam(value = "searchGO", required = false, defaultValue = "false") boolean useGeneOntology,
+            @RequestParam(value = "noRedirect", required = false, defaultValue = "false") boolean noRedirect ) {
+        return search( null, termUri, dataset, platform, taxon, scope, useDatabase, useFullTextIndex, useOntology, useGeneOntology, noRedirect );
+    }
+
+    private Object search( @Nullable String query, @Nullable String termUri, String dataset, @Nullable String platform, @Nullable String taxon,
+            @Nullable String scope,
+            boolean useDatabase,
+            boolean useFullTextIndex,
+            boolean useOntology,
+            boolean useGeneOntology,
+            boolean noRedirect ) {
+        ModelAndView mav = new ModelAndView( "generalSearch" );
+        if ( query != null ) {
+            query = StringUtils.strip( query );
+            if ( StringUtils.isBlank( query ) ) {
+                throw new IllegalArgumentException( "The query cannot be blank." );
+            } else if ( query.charAt( 0 ) == '*' ) {
+                throw new IllegalArgumentException( "The query cannot start with a wildcard." );
+            }
+            mav.addObject( "SearchString", query );
+        } else if ( termUri != null ) {
+            try {
+                new URI( termUri );
+            } catch ( URISyntaxException e ) {
+                throw new IllegalArgumentException( "Invalid term URI: " + termUri, e );
+            }
+            mav.addObject( "SearchURI", termUri );
+        } else {
+            // a blank search page, without prior results
+        }
+
+        ExpressionExperiment d = null;
+        if ( dataset != null ) {
+            d = getDataset( dataset );
+            if ( d == null ) {
+                throw new IllegalArgumentException( "Unknown dataset " + dataset );
+            }
+            mav.addObject( "searchDataset", d );
+        }
+
+        ArrayDesign p = null;
+        if ( platform != null ) {
+            p = getPlatform( platform );
+            if ( p == null ) {
+                throw new IllegalArgumentException( "Unknown platform: " + platform );
+            }
+            mav.addObject( "searchPlatform", p );
+        }
+
+        Taxon t = null;
+        if ( taxon != null ) {
+            t = getTaxon( taxon );
+            if ( t == null ) {
+                throw new IllegalArgumentException( "Unknown taxon " + taxon );
+            }
+            mav.addObject( "searchTaxon", t.getScientificName() );
+        }
+
+        // check for a quick-redirect
+        Set<Scope> scopes = getScopes( scope );
+        mav.addObject( "scope", scope );
+
+        if ( ( query != null || termUri != null ) && scopes.size() == 1 && !noRedirect ) {
+            Scope scopeObj = scopes.iterator().next();
+            try {
+                List<SearchResult<?>> exactResults = searchService.search( SearchSettings.builder()
+                                .resultType( scopeObj.resultType )
+                                .mode( SearchSettings.SearchMode.EXACT )
+                                .query( query != null ? query : termUri )
+                                .fillResults( false )
+                                .experimentConstraint( d )
+                                .platformConstraint( p )
+                                .taxonConstraint( t )
+                                .useDatabase( useDatabase )
+                                .useFullTextIndex( useFullTextIndex )
+                                .useOntology( useOntology )
+                                .useGeneOntology( useGeneOntology )
+                                .build() )
+                        .getByResultType( scopeObj.resultType );
+                if ( exactResults.size() == 1 ) {
+                    SearchResult<?> result = exactResults.iterator().next();
+                    try {
+                        String url = getResultObjectUrl( result );
+                        return new RedirectView( url );
+                    } catch ( UnsupportedOperationException e ) {
+                        log.warn( "Cannot generate a URL for " + result.getResultType() + " with ID " + result.getResultId() + ", will not perform a quick redirect.", e );
+                    }
+                }
+            } catch ( SearchException e ) {
+                log.warn( "Failed to perform search, will render the page anyway, but the client might submit the same query again via AJAX.", e );
+            }
+        }
+
+        return mav;
+    }
+
+    /**
+     * AJAX
+     */
     @SuppressWarnings("unused")
     public JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
         if ( settingsValueObject == null || StringUtils.isBlank( settingsValueObject.getQuery() ) || StringUtils
@@ -146,10 +299,17 @@ public class GeneralSearchController {
             /*
              * Now put the valueObjects inside the SearchResults in score order.
              */
+            List<UnsupportedOperationException> exceptions = new ArrayList<>();
             searchService.loadValueObjects( results ).stream()
                     .sorted()
-                    .map( SearchResultValueObject::new )
+                    .map( sr -> new SearchResultValueObject<>( sr, getResultObjectUrlSafely( sr, exceptions ) ) )
                     .forEachOrdered( finalResults::add );
+            if ( !exceptions.isEmpty() ) {
+                Iterator<UnsupportedOperationException> it = exceptions.iterator();
+                UnsupportedOperationException e = it.next();
+                it.forEachRemaining( e::addSuppressed );
+                log.warn( "Failed to generate URLs for " + exceptions.size() + " entities.", e );
+            }
         }
 
         fillVosTimer.stop();
@@ -164,85 +324,110 @@ public class GeneralSearchController {
         return new JsonReaderResponse<>( finalResults );
     }
 
-    @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView search(
-            @RequestParam(value = "query", required = false) String query,
-            @RequestParam(value = "termUri", required = false) String termUri,
-            @RequestParam(value = "taxon", required = false) String taxon,
-            @RequestParam(value = "scope", required = false) String scope ) {
-        ModelAndView mav = new ModelAndView( "generalSearch" );
-        if ( query != null || termUri != null ) {
-            if ( query != null ) {
-                query = StringUtils.strip( query );
-                if ( StringUtils.isBlank( query ) ) {
-                    throw new IllegalArgumentException( "The query cannot be blank." );
-                } else if ( query.charAt( 0 ) == '*' ) {
-                    throw new IllegalArgumentException( "The query cannot start with a wildcard." );
-                }
+    @Nullable
+    private ExpressionExperiment getDataset( String datasetIdentifier ) {
+        ExpressionExperiment ee;
+        try {
+            if ( ( ee = expressionExperimentService.load( Long.parseLong( datasetIdentifier ) ) ) != null ) {
+                return ee;
             }
-            if ( termUri != null ) {
-                try {
-                    new URI( termUri );
-                } catch ( URISyntaxException e ) {
-                    throw new IllegalArgumentException( "Invalid term URI: " + termUri, e );
-                }
-            }
-            Taxon t = null;
-            if ( taxon != null ) {
-                t = getTaxon( taxon );
-                if ( t == null ) {
-                    throw new IllegalArgumentException( "Unknown taxon " + taxon );
-                }
-            }
-            if ( StringUtils.isNotBlank( scope ) ) {
-                for ( char s : scope.toCharArray() ) {
-                    boolean found = false;
-                    for ( Scope s2 : GeneralSearchController.scopes ) {
-                        if ( s2.scope == s ) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if ( !found ) {
-                        throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
-                    }
-                }
-            }
-            // Need this for the bookmarkable links
-            mav.addObject( "SearchString", query != null ? query : termUri );
-            mav.addObject( "SearchURI", termUri );
-            if ( t != null ) {
-                mav.addObject( "searchTaxon", t.getScientificName() );
-            }
+        } catch ( NumberFormatException e ) {
+            // ignore
         }
-        return mav;
+        if ( ( ee = expressionExperimentService.findByShortName( datasetIdentifier ) ) != null ) {
+            return ee;
+        }
+        return null;
     }
 
-    private Taxon getTaxon( String taxon ) {
+    @Nullable
+    private ArrayDesign getPlatform( String platformIdentifier ) {
+        ArrayDesign ad;
         try {
-            return taxonService.load( Long.parseLong( taxon ) );
+            if ( ( ad = arrayDesignService.load( Long.parseLong( platformIdentifier ) ) ) != null ) {
+                return ad;
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        if ( ( ad = arrayDesignService.findByShortName( platformIdentifier ) ) != null ) {
+            return ad;
+        }
+        return null;
+    }
+
+    @Nullable
+    private Taxon getTaxon( String taxonIdentifier ) {
+        Taxon taxon;
+        try {
+            if ( ( taxon = taxonService.load( Long.parseLong( taxonIdentifier ) ) ) != null ) {
+                return taxon;
+            }
+            if ( ( taxon = taxonService.findByNcbiId( Integer.parseInt( taxonIdentifier ) ) ) != null ) {
+                return taxon;
+            }
         } catch ( NumberFormatException e ) {
             // ignored
         }
-        Taxon t = taxonService.findByScientificName( taxon );
-        if ( t == null ) {
-            t = taxonService.findByCommonName( taxon );
+        if ( ( taxon = taxonService.findByScientificName( taxonIdentifier ) ) != null ) {
+            return taxon;
         }
-        return t;
+        if ( ( taxon = taxonService.findByCommonName( taxonIdentifier ) ) != null ) {
+            return taxon;
+        }
+        return null;
+    }
+
+    private Set<Scope> getScopes( @Nullable String scope ) {
+        Set<Scope> scopes = new HashSet<>();
+        if ( StringUtils.isNotBlank( scope ) ) {
+            for ( char s : scope.toCharArray() ) {
+                boolean found = false;
+                for ( Scope s2 : GeneralSearchController.SCOPES ) {
+                    if ( s2.scope == s ) {
+                        found = true;
+                        scopes.add( s2 );
+                        break;
+                    }
+                }
+                if ( !found ) {
+                    throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
+                }
+            }
+        }
+        return scopes;
+    }
+
+    @Nullable
+    private String getResultObjectUrlSafely( SearchResult<?> searchResult, Collection<UnsupportedOperationException> exceptions ) {
+        try {
+            return getResultObjectUrl( searchResult );
+        } catch ( UnsupportedOperationException e ) {
+            exceptions.add( e );
+            return null;
+        }
+    }
+
+    private String getResultObjectUrl( SearchResult<?> searchResult ) {
+        return entityUrlBuilder
+                .fromContextPath()
+                .entity( searchResult.getResultType(), searchResult.getResultId() )
+                .toUriString();
     }
 
     private SearchSettings searchSettingsFromVo( SearchSettingsValueObject settingsValueObject ) {
         return SearchSettings.builder()
                 .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
-                .platformConstraint( settingsValueObject.getPlatformConstraint() )
-                .taxonConstraint( settingsValueObject.getTaxon() )
+                .experimentConstraint( getDataset( settingsValueObject.getDatasetConstraint() ) )
+                .platformConstraint( getPlatform( settingsValueObject.getPlatformConstraint() ) )
+                .taxonConstraint( getTaxon( settingsValueObject.getTaxonConstraint() ) )
                 .maxResults( settingsValueObject.getMaxResults() != null ? settingsValueObject.getMaxResults() : SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE )
                 .resultTypes( resultTypesFromVo( settingsValueObject ) )
                 .resultType( BlacklistedEntity.class )
-                .useFullTextIndex( settingsValueObject.getUseIndices() )
-                .useDatabase( settingsValueObject.getUseDatabase() )
-                .useOntology( settingsValueObject.getUseCharacteristics() )
-                .useGeneOntology( settingsValueObject.getUseGo() )
+                .useFullTextIndex( settingsValueObject.isUseIndices() )
+                .useDatabase( settingsValueObject.isUseDatabase() )
+                .useOntology( settingsValueObject.isUseCharacteristics() )
+                .useGeneOntology( settingsValueObject.isUseGo() )
                 .build();
     }
 
@@ -250,7 +435,7 @@ public class GeneralSearchController {
         Set<Class<? extends Identifiable>> resultTypes = resultTypesFromVo( settingsValueObject );
         StringBuilder scope = new StringBuilder();
         for ( Class<? extends Identifiable> resultType : resultTypes ) {
-            for ( Scope s : scopes ) {
+            for ( Scope s : SCOPES ) {
                 if ( resultType.equals( s.resultType ) ) {
                     scope.append( s.scope );
                     break;
@@ -262,47 +447,25 @@ public class GeneralSearchController {
 
     private static Set<Class<? extends Identifiable>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
         Set<Class<? extends Identifiable>> ret = new HashSet<>();
-        if ( valueObject.getSearchExperiments() ) {
+        if ( valueObject.isSearchExperiments() ) {
             ret.add( ExpressionExperiment.class );
         }
-        if ( valueObject.getSearchGenes() ) {
+        if ( valueObject.isSearchGenes() ) {
             ret.add( Gene.class );
         }
-        if ( valueObject.getSearchPlatforms() ) {
+        if ( valueObject.isSearchPlatforms() ) {
             ret.add( ArrayDesign.class );
         }
-        if ( valueObject.getSearchExperimentSets() ) {
+        if ( valueObject.isSearchExperimentSets() ) {
             ret.add( ExpressionExperimentSet.class );
         }
-        if ( valueObject.getSearchProbes() ) {
+        if ( valueObject.isSearchProbes() ) {
             ret.add( CompositeSequence.class );
         }
-        if ( valueObject.getSearchGeneSets() ) {
+        if ( valueObject.isSearchGeneSets() ) {
             ret.add( GeneSet.class );
         }
         return ret;
-    }
-
-    @Value
-    public static class SearchResultValueObject<T extends IdentifiableValueObject<?>> {
-
-        Class<?> resultClass;
-        double score;
-        String highlightedText;
-        IdentifiableValueObject<?> resultObject;
-
-        public SearchResultValueObject( SearchResult<T> result ) {
-            this.resultClass = result.getResultType();
-            this.score = result.getScore();
-            if ( result.getHighlights() != null ) {
-                this.highlightedText = result.getHighlights().entrySet().stream()
-                        .map( e -> String.format( "Tagged %s: %s", e.getKey(), e.getValue() ) )
-                        .collect( Collectors.joining( "<br/>" ) );
-            } else {
-                this.highlightedText = null;
-            }
-            this.resultObject = result.getResultObject();
-        }
     }
 
     @ParametersAreNonnullByDefault

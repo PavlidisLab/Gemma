@@ -7,8 +7,13 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -30,6 +35,7 @@ import static ubic.gemma.core.search.lucene.LuceneQueryUtils.quote;
  * <p>
  * This does not exactly fit the {@link OntologySearchSource} because it is specialized for the {@link GeneOntologyService}
  * and uses higher-level method to retrieve GO-gene associations.
+ *
  * @author poirigui
  */
 @Component

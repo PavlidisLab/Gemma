@@ -22,16 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -44,7 +42,7 @@ import java.util.*;
  * Note: This is only in Core because it uses SearchService, but it could be refactored.
  *
  * @author keshav
- * @see    BibliographicReferenceService
+ * @see BibliographicReferenceService
  */
 @Service
 @ParametersAreNonnullByDefault
@@ -157,30 +155,9 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
-        try {
-            Collection<BibliographicReference> records = new ArrayList<>();
-            records.add( bibRef );
-            Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.bibliographicReferenceDao
-                    .getRelatedExperiments( records );
-            if ( map.containsKey( bibRef ) ) {
-                return map.get( bibRef );
-            }
-            return new ArrayList<>();
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
-                            + th,
-                    th );
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records ) {
         return this.bibliographicReferenceDao.getRelatedExperiments( records );
-
     }
 
     @Override
@@ -249,8 +226,8 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException {
-        SearchSettings ss = SearchSettings.bibliographicReferenceSearch( settings.getQuery() );
+    public List<BibliographicReferenceValueObject> search( String query, boolean searchExperiments, boolean searchBibrefs ) throws SearchException {
+        SearchSettings ss = SearchSettings.bibliographicReferenceSearch( query );
 
         List<SearchResult<BibliographicReference>> resultEntities = searchService.search( ss )
                 .getByResultObjectType( BibliographicReference.class );
@@ -265,14 +242,14 @@ public class BibliographicReferenceServiceImpl
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
 
 
-            if ( settings.getSearchExperiments() || settings.getSearchBibrefs() ) {
+            if ( searchExperiments || searchBibrefs ) {
                 this.populateRelatedExperiments( entity, vo );
-                if ( !vo.getExperiments().isEmpty() || settings.getSearchBibrefs() ) {
+                if ( !vo.getExperiments().isEmpty() || searchBibrefs ) {
                     results.add( vo );
                 }
             }
 
-            if ( settings.getSearchBibrefs() && !settings.getSearchExperiments() ) {
+            if ( searchBibrefs && !searchExperiments ) {
                 results.add( vo );
             }
 
@@ -333,18 +310,19 @@ public class BibliographicReferenceServiceImpl
 
     private void populateRelatedExperiments( BibliographicReference bibRef,
             BibliographicReferenceValueObject bibRefVO ) {
-        Collection<ExpressionExperiment> relatedExperiments = this.getRelatedExperiments( bibRef );
+        Collection<ExpressionExperiment> relatedExperiments = this.bibliographicReferenceDao
+                .getRelatedExperiments( Collections.singleton( ( bibRef ) ) )
+                .getOrDefault( ( bibRef ), Collections.emptyList() );
         if ( relatedExperiments.isEmpty() ) {
-            bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
+            bibRefVO.setExperiments( new ArrayList<>() );
         } else {
             bibRefVO.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments ) );
         }
-
     }
 
     private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
             Map<Long, BibliographicReferenceValueObject> idToBibRefVO ) {
-        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this
+        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceDao
                 .getRelatedExperiments( bibRefs );
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = idToBibRefVO.get( bibref.getId() );

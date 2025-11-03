@@ -16,12 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.search;
+package ubic.gemma.model.common.search;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.Assert;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nonnull;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * Results have a score and possibly number of highlights. Two results are considered equal if they have the same type
  * and ID. You may use a {@link SearchResultSet} to combine results in a sensible way, retaining result objects and
  * highlights when a better result is added.
+ *
  * @author paul
  * @author poirigui
  * @see SearchSource

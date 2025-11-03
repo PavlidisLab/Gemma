@@ -2,6 +2,7 @@ package ubic.gemma.core.search;
 
 import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchResult;
 
 import javax.annotation.Nullable;
 import java.util.Collections;

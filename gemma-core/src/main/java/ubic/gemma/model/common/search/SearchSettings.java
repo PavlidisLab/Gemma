@@ -22,7 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.With;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -57,7 +56,11 @@ public class SearchSettings {
         /**
          * Fast search mode, designed for autocompletion.
          */
-        FAST
+        FAST,
+        /**
+         * Very fast search mode, designed for exact matching of identifiers, etc.
+         */
+        EXACT
     }
 
     /**
@@ -69,7 +72,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings arrayDesignSearch( String query ) {
@@ -79,7 +82,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings bibliographicReferenceSearch( String query ) {
@@ -89,8 +92,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query       query
-     * @param  arrayDesign the array design to limit the search to
+     * @param query       query
+     * @param arrayDesign the array design to limit the search to
      * @return search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, @Nullable ArrayDesign arrayDesign ) {
@@ -103,7 +106,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
@@ -116,7 +119,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @param taxon if you want to filter by taxon (can be null)
      * @return search settings
      */
@@ -131,8 +134,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
-     * @param  taxon the taxon to limit the search to (can be null)
+     * @param query query
+     * @param taxon the taxon to limit the search to (can be null)
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {

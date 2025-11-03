@@ -14,6 +14,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;

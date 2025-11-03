@@ -63,7 +63,7 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       } );
       this.bookmarkPanel = new Ext.Panel( {
          xtype : 'panel',
-         tpl : '<a href="' + Gemma.CONTEXT_PATH + '/searcher.html?query={escapedQuery}{scopes}">Bookmarkable link</a>',
+         tpl : '<a href="' + Gemma.CONTEXT_PATH + '/searcher.html?{query}{scopes}{dataset}{platform}{taxon}{sources}&noRedirect=true">Bookmarkable link</a>',
          border : false,
          flex : 0,
          height : 25,
@@ -165,8 +165,13 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
          scopes = scopes + "B";
       }
 
+      // see SearchSettingsValueObject for available fields
       var params = [ {
          query : query,
+         termUri : null,
+         datasetConstraint : dataset,
+         platformConstraint : platform,
+         taxonConstraint : taxon,
          searchProbes : searchProbes,
          searchBioSequences : searchSequences,
          searchPlatforms : searchPlatforms,
@@ -211,7 +216,10 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       } );
       this.form.findById( 'submit-button' ).setDisabled( true );
       this.bookmarkPanel.update( {
-         escapedQuery : escape( query ),
+         query : escape( query ),
+         dataset : dataset,
+         platform : platform,
+         taxon : taxon,
          scopes : scopes
       } );
    }

@@ -28,7 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -573,10 +577,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon), so at front end
      * user can "select all"
      *
-     * @param query          query
-     * @param genes          genes
-     * @param geneSets       gene sets
-     * @param srDos          display objects
+     * @param query    query
+     * @param genes    genes
+     * @param geneSets gene sets
+     * @param srDos    display objects
      * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,

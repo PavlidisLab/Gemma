@@ -23,7 +23,6 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -80,7 +79,7 @@ public interface BibliographicReferenceService
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      *
-     * @param id id
+     * @param id           id
      * @param databaseName db name
      * @return reference
      */
@@ -107,17 +106,7 @@ public interface BibliographicReferenceService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
     Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
 
-    /**
-     * Get the ExpressionExperiments, if any, that are linked to the given reference.
-     *
-     * @param bibliographicReference reference
-     * @return datasets
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
-
-    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records );
+    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments( Collection<BibliographicReference> records );
 
     /**
      * @return all the IDs of bibliographic references in the system.
@@ -127,12 +116,11 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
-    List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException;
+    List<BibliographicReferenceValueObject> search( String query, boolean searchExperiments, boolean searchBibrefs ) throws SearchException;
 
     List<BibliographicReferenceValueObject> search( String query ) throws SearchException;
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 
     Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
 }

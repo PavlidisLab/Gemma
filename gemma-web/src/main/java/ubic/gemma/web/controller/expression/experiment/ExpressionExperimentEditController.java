@@ -162,6 +162,7 @@ public class ExpressionExperimentEditController {
             setValues( cta.getCellTypes().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() ) );
         }
 
+        @SuppressWarnings("unused") // used in the frontend
         public boolean getIsPreferred() {
             return isPreferred;
         }
