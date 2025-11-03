@@ -23,6 +23,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.*;
@@ -32,6 +33,7 @@ import ubic.gemma.cli.logging.LoggingConfigurer;
 import ubic.gemma.cli.logging.log4j.Log4jConfigurer;
 import ubic.gemma.cli.util.*;
 import ubic.gemma.core.context.SpringContextUtils;
+import ubic.gemma.core.logging.log4j.ThreadContextPopulator;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
@@ -77,6 +79,11 @@ public class GemmaCLI {
             VERBOSITY_OPTION = "v",
             PROFILING_OPTION = "profiling",
             TESTDB_OPTION = "testdb";
+
+    /**
+     * Key used in the Log4j context data.
+     */
+    public static final String CLI_ARGUMENTS_CONTEXT_KEY = ThreadContextPopulator.KEY_PREFIX + ".cliArguments";
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
 
@@ -186,6 +193,11 @@ public class GemmaCLI {
         }
 
         loggingConfigurer.apply();
+
+        // this has to be done after configuring Log4j
+        ThreadContext.put( CLI_ARGUMENTS_CONTEXT_KEY, Arrays.stream( args )
+                .map( ShellUtils::quoteIfNecessary )
+                .collect( Collectors.joining( " " ) ) );
 
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
