@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class DatasetMetadata {
     String id;
+    String collectionId;
     String name;
     int cellCount;
     List<Assay> assay;

@@ -79,6 +79,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private static final String
             CELLXGENE_CHECK = "cellxgene",
             CELLXGENE_COLLECTION_ID = "cellxgeneCollectionId",
+            CELLXGENE_ALL_DATASETS = "cellxgeneAllDatasets",
             CELLXGENE_DATASET_ID = "cellxgeneDatasetId",
             CELLXGENE_ASSET_ID = "cellxgeneAssetId";
 
@@ -139,6 +140,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private boolean cellXGeneCheck;
     @Nullable
     private String cellXGeneCollectionId;
+    /**
+     * Download all matching datasets in CELLxGENE.
+     */
+    private boolean cellXGeneAllDatasets;
     @Nullable
     private String cellXGeneDatasetId;
     @Nullable
@@ -182,9 +187,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Glob patterns may be used (i.e. raw_*_features.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Glob patterns may be used (i.e. raw_*_matrix.mtx.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( CELLXGENE_CHECK ).longOpt( "cellxgene" ).desc( "Check if there is single-cell data in CELLxGENE before looking up GEO supplementary materials." ).get() );
-        options.addOption( Option.builder( CELLXGENE_COLLECTION_ID ).longOpt( "cellxgene-collection-id" ).hasArgs().desc( "CELLxGENE collection identifier" ).get() );
-        options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArgs().get() );
-        options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArgs().get() );
+        options.addOption( Option.builder( CELLXGENE_COLLECTION_ID ).longOpt( "cellxgene-collection-id" ).hasArg().desc( "CELLxGENE collection identifier" ).get() );
+        options.addOption( Option.builder( CELLXGENE_ALL_DATASETS ).longOpt( "cellxgene-all-datasets" ).desc( "CELLxGENE dataset identifier" ).get() );
+        options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArg().get() );
+        options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArg().get() );
         addBatchOption( options );
         addThreadsOption( options );
     }
@@ -346,12 +352,12 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             if ( !singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -cellxgeneCollectionId/--cellxgene-collection-id option requires that only one accession be supplied via -e/--acc." );
             }
-            cellXGeneCollectionId = commandLine.getOptionValue( CELLXGENE_COLLECTION_ID );
-            cellXGeneDatasetId = commandLine.getOptionValue( CELLXGENE_DATASET_ID );
-            cellXGeneAssetId = getOptionValue( commandLine, CELLXGENE_ASSET_ID, requires( toBeSet( CELLXGENE_DATASET_ID ) ) );
-        } else if ( commandLine.hasOption( CELLXGENE_DATASET_ID ) ) {
-            throw new IllegalArgumentException( "You must specify the collection ID using -cellxgeneCollectionId/--cellxgene-collection-id when using -cellxgeneDatasetId/--cellxgene-dataset-id." );
         }
+        cellXGeneCollectionId = commandLine.getOptionValue( CELLXGENE_COLLECTION_ID );
+        // applies to both generic checking and specific collection ID
+        cellXGeneAllDatasets = hasOption( commandLine, CELLXGENE_ALL_DATASETS, requires( anyOf( toBeSet( CELLXGENE_CHECK ), toBeSet( CELLXGENE_COLLECTION_ID ) ) ) );
+        cellXGeneDatasetId = getOptionValue( commandLine, CELLXGENE_DATASET_ID, requires( allOf( toBeSet( CELLXGENE_COLLECTION_ID ), toBeUnset( CELLXGENE_ALL_DATASETS ) ) ) );
+        cellXGeneAssetId = getOptionValue( commandLine, CELLXGENE_ASSET_ID, requires( toBeSet( CELLXGENE_DATASET_ID ) ) );
     }
 
     @Override
@@ -428,15 +434,22 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         }
                         if ( cellXGeneCollectionId != null ) {
                             // data is in CELLxGENE
-                            DatasetMetadata dm;
                             if ( cellXGeneDatasetId != null ) {
-                                dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
+                            } else if ( cellXGeneAllDatasets ) {
+                                Collection<DatasetMetadata> dm = detector.getAllDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = ( int ) dm.stream().mapToLong( DatasetMetadata::getCellCount ).sum();
+                                numberOfSamples = ( int ) dm.stream().map( DatasetMetadata::getDonorId ).flatMap( Collection::stream ).distinct().count();
                             } else {
-                                dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
                             }
-                            detectedDataType = "ANNDATA";
-                            numberOfCellIds = dm.getCellCount();
-                            numberOfSamples = dm.getDonorId().size();
                             // TODO: numberOfGenes = dm.getMeanGenesPerCell();
                             if ( !skipDownload ) {
                                 if ( cellXGeneAssetId != null ) {
@@ -444,17 +457,30 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                     detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId, cellXGeneAssetId );
                                 } else if ( cellXGeneDatasetId != null ) {
                                     detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                } else if ( cellXGeneAllDatasets ) {
+                                    detector.downloadAllSingleCellDataInCellXGene( series, cellXGeneCollectionId );
                                 } else {
                                     detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId );
                                 }
                             }
                         } else if ( cellXGeneCheck && detector.hasSingleCellDataInCellXGene( series ) ) {
-                            DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series );
-                            detectedDataType = "ANNDATA";
-                            numberOfCellIds = dm.getCellCount();
-                            numberOfSamples = dm.getDonorId().size();
+                            if ( cellXGeneAllDatasets ) {
+                                Collection<DatasetMetadata> dm = detector.getAllDatasetMetadataFromCellXGene( series );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = ( int ) dm.stream().mapToLong( DatasetMetadata::getCellCount ).sum();
+                                numberOfSamples = ( int ) dm.stream().map( DatasetMetadata::getDonorId ).flatMap( Collection::stream ).distinct().count();
+                            } else {
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
+                            }
                             if ( !skipDownload ) {
-                                detector.downloadSingleCellDataInCellXGene( series );
+                                if ( cellXGeneAllDatasets ) {
+                                    detector.downloadAllSingleCellDataInCellXGene( series );
+                                } else {
+                                    detector.downloadSingleCellDataInCellXGene( series );
+                                }
                             }
                         } else if ( detector.hasSingleCellData( series ) ) {
                             if ( dataType != null && supplementaryFile != null ) {
