@@ -6,12 +6,10 @@ import org.apache.commons.io.IOUtils;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
-import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
-import ubic.gemma.core.util.ProgressReporterFactory;
+import ubic.gemma.core.loader.util.fetcher2.AbstractFetcher;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,40 +17,22 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 @CommonsLog
-public class GeoFetcher {
+public class GeoFetcher extends AbstractFetcher {
 
     private final SimpleRetry<IOException> retryTemplate;
-    private final SimpleDownloader simpleDownloader;
     private final Path geoSeriesDownloadPath;
 
     public GeoFetcher( SimpleRetryPolicy retryPolicy, Path geoSeriesDownloadPath ) {
-        this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
         // not retrying within the downloader itself since we want to use different fallback method to get the SOFT
         // files
-        this.simpleDownloader = new SimpleDownloader( null );
+        super( new SimpleDownloader( null ) );
         this.simpleDownloader.setCheckArchiveIntegrity( true );
+        this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
         this.geoSeriesDownloadPath = geoSeriesDownloadPath;
-    }
-
-    public void setFtpClientFactory( FTPClientFactory ftpClientFactory ) {
-        this.simpleDownloader.setFtpClientFactory( ftpClientFactory );
-    }
-
-    public void setFileLockManager( FileLockManager fileLockManager ) {
-        this.simpleDownloader.setFileLockManager( fileLockManager );
-    }
-
-    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
-        this.simpleDownloader.setProgressReporterFactory( progressReporterFactory );
-    }
-
-    public void setTaskExecutor( ExecutorService taskExecutor ) {
-        this.simpleDownloader.setTaskExecutor( taskExecutor );
     }
 
     public Path fetchSeriesFamilySoftFile( String accession ) throws IOException {

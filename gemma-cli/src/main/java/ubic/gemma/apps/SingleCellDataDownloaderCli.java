@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.cli.util.OptionsUtils.*;
 
 public class SingleCellDataDownloaderCli extends AbstractCLI {
 
@@ -73,6 +76,12 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             MEX_FEATURES_FILE_SUFFIX = "mexFeaturesFile",
             MEX_MATRIX_FILE_SUFFIX = "mexMatrixFile";
 
+    private static final String
+            CELLXGENE_CHECK = "cellxgene",
+            CELLXGENE_COLLECTION_ID = "cellxgeneCollectionId",
+            CELLXGENE_DATASET_ID = "cellxgeneDatasetId",
+            CELLXGENE_ASSET_ID = "cellxgeneAssetId";
+
     private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "data_in_sra", "comment" };
 
     private static final String
@@ -94,6 +103,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+
+    @Value("${cellxgene.local.singleCellData.basepath}")
+    private Path cellXGeneDownloadPath;
 
     private final Set<String> accessions = new HashSet<>();
     @Nullable
@@ -119,6 +131,18 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private String featuresFileSuffix;
     @Nullable
     private String matrixFileSuffix;
+
+    // CELLxGENE options
+    /**
+     * Allow for generic checking in CELLxGENE.
+     */
+    private boolean cellXGeneCheck;
+    @Nullable
+    private String cellXGeneCollectionId;
+    @Nullable
+    private String cellXGeneDatasetId;
+    @Nullable
+    private String cellXGeneAssetId;
 
     private SimpleRetryPolicy retryPolicy;
 
@@ -157,6 +181,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Glob patterns may be used (i.e. raw_*_barcodes.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Glob patterns may be used (i.e. raw_*_features.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Glob patterns may be used (i.e. raw_*_matrix.mtx.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
+        options.addOption( Option.builder( CELLXGENE_CHECK ).longOpt( "cellxgene" ).desc( "Check if there is single-cell data in CELLxGENE before looking up GEO supplementary materials." ).get() );
+        options.addOption( Option.builder( CELLXGENE_COLLECTION_ID ).longOpt( "cellxgene-collection-id" ).hasArgs().desc( "CELLxGENE collection identifier" ).get() );
+        options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArgs().get() );
+        options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArgs().get() );
         addBatchOption( options );
         addThreadsOption( options );
     }
@@ -313,6 +341,17 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             supplementaryFile = commandLine.getOptionValue( SUPPLEMENTARY_FILE_OPTION );
         }
+        cellXGeneCheck = commandLine.hasOption( CELLXGENE_CHECK );
+        if ( commandLine.hasOption( CELLXGENE_COLLECTION_ID ) ) {
+            if ( !singleAccessionMode ) {
+                throw new IllegalArgumentException( "The -cellxgeneCollectionId/--cellxgene-collection-id option requires that only one accession be supplied via -e/--acc." );
+            }
+            cellXGeneCollectionId = commandLine.getOptionValue( CELLXGENE_COLLECTION_ID );
+            cellXGeneDatasetId = commandLine.getOptionValue( CELLXGENE_DATASET_ID );
+            cellXGeneAssetId = getOptionValue( commandLine, CELLXGENE_ASSET_ID, requires( toBeSet( CELLXGENE_DATASET_ID ) ) );
+        } else if ( commandLine.hasOption( CELLXGENE_DATASET_ID ) ) {
+            throw new IllegalArgumentException( "You must specify the collection ID using -cellxgeneCollectionId/--cellxgene-collection-id when using -cellxgeneDatasetId/--cellxgene-dataset-id." );
+        }
     }
 
     @Override
@@ -336,11 +375,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
-            if ( getCliContext().getConsole() != null ) {
-                detector.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
-            }
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
+            CellXGeneFetcher cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
+            detector.setCellXGeneFetcher( cellXGeneFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
             }
@@ -350,6 +388,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                     ( ( FTPClientFactoryImpl ) ftpClientFactory ).setMaxTotalConnections( fetchThreads );
                 }
                 detector.setNumberOfFetchThreads( fetchThreads );
+            }
+            if ( getCliContext().getConsole() != null ) {
+                ConsoleProgressReporterFactory prc = new ConsoleProgressReporterFactory( getCliContext().getConsole() );
+                detector.setProgressReporterFactory( prc );
+                cellXGeneFetcher.setProgressReporterFactory( prc );
             }
             log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
             for ( String geoAccession : accessions ) {
@@ -383,7 +426,37 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             }
                             series.keepSamples( samplesToKeep );
                         }
-                        if ( detector.hasSingleCellData( series ) ) {
+                        if ( cellXGeneCollectionId != null ) {
+                            // data is in CELLxGENE
+                            DatasetMetadata dm;
+                            if ( cellXGeneDatasetId != null ) {
+                                dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                            } else {
+                                dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                            }
+                            detectedDataType = "ANNDATA";
+                            numberOfCellIds = dm.getCellCount();
+                            numberOfSamples = dm.getDonorId().size();
+                            // TODO: numberOfGenes = dm.getMeanGenesPerCell();
+                            if ( !skipDownload ) {
+                                if ( cellXGeneAssetId != null ) {
+                                    assert cellXGeneDatasetId != null;
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId, cellXGeneAssetId );
+                                } else if ( cellXGeneDatasetId != null ) {
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                } else {
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId );
+                                }
+                            }
+                        } else if ( cellXGeneCheck && detector.hasSingleCellDataInCellXGene( series ) ) {
+                            DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series );
+                            detectedDataType = "ANNDATA";
+                            numberOfCellIds = dm.getCellCount();
+                            numberOfSamples = dm.getDonorId().size();
+                            if ( !skipDownload ) {
+                                detector.downloadSingleCellDataInCellXGene( series );
+                            }
+                        } else if ( detector.hasSingleCellData( series ) ) {
                             if ( dataType != null && supplementaryFile != null ) {
                                 detectedDataType = dataType.name();
                             } else {
