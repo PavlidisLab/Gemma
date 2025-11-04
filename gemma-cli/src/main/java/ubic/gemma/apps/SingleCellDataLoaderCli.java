@@ -333,14 +333,18 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( hasOption( commandLine, LOAD_CELL_TYPE_ASSIGNMENT_OPTION,
                 noneOf( toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_TYPE_ASSIGNMENTS;
+            dataType = SingleCellDataType.NULL;
         } else if ( hasOption( commandLine, LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION,
                 noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_LEVEL_CHARACTERISTICS;
+            dataType = SingleCellDataType.NULL;
         } else if ( hasOption( commandLine, LOAD_SEQUENCING_METADATA_OPTION,
                 noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) ) ) {
             mode = Mode.LOAD_SEQUENCING_METADATA;
+            dataType = SingleCellDataType.NULL;
         } else {
             mode = Mode.LOAD_EVERYTHING;
+            dataType = null; // this will auto-datect the data type
             platformName = commandLine.getOptionValue( PLATFORM_OPTION );
             if ( platformName == null ) {
                 throw new MissingOptionException( "The -" + PLATFORM_OPTION + " option is required when loading vectors." );
@@ -348,8 +352,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             dataType = commandLine.getParsedOptionValue( DATA_TYPE_OPTION );
-        } else {
-            dataType = null;
         }
         dataPath = getParsedOptionValue( commandLine, DATA_PATH_OPTION, requires( toBeSet( DATA_TYPE_OPTION ) ) );
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
