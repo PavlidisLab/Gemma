@@ -865,19 +865,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         Assert.notNull( geoSeries.getGeoAccession() );
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries );
         String datasetId = datasetMetadata.getId();
-        List<DatasetAsset> annDataAssets = datasetMetadata.getDatasetAssets().stream()
-                .filter( CellXGeneUtils::isAnnData )
-                .collect( Collectors.toList() );
-        if ( annDataAssets.size() > 1 ) {
-            throw new IllegalArgumentException( "More than one CELLxGENE asset. Choose one among: " + annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( ", " ) ) );
-        } else if ( annDataAssets.size() == 1 ) {
-            String assetId = annDataAssets.iterator().next().getId();
-            log.info( geoSeries + ": Resolved dataset asset " + assetId + " for CELLxGENE dataset " + datasetId + "." );
-            return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId );
-        } else {
-            throw new NoSingleCellDataFoundException( String.format( "No AnnData asset found in CELLxGENE for %s in dataset %s.",
-                    geoSeries, datasetId ) );
+        DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
+    }
+
+    public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
+        Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
+        Assert.notNull( geoSeries.getGeoAccession() );
+        CollectionMetadata cm = getCollectionMetadata( geoSeries );
+        assert cm.getDatasets() != null;
+        Map<String, Path> result = new HashMap<>();
+        for ( DatasetMetadata datasetMetadata : cm.getDatasets() ) {
+            String datasetId = datasetMetadata.getId();
+            DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
+            result.put( datasetId, downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), false ) );
         }
+        return result;
     }
 
     /**
@@ -890,19 +893,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         Assert.notNull( geoSeries.getGeoAccession() );
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId );
         String datasetId = datasetMetadata.getId();
-        List<DatasetAsset> annDataAssets = datasetMetadata.getDatasetAssets().stream()
-                .filter( CellXGeneUtils::isAnnData )
-                .collect( Collectors.toList() );
-        if ( annDataAssets.size() > 1 ) {
-            throw new IllegalArgumentException( "More than one CELLxGENE asset. Choose one among: " + annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( ", " ) ) );
-        } else if ( annDataAssets.size() == 1 ) {
-            String assetId = annDataAssets.iterator().next().getId();
-            log.info( geoSeries + ": Resolved dataset asset " + assetId + " for CELLxGENE dataset " + datasetId + "." );
-            return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId );
-        } else {
-            throw new NoSingleCellDataFoundException( String.format( "No AnnData asset found in CELLxGENE for %s in collection %s with dataset ID %s.",
-                    geoSeries, collectionId, datasetId ) );
+        DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
+    }
+
+    public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException, NoSingleCellDataFoundException {
+        Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
+        Assert.notNull( geoSeries.getGeoAccession() );
+        CollectionMetadata cm = getCollectionMetadata( geoSeries, collectionId );
+        assert cm.getDatasets() != null;
+        Map<String, Path> result = new HashMap<>();
+        for ( DatasetMetadata datasetMetadata : cm.getDatasets() ) {
+            String datasetId = datasetMetadata.getId();
+            DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
+            result.put( datasetId, downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), false ) );
         }
+        return result;
     }
 
     /**
@@ -915,20 +921,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
         Assert.notNull( geoSeries.getGeoAccession() );
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
-        List<DatasetAsset> annDataAssets = datasetMetadata.getDatasetAssets().stream()
-                .filter( CellXGeneUtils::isAnnData )
-                .collect( Collectors.toList() );
-        String assetId;
-        if ( annDataAssets.size() > 1 ) {
-            throw new IllegalArgumentException( "More than one CELLxGENE asset. Choose one among: " + annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( ", " ) ) );
-        } else if ( annDataAssets.size() == 1 ) {
-            assetId = annDataAssets.iterator().next().getId();
-            log.info( geoSeries + ": Resolved dataset asset: " + assetId + " for CELLxGENE dataset " + datasetId + "." );
-        } else {
-            throw new NoSingleCellDataFoundException( String.format( "No single-cell data found in CELLxGENE for %s in collection %s with dataset ID %s.",
-                    geoSeries, collectionId, datasetId ) );
-        }
-        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId );
+        DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
     }
 
     /**
@@ -966,7 +960,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( !CellXGeneUtils.isAnnData( datasetAsset ) ) {
             throw new IllegalArgumentException( "Dataset asset " + assetId + " is not AnnData." );
         }
-        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId );
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId, true );
     }
 
     public DatasetMetadata getDatasetMetadataFromCellXGene( GeoSeries geoSeries ) throws NoSingleCellDataFoundException, IOException {
@@ -982,6 +976,31 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
             return dm;
         } else {
             throw new NoSingleCellDataFoundException( "No single-cell data found in CELLxGENE for " + geoSeries + "." );
+        }
+    }
+
+    public Collection<DatasetMetadata> getAllDatasetMetadataFromCellXGene( GeoSeries geoSeries ) throws NoSingleCellDataFoundException, IOException {
+        CollectionMetadata cm = getCollectionMetadata( geoSeries );
+        assert cm.getDatasets() != null;
+        List<DatasetMetadata> matchedDatasets = cm.getDatasets().stream().filter( this::hasSingleCellData ).collect( Collectors.toList() );
+        if ( !matchedDatasets.isEmpty() ) {
+            return matchedDatasets;
+        } else {
+            throw new NoSingleCellDataFoundException( "No single-cell data found in CELLxGENE for " + geoSeries + "." );
+        }
+    }
+
+    public Collection<DatasetMetadata> getAllDatasetMetadataFromCellXGene( GeoSeries geoSeries, String collectionId ) throws NoSingleCellDataFoundException, IOException {
+        CollectionMetadata cm = getCollectionMetadata( geoSeries, collectionId );
+        if ( !match( geoSeries, cm ) ) {
+            throw new IllegalArgumentException();
+        }
+        assert cm.getDatasets() != null;
+        List<DatasetMetadata> matchedDatasets = cm.getDatasets().stream().filter( this::hasSingleCellData ).collect( Collectors.toList() );
+        if ( !matchedDatasets.isEmpty() ) {
+            return matchedDatasets;
+        } else {
+            throw new NoSingleCellDataFoundException( "No single-cell data found in CELLxGENE for " + geoSeries + " in collection " + collectionId + "." );
         }
     }
 
@@ -1062,6 +1081,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         return cm;
     }
 
+    private DatasetAsset selectDatasetAsset( GeoSeries geoSeries, DatasetMetadata datasetMetadata ) throws NoSingleCellDataFoundException {
+        List<DatasetAsset> annDataAssets = datasetMetadata.getDatasetAssets().stream()
+                .filter( CellXGeneUtils::isAnnData )
+                .collect( Collectors.toList() );
+        if ( annDataAssets.size() > 1 ) {
+            throw new IllegalArgumentException( "More than one CELLxGENE asset. Choose one among: " + annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( ", " ) ) );
+        } else if ( annDataAssets.size() == 1 ) {
+            DatasetAsset asset = annDataAssets.iterator().next();
+            log.info( geoSeries + ": Resolved dataset asset: " + asset.getId() + " for CELLxGENE dataset " + datasetMetadata.getId() + "." );
+            return asset;
+        } else {
+            throw new NoSingleCellDataFoundException( String.format( "No single-cell data found in CELLxGENE for %s in collection %s with dataset ID %s.",
+                    geoSeries, datasetMetadata.getCollectionId(), datasetMetadata.getId() ) );
+        }
+    }
+
     private boolean hasSingleCellData( CollectionMetadata cm ) {
         Assert.notNull( cm.getDatasets() );
         return cm.getDatasets().stream()
@@ -1105,18 +1140,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                         || Strings.CS.equals( link.getLinkUrl(), "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + geoSeries.getGeoAccession() ) );
     }
 
-    private Path downloadSingleCellDataInCellXGeneInternal( GeoSeries geoSeries, String datasetId, String assetId ) throws
+    private Path downloadSingleCellDataInCellXGeneInternal( GeoSeries geoSeries, String datasetId, String assetId, boolean createSymlink ) throws
             IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
         Assert.notNull( geoSeries.getGeoAccession() );
         Path path = cellXGeneFetcher.downloadDatasetAsset( datasetId, assetId, FileType.H5AD );
-        Path linkPath = downloadDirectory.resolve( geoSeries.getGeoAccession() + ".h5ad" );
-        // create a symlink
-        if ( Files.exists( linkPath ) ) {
-            Files.delete( linkPath );
+        if ( createSymlink ) {
+            Path linkPath = downloadDirectory.resolve( geoSeries.getGeoAccession() + ".h5ad" );
+            // create a symlink
+            if ( Files.exists( linkPath ) ) {
+                Files.delete( linkPath );
+            }
+            log.info( "Linking " + path + " to " + linkPath + "..." );
+            return Files.createSymbolicLink( linkPath, path );
+        } else {
+            return path;
         }
-        log.info( "Linking " + path + " to " + linkPath + "..." );
-        return Files.createSymbolicLink( linkPath, path );
     }
 
     /**
