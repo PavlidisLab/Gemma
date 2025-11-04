@@ -437,8 +437,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         }
 
                         addSuccessObject( geoAccession, String.format( "Data Type=%s%s%s%s",
-                                dataType,
-                                numberOfSamples != null ? "Number of samples=" + numberOfSamples : "",
+                                detectedDataType,
+                                numberOfSamples != null ? " Number of samples=" + numberOfSamples : "",
                                 numberOfCellIds != null ? " Number of cell IDs=" + numberOfCellIds : "",
                                 numberOfGenes != null ? " Number of genes=" + numberOfGenes : "" ) );
 
