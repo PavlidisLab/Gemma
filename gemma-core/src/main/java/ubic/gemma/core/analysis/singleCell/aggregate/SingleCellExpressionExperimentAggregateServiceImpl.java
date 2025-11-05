@@ -216,7 +216,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             rawVector.setDesignElement( v.getDesignElement() );
             rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
             rawVectors.add( rawVector );
-            if ( rawVectors.size() % 1000 == 0 ) {
+            if ( rawVectors.size() % 100 == 0 ) {
                 log.info( String.format( "Aggregated %d/%d single-cell vectors.", rawVectors.size(), vectors.size() ) );
             }
         }
@@ -331,6 +331,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             BioAssayDimension bad, CellLevelCharacteristics cta,
             @Nullable boolean[] mask,
             Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method, boolean adjustLibrarySizes ) throws IllegalStateException {
+        log.info( "Computing library sizes for " + bad.getBioAssays().size() + " pseudo-bulk assays..." );
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         int numSourceSamples = sourceSampleToIndex.size();
@@ -338,6 +339,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         double[] librarySize = new double[numSamples];
         // library sizes of the source assays
         double[] sourceLibrarySize = new double[numSourceSamples];
+        int w = 0;
         for ( SingleCellExpressionDataVector scv : vectors ) {
             PrimitiveType representation = scv.getQuantitationType().getRepresentation();
             Buffer scrv = scv.getDataAsBuffer();
@@ -371,6 +373,10 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     }
                     sourceLibrarySize[sourceSampleIndex] += unscaledValue;
                 }
+            }
+            w++;
+            if ( w % 100 == 0 ) {
+                log.info( String.format( "Computed library size from %d/%d single-cell vectors.", w, vectors.size() ) );
             }
         }
         if ( adjustLibrarySizes ) {
