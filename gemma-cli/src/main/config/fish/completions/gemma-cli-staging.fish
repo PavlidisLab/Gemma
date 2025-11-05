@@ -2339,9 +2339,11 @@ complete -c gemma-cli-staging -n '__fish_seen_subcommand_from getTgfvo' -o force
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.CellXGeneGrabberCli
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.CellXGeneGrabberCli' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.CellXGeneGrabberCli' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.CellXGeneGrabberCli' -o allowedTaxa -l allowed-taxa -r -f --description 'Limit to selected taxa. Defaults to all taxa declared in Gemma.'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a listCELLxGENEData
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from listCELLxGENEData' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from listCELLxGENEData' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli-staging -n '__fish_seen_subcommand_from listCELLxGENEData' -o allowedTaxa -l allowed-taxa -r -f --description 'Limit to selected taxa. Defaults to all taxa declared in Gemma.'
 complete -c gemma-cli-staging -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.ExternalDatabaseOverviewCli --description 'Print an overview of all external databases used by Gemma'
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseOverviewCli' -f
 complete -c gemma-cli-staging -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseOverviewCli' -s h -l help -f --description 'Print this message'

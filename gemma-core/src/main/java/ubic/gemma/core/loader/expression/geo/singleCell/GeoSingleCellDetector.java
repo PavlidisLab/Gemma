@@ -4,7 +4,6 @@ import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.entrez.EntrezException;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
@@ -950,8 +949,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         assert cm.getDatasets() != null;
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         if ( datasetMetadata.getAssay().stream().noneMatch( CellXGeneUtils::isGeneExpressionAssay ) ) {
-            throw new IllegalArgumentException( String.format( "Dataset %s in collection %s is not a single-cell dataset.",
-                    datasetId, collectionId ) );
+            throw new IllegalArgumentException( String.format( "Dataset %s in collection %s is not a single-cell dataset. Only the following assay types are supported: %s.",
+                    datasetId, collectionId, String.join( ", ", CellXGeneUtils.GENE_EXPRESSION_ASSAYS ) ) );
         }
         DatasetAsset datasetAsset = datasetMetadata.getDatasetAssets().stream()
                 .filter( a -> a.getId().equals( assetId ) )
@@ -1116,6 +1115,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private CollectionMetadata fetchCollectionMetadata( String collectionId ) throws IOException {
         Assert.notNull( cellXGeneFetcher );
+        if ( cachedCollectionMetadata.isEmpty() ) {
+            log.warn( "Caching CELLxGENE collection metadata, this might take a while..." );
+        }
         try {
             return cachedCollectionMetadata.computeIfAbsent( collectionId, id -> {
                 try {
@@ -1133,11 +1135,11 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         }
     }
 
+    /**
+     * Check if a GEO series is linked to a given CELLxGENE collection.
+     */
     private boolean match( GeoSeries geoSeries, CollectionMetadata cm ) {
-        Assert.notNull( cm.getLinks() );
-        return cm.getLinks().stream().anyMatch( link ->
-                Strings.CS.contains( link.getLinkName(), geoSeries.getGeoAccession() )
-                        || Strings.CS.equals( link.getLinkUrl(), "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + geoSeries.getGeoAccession() ) );
+        return CellXGeneUtils.getGeoAccessions( cm ).contains( geoSeries.getGeoAccession() );
     }
 
     private Path downloadSingleCellDataInCellXGeneInternal( GeoSeries geoSeries, String datasetId, String assetId, boolean createSymlink ) throws

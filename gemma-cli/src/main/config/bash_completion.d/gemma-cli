@@ -1231,10 +1231,14 @@ function __gemma_cli_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -force -h -o" -- "$2")
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.CellXGeneGrabberCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
+        if ! [[ "$current_option" =~ (--allowed-taxa|-allowedTaxa) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--allowed-taxa --help -allowedTaxa -h" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' listCELLxGENEData ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
+        if ! [[ "$current_option" =~ (--allowed-taxa|-allowedTaxa) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--allowed-taxa --help -allowedTaxa -h" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExternalDatabaseOverviewCli ' ]]; then
         if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|-batchFormat|-batchOutputFile|-batchReportFrequency) ]]; then
