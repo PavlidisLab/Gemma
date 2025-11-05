@@ -204,6 +204,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
                 .includeMaskedCellsInLibrarySize( includeMaskedCellsInLibrarySize )
+                // TODO: add CLI parameter for these
+                .fetchSize( 30 )
+                .useCursorFetchIfSupported( true )
                 .build();
 
         QuantitationType newQt;
