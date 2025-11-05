@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import org.apache.commons.lang3.Strings;
-import ubic.gemma.core.loader.expression.cellxgene.model.Assay;
+import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 
 /**
@@ -12,7 +12,7 @@ public class CellXGeneUtils {
     /**
      * Determine if the given assay corresponds to a single cell assay producing gene expression data.
      */
-    public static boolean isGeneExpressionAssay( Assay a ) {
+    public static boolean isGeneExpressionAssay( OntologyTerm a ) {
         // TODO: we should keep a list of supported assays in a shared location
         return Strings.CI.equalsAny( a.getOntologyTermId(),
                 // 10x 3' v1

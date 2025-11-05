@@ -44,11 +44,20 @@ public class CellXGeneFetcher extends AbstractFetcher {
         this.downloadPath = downloadPath;
     }
 
+    /**
+     * Fetch the metadata for all CELLxGENE collections.
+     * <p>
+     * The collection metadata is shallow and does not include {@link CollectionMetadata#getDatasets()} or
+     * {@link CollectionMetadata#getLinks()}. Use {@link #fetchCollectionMetadata(String)} to get the full metadata.
+     */
     public List<CollectionMetadata> fetchAllCollectionMetadata() throws IOException {
         return objectMapper.readValue( new URL( "https://api.cellxgene.cziscience.com/dp/v1/collections/index" ),
                 objectMapper.getTypeFactory().constructCollectionLikeType( List.class, CollectionMetadata.class ) );
     }
 
+    /**
+     * Fetch the full metadata for a specific CELLxGENE collection.
+     */
     public CollectionMetadata fetchCollectionMetadata( String collectionId ) throws IOException {
         return objectMapper.readValue( new URL( "https://api.cellxgene.cziscience.com/dp/v1/collections/" + collectionId ), CollectionMetadata.class );
     }
@@ -57,6 +66,9 @@ public class CellXGeneFetcher extends AbstractFetcher {
     private Map<String, DatasetMetadata> cachedDatasetMetadataByDatasetId = null;
     private long lastDatasetMetadataContentLength = -1;
 
+    /**
+     * Fetch the metadata for all CELLxGENE datasets.
+     */
     public List<DatasetMetadata> fetchAllDatasetMetadata() throws IOException {
         URLConnection connection = new URL( "https://api.cellxgene.cziscience.com/dp/v1/datasets/index" ).openConnection();
         try {
@@ -91,6 +103,9 @@ public class CellXGeneFetcher extends AbstractFetcher {
         }
     }
 
+    /**
+     * Fetch the download metadata for a specific dataset asset.
+     */
     public DatasetAssetDownloadMetadata fetchDatasetAssetDownloadMetadata( String datasetId, String assetId ) throws IOException {
         return objectMapper.readValue( new URL( "https://api.cellxgene.cziscience.com/dp/v1/datasets/" + datasetId + "/asset/" + assetId ),
                 DatasetAssetDownloadMetadata.class );

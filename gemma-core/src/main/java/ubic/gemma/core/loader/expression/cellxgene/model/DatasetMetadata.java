@@ -10,7 +10,12 @@ public class DatasetMetadata {
     String collectionId;
     String name;
     int cellCount;
-    List<Assay> assay;
+    List<OntologyTerm> organism;
+    List<OntologyTerm> cellType;
+    List<OntologyTerm> developmentStage;
+    List<OntologyTerm> disease;
+    List<OntologyTerm> tissue;
+    List<OntologyTerm> assay;
     List<DatasetAsset> datasetAssets;
     List<String> donorId;
     double meanGenesPerCell;
