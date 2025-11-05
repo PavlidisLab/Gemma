@@ -40,7 +40,9 @@ Gemma.AnnotationDataView = Ext
         {
 
             readMethod: ExpressionExperimentController.getAnnotation,
-
+            groupingThreshold: 5,
+            groupCounts: null,
+            groupIndices:null,
             record: Ext.data.Record.create([{
                 name: "id",
                 type: "int"
@@ -76,8 +78,17 @@ Gemma.AnnotationDataView = Ext
              * Make it easier to spot which ones come from BioMaterial, FactorValue
              */
             tpl: new Ext.XTemplate(
-                '<tpl for=".">',
-                '<span class="ann-wrap" ext:qtip="{className}" >',
+               '<tpl for=".">',
+               // If this is the FIRST item of a large group, render ONE group badge
+               '<tpl if="isGrouped && groupIndex == 1">',
+               '<span class="ann-group" ' +
+               'data-groupkey="{groupKey}" ' +
+               'data-collapsedtext="{className} ({groupCount}) ►" ' +
+               'data-expandedtext="{className} ({groupCount}) ◄">' +
+               '{className} ({groupCount}) ►' +
+               '</span>&nbsp;&nbsp;',
+               '</tpl>',
+                '<span class="ann-wrap {[values.isGrouped ? ("hidden group-"+values.groupKey) : ""]}" ext:qtip="{className}" >',
                 '<tpl if="objectClass == \'BioMaterial\'">',
                 '<span class="fromBioMaterial">',
                 '</tpl>',
@@ -87,11 +98,17 @@ Gemma.AnnotationDataView = Ext
                 '<tpl if="objectClass == \'ExperimentTag\'">',
                 '<span class="fromExperimentTag">',
                 '</tpl>',
+                '<tpl if="' +
+               '!(objectClass == \'BioMaterial\' ||' +
+               'objectClass == \'FactorValue\' ||' +
+               'objectClass == \'ExperimentTag\')" >',
+               '<span class="fromOther">',
+               '</tpl>',
                 '<a ext:qtip="{className} : {termUri} via {objectClass}" href="' + Gemma.GEMBROW_URL + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
                 '{termName}',
                 '</a>',
                 '</span>',
-                '</span>&nbsp;&nbsp;',
+                '</span>',
                 '</tpl>'),
 
 
@@ -99,7 +116,6 @@ Gemma.AnnotationDataView = Ext
             emptyText: 'No tags',
 
             initComponent: function () {
-
                 Ext.apply(this, {
                     store: new Ext.data.Store({
                         proxy: new Ext.data.DWRProxy(this.readMethod),
@@ -119,6 +135,65 @@ Gemma.AnnotationDataView = Ext
                 this.store.load({
                     params: this.getReadParams()
                 });
+
+                this.on('render',function(){
+                    this.el.on('click',this.onGroupClick,this,{delegate:".ann-group"})
+                })
+
+                this.store.on('load', (store, records) => {
+                    this.groupCounts = records.reduce((acc, val)=>{
+                        let current = acc[val.data.className] || 0;
+                        current += 1;
+                        acc[val.data.className] = current;
+                        return acc
+                    },{});
+                    this.groupIndices = {}
+                    this.refresh()
+                });
+            },
+
+            prepareData: function(data, index, record){
+
+                if(this.groupCounts) {
+                    let name = data.className;
+                    var count = (this.groupCounts && this.groupCounts[name]) || 0;
+
+                    let current = (this.groupIndices && this.groupIndices[name]) || 0;
+                    current += 1;
+                    this.groupIndices[name] = current;
+
+                    data.groupCount = count;
+                    data.groupIndex = current;
+                    data.isGrouped = (count > this.groupingThreshold)
+                    data.groupKey =  String(name).replace(/[^\w-]/g, '_')
+                } else{
+                    data.groupCount = 0;
+                    data.groupIndex = 0;
+                    data.isGrouped = false;
+                    data.groupKey = '';
+                }
+                return data
+            },
+
+            onGroupClick: function(e,target){
+                let el = Ext.get(target);
+                let key = el.getAttribute('data-groupkey');
+                let expanded = el.hasClass('expanded');
+                let groupSelector = '.group-' + key;
+                let nodes = this.el.select(groupSelector);
+
+                if (expanded) {
+                    nodes.addClass('hidden');
+                    el.removeClass('expanded');
+                    el.update(el.getAttribute('data-collapsedtext'));
+                } else {
+                    nodes.removeClass('hidden');
+                    el.addClass('expanded');
+                    el.update(el.getAttribute('data-expandedtext'));
+                }
+
+
+
             }
 
         });

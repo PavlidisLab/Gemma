@@ -393,6 +393,39 @@ a.info {
 	border-radius: 15px;
 }
 
+.fromOther{
+	font-weight: bold;
+	background-color: #ff98008c;
+	padding: 3px;
+	line-height: 1.5em;
+	border-radius: 15px;
+}
+
+.ann-wrap:not(.hidden) {
+	padding-left: 4px
+}
+
+.ann-wrap.hidden {
+	display: none;
+}
+
+.ann-group {
+	cursor: pointer;
+	border: 1px solid #cfd6e6;
+	padding: 2px 6px;
+	border-radius: 10px;
+	background: #f4f7fb;
+	color: #204060;
+}
+
+
+.ann-group.expanded {
+	background: #e8f4ff;
+	border-color: #7aaad6;
+}
+
+
+
 a.info:hover {
 	z-index: 25;
 	background-color: #FFEB3B;
