@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
@@ -40,6 +41,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,6 +75,9 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
 
+    @Value("${gemma.download.path}/singleCellData/CELLxGENE")
+    private Path cellXGenePath;
+
     private GeoSingleCellDetector detector;
 
     @Before
@@ -82,6 +87,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
         detector.setSraFetcher( new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null ) );
+        detector.setCellXGeneFetcher( new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGenePath ) );
     }
 
     /**
@@ -845,6 +851,57 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         GeoSeries series = readSeriesFromGeo( "GSE278619" );
         assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();
         assertThat( detector.hasSingleCellDataInSra( series.getSamples().iterator().next() ) ).isTrue();
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testHasSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        detector.getDatasetMetadataFromCellXGene( series );
+    }
+
+    @Test
+    public void testDownloadSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) ).isTrue();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e", "03390dd0-fe16-4cef-b430-ab451e85c448" ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+        detector.getDatasetMetadataFromCellXGene( series );
+    }
+
+    @Test
+    public void testGSE71585() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE71585" );
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        assertThat( detector.hasSingleCellDataInCellXGene( series, "a3c37598-b8e8-47db-92a9-eb91a77c9529" ) )
+                .isTrue();
     }
 
     @Test
