@@ -13,11 +13,17 @@ import ubic.gemma.core.loader.util.hdf5.TruncatedH5FileException;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Fetch data from CELLxGENE.
@@ -47,9 +53,42 @@ public class CellXGeneFetcher extends AbstractFetcher {
         return objectMapper.readValue( new URL( "https://api.cellxgene.cziscience.com/dp/v1/collections/" + collectionId ), CollectionMetadata.class );
     }
 
+    private List<DatasetMetadata> cachedDatasetMetadata = null;
+    private Map<String, DatasetMetadata> cachedDatasetMetadataByDatasetId = null;
+    private long lastDatasetMetadataContentLength = -1;
+
     public List<DatasetMetadata> fetchAllDatasetMetadata() throws IOException {
-        return objectMapper.readValue( new URL( "https://api.cellxgene.cziscience.com/dp/v1/datasets/index" ),
-                objectMapper.getTypeFactory().constructCollectionLikeType( List.class, DatasetMetadata.class ) );
+        URLConnection connection = new URL( "https://api.cellxgene.cziscience.com/dp/v1/datasets/index" ).openConnection();
+        try {
+            if ( cachedDatasetMetadata == null || connection.getContentLengthLong() == -1 || connection.getContentLengthLong() != lastDatasetMetadataContentLength ) {
+                log.warn( "Fetching metadata for all CELLxGENE datasets, this might take a moment..." );
+                cachedDatasetMetadata = objectMapper.readValue( connection.getInputStream(),
+                        objectMapper.getTypeFactory().constructCollectionLikeType( List.class, DatasetMetadata.class ) );
+                cachedDatasetMetadataByDatasetId = cachedDatasetMetadata.stream()
+                        .collect( Collectors.toMap( DatasetMetadata::getId, Function.identity() ) );
+                lastDatasetMetadataContentLength = connection.getContentLengthLong();
+            }
+        } finally {
+            if ( connection instanceof HttpURLConnection ) {
+                ( ( HttpURLConnection ) connection ).disconnect();
+            }
+        }
+        return cachedDatasetMetadata;
+    }
+
+    /**
+     * Retrieves the metadata for a specific CELLxGENE dataset.
+     * <p>
+     * There is no dedicated endpoint for fetching a single dataset's metadata, so this method relies on cache the
+     * output of {@link #fetchAllDatasetMetadata()}.
+     */
+    public DatasetMetadata fetchDatasetMetadata( String datasetId ) throws IOException {
+        fetchAllDatasetMetadata();
+        if ( cachedDatasetMetadataByDatasetId.containsKey( datasetId ) ) {
+            return cachedDatasetMetadataByDatasetId.get( datasetId );
+        } else {
+            throw new FileNotFoundException( "No dataset with ID " + datasetId + " found in CELLxGENE." );
+        }
     }
 
     public DatasetAssetDownloadMetadata fetchDatasetAssetDownloadMetadata( String datasetId, String assetId ) throws IOException {

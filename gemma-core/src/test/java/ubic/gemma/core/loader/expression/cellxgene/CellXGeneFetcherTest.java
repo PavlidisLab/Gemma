@@ -45,9 +45,6 @@ public class CellXGeneFetcherTest extends BaseTest {
     public void testFetchAllCollectionMetadata() throws IOException {
         List<CollectionMetadata> metadata = fetcher.fetchAllCollectionMetadata();
         assertThat( metadata ).isNotEmpty();
-        for ( CollectionMetadata cm : metadata ) {
-            System.out.println( cm );
-        }
     }
 
     @Test
@@ -61,16 +58,18 @@ public class CellXGeneFetcherTest extends BaseTest {
     public void testFetchAllDatasetMetadata() throws IOException {
         List<DatasetMetadata> metadata = fetcher.fetchAllDatasetMetadata();
         assertThat( metadata ).isNotEmpty();
-        for ( DatasetMetadata dm : metadata ) {
-            if ( dm.getDatasetAssets().stream().anyMatch( CellXGeneUtils::isAnnData ) ) {
-                System.out.println( dm.getId() );
-            }
-        }
     }
 
     @Test
     @Category(SlowTest.class)
     public void testFetchDatasetMetadata() throws IOException {
+        DatasetMetadata datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+        assertThat( datasetMetadata.getId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+
+        // try re-fetching, should hit the cache
+        datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+        assertThat( datasetMetadata.getId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+
         DatasetAssetDownloadMetadata metadata = fetcher.fetchDatasetAssetDownloadMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1", "ee04d5be-523b-4bde-af01-f892778e01d8" );
         assertThat( metadata.getDatasetId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
         assertThat( metadata.getUrl() ).isNotNull();

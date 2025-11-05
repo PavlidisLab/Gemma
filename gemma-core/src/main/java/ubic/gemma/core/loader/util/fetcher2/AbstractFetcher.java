@@ -1,5 +1,7 @@
 package ubic.gemma.core.loader.util.fetcher2;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleDownloader;
@@ -8,6 +10,8 @@ import ubic.gemma.core.util.locking.FileLockManager;
 import java.util.concurrent.ExecutorService;
 
 public abstract class AbstractFetcher {
+
+    protected final Log log = LogFactory.getLog( this.getClass() );
 
     protected final SimpleDownloader simpleDownloader;
 
