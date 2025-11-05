@@ -384,6 +384,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
             CellXGeneFetcher cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
+            cellXGeneFetcher.setFileLockManager( fileLockManager );
             detector.setCellXGeneFetcher( cellXGeneFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
