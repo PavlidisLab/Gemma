@@ -207,6 +207,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 // TODO: add CLI parameter for these
                 .fetchSize( 30 )
                 .useCursorFetchIfSupported( true )
+                .console( getCliContext().getConsole() )
                 .build();
 
         QuantitationType newQt;

@@ -1554,7 +1554,7 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true, null ) )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
@@ -2139,6 +2139,7 @@ public class DatasetsWebService {
 
     /**
      * A group of subsets, logically organized by a {@link BioAssayDimension}.
+     *
      * @author poirigui
      */
     @Getter

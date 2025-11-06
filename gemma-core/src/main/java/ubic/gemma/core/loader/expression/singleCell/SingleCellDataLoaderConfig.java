@@ -5,14 +5,17 @@ import lombok.experimental.SuperBuilder;
 import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import javax.annotation.Nullable;
+import java.io.Console;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
  * Basic configuration for loading single-cell data.
+ *
  * @author poirigui
  * @see SingleCellDataLoaderService
  */
@@ -88,7 +91,7 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
 
     /**
      * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap
-     * between the cell IDs from the file and those from the {@link ubic.gemma.model.expression.bioAssayData.SingleCellDimension}
+     * between the cell IDs from the file and those from the {@link SingleCellDimension}
      * to infer sample associations.
      * <p>
      * When this option is set, the sample ID column must be supplied for this strategy to
@@ -139,4 +142,10 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      */
     @Nullable
     public ExecutorService transformExecutor;
+
+    /**
+     * Console to use for reporting progress.
+     */
+    @Nullable
+    private Console console;
 }

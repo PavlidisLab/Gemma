@@ -89,7 +89,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         Collection<SingleCellExpressionDataVector> vectors;
         if ( config.getFetchSize() > 0 ) {
             vectors = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, config.getFetchSize(), config.isUseCursorFetchIfSupported(), false, vectorInitConfig )
-                    .peek( createStreamMonitor( ee, qt, SingleCellExpressionExperimentAggregateServiceImpl.class.getName(), 100, numVecs ) )
+                    .peek( createStreamMonitor( ee, qt, SingleCellExpressionExperimentAggregateServiceImpl.class.getName(), 100, numVecs, config.getConsole() ) )
                     .collect( Collectors.toList() );
         } else {
             vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, vectorInitConfig );

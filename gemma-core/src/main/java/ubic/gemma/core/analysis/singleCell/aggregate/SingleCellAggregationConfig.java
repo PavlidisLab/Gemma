@@ -2,9 +2,11 @@ package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.Builder;
 import lombok.Getter;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 
 import javax.annotation.Nullable;
+import java.io.Console;
 
 /**
  * Configuration for aggregating single-cell data.
@@ -18,7 +20,7 @@ class SingleCellAggregationConfig {
     /**
      * Categorical mask to use on data.
      * <p>
-     * The category of the characteristics must be {@link ubic.gemma.model.common.description.Categories#MASK}.
+     * The category of the characteristics must be {@link Categories#MASK}.
      */
     @Nullable
     private CellLevelCharacteristics mask;
@@ -39,4 +41,6 @@ class SingleCellAggregationConfig {
     @Builder.Default
     private int fetchSize = -1;
     private boolean useCursorFetchIfSupported;
+    @Nullable
+    private Console console;
 }

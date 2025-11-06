@@ -483,7 +483,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( mappingDetails );
             loader.setDesignElementToGeneMapper( mapper );
             vectors = loader.loadVectors( platform.getCompositeSequences(), dim, qt )
-                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, ( long ) ( stats.getCoverage() * platform.getCompositeSequences().size() ) ) )
+                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, ( long ) ( stats.getCoverage() * platform.getCompositeSequences().size() ), config.getConsole() ) )
                     .collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
+import java.io.Console;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -47,6 +48,7 @@ public interface ExpressionDataFileService {
      * <p>
      * Experiment metadata are not deleted, use {@link #deleteMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
      * for that purpose.
+     *
      * @see #deleteDesignFile(ExpressionExperiment)
      * @see #deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      * @see #deleteAllProcessedDataFiles(ExpressionExperiment)
@@ -63,6 +65,7 @@ public interface ExpressionDataFileService {
      * Delete all files that contain platform annotations for a given experiment.
      * <p>
      * This includes all the data and analysis files.
+     *
      * @see #deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      * @see #deleteAllProcessedDataFiles(ExpressionExperiment)
      * @see #deleteDiffExArchiveFile(DifferentialExpressionAnalysis)
@@ -85,6 +88,7 @@ public interface ExpressionDataFileService {
 
     /**
      * Delete all analyses files for a given experiment.
+     *
      * @see #deleteDiffExArchiveFile(DifferentialExpressionAnalysis)
      * @see #deleteCoexpressionDataFile(ExpressionExperiment)
      */
@@ -92,6 +96,7 @@ public interface ExpressionDataFileService {
 
     /**
      * Delete a diff. ex. analysis archive file for a given analysis.
+     *
      * @return true if any file was deleted
      */
     boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
@@ -109,6 +114,7 @@ public interface ExpressionDataFileService {
      * <p>
      * If the data file is being written (i.e. with {@link #copyMetadataFile(ExpressionExperiment, Path, ExpressionExperimentMetaFileType, boolean)},
      * this method will block until it is completed.
+     *
      * @return the metadata file or empty if none is present in the case of a directory-structured metadata
      */
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
@@ -123,6 +129,7 @@ public interface ExpressionDataFileService {
      * Writing to a directory (i.e. {@link ExpressionExperimentMetaFileType#isDirectory()} is true) is not supported.
      * <p>
      * If the metadata file is in use, this method will block until it is released.
+     *
      * @param existingFile file to copy, must exist
      * @param forceWrite   override any existing metadata file
      * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType, boolean)}
@@ -143,8 +150,9 @@ public interface ExpressionDataFileService {
      * <p>
      * This is a helper based on {@link #copyMetadataFile(ExpressionExperiment, Path, String, boolean)} that will
      * automatically copy the main HTML report file as well as the log and JSON data files if they exist.:w
+     *
      * @param type must be a MultiQC report (i.e. {@link ExpressionExperimentMetaFileType#RNASEQ_PIPELINE_REPORT} or
-     * {@link ExpressionExperimentMetaFileType#CELL_TYPE_ANNOTATION_PIPELINE_REPORT})
+     *             {@link ExpressionExperimentMetaFileType#CELL_TYPE_ANNOTATION_PIPELINE_REPORT})
      */
     Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
 
@@ -154,6 +162,7 @@ public interface ExpressionDataFileService {
      * If the metadata file is organized as a directory, it is deleted recursively.
      * <p>
      * If the metadata file is in use, this method will block until it is released.
+     *
      * @param type the type of metadata file to delete
      * @return true if a metadata file was deleted
      *
@@ -163,6 +172,7 @@ public interface ExpressionDataFileService {
     /**
      * Locate any data file in the data directory.
      * <p>
+     *
      * @param exclusive if true, acquire an exclusive lock on the file
      */
     LockedPath getDataFile( String filename, boolean exclusive ) throws IOException;
@@ -175,6 +185,7 @@ public interface ExpressionDataFileService {
      * Delete a raw or single-cell data file if it exists.
      * <p>
      * If the data file is in use, this method will block until it is released.
+     *
      * @return true if the file was deleted, false if it did not exist
      */
     boolean deleteDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) throws IOException;
@@ -183,6 +194,7 @@ public interface ExpressionDataFileService {
      * Delete a processed data file if it exists.
      * <p>
      * If the data file is in use, this method will block until it is released.
+     *
      * @return true if the file was deleted, false if it did not exist
      */
     boolean deleteDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) throws IOException;
@@ -200,25 +212,26 @@ public interface ExpressionDataFileService {
      *                                  this for public-facing operations because it may require a lot of memory
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush, @Nullable Console console ) throws IOException;
 
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush, @Nullable Console console ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
+     *
      * @return a path where the vectors were written
-     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, boolean, int, boolean, Writer, boolean)
+     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, boolean, int, boolean, Writer, boolean, Console)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, @Nullable Console console ) throws IOException;
 
     /**
-     * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)
      * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean, Console)
      */
     Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws RejectedExecutionException;
 
-    int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush ) throws IOException;
+    int writeCellBrowserSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useBioAssayIds, boolean useRawColumnNames, int fetchSize, boolean useCursorFetchIfSupported, Writer writer, boolean autoFlush, @Nullable Console console ) throws IOException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
@@ -246,28 +259,30 @@ public interface ExpressionDataFileService {
      * @param fetchSize                 fetch size to use for streaming, or load everything in memory of zero or less
      * @param useCursorFetchIfSupported use cursor fetching if supported by the database. It is not recommended to use
      *                                  this for public-facing operations because it may require a lot of memory
+     * @param forceWrite                whether to force write and ignore any pre-existing directory
      * @param destDir                   the destination directory to write the data to. It is now allowed to write under
      *                                  the {@code ${gemma.appdata.home}/dateFiles} directory using this method, use
-     *                                  {@link #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)}
+     *                                  {@link #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean, Console)}
      *                                  instead.
-     * @param forceWrite                whether to force write and ignore any pre-existing directory
+     * @param console
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush, @Nullable Console console ) throws IOException;
 
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush, @Nullable Console console ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type.
+     *
      * @return a path where the vectors were written
-     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, int, boolean, boolean, Path, boolean)
+     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, int, boolean, boolean, Path, boolean, Console)
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, @Nullable Console console ) throws IOException;
 
     /**
-     * @see #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean)
      * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean, Console)
      */
     Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite ) throws RejectedExecutionException;
 
@@ -277,13 +292,13 @@ public interface ExpressionDataFileService {
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * @param ee                   the expression experiment
-     * @param qt                   a quantitation type to use
-     * @param scaleType            a scale type to use or null to leave the data untransformed
+     * @param ee                       the expression experiment
+     * @param qt                       a quantitation type to use
+     * @param scaleType                a scale type to use or null to leave the data untransformed
      * @param excludeSampleIdentifiers
-     * @param useBioAssayIds       whether to use bioassay and biomaterial IDs instead of names or short names
-     * @param useRawColumnNames    whether to use raw column names instead of R-friendly ones
-     * @param writer               the destination for the raw expression data
+     * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
+     * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
+     * @param writer                   the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
     int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws IOException;
@@ -296,11 +311,11 @@ public interface ExpressionDataFileService {
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * @param ee                   the expression experiment
+     * @param ee                       the expression experiment
      * @param excludeSampleIdentifiers
-     * @param useBioAssayIds       whether to use bioassay and biomaterial IDs instead of names or short names
-     * @param useRawColumnNames    whether to use raw column names instead of R-friendly ones
-     * @param writer               the destination for the raw expression data
+     * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
+     * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
+     * @param writer                   the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
     int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
@@ -311,6 +326,7 @@ public interface ExpressionDataFileService {
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
+     *
      * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
     void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException;
@@ -387,6 +403,7 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate or create the differential expression archive file for a given analysis ID.
+     *
      * @see #writeOrLocateDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, boolean)
      */
     LockedPath writeOrLocateDiffExAnalysisArchiveFileById( Long analysisId, boolean forceWrite ) throws IOException;

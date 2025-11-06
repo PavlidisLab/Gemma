@@ -498,7 +498,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 }
                 if ( qt.getIsSingleCellPreferred() ) {
                     log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, true ) ) {
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, true, getCliContext().getConsole() ) ) {
                         log.info( "Generated MEX data file for " + qt + " at " + lockedPath.getPath() + "." );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to generate MEX data files for " + qt + ".", e );
@@ -576,7 +576,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .markQuantitationTypeAsRecomputedFromRawData( recomputedFromRawData )
                 .preferSinglePrecision( preferSinglePrecision )
                 .markQuantitationTypeAsPreferred( preferredQt )
-                .transformExecutor( transformExecutor );
+                .transformExecutor( transformExecutor )
+                .console( getCliContext().getConsole() );
         if ( renamingFile != null ) {
             configBuilder.renamingFile( renamingFile );
         }
