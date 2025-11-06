@@ -12,10 +12,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
+import ubic.gemma.cli.util.EnumeratedStringConverter;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -81,7 +85,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             CELLXGENE_COLLECTION_ID = "cellxgeneCollectionId",
             CELLXGENE_ALL_DATASETS = "cellxgeneAllDatasets",
             CELLXGENE_DATASET_ID = "cellxgeneDatasetId",
-            CELLXGENE_ASSET_ID = "cellxgeneAssetId";
+            CELLXGENE_ASSET_ID = "cellxgeneAssetId",
+            CELLXGENE_ASSAYS = "cellxgeneAssays";
 
     private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "data_in_sra", "comment" };
 
@@ -148,6 +153,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private String cellXGeneDatasetId;
     @Nullable
     private String cellXGeneAssetId;
+    @Nullable
+    private Set<String> cellXGeneAssays;
 
     private SimpleRetryPolicy retryPolicy;
 
@@ -191,6 +198,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( CELLXGENE_ALL_DATASETS ).longOpt( "cellxgene-all-datasets" ).desc( "CELLxGENE dataset identifier" ).get() );
         options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArg().get() );
         options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArg().get() );
+        options.addOption( Option.builder( CELLXGENE_ASSAYS ).longOpt( "cellxgene-assays" ).hasArgs().valueSeparator( ',' )
+                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                        .collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
+                .desc( "CELLxGENE assay identifiers to use to look for. Defaults to a predefined list of single-cell gene expression assays." ).get() );
         addBatchOption( options );
         addThreadsOption( options );
     }
@@ -358,6 +369,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         cellXGeneAllDatasets = hasOption( commandLine, CELLXGENE_ALL_DATASETS, requires( anyOf( toBeSet( CELLXGENE_CHECK ), toBeSet( CELLXGENE_COLLECTION_ID ) ) ) );
         cellXGeneDatasetId = getOptionValue( commandLine, CELLXGENE_DATASET_ID, requires( allOf( toBeSet( CELLXGENE_COLLECTION_ID ), toBeUnset( CELLXGENE_ALL_DATASETS ) ) ) );
         cellXGeneAssetId = getOptionValue( commandLine, CELLXGENE_ASSET_ID, requires( toBeSet( CELLXGENE_DATASET_ID ) ) );
+        if ( commandLine.hasOption( CELLXGENE_ASSAYS ) ) {
+            cellXGeneAssays = Arrays.stream( commandLine.getOptionValues( CELLXGENE_ASSAYS ) ).collect( Collectors.toSet() );
+        } else {
+            cellXGeneAssays = null;
+        }
     }
 
     @Override
@@ -386,6 +402,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             CellXGeneFetcher cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
             cellXGeneFetcher.setFileLockManager( fileLockManager );
             detector.setCellXGeneFetcher( cellXGeneFetcher );
+            detector.setCellXGeneAssays( cellXGeneAssays );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
             }

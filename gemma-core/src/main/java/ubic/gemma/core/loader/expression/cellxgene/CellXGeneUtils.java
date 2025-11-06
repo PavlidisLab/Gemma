@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
@@ -20,75 +20,41 @@ public class CellXGeneUtils {
      * <p>
      * TODO: we should keep a list of supported assays in a shared location
      */
-    public static final String[] GENE_EXPRESSION_ASSAYS = {
-            // 10x 3' transcription profiling
-            "EFO:0030003",
-            // 10x 3' v1
-            "EFO:0009901",
-            // 10x 3' v2
-            "EFO:0009899",
-            // 10x 3' v3
-            "EFO:0009922",
-            // 10x 3' v4
-            "EFO:0022604",
-            // 10x 5' transcription profiling
-            "EFO:0030004",
-            // 10x 5' v1
-            "EFO:0011025",
-            // 10x 5' v2
-            "EFO:0009900",
-            // 10x 5' v3
-            "EFO:0022605",
-            // 10x multiome
-            "EFO:0030059",
-            // 10x gene expression flex
-            "EFO:0022606",
-            // Smart-seq
-            "EFO:0008930",
-            // Smart-seq2
-            "EFO:0008931",
-            // Smart-seq3
-            "EFO:0022488",
-            // Smart-seq v4
-            "EFO:0700016",
-            // Visium Spatial Gene Expression V1
-            "EFO:0022857",
-            // Visium Spatial Gene Expression V2
-            "EFO:0022858",
-            // Visium CytAssist Spatial Gene Expression, 6.5mm
-            "EFO:0022859",
-            // Visium CytAssist Spatial Gene Expression, 11mm
-            "EFO:0022860",
-            // Drop-seq
-            "EFO:0008722",
-            // InDrops
-            "EFO:0008780",
-            // sci-RNA-seq3
-            "EFO:0030028",
-            // CEL-Seq
-            "EFO:0008679",
-            // CEL-seq2
-            "EFO:0010010",
-            // modified STRT-seq
-            "EFO:0022845",
-            // TruDrop
-            "EFO:0700010",
-            // ScaleBio single cell RNA sequencing
-            "EFO:0022490",
-            // Seq-Well
-            "EFO:0008919",
-            // Seq-Well S3
-            "EFO:0030019",
-            // MARS-seq
-            "EFO:0008796",
-            // MERFISH
-            "EFO:0008992",
-            // Slide-seqV2
-            "EFO:0030062",
-            // Patch-seq (low-throughput)
-            "EFO:0008853",
-            // "SPLiT-seq"
-            "EFO:0009919"
+    public static final OntologyTerm[] GENE_EXPRESSION_ASSAYS = {
+            new OntologyTerm( "EFO:0030003", "10x 3' transcription profiling" ),
+            new OntologyTerm( "EFO:0009901", "10x 3' v1" ),
+            new OntologyTerm( "EFO:0009899", "10x 3' v2" ),
+            new OntologyTerm( "EFO:0009922", "10x 3' v3" ),
+            new OntologyTerm( "EFO:0022604", "10x 3' v4" ),
+            new OntologyTerm( "EFO:0030004", "10x 5' transcription profiling" ),
+            new OntologyTerm( "EFO:0011025", "10x 5' v1" ),
+            new OntologyTerm( "EFO:0009900", "10x 5' v2" ),
+            new OntologyTerm( "EFO:0022605", "10x 5' v3" ),
+            new OntologyTerm( "EFO:0030059", "10x multiome" ),
+            new OntologyTerm( "EFO:0022606", "10x gene expression flex" ),
+            new OntologyTerm( "EFO:0008930", "Smart-seq" ),
+            new OntologyTerm( "EFO:0008931", "Smart-seq2" ),
+            new OntologyTerm( "EFO:0022488", "Smart-seq3" ),
+            new OntologyTerm( "EFO:0700016", "Smart-seq v4" ),
+            new OntologyTerm( "EFO:0022857", "Visium Spatial Gene Expression V1" ),
+            new OntologyTerm( "EFO:0022858", "Visium Spatial Gene Expression V2" ),
+            new OntologyTerm( "EFO:0022859", "Visium CytAssist Spatial Gene Expression, 6.5mm" ),
+            new OntologyTerm( "EFO:0022860", "Visium CytAssist Spatial Gene Expression, 11mm" ),
+            new OntologyTerm( "EFO:0008722", "Drop-seq" ),
+            new OntologyTerm( "EFO:0008780", "InDrops" ),
+            new OntologyTerm( "EFO:0030028", "sci-RNA-seq3" ),
+            new OntologyTerm( "EFO:0008679", "CEL-Seq" ),
+            new OntologyTerm( "EFO:0010010", "CEL-Seq2" ),
+            new OntologyTerm( "EFO:0022845", "modified STRT-seq" ),
+            new OntologyTerm( "EFO:0700010", "TruDrop" ),
+            new OntologyTerm( "EFO:0022490", "ScaleBio single cell RNA sequencing" ),
+            new OntologyTerm( "EFO:0008919", "Seq-Well" ),
+            new OntologyTerm( "EFO:0030019", "Seq-Well S3" ),
+            new OntologyTerm( "EFO:0008796", "MARS-seq" ),
+            new OntologyTerm( "EFO:0008992", "MERFISH" ),
+            new OntologyTerm( "EFO:0030062", "Slide-seqV2" ),
+            new OntologyTerm( "EFO:0008853", "Patch-seq" ),
+            new OntologyTerm( "EFO:0009919", "SPLiT-seq" )
     };
 
     /**
@@ -112,7 +78,7 @@ public class CellXGeneUtils {
      * Determine if the given assay corresponds to a single cell assay producing gene expression data.
      */
     public static boolean isGeneExpressionAssay( OntologyTerm a ) {
-        return Strings.CI.equalsAny( a.getOntologyTermId(), GENE_EXPRESSION_ASSAYS );
+        return ArrayUtils.contains( GENE_EXPRESSION_ASSAYS, a.getOntologyTermId() );
     }
 
     /**

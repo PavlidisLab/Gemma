@@ -6,7 +6,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.EnumeratedStringConverter;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
@@ -33,6 +35,8 @@ public class CellXGeneGrabberCli extends AbstractCLI {
 
     private Set<String> allowedTaxa;
 
+    private Set<String> assays;
+
     @Override
     public String getCommandName() {
         return "listCELLxGENEData";
@@ -43,12 +47,20 @@ public class CellXGeneGrabberCli extends AbstractCLI {
         options.addOption( Option.builder( "allowedTaxa" ).longOpt( "allowed-taxa" ).hasArgs()
                 .valueSeparator( ',' )
                 .desc( "Limit to selected taxa. Defaults to all taxa declared in Gemma." ).get() );
+        options.addOption( Option.builder( "assays" ).longOpt( "assays" ).hasArgs()
+                .valueSeparator( ',' )
+                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS ).collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
+                .desc( "Limit to selected assays. Defaults to a predefined set of gene expression assays." )
+                .get() );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "allowedTaxa" ) ) {
             allowedTaxa = new HashSet<>( Arrays.asList( commandLine.getOptionValues( "allowedTaxa" ) ) );
+        }
+        if ( commandLine.hasOption( "assays" ) ) {
+            assays = new HashSet<>( Arrays.asList( commandLine.getOptionValues( "assays" ) ) );
         }
     }
 
@@ -68,8 +80,13 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                     log.warn( dm.getId() + ": Dataset does not have a supported taxa: " + dm.getOrganism() + ", skipping." );
                     continue;
                 }
-                if ( dm.getAssay().stream().noneMatch( CellXGeneUtils::isGeneExpressionAssay ) ) {
-                    log.warn( dm.getId() + ": Dataset does not use a gene expression assay: " + dm.getAssay() + ", skipping." );
+                if ( dm.getAssay().stream().noneMatch( this::isGeneExpressionAssay ) ) {
+                    if ( assays != null ) {
+                        // make it a debug, otherwise it gets noisy
+                        log.debug( dm.getId() + ": Dataset does not use a specified assay: " + dm.getAssay() + ", skipping." );
+                    } else {
+                        log.warn( dm.getId() + ": Dataset does not use a gene expression assay: " + dm.getAssay() + ", skipping." );
+                    }
                     continue;
                 }
                 getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
@@ -78,6 +95,14 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                         format( dm.getDevelopmentStage() ), format( dm.getDisease() ), format( dm.getAssay() ),
                         TsvUtils.format( dm.getDonorId().size() ), TsvUtils.format( dm.getCellCount() ) );
             }
+        }
+    }
+
+    private boolean isGeneExpressionAssay( OntologyTerm assay ) {
+        if ( assays != null ) {
+            return assays.contains( assay.getOntologyTermId() ) || assays.contains( assay.getLabel() );
+        } else {
+            return CellXGeneUtils.isGeneExpressionAssay( assay );
         }
     }
 

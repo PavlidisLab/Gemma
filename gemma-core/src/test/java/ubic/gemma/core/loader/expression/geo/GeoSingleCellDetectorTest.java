@@ -88,6 +88,11 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         detector.setDownloadDirectory( downloadDir );
         detector.setSraFetcher( new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null ) );
         detector.setCellXGeneFetcher( new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGenePath ) );
+        detector.setCellXGeneAssays( new HashSet<>( Arrays.asList(
+                // 10x 3' v3
+                "EFO:0009922",
+                // Smart-seq
+                "EFO:0008930" ) ) );
     }
 
     /**
