@@ -29,8 +29,7 @@ Gemma.GemmaNavigationHeader = Ext
          },
          doSearchQuery : function() {
             if ( this.inMenuSearchField.getValue().length > 1 ) {
-               location.href = Gemma.CONTEXT_PATH + '/searcher.html?query=' + this.inMenuSearchField.getValue(); // +
-               // '&scope=EG'
+               location.href = Gemma.GEMBROW_URL + '/#/q/' + this.inMenuSearchField.getValue();
             }
          },
 
