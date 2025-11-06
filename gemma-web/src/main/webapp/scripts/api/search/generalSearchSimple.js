@@ -24,7 +24,7 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
       Ext.apply( this, {
          items : [ {
             xtype : 'box',
-            html : 'Search for',
+            html : 'Search Gemma',
             cls : 'front-page-header-text',
             margins : {
                top : 0,
@@ -32,10 +32,6 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
                bottom : 0,
                left : 20
             }
-         }, {
-            ref : 'searchTypeCombo',
-            xtype : 'search.GeneralSearchSimpleCombo',
-            width : 100
          }, {
             ref : 'queryField',
             xtype : 'textfield',
@@ -58,8 +54,7 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
       Gemma.Search.GeneralSearchSimple.superclass.initComponent.call( this );
    },
    runSearch : function() {
-      var searchURL = this.getSearchURL();
-      window.location.href = searchURL;
+      window.location.href =  Gemma.GEMBROW_URL + '/#/q/' + this.queryField.getValue();
    },
    getSearchURL : function() {
       var scopeLetterArr = this.searchTypeCombo.getURLScopeLetters();
