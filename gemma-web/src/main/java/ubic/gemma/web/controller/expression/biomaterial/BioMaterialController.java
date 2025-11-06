@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.biomaterial;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -36,6 +38,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 
@@ -47,6 +50,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping("/bioMaterial")
+@CommonsLog
 public class BioMaterialController {
 
     @Autowired
@@ -93,7 +97,10 @@ public class BioMaterialController {
     public ModelAndView annot( @RequestParam("eeid") Long id ) {
         Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
         ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
-        mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
+        mav.addObject( "bioMaterialIdList", bioMaterials.stream()
+                .map( BioMaterial::getId )
+                .map( String::valueOf )
+                .collect( Collectors.joining( "," ) ) );
         Long numBioMaterials = ( long ) bioMaterials.size();
         mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterials );
@@ -189,6 +196,41 @@ public class BioMaterialController {
         results.put( "children", children );
         results.put( "siblings", siblings );
         return results;
+    }
+
+    /**
+     * Add a characteristic to a sample.
+     * <p>
+     * AJAX
+     */
+    @SuppressWarnings("unused")
+    public void createBioMaterialTag( Characteristic vc, Long bmId ) {
+        BioMaterial bm = bioMaterialService.loadOrFail( bmId,
+                EntityNotFoundException::new, "No such BioMaterial with id=" + bmId );
+        bm = bioMaterialService.thaw( bm );
+        bioMaterialService.addCharacteristic( bm, vc );
+    }
+
+    /**
+     * Remove a number of characteristics from a sample.
+     * <p>
+     * AJAX
+     */
+    @SuppressWarnings("unused")
+    public void removeBioMaterialTag( Collection<Long> characterIds, Long bmId ) {
+        BioMaterial bm = bioMaterialService.loadAndThawOrFail( bmId, EntityNotFoundException::new, "No such BioMaterial with id=" + bmId );
+        bm = bioMaterialService.thaw( bm );
+        Map<Long, Characteristic> m = IdentifiableUtils.getIdMap( bm.getCharacteristics() );
+        Set<Characteristic> toRemove = new HashSet<>();
+        for ( Long characterId : characterIds ) {
+            Characteristic characteristic = m.get( characterId );
+            if ( characteristic == null ) {
+                throw new EntityNotFoundException( "No such characteristic with id=" + characterId );
+            }
+            toRemove.add( characteristic );
+        }
+        log.info( "Removing " + toRemove.size() + " characteristics from " + bm + "." );
+        bioMaterialService.removeCharacteristics( bm, toRemove );
     }
 }
 

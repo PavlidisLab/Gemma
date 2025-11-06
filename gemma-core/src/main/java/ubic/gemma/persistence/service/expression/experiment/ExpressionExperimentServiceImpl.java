@@ -60,6 +60,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -129,6 +130,8 @@ public class ExpressionExperimentServiceImpl
     private CoexpressionService coexpressionService;
     @Autowired
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
+    @Autowired
+    private CharacteristicService characteristicService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -1730,6 +1733,16 @@ public class ExpressionExperimentServiceImpl
 
         ee.getCharacteristics().add( vc );
         this.update( ee );
+    }
+
+    @Override
+    @Transactional
+    public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
+        Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
+        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) );
+        ee.getCharacteristics().removeAll( characteristicsToRemove );
+        update( ee );
+        characteristicService.remove( characteristicsToRemove );
     }
 
     @Override

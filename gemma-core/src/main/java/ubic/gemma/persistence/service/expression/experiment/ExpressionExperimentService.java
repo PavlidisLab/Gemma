@@ -918,7 +918,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param ee the experiment to add the characteristics to.
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove );
 
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)

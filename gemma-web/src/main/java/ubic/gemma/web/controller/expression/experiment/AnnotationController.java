@@ -27,17 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
@@ -45,8 +39,6 @@ import ubic.gemma.web.controller.util.EntityNotFoundException;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -57,23 +49,12 @@ import java.util.concurrent.TimeoutException;
  * @author paul
  * @see ubic.gemma.web.controller.common.description.CharacteristicBrowserController for related methods.
  */
-@SuppressWarnings("unused")
 @Controller
 public class AnnotationController {
 
     private static final Log log = LogFactory.getLog( AnnotationController.class.getName() );
 
-    @Autowired
-    private TaskRunningService taskRunningService;
-
-    @Autowired
-    private BioMaterialService bioMaterialService;
-
-    @Autowired
-    private CharacteristicService characteristicService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private static final long FIND_TERM_TIMEOUT_MS = 30000L;
 
     @Autowired
     private OntologyService ontologyService;
@@ -81,56 +62,39 @@ public class AnnotationController {
     @Autowired
     private TaxonService taxonService;
 
+    /**
+     * Obtain all category terms that can be used as characteristic categories.
+     * <p>
+     * AJAX
+     */
+    @SuppressWarnings("unused")
     public Collection<OntologyTerm> getCategoryTerms() {
         return ontologyService.getCategoryTerms();
     }
 
+    /**
+     * Obtain all relation terms that can be used as predicate.
+     * <p>
+     * AJAX
+     */
+    @SuppressWarnings("unused")
     public Collection<OntologyProperty> getRelationTerms() {
         return ontologyService.getRelationTerms();
     }
 
-    public void createBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.loadOrFail( id,
-                EntityNotFoundException::new, "No such BioMaterial with id=" + id );
-        bm = bioMaterialService.thaw( bm );
-        bioMaterialService.addCharacteristic( bm, vc );
-    }
-
     /**
-     * Ajax
+     * Find terms for tagging, etc.
+     * <p>
+     * AJAX
      *
-     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param id of the expression experiment
-     */
-    public void createExperimentTag( Characteristic vc, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
-                EntityNotFoundException::new, "No such experiment with id=" + id );
-        if ( vc == null ) {
-            throw new IllegalArgumentException( "Null characteristic" );
-        }
-        try {
-            OntologyTerm term = ontologyService.getTerm( vc.getValueUri(), 5000, TimeUnit.MILLISECONDS );
-            if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
-                throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
-            }
-        } catch ( TimeoutException e ) {
-            log.error( "Obtaining term for " + vc.getValueUri() + " timed out, will not check if it is obsolete.", e );
-        }
-        expressionExperimentService.addCharacteristic( ee, vc );
-    }
-
-    private static final long FIND_TERM_TIMEOUT_MS = 30000L;
-
-    /**
-     * AJAX. Find terms for tagging, etc.
-     *
-     * @param givenQueryString the query string
+     * @param query   the query string
      * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
-     *                important use case.
+     *                important use case, ignored if null.
      */
-    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, @Nullable Long taxonId ) {
+    @SuppressWarnings("unused")
+    public Collection<CharacteristicValueObject> findTerm( String query, @Nullable Long taxonId ) {
         StopWatch timer = StopWatch.createStarted();
-        if ( StringUtils.isBlank( givenQueryString ) ) {
+        if ( StringUtils.isBlank( query ) ) {
             return Collections.emptySet();
         }
         Taxon taxon = null;
@@ -138,7 +102,7 @@ public class AnnotationController {
             taxon = taxonService.loadOrFail( taxonId, EntityNotFoundException::new );
         }
         try {
-            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon, Math.max( FIND_TERM_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( query, 5000, taxon, Math.max( FIND_TERM_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             /*
              * Populate the definition for the top hits.
              */
@@ -153,7 +117,7 @@ public class AnnotationController {
 
             return sortedResults;
         } catch ( TimeoutException e ) {
-            log.error( "Search for " + givenQueryString + ( taxon != null ? " in " + taxon : "" ) + " timed out, no results will be returned.", e );
+            log.error( "Search for " + query + ( taxon != null ? " in " + taxon : "" ) + " timed out, no results will be returned.", e );
             return Collections.emptySet();
         } catch ( ParseSearchException e ) {
             throw new IllegalArgumentException( e.getMessage(), e );
@@ -165,6 +129,7 @@ public class AnnotationController {
     /**
      * AJAX Note that this completely scraps the indices, and runs asynchronously.
      */
+    @SuppressWarnings("unused")
     public void reinitializeOntologyIndices() {
         if ( !SecurityUtil.isRunningAsAdmin() ) {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
@@ -172,45 +137,4 @@ public class AnnotationController {
         }
         ontologyService.reinitializeAndReindexAllOntologies();
     }
-
-    public void removeBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.loadOrFail( id, EntityNotFoundException::new, "No such BioMaterial with id=" + id );
-        bm = bioMaterialService.thaw( bm );
-        bioMaterialService.removeCharacteristic( bm, vc );
-    }
-
-    public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            return;
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        Set<Characteristic> current = ee.getCharacteristics();
-
-        Collection<Characteristic> found = new HashSet<>();
-
-        for ( Characteristic characteristic : current ) {
-            if ( characterIds.contains( characteristic.getId() ) )
-                found.add( characteristic );
-
-        }
-
-        for ( Characteristic characteristic : found ) {
-            log.info( "Removing characteristic  from " + ee + " : " + characteristic );
-        }
-
-        current.removeAll( found );
-        ee.setCharacteristics( current );
-        expressionExperimentService.update( ee );
-
-        for ( Long id : characterIds ) {
-            characteristicService.remove( id );
-        }
-
-    }
-
 }

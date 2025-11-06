@@ -239,6 +239,8 @@
             <dwr:include method="recalculateBatchConfound"/>
             <dwr:include method="recalculateBatchEffect"/>
             <dwr:include method="runGeeq"/>
+            <dwr:include method="createExperimentTag"/>
+            <dwr:include method="removeExperimentTag"/>
         </dwr:remote>
     </bean>
 
@@ -311,6 +313,8 @@
             <dwr:include method="getAnnotation"/>
             <dwr:include method="getFactorValues"/>
             <dwr:include method="addFactorValueTo"/>
+            <dwr:include method="createBioMaterialTag"/>
+            <dwr:include method="removeBioMaterialTag"/>
         </dwr:remote>
     </bean>
 
@@ -404,10 +408,6 @@
             <dwr:include method="findTerm"/>
             <dwr:include method="getCategoryTerms"/>
             <dwr:include method="getRelationTerms"/>
-            <dwr:include method="createExperimentTag"/>
-            <dwr:include method="removeExperimentTag"/>
-            <dwr:include method="createBioMaterialTag"/>
-            <dwr:include method="removeBioMaterialTag"/>
             <dwr:include method="reinitializeOntologyIndices"/>
             <dwr:include method="validateTags"/>
         </dwr:remote>
