@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 /**
  * Base class for CLI tools that manipulate expression experiment vectors.
+ *
  * @author poirigui
  */
 public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataVector> extends ExpressionExperimentManipulatingCLI {
