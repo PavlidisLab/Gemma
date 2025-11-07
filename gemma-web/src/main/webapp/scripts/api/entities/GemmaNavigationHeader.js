@@ -524,7 +524,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : Gemma.CONTEXT_PATH + '/home.html',
-                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/gemma-headerlogo.png" height="63" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
+                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/gemma-headerlogo.png" height="60" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
                          }
                       }, '->', {
                          ref : 'navToolbar',
