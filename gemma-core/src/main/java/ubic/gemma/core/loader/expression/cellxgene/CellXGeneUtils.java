@@ -1,12 +1,12 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.Link;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -54,8 +54,18 @@ public class CellXGeneUtils {
             new OntologyTerm( "EFO:0008992", "MERFISH" ),
             new OntologyTerm( "EFO:0030062", "Slide-seqV2" ),
             new OntologyTerm( "EFO:0008853", "Patch-seq" ),
-            new OntologyTerm( "EFO:0009919", "SPLiT-seq" )
+            new OntologyTerm( "EFO:0009919", "SPLiT-seq" ),
+            new OntologyTerm( "EFO:0700004", "BD Rhapsody Targeted mRNA Profiling" ),
+            new OntologyTerm( "EFO:0700003", "BD Rhapsody Whole Transcriptome Analysis" ),
+            new OntologyTerm( "EFO:0030026", "sci-Plex" ),
+            new OntologyTerm( "EFO:0030002", "microwell-seq" ),
+            new OntologyTerm( "EFO:0900002", "HIVE CLX Single-Cell RNAseq Solution" ),
+            new OntologyTerm( "EFO:0900001", "Asteria scRNA-seq kit" ),
+            new OntologyTerm( "EFO:0022601", "Parse Evercode Whole Transcriptome v2" ),
+            new OntologyTerm( "EFO:0900000", "particle-templated instant partition sequencing" )
     };
+
+    private static final Set<OntologyTerm> GENE_EXPRESSION_ASSAYS_SET = new HashSet<>( Arrays.asList( GENE_EXPRESSION_ASSAYS ) );
 
     /**
      * Extract GEO accessions from the given collection metadata.
@@ -78,7 +88,7 @@ public class CellXGeneUtils {
      * Determine if the given assay corresponds to a single cell assay producing gene expression data.
      */
     public static boolean isGeneExpressionAssay( OntologyTerm a ) {
-        return ArrayUtils.contains( GENE_EXPRESSION_ASSAYS, a.getOntologyTermId() );
+        return GENE_EXPRESSION_ASSAYS_SET.contains( a );
     }
 
     /**
