@@ -19,6 +19,7 @@ import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,6 +36,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
 
     private Set<String> allowedTaxa;
 
+    @Nullable
     private Set<String> assays;
 
     @Override
@@ -70,7 +72,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             allowedTaxa = getTaxaInGemma();
         }
         CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1, 1.5 ), cellXGeneDownloadPath );
-        getCliContext().getOutputStream().println( "collection_id\tdataset_id\tgeo_accessions\ttaxa\ttissues\tcell_types\tdevelopment_stages\tdiseases\tassays\tnumber_of_samples\tnumber_of_cells" );
+        getCliContext().getOutputStream().println( "collection_id\tdataset_id\tdataset_name\tgeo_accessions\ttaxa\ttissues\tcell_types\tdevelopment_stages\tdiseases\tassays\tnumber_of_samples\tnumber_of_cells" );
         for ( CollectionMetadata cm : fetcher.fetchAllCollectionMetadata() ) {
             cm = fetcher.fetchCollectionMetadata( cm.getId() );
             assert cm.getDatasets() != null;
@@ -89,8 +91,9 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                     }
                     continue;
                 }
-                getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
-                        TsvUtils.format( cm.getId() ), TsvUtils.format( dm.getId() ), TsvUtils.format( geoAccessions ),
+                getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
+                        TsvUtils.format( cm.getId() ), TsvUtils.format( dm.getId() ), TsvUtils.format( dm.getName() ),
+                        TsvUtils.format( geoAccessions ),
                         format( dm.getOrganism() ), format( dm.getTissue() ), format( dm.getCellType() ),
                         format( dm.getDevelopmentStage() ), format( dm.getDisease() ), format( dm.getAssay() ),
                         TsvUtils.format( dm.getDonorId().size() ), TsvUtils.format( dm.getCellCount() ) );
