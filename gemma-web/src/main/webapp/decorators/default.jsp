@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <%--@elvariable id="appConfig" type="java.util.Map"--%>
 <!DOCTYPE html>
-<html>
+<html lang="en-CA">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width; initial-scale=1" />
@@ -9,7 +9,7 @@
 <meta name="author" content="Gemma admin (${appConfig["gemma.support.email"]})" />
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
 <Gemma:style src="/bundles/gemma-all.css" />
-<script type="application/javascript">
+<script>
 window.gemmaHostUrl = "${appConfig["gemma.hosturl"]}";
 window.ctxBasePath = "${pageContext.request.contextPath}";
 window.recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";
