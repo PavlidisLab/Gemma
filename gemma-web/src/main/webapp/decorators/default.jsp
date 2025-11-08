@@ -7,10 +7,6 @@
 <meta name="viewport" content="width=device-width; initial-scale=1" />
 <title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 <meta name="author" content="Gemma admin (${appConfig["gemma.support.email"]})" />
-<meta name="description"
-        content="<decorator:getProperty property="meta.description" default="Database of curated, reanalyzed genomics datasets for meta-analysis"/>" />
-<meta name="keywords"
-        content="<decorator:getProperty property="meta.keywords" default="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>" />
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
 <Gemma:style src="/bundles/gemma-all.css" />
 <script type="application/javascript">
