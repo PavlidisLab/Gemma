@@ -947,7 +947,7 @@ public class ExpressionExperimentController {
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
         ExpressionExperiment expressionExperiment;
-        expressionExperiment = expressionExperimentService.load( id );
+        expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
@@ -956,7 +956,7 @@ public class ExpressionExperimentController {
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentByShortName( @RequestParam(value = "shortName") String shortName ) {
-        ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortName( shortName );
+        ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortNameWithPrimaryPublication( shortName );
         if ( experimentExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
         }

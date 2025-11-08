@@ -74,6 +74,18 @@
 	</tag>
 
 	<tag>
+		<description>Render HTML meta tags for a citation</description>
+		<name>citationMeta</name>
+		<tag-class>ubic.gemma.web.taglib.BibliographicReferenceMetaTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>citation</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+	<tag>
 		<name>constants</name>
 		<tag-class>ubic.gemma.web.taglib.ConstantsTag</tag-class>
 		<tei-class>ubic.gemma.web.taglib.ConstantsTei</tei-class>

@@ -495,10 +495,7 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             if ( ee.getPrimaryPublication() != null ) {
-                Hibernate.initialize( ee.getPrimaryPublication() );
-                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
-                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
-                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
             }
         }
         return ee;
@@ -510,21 +507,10 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             if ( ee.getPrimaryPublication() != null ) {
-                Hibernate.initialize( ee.getPrimaryPublication() );
-                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
-                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
-                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
             }
-            Set<BibliographicReference> pubs = ee.getOtherRelevantPublications();
-
-            for ( BibliographicReference pub : pubs ) {
-                Hibernate.initialize( pub );
-                Hibernate.initialize( pub.getMeshTerms() );
-                Hibernate.initialize( pub.getChemicals() );
-                Hibernate.initialize( pub.getKeywords() );
-            }
+            ee.getOtherRelevantPublications().forEach( Thaws::thawBibliographicReference );
         }
-
         return ee;
     }
 
@@ -697,6 +683,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment findByShortName( final String shortName ) {
         return this.expressionExperimentDao.findByShortName( shortName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByShortNameWithPrimaryPublication( String shortName ) {
+        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
+        if ( ee != null && ee.getPrimaryPublication() != null ) {
+            Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
+        }
+        return ee;
     }
 
     @Override
