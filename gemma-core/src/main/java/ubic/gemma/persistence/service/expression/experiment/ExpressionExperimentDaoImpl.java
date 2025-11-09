@@ -994,7 +994,7 @@ public class ExpressionExperimentDaoImpl
             clauses.add( "T.CATEGORY_URI is null or T.CATEGORY_URI not in (:excludedCategoryUris)" );
         }
         if ( excludedTermUris != null && !excludedTermUris.isEmpty() ) {
-            clauses.add( "T." + valueUriColumn + " is null or T." + valueColumn + " not in (:excludedTermUris)" );
+            clauses.add( "T." + valueUriColumn + " is null or T." + valueUriColumn + " not in (:excludedTermUris)" );
         }
         if ( excludeFreeTextCategories ) {
             // we don't want to exclude "uncategorized" terms when excluding free-text categories
