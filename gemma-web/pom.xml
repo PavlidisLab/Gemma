@@ -73,6 +73,7 @@
 						</resource>
 					</webResources>
 					<warSourceExcludes>
+						debug.html,
 						fonts/**,
 						<!-- TODO: exclude images too, but many of them are not resolved with Webpack -->
 						<!-- images/**, -->
