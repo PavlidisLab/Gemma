@@ -17,11 +17,11 @@ import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
@@ -162,7 +162,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
         } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
-        SearchWebService.SearchResultsResponseDataObject searchResults = searchWebService.search( QueryArg.valueOf( "BRCA1" ), null, null, null, LimitArg.valueOf( "20" ), null );
+        SearchWebService.SearchResultsResponseDataObject searchResults = searchWebService.search( QueryArg.valueOf( "BRCA1" ), null, null, null, null, LimitArg.valueOf( "20" ), null );
 
         assertThat( searchSettingsArgumentCaptor.getValue() )
                 .hasFieldOrPropertyWithValue( "query", "BRCA1" )
@@ -196,7 +196,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
             }
             return sr;
         } );
-        searchWebService.search( QueryArg.valueOf( "BRCA1" ), TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ), null );
+        searchWebService.search( QueryArg.valueOf( "BRCA1" ), null, TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ), null );
         verify( taxonService ).findByNcbiId( 9606 );
     }
 
@@ -214,13 +214,13 @@ public class SearchWebServiceTest extends BaseJerseyTest {
             }
             return sr;
         } );
-        searchWebService.search( QueryArg.valueOf( "BRCA1" ), null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ), null );
+        searchWebService.search( QueryArg.valueOf( "BRCA1" ), null, null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ), null );
         verify( arrayDesignService ).load( 1L );
     }
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenQueryIsMissing() {
-        searchWebService.search( null, null, null, null, LimitArg.valueOf( "20" ), null );
+        searchWebService.search( null, null, null, null, null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = BadRequestException.class)
@@ -230,17 +230,17 @@ public class SearchWebServiceTest extends BaseJerseyTest {
 
     @Test(expected = NotFoundException.class)
     public void testSearchWhenUnknownTaxonIsProvided() {
-        searchWebService.search( QueryArg.valueOf( "brain" ), TaxonArg.valueOf( "9607" ), null, null, LimitArg.valueOf( "20" ), null );
+        searchWebService.search( QueryArg.valueOf( "brain" ), null, TaxonArg.valueOf( "9607" ), null, null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = NotFoundException.class)
     public void testSearchWhenUnknownPlatformIsProvided() {
-        searchWebService.search( QueryArg.valueOf( "brain" ), null, PlatformArg.valueOf( "2" ), null, LimitArg.valueOf( "20" ), null );
+        searchWebService.search( QueryArg.valueOf( "brain" ), null, null, PlatformArg.valueOf( "2" ), null, LimitArg.valueOf( "20" ), null );
     }
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenUnsupportedResultTypeIsProvided() {
-        searchWebService.search( QueryArg.valueOf( "brain" ), null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ), null );
+        searchWebService.search( QueryArg.valueOf( "brain" ), null, null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ), null );
     }
 
     @Test

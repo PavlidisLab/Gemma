@@ -1,7 +1,6 @@
-package ubic.gemma.core.search;
+package ubic.gemma.model.common.search;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.search.SearchSettings;
 
 import java.util.AbstractSet;
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import java.util.Map;
  * <p>
  * The collection also honor the {@link SearchSettings#getMaxResults()} value, rejecting any new result unless replacing
  * an existing one.
+ *
  * @author poirigui
  */
 public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchResult<T>> {

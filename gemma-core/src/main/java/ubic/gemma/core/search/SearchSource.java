@@ -3,6 +3,7 @@ package ubic.gemma.core.search;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 
 /**
  * Search source that provides {@link SearchResult} from a search engine.
+ *
  * @author poirigui
  */
 public interface SearchSource {

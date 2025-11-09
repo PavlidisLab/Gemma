@@ -85,11 +85,11 @@ public class SearchServiceTest extends BaseTest {
 
     @Test
     public void testGetFields() {
-        when( ( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class ) )
+        when( ( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class, SearchSettings.SearchMode.ACCURATE ) )
                 .thenReturn( Collections.singleton( "shortName" ) );
-        assertThat( searchService.getFields( ExpressionExperiment.class ) )
+        assertThat( searchService.getFields( ExpressionExperiment.class, SearchSettings.SearchMode.ACCURATE ) )
                 .contains( "shortName" );
-        verify( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class );
+        verify( ( FieldAwareSearchSource ) fieldAwareSearchSource ).getFields( ExpressionExperiment.class, SearchSettings.SearchMode.ACCURATE );
     }
 
     @Test

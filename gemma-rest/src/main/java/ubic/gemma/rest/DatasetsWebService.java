@@ -56,7 +56,6 @@ import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
@@ -67,6 +66,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -300,7 +300,7 @@ public class DatasetsWebService {
         public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo, @Nullable SearchResult<ExpressionExperiment> result ) {
             super( vo );
             if ( result != null ) {
-                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ) );
+                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ), null, false );
             } else {
                 this.searchResult = null;
             }

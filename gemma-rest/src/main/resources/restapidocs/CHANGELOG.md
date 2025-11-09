@@ -1,5 +1,10 @@
 ## Updates
 
+### Update 2.9.3
+
+- add a `dataset` parameter to the `search` endpoint to constraint results to be related to a specific dataset
+- add a `resultObjectUrl` and `resultObjectUrlExternal` fields to the `SearchResultValueObject` model
+
 ### Update 2.9.2
 
 Subject, predicates and objects of statements are now exposed in the `FilterArgExpressionExperiment` model. Their URIs
