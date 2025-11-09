@@ -1,7 +1,7 @@
 <!--  
     Sitemesh configuration
 -->
-<decorators defaultdir="/decorators">
+<decorators defaultdir="/WEB-INF/decorators">
     <excludes>
         <pattern>/resources/*</pattern>
     </excludes> 

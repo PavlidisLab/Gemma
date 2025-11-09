@@ -1,0 +1,18 @@
+<%@ include file="/WEB-INF/common/taglibs.jsp" %>
+<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
+
+<c:if test='${ appConfig["ga.tracker"] != null}'>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${appConfig["ga.tracker"]}"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+       dataLayer.push( arguments );
+    }
+
+    gtag( 'js', new Date() );
+
+    gtag( 'config', '${appConfig["ga.tracker"]}' );
+    </script>
+</c:if>

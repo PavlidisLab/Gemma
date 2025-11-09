@@ -613,7 +613,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             },
 
             login: function () {
-                window.open(Gemma.CONTEXT_PATH + "/login.jsp");
+                window.open(Gemma.CONTEXT_PATH + "/login.html");
             },
             okHandler: function () {
                 // if user has made changes, save to session

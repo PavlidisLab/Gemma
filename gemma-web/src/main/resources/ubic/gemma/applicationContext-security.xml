@@ -29,7 +29,7 @@
 	</bean>
 
 	<bean id="ajaxAuthenticationFailureHandler" class="gemma.gsec.authentication.AjaxAuthenticationFailureHandler">
-		<property name="defaultFailureUrl" value="/login.jsp"/>
+		<property name="defaultFailureUrl" value="/login.html"/>
 	</bean>
 
 	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint">
@@ -74,8 +74,8 @@
 
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
 
-		<s:logout logout-success-url="/login.jsp"/>
-		<s:form-login login-page="/login.jsp" default-target-url="/"
+		<s:logout logout-success-url="/home.html"/>
+		<s:form-login login-page="/login.html" default-target-url="/home.html"
 					  authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
 					  authentication-failure-handler-ref="ajaxAuthenticationFailureHandler"/>
 		<s:remember-me key="gemma_rm" user-service-ref="userManager"/>

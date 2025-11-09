@@ -120,10 +120,8 @@
         <filter-name>cors</filter-name>
         <url-pattern>/rest/v2/*</url-pattern>
         <!-- specifically for GemBrow to allow preflights on the logout action -->
-        <!-- FIXME: all these should have equivalent endpoints under /rest/v2 -->
+        <!-- TODO: migrate these two REST API endpoints under /rest/v2 -->
         <url-pattern>/j_spring_security_logout</url-pattern>
-        <url-pattern>/home.html</url-pattern>
-        <url-pattern>/login.jsp</url-pattern>
         <url-pattern>/whatsnew/generateCache.html</url-pattern>
     </filter-mapping>
 
@@ -267,7 +265,7 @@
     </session-config>
 
     <error-page>
-        <location>/error.jsp</location>
+        <location>/WEB-INF/error.jsp</location>
     </error-page>
 
     <!-- https://github.com/PavlidisLab/Gemma/issues/923 -->

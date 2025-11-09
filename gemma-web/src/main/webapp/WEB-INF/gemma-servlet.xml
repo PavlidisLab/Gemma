@@ -71,9 +71,10 @@
     </bean>
 
     <!-- ==================================================== -->
-    <!-- Mapping urls to views. List views here that are just jsps and that don't need a controller. -->
+    <!-- Mapping urls to views. List views here that are just JSPs and that don't need a controller. -->
     <!-- ==================================================== -->
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html"/>
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/login.html"/>
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html"/>
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/manageGroups.html"/>
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/geneGroupManager.html"/>
@@ -105,7 +106,7 @@
     <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="requestContextAttribute" value="rc"/>
         <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
-        <property name="prefix" value="/pages/"/>
+        <property name="prefix" value="/WEB-INF/pages/"/>
         <property name="suffix" value=".jsp"/>
     </bean>
 
