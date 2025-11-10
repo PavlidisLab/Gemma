@@ -93,7 +93,7 @@ public class ConfluenceWikiHtmlGenerator {
             writer.printf( "<h3>%s</h3>", escapeHtml4( commandGroup.name() ) );
             for ( CommandMeta c : commands.get( commandGroup ).values() ) {
                 if ( StringUtils.isNotBlank( c.getCommandName() ) ) {
-                    writer.printf( "<p><ac:link><ri:page ri:content-title=\"%s\"><ac:link-body>%s</ac:link-body></ac:link>%s</p>",
+                    writer.printf( "<p><ac:link><ri:page ri:content-title=\"%s\"><ac:link-body>%s</ac:link-body></ri:page></ac:link>%s</p>",
                             escapeHtml4( c.getCommandName() + pageSuffix ),
                             escapeHtml4( c.getCommandName() ),
                             escapeHtml4( StringUtils.isNotBlank( c.getShortDesc() ) ? " - " + c.getShortDesc() : "" ) );
