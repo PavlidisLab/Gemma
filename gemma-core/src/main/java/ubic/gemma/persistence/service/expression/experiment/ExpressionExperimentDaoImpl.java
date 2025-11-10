@@ -23,6 +23,7 @@ import gemma.gsec.acl.domain.AclSid;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -2492,6 +2493,11 @@ public class ExpressionExperimentDaoImpl
     private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
         Assert.notNull( scbad.getCellIds() );
         Assert.isTrue( !scbad.getCellIds().isEmpty(), "There must be at least one cell ID." );
+        for ( String cellId : scbad.getCellIds() ) {
+            // space is actually considered ASCII printable, but we allow it since it can occur
+            Assert.isTrue( StringUtils.isAsciiPrintable( cellId ),
+                    "Cell IDs can only contain printable ASCII characters (from 32 to 126)." );
+        }
         for ( int i = 0; i < scbad.getBioAssays().size(); i++ ) {
             List<String> sampleCellIds = scbad.getCellIdsBySample( i );
             Assert.isTrue( sampleCellIds.stream().distinct().count() == sampleCellIds.size(),
@@ -2500,7 +2506,7 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCellIds(),
                 "The number of cell IDs must match the number of cells." );
         Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
-                "There must be at most one preferred cell type labelling." );
+                "There must be at most one preferred cell type assignment." );
         validateCellTypeAssignments( scbad );
         validateCellLevelCharacteristics( scbad );
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
