@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -639,11 +640,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
         DoubleVectorValueObject exemplar = obs.iterator().next();
 
-        BioAssayDimensionValueObject bad = new BioAssayDimensionValueObject();
-        bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
-        bad.setDescription( "Subset slice" );
-        bad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
-        bad.setIsSubset( true );
+        BioAssayDimensionValueObject slicedBad = new BioAssayDimensionValueObject();
+        slicedBad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
+        slicedBad.setDescription( "Subset slice" );
+        slicedBad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
+        slicedBad.setIsSubset( true );
         Collection<Long> subsetBioAssayIds = IdentifiableUtils.getIds( ee.getBioAssays() );
 
         for ( BioAssayValueObject ba : exemplar.getBioAssays() ) {
@@ -654,10 +655,18 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             sliceBioAssays.add( ba );
         }
 
-        bad.addBioAssays( sliceBioAssays );
+        slicedBad.addBioAssays( sliceBioAssays );
         ExpressionExperimentSubsetValueObject eeVo = new ExpressionExperimentSubsetValueObject( ee );
+
+        List<BioAssayValueObject> assays = obs.iterator().next().getBioAssays();
+        Map<BioAssayValueObject, Integer> ba2i = ListUtils.indexOfElements( assays );
+        int[] bioAssayIndex = new int[sliceBioAssays.size()];
+        for ( int i = 0; i < sliceBioAssays.size(); i++ ) {
+            bioAssayIndex[i] = ba2i.get( sliceBioAssays.get( i ) );
+        }
+
         for ( DoubleVectorValueObject vec : obs ) {
-            sliced.add( vec.slice( eeVo, bad ) );
+            sliced.add( vec.slice( eeVo, slicedBad, bioAssayIndex ) );
         }
 
         return sliced;
