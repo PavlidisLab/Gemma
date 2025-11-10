@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
@@ -421,6 +422,26 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
                     assertThat( vec.getData() ).isEmpty();
                     assertThat( vec.getDataIndices() ).isEmpty();
                 } );
+    }
+
+    /**
+     * This GEO series inclues cell types in the barcodes.tsv.gz files.
+     */
+    @Test
+    @Category({ GeoTest.class, SlowTest.class })
+    public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE125708" );
+        GeoSample sample = series.getSamples().stream().filter( s -> "GSM3580724".equals( s.getGeoAccession() ) )
+                .findFirst()
+                .orElseThrow( IllegalArgumentException::new );
+        detector.downloadSingleCellData( series, sample );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder().ignoreSamplesLackingData( true ).build() );
+        BioAssay ba = BioAssay.Factory.newInstance( sample.getGeoAccession() );
+        ba.setSampleUsed( BioMaterial.Factory.newInstance( sample.getGeoAccession() ) );
+        SingleCellDimension dimension = loader.getSingleCellDimension( Collections.singletonList( ba ) );
+        assertThat( dimension.getCellIds() )
+                .hasSize( 9939 )
+                .contains( "AAACCTGAGGTGACCA-1" );
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
