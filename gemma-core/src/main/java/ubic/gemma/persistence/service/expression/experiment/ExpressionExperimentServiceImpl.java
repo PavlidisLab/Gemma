@@ -965,11 +965,21 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * FIXME: There seems to be a bug in Hibernate where collections are not evicted, so newly added entities might
+     *        not appear as a result of using the {@link CacheMode#REFRESH} mode.
+     */
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
+            this.expressionExperimentDao.evictCharacteristicsCache( ee );
+            this.expressionExperimentDao.evictBioAssaysCache( ee );
+            this.expressionExperimentDao.evictQuantitationTypesCache( ee );
+            this.expressionExperimentDao.evictOtherPartsCache( ee );
             this.expressionExperimentDao.thawLite( ee );
         }
         return ee;

@@ -40,6 +40,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ListUtils;
+import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -144,6 +145,26 @@ public class ExpressionExperimentDaoImpl
         Session session = getSessionFactory().getCurrentSession();
         session.setCacheMode( cacheMode );
         return super.load( id );
+    }
+
+    @Override
+    public void evictCharacteristicsCache( ExpressionExperiment ee ) {
+        getSessionFactory().getCache().evictCollection( Investigation.class.getName() + ".characteristics", ee.getId() );
+    }
+
+    @Override
+    public void evictBioAssaysCache( ExpressionExperiment ee ) {
+        getSessionFactory().getCache().evictCollection( getEntityName() + ".bioAssays", ee.getId() );
+    }
+
+    @Override
+    public void evictOtherPartsCache( ExpressionExperiment ee ) {
+        getSessionFactory().getCache().evictCollection( getEntityName() + ".otherParts", ee.getId() );
+    }
+
+    @Override
+    public void evictQuantitationTypesCache( ExpressionExperiment ee ) {
+        getSessionFactory().getCache().evictCollection( getEntityName() + ".quantitationTypes", ee.getId() );
     }
 
     @Override
