@@ -53,6 +53,14 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
+    void evictCharacteristicsCache( ExpressionExperiment ee );
+
+    void evictBioAssaysCache( ExpressionExperiment ee );
+
+    void evictOtherPartsCache( ExpressionExperiment ee );
+
+    void evictQuantitationTypesCache( ExpressionExperiment ee );
+
     @Data
     class Identifiers {
         Long id;

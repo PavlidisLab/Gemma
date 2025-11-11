@@ -213,6 +213,10 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testLoadWithRefreshCacheMode() {
         ee = createExpressionExperiment();
         assertNotNull( expressionExperimentDao.load( ee.getId(), CacheMode.REFRESH ) );
+        expressionExperimentDao.evictCharacteristicsCache( ee );
+        expressionExperimentDao.evictBioAssaysCache( ee );
+        expressionExperimentDao.evictOtherPartsCache( ee );
+        expressionExperimentDao.evictQuantitationTypesCache( ee );
     }
 
     @Test
