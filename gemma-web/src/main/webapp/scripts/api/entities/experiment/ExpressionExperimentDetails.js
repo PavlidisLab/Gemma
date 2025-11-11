@@ -893,7 +893,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         width: 80
                                     }*/
                                     , {
-                                        fieldLabel: 'Differential Expr. Analyses (<a href="https://academic.oup.com/database/article/doi/10.1093/database/baab006/6143045#228516893">ANOVA</a>)',
+                                        fieldLabel: 'Differential Expr. Analyses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7904053/#s2-s16">ANOVA</a>)',
                                         items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
                                             experimentDetails: e,
                                             editable: this.editable,
