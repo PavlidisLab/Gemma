@@ -969,7 +969,8 @@ public class ExpressionExperimentServiceImpl
      * {@inheritDoc}
      * <p>
      * FIXME: There seems to be a bug in Hibernate where collections are not evicted, so newly added entities might
-     *        not appear as a result of using the {@link CacheMode#REFRESH} mode.
+     *        not appear as a result of using the {@link CacheMode#REFRESH} mode. To workaround this, we explicitly
+     *        evict collections that are cached prior to thawing their contents.
      */
     @Override
     @Transactional(readOnly = true)
