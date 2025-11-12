@@ -125,6 +125,12 @@
                                 </form:select>
                                 <form:errors path="representation" cssClass="error" />
                             </td>
+                            <td>
+                                <form:button
+                                        name="deleteQuantitationType"
+                                        value="${qt.id}"
+                                        class="btn-unstyled"><i class="fa fa-remove red"></i></form:button>
+                            </td>
                         </tr>
                     </spring:nestedPath>
                 </c:forEach>
@@ -186,6 +192,11 @@
                                             ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
                                         </c:forEach>
                                     </td>
+                                    <td>
+                                        <form:button
+                                                name="deleteCellTypeAssignment"
+                                                value="${cta.id}" class="btn-unstyled"><i class="fa fa-remove red"></i></form:button>
+                                    </td>
                                 </tr>
                             </spring:nestedPath>
                         </c:forEach>
@@ -227,6 +238,11 @@
                                             ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
                                         </c:forEach>
                                     </td>
+                                    <td>
+                                        <form:button
+                                                name="deleteCellLevelCharacteristics"
+                                                value="${clc.id}" class="btn-uns"><i class="fa fa-remove red"></i></form:button>
+                                    </td>
                                 </tr>
                             </spring:nestedPath>
                         </c:forEach>
@@ -260,6 +276,38 @@
             <input type="reset" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
         </div>
 
+        <form:hidden path="confirmation" />
+
     </form:form>
 
 </div>
+
+<script>
+function bindCheckboxes( selector ) {
+   $( selector ).click( function() {
+      $( selector ).not( this ).prop( 'checked', false );
+   } );
+}
+
+bindCheckboxes( '[name^="quantitationTypes["][name$="].isPreferred"]' );
+bindCheckboxes( '[name^="quantitationTypes["][name$="].isSingleCellPreferred"]' );
+<c:forEach items="${expressionExperiment.singleCellDimensions}" var="scd" varStatus="scdIndex">
+bindCheckboxes( '[name^="singleCellDimensions[${scdIndex.index}].cellTypeAssignments["][name$="].isPreferred"]' );
+</c:forEach>
+
+function addDeleteConfirmation( selector, what, messagePrefix ) {
+   $( selector ).click( function() {
+      const id = $( this ).val();
+      const name = $( this ).closest( 'tr' ).children( 'td' ).eq( 1 ).children().eq( 0 ).val();
+      if ( prompt( 'Enter "DELETE" to confirm deletion of ' + what + ' with ID ' + id + ' and name ' + name + ':' ) === 'DELETE' ) {
+         $( '#confirmation' ).val( 'DELETE ' + messagePrefix + ' ' + $( this ).val() );
+      } else {
+         event.preventDefault();
+      }
+   } );
+}
+
+addDeleteConfirmation( '[name$="deleteQuantitationType"]', 'quantitation type', 'QT' )
+addDeleteConfirmation( '[name$="deleteCellTypeAssignment"]', 'cell type assignment', 'CTA ' )
+addDeleteConfirmation( '[name$="deleteCellLevelCharacteristics"]', 'cell-level characteristics', 'CLC' )
+</script>

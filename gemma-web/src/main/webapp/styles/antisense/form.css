@@ -1,0 +1,28 @@
+/* Utilities for styling forms and input elements */
+
+.btn-unstyled {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+}
+
+.btn-refresh {
+    border-radius: 10px;
+    background-color: whitesmoke !important;
+}
+
+.btn-refresh:hover {
+    background-color: lightgray !important;
+}
+
+.btn-refresh * {
+    font-weight: bold;
+    background: transparent !important;
+    cursor: pointer;
+    font-size: 106% !important;
+    color: royalblue !important;
+}

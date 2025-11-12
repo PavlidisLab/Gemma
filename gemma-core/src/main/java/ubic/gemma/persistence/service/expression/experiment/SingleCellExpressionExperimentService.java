@@ -307,6 +307,12 @@ public interface SingleCellExpressionExperimentService {
     void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellTypeAssignmentById( ExpressionExperiment ee, SingleCellDimension dimension, Long ctaId );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -392,6 +398,12 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics clc );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelCharacteristicsById( ExpressionExperiment ee, SingleCellDimension dimension, Long clcId );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );

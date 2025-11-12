@@ -253,24 +253,6 @@ hr.normal {
     float: left;
 }
 
-.btn-refresh {
-    border-radius: 10px;
-    background-color: whitesmoke !important;
-}
-
-.btn-refresh:hover {
-    background-color: lightgray !important;
-}
-
-.btn-refresh * {
-    font-weight: bold;
-    background: transparent !important;
-    cursor: pointer;
-    font-size: 106% !important;
-    color: royalblue !important;
-}
-
-
 .folded {
     height: 5px;
     overflow: hidden;

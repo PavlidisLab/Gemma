@@ -51,6 +51,11 @@ public class QuantitationType extends AbstractDescribable {
     private boolean isNormalized;
 
     /**
+     * Indicate if the data is aggregated, usually from single-cell data.
+     */
+    private boolean isAggregated;
+
+    /**
      * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector} is
      * preferred.
      */
@@ -63,6 +68,7 @@ public class QuantitationType extends AbstractDescribable {
 
     /**
      * Indicate if this quantitation is the preferred for processed data.
+     *
      * @deprecated this is useless as there can only be one QT for processed data per dataset.
      */
     @Deprecated
@@ -203,6 +209,13 @@ public class QuantitationType extends AbstractDescribable {
         this.type = type;
     }
 
+    public boolean getIsAggregated() {
+        return isAggregated;
+    }
+
+    public void setIsAggregated( boolean aggregated ) {
+        isAggregated = aggregated;
+    }
 
     @Override
     public boolean equals( Object object ) {

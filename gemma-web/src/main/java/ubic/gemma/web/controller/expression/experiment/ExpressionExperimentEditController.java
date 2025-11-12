@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.loader.expression.DataDeleterService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -95,6 +96,8 @@ public class ExpressionExperimentEditController {
     protected MessageUtil messageUtil;
     @Autowired
     private ExpressionExperimentEditControllerHelperService expressionExperimentEditControllerHelperService;
+    @Autowired
+    private DataDeleterService dataDeleterService;
 
     @Autowired
     private TaskExecutor taskExecutor;
@@ -115,6 +118,10 @@ public class ExpressionExperimentEditController {
         private Collection<BioAssayValueObject> bioAssays;
         @Nullable
         private String assayToMaterialMap;
+        /**
+         * Field used to confirm deletion.
+         */
+        private String confirmation;
         /**
          * Return to the experiment page after a successful update.
          * <p>
@@ -412,12 +419,44 @@ public class ExpressionExperimentEditController {
                 .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
     }
 
-    private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
-        for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay, false ) );
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteQuantitationType" })
+    public ModelAndView deleteQuantitationType( @RequestParam("id") Long id, @RequestParam("deleteQuantitationType") Long qtId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        QuantitationType qt = ee.getQuantitationTypes().stream()
+                .filter( q -> q.getId().equals( qtId ) )
+                .findFirst()
+                .orElseThrow( () -> new EntityNotFoundException( "No quantitation type with ID " + qtId + " found for " + ee.getShortName() + "." ) );
+        if ( !confirmation.equals( "DELETE QT " + qtId ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the quantitation type with ID " + qtId + "." );
         }
-        return result;
+        dataDeleterService.deleteRawData( ee, qt );
+        messageUtil.saveMessage( "Deleted " + qt + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteCellTypeAssignment" })
+    public ModelAndView deleteCellTypeAssignment( @RequestParam("id") Long id, @RequestParam("deleteCellTypeAssignment") Long ctaId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        if ( !confirmation.equals( "DELETE CTA " + ctaId ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the cell type assignment with ID " + ctaId + "." );
+        }
+        singleCellExpressionExperimentService.removeCellTypeAssignmentById( ee, ctaId );
+        messageUtil.saveMessage( "Deleted cell type assignment with ID " + ctaId + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteCellLevelCharacteristics" })
+    public ModelAndView deleteCellLevelCharacteristics( @RequestParam("id") Long id, @RequestParam("deleteCellLevelCharacteristics") Long clcId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        if ( !confirmation.equals( "DELETE CLC " + clcId ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the cell-level characteristics with ID " + clcId + "." );
+        }
+        singleCellExpressionExperimentService.removeCellLevelCharacteristicsById( ee, clcId );
+        messageUtil.saveMessage( "Deleted cell-level characteristics with ID " + clcId + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }
 
     private enum QuantitationTypeUpdateStatus {

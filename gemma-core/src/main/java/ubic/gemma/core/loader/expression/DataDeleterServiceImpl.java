@@ -38,15 +38,13 @@ public class DataDeleterServiceImpl implements DataDeleterService {
     }
 
     @Override
-    public void deleteSingleCellDataAggregate( ExpressionExperiment ee, QuantitationType qt ) {
-        singleCellExpressionExperimentAggregateService.removeAggregatedVectors( ee, qt );
-        expressionDataFileService.deleteAllDataFiles( ee, qt );
-    }
-
-    @Override
     public void deleteRawData( ExpressionExperiment ee, QuantitationType qt ) {
         ee = expressionExperimentService.thaw( ee );
-        expressionExperimentService.removeRawDataVectors( ee, qt );
+        if ( singleCellExpressionExperimentAggregateService.isAggregated( ee, qt ) ) {
+            singleCellExpressionExperimentAggregateService.removeAggregatedVectors( ee, qt );
+        } else {
+            expressionExperimentService.removeRawDataVectors( ee, qt );
+        }
         expressionDataFileService.deleteAllDataFiles( ee, qt );
     }
 

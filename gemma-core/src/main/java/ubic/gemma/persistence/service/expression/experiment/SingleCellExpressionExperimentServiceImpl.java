@@ -985,6 +985,26 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    public void removeCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId ) {
+        SingleCellDimension dimension = expressionExperimentDao.getSingleCellDimensionForCellTypeAssignmentById( ee, ctaId );
+        if ( dimension == null ) {
+            throw new IllegalStateException( ee + " does not have a CellTypeAssignment with ID " + ctaId + "." );
+        }
+        removeCellTypeAssignmentById( ee, dimension, ctaId );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellTypeAssignmentById( ExpressionExperiment ee, SingleCellDimension dimension, Long ctaId ) {
+        CellTypeAssignment cta = dimension.getCellTypeAssignments().stream()
+                .filter( cta2 -> cta2.getId().equals( ctaId ) )
+                .findFirst()
+                .orElseThrow( () -> new IllegalArgumentException( "No cell type assignment with ID " + ctaId + " found." ) );
+        removeCellTypeAssignment( ee, dimension, cta );
+    }
+
+    @Override
+    @Transactional
     public void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
         List<CellTypeAssignment> toRemove = dimension.getCellTypeAssignments().stream()
                 .filter( cta -> name.equalsIgnoreCase( cta.getName() ) )
@@ -1143,6 +1163,26 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
         removeCellLevelCharacteristics( ee, dim, clc );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId ) {
+        SingleCellDimension dimension = expressionExperimentDao.getSingleCellDimensionForCellLevelCharacteristicsById( ee, clcId );
+        if ( dimension == null ) {
+            throw new IllegalStateException( ee + " does not have a CellLevelCharacteristics with ID " + clcId + "." );
+        }
+        removeCellLevelCharacteristicsById( ee, dimension, clcId );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellLevelCharacteristicsById( ExpressionExperiment ee, SingleCellDimension dimension, Long clcId ) {
+        CellLevelCharacteristics clc = dimension.getCellLevelCharacteristics().stream()
+                .filter( clc2 -> clc2.getId().equals( clcId ) )
+                .findFirst()
+                .orElseThrow( () -> new IllegalArgumentException( "No cell-level characteristics with ID " + clcId + " found." ) );
+        removeCellLevelCharacteristics( ee, dimension, clc );
     }
 
     @Override

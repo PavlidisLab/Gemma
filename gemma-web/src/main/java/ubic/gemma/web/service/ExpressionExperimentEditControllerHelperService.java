@@ -37,10 +37,7 @@ public class ExpressionExperimentEditControllerHelperService {
     public Map<String, ?> getFormObjectAndReferenceDataAndKeywordsById( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new,
                 "No experiment with ID " + id );
-        Map<String, Object> referenceData = new HashMap<>();
-        referenceData.put( "expressionExperiment", getFormObject( ee ) );
-        referenceData.putAll( getReferenceDataAndKeywords( ee ) );
-        return referenceData;
+        return getFormObjectAndReferenceDataAndKeywords( ee );
     }
 
     @Transactional(readOnly = true)

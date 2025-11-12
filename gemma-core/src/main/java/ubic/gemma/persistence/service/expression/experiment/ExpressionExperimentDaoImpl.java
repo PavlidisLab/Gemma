@@ -2311,6 +2311,30 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getSingleCellDimensionForCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
+                        + "join scdv.singleCellDimension dim join dim.cellTypeAssignments cta "
+                        + "where scdv.expressionExperiment = :ee and cta.id = :ctaId "
+                        + "group by dim")
+                .setParameter( "ee", ee )
+                .setParameter( "ctaId", ctaId )
+                .uniqueResult();
+    }
+
+    @Override
+    public SingleCellDimension getSingleCellDimensionForCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
+                        + "join scdv.singleCellDimension dim join dim.cellLevelCharacteristics clc "
+                        + "where scdv.expressionExperiment = :ee and clc.id = :clcId "
+                        + "group by dim")
+                .setParameter( "ee", ee )
+                .setParameter( "clcId", clcId )
+                .uniqueResult();
+    }
+
+    @Override
     public SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
