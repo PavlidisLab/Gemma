@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,12 @@
  */
 package ubic.gemma.web.taglib;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.web.util.Constants;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -47,10 +49,11 @@ import java.util.Map;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>, originally.
  * @author pavlidis modified
  */
+@Setter
+@Getter
+@CommonsLog
 public class ConstantsTag extends TagSupport {
-    private static final long serialVersionUID = 4937929483183805421L;
 
-    private static final Log log = LogFactory.getLog( ConstantsTag.class );
     /**
      * Maps lowercase JSP scope names to their PageContext integer constant values.
      */
@@ -66,15 +69,19 @@ public class ConstantsTag extends TagSupport {
     /**
      * The class to expose the variables from.
      */
-    public String clazz = Constants.class.getName();
+    private String className = Constants.class.getName();
+
     /**
      * The scope to be put the variable in.
      */
-    protected String scope = null;
+    @Nullable
+    private String scope = null;
+
     /**
      * The single variable to expose.
      */
-    protected String var = null;
+    @Nullable
+    private String var = null;
 
     @Override
     public int doStartTag() throws JspException {
@@ -87,7 +94,7 @@ public class ConstantsTag extends TagSupport {
         }
 
         try {
-            c = Class.forName( clazz );
+            c = Class.forName( className );
         } catch ( ClassNotFoundException cnf ) {
             log.error( "ClassNotFound - maybe a typo?" );
             throw new JspException( cnf.getMessage() );
@@ -125,28 +132,6 @@ public class ConstantsTag extends TagSupport {
         return ( SKIP_BODY );
     }
 
-    public String getClassName() {
-        return this.clazz;
-    }
-
-    /*
-     * @jsp.attribute
-     */
-    public void setClassName( String clazz ) {
-        this.clazz = clazz;
-    }
-
-    public String getScope() {
-        return ( this.scope );
-    }
-
-    /*
-     * @jsp.attribute
-     */
-    public void setScope( String scope ) {
-        this.scope = scope;
-    }
-
     /**
      * Converts the scope name into its corresponding PageContext constant value.
      *
@@ -164,24 +149,13 @@ public class ConstantsTag extends TagSupport {
         return localScope;
     }
 
-    public String getVar() {
-        return ( this.var );
-    }
-
-    /*
-     * @jsp.attribute
-     */
-    public void setVar( String var ) {
-        this.var = var;
-    }
-
     /**
      * Release all allocated resources.
      */
     @Override
     public void release() {
         super.release();
-        clazz = null;
+        className = null;
         scope = Constants.class.getName();
     }
 }

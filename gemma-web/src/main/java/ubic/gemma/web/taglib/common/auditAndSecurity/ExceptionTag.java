@@ -19,9 +19,8 @@
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
 import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.SecurityConfig;
@@ -38,10 +37,8 @@ import static org.springframework.web.util.HtmlUtils.htmlEscape;
  * @author pavlidis
  */
 @Setter
+@CommonsLog
 public class ExceptionTag extends RequestContextAwareTag {
-
-    private static final long serialVersionUID = 4323477499674966726L;
-    private static final Log log = LogFactory.getLog( ExceptionTag.class.getName() );
 
     /**
      * Exception to display.

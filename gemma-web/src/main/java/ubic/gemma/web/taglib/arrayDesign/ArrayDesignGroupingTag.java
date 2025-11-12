@@ -18,8 +18,10 @@
  */
 package ubic.gemma.web.taglib.arrayDesign;
 
+import lombok.Setter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 import java.util.Collection;
@@ -31,8 +33,11 @@ import java.util.Collection;
  */
 public class ArrayDesignGroupingTag extends TagSupport {
 
-    private static final long serialVersionUID = -5646614364631502667L;
+    @Setter
     private ArrayDesign subsumer;
+
+    @Nullable
+    @Setter
     private Collection<ArrayDesign> subsumees;
 
     @Override
@@ -45,19 +50,19 @@ public class ArrayDesignGroupingTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        if ( this.subsumer == null && ( this.subsumees == null || this.subsumees.size() == 0 ) ) {
+        if ( this.subsumer == null && ( this.subsumees == null || this.subsumees.isEmpty() ) ) {
             buf.append( "[None]" );
-        } else if ( this.subsumer != null && this.subsumees != null && this.subsumees.size() > 0 ) {
+        } else if ( this.subsumer != null && this.subsumees != null && !this.subsumees.isEmpty() ) {
             buf.append( "[Invalid parameters passed]" ); // don't throw an exception, just warn
         } else if ( this.subsumer != null ) {
             buf.append( arrayDesignLink( subsumer ) );
-        } else if ( this.subsumees != null && this.subsumees.size() > 0 ) {
+        } else {
             for ( ArrayDesign subsumee : subsumees ) {
                 buf.append( arrayDesignLink( subsumee ) );
                 Collection<ArrayDesign> m = subsumee.getSubsumedArrayDesigns();
-                if ( m.size() > 0 ) {
+                if ( !m.isEmpty() ) {
                     for ( ArrayDesign ms : m ) {
-                        buf.append( " &#187; subsumes " + arrayDesignShortLink( ms ) ); // FIXME, recurse to go down
+                        buf.append( " &#187; subsumes " ).append( arrayDesignShortLink( ms ) ); // FIXME, recurse to go down
                         // even further.
                     }
                 }
@@ -71,14 +76,6 @@ public class ArrayDesignGroupingTag extends TagSupport {
             throw new JspException( "arrayDesignGroupingTag: " + ex.getMessage() );
         }
         return SKIP_BODY;
-    }
-
-    public void setSubsumees( Collection<ArrayDesign> subsumees ) {
-        this.subsumees = subsumees;
-    }
-
-    public void setSubsumer( ArrayDesign subsumer ) {
-        this.subsumer = subsumer;
     }
 
     private String arrayDesignLink( ArrayDesign ad ) {

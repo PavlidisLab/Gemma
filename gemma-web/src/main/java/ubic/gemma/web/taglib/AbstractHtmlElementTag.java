@@ -13,6 +13,7 @@ import java.util.Map;
 /**
  * An alternative to Spring's {@link org.springframework.web.servlet.tags.form.AbstractHtmlElementTag} that does not
  * carry the complexity of form data bindings.
+ *
  * @author poirigui
  */
 public abstract class AbstractHtmlElementTag extends HtmlEscapingAwareTag implements DynamicAttributes {
@@ -52,7 +53,7 @@ public abstract class AbstractHtmlElementTag extends HtmlEscapingAwareTag implem
         TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), tagWriter );
     }
 
-    protected String htmlEscape( String value ) {
+    protected String htmlEscape( @Nullable String value ) {
         return isHtmlEscape() ? HtmlUtils.htmlEscape( value ) : value;
     }
 }

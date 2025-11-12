@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib;
 
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,10 +37,9 @@ import java.util.GregorianCalendar;
  */
 public class ShortBibliographicReferenceTag extends TagSupport {
 
-    private static final long serialVersionUID = -7325678534991860679L;
+    private static final Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
 
-    private static Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
-
+    @Setter
     private BibliographicReference citation;
 
     @Override
@@ -118,9 +118,5 @@ public class ShortBibliographicReferenceTag extends TagSupport {
         ShortBibliographicReferenceTag.log.debug( "end tag" );
 
         return Tag.EVAL_PAGE;
-    }
-
-    public void setCitation( BibliographicReference citation ) {
-        this.citation = citation;
     }
 }

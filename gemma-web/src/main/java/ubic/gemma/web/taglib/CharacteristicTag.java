@@ -8,6 +8,7 @@ import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.web.util.Constants;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import java.io.UnsupportedEncodingException;
@@ -90,7 +91,7 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
         return ( Map<String, ?> ) requireNonNull( pageContext.getAttribute( Constants.CONFIG, PageContext.APPLICATION_SCOPE ) );
     }
 
-    private String htmlEscape( String s ) {
+    private String htmlEscape( @Nullable String s ) {
         return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
     }
 

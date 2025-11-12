@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -55,31 +56,22 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
     private transient StaticAssetResolver staticAssetResolver;
     private transient WebEntityUrlBuilder entityUrlBuilder;
 
+    @Setter
     private Collection<BioAssayValueObject> bioAssays;
 
+    /**
+     * An identifier to the expression experiment that owns the biossays.
+     */
     @Nullable
+    @Setter
     private Long expressionExperimentId;
 
+    @Setter
     private boolean edit = false;
 
     /* internal state */
     private int currentRow;
     private int emptyAssays;
-
-    public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    /**
-     * An identifier to the expression experiment that owns the biossays.
-     */
-    public void setExpressionExperimentId( @Nullable Long eeId ) {
-        this.expressionExperimentId = eeId;
-    }
-
-    public void setEdit( boolean edit ) {
-        this.edit = edit;
-    }
 
     @Override
     public int doStartTagInternal() throws Exception {
