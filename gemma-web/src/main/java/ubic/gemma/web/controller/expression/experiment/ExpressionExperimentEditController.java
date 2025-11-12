@@ -42,7 +42,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
-import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -59,6 +58,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
@@ -74,12 +74,6 @@ import java.util.stream.Collectors;
 @Controller
 @CommonsLog
 public class ExpressionExperimentEditController {
-
-    private static final List<String>
-            STANDARD_QUANTITATION_TYPES = Arrays.stream( StandardQuantitationType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            SCALE_TYPES = Arrays.stream( ScaleType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            GENERAL_QUANTITATION_TYPES = Arrays.stream( GeneralType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            REPRESENTATIONS = Arrays.stream( PrimitiveType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -99,6 +93,8 @@ public class ExpressionExperimentEditController {
     protected MessageSource messageSource;
     @Autowired
     protected MessageUtil messageUtil;
+    @Autowired
+    private ExpressionExperimentEditControllerHelperService expressionExperimentEditControllerHelperService;
 
     @Autowired
     private TaskExecutor taskExecutor;
@@ -167,6 +163,8 @@ public class ExpressionExperimentEditController {
             setValues( cta.getCellTypes().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() ) );
         }
 
+        // used by the frontend
+        @SuppressWarnings("unused")
         public boolean getIsPreferred() {
             return isPreferred;
         }
@@ -294,12 +292,8 @@ public class ExpressionExperimentEditController {
 
     @RequestMapping(value = "/expressionExperiment/editExpressionExperiment.html", method = RequestMethod.GET)
     public ModelAndView getExpressionExperimentEditPage( @RequestParam("id") Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new,
-                "No experiment with ID " + id );
         return new ModelAndView( "expressionExperiment.edit" )
-                .addObject( "expressionExperiment", getFormObject( ee ) )
-                .addObject( "keywords", getKeywords( ee ) )
-                .addAllObjects( getReferenceData() );
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }
 
     @RequestMapping(value = "/expressionExperiment/editExpressionExperiment.html", method = RequestMethod.POST)
@@ -310,7 +304,7 @@ public class ExpressionExperimentEditController {
                 EntityNotFoundException::new, String.format( "No experiment with ID %d", id ) );
 
         // the backend only submits quantitationTypes and assayToMaterialMap, so we need to populate the remaining fields
-        populateForm( form, expressionExperiment );
+        expressionExperimentEditControllerHelperService.populateForm( form, expressionExperiment );
 
         // FIXME: the update can alter properties affecting hashCode(), so an hash set is unsuitable here
         Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
@@ -344,7 +338,7 @@ public class ExpressionExperimentEditController {
             response.setStatus( HttpServletResponse.SC_BAD_REQUEST );
             return new ModelAndView( "expressionExperiment.edit" )
                     .addObject( "expressionExperiment", form )
-                    .addAllObjects( getReferenceData() );
+                    .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
         }
 
         // fetch the previous CTA in case the preferred single-cell QT changes
@@ -415,39 +409,7 @@ public class ExpressionExperimentEditController {
 
         return new ModelAndView( "expressionExperiment.edit" )
                 .addObject( "expressionExperiment", form )
-                .addObject( "keywords", getKeywords( expressionExperiment ) )
-                .addAllObjects( getReferenceData() );
-    }
-
-    private ExpressionExperimentEditForm getFormObject( ExpressionExperiment ee ) {
-        ExpressionExperimentEditForm obj = new ExpressionExperimentEditForm();
-        populateForm( obj, ee );
-        LinkedHashMap<Class<? extends DataVector>, List<QuantitationTypeEditForm>> qtf = getQuantitationTypesByVectorType( ee );
-        List<QuantitationTypeEditForm> qtfL = qtf.values().stream()
-                .flatMap( Collection::stream )
-                .collect( Collectors.toList() );
-        obj.setQuantitationTypes( qtfL );
-        obj.setQuantitationTypesByVectorType( qtf );
-        return obj;
-    }
-
-    private void populateForm( ExpressionExperimentEditForm form, ExpressionExperiment expressionExperiment ) {
-        form.setId( expressionExperiment.getId() );
-        form.setShortName( expressionExperiment.getShortName() );
-        form.setName( expressionExperiment.getName() );
-        form.setDescription( expressionExperiment.getDescription() );
-        form.setBioAssays( convert2ValueObjects( expressionExperiment.getBioAssays() ) );
-        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
-                .includeCtas( true )
-                .includeClcs( true )
-                .includeProtocol( true )
-                .includeCharacteristics( true )
-                .build();
-        Map<SingleCellDimension, Set<QuantitationType>> dim2qts = singleCellExpressionExperimentService.getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( expressionExperiment,
-                // minimal config, we only care about the mapping keys
-                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder().build() );
-        List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
-        form.setSingleCellDimensions( scds.stream().map( scd -> new SingleCellDimensionEditForm( scd, dim2qts.getOrDefault( scd, Collections.emptySet() ) ) ).collect( Collectors.toList() ) );
+                .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
     }
 
     private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
@@ -456,29 +418,6 @@ public class ExpressionExperimentEditController {
             result.add( new BioAssayValueObject( bioAssay, false ) );
         }
         return result;
-    }
-
-    /**
-     * Organize all the QTs for the given experiment by the vector type they apply to.
-     */
-    private LinkedHashMap<Class<? extends DataVector>, List<QuantitationTypeEditForm>> getQuantitationTypesByVectorType( ExpressionExperiment ee ) {
-        // sort the mapping
-        return expressionExperimentService.getQuantitationTypesByVectorType( ee ).entrySet().stream()
-                .sorted( Map.Entry.comparingByKey( Comparator.comparing( Class::getSimpleName, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
-                .collect( Collectors.toMap( Entry::getKey,
-                        v -> v.getValue().stream().sorted( Comparator.comparing( QuantitationType::getName ) ).map( QuantitationTypeEditForm::new ).collect( Collectors.toList() ),
-                        ( a, b ) -> b,
-                        LinkedHashMap::new ) );
-    }
-
-    private Map<String, ?> getReferenceData() {
-        Map<String, Object> referenceData = new HashMap<>();
-        referenceData.put( "standardQuantitationTypes", new ArrayList<>( STANDARD_QUANTITATION_TYPES ) );
-        referenceData.put( "scaleTypes", new ArrayList<>( SCALE_TYPES ) );
-        referenceData.put( "generalQuantitationTypes", new ArrayList<>( GENERAL_QUANTITATION_TYPES ) );
-        referenceData.put( "representations", new ArrayList<>( REPRESENTATIONS ) );
-        referenceData.put( "cellTypeAssignmentProtocols", singleCellExpressionExperimentService.getCellTypeAssignmentProtocols() );
-        return referenceData;
     }
 
     private enum QuantitationTypeUpdateStatus {
@@ -676,12 +615,6 @@ public class ExpressionExperimentEditController {
             return true;
         }
         return false;
-    }
-
-    private String getKeywords( ExpressionExperiment ee ) {
-        return expressionExperimentService.getAnnotations( ee ).stream()
-                .map( AnnotationValueObject::getTermName )
-                .collect( Collectors.joining( "," ) );
     }
 
     private static class ExpressionExperimentEditFormValidator implements Validator {

@@ -21,6 +21,8 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.web.service.ExpressionExperimentControllerHelperService;
+import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 import ubic.gemma.web.util.BaseWebTest;
 
 import java.util.Collections;
@@ -48,6 +50,11 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         @Bean
         public ExpressionExperimentEditController expressionExperimentFormController() {
             return new ExpressionExperimentEditController();
+        }
+
+        @Bean
+        public ExpressionExperimentEditControllerHelperService expressionExperimentEditControllerHelperService() {
+            return new ExpressionExperimentEditControllerHelperService();
         }
 
         @Bean
