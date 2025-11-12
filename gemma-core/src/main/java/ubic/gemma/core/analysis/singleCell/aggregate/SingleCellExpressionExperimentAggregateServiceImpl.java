@@ -162,6 +162,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         newQt.setIsPreferred( config.isMakePreferred() );
         // we're always aggregating into doubles, regardless of the input representation
         newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsAggregated( true );
 
         boolean[] mask;
         if ( config.getMask() != null ) {
@@ -573,6 +574,21 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             default:
                 throw new UnsupportedOperationException( "Unsupported representation " + representation );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAggregated( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        if ( quantitationType.getIsAggregated() ) {
+            return true;
+        }
+        // TODO: remove this once all QTs have the isAggregated flag set correctly
+        //       processed vectors also contain "aggregated by" in their name, so we also need to check the vector type
+        if ( quantitationType.getName().contains( "aggregated by" ) ) {
+            Class<? extends DataVector> dataVectorType = quantitationTypeService.getDataVectorType( quantitationType );
+            return dataVectorType != null && RawExpressionDataVector.class.isAssignableFrom( dataVectorType );
+        }
+        return false;
     }
 
     @Override

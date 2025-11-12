@@ -114,7 +114,7 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( qt );
         loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
         try ( Stream<SingleCellExpressionDataVector> stream = loader.loadVectors( elementsMapping.values(), dimension, qt ) ) {
-            singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, stream.collect( Collectors.toList() ), null );
+            singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, stream.collect( Collectors.toList() ), null, true, false );
         }
     }
 }

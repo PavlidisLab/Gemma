@@ -152,7 +152,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     continue;
                 }
             }
-            created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta ) );
+            created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() ) );
         }
         return created;
     }
@@ -493,10 +493,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( String.format( "Switched %d bioassays to %s.", switched, platform ) );
         }
         if ( config.isReplaceExistingQuantitationType() ) {
-            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors, mappingDetails );
+            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors, mappingDetails, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() );
             log.info( String.format( "Replaced %d single-cell vectors in %s.", replacedVectors, qt ) );
         } else {
-            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, mappingDetails );
+            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, mappingDetails, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() );
             log.info( String.format( "Added %d single-cell vectors to %s in %s.", addedVectors, ee, qt ) );
         }
     }

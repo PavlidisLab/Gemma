@@ -5,6 +5,7 @@ import lombok.Setter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -114,7 +115,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
 
     @Override
     public int hashCode() {
-        return Objects.hash( super.hashCode(), Arrays.hashCode( cellTypeIndices ), cellTypes );
+        return super.hashCode();
     }
 
     @Override
@@ -128,14 +129,15 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
             return getId().equals( that.getId() );
         }
         return Objects.equals( getName(), that.getName() )
-                && Objects.equals( cellTypes, that.cellTypes )
+                // cellTypes might be uninitialized, ignore it when comparing
+                && ModelUtils.equals( cellTypes, that.cellTypes ) == ModelUtils.EqualityOutcome.EQUAL
                 && Arrays.equals( cellTypeIndices, that.cellTypeIndices );
     }
 
     @Override
     public String toString() {
         return super.toString()
-                + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( cellTypes != null && ModelUtils.isInitialized( cellTypes ) ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
                 + ( " Number of Cell Types=" + numberOfCellTypes )
                 + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : "" )
                 + ( preferred ? " [Preferred]" : "" );

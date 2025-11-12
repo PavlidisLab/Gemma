@@ -31,6 +31,7 @@ public class CharacteristicUtilsTest {
         assertTrue( CharacteristicUtils.equals( null, "b", "c", "b" ) );
         assertFalse( CharacteristicUtils.equals( null, "b", "c", "c" ) );
         assertTrue( CharacteristicUtils.equals( "A", null, "a", null ) );
+        assertTrue( CharacteristicUtils.equals( null, null, null, null ) );
     }
 
     @Test

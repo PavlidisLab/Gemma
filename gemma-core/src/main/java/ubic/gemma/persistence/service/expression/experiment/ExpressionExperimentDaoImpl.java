@@ -2266,7 +2266,8 @@ public class ExpressionExperimentDaoImpl
                 includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
-                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelect( "dimension" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2276,8 +2277,35 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer(
+                includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        //noinspection unchecked
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( initializer.createSelect( "dimension" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension dimension "
+                        + "where scedv.expressionExperiment = :ee and dimension.id = :dimensionId "
+                        + "group by dimension" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "dimensionId", dimensionId )
+                .setResultTransformer( initializer )
+                .uniqueResult();
+    }
+
+    @Override
     public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return getSingleCellDimension( ee, qt, getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
+    public SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long dimensionId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession().createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.singleCellDimension.id = :dimensionId "
+                        + "group by scedv.singleCellDimension" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "dimensionId", dimensionId )
+                .uniqueResult();
     }
 
     private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, Session session ) {
@@ -2299,13 +2327,38 @@ public class ExpressionExperimentDaoImpl
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelect( "dimension" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setResultTransformer( initializer )
+                .uniqueResult();
+    }
+
+    @Override
+    public SingleCellDimension getSingleCellDimensionForCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
+                        + "join scdv.singleCellDimension dim join dim.cellTypeAssignments cta "
+                        + "where scdv.expressionExperiment = :ee and cta.id = :ctaId "
+                        + "group by dim" )
+                .setParameter( "ee", ee )
+                .setParameter( "ctaId", ctaId )
+                .uniqueResult();
+    }
+
+    @Override
+    public SingleCellDimension getSingleCellDimensionForCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
+                        + "join scdv.singleCellDimension dim join dim.cellLevelCharacteristics clc "
+                        + "where scdv.expressionExperiment = :ee and clc.id = :clcId "
+                        + "group by dim" )
+                .setParameter( "ee", ee )
+                .setParameter( "clcId", clcId )
                 .uniqueResult();
     }
 
@@ -2328,7 +2381,8 @@ public class ExpressionExperimentDaoImpl
     public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelect( "dimension" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2360,7 +2414,7 @@ public class ExpressionExperimentDaoImpl
         /**
          * Create a query for selecting {@link SingleCellDimension} that can be used with a {@link SingleCellDimensionWithoutCellIdsInitializer}.
          */
-        public String createSelectSingleCellDimension( String alias ) {
+        public String createSelect( String alias ) {
             return "select " + Arrays.stream( props )
                     .map( p -> alias + "." + p + " as " + p )
                     .collect( Collectors.joining( ", " ) );
@@ -2410,14 +2464,14 @@ public class ExpressionExperimentDaoImpl
                     }
                     result.setCellTypeAssignments( new HashSet<>( ctas ) );
                 } else {
+                    CtaInitializer ctaInitializer = new CtaInitializer( includeProtocol, includeCharacteristics, includeIndices );
                     //noinspection unchecked
                     List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
-                            .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells, cta.preferred as preferred"
-                                    + ( includeIndices ? ", cta.cellTypeIndices as indices" : "" ) + " "
+                            .createQuery( ctaInitializer.createSelect( "cta" ) + " "
                                     + "from SingleCellDimension scd "
                                     + "join scd.cellTypeAssignments cta where scd = :scd" )
                             .setParameter( "scd", result )
-                            .setResultTransformer( new CtaInitializer( includeProtocol, includeCharacteristics ) )
+                            .setResultTransformer( ctaInitializer )
                             .list();
                     result.setCellTypeAssignments( new HashSet<>( ctas ) );
                 }
@@ -2433,14 +2487,14 @@ public class ExpressionExperimentDaoImpl
                             .list();
                     result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
                 } else {
+                    ClcInitializer clcInitializer = new ClcInitializer( includeCharacteristics, includeIndices );
                     //noinspection unchecked
                     List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
-                            .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells"
-                                    + ( includeIndices ? ", clc.indices as indices" : "" ) + " "
+                            .createQuery( clcInitializer.createSelect( "clc" ) + " "
                                     + "from SingleCellDimension scd "
                                     + "join scd.cellLevelCharacteristics clc where scd = :scd" )
                             .setParameter( "scd", result )
-                            .setResultTransformer( new ClcInitializer( includeCharacteristics ) )
+                            .setResultTransformer( clcInitializer )
                             .list();
                     result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
                 }
@@ -2467,10 +2521,20 @@ public class ExpressionExperimentDaoImpl
 
         private final boolean includeProtocol;
         private final boolean includeCharacteristics;
+        private final String[] fields;
 
-        private CtaInitializer( boolean includeProtocol, boolean includeCharacteristics ) {
+        private CtaInitializer( boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
             this.includeProtocol = includeProtocol;
             this.includeCharacteristics = includeCharacteristics;
+            if ( includeIndices ) {
+                fields = new String[] { "id", "name", "description", "preferred", "numberOfCellTypes", "numberOfAssignedCells", "indices" };
+            } else {
+                fields = new String[] { "id", "name", "description", "preferred", "numberOfCellTypes", "numberOfAssignedCells" };
+            }
+        }
+
+        public String createSelect( String alias ) {
+            return "select " + Arrays.stream( fields ).map( f -> alias + "." + f + " as " + f ).collect( Collectors.joining( ", " ) );
         }
 
         @Override
@@ -2505,9 +2569,20 @@ public class ExpressionExperimentDaoImpl
     private class ClcInitializer implements TypedResultTransformer<GenericCellLevelCharacteristics> {
 
         private final boolean includeCharacteristics;
+        private final String[] fields;
 
-        private ClcInitializer( boolean includeCharacteristics ) {
+        private ClcInitializer( boolean includeCharacteristics, boolean includeIndices ) {
             this.includeCharacteristics = includeCharacteristics;
+            if ( includeIndices ) {
+                fields = new String[] { "id", "name", "description", "numberOfCharacteristics", "numberOfAssignedCells", "indices" };
+            } else {
+
+                fields = new String[] { "id", "name", "description", "numberOfCharacteristics", "numberOfAssignedCells" };
+            }
+        }
+
+        public String createSelect( String clc ) {
+            return "select " + Arrays.stream( fields ).map( f -> clc + "." + f + " as " + f ).collect( Collectors.joining( ", " ) );
         }
 
         @Override
@@ -2639,6 +2714,15 @@ public class ExpressionExperimentDaoImpl
     public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         log.info( "Removing " + singleCellDimension + " from " + ee + "..." );
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        SingleCellDimension dim = ( SingleCellDimension ) getSessionFactory().getCurrentSession().load( SingleCellDimension.class, dimension.getId() );
+        if ( dim == null ) {
+            throw new ObjectNotFoundException( dimension.getId(), SingleCellDimension.class.getName() );
+        }
+        return dim;
     }
 
     @Override
@@ -2864,16 +2948,17 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and scedv.expressionExperiment = :ee "
                         + "group by cta" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new CtaInitializer( true, true ) )
+                .setResultTransformer( ctaInitializer )
                 .list();
     }
 
@@ -2892,15 +2977,16 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
+        CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
                         + "group by cta" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new CtaInitializer( true, true ) )
+                .setResultTransformer( ctaInitializer )
                 .uniqueResult();
     }
 
@@ -2920,8 +3006,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee "
@@ -2929,7 +3016,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaId", ctaId )
-                .setResultTransformer( new CtaInitializer( true, true ) )
+                .setResultTransformer( ctaInitializer )
                 .uniqueResult();
     }
 
@@ -2974,8 +3061,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells from SingleCellExpressionDataVector scedv "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee "
@@ -2983,7 +3071,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaName", ctaName )
-                .setResultTransformer( new CtaInitializer( true, true ) )
+                .setResultTransformer( ctaInitializer )
                 .uniqueResult();
     }
 
@@ -3075,8 +3163,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId ) {
+        ClcInitializer clcInitializer = new ClcInitializer( true, false );
         return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
-                .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells "
+                .createQuery( clcInitializer.createSelect( "clc" ) + " "
                         + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
@@ -3085,14 +3174,15 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setParameter( "clcId", clcId )
-                .setResultTransformer( new ClcInitializer( true ) )
+                .setResultTransformer( clcInitializer )
                 .uniqueResult();
     }
 
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
+        ClcInitializer clcInitializer = new ClcInitializer( true, false );
         return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
-                .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells "
+                .createQuery( clcInitializer.createSelect( "clc" ) + " "
                         + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
@@ -3101,15 +3191,16 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setParameter( "clcName", clcName )
-                .setResultTransformer( new ClcInitializer( true ) )
+                .setResultTransformer( clcInitializer )
                 .uniqueResult();
     }
 
     @Override
     public Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        ClcInitializer clcInitializer = new ClcInitializer( true, false );
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells "
+                .createQuery( clcInitializer.createSelect( "clc" ) + " "
                         + "from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
@@ -3117,7 +3208,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by clc" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new ClcInitializer( true ) )
+                .setResultTransformer( clcInitializer )
                 .list();
     }
 
@@ -3151,7 +3242,8 @@ public class ExpressionExperimentDaoImpl
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( initializer.createSelectSingleCellDimension( "scd" ) + ", qt from SingleCellExpressionDataVector scedv "
+                .createQuery( initializer.createSelect( "scd" ) + ", qt " +
+                        "from SingleCellExpressionDataVector scedv "
                         + "join scedv.quantitationType as qt join scedv.singleCellDimension as scd "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by scd, qt" )
@@ -3187,13 +3279,16 @@ public class ExpressionExperimentDaoImpl
         if ( dimension == null ) {
             throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
         }
+        SingleCellDataVectorInitializer initializer = new SingleCellDataVectorInitializer( ee, null,
+                quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices );
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( createSelectSingleCellDataVectorQuery( true, includeData, includeDataIndices ) + " "
+                .createQuery( initializer.createSelect( "scedv" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
-                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices ) )
+                .setResultTransformer( initializer )
                 .list();
     }
 
@@ -3231,11 +3326,13 @@ public class ExpressionExperimentDaoImpl
                     log.info( String.format( "Querying single-cell vectors for %s and %s with a fetch size of %d%s...",
                             ee, quantitationType, fetchSize,
                             useCursorFetchIfSupported ? " and cursor fetching" : "" ) );
-                    return session.createQuery( createSelectSingleCellDataVectorQuery( true, includeData, includeDataIndices ) + " "
+                    SingleCellDataVectorInitializer initializer = new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices );
+                    return session.createQuery( initializer.createSelect( "scedv" ) + " "
+                                    + "from SingleCellExpressionDataVector scedv "
                                     + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                             .setParameter( "ee", ee )
                             .setParameter( "qt", quantitationType )
-                            .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices ) );
+                            .setResultTransformer( initializer );
                 },
                 SingleCellExpressionDataVector.class,
                 fetchSize,
@@ -3258,22 +3355,17 @@ public class ExpressionExperimentDaoImpl
         if ( dimension == null ) {
             throw new IllegalStateException( quantitationType + " from " + ee + " does not have an associated single-cell dimension." );
         }
+        SingleCellDataVectorInitializer initializer = new SingleCellDataVectorInitializer( ee, designElement,
+                quantitationType, dimension, false, true, true );
         return ( SingleCellExpressionDataVector ) getSessionFactory().getCurrentSession()
-                .createQuery( createSelectSingleCellDataVectorQuery( false, true, true ) + " "
+                .createQuery( initializer.createSelect( "scedv" ) + " "
+                        + "from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and scedv.designElement = :de" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .setParameter( "de", designElement )
-                .setResultTransformer( new SingleCellDataVectorInitializer( ee, designElement, quantitationType, dimension, false, true, true ) )
+                .setResultTransformer( initializer )
                 .uniqueResult();
-    }
-
-    private String createSelectSingleCellDataVectorQuery( boolean includeDesignElement, boolean includeData, boolean includeDataIndices ) {
-        return "select scedv.id as id, "
-                + ( includeDesignElement ? "scedv.designElement as designElement, " : "" )
-                + ( includeData ? "scedv.data as data, " : "" )
-                + ( includeDataIndices ? "scedv.dataIndices as dataIndices, " : "" )
-                + "scedv.originalDesignElement as originalDesignElement from SingleCellExpressionDataVector scedv";
     }
 
     private static class SingleCellDataVectorInitializer implements TypedResultTransformer<SingleCellExpressionDataVector> {
@@ -3286,8 +3378,11 @@ public class ExpressionExperimentDaoImpl
         private final boolean includeBiologicalCharacteristics;
         private final boolean includeData;
         private final boolean includeDataIndices;
+        private final List<String> fields = new ArrayList<>();
 
-        public SingleCellDataVectorInitializer( ExpressionExperiment ee, @Nullable CompositeSequence designElement, QuantitationType qt, SingleCellDimension dimension, boolean includeBiologicalCharacteristics, boolean includeData, boolean includeDataIndices ) {
+        public SingleCellDataVectorInitializer( ExpressionExperiment ee, @Nullable CompositeSequence designElement,
+                QuantitationType qt, SingleCellDimension dimension, boolean includeBiologicalCharacteristics,
+                boolean includeData, boolean includeDataIndices ) {
             this.ee = ee;
             this.designElement = designElement;
             this.qt = qt;
@@ -3295,6 +3390,21 @@ public class ExpressionExperimentDaoImpl
             this.includeBiologicalCharacteristics = includeBiologicalCharacteristics;
             this.includeData = includeData;
             this.includeDataIndices = includeDataIndices;
+            this.fields.add( "id" );
+            if ( designElement == null ) {
+                this.fields.add( "designElement" );
+            }
+            if ( includeData ) {
+                this.fields.add( "data" );
+            }
+            if ( includeDataIndices ) {
+                this.fields.add( "dataIndices" );
+            }
+            this.fields.add( "originalDesignElement" );
+        }
+
+        public String createSelect( String alias ) {
+            return "select " + fields.stream().map( f -> alias + "." + f + " as " + f ).collect( Collectors.joining( ", " ) );
         }
 
         @Override
