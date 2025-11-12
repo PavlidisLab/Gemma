@@ -66,6 +66,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.BeanWrapperUtils.setPropertyValue;
+
 /**
  * Handle advanced editing of expression experiments.
  *
@@ -646,14 +648,6 @@ public class ExpressionExperimentEditController {
         }
 
         return anyChanges;
-    }
-
-    private <T> boolean setPropertyValue( BeanWrapper qt, String property, T newVal ) {
-        if ( !Objects.equals( qt.getPropertyValue( property ), newVal ) ) {
-            qt.setPropertyValue( property, newVal );
-            return true;
-        }
-        return false;
     }
 
     private String getKeywords( ExpressionExperiment ee ) {

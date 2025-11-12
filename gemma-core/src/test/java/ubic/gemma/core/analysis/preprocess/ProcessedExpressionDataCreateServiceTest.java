@@ -308,8 +308,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         fv2.setIsBaseline( true );
         fv2.setExperimentalFactor( factor );
 
-        eeService.addFactorValue( ee, fv1 );
-        eeService.addFactorValue( ee, fv2 );
+        eeService.addFactorValue( ee, fv1, false );
+        eeService.addFactorValue( ee, fv2, false );
 
         List<BioAssay> basInOrder = new ArrayList<>( ee.getBioAssays() );
 

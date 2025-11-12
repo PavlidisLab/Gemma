@@ -11,8 +11,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -56,6 +58,7 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioAssaySet> load( Collection<Long> ids ) {
         Collection<BioAssaySet> result = new ArrayList<>();
         result.addAll( expressionExperimentService.load( ids ) );
@@ -63,8 +66,32 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
         return result;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssaySet> loadOrFail( Collection<Long> ids ) throws NullPointerException {
+        return loadOrFail( ids, NullPointerException::new );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> Collection<BioAssaySet> loadOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T {
+        ids = new HashSet<>( ids );
+        Collection<BioAssaySet> result = new ArrayList<>();
+        result.addAll( expressionExperimentService.load( ids ) );
+        result.addAll( expressionExperimentSubSetService.load( ids ) );
+        if ( result.size() < ids.size() ) {
+            for ( BioAssaySet o : result ) {
+                ids.remove( o.getId() );
+            }
+            throw exceptionSupplier.apply( String.format( "No BioAssaySet with IDs %s found.",
+                    ids.stream().sorted().map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
+        }
+        return result;
+    }
+
     @Nullable
     @Override
+    @Transactional(readOnly = true)
     public BioAssaySet load( Long id ) {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );
@@ -76,6 +103,7 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Nonnull
     @Override
+    @Transactional(readOnly = true)
     public BioAssaySet loadOrFail( Long id ) throws NullPointerException {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );
@@ -87,6 +115,7 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Nonnull
     @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );
@@ -98,6 +127,7 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Nonnull
     @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );
@@ -109,6 +139,7 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
 
     @Nonnull
     @Override
+    @Transactional(readOnly = true)
     public <T extends Exception> BioAssaySet loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         BioAssaySet bas;
         bas = expressionExperimentService.load( id );
@@ -134,11 +165,13 @@ public class BioAssaySetServiceImpl implements BioAssaySetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Stream<BioAssaySet> streamAll() {
         return Stream.concat( expressionExperimentService.streamAll(), expressionExperimentSubSetService.streamAll() );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Stream<BioAssaySet> streamAll( boolean createNewSession ) {
         return Stream.concat( expressionExperimentService.streamAll( createNewSession ), expressionExperimentSubSetService.streamAll( createNewSession ) );
     }
