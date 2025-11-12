@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -44,8 +45,8 @@ public interface CharacteristicDao
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param  start How far into the list to start
-     * @param  limit Maximum records to retrieve (might be subject to security filtering)
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve (might be subject to security filtering)
      * @return characteristics
      */
     @Override
@@ -54,10 +55,10 @@ public interface CharacteristicDao
     /**
      * Browse through the characteristics, excluding GO annotations, with sorting.
      *
-     * @param  start      query offset
-     * @param  limit      maximum amount of entries
-     * @param  descending order direction
-     * @param  sortField  order field
+     * @param start      query offset
+     * @param limit      maximum amount of entries
+     * @param descending order direction
+     * @param sortField  order field
      * @return characteristics
      */
     @Override
@@ -101,7 +102,7 @@ public interface CharacteristicDao
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<@MayBeUninitialized ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
      * Find characteristics with the given URI.
@@ -144,7 +145,7 @@ public interface CharacteristicDao
     /**
      * Finds all Characteristics whose value match the given search term
      *
-     * @param category      constraint the category of the characteristic, or null to ignore
+     * @param category constraint the category of the characteristic, or null to ignore
      */
     Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 

@@ -33,6 +33,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -302,7 +303,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
+    public Map<@MayBeUninitialized ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<@MayBeUninitialized ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
         Map<Long, ExpressionAnalysisResultSet> idMap = IdentifiableUtils.getIdMap( resultSets );
         return getBaselinesForInteractionsByIds( IdentifiableUtils.getIds( resultSets ), initializeFactorValues ).entrySet().stream()
                 .collect( IdentifiableUtils.toIdentifiableMap( e -> idMap.get( e.getKey() ), Map.Entry::getValue ) );

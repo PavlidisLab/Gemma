@@ -36,6 +36,7 @@ import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -58,7 +59,7 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author paul
- * @see    DifferentialExpressionAnalysis
+ * @see DifferentialExpressionAnalysis
  */
 @Repository
 class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpressionAnalysis>
@@ -658,7 +659,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     /**
      * Select actual {@link ExpressionExperiment} from a collection of experiments analyzed.
      */
-    private Collection<ExpressionExperiment> getExpressionExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
+    private Collection<@MayBeUninitialized ExpressionExperiment> getExpressionExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
         return bioAssaySets.stream()
                 .filter( bas -> bas instanceof ExpressionExperiment )
                 .map( bas -> ( ( ExpressionExperiment ) bas ) )

@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.ontology.OntologyUtils;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -62,7 +63,7 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 /**
  * @author Luke
  * @author Paul
- * @see    Characteristic
+ * @see Characteristic
  */
 @Repository
 public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Characteristic, CharacteristicValueObject>
@@ -207,7 +208,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         .computeIfAbsent( uri, row -> subEntry.getValue().stream()
                                 .map( eeById::get )
                                 .filter( Objects::nonNull )
-                                .collect( toIdentifiableSet() ) );
+                                .collect( Collectors.toSet() ) );
             }
         }
         return result2;
@@ -218,7 +219,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
      * initialization by accessing {@link Object#hashCode()}. Thus we need to create a {@link TreeSet} over the EE IDs.
      */
     @Override
-    public Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
+    public Map<Class<? extends Identifiable>, Map<String, Set<@MayBeUninitialized ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }

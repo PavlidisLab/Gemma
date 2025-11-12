@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.type.LongType;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -64,7 +65,7 @@ public class CommonQueries {
     /**
      * Retrieve a list of array designs used by the given experiments.
      */
-    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees, Session session ) {
+    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends @MayBeUninitialized BioAssaySet> ees, Session session ) {
         // Safety 1st....
         if ( ees == null || ees.isEmpty() )
             return Collections.emptySet();
@@ -74,11 +75,11 @@ public class CommonQueries {
                 + "group by ad" ), "ees", getExperiments( ees ), 2048 );
     }
 
-    private static Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
+    private static Collection<@MayBeUninitialized ExpressionExperiment> getExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
         return bioAssaySets.stream().map( CommonQueries::getExperiment ).collect( IdentifiableUtils.toIdentifiableSet() );
     }
 
-    private static ExpressionExperiment getExperiment( BioAssaySet bas ) {
+    private static ExpressionExperiment getExperiment( @MayBeUninitialized BioAssaySet bas ) {
         if ( bas instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) bas;
         } else if ( bas instanceof ExpressionExperimentSubSet ) {

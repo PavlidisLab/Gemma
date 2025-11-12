@@ -5,6 +5,7 @@ import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
@@ -17,7 +18,6 @@ import ubic.gemma.persistence.util.Sort;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,7 +48,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
+    Map<@MayBeUninitialized ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Set<@MayBeUninitialized ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
     Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues );
 

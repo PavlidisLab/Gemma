@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -33,7 +34,6 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -139,7 +139,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Retrieve baselines for all the given result sets representing factor interactions.
      * @param initializeFactorValues whether to initialize factor values
      */
-    Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
+    Map<@MayBeUninitialized ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<@MayBeUninitialized ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues );
 
     /**
      * Retrieve baselines using result set IDs representing factor interactions.

@@ -61,6 +61,7 @@ import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -1070,11 +1071,11 @@ public class DatasetsWebService {
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
                 .collect( Collectors.toList() );
         // obtain result set IDs of results that lack baselines (i.e. for interactions)
-        Set<ExpressionAnalysisResultSet> missingBaselines = payload.stream()
+        Set<@MayBeUninitialized ExpressionAnalysisResultSet> missingBaselines = payload.stream()
                 .filter( vo -> baselineMap.get( vo ) == null )
                 .map( DifferentialExpressionAnalysisResult::getResultSet )
                 .collect( toIdentifiableSet() );
-        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
+        Map<@MayBeUninitialized ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
         for ( DifferentialExpressionAnalysisResult r : payload ) {
             Baseline b2 = b.get( r.getResultSet() );
             if ( b2 == null ) {
