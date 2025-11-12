@@ -961,7 +961,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      *
      * @return collection of GEO experiments which lack an association with a publication (non-GEO experiments will be ignored)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
     /**
