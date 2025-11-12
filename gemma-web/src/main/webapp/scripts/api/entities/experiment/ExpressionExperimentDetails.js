@@ -144,7 +144,7 @@ Gemma.ExpressionExperimentDetails = Ext
               if ( ee.numberOfCellsIds !== null ) {
                  result += formatNumber( ee.numberOfCellIds );
                  if ( ee.numberOfCells !== null && ee.numberOfCells < 0.9 * ee.numberOfCellIds ) {
-                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."/> ';
+                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."></i>';
                  }
               } else if ( ee.numberOfCells !== null ) {
                  result += formatNumber( ee.numberOfCells );
