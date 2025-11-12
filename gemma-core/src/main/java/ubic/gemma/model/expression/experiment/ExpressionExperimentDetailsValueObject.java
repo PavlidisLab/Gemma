@@ -170,6 +170,11 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @Nullable
     private Map<Long, String> cellBrowserCellLevelCharacteristicsMetaNamesMap;
+    /**
+     * Mapping of cell-level measurements IDs to names for the Cell Browser.
+     */
+    @Nullable
+    private Map<Long, String> cellBrowserCellLevelMeasurementsMetaNamesMap;
 
     /**
      * Required when using the class as a spring bean.

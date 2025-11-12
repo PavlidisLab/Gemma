@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.BitSet;
+
 /**
  * Primitive storage types for data vectors.
  */
@@ -28,7 +30,8 @@ public enum PrimitiveType {
     LONG( Long.class, 8 ),
     CHAR( Character.class, 2 ),
     BOOLEAN( Boolean.class, 1 ),
-    STRING( String.class, -1 );
+    STRING( String.class, -1 ),
+    BITSET( BitSet.class, -1 );
 
     private final Class<?> javaClass;
     private final int sizeInBytes;

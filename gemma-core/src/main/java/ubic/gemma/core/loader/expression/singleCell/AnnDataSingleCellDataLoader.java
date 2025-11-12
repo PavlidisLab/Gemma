@@ -19,10 +19,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -487,6 +484,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
         return results;
+    }
+
+    @Override
+    public Set<CellLevelMeasurements> getOtherCellLevelMeasurements( SingleCellDimension dimension ) throws IOException {
+        // TODO: some of the cell-level characteristics are measurements
+        return Collections.emptySet();
     }
 
     @Override

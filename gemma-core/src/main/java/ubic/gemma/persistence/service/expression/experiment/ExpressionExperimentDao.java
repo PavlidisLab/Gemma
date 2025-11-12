@@ -4,6 +4,7 @@ import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -548,13 +549,16 @@ public interface ExpressionExperimentDao
      */
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices, boolean includeValues, boolean includeBitSetValues );
 
     /**
      * Obtain the single-cell dimension used by a specific QT.
      */
     @Nullable
     SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    @Nullable
+    SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices, boolean includeValues, boolean includeBitSetValues );
 
     /**
      * Load a single-cell dimension used by a specific QT without its cell IDs.
@@ -563,7 +567,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices, boolean includeValues, boolean includeBitSetValues );
 
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -578,7 +582,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
     @Nullable
-    SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices, boolean includeValues, boolean includeBitSetValues );
 
     /**
      * Create a single-cell dimension for a given experiment.
@@ -613,7 +617,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the category of a cell-level characteristic.
      * <p>
-     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean, boolean)}).
+     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean, boolean, boolean)}).
      */
     @Nullable
     Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );
@@ -623,19 +627,88 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain the cell type at a given cell index.
+     * <p>
+     * To be used with {@link #getCellTypeAssignmentWithoutIndices(ExpressionExperiment, QuantitationType, Long)}.
+     * @return the characteristic or {@code null} if the cell is assigned to {@link CellTypeAssignment#UNKNOWN_CHARACTERISTIC}.
+     * In case the CLC does not exist, an {@link org.hibernate.ObjectNotFoundException} will be thrown.
+     * @throws org.hibernate.ObjectNotFoundException if the characteristic does not exist
      */
     @Nullable
-    Characteristic getCellTypeAt( CellTypeAssignment cta, int cellIndex );
+    Characteristic getCellTypeAt( CellTypeAssignment cta, int cellIndex ) throws ObjectNotFoundException;
 
+    @Nullable
     Characteristic[] getCellTypeAt( CellTypeAssignment cta, int startIndex, int endIndexExclusive );
 
     /**
      * Obtain the characteristic at a given cell index.
+     * <p>
+     * To be used with {@link #getCellLevelCharacteristicsWithoutIndices(ExpressionExperiment, QuantitationType, Long)}.
+     * @return the characteristic or {@code null} if the cell is assigned to {@link CellLevelCharacteristics#UNKNOWN_CHARACTERISTIC}.
+     * In case the CLC does not exist, an {@link org.hibernate.ObjectNotFoundException} will be thrown.
+     * @throws org.hibernate.ObjectNotFoundException if the characteristic does not exist
      */
     @Nullable
-    Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex );
+    Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex ) throws ObjectNotFoundException;
 
+    /**
+     * Obtain the characteristic at a given cell range.
+     * <p>
+     * To be used with {@link #getCellLevelCharacteristicsWithoutIndices(ExpressionExperiment, QuantitationType, Long)}.
+     */
+    @Nullable
     Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive );
+
+    /**
+     * Obtain a cell-level measurements by ID.
+     */
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Long clmId );
+
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, String clmName );
+
+    @Nullable
+    List<CellLevelMeasurements> getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Category category );
+
+    /**
+     * Obtain a cell-level measurements by ID without loading the data.
+     */
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurementsWithoutData( ExpressionExperiment ee, SingleCellDimension dim, Long clmId );
+
+    /**
+     * Obtain a measurement at a given cell index.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
+     */
+    @Nullable
+    <T> T getCellLevelMeasurementAt( CellLevelMeasurements clm, int cellIndex );
+
+    /**
+     * Obtain a slice of measurements at a given cell index range.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
+     */
+    @Nullable
+    <T> T[] getCellLevelMeasurementAt( CellLevelMeasurements clm, int startIndex, int endIndexExclusive );
+
+    @Nullable
+    byte[] getCellLevelMeasurementAtAsBytes( CellLevelMeasurements clm, int cellIndex );
+
+    @Nullable
+    byte[] getCellLevelMeasurementAtAsBytes( CellLevelMeasurements clm, int startIndex, int endIndexExclusive );
+
+    /**
+     * Stream a cell-level measurement.
+     * <p>
+     * The type held in the stream depends on the representation of the cell-level measurement. Refer to
+     * {@link ubic.gemma.persistence.util.ByteArrayUtils#byteArrayToObjects(byte[], Class)} for more details on the
+     * conversions.
+     * <p>
+     * To be combined with {@link #getCellLevelMeasurementsWithoutData(ExpressionExperiment, SingleCellDimension, Long)}.
+     */
+    @Nullable
+    <T> Stream<T> streamCellLevelMeasurements( CellLevelMeasurements clm, boolean createNewSession );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
@@ -672,8 +745,11 @@ public interface ExpressionExperimentDao
      */
     Collection<Protocol> getCellTypeAssignmentProtocols();
 
-    @Nullable
-    Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolIdentifier );
+    /**
+     * Obtain all the cell type assignments for a given experiment and quantitation type, filtered by protocol
+     * identifier.
+     */
+    Collection<CellTypeAssignment> getCellTypeAssignmentsByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolIdentifier );
 
     /**
      * Obtain a cell type assignment by name without loading the indices.
@@ -701,6 +777,12 @@ public interface ExpressionExperimentDao
 
     @Nullable
     CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String clcName );
+
+    /**
+     * Obtain a specific cell-level characteristic by ID without loading the indices.
+     */
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long clcId );
 
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 

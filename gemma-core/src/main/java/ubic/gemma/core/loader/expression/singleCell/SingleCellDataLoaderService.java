@@ -5,6 +5,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -64,4 +65,18 @@ public interface SingleCellDataLoaderService {
      * The dataset must already have a set of preferred single-cell vectors loaded or one identified by {@link SingleCellDataLoaderConfig#getQuantitationTypeName()}.
      */
     Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config );
+
+    /**
+     * Load other cell-level characteristics (i.e. anything that is not a cell type assignment), the data type is
+     * automatically detected.
+     * @see #loadOtherCellLevelCharacteristics(ExpressionExperiment, SingleCellDataType, SingleCellDataLoaderConfig)
+     */
+    Collection<CellLevelMeasurements> loadOtherCellLevelMeasurements( ExpressionExperiment ee, SingleCellDataLoaderConfig config );
+
+    /**
+     * Load other cell-level characteristics (i.e. anything that is not a cell type assignment).
+     * <p>
+     * The dataset must already have a set of preferred single-cell vectors loaded or one identified by {@link SingleCellDataLoaderConfig#getQuantitationTypeName()}.
+     */
+    Collection<CellLevelMeasurements> loadOtherCellLevelMeasurements( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config );
 }

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <class name="ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements"
+           table="CELL_LEVEL_MEASUREMENTS" mutable="false">
+        <cache usage="read-only"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <property name="name">
+            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description">
+            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="type">
+            <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)" index="CELL_LEVEL_MEASUREMENTS_TYPE"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementType</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="kindCV">
+            <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"
+                    index="CELL_LEVEL_MEASUREMENTS_KIND_CV"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementKind</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="otherKind" type="java.lang.String">
+            <column name="OTHER_KIND" not-null="false" unique="false" sql-type="VARCHAR(255)"
+                    index="CELL_LEVEL_MEASUREMENTS_OTHER_KIND"/>
+        </property>
+        <property name="representation">
+            <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"
+                    index="CELL_LEVEL_MEASUREMENTS_REPRESENTATION"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.quantitationtype.PrimitiveType</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <!-- absolutely necessary for this entity, so always fetched -->
+        <!-- there's only a handful of units, so select and cache -->
+        <many-to-one name="unit" class="ubic.gemma.model.common.measurement.Unit" lazy="false" fetch="select"
+                     foreign-key="CELL_LEVEL_MEASUREMENTS_UNIT_FKC">
+            <column name="UNIT_FK" not-null="false" sql-type="BIGINT"/>
+        </many-to-one>
+        <property name="data">
+            <column name="DATA" not-null="true" sql-type="LONGBLOB"/>
+        </property>
+        <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic" cascade="all"
+                     lazy="false" fetch="join" foreign-key="CELL_LEVEL_MEASUREMENTS_CATEGORY_FKC">
+            <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"
+                    index="CELL_LEVEL_MEASUREMENTS_CATEGORY"/>
+        </many-to-one>
+    </class>
+</hibernate-mapping>
