@@ -746,6 +746,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id ) {
+        return expressionExperimentDao.getSingleCellDimensionForCellLevelCharacteristicsById( expressionExperiment, id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensions( ee );
     }
@@ -949,6 +955,62 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
 
         return cta;
+    }
+
+    @Override
+    @Transactional
+    public void changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta ) {
+        Assert.notNull( newPreferredCta.getId(), "The new preferred CTA must be persistent." );
+        Assert.isTrue( dimension.getCellTypeAssignments().contains( newPreferredCta ) );
+
+        SingleCellDimension preferredDimension = getPreferredSingleCellDimension( ee )
+                .orElse( null );
+
+        CellTypeAssignment preferredCta = dimension.getCellTypeAssignments().stream()
+                .filter( CellTypeAssignment::isPreferred )
+                .findFirst()
+                .orElse( null );
+
+        if ( newPreferredCta.equals( preferredCta ) ) {
+            log.info( newPreferredCta + " is already the preferred cell type assignment for " + dimension + ", no change necessary." );
+            return;
+        }
+
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            cta.setPreferred( cta.equals( newPreferredCta ) );
+        }
+
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        auditTrailService.addUpdateEvent( ee, PreferredCellTypeAssignmentChangedEvent.class,
+                String.format( "Changed the preferred cell type assignment of %s%s to %s", dimension,
+                        preferredCta != null ? " from " + preferredCta : "", newPreferredCta ) );
+
+        // include the case where there was no overall CTA
+        if ( dimension.equals( preferredDimension ) ) {
+            recreateCellTypeFactor( ee, newPreferredCta );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        if ( dimension.getCellTypeAssignments().stream().noneMatch( CellTypeAssignment::isPreferred ) ) {
+            log.info( "There is no preferred CTA in " + dimension + ", nothing to clear." );
+            return;
+        }
+        SingleCellDimension preferredDimension = getPreferredSingleCellDimension( ee )
+                .orElse( null );
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            cta.setPreferred( false );
+        }
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        auditTrailService.addUpdateEvent( ee, PreferredCellTypeAssignmentChangedEvent.class, "Cleared the preferred cell type assignment from " + dimension + "." );
+
+        // if we are clearing the preferred CTA from the preferred dimension (the one that belongs to the preferred
+        // single-cell vectors), remove the cell type factor
+        if ( dimension.equals( preferredDimension ) ) {
+            removeCellTypeFactorIfExists( ee );
+        }
     }
 
     @Override
@@ -1313,6 +1375,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     private ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl ) {
         Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design, cannot re-create the cell type factor." );
+        // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
+        Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
         removeCellTypeFactorIfExists( ee );
         // create a new cell type factor
         ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );

@@ -19,9 +19,12 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
- * Indicates that a data type (for a specific QuantitationType, possibly new) was added. This is always 'raw' data.
+ * Indicates that a data type (for a specific QuantitationType, possibly new) was added.
  * </p>
+ * Prefer one of the more specific subclasses if possible, this will eventually become an abstract class.
+ *
+ * @see RawDataAddedEvent
+ * @see SingleCellDataAddedEvent
  */
 public class DataAddedEvent extends ExpressionExperimentAnalysisEvent {
 

@@ -385,6 +385,10 @@ public class ExpressionExperimentEditController {
             }
         }
 
+        if ( form.getSingleCellDimensions() != null ) {
+            updateSingleCellDimensions( expressionExperiment, form.getSingleCellDimensions() );
+        }
+
         if ( form.getAssayToMaterialMap() != null ) {
             if ( updateBioMaterialMap( expressionExperiment, form.getAssayToMaterialMap() ) ) {
                 this.messageUtil.saveMessage( "Assay to sample associations have been changed; reprocessing will be performed." );
@@ -562,6 +566,34 @@ public class ExpressionExperimentEditController {
         }
     }
 
+    private void updateSingleCellDimensions( ExpressionExperiment expressionExperiment, List<SingleCellDimensionEditForm> singleCellDimensions ) {
+        for ( SingleCellDimensionEditForm form : singleCellDimensions ) {
+            SingleCellDimension scd = singleCellExpressionExperimentService.getSingleCellDimensionById( expressionExperiment, form.getId() );
+            if ( scd == null ) {
+                throw new EntityNotFoundException( "No SingleCellDimension with ID " + form.getId() );
+            }
+            Map<Long, CellTypeAssignment> ctaById = IdentifiableUtils.getIdMap( scd.getCellTypeAssignments() );
+            CellTypeAssignment preferredCta = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
+            CellTypeAssignment newPreferredCta = form.cellTypeAssignments.stream()
+                    .filter( CellTypeAssignmentEditForm::getIsPreferred )
+                    .map( CellTypeAssignmentEditForm::getId )
+                    .map( ctaById::get )
+                    .map( Objects::requireNonNull )
+                    .findFirst()
+                    .orElse( null );
+            if ( !Objects.equals( preferredCta, newPreferredCta ) ) {
+                if ( newPreferredCta != null ) {
+                    singleCellExpressionExperimentService.changePreferredCellTypeAssignment( expressionExperiment, scd, newPreferredCta );
+                } else {
+                    singleCellExpressionExperimentService.clearPreferredCellTypeAssignment( expressionExperiment, scd );
+                }
+            } else {
+                // no change, including the case where both are null
+                log.debug( "No change to the preferred CTA in " + scd + "." );
+            }
+        }
+    }
+
     /**
      * Change the relationship between assays and biomaterials.
      *
@@ -677,6 +709,7 @@ public class ExpressionExperimentEditController {
         public void validate( Object target, Errors errors ) {
             ExpressionExperimentEditForm form = ( ExpressionExperimentEditForm ) target;
             validateQuantitationTypes( form, errors );
+            validateSingleCellDimensions( form, errors );
             validateAssayToMaterialMap( form, errors );
         }
 
@@ -758,6 +791,22 @@ public class ExpressionExperimentEditController {
             } catch ( IllegalArgumentException e ) {
                 errors.rejectValue( field, "invalid", "Invalid value." );
             }
+        }
+
+        private void validateSingleCellDimensions( ExpressionExperimentEditForm form, Errors errors ) {
+            if ( form.getSingleCellDimensions() == null ) {
+                return;
+            }
+            for ( int i = 0; i < form.getSingleCellDimensions().size(); i++ ) {
+                errors.pushNestedPath( "singleCellDimensions[" + i + "]" );
+                // check if all CTAs are un
+                validateSingleCellDimension( form.getSingleCellDimensions().get( i ), errors );
+                errors.popNestedPath();
+            }
+        }
+
+        private void validateSingleCellDimension( SingleCellDimensionEditForm singleCellDimensionEditForm, Errors errors ) {
+
         }
 
         private void validateAssayToMaterialMap( ExpressionExperimentEditForm form, Errors errors ) {

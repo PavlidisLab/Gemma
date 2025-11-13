@@ -215,6 +215,10 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig singleCellDimensionInitializationConfig );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id );
+
     /**
      * Obtain the preferred single-cell dimension.
      * <p>
@@ -289,6 +293,19 @@ public interface SingleCellExpressionExperimentService {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
+
+
+    /**
+     * Change the preferred cell type assignment to the given one.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta );
+
+    /**
+     * Clear the preferred cell type assignment.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension );
 
     /**
      * Remove the given cell type assignment.
