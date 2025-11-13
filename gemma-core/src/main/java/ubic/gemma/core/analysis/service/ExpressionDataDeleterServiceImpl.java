@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression;
+package ubic.gemma.core.analysis.service.expression;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 
 @Service
 @Transactional(propagation = Propagation.NEVER)
-public class DataDeleterServiceImpl implements DataDeleterService {
+public class ExpressionExperimentDataDeleterServiceImpl implements ExpressionExperimentDataDeleterService {
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;

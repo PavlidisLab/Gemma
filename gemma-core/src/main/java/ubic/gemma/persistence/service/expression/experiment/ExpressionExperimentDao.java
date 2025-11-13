@@ -599,11 +599,22 @@ public interface ExpressionExperimentDao
 
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Obtain the single-cell dimension used by a specific QT.
      */
     @Nullable
     SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain a single-cell dimension by ID.
+     * <p>
+     * This also ensures that the SCD belongs to the given experiment.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id );
 
     /**
      * Load a single-cell dimension used by a specific QT without its cell IDs.
@@ -653,6 +664,15 @@ public interface ExpressionExperimentDao
      * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Reload a single-cell dimension.
+     * <p>
+     * Use this on a detached single-cell dimension such as those returned by {@link #getSingleCellDimensionWithoutCellIds(ExpressionExperiment, QuantitationType)}.
+     *
+     * @see #reload(Identifiable)
+     */
+    SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension );
 
     /**
      * Stream the cell IDs of a dimension.
@@ -844,7 +864,7 @@ public interface ExpressionExperimentDao
      *
      * @param quantitationType quantitation to remove
      * @param deleteQt         if true, detach the QT from the experiment and delete it
-     *                                                                                                                                                 TODO: add a replaceSingleCellDataVectors to avoid needing this
+     *                                                                                                                                                                                                                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 

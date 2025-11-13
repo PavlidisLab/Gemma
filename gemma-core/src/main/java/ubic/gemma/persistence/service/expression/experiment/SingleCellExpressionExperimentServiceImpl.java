@@ -43,6 +43,7 @@ import static ubic.gemma.core.analysis.preprocess.convert.RepresentationConversi
 import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.createSlicer;
 import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.sliceCellIds;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
+import static ubic.gemma.model.expression.experiment.ExperimentFactorUtils.isCompatibleWith;
 
 @Service
 @CommonsLog
@@ -440,6 +441,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return numVectorsRemoved;
     }
 
+    private void removeCellTypeFactorIfExists( ExpressionExperiment ee ) {
+        ExperimentalFactor existingCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
+        if ( existingCellTypeFactor != null ) {
+            removeCellTypeFactor( ee, existingCellTypeFactor );
+        } else {
+            log.info( "There's no cell type factor for " + ee + ", no need to remove anything." );
+        }
+    }
+
+
     @Override
     @Transactional
     public void updateSparsityMetrics( ExpressionExperiment ee ) {
@@ -746,8 +757,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id ) {
-        return expressionExperimentDao.getSingleCellDimensionForCellLevelCharacteristicsById( expressionExperiment, id );
+    public SingleCellDimension getSingleCellDimensionByIdWithoutCellIds( ExpressionExperiment expressionExperiment, Long dimensionId, SingleCellDimensionInitializationConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIdsById( expressionExperiment, dimensionId, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -959,8 +970,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta ) {
+    public PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactor ) {
+        Assert.notNull( ee.getId(), "Dataset must be persistent." );
+        Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
         Assert.notNull( newPreferredCta.getId(), "The new preferred CTA must be persistent." );
+
+        // if the dimension is detached or was loaded without cell IDs,
+        dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );
+
         Assert.isTrue( dimension.getCellTypeAssignments().contains( newPreferredCta ) );
 
         SingleCellDimension preferredDimension = getPreferredSingleCellDimension( ee )
@@ -973,7 +990,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
         if ( newPreferredCta.equals( preferredCta ) ) {
             log.info( newPreferredCta + " is already the preferred cell type assignment for " + dimension + ", no change necessary." );
-            return;
+            return PreferredCellTypeAssignmentChangeOutcome.UNCHANGED;
         }
 
         for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
@@ -986,17 +1003,28 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                         preferredCta != null ? " from " + preferredCta : "", newPreferredCta ) );
 
         // include the case where there was no overall CTA
-        if ( dimension.equals( preferredDimension ) ) {
-            recreateCellTypeFactor( ee, newPreferredCta );
+        if ( recreateCellTypeFactor && !dimension.equals( preferredDimension ) ) {
+            log.info( "Preferred CTA changed for the preferred single-cell dimension " + dimension + " of " + ee + ", recreating the cell type factor..." );
+            recreateCellTypeFactor( ee );
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_RECREATED;
+        } else if ( !dimension.equals( preferredDimension ) && !isCellTypeFactorCompatibleWith( ee, newPreferredCta ) ) {
+            log.warn( "Preferred CTA changed for the preferred single-cell dimension " + dimension + " of " + ee + ". The cell type factor will not be removed as requested, but it will now be misaligned with the preferred CTA." );
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_UNCHANGED_BUT_MISALIGNED;
+        } else {
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_UNCHANGED;
         }
     }
 
     @Override
     @Transactional
-    public void clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension ) {
+    public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, boolean removeCellTypeFactor ) {
+        Assert.notNull( ee.getId() );
+        Assert.notNull( dimension.getId() );
+        // if the dimension is detached or was loaded without cell IDs
+        dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );
         if ( dimension.getCellTypeAssignments().stream().noneMatch( CellTypeAssignment::isPreferred ) ) {
             log.info( "There is no preferred CTA in " + dimension + ", nothing to clear." );
-            return;
+            return PreferredCellTypeAssignmentChangeOutcome.UNCHANGED;
         }
         SingleCellDimension preferredDimension = getPreferredSingleCellDimension( ee )
                 .orElse( null );
@@ -1008,8 +1036,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
         // if we are clearing the preferred CTA from the preferred dimension (the one that belongs to the preferred
         // single-cell vectors), remove the cell type factor
-        if ( dimension.equals( preferredDimension ) ) {
+        if ( removeCellTypeFactor && dimension.equals( preferredDimension ) ) {
+            log.info( "Cleared preferred CTA from the preferred single-cell dimension " + dimension + " of " + ee + ", removing the cell type factor..." );
             removeCellTypeFactorIfExists( ee );
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_REMOVED;
+        } else if ( dimension.equals( preferredDimension ) && getCellTypeFactor( ee ).isPresent() ) {
+            log.warn( "Cleared preferred CTA from the preferred single-cell dimension " + dimension + " of " + ee + ". The cell type factor will not be removed as requested, but it will now be misaligned with the preferred CTA." );
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_UNCHANGED_BUT_MISALIGNED;
+        } else {
+            log.info( "Cleared preferred CTA from the single-cell dimension " + dimension + " of " + ee + "." );
+            return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_UNCHANGED;
         }
     }
 
@@ -1362,6 +1398,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
     }
 
+    /**
+     * Check if a given cell type assignment is compatible with the current cell type factor of the given expression
+     * experiment.
+     */
+    private boolean isCellTypeFactorCompatibleWith( ExpressionExperiment ee, CellTypeAssignment cta ) {
+        return getCellTypeFactor( ee )
+                .map( ctf -> isCompatibleWith( createCellTypeFactor( ee, cta ), ctf ) )
+                .orElse( false );
+    }
+
     @Override
     @Transactional
     public ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee ) {
@@ -1377,8 +1423,26 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design, cannot re-create the cell type factor." );
         // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
         Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
-        removeCellTypeFactorIfExists( ee );
+        ExperimentalFactor currentCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
         // create a new cell type factor
+        ExperimentalFactor cellTypeFactor = createCellTypeFactor( ee, ctl );
+        if ( currentCellTypeFactor != null && isCompatibleWith( cellTypeFactor, currentCellTypeFactor ) ) {
+            log.info( "The current cell type factor " + currentCellTypeFactor + " is compatible with " + ctl + ", no need to recreate it." );
+            return currentCellTypeFactor;
+        }
+        if ( currentCellTypeFactor != null ) {
+            removeCellTypeFactor( ee, currentCellTypeFactor );
+        }
+        cellTypeFactor = experimentalFactorService.create( cellTypeFactor );
+        log.info( "Created cell type factor " + cellTypeFactor + " from " + ctl );
+        ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
+        experimentalDesignService.update( ee.getExperimentalDesign() );
+        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                String.format( "Created a cell type factor %s from preferred cell type assignment %s.", cellTypeFactor, ctl ) );
+        return cellTypeFactor;
+    }
+
+    private ExperimentalFactor createCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl ) {
         ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
         cellTypeFactor.setDescription( "Cell type factor pre-populated from " + ctl + "." );
         cellTypeFactor.setExperimentalDesign( ee.getExperimentalDesign() );
@@ -1393,25 +1457,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             fv.setExperimentalFactor( cellTypeFactor );
             cellTypeFactor.getFactorValues().add( fv );
         }
-        cellTypeFactor = experimentalFactorService.create( cellTypeFactor );
-        log.info( "Created cell type factor " + cellTypeFactor + " from " + ctl );
-        ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
-        experimentalDesignService.update( ee.getExperimentalDesign() );
-        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                String.format( "Created a cell type factor %s from preferred cell type assignment %s.", cellTypeFactor, ctl ) );
         return cellTypeFactor;
     }
 
-    private void removeCellTypeFactorIfExists( ExpressionExperiment ee ) {
-        ExperimentalFactor existingCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
-        if ( existingCellTypeFactor != null ) {
-            // this will remove analysis involving the factor and also sample-fv associations
-            log.info( "Removing existing cell type factor for " + ee + ": " + existingCellTypeFactor );
-            experimentalFactorService.remove( existingCellTypeFactor );
-            auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                    String.format( "Removed the cell type factor %s.", existingCellTypeFactor ) );
-        } else {
-            log.info( "There's no cell type factor for " + ee );
-        }
+    private void removeCellTypeFactor( ExpressionExperiment ee, ExperimentalFactor existingCellTypeFactor ) {
+        // this will remove analysis involving the factor and also sample-fv associations
+        log.info( "Removing existing cell type factor for " + ee + ": " + existingCellTypeFactor );
+        experimentalFactorService.remove( existingCellTypeFactor );
+        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                String.format( "Removed the cell type factor %s.", existingCellTypeFactor ) );
     }
 }

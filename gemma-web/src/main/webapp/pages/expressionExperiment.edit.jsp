@@ -81,16 +81,16 @@
                                     </c:when>
                                     <c:when test="${vectorType.simpleName == 'SingleCellExpressionDataVector'}">
                                         <form:checkbox path="isSingleCellPreferred" />
-                                        <form:errors path="isSingleCellPreferred" />
+                                        <form:errors path="isSingleCellPreferred" cssClass="error" />
                                     </c:when>
                                     <c:when test="${vectorType.simpleName == 'RawExpressionDataVector'}">
                                         <form:checkbox path="isPreferred" />
-                                        <form:errors path="isPreferred" />
+                                        <form:errors path="isPreferred" cssClass="error" />
                                     </c:when>
                                     <c:when test="${vectorType.simpleName == 'ProcessedExpressionDataVector'}">
                                         <form:checkbox path="isMaskedPreferred" disabled="true"
                                                 title="The preferred status for processed vectors cannot be modified." />
-                                        <form:errors path="isMaskedPreferred" />
+                                        <form:errors path="isMaskedPreferred" cssClass="error" />
                                     </c:when>
                                 </c:choose>
                             </td>
@@ -140,7 +140,6 @@
         <c:forEach items="${expressionExperiment.singleCellDimensions}" var="scd" varStatus="scdIndex">
             <hr class="normal">
             <h3>Single-Cell Dimension #${scd.id}</h3>
-            <p>The values here cannot be modified for now.</p>
             <c:if test="${not empty scd.quantitationTypes}">
                 Used by the following quantitation types:
                 <c:forEach items="${scd.quantitationTypes}" var="qt">
@@ -151,6 +150,7 @@
                 <form:hidden path="id" />
                 <c:if test="${!scd.cellTypeAssignments.isEmpty()}">
                     <h4>Cell Type Assignments</h4>
+                    <form:errors path="cellTypeAssignments" cssClass="error" />
                     <table>
                         <tr>
                             <th style="min-width: 50px;">ID</th>
@@ -184,7 +184,7 @@
                                         </form:select>
                                     </td>
                                     <td class="text-center">
-                                        <form:checkbox path="isPreferred" cssErrorClass="error" disabled="true" />
+                                        <form:checkbox path="isPreferred" cssErrorClass="error" />
                                         <form:errors path="isPreferred" cssClass="error" />
                                     </td>
                                     <td class="text-ellipsis" style="width: 100%; max-width: 0;">
@@ -195,7 +195,8 @@
                                     <td>
                                         <form:button
                                                 name="deleteCellTypeAssignment"
-                                                value="${cta.id}" class="btn-unstyled"><i class="fa fa-remove red"></i></form:button>
+                                                value="${cta.id}" class="btn-unstyled"><i
+                                                class="fa fa-remove red"></i></form:button>
                                     </td>
                                 </tr>
                             </spring:nestedPath>
@@ -241,7 +242,8 @@
                                     <td>
                                         <form:button
                                                 name="deleteCellLevelCharacteristics"
-                                                value="${clc.id}" class="btn-uns"><i class="fa fa-remove red"></i></form:button>
+                                                value="${clc.id}" class="btn-uns"><i
+                                                class="fa fa-remove red"></i></form:button>
                                     </td>
                                 </tr>
                             </spring:nestedPath>
@@ -250,6 +252,8 @@
                 </c:if>
             </spring:nestedPath>
         </c:forEach>
+
+        <form:button name="recreateCellTypeFactor">Re-create the cell type factor</form:button>
 
         <hr class="normal">
 
@@ -310,4 +314,14 @@ function addDeleteConfirmation( selector, what, messagePrefix ) {
 addDeleteConfirmation( '[name$="deleteQuantitationType"]', 'quantitation type', 'QT' )
 addDeleteConfirmation( '[name$="deleteCellTypeAssignment"]', 'cell type assignment', 'CTA ' )
 addDeleteConfirmation( '[name$="deleteCellLevelCharacteristics"]', 'cell-level characteristics', 'CLC' )
+
+$( '[name="recreateCellTypeFactor"]' ).click( function() {
+   const id = $( this ).val();
+   const name = $( this ).closest( 'tr' ).children( 'td' ).eq( 1 ).children().eq( 0 ).val();
+   if ( prompt( 'Enter "RECREATE" to confirm re-creation of the cell type factor:' ) === 'RECREATE' ) {
+      $( '#confirmation' ).val( 'RECREATE CTF' );
+   } else {
+      event.preventDefault();
+   }
+} );
 </script>

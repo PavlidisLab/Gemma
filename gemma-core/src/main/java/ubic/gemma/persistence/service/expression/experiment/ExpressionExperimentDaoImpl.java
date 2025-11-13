@@ -2277,8 +2277,34 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
+        SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer(
+                includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        //noinspection unchecked
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( initializer.createSelectSingleCellDimension( "dimension" ) + " from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension dimension "
+                        + "where scedv.expressionExperiment = :ee and dimension.id = :dimensionId "
+                        + "group by dimension" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "dimensionId", dimensionId )
+                .setResultTransformer( initializer )
+                .uniqueResult();
+    }
+
+    @Override
     public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return getSingleCellDimension( ee, qt, getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
+    public SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long dimensionId ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession().createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.singleCellDimension.id = :dimensionId "
+                        + "group by scedv.singleCellDimension" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "dimensionId", dimensionId )
+                .uniqueResult();
     }
 
     private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, Session session ) {
@@ -2316,7 +2342,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select dim from SingleCellExpressionDataVector scdv "
                         + "join scdv.singleCellDimension dim join dim.cellTypeAssignments cta "
                         + "where scdv.expressionExperiment = :ee and cta.id = :ctaId "
-                        + "group by dim")
+                        + "group by dim" )
                 .setParameter( "ee", ee )
                 .setParameter( "ctaId", ctaId )
                 .uniqueResult();
@@ -2328,7 +2354,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select dim from SingleCellExpressionDataVector scdv "
                         + "join scdv.singleCellDimension dim join dim.cellLevelCharacteristics clc "
                         + "where scdv.expressionExperiment = :ee and clc.id = :clcId "
-                        + "group by dim")
+                        + "group by dim" )
                 .setParameter( "ee", ee )
                 .setParameter( "clcId", clcId )
                 .uniqueResult();
@@ -2664,6 +2690,15 @@ public class ExpressionExperimentDaoImpl
     public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         log.info( "Removing " + singleCellDimension + " from " + ee + "..." );
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        SingleCellDimension dim = ( SingleCellDimension ) getSessionFactory().getCurrentSession().load( SingleCellDimension.class, dimension.getId() );
+        if ( dim == null ) {
+            throw new ObjectNotFoundException( dimension.getId(), SingleCellDimension.class.getName() );
+        }
+        return dim;
     }
 
     @Override

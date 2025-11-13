@@ -217,7 +217,7 @@ public interface SingleCellExpressionExperimentService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id );
+    SingleCellDimension getSingleCellDimensionByIdWithoutCellIds( ExpressionExperiment expressionExperiment, Long id, SingleCellDimensionInitializationConfig config );
 
     /**
      * Obtain the preferred single-cell dimension.
@@ -294,18 +294,37 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
 
+    enum PreferredCellTypeAssignmentChangeOutcome {
+        /**
+         * No change were made.
+         */
+        UNCHANGED,
+        CELL_TYPE_FACTOR_UNCHANGED,
+        /**
+         * The factor was left unchanged, but is now misaligned with the preferred cell type assignment.
+         */
+        CELL_TYPE_FACTOR_UNCHANGED_BUT_MISALIGNED,
+        CELL_TYPE_FACTOR_RECREATED,
+        CELL_TYPE_FACTOR_REMOVED
+    }
 
     /**
      * Change the preferred cell type assignment to the given one.
+     *
+     * @param recreateCellTypeFactor re-create the cell type factor; this is only done if the preferred cell type
+     *                               assignment applies to the preferred single-cell vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta );
+    PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactor );
 
     /**
      * Clear the preferred cell type assignment.
+     *
+     * @param removeCellTypeFactor also remove the cell type factor; this is only done if the preferred single-cell
+     *                             dimension is being cleared
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension );
+    PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, boolean removeCellTypeFactor );
 
     /**
      * Remove the given cell type assignment.

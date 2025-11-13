@@ -1,6 +1,5 @@
-package ubic.gemma.core.loader.expression;
+package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -13,7 +12,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
  *
  * @author poirigui
  */
-public interface DataDeleterService {
+public interface ExpressionDataDeleterService {
 
     /**
      * @see SingleCellExpressionExperimentService#removeSingleCellDataVectors(ExpressionExperiment, QuantitationType)

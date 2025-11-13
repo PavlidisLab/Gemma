@@ -4,7 +4,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.DataDeleterService;
+import ubic.gemma.core.analysis.service.expression.ExpressionExperimentDataDeleterService;
+import ubic.gemma.core.loader.expression.ExpressionExperimentDataDeleterService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -26,7 +27,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
             DELETE_ALL_CELL_LEVEL_CHARACTERISTICS = "deleteClcs";
 
     @Autowired
-    private DataDeleterService dataDeleterService;
+    private ExpressionExperimentDataDeleterService expressionExperimentDataDeleterService;
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
@@ -91,7 +92,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
         long removed;
         switch ( mode ) {
             case DELETE_ALL:
-                dataDeleterService.deleteSingleCellData( ee, qt );
+                expressionExperimentDataDeleterService.deleteSingleCellData( ee, qt );
                 addSuccessObject( ee, qt, "Deleted single-cell data." );
                 break;
             case DELETE_ALL_CELL_TYPE_ASSIGNMENTS:

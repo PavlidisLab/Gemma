@@ -74,7 +74,7 @@ public class ExpressionExperimentEditControllerHelperService {
     @Transactional(readOnly = true)
     public ExpressionExperimentEditController.ExpressionExperimentEditForm getFormObject( ExpressionExperiment ee ) {
         ExpressionExperimentEditController.ExpressionExperimentEditForm obj = new ExpressionExperimentEditController.ExpressionExperimentEditForm();
-        populateForm( obj, ee );
+        populateForm( obj, ee, false );
         LinkedHashMap<Class<? extends DataVector>, List<ExpressionExperimentEditController.QuantitationTypeEditForm>> qtf = getQuantitationTypesByVectorType( ee );
         List<ExpressionExperimentEditController.QuantitationTypeEditForm> qtfL = qtf.values().stream()
                 .flatMap( Collection::stream )
@@ -86,6 +86,16 @@ public class ExpressionExperimentEditControllerHelperService {
 
     @Transactional(readOnly = true)
     public void populateForm( ExpressionExperimentEditController.ExpressionExperimentEditForm form, ExpressionExperiment expressionExperiment ) {
+        populateForm( form, expressionExperiment, true );
+    }
+
+    /**
+     *
+     * @param form
+     * @param expressionExperiment
+     * @param applyPreferredCtaIds apply the preferred CTAs that are already present in the form
+     */
+    private void populateForm( ExpressionExperimentEditController.ExpressionExperimentEditForm form, ExpressionExperiment expressionExperiment, boolean applyPreferredCtaIds ) {
         form.setId( expressionExperiment.getId() );
         form.setShortName( expressionExperiment.getShortName() );
         form.setName( expressionExperiment.getName() );
@@ -101,7 +111,25 @@ public class ExpressionExperimentEditControllerHelperService {
                 // minimal config, we only care about the mapping keys
                 SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder().build() );
         List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
-        form.setSingleCellDimensions( scds.stream().map( scd -> new ExpressionExperimentEditController.SingleCellDimensionEditForm( scd, dim2qts.getOrDefault( scd, Collections.emptySet() ) ) ).collect( Collectors.toList() ) );
+
+        // the only user-supplied field is the preferred CTA
+        Map<Long, Boolean> preferredCtaIds;
+        if ( applyPreferredCtaIds && form.getSingleCellDimensions() != null ) {
+            preferredCtaIds = form.getSingleCellDimensions().stream()
+                    .map( ExpressionExperimentEditController.SingleCellDimensionEditForm::getCellTypeAssignments )
+                    .filter( Objects::nonNull )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toMap( ExpressionExperimentEditController.CellTypeAssignmentEditForm::getId,
+                            ExpressionExperimentEditController.CellTypeAssignmentEditForm::getIsPreferred,
+                            // this should never happen, but an input might have duplicated CTA IDs
+                            ( a, b ) -> b ) );
+        } else {
+            preferredCtaIds = null;
+        }
+
+        form.setSingleCellDimensions( scds.stream()
+                .map( scd -> new ExpressionExperimentEditController.SingleCellDimensionEditForm( scd, dim2qts.get( scd ), preferredCtaIds ) )
+                .collect( Collectors.toList() ) );
     }
 
     private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
