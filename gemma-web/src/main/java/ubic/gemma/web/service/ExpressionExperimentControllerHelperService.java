@@ -169,8 +169,8 @@ public class ExpressionExperimentControllerHelperService {
     /**
      * Sets batch information and related properties
      *
-     * @param ee          ee
-     * @param finalResult result
+     * @param  ee          ee
+     * @param  finalResult result
      */
     private void setBatchInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         boolean hasUsableBatchInformation = expressionExperimentBatchInformationService.checkHasUsableBatchInfo( ee );
@@ -186,8 +186,8 @@ public class ExpressionExperimentControllerHelperService {
     /**
      * populates the publication and author information
      *
-     * @param ee          ee
-     * @param finalResult result
+     * @param  ee          ee
+     * @param  finalResult result
      */
     private void setPublicationAndAuthor( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
@@ -208,8 +208,8 @@ public class ExpressionExperimentControllerHelperService {
     /**
      * Checks and sets multiple technology types and RNA-seq status
      *
-     * @param ee          ee
-     * @param finalResult result
+     * @param  ee          ee
+     * @param  finalResult result
      */
     private void setTechTypeInfo( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         Collection<TechnologyType> techTypes = new HashSet<>();
@@ -225,8 +225,8 @@ public class ExpressionExperimentControllerHelperService {
     /**
      * Check for multiple "preferred" qts and reprocessing.
      *
-     * @param ee          ee
-     * @param finalResult result
+     * @param  ee          ee
+     * @param  finalResult result
      */
     private void setPreferredAndReprocessed( ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
