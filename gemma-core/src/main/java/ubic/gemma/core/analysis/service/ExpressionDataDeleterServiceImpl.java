@@ -1,10 +1,9 @@
-package ubic.gemma.core.analysis.service.expression;
+package ubic.gemma.core.analysis.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -14,7 +13,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 
 @Service
 @Transactional(propagation = Propagation.NEVER)
-public class ExpressionExperimentDataDeleterServiceImpl implements ExpressionExperimentDataDeleterService {
+public class ExpressionDataDeleterServiceImpl implements ExpressionDataDeleterService {
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;

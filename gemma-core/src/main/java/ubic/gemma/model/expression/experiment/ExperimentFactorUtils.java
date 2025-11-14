@@ -61,10 +61,10 @@ public class ExperimentFactorUtils {
      * Check if two experimental factors are compatible, i.e. they have the same type and category and {@code a}
      * contains a subset of the factor values of {@code b}.
      * <p>
-     * The main reason to check compatibility is to see if it is possible to keep the current factor and avoid removing a factor used in DEA avoid removing a factor that used in a DEA.
+     * The main reason to check compatibility is to see if it is possible to keep the current factor (in this case {@code b}), instead of replacing it
+     * and avoid removing a factor used in DEA avoid removing a factor that used in a DEA.
      */
     public static boolean isCompatibleWith( ExperimentalFactor a, ExperimentalFactor b ) {
-        Assert.isTrue( a.getId() == null || b.getId() == null, "At least one transient factor must be supplied." );
         Assert.isTrue( a.getType() == FactorType.CATEGORICAL && b.getType() == FactorType.CATEGORICAL,
                 "Only categorical factor can be tested for compatibility." );
         return Objects.equals( a.getName(), b.getName() )
@@ -92,8 +92,7 @@ public class ExperimentFactorUtils {
                 }
             }
             if ( !found ) {
-                log.warn( "No matching factor value found for " + fv + " in:\n\t" + b.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) )
-                ;
+                log.warn( "No matching factor value found for " + fv + " in:\n\t" + b.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) );
                 return false;
             }
         }
@@ -101,18 +100,23 @@ public class ExperimentFactorUtils {
     }
 
     private static boolean isCompatibleWith( FactorValue fv, FactorValue fv2 ) {
-        return isCompatibleWithS( fv.getCharacteristics(), fv2.getCharacteristics() )
-                && Objects.equals( fv.getValue(), fv2.getValue() );
+        return Objects.equals( fv.getIsBaseline(), fv2.getIsBaseline() )
+                && Objects.equals( fv.getNeedsAttention(), fv2.getNeedsAttention() )
+                && Objects.equals( fv.getValue(), fv2.getValue() )
+                && extractStatements( fv ).equals( extractStatements( fv2 ) );
     }
 
-    private static boolean isCompatibleWithS( Set<Statement> characteristics, Set<Statement> characteristics1 ) {
-        return populate( characteristics ).equals( populate( characteristics1 ) );
-    }
-
-    private static Set<StatementModel> populate( Set<Statement> characteristics ) {
-        Set<StatementModel> models = new HashSet<>();
-        for ( Statement s : characteristics ) {
+    /**
+     * Extract statements from a {@link FactorValue}.
+     */
+    private static Set<StatementModel> extractStatements( FactorValue factorValue ) {
+        Set<StatementModel> models = new HashSet<>( 2 * factorValue.getCharacteristics().size() );
+        for ( Statement s : factorValue.getCharacteristics() ) {
             for ( int i = 0; i < s.getNumberOfStatements(); i++ ) {
+                if ( s.getSubject( i ) == null && s.getPredicate( i ) == null && s.getObject( i ) == null ) {
+                    // ignore blank statements
+                    continue;
+                }
                 models.add( new StatementModel(
                         s.getCategory(),
                         s.getCategoryUri(),

@@ -37,5 +37,15 @@ public class ExperimentFactorUtilsTest {
         ef2 = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL );
         ef2.getFactorValues().add( FactorValue.Factory.newInstance( ef2, Statement.Factory.newInstance() ) );
         assertTrue( isCompatibleWith( ef1, ef2 ) );
+        assertTrue( isCompatibleWith( ef2, ef1 ) );
+
+        ef1 = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL );
+        ef1.getFactorValues().add( FactorValue.Factory.newInstance( ef1, Statement.Factory.newInstance( Categories.CELL_TYPE, "astrocyte", null ) ) );
+        ef2 = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL );
+        ef2.getFactorValues().add( FactorValue.Factory.newInstance( ef2, Statement.Factory.newInstance( Categories.CELL_TYPE, "astrocyte", null ) ) );
+        ef2.getFactorValues().add( FactorValue.Factory.newInstance( ef2, Statement.Factory.newInstance( Categories.CELL_TYPE, "microglia", null ) ) );
+        assertTrue( isCompatibleWith( ef1, ef2 ) );
+        // ef1 does not have microglia
+        assertFalse( isCompatibleWith( ef2, ef1 ) );
     }
 }
