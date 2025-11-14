@@ -270,6 +270,7 @@ public class ExpressionExperimentEditController {
         private boolean isBatchCorrected;
         private boolean isRatio;
         private boolean isRecomputedFromRawData;
+        private boolean isAggregated;
 
         public QuantitationTypeEditForm( QuantitationType qt ) {
             setId( qt.getId() );
@@ -289,6 +290,7 @@ public class ExpressionExperimentEditController {
             setIsBatchCorrected( qt.getIsBatchCorrected() );
             setIsRatio( qt.getIsRatio() );
             setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
+            setIsAggregated( qt.getIsAggregated() );
         }
 
         public boolean getIsBackground() {
@@ -337,6 +339,14 @@ public class ExpressionExperimentEditController {
 
         public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
             this.isRecomputedFromRawData = isRecomputedFromRawData;
+        }
+
+        public boolean getIsAggregated() {
+            return isAggregated;
+        }
+
+        public void setIsAggregated( boolean isAggregated ) {
+            this.isAggregated = isAggregated;
         }
     }
 

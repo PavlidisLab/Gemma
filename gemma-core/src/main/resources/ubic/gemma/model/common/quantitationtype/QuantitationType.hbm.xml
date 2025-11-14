@@ -71,5 +71,8 @@
        <property name="isRecomputedFromRawData" type="java.lang.Boolean">
          <column name="IS_RECOMPUTED_FROM_RAW_DATA" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
+      <property name="isAggregated" type="java.lang.Boolean">
+         <column name="IS_AGGREGATED" not-null="true" unique="false" sql-type="TINYINT"/>
+      </property>
    </class>
 </hibernate-mapping>

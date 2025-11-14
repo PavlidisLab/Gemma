@@ -26,22 +26,23 @@
 
         <form:errors path="quantitationTypes" cssClass="error" />
 
-        <table class="detail">
+        <table class="detail" style="width: 100%;">
             <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Preferred</th>
-                <th>Recomputed</th>
-                <th>Batch Corrected?</th>
-                <th>Ratio</th>
-                <th>Background</th>
-                <th>Background Subtracted</th>
-                <th>Normalized</th>
-                <th>General Type</th>
-                <th>Type</th>
-                <th>Scale</th>
-                <th>Representation</th>
+                <th style="vertical-align: bottom;">ID</th>
+                <th style="vertical-align: bottom;">Name</th>
+                <th style="vertical-align: bottom;">Description</th>
+                <th style="writing-mode: sideways-lr;">Preferred?</th>
+                <th style="writing-mode: sideways-lr;">Recomputed?</th>
+                <th style="writing-mode: sideways-lr;">Aggregated?</th>
+                <th style="writing-mode: sideways-lr;">Batch Corrected?</th>
+                <th style="writing-mode: sideways-lr;">Ratio</th>
+                <th style="writing-mode: sideways-lr;">Background</th>
+                <th style="writing-mode: sideways-lr;">Background Subtracted</th>
+                <th style="writing-mode: sideways-lr;">Normalized</th>
+                <th style="vertical-align: bottom;">General Type</th>
+                <th style="vertical-align: bottom;">Type</th>
+                <th style="vertical-align: bottom;">Scale</th>
+                <th style="vertical-align: bottom;">Representation</th>
             </tr>
 
             <!-- vectors, grouped by vector type -->
@@ -49,7 +50,7 @@
                 <c:set var="vectorType" value="${e.key}" />
                 <c:set var="quantitationTypes" value="${e.value}" />
                 <tr>
-                    <td colspan="14">
+                    <td colspan="16">
                         <c:choose>
                             <c:when test="${vectorType != null}">
                                 <h4><spring:message code="${vectorType.simpleName}.title"
@@ -73,7 +74,8 @@
                                 <form:input path="name" size="20" cssErrorClass="error" />
                                 <form:errors path="name" cssClass="error" />
                             </td>
-                            <td><form:input path="description" size="35" /><form:errors path="description" /></td>
+                            <td style="width: 100%;"><form:input path="description" cssStyle="width: 100%;" /><form:errors
+                                    path="description" /></td>
                             <td class="text-center">
                                 <c:choose>
                                     <c:when test="${vectorType == null}">
@@ -95,6 +97,7 @@
                                 </c:choose>
                             </td>
                             <td class="text-center"><form:checkbox path="isRecomputedFromRawData" /></td>
+                            <td class="text-center"><form:checkbox path="isAggregated" disabled="true" /></td>
                             <td class="text-center"><form:checkbox path="isBatchCorrected" /></td>
                             <td class="text-center"><form:checkbox path="isRatio" /></td>
                             <td class="text-center"><form:checkbox path="isBackground" /></td>
@@ -151,13 +154,13 @@
                 <c:if test="${!scd.cellTypeAssignments.isEmpty()}">
                     <h4>Cell Type Assignments</h4>
                     <form:errors path="cellTypeAssignments" cssClass="error" />
-                    <table>
+                    <table class="detail" style="width: 100%;">
                         <tr>
                             <th style="min-width: 50px;">ID</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Protocol</th>
-                            <th class="text-center">Preferred?</th>
+                            <th style="writing-mode: sideways-lr;">Preferred?</th>
                             <th>Values</th>
                         </tr>
                         <c:forEach items="${scd.cellTypeAssignments}" var="cta" varStatus="ctaIndex">
@@ -213,7 +216,7 @@
 
                 <c:if test="${!scd.cellLevelCharacteristics.isEmpty()}">
                     <h4>Cell-level Characteristics</h4>
-                    <table>
+                    <table class="detail" style="width: 100%;">
                         <tr>
                             <th style="min-width: 50px">ID</th>
                             <th>Name</th>
@@ -234,9 +237,9 @@
                                         <form:errors path="name" cssClass="error" />
                                     </td>
                                     <td>
-                                        <form:input path="description" size="20" cssErrorClass="error"
+                                        <form:input path="description" size="35" cssErrorClass="error"
                                                 disabled="true" />
-                                        <form:errors path="description" size="35" cssClass="error" />
+                                        <form:errors path="description" cssClass="error" />
                                     </td>
                                     <td>
                                             ${fn:escapeXml(clc.category)}
@@ -283,7 +286,6 @@
                     </div>
                 </div>
             </div>
-            <p>You can either re-create the cell type factor or change the preferred cell type assignment.</p>
         </c:if>
 
         <hr class="normal">
