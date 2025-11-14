@@ -286,10 +286,6 @@ div.hr {
 	border-bottom: 1px dotted black;
 }
 
-.error {
-	background: #fff url(../../images/default/grid/invalid_line.gif) repeat-x bottom;
-}
-
 /* Help pages */
 h2.helpstep, h3.helpstep {
 	left-margin: 0px;

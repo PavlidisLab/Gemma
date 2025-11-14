@@ -261,7 +261,7 @@
         </c:forEach>
 
         <c:if test="${not expressionExperiment.preferredCellTypeAssignmentCompatibleWithCellTypeFactor}">
-            <div style="width: 800px;">
+            <div class="error" style="width: 800px;">
                 <p>Values in the preferred cell type assignment are not compatible with the cell type factor:</p>
                 <div class="flex justify-space-around">
                     <div>
@@ -278,7 +278,7 @@
                             <c:forEach items="${expressionExperiment.cellTypeFactorValues}" var="value"
                                     varStatus="valueI">
                                 <li class="${expressionExperiment.unmatchedCellTypeFactorValues.contains(value) ? 'warning': ''}">${fn:escapeXml(value)}</li>
-                            </c:forEach><br>
+                            </c:forEach>
                         </ul>
                     </div>
                 </div>

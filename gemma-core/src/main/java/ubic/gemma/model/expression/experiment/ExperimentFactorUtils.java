@@ -1,6 +1,5 @@
 package ubic.gemma.model.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -9,7 +8,6 @@ import ubic.gemma.model.common.description.CharacteristicUtils;
 import java.util.Collections;
 import java.util.List;
 
-@CommonsLog
 public class ExperimentFactorUtils {
 
     /**

@@ -30,15 +30,15 @@
 .error {
     border: 2px solid red;
     font-weight: normal;
-    margin: 2px auto;
-    padding: 1px;
-    text-align: left;
-    vertical-align: bottom;
+    /* margin: 2px auto; */
+    padding: 0.25em;
+    /* text-align: left;*/
+    /* vertical-align: bottom;*/
 }
 
 /* IE fix, followed by the rest of the world fix */
 li.error {
-    padding: 3px !important;
+    padding: 1em !important;
 }
 
 ul > li.error {
@@ -48,10 +48,9 @@ ul > li.error {
 .warning {
     border: 2px solid yellow;
     font-weight: normal;
-    margin: 2px auto;
-    padding: 1px;
-    text-align: left;
-    vertical-align: bottom;
+    padding: 0.25em;
+    /* text-align: left; */
+    /* vertical-align: bottom; */
 }
 
 /* IE fix, followed by the rest of the world fix */
