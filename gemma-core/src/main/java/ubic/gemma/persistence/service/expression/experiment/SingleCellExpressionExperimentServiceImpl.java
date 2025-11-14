@@ -1424,9 +1424,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             removeCellTypeFactor( ee, currentCellTypeFactor );
         }
         // create a new cell type factor
-        ExperimentalFactor cellTypeFactor1 = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
-        cellTypeFactor1.setDescription( "Cell type factor pre-populated from " + ctl + "." );
-        cellTypeFactor1.setExperimentalDesign( ee.getExperimentalDesign() );
+        ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
+        cellTypeFactor.setDescription( "Cell type factor pre-populated from " + ctl + "." );
+        cellTypeFactor.setExperimentalDesign( ee.getExperimentalDesign() );
         for ( Characteristic ct : ctl.getCellTypes() ) {
             FactorValue fv = new FactorValue();
             Statement s = new Statement();
@@ -1435,10 +1435,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             s.setSubject( ct.getValue() );
             s.setSubjectUri( ct.getValueUri() );
             fv.getCharacteristics().add( s );
-            fv.setExperimentalFactor( cellTypeFactor1 );
-            cellTypeFactor1.getFactorValues().add( fv );
+            fv.setExperimentalFactor( cellTypeFactor );
+            cellTypeFactor.getFactorValues().add( fv );
         }
-        ExperimentalFactor cellTypeFactor = cellTypeFactor1;
         cellTypeFactor = experimentalFactorService.create( cellTypeFactor );
         log.info( "Created cell type factor " + cellTypeFactor + " from " + ctl );
         ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
