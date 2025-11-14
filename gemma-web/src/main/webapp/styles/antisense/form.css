@@ -26,3 +26,56 @@
     font-size: 106% !important;
     color: royalblue !important;
 }
+
+.error {
+    border: 2px solid red;
+    font-weight: normal;
+    margin: 2px auto;
+    padding: 1px;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+/* IE fix, followed by the rest of the world fix */
+li.error {
+    padding: 3px !important;
+}
+
+ul > li.error {
+    padding: 0 !important;
+}
+
+.warning {
+    border: 2px solid yellow;
+    font-weight: normal;
+    margin: 2px auto;
+    padding: 1px;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+/* IE fix, followed by the rest of the world fix */
+li.warning {
+    padding: 3px !important;
+}
+
+ul > li.warning {
+    padding: 0 !important;
+}
+
+img.validationWarning, div.error img.icon, div.message img.icon, li.error img.icon {
+    border: 0 !important;
+    width: 14px;
+    height: 13px;
+    vertical-align: middle;
+    margin-left: 3px;
+    background: transparent !important;
+    /* important added because some themes define div#main img */
+}
+
+.fieldError, .errorMessage {
+    color: red;
+    font-size: .95em;
+    font-weight: bold;
+    display: block;
+}

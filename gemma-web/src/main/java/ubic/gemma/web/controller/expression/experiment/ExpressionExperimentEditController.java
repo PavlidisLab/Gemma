@@ -830,39 +830,39 @@ public class ExpressionExperimentEditController {
                 errors.pushNestedPath( "quantitationTypes[" + i + "]" );
                 // Note: there's no visible UI field for the ID, so we bind errors to the overall QT
                 if ( qt.getId() == null ) {
-                    errors.rejectValue( null, null, "Quantitation type ID is required." );
+                    errors.rejectValue( null, "errors.QuantitationType.id.required" );
                     errors.popNestedPath();
                     continue;
                 }
                 if ( !vectorTypes.containsKey( qt.getId() ) ) {
-                    errors.rejectValue( null, null, new String[] { String.valueOf( qt.getId() ) },
-                            String.format( "Quantitation type with ID %d does not belong to the experiment.", qt.getId() ) );
+                    errors.rejectValue( null, "errors.QuantitationType.doesNotBelongToExperiment",
+                            new String[] { String.valueOf( qt.getId() ) }, null );
                     errors.popNestedPath();
                     continue;
                 }
                 if ( StringUtils.isBlank( qt.getName() ) ) {
-                    errors.rejectValue( "name", null, "Name is required." );
+                    errors.rejectValue( "name", "errors.QuantitationType.name.required" );
                 }
                 if ( !usedNames.add( StringUtils.strip( qt.getName() ) ) ) {
                     // this is not enforced in the database, but it's good practice when naming QTs.
-                    errors.rejectValue( "name", null, "Name must be unique for each quantitation type." );
+                    errors.rejectValue( "name", "errors.QuantitationType.name.unique" );
                 }
                 Class<? extends DataVector> vectorType = vectorTypes.get( qt.getId() );
                 if ( qt.getIsSingleCellPreferred() != null && qt.getIsSingleCellPreferred() ) {
                     if ( vectorType == null || !SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isSingleCellPreferred", null, "This quantitation type is not applicable to single-cell data vectors." );
+                        errors.rejectValue( "isSingleCellPreferred", "errors.QuantitationType.isSingleCellPreferred.notApplicableToVectorType" );
                     }
                     numSingleCellPreferred++;
                 }
                 if ( qt.getIsPreferred() != null && qt.getIsPreferred() ) {
                     if ( vectorType == null || !RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isPreferred", null, "This quantitation type is not applicable to raw data vectors." );
+                        errors.rejectValue( "isPreferred", "errors.QuantitationType.isPreferred.notApplicableToVectorType" );
                     }
                     numPreferred++;
                 }
                 if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() ) {
                     if ( vectorType == null || !ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isMaskedPreferred", null, "This quantitation type is not applicable to processed data vectors." );
+                        errors.rejectValue( "isMaskedPreferred", "errors.QuantitationType.isMaskedPreferred.notApplicableToVectorType" );
                     }
                     numMaskedPreferred++;
                 }
@@ -877,26 +877,26 @@ public class ExpressionExperimentEditController {
             }
             // also include QTs that are not modified when counting the number of preferred QTs
             if ( numSingleCellPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", null, "There must be at most one preferred single-cell quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredSingleCellQuantitationType" );
             }
             if ( numPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", null, "There must be at most one preferred raw quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredRawQuantitationType" );
             }
             if ( numMaskedPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", null, "There must be at most one preferred processed quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredProcessedQuantitationType" );
             }
         }
 
         private <T extends Enum<T>> void validateRequiredEnumField( String field, Class<T> enumClass, Errors errors ) {
             String val = ( String ) errors.getFieldValue( field );
             if ( val == null ) {
-                errors.rejectValue( field, null, "Value is required." );
+                errors.rejectValue( field, "errors.Enum.required" );
                 return;
             }
             try {
                 Enum.valueOf( enumClass, val );
             } catch ( IllegalArgumentException e ) {
-                errors.rejectValue( field, null, "Invalid value." );
+                errors.rejectValue( field, "errors.Enum.invalid" );
             }
         }
 
@@ -923,7 +923,7 @@ public class ExpressionExperimentEditController {
                     .filter( CellTypeAssignmentEditForm::getIsPreferred )
                     .count();
             if ( numberOfPreferredCtas > 1 ) {
-                errors.rejectValue( "cellTypeAssignments", null, "There must be at most one preferred cell type assignment per single-cell dimension." );
+                errors.rejectValue( "cellTypeAssignments", "errors.CellTypeAssignment.atMostOnePreferred" );
             }
         }
 
@@ -938,24 +938,25 @@ public class ExpressionExperimentEditController {
                     try {
                         long bioAssayId = Long.parseLong( key );
                         if ( !bioAssays.contains( bioAssayId ) ) {
-                            errors.rejectValue( null, null,
-                                    String.format( "Assay with ID %d does not belong to the experiment.", bioAssayId ) );
+                            errors.rejectValue( null, "errors.assayToMaterialMap.assayDoesNotBelongToExperiment",
+                                    new String[] { String.valueOf( bioAssayId ) }, null );
                         }
                     } catch ( NumberFormatException e ) {
-                        errors.rejectValue( null, null, "Invalid assay ID." );
+                        errors.rejectValue( null, "errors.assayToMaterialMap.invalidAssayId" );
                     }
                     try {
                         long bioMaterialId = Long.parseLong( obj.getString( key ) );
                         if ( !bioMaterials.contains( bioMaterialId ) ) {
-                            errors.rejectValue( null, null,
-                                    String.format( "Biomaterial with ID %d does not belong to the experiment.", bioMaterialId ) );
+                            errors.rejectValue( null, "errors.assayToMaterialMap.sampleDoesNotBelongToExperiment",
+                                    new String[] { String.valueOf( bioMaterialId ) }, null );
                         }
                     } catch ( NumberFormatException e ) {
-                        errors.rejectValue( null, null, "Invalid biomaterial ID." );
+                        errors.rejectValue( null, "errors.assayToMaterialMap.invalidSampleId" );
                     }
                 }
             } catch ( JSONException e ) {
-                errors.rejectValue( "assayToMaterialMap", null, "Invalid JSON format." );
+                log.warn( "Invalid JSON format in assayToMaterialMap", e );
+                errors.rejectValue( null, "errors.assayToMaterialMap.invalidJsonFormat" );
             } finally {
                 errors.popNestedPath();
             }
