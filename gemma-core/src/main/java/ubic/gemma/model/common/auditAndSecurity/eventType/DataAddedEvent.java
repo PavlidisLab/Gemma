@@ -20,7 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Indicates that a data type (for a specific QuantitationType, possibly new) was added.
- * </p>
+ * <p>
  * Prefer one of the more specific subclasses if possible, this will eventually become an abstract class.
  *
  * @see RawDataAddedEvent

@@ -125,7 +125,7 @@
                                 </form:select>
                                 <form:errors path="representation" cssClass="error" />
                             </td>
-                            <td>
+                            <td class="text-right">
                                 <form:button
                                         name="deleteQuantitationType"
                                         value="${qt.id}"
@@ -192,12 +192,12 @@
                                             ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
                                         </c:forEach>
                                     </td>
-                                    <td class="text-nowrap">
+                                    <td class="text-nowrap text-right">
                                         <c:if test="${cta.id == expressionExperiment.preferredCellTypeAssignmentId}">
                                             <form:button
-                                                    name="recreateCellTypeFactor" class="btn-unstyled"
+                                                    name="recreateCellTypeFactor" class="btn-unstyled mr-1"
                                                     title="Re-create the cell type factor.">
-                                                <i class="fa fa-refresh yellow"></i>
+                                                <i class="fa fa-refresh orange"></i>
                                             </form:button>
                                         </c:if>
                                         <form:button
@@ -246,10 +246,10 @@
                                             ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
                                         </c:forEach>
                                     </td>
-                                    <td>
+                                    <td class="text-right">
                                         <form:button
                                                 name="deleteCellLevelCharacteristics"
-                                                value="${clc.id}" class="btn-uns"><i
+                                                value="${clc.id}" class="btn-unstyled"><i
                                                 class="fa fa-remove red"></i></form:button>
                                     </td>
                                 </tr>
