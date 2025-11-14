@@ -31,6 +31,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
  * <p>
  * The most common use case for this is to map the cell type assigmnents from a {@link ubic.gemma.model.expression.bioAssayData.CellTypeAssignment}
  * to a cell type factor.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -44,6 +45,7 @@ public class CellLevelCharacteristicsMappingUtils {
      * There is a possibility that no factor value is found for a given cell type, in which case it is ignored.
      * <p>
      * TODO: this should be private, but we reuse the same logic for aggregating in {@link SingleCellExpressionExperimentAggregateServiceImpl}.
+     *
      * @throws IllegalStateException if there is more than one factor value mapping a given cell type
      */
     public static Map<Characteristic, FactorValue> createMappingByFactorValueCharacteristics( CellLevelCharacteristics cta, ExperimentalFactor factor ) {
@@ -60,6 +62,22 @@ public class CellLevelCharacteristicsMappingUtils {
                 throw new IllegalStateException( characteristic + "matches more than one factor value in " + factor );
             }
             mappedFactors.put( characteristic, matchedFvs.iterator().next() );
+        }
+        return mappedFactors;
+    }
+
+    /**
+     * Create a full mapping of cell types from a cell type assignment to factor values in a cell type factor.
+     * <p>
+     * In the case of a full mapping, every cell type is mapped to a (possibly empty) set of factor values.
+     */
+    public static Map<Characteristic, Set<FactorValue>> createFullMappingByFactorValueCharacteristics( CellLevelCharacteristics clc, ExperimentalFactor factor ) {
+        Assert.isTrue( factor.getType() == FactorType.CATEGORICAL, "The factor must be categorical." );
+        Map<Characteristic, Set<FactorValue>> mappedFactors = new HashMap<>();
+        for ( Characteristic characteristic : clc.getCharacteristics() ) {
+            mappedFactors.put( characteristic, factor.getFactorValues().stream()
+                    .filter( fv -> fv.getCharacteristics().stream().anyMatch( s -> StatementUtils.hasSubject( s, characteristic ) ) )
+                    .collect( Collectors.toSet() ) );
         }
         return mappedFactors;
     }

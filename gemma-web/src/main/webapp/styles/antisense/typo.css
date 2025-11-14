@@ -393,7 +393,7 @@ a.info {
 	border-radius: 15px;
 }
 
-.fromOther{
+.fromOther {
 	font-weight: bold;
 	background-color: #ff98008c;
 	padding: 3px;
@@ -423,7 +423,6 @@ a.info {
 	background: #e8f4ff;
 	border-color: #7aaad6;
 }
-
 
 
 a.info:hover {
@@ -573,4 +572,8 @@ a.tooltip:hover .tooltiptext {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.text-nowrap {
+	white-space: nowrap;
 }

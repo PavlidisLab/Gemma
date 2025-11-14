@@ -192,7 +192,14 @@
                                             ${fn:escapeXml(value)}<c:if test="${!valueI.last}">, </c:if>
                                         </c:forEach>
                                     </td>
-                                    <td>
+                                    <td class="text-nowrap">
+                                        <c:if test="${cta.id == expressionExperiment.preferredCellTypeAssignmentId}">
+                                            <form:button
+                                                    name="recreateCellTypeFactor" class="btn-unstyled"
+                                                    title="Re-create the cell type factor.">
+                                                <i class="fa fa-refresh yellow"></i>
+                                            </form:button>
+                                        </c:if>
                                         <form:button
                                                 name="deleteCellTypeAssignment"
                                                 value="${cta.id}" class="btn-unstyled"><i
@@ -253,7 +260,31 @@
             </spring:nestedPath>
         </c:forEach>
 
-        <form:button name="recreateCellTypeFactor">Re-create the cell type factor</form:button>
+        <c:if test="${not expressionExperiment.preferredCellTypeAssignmentCompatibleWithCellTypeFactor}">
+            <div style="width: 800px;">
+                <p>Values in the preferred cell type assignment are not compatible with the cell type factor:</p>
+                <div class="flex justify-space-around">
+                    <div>
+                        <h4>Preferred Cell Type Assignment</h4>
+                        <ul>
+                            <c:forEach items="${expressionExperiment.preferredCellTypeAssignmentValues}" var="value">
+                                <li class="${expressionExperiment.incompatibleCellTypeAssignmentValues.contains(value) ? 'error': ''}">${fn:escapeXml(value)}</li>
+                            </c:forEach>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Cell Type Factor</h4>
+                        <ul>
+                            <c:forEach items="${expressionExperiment.cellTypeFactorValues}" var="value"
+                                    varStatus="valueI">
+                                <li class="${expressionExperiment.unmatchedCellTypeFactorValues.contains(value) ? 'warning': ''}">${fn:escapeXml(value)}</li>
+                            </c:forEach><br>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <p>You can either re-create the cell type factor or change the preferred cell type assignment.</p>
+        </c:if>
 
         <hr class="normal">
 
@@ -316,10 +347,10 @@ addDeleteConfirmation( '[name$="deleteCellTypeAssignment"]', 'cell type assignme
 addDeleteConfirmation( '[name$="deleteCellLevelCharacteristics"]', 'cell-level characteristics', 'CLC' )
 
 $( '[name="recreateCellTypeFactor"]' ).click( function() {
-   const id = $( this ).val();
+   const id = $( this ).closest( 'tr' ).children( 'td' ).eq( 0 ).children().eq( 0 ).val();
    const name = $( this ).closest( 'tr' ).children( 'td' ).eq( 1 ).children().eq( 0 ).val();
-   if ( prompt( 'Enter "RECREATE" to confirm re-creation of the cell type factor:' ) === 'RECREATE' ) {
-      $( '#confirmation' ).val( 'RECREATE CTF' );
+   if ( prompt( 'Enter "RECREATE" to confirm re-creation of the cell type factor from ' + name + ':' ) === 'RECREATE' ) {
+      $( '#confirmation' ).val( 'RECREATE CTF FROM CTA ' + id );
    } else {
       event.preventDefault();
    }

@@ -40,10 +40,10 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils.convertVectors;
+import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createFullMappingByFactorValueCharacteristics;
 import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.createSlicer;
 import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.sliceCellIds;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
-import static ubic.gemma.model.expression.experiment.ExperimentFactorUtils.isCompatibleWith;
 
 @Service
 @CommonsLog
@@ -1007,7 +1007,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             log.info( "Preferred CTA changed for the preferred single-cell dimension " + dimension + " of " + ee + ", recreating the cell type factor..." );
             recreateCellTypeFactor( ee );
             return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_RECREATED;
-        } else if ( !dimension.equals( preferredDimension ) && !isCellTypeFactorCompatibleWith( ee, newPreferredCta ) ) {
+        } else if ( !dimension.equals( preferredDimension ) && !( boolean ) getCellTypeFactor( ee )
+                .map( ctf -> isCellTypeAssignmentCompatibleWithCellTypeFactor( newPreferredCta, ctf ) )
+                .orElse( false ) ) {
             log.warn( "Preferred CTA changed for the preferred single-cell dimension " + dimension + " of " + ee + ". The cell type factor will not be removed as requested, but it will now be misaligned with the preferred CTA." );
             return PreferredCellTypeAssignmentChangeOutcome.CELL_TYPE_FACTOR_UNCHANGED_BUT_MISALIGNED;
         } else {
@@ -1398,16 +1400,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
     }
 
-    /**
-     * Check if a given cell type assignment is compatible with the current cell type factor of the given expression
-     * experiment.
-     */
-    private boolean isCellTypeFactorCompatibleWith( ExpressionExperiment ee, CellTypeAssignment cta ) {
-        return getCellTypeFactor( ee )
-                .map( ctf -> isCompatibleWith( createCellTypeFactor( ee, cta ), ctf ) )
-                .orElse( false );
-    }
-
     @Override
     @Transactional
     public ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee ) {
@@ -1424,15 +1416,29 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
         Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
         ExperimentalFactor currentCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
-        // create a new cell type factor
-        ExperimentalFactor cellTypeFactor = createCellTypeFactor( ee, ctl );
-        if ( currentCellTypeFactor != null && isCompatibleWith( cellTypeFactor, currentCellTypeFactor ) ) {
+        if ( currentCellTypeFactor != null && isCellTypeAssignmentCompatibleWithCellTypeFactor( ctl, currentCellTypeFactor ) ) {
             log.info( "The current cell type factor " + currentCellTypeFactor + " is compatible with " + ctl + ", no need to recreate it." );
             return currentCellTypeFactor;
         }
         if ( currentCellTypeFactor != null ) {
             removeCellTypeFactor( ee, currentCellTypeFactor );
         }
+        // create a new cell type factor
+        ExperimentalFactor cellTypeFactor1 = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
+        cellTypeFactor1.setDescription( "Cell type factor pre-populated from " + ctl + "." );
+        cellTypeFactor1.setExperimentalDesign( ee.getExperimentalDesign() );
+        for ( Characteristic ct : ctl.getCellTypes() ) {
+            FactorValue fv = new FactorValue();
+            Statement s = new Statement();
+            s.setCategory( ct.getCategory() );
+            s.setCategoryUri( ct.getCategoryUri() );
+            s.setSubject( ct.getValue() );
+            s.setSubjectUri( ct.getValueUri() );
+            fv.getCharacteristics().add( s );
+            fv.setExperimentalFactor( cellTypeFactor1 );
+            cellTypeFactor1.getFactorValues().add( fv );
+        }
+        ExperimentalFactor cellTypeFactor = cellTypeFactor1;
         cellTypeFactor = experimentalFactorService.create( cellTypeFactor );
         log.info( "Created cell type factor " + cellTypeFactor + " from " + ctl );
         ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
@@ -1442,22 +1448,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return cellTypeFactor;
     }
 
-    private ExperimentalFactor createCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl ) {
-        ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
-        cellTypeFactor.setDescription( "Cell type factor pre-populated from " + ctl + "." );
-        cellTypeFactor.setExperimentalDesign( ee.getExperimentalDesign() );
-        for ( Characteristic ct : ctl.getCellTypes() ) {
-            FactorValue fv = new FactorValue();
-            Statement s = new Statement();
-            s.setCategory( ct.getCategory() );
-            s.setCategoryUri( ct.getCategoryUri() );
-            s.setSubject( ct.getValue() );
-            s.setSubjectUri( ct.getValueUri() );
-            fv.getCharacteristics().add( s );
-            fv.setExperimentalFactor( cellTypeFactor );
-            cellTypeFactor.getFactorValues().add( fv );
-        }
-        return cellTypeFactor;
+    /**
+     * Check if a given cell type assignment is compatible with the given cell type factor.
+     */
+    private boolean isCellTypeAssignmentCompatibleWithCellTypeFactor( CellTypeAssignment ctl, ExperimentalFactor ctf ) {
+        Map<Characteristic, Set<FactorValue>> mapping = createFullMappingByFactorValueCharacteristics( ctl, ctf );
+        // the mapping is full, so we only need to check that each characteristic maps to exactly one factor value
+        return mapping.values().stream().allMatch( fvs -> fvs.size() == 1 );
     }
 
     private void removeCellTypeFactor( ExpressionExperiment ee, ExperimentalFactor existingCellTypeFactor ) {

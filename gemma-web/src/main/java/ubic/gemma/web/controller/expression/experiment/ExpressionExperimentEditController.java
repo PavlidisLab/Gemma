@@ -121,9 +121,26 @@ public class ExpressionExperimentEditController {
          */
         private Collection<BioAssayValueObject> bioAssays;
         @Nullable
+        private Long preferredCellTypeAssignmentId;
+        @Nullable
+        private List<String> preferredCellTypeAssignmentValues;
+        /**
+         * A list of values from the current cell type factor (to compare with the current preferred CTA).
+         */
+        @Nullable
+        private List<String> cellTypeFactorValues;
+        /**
+         * Whether the preferred cell type assignment is compatible with the existing cell type factor.
+         */
+        private boolean isPreferredCellTypeAssignmentCompatibleWithCellTypeFactor;
+        @Nullable
+        private Set<String> incompatibleCellTypeAssignmentValues;
+        @Nullable
+        private Set<String> unmatchedCellTypeFactorValues;
+        @Nullable
         private String assayToMaterialMap;
         /**
-         * Field used to confirm deletion.
+         * Field used to confirm destructive actions.
          */
         private String confirmation;
         /**
@@ -444,10 +461,19 @@ public class ExpressionExperimentEditController {
                 .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
     }
 
+    /**
+     *
+     * @param id
+     * @param confirmation must be equal to {@code "RECREATE CTF FROM CTA " + preferredCta.getId()}  to confirm that the
+     *                     user
+     * @return
+     */
     @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "recreateCellTypeFactor" })
     public ModelAndView recreateCellTypeFactor( @RequestParam("id") Long id, @RequestParam("confirmation") String confirmation ) {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        if ( !confirmation.equals( "RECREATE CTF" ) ) {
+        CellTypeAssignment preferredCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
+                .orElseThrow( () -> new IllegalArgumentException( "No preferred cell type assignment found for " + ee.getShortName() + "." ) );
+        if ( !confirmation.equals( "RECREATE CTF FROM CTA " + preferredCta.getId() ) ) {
             throw new IllegalArgumentException( "No confirmation was provided for re-creating the cell type factor." );
         }
         singleCellExpressionExperimentService.recreateCellTypeFactor( ee );
@@ -473,8 +499,8 @@ public class ExpressionExperimentEditController {
         if ( qt == null ) {
             throw new EntityNotFoundException( "No quantitation type with ID " + qtId + " found for " + ee.getShortName() + "." );
         }
-        if ( !confirmation.equals( "DELETE QT " + qtId ) ) {
-            throw new IllegalArgumentException( "No confirmation was provided for deleting the quantitation type with ID " + qtId + "." );
+        if ( !confirmation.equals( "DELETE QT " + qt.getId() ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the quantitation type with ID " + qt.getId() + "." );
         }
         if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             expressionDataDeleterService.deleteRawData( ee, qt );
