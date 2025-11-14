@@ -32,9 +32,10 @@ public class BibliographicReferenceMetaTag extends TagSupport {
         Assert.notNull( citation, "A citation must be set." );
         TagWriter writer = new TagWriter( pageContext );
         writeMetaTag( "citation_title", citation.getTitle(), writer );
-        for ( String author : StringUtils.split( citation.getAuthorList(), ";" ) ) {
-
-            writeMetaTag( "citation_author", StringUtils.strip( author ), writer );
+        if ( citation.getAuthorList() != null ) {
+            for ( String author : StringUtils.split( citation.getAuthorList(), ";" ) ) {
+                writeMetaTag( "citation_author", StringUtils.strip( author ), writer );
+            }
         }
         if ( citation.getPublicationDate() != null ) {
             writeMetaTag( "citation_publication_date", DateFormatUtils.format( citation.getPublicationDate(), "yyyy/MM/dd" ), writer );
