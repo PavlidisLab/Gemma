@@ -31,8 +31,8 @@ public class ExpressionDataDeleterServiceImpl implements ExpressionDataDeleterSe
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Override
-    public void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt ) {
-        singleCellExpressionExperimentService.removeSingleCellDataVectors( ee, qt );
+    public void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt, boolean removeCellTypeFactorIfNecessary ) {
+        singleCellExpressionExperimentService.removeSingleCellDataVectors( ee, qt, removeCellTypeFactorIfNecessary );
         expressionDataFileService.deleteAllDataFiles( ee, qt );
     }
 

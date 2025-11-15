@@ -110,14 +110,20 @@ public class OptionsUtils {
         }
     }
 
+    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
+        addAutoOption( options, optionName, longOptionName, description, noOptionName, longNoOptionName, noDescription, "Default is to auto-detect." );
+    }
+
     /**
      * Add an option with three possible values: {@code true}, {@code false}, or {@code null}.
      * <p>
      * Use {@link #getAutoOptionValue(CommandLine, String, String)} to retrieve its value later on.
+     *
+     * @param defaultDescription description of the default behavior when neither option is specified
      */
-    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
-        options.addOption( optionName, longOptionName, false, description + " This option is incompatible with " + formatOption( noOptionName, longNoOptionName ) + ". Default is to auto-detect." );
-        options.addOption( noOptionName, longNoOptionName, false, noDescription + " This option is incompatible with " + formatOption( optionName, longOptionName ) + ". Default is to auto-detect." );
+    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription, String defaultDescription ) {
+        options.addOption( optionName, longOptionName, false, appendIfMissing( description, "." ) + " This option is incompatible with " + formatOption( noOptionName, longNoOptionName ) + ". " + defaultDescription );
+        options.addOption( noOptionName, longNoOptionName, false, appendIfMissing( noDescription, "." ) + " This option is incompatible with " + formatOption( optionName, longOptionName ) + ". " + defaultDescription );
     }
 
     /**

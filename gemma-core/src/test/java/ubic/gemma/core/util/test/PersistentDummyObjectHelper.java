@@ -231,7 +231,7 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param  allFactorValues all factor values
+     * @param allFactorValues all factor values
      * @return Non-persistent ED
      */
     public ExperimentalDesign getExperimentalDesign( Collection<FactorValue> allFactorValues ) {
@@ -325,7 +325,7 @@ public class PersistentDummyObjectHelper {
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations
      *
-     * @param  doSequence Should the array design get all the sequence information filled in? (true = slower)
+     * @param doSequence Should the array design get all the sequence information filled in? (true = slower)
      * @return EE
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean doSequence ) {
@@ -386,7 +386,7 @@ public class PersistentDummyObjectHelper {
         scQt.setRepresentation( PrimitiveType.DOUBLE );
         scQt.setIsSingleCellPreferred( true );
         List<SingleCellExpressionDataVector> vectors = RandomSingleCellDataUtils.randomSingleCellVectors( ee, ad, scQt );
-        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, scQt, vectors, null );
+        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, scQt, vectors, null, true, false );
 
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
 
@@ -408,7 +408,7 @@ public class PersistentDummyObjectHelper {
         cta.setNumberOfCellTypes( NUM_CELL_TYPES );
         cta.setNumberOfAssignedCells( assigned );
         cta.setPreferred( true );
-        singleCellExpressionExperimentService.addCellTypeAssignment( ee, scQt, dimension, cta );
+        singleCellExpressionExperimentService.addCellTypeAssignment( ee, scQt, dimension, cta, true, false );
 
         return ee;
     }
@@ -526,11 +526,11 @@ public class PersistentDummyObjectHelper {
      * The ArrayDesign is provided with some CompositeSequence DesignElements if desired. If composite sequences are
      * created, they are each associated with a single generated Reporter.
      *
-     * @param  numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param  randomNames           If true, probe names will be random strings; otherwise they will be
-     *                               0_probe_at....N_probe_at
-     * @param  doSequence            If true, biosequences and biosequence2GeneProduct associations are filled in
-     *                               (slower).
+     * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
+     * @param randomNames           If true, probe names will be random strings; otherwise they will be
+     *                              0_probe_at....N_probe_at
+     * @param doSequence            If true, biosequences and biosequence2GeneProduct associations are filled in
+     *                              (slower).
      * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
@@ -647,8 +647,8 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      *
-     * @param  ad AD
-     * @param  bm BM
+     * @param ad AD
+     * @param bm BM
      * @return BA
      */
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
@@ -682,7 +682,7 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param  bioSequence bio sequence
+     * @param bioSequence bio sequence
      * @return bio sequence to gene products
      */
     @SuppressWarnings("unchecked")
@@ -743,7 +743,7 @@ public class PersistentDummyObjectHelper {
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession is set to a random string
      *
-     * @param  ed ED
+     * @param ed ED
      * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( ExternalDatabase ed ) {
@@ -755,8 +755,8 @@ public class PersistentDummyObjectHelper {
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      *
-     * @param  ed        ED
-     * @param  accession accession
+     * @param ed        ED
+     * @param accession accession
      * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
@@ -781,8 +781,8 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param  databaseName GEO or PubMed (others could be supported)
-     * @param  accession    accession
+     * @param databaseName GEO or PubMed (others could be supported)
+     * @param accession    accession
      * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
@@ -820,7 +820,7 @@ public class PersistentDummyObjectHelper {
      * objects. This implementation does NOT fill in associations of the created object except for the creation of
      * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
      *
-     * @param  taxon the experiment will have this taxon
+     * @param taxon the experiment will have this taxon
      * @return EE
      */
     public ExpressionExperiment getTestPersistentExpressionExperiment( Taxon taxon ) {
@@ -1007,16 +1007,16 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param  bioAssays         BAs
-     * @param  ad                AD
-     * @param  ee                EE
-     * @param  quantitationTypes QTs
+     * @param bioAssays         BAs
+     * @param ad                AD
+     * @param ee                EE
+     * @param quantitationTypes QTs
      * @return These are non-persistent
      */
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(  bioAssays );
+        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( bioAssays );
 
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         for ( QuantitationType quantType : quantitationTypes ) {

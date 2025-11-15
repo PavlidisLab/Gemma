@@ -7,7 +7,6 @@ import ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -81,6 +80,7 @@ public class ExpressionExperimentEditControllerHelperService {
     public ExpressionExperimentEditController.ExpressionExperimentEditForm getFormObject( ExpressionExperiment ee ) {
         ExpressionExperimentEditController.ExpressionExperimentEditForm obj = new ExpressionExperimentEditController.ExpressionExperimentEditForm();
         populateForm( obj, ee, false );
+        populateCellTypeMisalignment( obj, ee );
         LinkedHashMap<Class<? extends DataVector>, List<ExpressionExperimentEditController.QuantitationTypeEditForm>> qtf = getQuantitationTypesByVectorType( ee );
         List<ExpressionExperimentEditController.QuantitationTypeEditForm> qtfL = qtf.values().stream()
                 .flatMap( Collection::stream )
@@ -106,7 +106,39 @@ public class ExpressionExperimentEditControllerHelperService {
         form.setShortName( expressionExperiment.getShortName() );
         form.setName( expressionExperiment.getName() );
         form.setDescription( expressionExperiment.getDescription() );
-        form.setBioAssays( convert2ValueObjects( expressionExperiment.getBioAssays() ) );
+        form.setBioAssays( expressionExperiment.getBioAssays().stream().map( bioAssay -> new BioAssayValueObject( bioAssay, false ) ).collect( Collectors.toSet() ) );
+        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                .includeCtas( true )
+                .includeClcs( true )
+                .includeProtocol( true )
+                .includeCharacteristics( true )
+                .build();
+        Map<SingleCellDimension, Set<QuantitationType>> dim2qts = singleCellExpressionExperimentService.getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( expressionExperiment,
+                // minimal config, we only care about the mapping keys
+                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder().build() );
+        List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
+
+        // the only user-supplied field is the preferred CTA
+        Map<Long, Boolean> preferredCtaIds;
+        if ( applyPreferredCtaIds && form.getSingleCellDimensions() != null ) {
+            preferredCtaIds = form.getSingleCellDimensions().stream()
+                    .map( ExpressionExperimentEditController.SingleCellDimensionEditForm::getCellTypeAssignments )
+                    .filter( Objects::nonNull )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toMap( ExpressionExperimentEditController.CellTypeAssignmentEditForm::getId,
+                            ExpressionExperimentEditController.CellTypeAssignmentEditForm::getIsPreferred,
+                            // this should never happen, but an input might have duplicated CTA IDs
+                            ( a, b ) -> b ) );
+        } else {
+            preferredCtaIds = null;
+        }
+
+        form.setSingleCellDimensions( scds.stream()
+                .map( scd -> new ExpressionExperimentEditController.SingleCellDimensionEditForm( scd, dim2qts.get( scd ), preferredCtaIds ) )
+                .collect( Collectors.toList() ) );
+    }
+
+    private void populateCellTypeMisalignment( ExpressionExperimentEditController.ExpressionExperimentEditForm form, ExpressionExperiment expressionExperiment ) {
         CellTypeAssignment preferredCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment ).orElse( null );
         if ( preferredCta != null ) {
             form.setPreferredCellTypeAssignmentId( preferredCta.getId() );
@@ -141,43 +173,6 @@ public class ExpressionExperimentEditControllerHelperService {
                         .collect( Collectors.toSet() ) );
             }
         }
-        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
-                .includeCtas( true )
-                .includeClcs( true )
-                .includeProtocol( true )
-                .includeCharacteristics( true )
-                .build();
-        Map<SingleCellDimension, Set<QuantitationType>> dim2qts = singleCellExpressionExperimentService.getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( expressionExperiment,
-                // minimal config, we only care about the mapping keys
-                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder().build() );
-        List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
-
-        // the only user-supplied field is the preferred CTA
-        Map<Long, Boolean> preferredCtaIds;
-        if ( applyPreferredCtaIds && form.getSingleCellDimensions() != null ) {
-            preferredCtaIds = form.getSingleCellDimensions().stream()
-                    .map( ExpressionExperimentEditController.SingleCellDimensionEditForm::getCellTypeAssignments )
-                    .filter( Objects::nonNull )
-                    .flatMap( Collection::stream )
-                    .collect( Collectors.toMap( ExpressionExperimentEditController.CellTypeAssignmentEditForm::getId,
-                            ExpressionExperimentEditController.CellTypeAssignmentEditForm::getIsPreferred,
-                            // this should never happen, but an input might have duplicated CTA IDs
-                            ( a, b ) -> b ) );
-        } else {
-            preferredCtaIds = null;
-        }
-
-        form.setSingleCellDimensions( scds.stream()
-                .map( scd -> new ExpressionExperimentEditController.SingleCellDimensionEditForm( scd, dim2qts.get( scd ), preferredCtaIds ) )
-                .collect( Collectors.toList() ) );
-    }
-
-    private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
-        for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay, false ) );
-        }
-        return result;
     }
 
     /**
@@ -188,7 +183,10 @@ public class ExpressionExperimentEditControllerHelperService {
         return expressionExperimentService.getQuantitationTypesByVectorType( ee ).entrySet().stream()
                 .sorted( Map.Entry.comparingByKey( Comparator.comparing( Class::getSimpleName, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
                 .collect( Collectors.toMap( Map.Entry::getKey,
-                        v -> v.getValue().stream().sorted( Comparator.comparing( QuantitationType::getName ) ).map( ExpressionExperimentEditController.QuantitationTypeEditForm::new ).collect( Collectors.toList() ),
+                        v -> v.getValue().stream()
+                                .sorted( Comparator.comparing( QuantitationType::getName ) )
+                                .map( qt -> new ExpressionExperimentEditController.QuantitationTypeEditForm( qt, v.getKey() ) )
+                                .collect( Collectors.toList() ),
                         ( a, b ) -> b,
                         LinkedHashMap::new ) );
     }

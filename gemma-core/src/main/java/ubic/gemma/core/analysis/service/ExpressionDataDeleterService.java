@@ -15,10 +15,10 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 public interface ExpressionDataDeleterService {
 
     /**
-     * @see SingleCellExpressionExperimentService#removeSingleCellDataVectors(ExpressionExperiment, QuantitationType)
+     * @see SingleCellExpressionExperimentService#removeSingleCellDataVectors(ExpressionExperiment, QuantitationType, boolean)
      * @see ExpressionDataFileService#deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      */
-    void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt );
+    void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt, boolean removeCellTypeFactorIfNecessary );
 
     /**
      * Delete raw data vectors and associated data files.

@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoaderConfig;
@@ -124,6 +125,14 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      */
     @Nullable
     private String preferredCellTypeAssignmentName;
+
+    /**
+     * Re-create the cell type factor if necessary.
+     */
+    @Builder.Default
+    private boolean recreateCellTypeFactorIfNecessary = true;
+
+    private boolean ignoreCompatibleCellTypeFactor;
 
     /**
      * Prefer single-precision for storage, even if the data is available with double-precision.

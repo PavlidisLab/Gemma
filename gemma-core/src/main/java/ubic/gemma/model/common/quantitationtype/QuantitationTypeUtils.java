@@ -12,9 +12,11 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for working with {@link QuantitationType}s.
+ *
  * @author poirigui
  */
 public class QuantitationTypeUtils {
+
 
     /**
      * Check if a given quantitation type holds log2 CPM.

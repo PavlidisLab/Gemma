@@ -84,6 +84,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Load troubled experiment IDs.
+     *
      * @see CuratableDao#loadTroubledIds()
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -91,6 +92,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Load all possible identifiers for experiments.
+     *
      * @param includeNames if true, include experiment names as possible identifier
      * @return a mapping of candidate identifier to experiment name
      */
@@ -176,17 +178,17 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension );
 
     /**
-     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment)
      * @return a collection of processed data vectors for the given experiment and list of assays, or
      * {@link Optional#empty()} if there are no processed vectors
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment, List)
      * @return a collection of processed data vectors for the given experiment and list of assays, or
      * {@link Optional#empty()} if there are no processed vectors
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment, List)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays );
@@ -196,6 +198,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * You might actually want to use {@link ProcessedExpressionDataVectorService#createProcessedDataVectors(ExpressionExperiment, boolean, boolean)}
      * as this method is fairly low-level.
+     *
      * @see ExpressionExperimentDao#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -206,6 +209,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * You might actually want to use {@link ProcessedExpressionDataVectorService#replaceProcessedDataVectors(ExpressionExperiment, Collection, boolean)} (ExpressionExperiment)}.
      * as this method is fairly low-level.
+     *
      * @see ExpressionExperimentDao#replaceProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -216,6 +220,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * You might actually want to use {@link ProcessedExpressionDataVectorService#removeProcessedDataVectors(ExpressionExperiment)}.
      * as this method is fairly low-level.
+     *
      * @see ExpressionExperimentDao#removeProcessedDataVectors(ExpressionExperiment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -462,6 +467,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>
      *     <li>apply ontological inference to augment a filter with additional terms.</li>
      * </ul>
+     *
      * @param mentionedTerms if non-null, all the terms explicitly mentioned in the filters are added to the collection.
      * @param inferredTerms  if non-null, all the terms inferred from those mentioned in the filters are added to the
      *                       collection
@@ -496,12 +502,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Special indicator for free-text terms.
+     *
      * @see ExpressionExperimentDao#FREE_TEXT
      */
     String FREE_TEXT = ExpressionExperimentDao.FREE_TEXT;
 
     /**
      * Special indicator for uncategorized terms.
+     *
      * @see ExpressionExperimentDao#UNCATEGORIZED
      */
     String UNCATEGORIZED = ExpressionExperimentDao.UNCATEGORIZED;
@@ -555,6 +563,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
      * <p>
      * The type of vectors is inferred.
+     *
      * @see #getArrayDesignsUsed(ExpressionExperiment, QuantitationType, Class)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -731,6 +740,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Retrieve all the quantitation types used by the given expression experiment.
+     *
      * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao#findByExpressionExperiment(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -750,6 +760,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Load all {@link QuantitationType} associated to an expression experiment as VOs.
+     *
      * @see #getQuantitationTypes(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -909,6 +920,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Variant of {@link #loadValueObjectsByIds(Collection)} that preserve its input order.
+     *
      * @param ids           ids to load
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return value objects
@@ -969,10 +981,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * If the provided QT is preferred (i.e. either single-cell, raw or processed), all other QTs in the experiment for
      * that type of vectors will be set to non-preferred.
+     *
+     * @param previousPreferredQt if the {@link QuantitationType#getIsPreferred()} (or {@link QuantitationType#getIsSingleCellPreferred()} for single-cell data)
+     *                            status is changing, this indicates which QT was previously preferred. If null, it is
+     *                            assumed that no QT was previously preferred. This only affects the event added to the
+     *                            audit trail, all other QTs will have their preferred status updated regardless.
      * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService#update(QuantitationType)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt );
+    void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt, @Nullable QuantitationType previousPreferredQt );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );

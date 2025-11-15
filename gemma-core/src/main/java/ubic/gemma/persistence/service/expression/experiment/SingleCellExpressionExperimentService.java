@@ -134,21 +134,24 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Add single-cell data vectors.
      *
+     * @param recrateCellTypeFactorIfNecessary re-create the cell type factor if necessary (i.e. a new set of preferred single-cell vectors are added)
+     * @param ignoreCompatibleFactor
      * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
-            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details );
+            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     /**
      * Replace existing single-cell data vectors for the given quantitation type.
      *
-     * @param details additional details to include in the audit event
+     * @param details                additional details to include in the audit event
+     * @param ignoreCompatibleFactor
      * @return the number of vectors that were replaced
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
-            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details );
+            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     /**
      * Update the sparsity metrics.
@@ -161,10 +164,12 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Remove single-cell data vectors for the given quantitation type.
      *
+     * @param removeCellTypeFactorIfNecessary if the preferred single-cell QT is being removed, also remove the
+     *                                        corresponding cell type factor.
      * @return the number of vectors that were removed
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
+    int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean removeCellTypeFactorIfNecessary );
 
     /**
      * Obtain all the single-cell dimensions used by a given dataset.
@@ -284,15 +289,17 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Relabel the cell types of an existing set of single-cell vectors.
      *
-     * @param newCellTypeLabels the new cell types labels, must match the number of cells
-     * @param labellingProtocol the protocol used to generate the new labelling, or null if unknown
+     * @param newCellTypeLabels                 the new cell types labels, must match the number of cells
+     * @param labellingProtocol                 the protocol used to generate the new labelling, or null if unknown
+     * @param recreateCellTypeFactorIfNecessary
+     * @param ignoreCompatibleFactor
      * @return a new, preferred cell type labelling
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description );
+    CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
+    CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     enum PreferredCellTypeAssignmentChangeOutcome {
         /**
@@ -311,20 +318,22 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Change the preferred cell type assignment to the given one.
      *
-     * @param recreateCellTypeFactor re-create the cell type factor; this is only done if the preferred cell type
-     *                               assignment applies to the preferred single-cell vectors
+     * @param recreateCellTypeFactorIfNecessary re-create the cell type factor; this is only done if the preferred cell
+     *                                          type assignment applies to the preferred single-cell vectors and the
+     *                                          current cell type factor is incompatible.
+     * @param ignoreCompatibleFactor
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactor );
+    PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     /**
      * Clear the preferred cell type assignment.
      *
-     * @param removeCellTypeFactor also remove the cell type factor; this is only done if the preferred single-cell
-     *                             dimension is being cleared
+     * @param removeCellTypeFactorIfNecessary also remove the cell type factor; this is only done if the preferred
+     *                                        single-cell dimension is being cleared
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, boolean removeCellTypeFactor );
+    PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, boolean removeCellTypeFactorIfNecessary );
 
     /**
      * Remove the given cell type assignment.
@@ -332,27 +341,27 @@ public interface SingleCellExpressionExperimentService {
      * If the cell type labelling is preferred and applies to the preferred vectors as per {@link #getPreferredCellTypeAssignment(ExpressionExperiment)}, the cell type factor will be removed.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment );
+    void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment, boolean removeCellTypeAssignmentIfNecessary );
 
     /**
      * Remove the given cell type assignment by QT.
      *
-     * @see #removeCellTypeAssignment(ExpressionExperiment, SingleCellDimension, CellTypeAssignment)
+     * @see #removeCellTypeAssignment(ExpressionExperiment, SingleCellDimension, CellTypeAssignment, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment );
+    void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment, boolean removeCellTypeFactorIfNecessary );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId );
+    void removeCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId, boolean removeCellTypeFactorIfNecessary );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCellTypeAssignmentById( ExpressionExperiment ee, SingleCellDimension dimension, Long ctaId );
+    void removeCellTypeAssignmentById( ExpressionExperiment ee, SingleCellDimension dimension, Long ctaId, boolean removeCellTypeFactorIfNecessary );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name );
+    void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name, boolean removeCellTypeFactorIfNecessary );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    long removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt );
+    long removeAllCellTypeAssignments( ExpressionExperiment ee, QuantitationType qt, boolean removeCellTypeFactorIfNecessary );
 
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
@@ -516,10 +525,15 @@ public interface SingleCellExpressionExperimentService {
      * Note that the cell type factor will not be deleted if there is more than one such factor present as per
      * {@link #getCellTypeFactor(ExpressionExperiment)}.
      *
-     * @return the created cell type factor
+     * @param removeExistingIfNecessary if there is already a cell type factor that is incompatible with the preferred
+     *                                  cell type assignment, remove it.
+     * @param ignoreCompatibleFactor    remove an existing cell type factor even if a compatible cell type factor is
+     *                                  found, requires {@code removeExistingIfNecessary} to be true.
+     * @return the created cell type factor, or a compatible one if found, or {@code null} if no factor was created or no compatible one was found
      * @throws IllegalStateException if the dataset does not have a preferred cell type labelling for its preferred set
      *                               of single-cell vectors.
      */
+    @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExperimentalFactor recreateCellTypeFactor( ExpressionExperiment ee );
+    ExperimentalFactor createCellTypeFactor( ExpressionExperiment ee, boolean removeExistingIfNecessary, boolean ignoreCompatibleFactor );
 }

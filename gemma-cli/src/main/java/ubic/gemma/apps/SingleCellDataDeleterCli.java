@@ -33,6 +33,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     private String ctaIdentifier;
     private String clcIdentifier;
+    private boolean removeCellTypeFactorIfNecessary = true;
 
     enum Mode {
         DELETE_ALL,
@@ -91,18 +92,18 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
         long removed;
         switch ( mode ) {
             case DELETE_ALL:
-                expressionDataDeleterService.deleteSingleCellData( ee, qt );
+                expressionDataDeleterService.deleteSingleCellData( ee, qt, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted single-cell data." );
                 break;
             case DELETE_ALL_CELL_TYPE_ASSIGNMENTS:
                 ee = eeService.thawLite( ee );
-                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt );
+                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted " + removed + " cell type assignments." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );
                 CellTypeAssignment cta = entityLocator.locateCellTypeAssignment( ee, qt, ctaIdentifier );
-                singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta );
+                singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:

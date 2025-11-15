@@ -74,7 +74,8 @@
                                 <form:input path="name" size="20" cssErrorClass="error" />
                                 <form:errors path="name" cssClass="error" />
                             </td>
-                            <td style="width: 100%;"><form:input path="description" cssStyle="width: 100%;" /><form:errors
+                            <td style="width: 100%;"><form:input path="description"
+                                    cssStyle="width: 100%;" /><form:errors
                                     path="description" /></td>
                             <td class="text-center">
                                 <c:choose>

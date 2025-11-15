@@ -19,8 +19,15 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
+import javax.annotation.Nonnull;
+import javax.persistence.Transient;
 import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable {
@@ -141,6 +148,42 @@ public class QuantitationType extends AbstractDescribable {
 
     public void setIsNormalized( boolean isNormalized ) {
         this.isNormalized = isNormalized;
+    }
+
+    /**
+     * Check if a given quantitation type is preferred for a particular vector type.
+     * <p>
+     * Having multiple preferred flag is a long-standing issue in the QT model that will eventually be refactored, see
+     * <a href="https://github.com/PavlidisLab/Gemma/issues/620">#620</a> for details. For now, this is the best we can
+     * do.
+     */
+    public boolean isPreferred( @Nonnull Class<? extends DataVector> vectorType ) {
+        Assert.notNull( vectorType );
+        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return getIsSingleCellPreferred();
+        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return getIsPreferred();
+        } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return getIsMaskedPreferred();
+        } else {
+            throw new UnsupportedOperationException( "Cannot obtain preferred status for vector type: " + vectorType );
+        }
+    }
+
+    /**
+     * Set the preferred status for a particular vector type.
+     */
+    public void setIsPreferred( boolean isPreferred, @Nonnull Class<? extends DataVector> vectorType ) {
+        Assert.notNull( vectorType );
+        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            setIsSingleCellPreferred( isPreferred );
+        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            setIsPreferred( isPreferred );
+        } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            setIsMaskedPreferred( isPreferred );
+        } else {
+            throw new UnsupportedOperationException( "Cannot set preferred status for vector type: " + vectorType );
+        }
     }
 
     public boolean getIsSingleCellPreferred() {
