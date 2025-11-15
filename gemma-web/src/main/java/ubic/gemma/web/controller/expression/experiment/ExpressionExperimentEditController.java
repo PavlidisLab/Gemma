@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -489,7 +490,16 @@ public class ExpressionExperimentEditController {
         if ( !confirmation.equals( "RECREATE CTF FROM CTA " + preferredCta.getId() ) ) {
             throw new IllegalArgumentException( "No confirmation was provided for re-creating the cell type factor." );
         }
-        singleCellExpressionExperimentService.createCellTypeFactor( ee, true, false );
+        ExperimentalFactor previousCellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee ).orElse( null );
+        ExperimentalFactor newCtf = singleCellExpressionExperimentService.createCellTypeFactor( ee, true, false );
+        if ( newCtf != null && newCtf.equals( previousCellTypeFactor ) ) {
+            messageUtil.saveMessage( "The current cell type factor was kept since it's compatible with the preferred cell type assignment." );
+        } else if ( newCtf != null ) {
+            messageUtil.saveMessage( "The cell type factor was " + ( previousCellTypeFactor != null ? "replaced" : "created" ) + "." );
+        } else {
+            // should never happen since we passed removeExistingIfNecessary
+            messageUtil.saveMessage( "No cell type factor was created." );
+        }
         return new ModelAndView( "expressionExperiment.edit" )
                 .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }

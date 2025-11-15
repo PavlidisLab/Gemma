@@ -132,6 +132,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     @Builder.Default
     private boolean recreateCellTypeFactorIfNecessary = true;
 
+    /**
+     * When re-creating, ignore a compatible cell type factor that may already exist.
+     * <p>
+     * Requires {@link #recreateCellTypeFactorIfNecessary} to be set.
+     */
     private boolean ignoreCompatibleCellTypeFactor;
 
     /**

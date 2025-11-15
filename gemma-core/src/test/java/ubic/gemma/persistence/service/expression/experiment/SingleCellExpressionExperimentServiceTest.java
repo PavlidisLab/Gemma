@@ -628,6 +628,32 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .findFirst()
                 .orElseThrow( AssertionError::new );
         ExperimentalFactor recreatedFactor = scExpressionExperimentService.createCellTypeFactor( ee, true, false );
+        assertThat( recreatedFactor ).isNotNull();
+        assertThat( recreatedFactor ).isSameAs( factor );
+        assertThat( recreatedFactor.getName() ).isEqualTo( "cell type" );
+        assertThat( recreatedFactor.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
+        assertThat( recreatedFactor.getCategory() ).isNotNull().satisfies( f -> {
+            assertThat( f.getCategory() ).isEqualTo( "cell type" );
+            assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
+        } );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+    }
+
+    @Test
+    public void testCreateCellTypeFactorIgnoreCompatibleFactor() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null, true, false );
+        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
+                .orElseThrow( AssertionError::new );
+        assertThat( ee.getExperimentalDesign() ).isNotNull();
+        ExperimentalFactor factor = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( ef -> ef.getCategory() != null && CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
+                .findFirst()
+                .orElseThrow( AssertionError::new );
+        ExperimentalFactor recreatedFactor = scExpressionExperimentService.createCellTypeFactor( ee, true, true );
+        assertThat( recreatedFactor ).isNotNull();
+        assertThat( recreatedFactor ).isNotSameAs( factor );
         assertThat( recreatedFactor.getName() ).isEqualTo( "cell type" );
         assertThat( recreatedFactor.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
         assertThat( recreatedFactor.getCategory() ).isNotNull().satisfies( f -> {
