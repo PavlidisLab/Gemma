@@ -4,7 +4,16 @@ import java.util.Set;
 
 /**
  * A set that is intentionally not initialized.
+ *
  * @author poirigui
  */
 public class UninitializedSet<T> extends UninitializedCollection<T> implements Set<T> {
+
+    public UninitializedSet() {
+
+    }
+
+    public UninitializedSet( int size ) {
+        super( size );
+    }
 }

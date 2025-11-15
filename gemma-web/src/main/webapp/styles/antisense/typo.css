@@ -286,10 +286,6 @@ div.hr {
 	border-bottom: 1px dotted black;
 }
 
-.error {
-	background: #fff url(../../images/default/grid/invalid_line.gif) repeat-x bottom;
-}
-
 /* Help pages */
 h2.helpstep, h3.helpstep {
 	left-margin: 0px;
@@ -393,7 +389,7 @@ a.info {
 	border-radius: 15px;
 }
 
-.fromOther{
+.fromOther {
 	font-weight: bold;
 	background-color: #ff98008c;
 	padding: 3px;
@@ -423,7 +419,6 @@ a.info {
 	background: #e8f4ff;
 	border-color: #7aaad6;
 }
-
 
 
 a.info:hover {
@@ -569,8 +564,16 @@ a.tooltip:hover .tooltiptext {
 	text-align: center;
 }
 
+.text-right {
+	text-align: right;
+}
+
 .text-ellipsis {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.text-nowrap {
+	white-space: nowrap;
 }

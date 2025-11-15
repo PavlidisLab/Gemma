@@ -1,6 +1,5 @@
-package ubic.gemma.core.loader.expression;
+package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -10,24 +9,24 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 
 /**
  * A high-level service for deleting data and their associated files.
+ *
  * @author poirigui
  */
-public interface DataDeleterService {
+public interface ExpressionDataDeleterService {
 
     /**
-     * @see SingleCellExpressionExperimentService#removeSingleCellDataVectors(ExpressionExperiment, QuantitationType)
+     * @see SingleCellExpressionExperimentService#removeSingleCellDataVectors(ExpressionExperiment, QuantitationType, boolean)
      * @see ExpressionDataFileService#deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      */
-    void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt );
+    void deleteSingleCellData( ExpressionExperiment ee, QuantitationType qt, boolean removeCellTypeFactorIfNecessary );
 
     /**
-     * @see SingleCellExpressionExperimentAggregateService#removeAggregatedVectors(ExpressionExperiment, QuantitationType)
-     * @see ExpressionDataFileService#deleteAllDataFiles(ExpressionExperiment, QuantitationType)
-     */
-    void deleteSingleCellDataAggregate( ExpressionExperiment ee, QuantitationType qt );
-
-    /**
+     * Delete raw data vectors and associated data files.
+     * <p>
+     * This method will detect aggregated single-cell data vector and perform additional cleanups.
+     *
      * @see ExpressionExperimentService#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     * @see SingleCellExpressionExperimentAggregateService#removeAggregatedVectors(ExpressionExperiment, QuantitationType, boolean)
      * @see ExpressionDataFileService#deleteAllDataFiles(ExpressionExperiment, QuantitationType)
      */
     void deleteRawData( ExpressionExperiment ee, QuantitationType qt );

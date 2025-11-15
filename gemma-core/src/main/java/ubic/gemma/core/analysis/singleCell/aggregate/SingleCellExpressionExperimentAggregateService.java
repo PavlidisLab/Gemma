@@ -17,6 +17,7 @@ import java.util.Map;
 
 /**
  * Aggregate single-cell vectors.
+ *
  * @author poirigui
  */
 public interface SingleCellExpressionExperimentAggregateService {
@@ -24,8 +25,9 @@ public interface SingleCellExpressionExperimentAggregateService {
     /**
      * Aggregate preferred single-cell data vectors by the preferred cell type assignment and the only cell type
      * factor of the experiment.
+     *
      * @throws IllegalStateException if there is no preferred cell type assignment or if there is no cell type factor in
-     * the experimental design
+     *                               the experimental design
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType aggregateVectorsByCellType( ExpressionExperiment ee, List<BioAssay> cellBAs, SingleCellAggregationConfig config ) throws SingleCellAggregationException;
@@ -58,18 +60,26 @@ public interface SingleCellExpressionExperimentAggregateService {
             SingleCellAggregationConfig config ) throws SingleCellAggregationException;
 
     /**
+     * Check if a particular quantitation type is aggregated.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    boolean isAggregated( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
      * Remove aggregated vectors for the given quantitation type.
      * <p>
      * This performs additional cleanups such as removing unused dimension(s), resetting single-cell sparsity metrics
      * from the {@link BioAssay}s, etc.
-     * @see ExpressionExperimentService#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     *
      * @return the number of vectors removed
+     * @see ExpressionExperimentService#removeRawDataVectors(ExpressionExperiment, QuantitationType)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int removeAggregatedVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Remove aggregated vectors for the given quantitation type.
+     *
      * @param keepDimension if true, preserve the {@link ubic.gemma.model.expression.bioAssayData.BioAssayDimension} of
      *                      the vectors. Use this to re-aggregate the vectors with the same dimension.
      */

@@ -60,6 +60,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -132,6 +133,8 @@ public class ExpressionExperimentServiceImpl
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
     @Autowired
     private CharacteristicService characteristicService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -1887,44 +1890,63 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt ) {
+    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt, @Nullable QuantitationType previousPreferredQt ) {
         Assert.notNull( ee.getId(), "The experiment must be persistent." );
         Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
         // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
         //        cannot use contains
         Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
                 "The quantitation type does not belong to " + ee + "." );
-        if ( qt.getIsSingleCellPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsSingleCellPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for single-cell data." );
-                    otherQt.setIsSingleCellPreferred( false );
-                    quantitationTypeService.update( otherQt );
+
+        Class<? extends DataVector> vectorType = quantitationTypeService.getDataVectorType( qt );
+
+        if ( vectorType != null ) {
+            if ( qt.isPreferred( vectorType ) ) {
+                // set all other QTs to non-preferred (regardless of their type)
+                for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                    if ( otherQt.isPreferred( vectorType ) && !otherQt.equals( qt ) ) {
+                        log.info( "Marking " + otherQt + " as non-preferred for " + vectorType + "." );
+                        otherQt.setIsPreferred( false, vectorType );
+                        quantitationTypeService.update( otherQt );
+                    }
+                }
+                if ( !qt.equals( previousPreferredQt ) ) {
+                    Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
+                    String message = String.format( "The preferred quantitation type for %s changed%s to %s.",
+                            vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt );
+                    if ( eventType != null ) {
+                        auditTrailService.addUpdateEvent( ee, eventType, message );
+                    } else {
+                        log.warn( message + " There is no audit event type for this change." );
+                    }
+                }
+            } else if ( previousPreferredQt != null && previousPreferredQt.isPreferred( vectorType ) && qt.equals( previousPreferredQt ) ) {
+                Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
+                String message = String.format( "The preferred quantitation type for %s was cleared (previously %s).",
+                        vectorType.getSimpleName(), previousPreferredQt );
+                if ( eventType != null ) {
+                    auditTrailService.addUpdateEvent( ee, eventType, message );
+                } else {
+                    log.warn( message + " There is no audit event type for this change." );
                 }
             }
+        } else {
+            log.warn( qt + " does not have a vector type, likely cause is the absence of data vectors." );
         }
-        if ( qt.getIsPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for raw data." );
-                    otherQt.setIsPreferred( false );
-                    quantitationTypeService.update( otherQt );
-                }
-            }
-        }
-        if ( qt.getIsMaskedPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsMaskedPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for processed data." );
-                    otherQt.setIsMaskedPreferred( false );
-                    quantitationTypeService.update( otherQt );
-                }
-            }
-        }
+
         quantitationTypeService.update( qt );
+    }
+
+    @Nullable
+    private Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
+        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return PreferredSingleCellDataChangedEvent.class;
+        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return PreferredRawDataChangedEvent.class;
+        } else {
+            // there is no event for a change of processed data because we don't allow more than one set of processed
+            return null;
+        }
     }
 
     @Override

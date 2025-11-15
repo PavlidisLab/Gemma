@@ -4,7 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.DataDeleterService;
+import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -26,13 +26,14 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
             DELETE_ALL_CELL_LEVEL_CHARACTERISTICS = "deleteClcs";
 
     @Autowired
-    private DataDeleterService dataDeleterService;
+    private ExpressionDataDeleterService expressionDataDeleterService;
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     private String ctaIdentifier;
     private String clcIdentifier;
+    private boolean removeCellTypeFactorIfNecessary = true;
 
     enum Mode {
         DELETE_ALL,
@@ -91,18 +92,18 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
         long removed;
         switch ( mode ) {
             case DELETE_ALL:
-                dataDeleterService.deleteSingleCellData( ee, qt );
+                expressionDataDeleterService.deleteSingleCellData( ee, qt, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted single-cell data." );
                 break;
             case DELETE_ALL_CELL_TYPE_ASSIGNMENTS:
                 ee = eeService.thawLite( ee );
-                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt );
+                removed = singleCellExpressionExperimentService.removeAllCellTypeAssignments( ee, qt, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted " + removed + " cell type assignments." );
                 break;
             case DELETE_CELL_TYPE_ASSIGNMENT:
                 ee = eeService.thawLite( ee );
                 CellTypeAssignment cta = entityLocator.locateCellTypeAssignment( ee, qt, ctaIdentifier );
-                singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta );
+                singleCellExpressionExperimentService.removeCellTypeAssignment( ee, qt, cta, removeCellTypeFactorIfNecessary );
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:

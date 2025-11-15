@@ -587,11 +587,22 @@ public interface ExpressionExperimentDao
 
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Obtain the single-cell dimension used by a specific QT.
      */
     @Nullable
     SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain a single-cell dimension by ID.
+     * <p>
+     * This also ensures that the SCD belongs to the given experiment.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id );
 
     /**
      * Load a single-cell dimension used by a specific QT without its cell IDs.
@@ -601,6 +612,12 @@ public interface ExpressionExperimentDao
 
     @Nullable
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
+    @Nullable
+    SingleCellDimension getSingleCellDimensionForCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId );
+
+    @Nullable
+    SingleCellDimension getSingleCellDimensionForCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId );
 
     /**
      * Obtain the preferred single-cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -633,6 +650,15 @@ public interface ExpressionExperimentDao
      * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Reload a single-cell dimension.
+     * <p>
+     * Use this on a detached single-cell dimension such as those returned by {@link #getSingleCellDimensionWithoutCellIds(ExpressionExperiment, QuantitationType)}.
+     *
+     * @see #reload(Identifiable)
+     */
+    SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension );
 
     /**
      * Stream the cell IDs of a dimension.
@@ -679,14 +705,6 @@ public interface ExpressionExperimentDao
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
-
-    /**
-     * Obtain the preferred assignment of the preferred single-cell vectors.
-     *
-     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
-     */
-    @Nullable
-    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
 
     /**
      * Obtain the preferred assignment for the given quantitation type.
@@ -775,6 +793,8 @@ public interface ExpressionExperimentDao
      * Obtain a list of single-cell QTs.
      */
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    Map<SingleCellDimension, Set<QuantitationType>> getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
      * Indicate if the given experiment has single-cell quantitation types.

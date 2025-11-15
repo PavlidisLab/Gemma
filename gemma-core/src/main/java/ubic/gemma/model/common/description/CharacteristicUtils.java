@@ -1,8 +1,10 @@
 package ubic.gemma.model.common.description;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class CharacteristicUtils {
@@ -82,6 +84,13 @@ public class CharacteristicUtils {
     }
 
     /**
+     * Hash an ontology term.
+     */
+    public static int hash( String value, String valueUri ) {
+        return Objects.hash( StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
+    }
+
+    /**
      * Compare a pair of ontology terms.
      */
     public static boolean equals( String a, String aUri, String b, String bUri ) {
@@ -97,7 +106,7 @@ public class CharacteristicUtils {
      * Terms are sorted by label and then URI. If two term have an identical URI, this method will return zero
      * regardless of the label.
      * <p>
-     *  All URI and label comparisons are case-insensitive.
+     * All URI and label comparisons are case-insensitive.
      */
     public static int compareTerm( String a, @Nullable String aUri, String b, @Nullable String bUri ) {
         if ( aUri != null && bUri != null ) {

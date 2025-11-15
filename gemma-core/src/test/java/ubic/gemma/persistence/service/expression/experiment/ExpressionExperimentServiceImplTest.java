@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -185,6 +186,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
 
         @Bean
         public CharacteristicService characteristicService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
             return mock();
         }
     }
