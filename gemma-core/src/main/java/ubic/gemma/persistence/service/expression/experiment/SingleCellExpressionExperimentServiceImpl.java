@@ -963,10 +963,22 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    public PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType quantitationType, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
+        SingleCellDimension dimension = getSingleCellDimension( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalArgumentException( "No single-cell dimension found for " + quantitationType + " in " + ee + "." );
+        }
+        return changePreferredCellTypeAssignment( ee, dimension, newPreferredCta, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
+    }
+
+    @Override
+    @Transactional
     public PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
         Assert.notNull( newPreferredCta.getId(), "The new preferred CTA must be persistent." );
+
+        ee = expressionExperimentDao.reload( ee );
 
         // if the dimension is detached or was loaded without cell IDs,
         dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );
@@ -996,7 +1008,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                         preferredCta != null ? " from " + preferredCta : "", newPreferredCta ) );
 
         // include the case where there was no overall CTA
-        if ( !dimension.equals( preferredDimension ) ) {
+        if ( dimension.equals( preferredDimension ) ) {
             ExperimentalFactor existingCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
             log.info( "Preferred CTA changed for the preferred single-cell dimension " + dimension + " of " + ee + ", creating the cell type factor..." );
             ExperimentalFactor newCellTypeFactor = createCellTypeFactor( ee, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
@@ -1015,10 +1027,21 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        SingleCellDimension dimension = getSingleCellDimension( ee, quantitationType );
+        if ( dimension == null ) {
+            throw new IllegalArgumentException( "There is no single-cell dimension for " + quantitationType + " in " + ee + "." );
+        }
+        return clearPreferredCellTypeAssignment( ee, dimension );
+    }
+
+    @Override
+    @Transactional
     public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension ) {
         Assert.notNull( ee.getId() );
         Assert.notNull( dimension.getId() );
         // if the dimension is detached or was loaded without cell IDs
+        ee = expressionExperimentDao.reload( ee );
         dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );
         if ( dimension.getCellTypeAssignments().stream().noneMatch( CellTypeAssignment::isPreferred ) ) {
             log.info( "There is no preferred CTA in " + dimension + ", nothing to clear." );

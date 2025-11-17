@@ -316,6 +316,12 @@ public interface SingleCellExpressionExperimentService {
     }
 
     /**
+     * @see #changePreferredCellTypeAssignment(ExpressionExperiment, SingleCellDimension, CellTypeAssignment, boolean, boolean)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType quantitationType, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
+
+    /**
      * Change the preferred cell type assignment to the given one.
      *
      * @param recreateCellTypeFactorIfNecessary re-create the cell type factor; this is only done if the preferred cell
@@ -325,6 +331,12 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
+
+    /**
+     * @see #clearPreferredCellTypeAssignment(ExpressionExperiment, SingleCellDimension)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
      * Clear the preferred cell type assignment.
