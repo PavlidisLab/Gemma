@@ -272,16 +272,19 @@
                         <h4>Preferred Cell Type Assignment</h4>
                         <ul>
                             <c:forEach items="${expressionExperiment.preferredCellTypeAssignmentValues}" var="value">
-                                <li class="${expressionExperiment.incompatibleCellTypeAssignmentValues.contains(value) ? 'error mb-1': ''}">${fn:escapeXml(value)}</li>
+                                <li class="${expressionExperiment.incompatibleCellTypeAssignmentValues.contains(value) ? 'error mb-1': ''}">
+                                    <Gemma:characteristic characteristic="${value}" external="true" />
+                                </li>
                             </c:forEach>
                         </ul>
                     </div>
                     <div>
                         <h4>Cell Type Factor</h4>
                         <ul>
-                            <c:forEach items="${expressionExperiment.cellTypeFactorValues}" var="value"
-                                    varStatus="valueI">
-                                <li class="${expressionExperiment.unmatchedCellTypeFactorValues.contains(value) ? 'warning mb-1': ''}">${fn:escapeXml(value)}</li>
+                            <c:forEach items="${expressionExperiment.cellTypeFactorValues}" var="value">
+                                <li class="${expressionExperiment.unmatchedCellTypeFactorValues.contains(value) ? 'warning mb-1': ''}">
+                                    <Gemma:factorValue factorValue="${value}" />
+                                </li>
                             </c:forEach>
                         </ul>
                     </div>

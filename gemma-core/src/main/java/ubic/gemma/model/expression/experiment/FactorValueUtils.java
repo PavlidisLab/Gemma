@@ -2,7 +2,9 @@ package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -20,6 +22,7 @@ public class FactorValueUtils {
      * <p>
      * This value is suitable for displaying in a flat file format. If you need a human-readable summary of the factor
      * value, consider using {@link #getSummaryString(FactorValue)} instead.
+     *
      * @param delimiter delimiter used when joining multiple values from statements
      */
     @Nullable
@@ -78,6 +81,35 @@ public class FactorValueUtils {
             }
         } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
             buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
+    }
+
+    public static String getSummaryString( AbstractFactorValueValueObject fv ) {
+        CharacteristicValueObject category = fv.getExperimentalFactorCategory();
+        String statementDelimiter = ", ";
+        StringBuilder buf = new StringBuilder();
+        if ( fv.getMeasurementObject() != null ) {
+            if ( category != null && category.getCategory() != null ) {
+                buf.append( defaultIfBlank( category.getCategory(), "?" ) )
+                        .append( ": " );
+            }
+            MeasurementValueObject measurement = fv.getMeasurementObject();
+            buf.append( defaultIfBlank( measurement.getValue(), "?" ) );
+            if ( fv.getMeasurementObject().getUnit() != null ) {
+                buf.append( " " ).append( fv.getMeasurementObject().getUnit() );
+            }
+        } else if ( !fv.getStatements().isEmpty() ) {
+            for ( Iterator<StatementValueObject> iter = fv.getStatements().stream().sorted().iterator(); iter.hasNext(); ) {
+                StatementValueObject c = iter.next();
+                buf.append( StatementUtils.formatStatement( c ) );
+                if ( iter.hasNext() )
+                    buf.append( statementDelimiter );
+            }
+        } else if ( fv instanceof FactorValueBasicValueObject && StringUtils.isNotBlank( ( ( FactorValueBasicValueObject ) fv ).getValue() ) ) {
+            buf.append( ( ( FactorValueBasicValueObject ) fv ).getValue() );
         } else {
             buf.append( "?" );
         }

@@ -44,6 +44,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -51,6 +52,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -124,20 +126,20 @@ public class ExpressionExperimentEditController {
         @Nullable
         private Long preferredCellTypeAssignmentId;
         @Nullable
-        private List<String> preferredCellTypeAssignmentValues;
+        private List<CharacteristicValueObject> preferredCellTypeAssignmentValues;
         /**
          * A list of values from the current cell type factor (to compare with the current preferred CTA).
          */
         @Nullable
-        private List<String> cellTypeFactorValues;
+        private List<FactorValueBasicValueObject> cellTypeFactorValues;
         /**
          * Whether the preferred cell type assignment is compatible with the existing cell type factor.
          */
         private boolean isPreferredCellTypeAssignmentCompatibleWithCellTypeFactor;
         @Nullable
-        private Set<String> incompatibleCellTypeAssignmentValues;
+        private Set<CharacteristicValueObject> incompatibleCellTypeAssignmentValues;
         @Nullable
-        private Set<String> unmatchedCellTypeFactorValues;
+        private Set<FactorValueBasicValueObject> unmatchedCellTypeFactorValues;
         @Nullable
         private String assayToMaterialMap;
         /**

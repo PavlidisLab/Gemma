@@ -6,15 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditController;
@@ -146,14 +144,14 @@ public class ExpressionExperimentEditControllerHelperService {
         CellTypeAssignment preferredCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment ).orElse( null );
         if ( preferredCta != null ) {
             form.setPreferredCellTypeAssignmentId( preferredCta.getId() );
-            form.setPreferredCellTypeAssignmentValues( preferredCta.getCellTypes().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() ) );
+            form.setPreferredCellTypeAssignmentValues( preferredCta.getCellTypes().stream().sorted().map( CharacteristicValueObject::new ).collect( Collectors.toList() ) );
         }
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( expressionExperiment ).orElse( null );
         if ( cellTypeFactor != null ) {
             // this should generally match the order we display CTA values
             form.setCellTypeFactorValues( cellTypeFactor.getFactorValues().stream()
-                    .map( FactorValueUtils::getSummaryString )
-                    .sorted()
+                    .map( FactorValueBasicValueObject::new )
+                    .sorted( Comparator.comparing( FactorValueUtils::getSummaryString, String.CASE_INSENSITIVE_ORDER ) )
                     .collect( Collectors.toList() ) );
         }
         if ( preferredCta != null && cellTypeFactor != null ) {
@@ -168,12 +166,12 @@ public class ExpressionExperimentEditControllerHelperService {
                 form.setIncompatibleCellTypeAssignmentValues( preferredCta.getCellTypes().stream()
                         // this will include characteristics that map to zero or multiple factor values
                         .filter( c -> mapping.get( c ).size() != 1 )
-                        .map( Characteristic::getValue )
+                        .map( CharacteristicValueObject::new )
                         .collect( Collectors.toSet() ) );
                 Set<FactorValue> allMappedFactorValues = mapping.values().stream().flatMap( Set::stream ).collect( Collectors.toSet() );
                 form.setUnmatchedCellTypeFactorValues( cellTypeFactor.getFactorValues().stream()
                         .filter( fv -> !allMappedFactorValues.contains( fv ) )
-                        .map( FactorValueUtils::getSummaryString )
+                        .map( FactorValueBasicValueObject::new )
                         .collect( Collectors.toSet() ) );
             }
         }

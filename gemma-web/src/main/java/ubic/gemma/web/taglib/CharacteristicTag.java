@@ -6,6 +6,7 @@ import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.web.util.Constants;
 
 import javax.annotation.Nullable;
@@ -18,17 +19,17 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
-@Setter
 public class CharacteristicTag extends HtmlEscapingAwareTag {
 
     /**
      * Characteristic to generate the tag for.
      */
-    private Characteristic characteristic;
+    private CharacteristicValueObject characteristic;
 
     /**
      * Only render the category part of the characteristic.
      */
+    @Setter
     private boolean category;
 
     /**
@@ -36,6 +37,7 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
      * <p>
      * The default is to generate an internal link.
      */
+    @Setter
     private boolean external;
 
     @Override
@@ -53,14 +55,13 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
                 } else {
                     tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getValueUri() ) ) );
                 }
+                tagWriter.writeOptionalAttributeValue( "title", htmlEscape( characteristic.getCategory() + ": " + characteristic.getValueUri() ) );
+            } else {
+                tagWriter.startTag( "span" );
                 tagWriter.writeOptionalAttributeValue( "title", htmlEscape( characteristic.getCategory() ) );
             }
-            tagWriter.startTag( "span" );
             tagWriter.appendValue( htmlEscape( characteristic.getValue() ) );
             tagWriter.endTag();
-            if ( characteristic.getValueUri() != null ) {
-                tagWriter.endTag();
-            }
         } else if ( characteristic.getCategory() != null ) {
             if ( characteristic.getCategoryUri() != null ) {
                 tagWriter.startTag( "a" );
@@ -71,19 +72,28 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
                 } else {
                     tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getCategoryUri() ) ) );
                 }
+                tagWriter.writeOptionalAttributeValue( "title", htmlEscape( characteristic.getCategoryUri() ) );
+            } else {
+                tagWriter.startTag( "span" );
             }
-            tagWriter.startTag( "span" );
             tagWriter.appendValue( htmlEscape( characteristic.getCategory() ) );
             tagWriter.endTag();
-            if ( characteristic.getCategoryUri() != null ) {
-                tagWriter.endTag();
-            }
         } else {
             tagWriter.startTag( "i" );
             tagWriter.appendValue( "Uncategorized" );
             tagWriter.endTag();
         }
         return SKIP_BODY;
+    }
+
+    public void setCharacteristic( Object characteristic ) {
+        if ( characteristic instanceof Characteristic ) {
+            this.characteristic = new CharacteristicValueObject( ( Characteristic ) characteristic );
+        } else if ( characteristic instanceof CharacteristicValueObject ) {
+            this.characteristic = ( CharacteristicValueObject ) characteristic;
+        } else {
+            throw new IllegalArgumentException( "Only Characteristic and CharacteristicValueObject are supported." );
+        }
     }
 
     private Map<String, ?> getAppConfig() {
