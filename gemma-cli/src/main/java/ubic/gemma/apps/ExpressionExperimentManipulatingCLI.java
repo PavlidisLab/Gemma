@@ -752,6 +752,21 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * A silent version of {@link #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)} that
+     * produces a warning via {@link #addWarningObject(ExpressionExperiment, String, Throwable)} instead of throwing an
+     * exception.
+     *
+     * @see #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)
+     */
+    protected void refreshExpressionExperimentFromGemmaWebSilently( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) {
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web.", e );
+        }
+    }
+
+    /**
      * Refresh a dataset for Gemma Web.
      *
      * @param refreshVectors if true, refresh vectors from the caches, that include raw, single-cell, processed and also

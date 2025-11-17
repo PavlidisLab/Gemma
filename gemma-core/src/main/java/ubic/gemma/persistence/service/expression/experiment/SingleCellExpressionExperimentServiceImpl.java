@@ -1407,7 +1407,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         ExpressionExperiment finalEe = expressionExperimentDao.reload( ee );
         CellTypeAssignment preferredCta = getPreferredCellTypeAssignmentWithoutIndices( ee ) // we only need the characteristics
                 .orElseThrow( () -> new IllegalStateException( "There must be a preferred cell type labelling for " + finalEe + " to update the cell type factor." ) );
-        return createCellTypeFactor( ee, preferredCta, removeExistingIfNecessary, ignoreCompatibleFactor );
+        return createCellTypeFactor( finalEe, preferredCta, removeExistingIfNecessary, ignoreCompatibleFactor );
     }
 
     @Nullable

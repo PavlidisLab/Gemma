@@ -65,8 +65,10 @@ public class SingleCellDataUpdaterCli extends ExpressionExperimentVectorsManipul
             singleCellExpressionExperimentService.changePreferredCellTypeAssignment( ee, qt, preferredCta,
                     replaceCellTypeFactor == null || replaceCellTypeFactor,
                     replaceCellTypeFactor != null && replaceCellTypeFactor );
+            refreshExpressionExperimentFromGemmaWebSilently( ee, false, false );
         } else if ( clearPreferredCta ) {
             singleCellExpressionExperimentService.clearPreferredCellTypeAssignment( ee, qt );
+            refreshExpressionExperimentFromGemmaWebSilently( ee, false, false );
         }
     }
 }

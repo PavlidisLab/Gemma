@@ -583,14 +583,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEmpty();
+        assertThat( scExpressionExperimentService.getCellTypeFactor( ee ) ).isPresent();
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctaS + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Removed the cell type factor " + ctf + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Created a cell type factor " + newCtf + " from preferred cell type assignment " + newLabellingS + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Removed the cell type factor " + newCtf + "." );
     }
 
     /**
