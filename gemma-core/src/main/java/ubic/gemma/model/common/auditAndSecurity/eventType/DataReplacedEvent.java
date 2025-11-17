@@ -20,7 +20,12 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Signifies that the data for the experiment was replaced (or filled in) after the experiment was loaded into the
- * system. This is always 'raw' data.
+ * system.
+ * <p>
+ * Prefer one of the more specific subclasses if possible, this will eventually become an abstract class.
+ *
+ * @see RawDataReplacedEvent
+ * @see SingleCellDataReplacedEvent
  */
 public class DataReplacedEvent extends ExpressionExperimentAnalysisEvent {
 

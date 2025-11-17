@@ -122,6 +122,13 @@
                 <subclass abstract="false" discriminator-value="RawDataRemovedEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.RawDataRemovedEvent"/>
             </subclass>
+            <subclass abstract="true"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PreferredDataChangedEvent">
+                <subclass abstract="false" discriminator-value="PreferredRawDataChangeEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.PreferredRawDataChangedEvent"/>
+                <subclass abstract="false" discriminator-value="PreferredSingleCellDataChangeEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.PreferredSingleCellDataChangedEvent"/>
+            </subclass>
             <subclass abstract="false" discriminator-value="SampleRemovalReversionEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent"/>
             <subclass abstract="false" discriminator-value="MeanVarianceUpdateEvent"
@@ -135,6 +142,9 @@
                           discriminator-value="CellTypeAssignmentAddedEvent"/>
                 <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellTypeAssignmentRemovedEvent"
                           discriminator-value="CellTypeAssignmentRemovedEvent"/>
+                <subclass
+                    name="ubic.gemma.model.common.auditAndSecurity.eventType.PreferredCellTypeAssignmentChangedEvent"
+                    discriminator-value="PreferredCellTypeAssignmentChangedEvent"/>
             </subclass>
 
             <subclass abstract="true"
