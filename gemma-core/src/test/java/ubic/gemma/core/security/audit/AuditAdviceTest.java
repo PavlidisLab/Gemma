@@ -108,7 +108,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ee = expressionExperimentService.thawLite( ee );
 
         // should have create only
-        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+        assertEquals( 1, auditEventService.getEvents( ee ).size() );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setSourceTaxon( ee.getTaxon() );
@@ -152,7 +152,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertNotNull( ee.getBioAssays().iterator().next().getId() );
 
-        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+        assertEquals( 1, auditEventService.getEvents( ee ).size() );
 
     }
 

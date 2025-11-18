@@ -37,6 +37,12 @@ public interface AuditEventService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<AuditEvent> getEvents( Auditable auditable );
 
+    /**
+     * Retrieve all events with an event type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<AuditEvent> getEventsWithType( Auditable auditable );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditable );
 
@@ -68,6 +74,7 @@ public interface AuditEventService {
             Collection<T> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
+     *
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date );

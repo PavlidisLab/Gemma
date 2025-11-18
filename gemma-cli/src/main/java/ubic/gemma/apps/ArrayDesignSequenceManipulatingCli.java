@@ -170,8 +170,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     /**
      * @param arrayDesign the array design to check
      * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
+     * design. In the case of subsumption, this only works if the array design has been either analyzed for
+     * subsuming status. (the analysis is not done as part of this call).
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -235,7 +235,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
      *
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     * analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
@@ -297,7 +297,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
         }
 
         List<AuditEvent> eventsOfCurrentType = this.getEvents( arrayDesign, eventClass );
-        List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
+        List<AuditEvent> allEvents = auditEventService.getEvents( arrayDesign );
 
         if ( eventsOfCurrentType.isEmpty() ) {
             // it's never been run.

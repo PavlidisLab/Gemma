@@ -304,7 +304,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1, qts.size() );
         Geeq geeq = geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
         assertNotNull( geeq.getId() );
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.loadWithAuditTrail( ee.getId() );
+        assertNotNull( ee );
         assertEquals( geeq, ee.getGeeq() );
         assertEquals( 2, ee.getAuditTrail().getEvents().size() );
         // creation, followed by a GeeqEvent

@@ -4,20 +4,23 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
-import ubic.gemma.cli.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     @Nullable
     @Override
@@ -54,11 +57,11 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
                 ed.getReleaseVersion(),
                 ed.getReleaseUrl(),
                 ed.getLastUpdated(),
-                summarize( ed.getAuditTrail() ) );
+                summarize( auditEventService.getEvents( ed ) ) );
     }
 
-    private String summarize( AuditTrail auditTrail ) {
-        return auditTrail.getEvents().stream()
+    private String summarize( List<AuditEvent> events ) {
+        return events.stream()
                 .sorted( Comparator.comparing( AuditEvent::getDate, Comparator.reverseOrder() ) ) // most recent events first
                 .map( this::summarize )
                 .collect( Collectors.joining( "\n" ) );

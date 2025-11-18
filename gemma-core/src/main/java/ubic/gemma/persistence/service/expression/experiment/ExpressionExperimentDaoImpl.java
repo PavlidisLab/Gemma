@@ -2208,7 +2208,6 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
         }
 
-        Hibernate.initialize( expressionExperiment.getAuditTrail() );
         Hibernate.initialize( expressionExperiment.getGeeq() );
         Hibernate.initialize( expressionExperiment.getCurationDetails() );
 
