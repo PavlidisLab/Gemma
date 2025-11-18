@@ -24,7 +24,7 @@ public class LoggingProgressReporter extends AbstractProgressReporter implements
     }
 
     @Override
-    protected void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes ) {
+    protected void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes, boolean atEnd ) {
         logger.info( String.format( "%s %.2f%% [%d/%d] @ %s",
                 what,
                 100 * progressInPercent,
@@ -33,7 +33,7 @@ public class LoggingProgressReporter extends AbstractProgressReporter implements
     }
 
     @Override
-    protected void doReportUnknownProgress( long progressInBytes ) {
+    protected void doReportUnknownProgress( long progressInBytes, boolean atEnd ) {
         logger.info( String.format( "%s [%d/?] @ %s",
                 what,
                 progressInBytes,
