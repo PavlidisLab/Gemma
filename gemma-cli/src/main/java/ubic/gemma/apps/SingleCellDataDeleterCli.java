@@ -87,6 +87,12 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
     }
 
     @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        super.processExpressionExperiment( expressionExperiment );
+        refreshExpressionExperimentFromGemmaWebSilently( expressionExperiment, true, true );
+    }
+
+    @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         long removed;
         switch ( mode ) {

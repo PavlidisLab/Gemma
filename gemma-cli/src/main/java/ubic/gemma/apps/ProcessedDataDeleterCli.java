@@ -33,6 +33,12 @@ public class ProcessedDataDeleterCli extends ExpressionExperimentVectorsManipula
     }
 
     @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        super.processExpressionExperiment( expressionExperiment );
+        refreshExpressionExperimentFromGemmaWebSilently( expressionExperiment, true, true );
+    }
+
+    @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         expressionDataDeleterService.deleteProcessedData( ee );
         addSuccessObject( ee, qt, "Deleted processed data." );
