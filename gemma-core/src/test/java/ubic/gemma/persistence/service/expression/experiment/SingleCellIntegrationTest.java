@@ -5,9 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSubSetService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
 import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.Categories;
@@ -72,7 +72,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.COUNT );
         qt.setIsSingleCellPreferred( true );
-        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ), null );
+        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ), null, true, false );
 
         SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
                 .orElse( null );
@@ -85,7 +85,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( int i = 0; i < 8000; i++ ) {
             labels.add( String.valueOf( "ABCD".charAt( random.nextInt( 4 ) ) ) );
         }
-        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null );
+        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null, true, false );
         assertThat( cta.getNumberOfCellTypes() ).isEqualTo( 4 );
         assertThat( cta.getNumberOfAssignedCells() ).isEqualTo( 8000 );
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )

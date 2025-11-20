@@ -54,15 +54,12 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
                 "ad1ad2ad3_" + RandomStringUtils.insecure().nextAlphabetic( 4 ),
                 "ad1ad2ad3_" + RandomStringUtils.insecure().nextAlphabetic( 4 ), false );
 
-        ad1 = arrayDesignService.load( ad1.getId() );
+        ad1 = arrayDesignService.loadWithAuditTrail( ad1.getId() );
         assertNotNull( ad1 );
-        ad1 = arrayDesignService.thawLite( ad1 );
-        ad2 = arrayDesignService.load( ad2.getId() );
+        ad2 = arrayDesignService.loadWithAuditTrail( ad2.getId() );
         assertNotNull( ad2 );
-        ad2 = arrayDesignService.thawLite( ad2 );
-        ad3 = arrayDesignService.load( ad3.getId() );
+        ad3 = arrayDesignService.loadWithAuditTrail( ad3.getId() );
         assertNotNull( ad3 );
-        ad3 = arrayDesignService.thawLite( ad3 );
 
         /*
          * merged contains all three.
@@ -76,17 +73,17 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         assertEquals( ad1ad2ad3, ad2.getMergedInto() );
         assertEquals( ad1ad2ad3, ad3.getMergedInto() );
         AuditTrail auditTrail5 = ad1.getAuditTrail();
-        assertNotNull( (auditTrail5.getEvents().isEmpty() ? null : auditTrail5.getEvents().get( auditTrail5.getEvents().size() - 1 )).getEventType() );
+        assertNotNull( ( auditTrail5.getEvents().isEmpty() ? null : auditTrail5.getEvents().get( auditTrail5.getEvents().size() - 1 ) ).getEventType() );
         AuditTrail auditTrail4 = ad1.getAuditTrail();
-        assertEquals( ArrayDesignMergeEvent.class, (auditTrail4.getEvents().isEmpty() ? null : auditTrail4.getEvents().get( auditTrail4.getEvents().size() - 1 )).getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ( auditTrail4.getEvents().isEmpty() ? null : auditTrail4.getEvents().get( auditTrail4.getEvents().size() - 1 ) ).getEventType().getClass() );
         AuditTrail auditTrail3 = ad2.getAuditTrail();
-        assertNotNull( (auditTrail3.getEvents().isEmpty() ? null : auditTrail3.getEvents().get( auditTrail3.getEvents().size() - 1 )).getEventType() );
+        assertNotNull( ( auditTrail3.getEvents().isEmpty() ? null : auditTrail3.getEvents().get( auditTrail3.getEvents().size() - 1 ) ).getEventType() );
         AuditTrail auditTrail2 = ad2.getAuditTrail();
-        assertEquals( ArrayDesignMergeEvent.class, (auditTrail2.getEvents().isEmpty() ? null : auditTrail2.getEvents().get( auditTrail2.getEvents().size() - 1 )).getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ( auditTrail2.getEvents().isEmpty() ? null : auditTrail2.getEvents().get( auditTrail2.getEvents().size() - 1 ) ).getEventType().getClass() );
         AuditTrail auditTrail1 = ad3.getAuditTrail();
-        assertNotNull( (auditTrail1.getEvents().isEmpty() ? null : auditTrail1.getEvents().get( auditTrail1.getEvents().size() - 1 )).getEventType() );
+        assertNotNull( ( auditTrail1.getEvents().isEmpty() ? null : auditTrail1.getEvents().get( auditTrail1.getEvents().size() - 1 ) ).getEventType() );
         AuditTrail auditTrail = ad3.getAuditTrail();
-        assertEquals( ArrayDesignMergeEvent.class, (auditTrail.getEvents().isEmpty() ? null : auditTrail.getEvents().get( auditTrail.getEvents().size() - 1 )).getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ( auditTrail.getEvents().isEmpty() ? null : auditTrail.getEvents().get( auditTrail.getEvents().size() - 1 ) ).getEventType().getClass() );
 
         /*
          * Making a new one out of a merged design and an unmerged

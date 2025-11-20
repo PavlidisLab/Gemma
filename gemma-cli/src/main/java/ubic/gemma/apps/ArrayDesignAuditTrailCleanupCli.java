@@ -43,7 +43,7 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
             arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
-            List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
+            List<AuditEvent> allEvents = auditEventService.getEvents( arrayDesign );
 
             Map<Object, List<AuditEvent>> eventsByType = new HashMap<>();
 

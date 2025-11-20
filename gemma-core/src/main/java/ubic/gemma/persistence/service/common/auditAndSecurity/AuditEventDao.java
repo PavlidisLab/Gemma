@@ -43,6 +43,13 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     List<AuditEvent> getEvents( Auditable auditable );
 
     /**
+     * Obtain all events with a non-null event type for a given auditable.
+     * <p>
+     * Events are sorted by date in ascending order.
+     */
+    List<AuditEvent> getEventsWithType( Auditable auditable );
+
+    /**
      * Obtain the creation events for the given auditables.
      * <p>
      * If an auditable has more than one creation event (which is in itself a bug), the earliest one is returned.
@@ -63,6 +70,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * Obtain the latest event of a given type, excluding a certain number of types.
+     *
      * @param type          type of event to retrieve, augmented by its hierarchy
      * @param excludedTypes excluded event types (their hierarchy is also excluded)
      */
@@ -71,12 +79,14 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * Obtain the latest events of a specified type for all given auditables.
+     *
      * @see #getLastEvent(Auditable, Class)
      */
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables, Class<? extends AuditEventType> type );
 
     /**
      * Obtain the latest events of a specified type for all auditable of a given type.
+     *
      * @see #getLastEvent(Auditable, Class)
      */
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );

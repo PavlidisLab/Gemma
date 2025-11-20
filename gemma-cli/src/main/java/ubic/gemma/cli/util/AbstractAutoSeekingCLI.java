@@ -19,12 +19,14 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
+import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 
 /**
  * Provide auto-seeking capabilities to a CLI.
  * <p>
  * This allows CLIs to process entities that lack certain {@link AuditEvent} or that haven't been updated since a
  * certain date.
+ *
  * @param <T> the type of entity being seeked
  */
 public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends AbstractAuthenticatedCLI {
@@ -71,7 +73,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
         Assert.state( !options.hasOption( AUTO_OPTION_NAME ), "The -" + AUTO_OPTION_NAME + " option was already added." );
         options.addOption( Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
-                .build() );
+                .get() );
     }
 
     /**
@@ -200,6 +202,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
 
     /**
      * Check if the given auditable can be skipped.
+     *
      * @param auditable  auditable
      * @param eventClass can be null
      * @return boolean
@@ -226,7 +229,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan + ", use - " + FORCE_OPTION + "to process anyway." );
+                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan + ", use " + formatOption( FORCE_OPTION, "force" ) + " to process anyway." );
                         return true;
                     }
                 } else {

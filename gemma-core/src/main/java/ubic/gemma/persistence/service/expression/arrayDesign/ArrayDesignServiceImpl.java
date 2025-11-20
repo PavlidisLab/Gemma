@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +81,16 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     public <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ArrayDesign ad = loadOrFail( id, exceptionSupplier, message );
         arrayDesignDao.thawLite( ad );
+        return ad;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign loadWithAuditTrail( Long id ) {
+        ArrayDesign ad = load( id );
+        if ( ad != null ) {
+            Hibernate.initialize( ad.getAuditTrail() );
+        }
         return ad;
     }
 

@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
@@ -26,13 +25,19 @@ import javax.annotation.Nullable;
 public interface ExpressionExperimentBatchCorrectionService {
 
     /**
-     * Is there a Batch factor provided? Is there a confound problem? Do we have at
-     * least two samples per batch?
-     *
+     * Check if the given experiment is correctable for batch effects.
+     * <p>
+     * For a dataset to be correctable, it must meet the following criteria:
+     * <ul>
+     * <li>a batch factor must be present</li>
+     * <li>there must be no confounding factor</li>
+     * <li>there must be at least two samples per batch</li>
+     * </ul>
+     * <p>
      * This will return true even if there is evidence the data has been batch-corrected before;
-     * we assume the caller wants to redo it based on the raw data
+     * we assume the caller wants to redo it based on the raw data.
      *
-     * @param ee    the experiment
+     * @param ee the experiment
      * @return whether it is correctable
      */
     boolean checkCorrectability( ExpressionExperiment ee );
@@ -53,14 +58,4 @@ public interface ExpressionExperimentBatchCorrectionService {
      */
     @Nullable
     ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat );
-
-    /**
-     * For convenience of some testing classes
-     *
-     * @param ee the experiment to get the batch factor for
-     * @return the batch factor of the experiment, or null, if experiment has no batch factor
-     */
-    @Nullable
-    ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
-
 }

@@ -204,6 +204,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>external</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>htmlEscape</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

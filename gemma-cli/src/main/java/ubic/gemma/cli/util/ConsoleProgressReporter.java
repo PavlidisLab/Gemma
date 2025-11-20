@@ -22,8 +22,8 @@ public class ConsoleProgressReporter extends AbstractProgressReporter {
     }
 
     @Override
-    protected void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes ) {
-        console.printf( "%s %.2f%% [%d/%d] @ %s\r",
+    protected void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes, boolean atEnd ) {
+        console.printf( "%s %.2f%% [%d/%d] @ %s\r" + ( atEnd ? "\n" : "\r" ),
                 what,
                 100 * progressInPercent,
                 progressInBytes, maxSizeInBytes,
@@ -32,8 +32,8 @@ public class ConsoleProgressReporter extends AbstractProgressReporter {
     }
 
     @Override
-    protected void doReportUnknownProgress( long progressInBytes ) {
-        console.printf( "%s [%d/?] @ %s\r",
+    protected void doReportUnknownProgress( long progressInBytes, boolean atEnd ) {
+        console.printf( "%s [%d/?] @ %s" + ( atEnd ? "\n" : "\r" ),
                 what,
                 progressInBytes,
                 bytePerSecondToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) );

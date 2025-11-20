@@ -56,10 +56,20 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select e from AuditTrail t join t.events e where t = :at order by e.date,e.id " )
+                .createQuery( "select e from AuditTrail t join t.events e where t = :at order by e.date, e.id " )
                 .setParameter( "at", auditable.getAuditTrail() )
                 .list();
+    }
 
+    @Override
+    public List<AuditEvent> getEventsWithType( Auditable auditable ) {
+        Assert.notNull( auditable.getAuditTrail(), "Auditable did not have an audit trail: " + auditable );
+        Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from AuditTrail t join t.events e where t = :at and e.eventType is not null order by e.date, e.id " )
+                .setParameter( "at", auditable.getAuditTrail() )
+                .list();
     }
 
     @Nullable
@@ -250,7 +260,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     /**
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
      *
-     * @param type Class
+     * @param type          Class
      * @param excludedTypes a list of types to exclude
      * @return A List of class names, including the given type.
      */

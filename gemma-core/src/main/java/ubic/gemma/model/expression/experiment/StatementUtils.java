@@ -41,8 +41,26 @@ public class StatementUtils {
         return formatStatement( statement, new String[0] );
     }
 
+    public static String formatStatement( StatementValueObject statementVo ) {
+        Statement statement = Statement.Factory.newInstance();
+        statement.setCategory( statementVo.getCategory() );
+        statement.setCategoryUri( statementVo.getCategoryUri() );
+        statement.setSubject( statementVo.getSubject() );
+        statement.setSubjectUri( statementVo.getSubjectUri() );
+        statement.setPredicate( statementVo.getPredicate() );
+        statement.setPredicateUri( statementVo.getPredicateUri() );
+        statement.setObject( statementVo.getObject() );
+        statement.setObjectUri( statementVo.getObjectUri() );
+        statement.setSecondPredicate( statementVo.getSecondPredicate() );
+        statement.setSecondPredicateUri( statementVo.getSecondPredicateUri() );
+        statement.setSecondObject( statementVo.getSecondObject() );
+        statement.setSecondObjectUri( statementVo.getSecondObjectUri() );
+        return formatStatement( statement, new String[0] );
+    }
+
     /**
      * Format a statement.
+     *
      * @param statement            statement to format.
      * @param ignoredPredicateUris list of predicate URIs that shouldn't be included in the formatted statement
      */

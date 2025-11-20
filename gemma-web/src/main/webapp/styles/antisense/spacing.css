@@ -5,30 +5,38 @@
 /* paddings */
 
 .px-3 {
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 /* margins */
 
 .mt-10 {
-    margin-top: 2.5em;
+    margin-top: 40px;
+}
+
+.mb-1 {
+    margin-bottom: 4px;
 }
 
 .mb-3 {
-    margin-bottom: 1em;
+    margin-bottom: 12px;
 }
 
 .mb-10 {
-    margin-bottom: 2.5em;
+    margin-bottom: 40px;
+}
+
+.mr-1 {
+    margin-right: 4px;
 }
 
 .g-3 {
-    gap: 0.75em;
+    gap: 12px;
 }
 
 /* gaps */
 
 .g-5 {
-    gap: 1.25em;
+    gap: 20px;
 }

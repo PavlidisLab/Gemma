@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nonnull;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for working with {@link QuantitationType}s.
+ *
  * @author poirigui
  */
 public class QuantitationTypeUtils {
@@ -20,7 +22,7 @@ public class QuantitationTypeUtils {
      * Check if a given quantitation type holds log2 CPM.
      */
     public static boolean isLog2cpm( QuantitationType qt ) {
-        return StringUtils.containsIgnoreCase( qt.getName(), "log2cpm" ) &&
+        return Strings.CI.contains( qt.getName(), "log2cpm" ) &&
                 qt.getGeneralType() == GeneralType.QUANTITATIVE &&
                 qt.getType() == StandardQuantitationType.AMOUNT &&
                 qt.getScale() == ScaleType.LOG2;
@@ -209,7 +211,7 @@ public class QuantitationTypeUtils {
     public static void appendToDescription( QuantitationType qt, String s ) {
         String description;
         if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
-            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
+            description = Strings.CS.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
         } else {
             description = "";
         }

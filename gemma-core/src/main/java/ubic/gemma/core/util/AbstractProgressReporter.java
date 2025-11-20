@@ -33,20 +33,20 @@ public abstract class AbstractProgressReporter implements ProgressReporter {
         if ( maxSizeInBytes > 0 ) {
             double progressInPercent = ( double ) progressInBytes / ( double ) maxSizeInBytes;
             if ( atEnd || progressInPercent - lastReportedProgressInPercent > progressIncrementToReportInPercent ) {
-                doReportProgress( progressInPercent, progressInBytes, maxSizeInBytes );
+                doReportProgress( progressInPercent, progressInBytes, maxSizeInBytes, atEnd );
                 lastReportedProgressInPercent = progressInPercent;
                 lastReportedProgressInBytes = progressInBytes;
             }
         } else {
             if ( atEnd || progressInBytes - lastReportedProgressInBytes > progressIncrementToReportInBytes ) {
-                doReportUnknownProgress( progressInBytes );
+                doReportUnknownProgress( progressInBytes, atEnd );
                 lastReportedProgressInPercent = 0.0;
                 lastReportedProgressInBytes = progressInBytes;
             }
         }
     }
 
-    protected abstract void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes );
+    protected abstract void doReportProgress( double progressInPercent, long progressInBytes, long maxSizeInBytes, boolean atEnd );
 
-    protected abstract void doReportUnknownProgress( long progressInBytes );
+    protected abstract void doReportUnknownProgress( long progressInBytes, boolean atEnd );
 }

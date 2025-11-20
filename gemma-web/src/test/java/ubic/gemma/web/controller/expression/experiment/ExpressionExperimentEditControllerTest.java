@@ -10,6 +10,7 @@ import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -21,6 +22,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 import ubic.gemma.web.util.BaseWebTest;
 
 import java.util.Collections;
@@ -41,6 +43,9 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
+    @Autowired
+    private ExpressionDataDeleterService expressionDataDeleterService;
+
     @Configuration
     @TestComponent
     static class ExpressionExperimentFormControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
@@ -48,6 +53,11 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         @Bean
         public ExpressionExperimentEditController expressionExperimentFormController() {
             return new ExpressionExperimentEditController();
+        }
+
+        @Bean
+        public ExpressionExperimentEditControllerHelperService expressionExperimentEditControllerHelperService() {
+            return new ExpressionExperimentEditControllerHelperService();
         }
 
         @Bean
@@ -89,6 +99,11 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         public TaskExecutor taskExecutor() {
             return new SyncTaskExecutor();
         }
+
+        @Bean
+        public ExpressionDataDeleterService expressionDataDeleterService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -113,6 +128,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         ee = new ExpressionExperiment();
         ee.getQuantitationTypes().addAll( qts );
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
+        when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any() ) ).thenReturn( ee );
         when( expressionExperimentService.getQuantitationTypes( ee ) ).thenReturn( qts );
         when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) ).thenReturn( Collections.singletonMap( RawExpressionDataVector.class, qts ) );
         when( expressionExperimentService.thaw( ee ) ).thenReturn( ee );
@@ -120,7 +136,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
 
     @After
     public void tearDown() {
-        reset( expressionExperimentService, singleCellExpressionExperimentService, preprocessorService );
+        reset( expressionExperimentService, singleCellExpressionExperimentService, preprocessorService, expressionDataDeleterService );
     }
 
     @Test
@@ -150,7 +166,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
 
         assertThat( qt.getName() ).isEqualTo( "log2cpm" );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, null );
         verifyNoInteractions( preprocessorService );
     }
 
@@ -173,9 +189,9 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, qt );
         verify( preprocessorService ).process( ee );
     }
 
@@ -197,9 +213,9 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, null );
         verify( preprocessorService ).process( ee );
     }
 
@@ -224,7 +240,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .andExpect( view().name( "expressionExperiment.edit" ) )
                 .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "There is no preferred quantitation type, however existing processed data will be kept." ) ) );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, qt );
         verifyNoInteractions( preprocessorService );
     }
 
@@ -250,7 +266,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         assertThat( ee.getQuantitationTypes() ).contains( qt );
 
         verify( expressionExperimentService ).update( ee );
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, null );
     }
 
     @Test
@@ -272,9 +288,9 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isSingleCellPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred single-cell quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." ) ) );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, null );
         verify( singleCellExpressionExperimentService ).updateSparsityMetrics( ee );
     }
 
@@ -300,7 +316,44 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .andExpect( view().name( "expressionExperiment.edit" ) )
                 .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "There is no preferred single-cell quantitation type, single-cell sparsity metrics will be cleared." ) ) );
 
-        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt, qt );
         verify( singleCellExpressionExperimentService ).updateSparsityMetrics( ee );
+    }
+
+    @Test
+    public void testDeleteQuantitationType() throws Exception {
+        when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) )
+                .thenReturn( Collections.singletonMap( RawExpressionDataVector.class, Collections.singleton( qt ) ) );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "deleteQuantitationType", "1" )
+                .param( "confirmation", "DELETE QT 1" ) )
+                .andExpect( status().isOk() );
+        verify( expressionDataDeleterService ).deleteRawData( ee, qt );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "deleteQuantitationType", "1" )
+                .param( "confirmation", "DELETE QT 2" ) )
+                .andExpect( status().isBadRequest() );
+    }
+
+    @Test
+    public void testDeleteQuantitationTypeWhenConfirmationIsIncorrect() throws Exception {
+        when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) )
+                .thenReturn( Collections.singletonMap( RawExpressionDataVector.class, Collections.singleton( qt ) ) );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "deleteQuantitationType", "1" )
+                .param( "confirmation", "DELETE QT 2" ) )
+                .andExpect( status().isBadRequest() );
+        verifyNoInteractions( expressionDataDeleterService );
+    }
+
+    @Test
+    public void testDeleteSingleCellQuantitationType() throws Exception {
+        when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) )
+                .thenReturn( Collections.singletonMap( SingleCellExpressionDataVector.class, Collections.singleton( qt ) ) );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "deleteQuantitationType", "1" )
+                .param( "confirmation", "DELETE QT 1" ) )
+                .andExpect( status().isOk() );
+        verify( expressionDataDeleterService ).deleteSingleCellData( ee, qt );
     }
 }

@@ -52,6 +52,12 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<AuditEvent> getEventsWithType( Auditable auditable ) {
+        return this.auditEventDao.getEventsWithType( auditable );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditables ) {
         return this.auditEventDao.getCreateEvents( auditables );
     }

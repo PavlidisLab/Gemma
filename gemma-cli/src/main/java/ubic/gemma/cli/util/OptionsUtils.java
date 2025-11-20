@@ -4,7 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -21,7 +21,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 
 public class OptionsUtils {
 
@@ -40,10 +39,11 @@ public class OptionsUtils {
     public static void addDateOption( String name, @Nullable String longOpt, String desc, Options options ) {
         options.addOption( Option.builder( name )
                 .longOpt( longOpt )
-                .desc( appendIfMissing( desc, "." ) + "\nThe date can be specified in ISO 8601 format, as a relative date (e.g. +1d, -1m, -1h), or as a natural language expression (e.g. five hours ago, last week, etc.)." )
+                .desc( Strings.CS.appendIfMissing( desc, "." ) + "\nThe date can be specified in ISO 8601 format, as a relative date (e.g. +1d, -1m, -1h), or as a natural language expression (e.g. five hours ago, last week, etc.)." )
                 .hasArg()
                 .type( Date.class )
-                .converter( new DateConverterImpl( DEFAULT_RELATIVE_TO, DEFAULT_TIME_ZONE ) ).build() );
+                .converter( new DateConverterImpl( DEFAULT_RELATIVE_TO, DEFAULT_TIME_ZONE ) )
+                .get() );
     }
 
     /**
@@ -110,14 +110,20 @@ public class OptionsUtils {
         }
     }
 
+    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
+        addAutoOption( options, optionName, longOptionName, description, noOptionName, longNoOptionName, noDescription, "Default is to auto-detect." );
+    }
+
     /**
      * Add an option with three possible values: {@code true}, {@code false}, or {@code null}.
      * <p>
      * Use {@link #getAutoOptionValue(CommandLine, String, String)} to retrieve its value later on.
+     *
+     * @param defaultDescription description of the default behavior when neither option is specified
      */
-    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
-        options.addOption( optionName, longOptionName, false, description + " This option is incompatible with " + formatOption( noOptionName, longNoOptionName ) + ". Default is to auto-detect." );
-        options.addOption( noOptionName, longNoOptionName, false, noDescription + " This option is incompatible with " + formatOption( optionName, longOptionName ) + ". Default is to auto-detect." );
+    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription, String defaultDescription ) {
+        options.addOption( optionName, longOptionName, false, Strings.CS.appendIfMissing( description, "." ) + " This option is incompatible with " + formatOption( noOptionName, longNoOptionName ) + ". " + defaultDescription );
+        options.addOption( noOptionName, longNoOptionName, false, Strings.CS.appendIfMissing( noDescription, "." ) + " This option is incompatible with " + formatOption( optionName, longOptionName ) + ". " + defaultDescription );
     }
 
     /**
@@ -168,9 +174,9 @@ public class OptionsUtils {
                 .argName( enumClass.getSimpleName() )
                 .converter( EnumConverter.of( enumClass, descriptions ) )
                 .desc( String.format( "%s Possible values are: %s.",
-                        appendIfMissing( description, "." ),
+                        Strings.CS.appendIfMissing( description, "." ),
                         Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
-                .build() );
+                .get() );
     }
 
     public static <T extends Enum<T>> void addEnumSetOption( Options options, String optionName, String longOption, String description, Class<T> enumClass ) {
@@ -180,9 +186,9 @@ public class OptionsUtils {
                 .valueSeparator( ',' )
                 .converter( EnumConverter.of( enumClass ) )
                 .desc( String.format( "%s Possible values are: %s.",
-                        appendIfMissing( description, "." ),
+                        Strings.CS.appendIfMissing( description, "." ),
                         Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
-                .build() );
+                .get() );
     }
 
     /**
@@ -357,7 +363,7 @@ public class OptionsUtils {
         return formatOption( opt.getOpt(), opt.getLongOpt() );
     }
 
-    private static String formatOption( String opt, @Nullable String longOpt ) {
+    public static String formatOption( String opt, @Nullable String longOpt ) {
         return "-" + opt + ( longOpt != null ? ",--" + longOpt : "" );
     }
 
@@ -371,9 +377,9 @@ public class OptionsUtils {
                 || Path.class.equals( o.getType() )
                 // FIXME: remove all these heuristics, all options should be either File or Path
                 || ( String.class.equals( o.getType() ) && o.getConverter() == null && (
-                StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
-                        || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
-                        || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS ) ) );
+                Strings.CI.containsAny( o.getOpt(), FILE_KEYWORDS )
+                        || Strings.CI.containsAny( o.getLongOpt(), FILE_KEYWORDS )
+                        || Strings.CI.containsAny( o.getArgName(), FILE_KEYWORDS ) ) );
     }
 
     private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w,

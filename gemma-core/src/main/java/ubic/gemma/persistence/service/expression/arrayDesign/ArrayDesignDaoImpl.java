@@ -464,7 +464,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Get the ids of experiments that "originally" used this platform, but which don't any more due to a platform
      * switch.
      *
-     * @param  arrayDesign a platform for which the statistic is computed
+     * @param arrayDesign a platform for which the statistic is computed
      * @return collection of experiment IDs.
      */
     @Override
@@ -854,8 +854,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
         Hibernate.initialize( arrayDesign.getMergees() );
         Hibernate.initialize( arrayDesign.getDesignProvider() );
-        Hibernate.initialize( arrayDesign.getAuditTrail() );
-        Hibernate.initialize( arrayDesign.getAuditTrail().getEvents() );
         Hibernate.initialize( arrayDesign.getExternalReferences() );
         Hibernate.initialize( arrayDesign.getSubsumingArrayDesign() );
         Hibernate.initialize( arrayDesign.getMergedInto() );

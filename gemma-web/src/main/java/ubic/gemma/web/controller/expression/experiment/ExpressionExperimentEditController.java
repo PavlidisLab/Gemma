@@ -41,15 +41,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
-import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -59,6 +62,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.MessageUtil;
+import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
@@ -74,12 +78,6 @@ import java.util.stream.Collectors;
 @Controller
 @CommonsLog
 public class ExpressionExperimentEditController {
-
-    private static final List<String>
-            STANDARD_QUANTITATION_TYPES = Arrays.stream( StandardQuantitationType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            SCALE_TYPES = Arrays.stream( ScaleType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            GENERAL_QUANTITATION_TYPES = Arrays.stream( GeneralType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() ),
-            REPRESENTATIONS = Arrays.stream( PrimitiveType.values() ).map( Enum::name ).sorted().collect( Collectors.toList() );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -99,6 +97,10 @@ public class ExpressionExperimentEditController {
     protected MessageSource messageSource;
     @Autowired
     protected MessageUtil messageUtil;
+    @Autowired
+    private ExpressionExperimentEditControllerHelperService expressionExperimentEditControllerHelperService;
+    @Autowired
+    private ExpressionDataDeleterService expressionDataDeleterService;
 
     @Autowired
     private TaskExecutor taskExecutor;
@@ -115,10 +117,35 @@ public class ExpressionExperimentEditController {
          * {@link #quantitationTypes}, organized by the type of data vector they apply to and in the same order.
          */
         private Map<Class<? extends DataVector>, List<QuantitationTypeEditForm>> quantitationTypesByVectorType;
+        @Nullable
         private List<SingleCellDimensionEditForm> singleCellDimensions;
+        /**
+         * This field is populated by the backend, so it is always non-null.
+         */
         private Collection<BioAssayValueObject> bioAssays;
         @Nullable
+        private Long preferredCellTypeAssignmentId;
+        @Nullable
+        private List<CharacteristicValueObject> preferredCellTypeAssignmentValues;
+        /**
+         * A list of values from the current cell type factor (to compare with the current preferred CTA).
+         */
+        @Nullable
+        private List<FactorValueBasicValueObject> cellTypeFactorValues;
+        /**
+         * Whether the preferred cell type assignment is compatible with the existing cell type factor.
+         */
+        private boolean isPreferredCellTypeAssignmentCompatibleWithCellTypeFactor;
+        @Nullable
+        private Set<CharacteristicValueObject> incompatibleCellTypeAssignmentValues;
+        @Nullable
+        private Set<FactorValueBasicValueObject> unmatchedCellTypeFactorValues;
+        @Nullable
         private String assayToMaterialMap;
+        /**
+         * Field used to confirm destructive actions.
+         */
+        private String confirmation;
         /**
          * Return to the experiment page after a successful update.
          * <p>
@@ -131,12 +158,39 @@ public class ExpressionExperimentEditController {
     @NoArgsConstructor
     public static class SingleCellDimensionEditForm {
         private Long id;
+        /**
+         * This field is populated by the backend, so it is always non-null.
+         */
+        private List<QuantitationTypeValueObject> quantitationTypes;
+        @Nullable
         private List<CellTypeAssignmentEditForm> cellTypeAssignments;
+        @Nullable
         private List<CellLevelCharacteristicsEditForm> cellLevelCharacteristics;
 
-        public SingleCellDimensionEditForm( SingleCellDimension scd ) {
+        /**
+         *
+         * @param quantitationTypes a set of quantitation types associated to this single-cell dimension; can be null
+         * @param preferredCtaIds   a mapping of CTA IDs to whether they are preferred or not; can be null in which case
+         *                          the isPreferred is filled from the database
+         */
+        public SingleCellDimensionEditForm( SingleCellDimension scd, @Nullable Set<QuantitationType> quantitationTypes, @Nullable Map<Long, Boolean> preferredCtaIds ) {
             this.id = scd.getId();
+            if ( quantitationTypes != null ) {
+                this.quantitationTypes = quantitationTypes.stream()
+                        .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( QuantitationType::getId ) )
+                        .map( QuantitationTypeValueObject::new )
+                        .collect( Collectors.toList() );
+            } else {
+                this.quantitationTypes = Collections.emptyList();
+            }
             this.cellTypeAssignments = scd.getCellTypeAssignments().stream().map( CellTypeAssignmentEditForm::new ).collect( Collectors.toList() );
+            if ( preferredCtaIds != null ) {
+                for ( CellTypeAssignmentEditForm cellTypeAssignmentEditForm : this.cellTypeAssignments ) {
+                    if ( preferredCtaIds.containsKey( cellTypeAssignmentEditForm.getId() ) ) {
+                        cellTypeAssignmentEditForm.setIsPreferred( preferredCtaIds.get( cellTypeAssignmentEditForm.getId() ) );
+                    }
+                }
+            }
             this.cellLevelCharacteristics = scd.getCellLevelCharacteristics().stream().map( CellLevelCharacteristicsEditForm::new ).collect( Collectors.toList() );
         }
     }
@@ -162,6 +216,8 @@ public class ExpressionExperimentEditController {
             setValues( cta.getCellTypes().stream().map( Characteristic::getValue ).sorted().collect( Collectors.toList() ) );
         }
 
+        // used by the frontend
+        @SuppressWarnings("unused")
         public boolean getIsPreferred() {
             return isPreferred;
         }
@@ -210,15 +266,25 @@ public class ExpressionExperimentEditController {
         private Boolean isMaskedPreferred;
         @Nullable
         private Boolean isSingleCellPreferred;
-        // all required, Boolean is used for name consistency
+        // all required
         private boolean isBackground;
         private boolean isBackgroundSubtracted;
         private boolean isNormalized;
         private boolean isBatchCorrected;
         private boolean isRatio;
         private boolean isRecomputedFromRawData;
+        /**
+         * Disabled by default in the UI.
+         */
+        @Nullable
+        private Boolean isAggregated;
 
-        public QuantitationTypeEditForm( QuantitationType qt ) {
+        /**
+         * Populated by the backend.
+         */
+        private Class<? extends DataVector> vectorType;
+
+        public QuantitationTypeEditForm( QuantitationType qt, Class<? extends DataVector> vectorType ) {
             setId( qt.getId() );
             setName( qt.getName() );
             setDescription( qt.getDescription() );
@@ -236,6 +302,8 @@ public class ExpressionExperimentEditController {
             setIsBatchCorrected( qt.getIsBatchCorrected() );
             setIsRatio( qt.getIsRatio() );
             setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
+            setIsAggregated( qt.getIsAggregated() );
+            setVectorType( vectorType );
         }
 
         public boolean getIsBackground() {
@@ -285,35 +353,43 @@ public class ExpressionExperimentEditController {
         public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
             this.isRecomputedFromRawData = isRecomputedFromRawData;
         }
+
+        @Nullable
+        public Boolean getIsAggregated() {
+            return isAggregated;
+        }
+
+        public void setIsAggregated( @Nullable Boolean isAggregated ) {
+            this.isAggregated = isAggregated;
+        }
     }
 
     @RequestMapping(value = "/expressionExperiment/editExpressionExperiment.html", method = RequestMethod.GET)
     public ModelAndView getExpressionExperimentEditPage( @RequestParam("id") Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new,
-                "No experiment with ID " + id );
         return new ModelAndView( "expressionExperiment.edit" )
-                .addObject( "expressionExperiment", getFormObject( ee ) )
-                .addObject( "keywords", getKeywords( ee ) )
-                .addAllObjects( getReferenceData() );
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }
 
     @RequestMapping(value = "/expressionExperiment/editExpressionExperiment.html", method = RequestMethod.POST)
     public ModelAndView updateExpressionExperiment( @RequestParam("id") Long id,
             @ModelAttribute("expressionExperiment") ExpressionExperimentEditForm form, BindingResult bindingResult,
             HttpServletResponse response ) {
-        ExpressionExperiment expressionExperiment = expressionExperimentService.loadAndThawLiteOrFail( id,
-                EntityNotFoundException::new, String.format( "No experiment with ID %d", id ) );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
 
-        // the backend only submits quantitationTypes and assayToMaterialMap, so we need to populate the remaining fields
-        populateForm( form, expressionExperiment );
+        // the frontend only submits quantitationTypes and assayToMaterialMap, so we need to populate the remaining fields
+        expressionExperimentEditControllerHelperService.populateForm( form, expressionExperiment );
 
         // FIXME: the update can alter properties affecting hashCode(), so an hash set is unsuitable here
         Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
         Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
         Map<Long, Class<? extends DataVector>> qtbv = new LinkedHashMap<>();
         if ( form.getQuantitationTypes() != null ) {
-            for ( Entry<Class<? extends DataVector>, Set<QuantitationType>> entry : expressionExperimentService
-                    .getQuantitationTypesByVectorType( expressionExperiment ).entrySet() ) {
+            Map<Class<? extends DataVector>, Set<QuantitationType>> qtbvt = expressionExperimentService
+                    .getQuantitationTypesByVectorType( expressionExperiment );
+            Map<Long, QuantitationType> qtById = qtbvt.values().stream()
+                    .flatMap( Set::stream )
+                    .collect( Collectors.toMap( QuantitationType::getId, qt -> qt ) );
+            for ( Entry<Class<? extends DataVector>, Set<QuantitationType>> entry : qtbvt.entrySet() ) {
                 Class<? extends DataVector> key = entry.getKey();
                 Set<QuantitationType> v = entry.getValue();
                 for ( QuantitationType qt : v ) {
@@ -328,7 +404,19 @@ public class ExpressionExperimentEditController {
             }
             Map<Class<? extends DataVector>, List<QuantitationTypeEditForm>> qtf = new LinkedHashMap<>();
             for ( QuantitationTypeEditForm qt : form.getQuantitationTypes() ) {
-                qtf.computeIfAbsent( qtbv.get( qt.getId() ), k -> new ArrayList<>() )
+                Class<? extends DataVector> vectorType = qtbv.get( qt.getId() );
+                // these fields are not editable by the user, so they need to be populated
+                if ( qt.getIsAggregated() == null ) {
+                    qt.setIsAggregated( qtById.get( qt.getId() ).getIsAggregated() );
+                }
+                if ( qt.getIsMaskedPreferred() == null ) {
+                    qt.setIsMaskedPreferred( qtById.get( qt.getId() ).getIsMaskedPreferred() );
+                }
+                if ( qt.getRepresentation() == null ) {
+                    qt.setRepresentation( qtById.get( qt.getId() ).getRepresentation().toString() );
+                }
+                qt.setVectorType( vectorType );
+                qtf.computeIfAbsent( vectorType, k -> new ArrayList<>() )
                         .add( qt );
             }
             form.setQuantitationTypesByVectorType( qtf );
@@ -336,11 +424,15 @@ public class ExpressionExperimentEditController {
 
         ValidationUtils.invokeValidator( new ExpressionExperimentEditFormValidator( expressionExperiment, qtbv ), form, bindingResult );
         if ( bindingResult.hasErrors() ) {
+            expressionExperimentEditControllerHelperService.populateCellTypeMisalignment( form, expressionExperiment );
             response.setStatus( HttpServletResponse.SC_BAD_REQUEST );
             return new ModelAndView( "expressionExperiment.edit" )
                     .addObject( "expressionExperiment", form )
-                    .addAllObjects( getReferenceData() );
+                    .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
         }
+
+        // fetch the previous CTA in case the preferred single-cell QT changes
+        Optional<CellTypeAssignment> previousCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment );
 
         boolean reprocess = false;
         boolean recomputeSingleCellSparsityMetrics = false;
@@ -351,7 +443,7 @@ public class ExpressionExperimentEditController {
                     continue;
                 }
                 if ( entry.getKey().getIsPreferred() ) {
-                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, reprocessing will be performed." );
+                    this.messageUtil.saveMessage( "Preferred raw quantitation type has been significantly changed, reprocessing will be performed." );
                     reprocess = true;
                 } else if ( preferredQuantitationTypes.contains( entry.getKey() )
                         && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsPreferred ) ) {
@@ -359,8 +451,14 @@ public class ExpressionExperimentEditController {
                     this.messageUtil.saveMessage( "There is no preferred quantitation type, however existing processed data will be kept." );
                 }
                 if ( entry.getKey().getIsSingleCellPreferred() ) {
-                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." );
                     recomputeSingleCellSparsityMetrics = true;
+                    // check if it recommended to re-create the cell type factor since we changed the preferred single-cell QT
+                    Optional<CellTypeAssignment> newCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( expressionExperiment, entry.getKey() );
+                    this.messageUtil.saveMessage( "Preferred single-cell quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." );
+                    if ( newCta.isPresent() && !newCta.equals( previousCta ) ) {
+                        this.messageUtil.saveMessage( String.format( "The preferred cell type assignment has changed to %s, you should re-create the cell type factor.",
+                                newCta.get() ) );
+                    }
                 } else if ( preferredSingleCellQuantitationTypes.contains( entry.getKey() )
                         && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsSingleCellPreferred ) ) {
                     // sparsity metrics will be cleared if there are no other preferred SC QTs
@@ -368,6 +466,10 @@ public class ExpressionExperimentEditController {
                     recomputeSingleCellSparsityMetrics = true;
                 }
             }
+        }
+
+        if ( form.getSingleCellDimensions() != null ) {
+            updateSingleCellDimensions( expressionExperiment, form.getSingleCellDimensions() );
         }
 
         if ( form.getAssayToMaterialMap() != null ) {
@@ -395,69 +497,103 @@ public class ExpressionExperimentEditController {
             } );
         }
 
+        // this needs to be filled after the updates
+        // TODO: reorganize this code better to merge getFormObject() with the user's changes
+        expressionExperimentEditControllerHelperService.populateCellTypeMisalignment( form, expressionExperiment );
+
         return new ModelAndView( "expressionExperiment.edit" )
                 .addObject( "expressionExperiment", form )
-                .addObject( "keywords", getKeywords( expressionExperiment ) )
-                .addAllObjects( getReferenceData() );
-    }
-
-    private ExpressionExperimentEditForm getFormObject( ExpressionExperiment ee ) {
-        ExpressionExperimentEditForm obj = new ExpressionExperimentEditForm();
-        populateForm( obj, ee );
-        LinkedHashMap<Class<? extends DataVector>, List<QuantitationTypeEditForm>> qtf = getQuantitationTypesByVectorType( ee );
-        List<QuantitationTypeEditForm> qtfL = qtf.values().stream()
-                .flatMap( Collection::stream )
-                .collect( Collectors.toList() );
-        obj.setQuantitationTypes( qtfL );
-        obj.setQuantitationTypesByVectorType( qtf );
-        return obj;
-    }
-
-    private void populateForm( ExpressionExperimentEditForm form, ExpressionExperiment expressionExperiment ) {
-        form.setId( expressionExperiment.getId() );
-        form.setShortName( expressionExperiment.getShortName() );
-        form.setName( expressionExperiment.getName() );
-        form.setDescription( expressionExperiment.getDescription() );
-        form.setBioAssays( convert2ValueObjects( expressionExperiment.getBioAssays() ) );
-        SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initconfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
-                .includeCtas( true )
-                .includeClcs( true )
-                .includeProtocol( true )
-                .includeCharacteristics( true )
-                .build();
-        List<SingleCellDimension> scds = singleCellExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( expressionExperiment, initconfig );
-        form.setSingleCellDimensions( scds.stream().map( SingleCellDimensionEditForm::new ).collect( Collectors.toList() ) );
-    }
-
-    private Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
-        for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay, false ) );
-        }
-        return result;
+                .addAllObjects( expressionExperimentEditControllerHelperService.getReferenceDataAndKeywords( expressionExperiment ) );
     }
 
     /**
-     * Organize all the QTs for the given experiment by the vector type they apply to.
+     * Re-create the cell type factor from the preferred cell type assignment.
+     *
+     * @param confirmation must be equal to {@code RECREATE CTF FROM CTA {preferredCtaId} [IGNORE COMPATIBLE]} to
+     *                     confirm that the user
      */
-    private LinkedHashMap<Class<? extends DataVector>, List<QuantitationTypeEditForm>> getQuantitationTypesByVectorType( ExpressionExperiment ee ) {
-        // sort the mapping
-        return expressionExperimentService.getQuantitationTypesByVectorType( ee ).entrySet().stream()
-                .sorted( Map.Entry.comparingByKey( Comparator.comparing( Class::getSimpleName, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
-                .collect( Collectors.toMap( Entry::getKey,
-                        v -> v.getValue().stream().sorted( Comparator.comparing( QuantitationType::getName ) ).map( QuantitationTypeEditForm::new ).collect( Collectors.toList() ),
-                        ( a, b ) -> b,
-                        LinkedHashMap::new ) );
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "recreateCellTypeFactor" })
+    public ModelAndView recreateCellTypeFactor( @RequestParam("id") Long id, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        CellTypeAssignment preferredCta = singleCellExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
+                .orElseThrow( () -> new IllegalArgumentException( "No preferred cell type assignment found for " + ee.getShortName() + "." ) );
+        if ( !confirmation.equals( "RECREATE CTF FROM CTA " + preferredCta.getId() ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for re-creating the cell type factor." );
+        }
+        ExperimentalFactor previousCellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee ).orElse( null );
+        ExperimentalFactor newCtf = singleCellExpressionExperimentService.createCellTypeFactor( ee, true, false );
+        if ( newCtf != null && newCtf.equals( previousCellTypeFactor ) ) {
+            messageUtil.saveMessage( "The current cell type factor was kept since it's compatible with the preferred cell type assignment." );
+        } else if ( newCtf != null ) {
+            messageUtil.saveMessage( "The cell type factor was " + ( previousCellTypeFactor != null ? "replaced" : "created" ) + "." );
+        } else {
+            // should never happen since we passed removeExistingIfNecessary
+            messageUtil.saveMessage( "No cell type factor was created." );
+        }
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }
 
-    private Map<String, ?> getReferenceData() {
-        Map<String, Object> referenceData = new HashMap<>();
-        referenceData.put( "standardQuantitationTypes", new ArrayList<>( STANDARD_QUANTITATION_TYPES ) );
-        referenceData.put( "scaleTypes", new ArrayList<>( SCALE_TYPES ) );
-        referenceData.put( "generalQuantitationTypes", new ArrayList<>( GENERAL_QUANTITATION_TYPES ) );
-        referenceData.put( "representations", new ArrayList<>( REPRESENTATIONS ) );
-        referenceData.put( "cellTypeAssignmentProtocols", singleCellExpressionExperimentService.getCellTypeAssignmentProtocols() );
-        return referenceData;
+    /**
+     * @param confirmation must be equal to {@code "DELETE QT " + qtId} to confirm that the user
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteQuantitationType" })
+    public ModelAndView deleteQuantitationType( @RequestParam("id") Long id, @RequestParam("deleteQuantitationType") Long qtId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        Map<Class<? extends DataVector>, Set<QuantitationType>> qtByVt = expressionExperimentService.getQuantitationTypesByVectorType( ee );
+        QuantitationType qt = null;
+        Class<? extends DataVector> vectorType = null;
+        for ( Entry<Class<? extends DataVector>, Set<QuantitationType>> entry : qtByVt.entrySet() ) {
+            for ( QuantitationType qt2 : entry.getValue() ) {
+                if ( qt2.getId().equals( qtId ) ) {
+                    qt = qt2;
+                    vectorType = entry.getKey();
+                    break;
+                }
+            }
+        }
+        if ( qt == null ) {
+            throw new EntityNotFoundException( "No quantitation type with ID " + qtId + " found for " + ee.getShortName() + "." );
+        }
+        if ( !confirmation.equals( "DELETE QT " + qt.getId() ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the quantitation type with ID " + qt.getId() + "." );
+        }
+        if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            expressionDataDeleterService.deleteRawData( ee, qt );
+        } else if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            expressionDataDeleterService.deleteSingleCellData( ee, qt );
+        } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            expressionDataDeleterService.deleteProcessedData( ee );
+        } else {
+            throw new IllegalArgumentException( "Deleting quantitation types of type " + vectorType.getSimpleName() + " is not supported yet." );
+        }
+        messageUtil.saveMessage( "Deleted " + qt + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteCellTypeAssignment" })
+    public ModelAndView deleteCellTypeAssignment( @RequestParam("id") Long id, @RequestParam("deleteCellTypeAssignment") Long ctaId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        if ( !confirmation.equals( "DELETE CTA " + ctaId ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the cell type assignment with ID " + ctaId + "." );
+        }
+        singleCellExpressionExperimentService.removeCellTypeAssignmentById( ee, ctaId );
+        messageUtil.saveMessage( "Deleted cell type assignment with ID " + ctaId + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/expressionExperiment/editExpressionExperiment.html", params = { "deleteCellLevelCharacteristics" })
+    public ModelAndView deleteCellLevelCharacteristics( @RequestParam("id") Long id, @RequestParam("deleteCellLevelCharacteristics") Long clcId, @RequestParam("confirmation") String confirmation ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new );
+        if ( !confirmation.equals( "DELETE CLC " + clcId ) ) {
+            throw new IllegalArgumentException( "No confirmation was provided for deleting the cell-level characteristics with ID " + clcId + "." );
+        }
+        singleCellExpressionExperimentService.removeCellLevelCharacteristicsById( ee, clcId );
+        messageUtil.saveMessage( "Deleted cell-level characteristics with ID " + clcId + "." );
+        return new ModelAndView( "expressionExperiment.edit" )
+                .addAllObjects( expressionExperimentEditControllerHelperService.getFormObjectAndReferenceDataAndKeywordsById( id ) );
     }
 
     private enum QuantitationTypeUpdateStatus {
@@ -493,6 +629,28 @@ public class ExpressionExperimentEditController {
                 throw new EntityNotFoundException( "No QuantitationType with ID " + editForm.getId() );
             }
 
+            // may be null if there is no associated vectors, careful!
+            Class<? extends DataVector> vectorType = editForm.getVectorType();
+            QuantitationType previousPreferredQt;
+            if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+                previousPreferredQt = expressionExperiment.getQuantitationTypes().stream()
+                        .filter( QuantitationType::getIsSingleCellPreferred )
+                        .findFirst()
+                        .orElse( null );
+            } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+                previousPreferredQt = expressionExperiment.getQuantitationTypes().stream()
+                        .filter( QuantitationType::getIsPreferred )
+                        .findFirst()
+                        .orElse( null );
+            } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+                previousPreferredQt = expressionExperiment.getQuantitationTypes().stream()
+                        .filter( QuantitationType::getIsMaskedPreferred )
+                        .findFirst()
+                        .orElse( null );
+            } else {
+                throw new UnsupportedOperationException( "Unsupported data vector type: " + vectorType );
+            }
+
             BeanWrapper qtBw = new BeanWrapperImpl( qt );
 
             boolean dirty = false;
@@ -501,7 +659,6 @@ public class ExpressionExperimentEditController {
 
             dirty |= setPropertyValue( qtBw, "name", StringUtils.strip( editForm.getName() ) );
             dirty |= setPropertyValue( qtBw, "description", StringUtils.stripToNull( editForm.getDescription() ) );
-
             if ( editForm.getIsSingleCellPreferred() != null ) {
                 veryDirty |= setPropertyValue( qtBw, "isSingleCellPreferred", editForm.getIsSingleCellPreferred() );
             }
@@ -526,14 +683,17 @@ public class ExpressionExperimentEditController {
             veryDirty |= setPropertyValue( qtBw, "isBackground", editForm.getIsBackground() );
             veryDirty |= setPropertyValue( qtBw, "isBackgroundSubtracted", editForm.getIsBackgroundSubtracted() );
             veryDirty |= setPropertyValue( qtBw, "isRecomputedFromRawData", editForm.getIsRecomputedFromRawData() );
+            if ( editForm.getIsAggregated() != null ) {
+                dirty |= setPropertyValue( qtBw, "isAggregated", editForm.getIsAggregated() );
+            }
 
             // only reprocess if the preferred QT has been significantly changed, including if the preferred QT has
             // changed
             if ( veryDirty ) {
-                expressionExperimentService.updateQuantitationType( expressionExperiment, qt );
+                expressionExperimentService.updateQuantitationType( expressionExperiment, qt, previousPreferredQt );
                 result.put( qt, QuantitationTypeUpdateStatus.SIGNIFICANT );
             } else if ( dirty ) {
-                expressionExperimentService.updateQuantitationType( expressionExperiment, qt );
+                expressionExperimentService.updateQuantitationType( expressionExperiment, qt, previousPreferredQt );
                 result.put( qt, QuantitationTypeUpdateStatus.COSMETIC );
             } else {
                 result.put( qt, QuantitationTypeUpdateStatus.NONE );
@@ -560,6 +720,64 @@ public class ExpressionExperimentEditController {
         }
         if ( updateEe ) {
             expressionExperimentService.update( expressionExperiment );
+        }
+    }
+
+    private void updateSingleCellDimensions( ExpressionExperiment expressionExperiment, List<SingleCellDimensionEditForm> singleCellDimensions ) {
+        for ( SingleCellDimensionEditForm form : singleCellDimensions ) {
+            // TODO: avoid loading cell IDs, but that won't work with Hibernate's Session.update()
+            SingleCellDimension scd = singleCellExpressionExperimentService.getSingleCellDimensionByIdWithoutCellIds( expressionExperiment,
+                    form.getId(), SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                            .includeCtas( true ) // we need those to tell if the preferred CTA changed, or was cleared, or nothing was changed
+                            .includeCharacteristics( true ) // needed to check if the CTA is aligned with the CTF
+                            .build() );
+            if ( scd == null ) {
+                throw new EntityNotFoundException( "No SingleCellDimension with ID " + form.getId() + " in " + expressionExperiment.getShortName() + "." );
+            }
+            if ( form.cellTypeAssignments != null ) {
+                Map<Long, CellTypeAssignment> ctaById = IdentifiableUtils.getIdMap( scd.getCellTypeAssignments() );
+                CellTypeAssignment preferredCta = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
+                CellTypeAssignment newPreferredCta = form.cellTypeAssignments.stream()
+                        .filter( CellTypeAssignmentEditForm::getIsPreferred )
+                        .map( CellTypeAssignmentEditForm::getId )
+                        .map( ctaById::get )
+                        .map( Objects::requireNonNull )
+                        .findFirst()
+                        .orElse( null );
+                if ( !Objects.equals( preferredCta, newPreferredCta ) ) {
+                    SingleCellExpressionExperimentService.PreferredCellTypeAssignmentChangeOutcome outcome;
+                    if ( newPreferredCta != null ) {
+                        outcome = singleCellExpressionExperimentService.changePreferredCellTypeAssignment( expressionExperiment, scd, newPreferredCta, false, false );
+                        messageUtil.saveMessage( "The preferred cell type assignment was changed to " + newPreferredCta.getName() + "." );
+                    } else {
+                        outcome = singleCellExpressionExperimentService.clearPreferredCellTypeAssignment( expressionExperiment, scd );
+                        messageUtil.saveMessage( "The preferred cell type assignment was cleared." );
+                    }
+                    switch ( outcome ) {
+                        case UNCHANGED:
+                            // this is important to report because the user might be expecting a change
+                            messageUtil.saveMessage( "The preferred cell type assignment was left unchanged." );
+                            break;
+                        case CELL_TYPE_FACTOR_RECREATED:
+                            messageUtil.saveMessage( "The cell type factor was re-created." );
+                            break;
+                        case CELL_TYPE_FACTOR_REMOVED:
+                            messageUtil.saveMessage( "The cell type factor was removed." );
+                            break;
+                        case CELL_TYPE_FACTOR_UNCHANGED:
+                            break;
+                        case CELL_TYPE_FACTOR_UNCHANGED_BUT_MISALIGNED:
+                            messageUtil.saveMessage( "The cell type factor was left unchanged, but it is now misaligned with the new preferred cell type assignment. You should re-create it." );
+                            break;
+                        default:
+                            log.warn( "Unsupported outcome " + outcome + " when changing the preferred CTA in " + scd + "." );
+                            break;
+                    }
+                } else {
+                    // no change, including the case where both are null
+                    log.debug( "No change to the preferred CTA in " + scd + "." );
+                }
+            }
         }
     }
 
@@ -642,7 +860,7 @@ public class ExpressionExperimentEditController {
                 bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
             }
         } else {
-            ExpressionExperimentEditController.log.info( "There were no changes to the BioMaterial -> BioAssay map" );
+            ExpressionExperimentEditController.log.debug( "There were no changes to the BioMaterial -> BioAssay map" );
 
         }
 
@@ -655,12 +873,6 @@ public class ExpressionExperimentEditController {
             return true;
         }
         return false;
-    }
-
-    private String getKeywords( ExpressionExperiment ee ) {
-        return expressionExperimentService.getAnnotations( ee ).stream()
-                .map( AnnotationValueObject::getTermName )
-                .collect( Collectors.joining( "," ) );
     }
 
     private static class ExpressionExperimentEditFormValidator implements Validator {
@@ -684,6 +896,7 @@ public class ExpressionExperimentEditController {
         public void validate( Object target, Errors errors ) {
             ExpressionExperimentEditForm form = ( ExpressionExperimentEditForm ) target;
             validateQuantitationTypes( form, errors );
+            validateSingleCellDimensions( form, errors );
             validateAssayToMaterialMap( form, errors );
         }
 
@@ -697,39 +910,39 @@ public class ExpressionExperimentEditController {
                 errors.pushNestedPath( "quantitationTypes[" + i + "]" );
                 // Note: there's no visible UI field for the ID, so we bind errors to the overall QT
                 if ( qt.getId() == null ) {
-                    errors.rejectValue( null, "required", "Quantitation type ID is required." );
+                    errors.rejectValue( null, "errors.QuantitationType.id.required" );
                     errors.popNestedPath();
                     continue;
                 }
                 if ( !vectorTypes.containsKey( qt.getId() ) ) {
-                    errors.rejectValue( null, "invalid", new String[] { String.valueOf( qt.getId() ) },
-                            String.format( "Quantitation type with ID %d does not belong to the experiment.", qt.getId() ) );
+                    errors.rejectValue( null, "errors.QuantitationType.doesNotBelongToExperiment",
+                            new String[] { String.valueOf( qt.getId() ) }, null );
                     errors.popNestedPath();
                     continue;
                 }
                 if ( StringUtils.isBlank( qt.getName() ) ) {
-                    errors.rejectValue( "name", "required", "Name is required." );
+                    errors.rejectValue( "name", "errors.QuantitationType.name.required" );
                 }
                 if ( !usedNames.add( StringUtils.strip( qt.getName() ) ) ) {
                     // this is not enforced in the database, but it's good practice when naming QTs.
-                    errors.rejectValue( "name", "unique", "Name must be unique for each quantitation type." );
+                    errors.rejectValue( "name", "errors.QuantitationType.name.unique" );
                 }
                 Class<? extends DataVector> vectorType = vectorTypes.get( qt.getId() );
                 if ( qt.getIsSingleCellPreferred() != null && qt.getIsSingleCellPreferred() ) {
                     if ( vectorType == null || !SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isSingleCellPreferred", "invalid", "This quantitation type is not applicable to single-cell data vectors." );
+                        errors.rejectValue( "isSingleCellPreferred", "errors.QuantitationType.isSingleCellPreferred.notApplicableToVectorType" );
                     }
                     numSingleCellPreferred++;
                 }
                 if ( qt.getIsPreferred() != null && qt.getIsPreferred() ) {
                     if ( vectorType == null || !RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isPreferred", "invalid", "This quantitation type is not applicable to raw data vectors." );
+                        errors.rejectValue( "isPreferred", "errors.QuantitationType.isPreferred.notApplicableToVectorType" );
                     }
                     numPreferred++;
                 }
                 if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() ) {
                     if ( vectorType == null || !ProcessedExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                        errors.rejectValue( "isMaskedPreferred", "invalid", "This quantitation type is not applicable to processed data vectors." );
+                        errors.rejectValue( "isMaskedPreferred", "errors.QuantitationType.isMaskedPreferred.notApplicableToVectorType" );
                     }
                     numMaskedPreferred++;
                 }
@@ -744,26 +957,53 @@ public class ExpressionExperimentEditController {
             }
             // also include QTs that are not modified when counting the number of preferred QTs
             if ( numSingleCellPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", "", "There must be at most one preferred single-cell quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredSingleCellQuantitationType" );
             }
             if ( numPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", "", "There must be at most one preferred raw quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredRawQuantitationType" );
             }
             if ( numMaskedPreferred > 1 ) {
-                errors.rejectValue( "quantitationTypes", "", "There must be at most one preferred processed quantitation type." );
+                errors.rejectValue( "quantitationTypes", "errors.QuantitationType.atMostOnePreferredProcessedQuantitationType" );
             }
         }
 
         private <T extends Enum<T>> void validateRequiredEnumField( String field, Class<T> enumClass, Errors errors ) {
             String val = ( String ) errors.getFieldValue( field );
             if ( val == null ) {
-                errors.rejectValue( field, "required", "Value is required." );
+                errors.rejectValue( field, "errors.Enum.required" );
                 return;
             }
             try {
                 Enum.valueOf( enumClass, val );
             } catch ( IllegalArgumentException e ) {
-                errors.rejectValue( field, "invalid", "Invalid value." );
+                errors.rejectValue( field, "errors.Enum.invalid" );
+            }
+        }
+
+        private void validateSingleCellDimensions( ExpressionExperimentEditForm form, Errors errors ) {
+            if ( form.getSingleCellDimensions() == null ) {
+                return;
+            }
+            for ( int i = 0; i < form.getSingleCellDimensions().size(); i++ ) {
+                errors.pushNestedPath( "singleCellDimensions[" + i + "]" );
+                // check if all CTAs are un
+                validateSingleCellDimension( form.getSingleCellDimensions().get( i ), errors );
+                errors.popNestedPath();
+            }
+        }
+
+        /**
+         * Only the "preferred" state is editable for now.
+         */
+        private void validateSingleCellDimension( SingleCellDimensionEditForm singleCellDimensionEditForm, Errors errors ) {
+            if ( singleCellDimensionEditForm.cellTypeAssignments == null ) {
+                return;
+            }
+            long numberOfPreferredCtas = singleCellDimensionEditForm.cellTypeAssignments.stream()
+                    .filter( CellTypeAssignmentEditForm::getIsPreferred )
+                    .count();
+            if ( numberOfPreferredCtas > 1 ) {
+                errors.rejectValue( "cellTypeAssignments", "errors.CellTypeAssignment.atMostOnePreferred" );
             }
         }
 
@@ -778,24 +1018,25 @@ public class ExpressionExperimentEditController {
                     try {
                         long bioAssayId = Long.parseLong( key );
                         if ( !bioAssays.contains( bioAssayId ) ) {
-                            errors.rejectValue( null, "invalid",
-                                    String.format( "Assay with ID %d does not belong to the experiment.", bioAssayId ) );
+                            errors.rejectValue( null, "errors.assayToMaterialMap.assayDoesNotBelongToExperiment",
+                                    new String[] { String.valueOf( bioAssayId ) }, null );
                         }
                     } catch ( NumberFormatException e ) {
-                        errors.rejectValue( null, "invalid", "Invalid assay ID." );
+                        errors.rejectValue( null, "errors.assayToMaterialMap.invalidAssayId" );
                     }
                     try {
                         long bioMaterialId = Long.parseLong( obj.getString( key ) );
                         if ( !bioMaterials.contains( bioMaterialId ) ) {
-                            errors.rejectValue( null, "invalid",
-                                    String.format( "Biomaterial with ID %d does not belong to the experiment.", bioMaterialId ) );
+                            errors.rejectValue( null, "errors.assayToMaterialMap.sampleDoesNotBelongToExperiment",
+                                    new String[] { String.valueOf( bioMaterialId ) }, null );
                         }
                     } catch ( NumberFormatException e ) {
-                        errors.rejectValue( null, "invalid", "Invalid biomaterial ID." );
+                        errors.rejectValue( null, "errors.assayToMaterialMap.invalidSampleId" );
                     }
                 }
             } catch ( JSONException e ) {
-                errors.rejectValue( "assayToMaterialMap", "invalid", "Invalid JSON format." );
+                log.warn( "Invalid JSON format in assayToMaterialMap", e );
+                errors.rejectValue( null, "errors.assayToMaterialMap.invalidJsonFormat" );
             } finally {
                 errors.popNestedPath();
             }
