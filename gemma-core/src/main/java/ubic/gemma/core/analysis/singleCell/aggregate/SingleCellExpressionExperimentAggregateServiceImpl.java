@@ -252,12 +252,12 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             log.info( "Applying single-cell sparsity metrics to the aggregated assays..." );
             for ( BioAssay ba : cellBAs ) {
                 assert expressedCells != null;
-                int bai = scd.getBioAssays().indexOf( sourceBioAssayMap.get( ba ) );
-                int cti = cellTypeIndices.get( ba );
+                int sourceSampleIndex = sourceSampleToIndex.get( sourceBioAssayMap.get( ba ) );
+                int cellTypeIndex = cellTypeIndices.get( ba );
                 int maskedCount = 0;
                 int count = 0;
-                for ( int i = scd.getBioAssaysOffset()[bai]; i < scd.getBioAssaysOffset()[bai] + scd.getNumberOfCellIdsBySample( bai ); i++ ) {
-                    if ( expressedCells[i] && cellLevelCharacteristics.getIndices()[i] == cti ) {
+                for ( int i = scd.getBioAssaysOffset()[sourceSampleIndex]; i < scd.getBioAssaysOffset()[sourceSampleIndex] + scd.getNumberOfCellIdsBySample( sourceSampleIndex ); i++ ) {
+                    if ( expressedCells[i] && cellLevelCharacteristics.getIndices()[i] == cellTypeIndex ) {
                         count++;
                         if ( mask != null && mask[i] ) {
                             maskedCount++;
