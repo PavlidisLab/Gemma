@@ -6,3 +6,5 @@ set IS_AGGREGATED = true
 where NAME like '%aggregated by%'
   and ID in (select distinct QUANTITATION_TYPE_FK
              from RAW_EXPRESSION_DATA_VECTOR);
+alter table BIO_ASSAY
+    add column NUMBER_OF_MASKED_CELLS integer default null after NUMBER_OF_CELLS;

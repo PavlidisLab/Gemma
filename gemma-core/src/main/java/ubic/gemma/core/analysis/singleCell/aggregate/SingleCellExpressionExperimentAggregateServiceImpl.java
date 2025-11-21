@@ -209,15 +209,15 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         }
 
         // sparsity metrics, only needed for preferred QTs
-        Map<BioAssay, boolean[]> cellsByBioAssay;
+        boolean[] expressedCells;
         Map<BioAssay, Integer> designElementsByBioAssay;
         Map<BioAssay, Integer> cellByDesignElementByBioAssay;
         if ( config.isMakePreferred() ) {
-            cellsByBioAssay = new HashMap<>();
+            expressedCells = new boolean[scd.getNumberOfCellIds()];
             designElementsByBioAssay = new HashMap<>();
             cellByDesignElementByBioAssay = new HashMap<>();
         } else {
-            cellsByBioAssay = null;
+            expressedCells = null;
             designElementsByBioAssay = null;
             cellByDesignElementByBioAssay = null;
         }
@@ -231,7 +231,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
             rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
-                    sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay,
+                    sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
                     cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds ) );
             rawVectors.add( rawVector );
             if ( rawVectors.size() % 100 == 0 ) {
@@ -251,19 +251,21 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         if ( config.isMakePreferred() ) {
             log.info( "Applying single-cell sparsity metrics to the aggregated assays..." );
             for ( BioAssay ba : cellBAs ) {
-                assert cellsByBioAssay != null;
-                boolean[] expressedCells = cellsByBioAssay.get( ba );
-                if ( expressedCells != null ) {
-                    int count = 0;
-                    for ( boolean b : expressedCells ) {
-                        if ( b ) {
-                            count++;
+                assert expressedCells != null;
+                int bai = scd.getBioAssays().indexOf( sourceBioAssayMap.get( ba ) );
+                int cti = cellTypeIndices.get( ba );
+                int maskedCount = 0;
+                int count = 0;
+                for ( int i = scd.getBioAssaysOffset()[bai]; i < scd.getBioAssaysOffset()[bai] + scd.getNumberOfCellIdsBySample( bai ); i++ ) {
+                    if ( expressedCells[i] && cellLevelCharacteristics.getIndices()[i] == cti ) {
+                        count++;
+                        if ( mask != null && mask[i] ) {
+                            maskedCount++;
                         }
                     }
-                    ba.setNumberOfCells( count );
-                } else {
-                    ba.setNumberOfCells( 0 );
                 }
+                ba.setNumberOfCells( count );
+                ba.setNumberOfMaskedCells( maskedCount );
                 ba.setNumberOfDesignElements( designElementsByBioAssay.getOrDefault( ba, 0 ) );
                 ba.setNumberOfCellsByDesignElements( cellByDesignElementByBioAssay.getOrDefault( ba, 0 ) );
             }
@@ -281,6 +283,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             details.append( "\n" ).append( "\t" ).append( cellBa );
             if ( config.isMakePreferred() ) {
                 details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() )
+                        .append( " Number of masked cells=" ).append( cellBa.getNumberOfMaskedCells() )
                         .append( " Number of design elements=" ).append( cellBa.getNumberOfDesignElements() )
                         .append( " Number of cells x design elements=" ).append( cellBa.getNumberOfCellsByDesignElements() );
             }
@@ -483,7 +486,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             Map<BioAssay, Integer> sourceSampleToIndex,
             Map<BioAssay, Integer> cellTypeIndices,
             SingleCellExpressionAggregationMethod method,
-            @Nullable Map<BioAssay, boolean[]> cellsByBioAssay,
+            @Nullable boolean[] cellsByBioAssay,
             @Nullable Map<BioAssay, Integer> designElementsByBioAssay,
             @Nullable Map<BioAssay, Integer> cellByDesignElementByBioAssay,
             boolean performLog2cpm,
@@ -558,13 +561,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             }
 
             if ( cellsByBioAssay != null ) {
-                cellsByBioAssay.compute( sample, ( k, v ) -> {
-                    if ( v == null ) {
-                        v = new boolean[scv.getSingleCellDimension().getNumberOfCellIds()];
-                    }
-                    metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, v );
-                    return v;
-                } );
+                metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, cellsByBioAssay );
             }
             if ( designElementsByBioAssay != null ) {
                 designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
@@ -635,6 +632,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             log.info( "Clearing sparsity metrics on " + bioAssays.size() + " assays since we're removing preferred aggregated vectors..." );
             for ( BioAssay ba : bioAssays ) {
                 ba.setNumberOfCells( null );
+                ba.setNumberOfMaskedCells( null );
                 ba.setNumberOfDesignElements( null );
                 ba.setNumberOfCellsByDesignElements( null );
                 bioAssayService.update( ba );

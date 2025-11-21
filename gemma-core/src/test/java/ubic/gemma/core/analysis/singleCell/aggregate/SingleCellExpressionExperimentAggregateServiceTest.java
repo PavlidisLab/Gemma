@@ -684,6 +684,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
 
         SingleCellAggregationConfig config = SingleCellAggregationConfig.builder()
                 .mask( mask )
+                .makePreferred( true )
                 .build();
         QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( ee, cellBAs, config );
 
@@ -700,6 +701,14 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     // because the numerator (librarySize + 1) and numerical error from log/exp transformation, the
                     // offset will be pretty large. This is attenuated by large library sizes.
                     assertThat( total ).isEqualTo( 1e6, Offset.offset( 1e5 ) );
+                } )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getBioAssayDimension().getBioAssays() )
+                            .extracting( BioAssay::getNumberOfCells )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                    assertThat( vec.getBioAssayDimension().getBioAssays() )
+                            .extracting( BioAssay::getNumberOfMaskedCells )
+                            .containsExactly( 5, 5, 5, 5, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3 );
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );

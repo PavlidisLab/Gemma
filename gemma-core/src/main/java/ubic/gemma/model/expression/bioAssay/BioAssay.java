@@ -125,9 +125,18 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
      * If this assay correspond to a pseudo-bulk, it is the number of such cells in the aggregate.
      * <p>
      * This applies to the preferred set of single-cell vectors.
+     * <p>
+     * Note that masked cells are still counted as expressed.
      */
     @Nullable
     private Integer numberOfCells;
+    /**
+     * Number of cells for the assay that have at least one expressed gene and has been masked.
+     * <p>
+     * This applies to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    private Integer numberOfMaskedCells;
     /**
      * Number of design elements in the assay with at least one cell expressing it.
      * <p>
@@ -307,6 +316,15 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
 
     public void setNumberOfCells( @Nullable Integer numberOfCells ) {
         this.numberOfCells = numberOfCells;
+    }
+
+    @Nullable
+    public Integer getNumberOfMaskedCells() {
+        return numberOfMaskedCells;
+    }
+
+    public void setNumberOfMaskedCells( @Nullable Integer numberOfMaskedCells ) {
+        this.numberOfMaskedCells = numberOfMaskedCells;
     }
 
     @Nullable
