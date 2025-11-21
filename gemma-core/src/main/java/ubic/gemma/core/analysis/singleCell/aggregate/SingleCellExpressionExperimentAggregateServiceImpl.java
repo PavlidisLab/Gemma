@@ -265,7 +265,9 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     }
                 }
                 ba.setNumberOfCells( count );
-                ba.setNumberOfMaskedCells( maskedCount );
+                if ( mask != null ) {
+                    ba.setNumberOfMaskedCells( maskedCount );
+                }
                 ba.setNumberOfDesignElements( designElementsByBioAssay.getOrDefault( ba, 0 ) );
                 ba.setNumberOfCellsByDesignElements( cellByDesignElementByBioAssay.getOrDefault( ba, 0 ) );
             }
