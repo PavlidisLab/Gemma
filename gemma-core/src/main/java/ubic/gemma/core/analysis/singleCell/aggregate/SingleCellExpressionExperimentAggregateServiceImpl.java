@@ -284,8 +284,11 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             BioAssay cellBa = cellBAs.get( i );
             details.append( "\n" ).append( "\t" ).append( cellBa );
             if ( config.isMakePreferred() ) {
-                details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() )
-                        .append( " Number of masked cells=" ).append( cellBa.getNumberOfMaskedCells() )
+                details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() );
+                if ( mask != null ) {
+                    details.append( " Number of masked cells=" ).append( cellBa.getNumberOfMaskedCells() );
+                }
+                details
                         .append( " Number of design elements=" ).append( cellBa.getNumberOfDesignElements() )
                         .append( " Number of cells x design elements=" ).append( cellBa.getNumberOfCellsByDesignElements() );
             }
