@@ -42,6 +42,7 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         log.info( "--------- Deleting any diff ex analyses for " + ee + " --------" );
         deas.removeForExperiment( ee, true );
+        refreshExpressionExperimentFromGemmaWebSilently( ee, false, true );
         addSuccessObject( ee, "Deleted differential expression analyses." );
         log.info( "--------- Finished Deleting for " + ee + " -------" );
     }
