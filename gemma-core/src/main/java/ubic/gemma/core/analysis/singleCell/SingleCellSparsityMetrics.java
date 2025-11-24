@@ -16,6 +16,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 
 /**
  * Compute sparsity metrics for single-cell data.
+ *
  * @author poirigui
  */
 @Component
@@ -68,7 +69,6 @@ public class SingleCellSparsityMetrics {
      */
     public boolean isSupported( SingleCellExpressionDataVector vector ) {
         try {
-            //noinspection ResultOfMethodCallIgnored
             isExpressed( threshold + 0.1, vector.getQuantitationType().getScale() );
             return true;
         } catch ( IllegalArgumentException e ) {
@@ -78,12 +78,13 @@ public class SingleCellSparsityMetrics {
 
     /**
      * Calculate the number of cells with at least one gene expressed.
+     *
      * @param characteristicIndex only cell with the given characteristic index will be considered
      */
-    public int getNumberOfCells( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public int getNumberOfCells( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         boolean[] isExpressed = new boolean[vectors.iterator().next().getSingleCellDimension().getNumberOfCellIds()];
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            addExpressedCells( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, isExpressed );
+            addExpressedCells( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, mask, isExpressed );
         }
         int count = 0;
         for ( boolean b : isExpressed ) {
@@ -97,7 +98,7 @@ public class SingleCellSparsityMetrics {
     /**
      * Populate a boolean vector that indicates if a cell has at least one expressed gene.
      */
-    public void addExpressedCells( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, boolean[] isExpressed ) {
+    public void addExpressedCells( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask, boolean[] isExpressed ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         Buffer buf = vector.getDataAsBuffer();
@@ -106,7 +107,9 @@ public class SingleCellSparsityMetrics {
             if ( isExpressed[cellIndex] ) {
                 continue;
             }
-            if ( isExpressed( getDouble( buf, i, vector.getQuantitationType().getRepresentation() ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, vector.getQuantitationType().getRepresentation() ), vector.getQuantitationType().getScale() )
+                    && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 isExpressed[cellIndex] = true;
             }
         }
@@ -130,22 +133,24 @@ public class SingleCellSparsityMetrics {
     /**
      * Calculate the number of genes expressed in at least one cell.
      */
-    public int getNumberOfDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex ) {
+    public int getNumberOfDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            count += getNumberOfDesignElements( vector, sampleIndex, characteristic, characteristicIndex );
+            count += getNumberOfDesignElements( vector, sampleIndex, characteristic, characteristicIndex, mask );
         }
         return count;
     }
 
-    public int getNumberOfDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex ) {
+    public int getNumberOfDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex, @Nullable boolean[] mask ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         Buffer buf = vector.getDataAsBuffer();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() )
+                    && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 return 1;
             }
         }
@@ -155,15 +160,15 @@ public class SingleCellSparsityMetrics {
     /**
      * Calculate the number of expressed cell by gene pairs.
      */
-    public int getNumberOfCellsByDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public int getNumberOfCellsByDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            count += getNumberOfCellsByDesignElements( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex );
+            count += getNumberOfCellsByDesignElements( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, mask );
         }
         return count;
     }
 
-    public int getNumberOfCellsByDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public int getNumberOfCellsByDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
@@ -171,7 +176,9 @@ public class SingleCellSparsityMetrics {
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() )
+                    && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 count++;
             }
         }

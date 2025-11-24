@@ -705,10 +705,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                 .allSatisfy( vec -> {
                     assertThat( vec.getBioAssayDimension().getBioAssays() )
                             .extracting( BioAssay::getNumberOfCells )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
-                    assertThat( vec.getBioAssayDimension().getBioAssays() )
-                            .extracting( BioAssay::getNumberOfMaskedCells )
-                            .containsExactly( 5, 5, 5, 5, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3 );
+                            .containsExactly( 19, 19, 19, 19, 18, 18, 18, 18, 28, 28, 28, 28, 30, 30, 30, 30 );
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
@@ -719,6 +716,12 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .hasSize( 16 )
                             .containsExactly( 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927826167638358, 19.927826167638358, 19.927826167638358, 19.927826167638358 );
                 } );
+
+        ArgumentCaptor<String> details = ArgumentCaptor.captor();
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), eq( "Created 1 aggregated raw vectors for " + newQt + "." ), details.capture() );
+        assertThat( details.getValue() )
+                .contains( "BioAssay Name=s0c0 Number of cells=19 Number of design elements=1 Number of cells x design elements=19 Number of masked cells=29/264 Library Size=95,00" )
+                .contains( "Mask: GenericCellLevelCharacteristics Characteristics=false, true Number of characteristics=2 Number of assigned cells=4000" );
     }
 
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {

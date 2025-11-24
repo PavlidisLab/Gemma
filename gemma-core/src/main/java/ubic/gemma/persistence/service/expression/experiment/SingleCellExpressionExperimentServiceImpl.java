@@ -507,11 +507,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 ba.setNumberOfCellsByDesignElements( null );
                 continue;
             }
-            int numberOfCells = metrics.getNumberOfCells( vectors, sampleIndex, null, -1 );
+            int numberOfCells = metrics.getNumberOfCells( vectors, sampleIndex, null, -1, null );
             totalNumberOfCells += numberOfCells;
             ba.setNumberOfCells( numberOfCells );
-            ba.setNumberOfDesignElements( metrics.getNumberOfDesignElements( vectors, sampleIndex, null, -1 ) );
-            ba.setNumberOfCellsByDesignElements( metrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null, -1 ) );
+            ba.setNumberOfDesignElements( metrics.getNumberOfDesignElements( vectors, sampleIndex, null, -1, null ) );
+            ba.setNumberOfCellsByDesignElements( metrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null, -1, null ) );
             log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
                     ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
         }
@@ -548,9 +548,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 alreadyCheckedForSupport = true;
             }
             for ( int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++ ) {
-                metrics.addExpressedCells( vec, sampleIndex, null, -1, isExpressed );
-                numberOfDesignElements[sampleIndex] += metrics.getNumberOfDesignElements( vec, sampleIndex, null, -1 );
-                numberOfCellByDesignElements[sampleIndex] += metrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1 );
+                metrics.addExpressedCells( vec, sampleIndex, null, -1, null, isExpressed );
+                numberOfDesignElements[sampleIndex] += metrics.getNumberOfDesignElements( vec, sampleIndex, null, -1, null );
+                numberOfCellByDesignElements[sampleIndex] += metrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1, null );
                 sampleIndex++;
             }
         }

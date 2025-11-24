@@ -45,9 +45,6 @@
       <property name="numberOfCells" type="java.lang.Integer">
          <column name="NUMBER_OF_CELLS" not-null="false" sql-type="INTEGER"/>
       </property>
-      <property name="numberOfMaskedCells" type="java.lang.Integer">
-         <column name="NUMBER_OF_MASKED_CELLS" not-null="false" sql-type="INTEGER"/>
-      </property>
       <property name="numberOfDesignElements">
          <column name="NUMBER_OF_DESIGN_ELEMENTS" not-null="false" sql-type="INTEGER"/>
       </property>
