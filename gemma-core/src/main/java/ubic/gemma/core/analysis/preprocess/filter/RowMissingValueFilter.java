@@ -34,7 +34,7 @@ import java.util.List;
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class RowMissingValueFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private static final Log log = LogFactory.getLog( RowMissingValueFilter.class.getName() );
     private static final int ABSOLUTE_MIN_PRESENT = 1;
@@ -193,6 +193,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
     @Override
     public String toString() {
-        return "RowMissingValueFilter";
+        return String.format( "RowMissingValueFilter Min Present Fraction=%.2f%% Min Present Count=%d",
+                100.0 * minPresentFraction, minPresentCount );
     }
 }

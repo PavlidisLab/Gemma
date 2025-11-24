@@ -30,10 +30,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
-import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
+import ubic.gemma.core.analysis.preprocess.filter.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
@@ -78,7 +75,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException {
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig ) throws FilteringException {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
@@ -89,14 +86,14 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig, boolean logTransform ) throws FilteringException {
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         return this.getFilteredMatrix( dataVectors, arrayDesignsUsed, filterConfig, logTransform );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, FilterConfig filterConfig,
+    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig,
             boolean logTransform ) throws FilteringException {
         return this.getFilteredMatrix( dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform );
     }
@@ -203,19 +200,22 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      * <li>Remove rows with very high or low expression (as configured)
      * </ol>
      *
-     * @param dataVectors data vectors
+     * @param dataVectors  data vectors
+     * @param logTransform whether to log-transform the data if not already done
      * @return filtered matrix
      * @throws NoDesignElementsException if filtering results in no row left in the expression matrix
      */
-    private ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed, FilterConfig filterConfig, boolean logTransform ) throws FilteringException {
+    private ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors,
+            Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform
+    ) throws FilteringException {
         if ( dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
         if ( logTransform ) {
-            eeDoubleMatrix = transform( eeDoubleMatrix, arrayDesignsUsed );
+            eeDoubleMatrix = logTransform( eeDoubleMatrix, arrayDesignsUsed );
         }
-        return new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig ).filter( eeDoubleMatrix );
+        return new ExpressionExperimentFilter( filterConfig ).filter( eeDoubleMatrix, arrayDesignsUsed, new ExpressionExperimentFilterResult() );
     }
 
     /**
@@ -225,7 +225,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      *       and {@link ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils} for the parts that
      *       detect log-transformed data and two-color arrays
      */
-    private ExpressionDataDoubleMatrix transform( ExpressionDataDoubleMatrix datamatrix, Collection<ArrayDesign> arrayDesignsUsed ) {
+    private ExpressionDataDoubleMatrix logTransform( ExpressionDataDoubleMatrix datamatrix, Collection<ArrayDesign> arrayDesignsUsed ) {
         boolean alreadyLogged = this.isLogTransformed( datamatrix, arrayDesignsUsed );
         if ( alreadyLogged ) {
             return datamatrix;
@@ -241,7 +241,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     /**
-     * @param eeDoubleMatrix  the matrix
+     * @param eeDoubleMatrix the matrix
      * @return true if the data looks like it is already log transformed, false otherwise. This is based on the
      * quantitation types and, as a check, looking at the data itself.
      */

@@ -5,9 +5,10 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 
 /**
  * Remove rows that have a variance of zero (within a small constant)
+ *
  * @author paul
  */
-public class ZeroVarianceFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class ZeroVarianceFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix matrix ) {

@@ -21,17 +21,12 @@ package ubic.gemma.core.analysis.expression.diff;
 import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.*;
-
-import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.writeConfig;
 
 /**
  * Holds the settings used for differential expression analysis, and defines some defaults.
@@ -100,27 +95,47 @@ public class DifferentialExpressionAnalysisConfig {
     private boolean useWeights = false;
 
     /**
-     * Override the default mode of operation for the {@link RepetitiveValuesFilter}.
+     * Override the minimum number of cells for a particular assay to be included in the analysis.
+     * <p>
+     * This is only applied if {@link BioAssay#getNumberOfCells()} is populated.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS}.
      */
     @Nullable
-    private DifferentialExpressionAnalysisFilter.Mode filterMode = null;
+    private Integer minimumNumberOfCells = null;
 
     /**
-     * Override the minimum number of assays to apply the repetitive value filter.
-     *
-     * @see DifferentialExpressionAnalysisFilter#setMinimumNumberOfAssaysToApplyFilter(int)
+     * Override the default mode of operation for the {@link RepetitiveValuesFilter}.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_REPETITIVE_VALUES_FILTER_MODE}
      */
     @Nullable
-    private Integer minimumNumberOfAssaysToApplyFilter = null;
+    private DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode repetitiveValuesFilterMode = null;
+
+    /**
+     * Override the minimum number of samples to apply the repetitive value filter.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER}
+     */
+    @Nullable
+    private Integer minimumNumberOfSamplesToApplyRepetitiveValuesFilter = null;
 
     /**
      * Override the minimum number of unique values (as a fraction of the number of assays) for a particular design
-     * element to apply the filter.
-     *
-     * @see DifferentialExpressionAnalysisFilter#setMinimumFractionOfUniqueValues(double)
+     * element to be included in the analysis.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES}.
      */
     @Nullable
     private Double minimumFractionOfUniqueValues = null;
+
+    /**
+     * Override the minimum variance for a particular design element to be included in the analysis.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_VARIANCE}.
+     */
+    @Nullable
+    private Double minimumVariance = null;
 
     /**
      * Whether to create archive files.
@@ -151,6 +166,11 @@ public class DifferentialExpressionAnalysisConfig {
         this.useWeights = baseConfig.isUseWeights();
         this.makeArchiveFile = baseConfig.isMakeArchiveFile();
         this.maxAnalysisTimeMillis = baseConfig.getMaxAnalysisTimeMillis();
+        this.repetitiveValuesFilterMode = baseConfig.getRepetitiveValuesFilterMode();
+        this.minimumFractionOfUniqueValues = baseConfig.getMinimumFractionOfUniqueValues();
+        this.minimumNumberOfSamplesToApplyRepetitiveValuesFilter = baseConfig.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter();
+        this.minimumNumberOfCells = baseConfig.getMinimumNumberOfCells();
+        this.minimumVariance = baseConfig.getMinimumVariance();
     }
 
     /**
@@ -177,27 +197,5 @@ public class DifferentialExpressionAnalysisConfig {
 
     public void addBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baselineConditions ) {
         baselineFactorValues.putAll( baselineConditions );
-    }
-
-    /**
-     * @return representation of this analysis with populated protocol holding information from this.
-     */
-    public DifferentialExpressionAnalysis toAnalysis() {
-        DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
-        Protocol protocol = Protocol.Factory.newInstance();
-        protocol.setName( "Differential expression analysis settings" );
-        protocol.setDescription( this.toString() );
-        analysis.setProtocol( protocol );
-        return analysis;
-    }
-
-    @Override
-    public String toString() {
-        try ( StringWriter buf = new StringWriter() ) {
-            writeConfig( this, buf );
-            return buf.toString();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

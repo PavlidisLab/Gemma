@@ -15,7 +15,7 @@
 package ubic.gemma.core.analysis.service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -45,7 +45,7 @@ public interface ExpressionDataMatrixService {
      * @return data matrix
      * @throws IllegalStateException if there are no processed vectors
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig ) throws FilteringException;
 
     /**
      * Provide a filtered expression data matrix.
@@ -57,9 +57,9 @@ public interface ExpressionDataMatrixService {
      *                     scale, the default is to return the data as is.
      * @return data matrix
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig, boolean logTransform ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
-    ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, FilterConfig filterConfig, boolean logTransform ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
     /**
      * Obtain the processed expression data matrix for a given experiment.

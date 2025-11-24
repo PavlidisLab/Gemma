@@ -7,6 +7,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -15,8 +16,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,7 +30,7 @@ public class DiffExAnalyzerUtils {
     /**
      * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
      *
-     * @param  columnsToUse columns to use
+     * @param columnsToUse columns to use
      * @return bio assay dimension
      */
     public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
@@ -355,7 +354,10 @@ public class DiffExAnalyzerUtils {
         }
     }
 
-    public static void writeConfig( DifferentialExpressionAnalysisConfig config, Writer writer ) throws IOException {
+    public static Protocol createProtocolForConfig( DifferentialExpressionAnalysisConfig config ) {
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Differential expression analysis settings" );
+        StringBuilder writer = new StringBuilder();
         writer.append( "# Type of analysis: " )
                 .append( config.getAnalysisType() == null ? "Unknown" : config.getAnalysisType().toString() )
                 .append( "\n" );
@@ -405,6 +407,53 @@ public class DiffExAnalyzerUtils {
         if ( config.isModerateStatistics() ) {
             writer.append( "# Empirical Bayes moderated statistics used\n" );
         }
+
+        writer.append( "\n" );
+
+        int minimumNumberOfCells = config.getMinimumNumberOfCells() != null ? config.getMinimumNumberOfCells() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS;
+        if ( minimumNumberOfCells > 0 ) {
+            writer.append( "# Minimum number of cells: " ).append( minimumNumberOfCells ).append( "\n" );
+            writer.append( "# Samples with less cells than this value will be masked with missing values.\n" );
+            writer.append( "# This filter is only applied if the number of cells is filled for the samples (i.e. for single-cell data).\n" );
+            writer.append( "\n" );
+        }
+
+        int minimumNumberOfSamplesToApplyRepetitiveValuesFilter = config.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter() != null ?
+                config.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER;
+        if ( minimumNumberOfSamplesToApplyRepetitiveValuesFilter > 0 ) {
+            double minimumFractionOfUniqueValues = config.getMinimumFractionOfUniqueValues() != null ?
+                    config.getMinimumFractionOfUniqueValues() :
+                    DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES;
+            writer.append( "# Minimum fraction of unique values: " ).append( minimumFractionOfUniqueValues ).append( "\n" );
+            writer.append( "# Design elements with less unique values as a fraction of the number of assays not be tested.\n" );
+            writer.append( "# This is only applied if there are at least " ).append( minimumNumberOfSamplesToApplyRepetitiveValuesFilter ).append( " samples being tested.\n" );
+            DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode filterMode = config.getRepetitiveValuesFilterMode() != null ? config.getRepetitiveValuesFilterMode() : DifferentialExpressionAnalysisFilter.DEFAULT_REPETITIVE_VALUES_FILTER_MODE;
+            switch ( filterMode ) {
+                case RANK:
+                    writer.append( "# This filter is applied on ranks.\n" );
+                    break;
+                case NOMINAL:
+                    writer.append( "# This filter is applied on nominal values.\n" );
+                    break;
+                case AUTODETECT:
+                    writer.append( "# This filter is applied either on rank or nominal values depending on the data.\n" );
+                    break;
+            }
+        }
+
+        double minimumVariance = config.getMinimumVariance() != null ?
+                config.getMinimumVariance() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_VARIANCE;
+        if ( minimumVariance > 0 ) {
+            writer.append( "# Minimum variance: " ).append( minimumVariance ).append( "\n" );
+            writer.append( "# Design elements with variance across assays below this threshold will not be tested.\n" );
+            writer.append( "\n" );
+        }
+
+        protocol.setDescription( writer.toString() );
+        return protocol;
     }
 
     /**
@@ -427,6 +476,7 @@ public class DiffExAnalyzerUtils {
 
     /**
      * Build a design matrix for the given factors and samples.
+     *
      * @param factors            factors
      * @param samplesUsed        the samples used
      * @param allowMissingValues whether to allow missing values, if set to true, the returned matrix may contain nulls

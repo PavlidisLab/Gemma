@@ -275,9 +275,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // final transaction: audit.
         try {
-            auditTrailService
-                    .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
-                            analysis.getDescription() + "; analysis id=" + analysis.getId() );
+            auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
+                    analysis.toString(), analysis.getDescription() );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log
                     .error( "Error while trying to add audit event: " + e.getMessage(), e );

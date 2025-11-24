@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 
 /**
  * This service provides transactional helpers to retrieve data for {@link ExpressionDataFileService}.
+ *
  * @author poirigui
  */
 @Service
@@ -82,9 +83,11 @@ class ExpressionDataFileHelperService {
         log.info( "Retrieving processed data matrix for " + ee + "..." );
         ee = expressionExperimentService.thawLite( ee );
         if ( filtered ) {
-            FilterConfig filterConfig = new FilterConfig();
-            filterConfig.setIgnoreMinimumSampleThreshold( true );
-            filterConfig.setIgnoreMinimumRowsThreshold( true );
+            ExpressionExperimentFilterConfig filterConfig = new ExpressionExperimentFilterConfig();
+            // we do not mask outliers here because this is meant for creating data files
+            filterConfig.setMaskOutliers( false );
+            filterConfig.setIgnoreMinimumSamplesThreshold( true );
+            filterConfig.setIgnoreMinimumDesignElementsThreshold( true );
             if ( samples != null ) {
                 throw new UnsupportedOperationException( "Slicing a filtered matrix is not supported yet." );
             }

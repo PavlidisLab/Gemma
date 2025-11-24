@@ -15,12 +15,14 @@ import java.util.stream.Stream;
 
 /**
  * Slice bulk data vectors.
+ *
  * @author poirigui
  */
 public class BulkDataSlicerUtils {
 
     /**
      * Slice a collection of bulk data vectors.
+     *
      * @param vectorType the type of vector produced
      */
     public static <T extends BulkExpressionDataVector> Collection<T> slice( Collection<T> vectors, List<BioAssay> assays, Class<T> vectorType ) {
@@ -61,17 +63,17 @@ public class BulkDataSlicerUtils {
             }
             return result;
         } );
-        newVec.setData( sliceData( vec, assays, sampleIndices ) );
+        newVec.setData( sliceData( vec, sampleIndices ) );
         return newVec;
     }
 
-    private static byte[] sliceData( BulkExpressionDataVector vec, List<BioAssay> assays, int[] sampleIndices ) {
+    private static byte[] sliceData( BulkExpressionDataVector vec, int[] sampleIndices ) {
         int sizeInBytes = vec.getQuantitationType().getRepresentation().getSizeInBytes();
         if ( sizeInBytes == -1 ) {
             throw new UnsupportedOperationException( "Cannot slice data of unknown size." );
         }
-        byte[] data = new byte[assays.size() * sizeInBytes];
-        for ( int i = 0; i < assays.size(); i++ ) {
+        byte[] data = new byte[sampleIndices.length * sizeInBytes];
+        for ( int i = 0; i < sampleIndices.length; i++ ) {
             System.arraycopy( vec.getData(), sampleIndices[i] * sizeInBytes, data, i * sizeInBytes, sizeInBytes );
         }
         return data;

@@ -108,7 +108,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private ArrayDesignService arrayDesignService;
 
     @Override
-    public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+    public LinkAnalysis process( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig ) {
 
         try {
@@ -140,7 +140,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException {
+            ExpressionExperimentFilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException {
         ArrayDesign ad = arrayDesignService.findByShortName( linkAnalysisConfig.getArrayName() );
         if ( ad == null ) {
             throw new IllegalArgumentException( "No platform named '" + linkAnalysisConfig.getArrayName() + "'" );
@@ -174,14 +174,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         if ( datamatrix.rows() == 0 ) {
             LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
             throw new InsufficientDesignElementsException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < ExpressionExperimentFilter.MINIMUM_ROWS_TO_BOTHER ) {
+        } else if ( datamatrix.rows() < ExpressionExperimentFilter.MINIMUM_DESIGN_ELEMENTS ) {
             throw new InsufficientDesignElementsException(
                     "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
-                            + ExpressionExperimentFilter.MINIMUM_ROWS_TO_BOTHER + " rows" );
+                            + ExpressionExperimentFilter.MINIMUM_DESIGN_ELEMENTS + " rows" );
         }
     }
 
-    private void addAnalysisObj( ExpressionExperiment ee, FilterConfig filterConfig,
+    private void addAnalysisObj( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig, LinkAnalysis la ) {
 
         /*
@@ -201,7 +201,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         la.setAnalysisObj( analysis );
     }
 
-    private void analyze( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
+    private void analyze( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
             LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
 
         this.qcCheck( linkAnalysisConfig, ee );
@@ -489,7 +489,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * Save the analysis data, either to DB or a file.
      */
     private void saveResults( ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig,
-            FilterConfig filterConfig ) {
+            ExpressionExperimentFilterConfig filterConfig ) {
         try {
 
             if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
@@ -552,7 +552,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     /**
      * Write links as text.
      */
-    private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
+    private void writeLinks( final LinkAnalysis la, ExpressionExperimentFilterConfig filterConfig, Writer wr ) throws IOException {
         Map<CompositeSequence, Set<Gene>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         double subsetSize = la.getConfig().getSubsetSize();

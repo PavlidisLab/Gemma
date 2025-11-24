@@ -32,8 +32,7 @@ import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisPersister;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisService;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -77,7 +76,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    private final FilterConfig filterConfig = new FilterConfig();
+    private final ExpressionExperimentFilterConfig filterConfig = new ExpressionExperimentFilterConfig();
     private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
     private String analysisTaxon = null;
     private Path dataFileName = null;
@@ -459,25 +458,25 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private void buildFilterConfigOptions( Options options ) {
         Option minPresentFraction = Option.builder( "m" ).hasArg().argName( "Missing Value Threshold" ).desc(
                         "Fraction of data points that must be present in a profile to be retained , default="
-                                + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
+                                + ExpressionExperimentFilterConfig.DEFAULT_MIN_PRESENT_FRACTION )
                 .longOpt( "missingcut" ).build();
         options.addOption( minPresentFraction );
 
         Option lowExpressionCut = Option.builder( "l" ).hasArg().argName( "Expression Threshold" ).desc(
                         "Fraction of expression vectors to reject based on low values, default="
-                                + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
+                                + ExpressionExperimentFilterConfig.DEFAULT_LOW_EXPRESSION_CUT )
                 .longOpt( "lowcut" ).build();
         options.addOption( lowExpressionCut );
 
         Option lowVarianceCut = Option.builder( "lv" ).hasArg().argName( "Variance Threshold" ).desc(
                         "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                                + FilterConfig.DEFAULT_LOWVARIANCECUT )
+                                + ExpressionExperimentFilterConfig.DEFAULT_LOW_VARIANCE_CUT )
                 .longOpt( "lowvarcut" ).build();
         options.addOption( lowVarianceCut );
 
         Option distinctValueCut = Option.builder( "dv" ).hasArg().argName( "Fraction distinct values threshold" )
                 .desc( "Fraction of values which must be distinct (NaN counts as one value), default="
-                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION )
+                        + ExpressionExperimentFilterConfig.DEFAULT_DISTINCT_VALUE_FRACTION )
                 .longOpt( "distinctValCut" ).build();
         options.addOption( distinctValueCut );
 

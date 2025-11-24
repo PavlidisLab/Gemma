@@ -15,7 +15,7 @@
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
 import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -36,7 +36,7 @@ public interface LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @return analysis
      */
-    LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
+    LinkAnalysis process( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
 
     /**
      * Used when the input is data vectors from another source, instead of from a DB-bound expressionExperiment. Example
@@ -52,6 +52,6 @@ public interface LinkAnalysisService {
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
     LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException;
+            ExpressionExperimentFilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) throws FilteringException, SVDRelatedPreprocessingException;
 
 }
