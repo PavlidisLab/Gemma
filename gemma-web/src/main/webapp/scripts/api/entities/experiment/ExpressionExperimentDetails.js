@@ -888,6 +888,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                 defaults: {
                                     border: false
                                 },
+                                hidden: !e.otherParts || e.otherParts.length === 0,
                                 items: [
                                     pubMedDisplay,
                                     pubMedForm,
