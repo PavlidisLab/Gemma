@@ -160,8 +160,8 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             var note = record.note;
             var detail = record.detail;
             detail = detail.replace("\n", "<br />\n");
-            var content = "Date: " + record.date + "<br />Performer: " + record.performer + "<br />Note: " + note
-                + "<br />Details: " + detail;
+            var content = "<pre>Date: " + record.date + "<br />Performer: " + record.performer + "<br />Note: " + note
+               + "<br />Details: " + detail + "</pre>";
 
             // bug 3934: make this scrollable. I think in extjs 4 the MessageBox is more flexible.
             var w = new Ext.Window({
@@ -169,7 +169,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
                 html: content,
                 bodyStyle: 'padding:7px;background: white; font-size:1.1em',
                 autoScroll: true,
-                width: 600,
+                width: 800,
                 height: 600
             });
 
