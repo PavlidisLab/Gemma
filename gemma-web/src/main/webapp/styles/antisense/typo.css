@@ -397,8 +397,12 @@ a.info {
 	border-radius: 15px;
 }
 
-.ann-wrap:not(.hidden) {
-	padding-left: 4px
+.ann-wrap:not(:first-child) {
+	margin-left: 4px;
+}
+
+.ann-group:not(:first-child) {
+	margin-left: 4px;
 }
 
 .ann-wrap.hidden {

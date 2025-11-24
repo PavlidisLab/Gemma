@@ -86,7 +86,7 @@ Gemma.AnnotationDataView = Ext
                'data-collapsedtext="{className} ({groupCount}) ►" ' +
                'data-expandedtext="{className} ({groupCount}) ◄">' +
                '{className} ({groupCount}) ►' +
-               '</span>&nbsp;&nbsp;',
+               '</span>',
                '</tpl>',
                 '<span class="ann-wrap {[values.isGrouped ? ("hidden group-"+values.groupKey) : ""]}" ext:qtip="{className}" >',
                 '<tpl if="objectClass == \'BioMaterial\'">',
