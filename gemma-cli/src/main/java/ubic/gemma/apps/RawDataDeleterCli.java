@@ -35,6 +35,7 @@ public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCl
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        super.processExpressionExperiment( expressionExperiment );
         refreshExpressionExperimentFromGemmaWebSilently( expressionExperiment, true, true );
     }
 
