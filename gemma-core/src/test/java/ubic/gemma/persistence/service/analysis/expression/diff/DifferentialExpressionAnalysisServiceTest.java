@@ -26,10 +26,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -145,20 +143,20 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         investigations.add( e1 );
         investigations.add( e3 );
 
-        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> results = analysisService
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> results = analysisService
                 .findByExperiments( investigations, true );
-        assertEquals( 2, results.keySet().size() );
+        assertEquals( 2, results.size() );
 
         assertEquals( 1, results.get( e1 ).size() );
         assertEquals( 2, results.get( e3 ).size() );
 
         // also by ID
-        Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService
-                .findByExperimentIds( IdentifiableUtils.getIds( investigations ) );
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> ees = analysisService
+                .findByExperiments( investigations, true );
         assertEquals( 2, ees.size() );
 
-        assertEquals( 1, ees.get( e1.getId() ).size() );
-        assertEquals( 2, ees.get( e3.getId() ).size() );
+        assertEquals( 1, ees.get( e1 ).size() );
+        assertEquals( 2, ees.get( e3 ).size() );
     }
 
     @Test

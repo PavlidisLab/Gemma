@@ -21,31 +21,29 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
+ * Service interface for {@link DifferentialExpressionAnalysis}.
+ * <p>
+ * The methods here have two flavours: by experiments, which is always an {@link ExpressionExperiment} and by experiment
+ * analyzed which is either a {@link ExpressionExperiment} or {@link ExpressionExperimentSubSet}.
+ *
  * @author kelsey
+ * @see DifferentialExpressionAnalysisDao
  */
 public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis>, SecurableBaseService<DifferentialExpressionAnalysis> {
 
     @Nullable
     DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id );
-
-    @Secured({ "GROUP_USER" })
-    DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> findByName( String name );
@@ -53,15 +51,12 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds( Collection<Long> investigationIds );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_READ" })
-    DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( ExpressionExperiment expressionExperiment, Long analysisId, boolean includeSubSets );
+    DifferentialExpressionAnalysis findByExperimentAndAnalysisId( ExpressionExperiment expressionExperiment, boolean includeSubSets, Long analysisId );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
@@ -75,10 +70,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( DifferentialExpressionAnalysis o );
-
     /**
      * @param differentialExpressionAnalysis analysis
      * @return Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.
@@ -91,20 +82,18 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
      * latter case, the return value will contain experiments that were not explicitly queried for.
      *
-     * @param ids           of experiments or experimentsubsets.
-     * @param includeAssays
-     * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
+     * @param experimentIds  of {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
+     * @param includeSubSets include analysis of subsets of the requested experiments
+     * @param includeAssays  include assay information in the value objects
+     * @return map of detailed EE VOs to analyses VOs for each, subset analyses are mapped to their source experiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, boolean includeAssays );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, int offset, int limit, boolean includeAssays );
+    Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> findByExperimentIds(
+            Collection<Long> experimentIds, boolean includeSubSets, boolean includeAssays );
 
     /**
      * Remove analyses using the given factor.
+     *
      * @return the number of analysis removed
      */
     int removeForExperimentalFactor( ExperimentalFactor experimentalFactor );
@@ -113,44 +102,43 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
 
     /**
      * @param experimentAnalyzed experiment analyzed
-     * @param includeSubSets     include analyses for its {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}
+     * @param includeSubSets     include analyses for its {@link ExpressionExperimentSubSet}
      * @return find all the analyses that involved the given investigation
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> findByExperiment( ExpressionExperiment experimentAnalyzed, boolean includeSubSets );
 
     /**
-     * @param investigations investigations
-     * @param includeSubSets include analyses for their {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}
-     * @return Given a collection of investigations returns a Map of Analysis --&gt; collection of Investigations
-     * The collection of investigations returned by the map will include all the investigations for the analysis key iff
-     * one of the investigations for that analysis was in the given collection started with
+     * @param experiments    investigations
+     * @param includeSubSets include analyses for their {@link ExpressionExperimentSubSet}
+     * @return analyses grouped by experiment, subset analyses are mapped to their source experiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
-    Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<ExpressionExperiment> investigations, boolean includeSubSets );
+    Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<ExpressionExperiment> experiments, boolean includeSubSets );
 
     /**
      * Obtain IDs of experiments that have analyses.
      * <p>
      * Not secured: for internal use only
      *
-     * @param eeIds          starting list of experiment IDs
+     * @param experimentIds  starting list of {@link ExpressionExperiment} IDs
      * @param includeSubSets include IDs of their subsets that have analyses
      * @return the ones which have an analysis
      */
-    Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds, boolean includeSubSets );
-
-    Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentIds, boolean includeSubSets );
 
     /**
      * Removes all analyses for the given experiment
      *
      * @param ee             the expriment to remove all analyses for
-     * @param includeSubSets also delete analyses of its {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
+     * @param includeSubSets also delete analyses of its {@link ExpressionExperimentSubSet}.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee, boolean includeSubSets );
 
+    /**
+     * Remove all analysis for the given experiment or subset.
+     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperimentAnalyzed( BioAssaySet experimentAnalyzed );
 }

@@ -111,8 +111,8 @@ public class DifferentialExpressionSearchTaskImpl
         DifferentialExpressionSearchTaskImpl.log.info( "Loading " + getTaskCommand().getExperimentGroupName() + " experiments..." );
 
         // database hit: important that this be fast.
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( IdentifiableUtils.getIds( getTaskCommand().getExperimentGroup() ), false );
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
+                .findByExperimentIds( IdentifiableUtils.getIds( getTaskCommand().getExperimentGroup() ), true, false );
 
         experiment:
         for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {

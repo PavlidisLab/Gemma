@@ -344,7 +344,7 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public DifferentialExpressionAnalysis locateDiffExAnalysis( ExpressionExperiment ee, String analysisIdentifier ) {
-        return requireNonNull( differentialExpressionAnalysisService.findByExperimentAnalyzedAndId( ee, Long.parseLong( analysisIdentifier ), true ),
+        return requireNonNull( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, Long.parseLong( analysisIdentifier ) ),
                 () -> String.format( "Could not locate an analysis matching '%s' in %s.%s",
                         analysisIdentifier,
                         ee.getShortName(),

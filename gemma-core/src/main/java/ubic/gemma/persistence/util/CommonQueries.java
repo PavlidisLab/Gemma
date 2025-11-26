@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,7 +56,7 @@ public class CommonQueries {
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed ad "
                         + "where ee = :ee "
-                        + "group by ad")
+                        + "group by ad" )
                 .setParameter( "ee", getExperiment( bas ) )
                 .list();
     }
@@ -90,57 +89,6 @@ public class CommonQueries {
     }
 
     /**
-     * @param ees     experiments
-     * @param session session
-     * @return map of experiment to collection of array design ids. If any of the ids given are for subsets, then the
-     * key in the return value will be for the subset, not the source experiment (so it is consistent with the
-     * input)
-     */
-    public static Map<Long, Collection<Long>> getArrayDesignsUsedEEMap( Collection<Long> ees, Session session ) {
-        if ( ees == null || ees.isEmpty() )
-            return Collections.emptyMap();
-
-        Map<Long, Collection<Long>> ee2ads = new HashMap<>();
-
-        //noinspection unchecked
-        List<Object[]> qr = session.createQuery( "select ee.id, ad.id from ExpressionExperiment as ee "
-                        + "join ee.bioAssays b join b.arrayDesignUsed ad where ee.id in (:ees) group by ee.id, ad.id" )
-                .setParameterList( "ees", optimizeParameterList( ees ) )
-                .list();
-        CommonQueries.addAllAds( ee2ads, qr );
-
-        if ( ee2ads.size() < ees.size() ) {
-            // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
-            // source.
-            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() );
-            // note: CollectionUtils.removeAll has a bug.
-
-            //noinspection unchecked
-            qr = session.createQuery( "select ees.id, ad.id from ExpressionExperimentSubSet as ees "
-                            + "join ees.sourceExperiment ee "
-                            + "join ee.bioAssays b "
-                            + "join b.arrayDesignUsed ad where ees.id in (:ees) "
-                            + "group by ees.id, ad.id" )
-                    .setParameterList( "ees", optimizeParameterList( possibleEEsubsets ) )
-                    .list();
-            CommonQueries.addAllAds( ee2ads, qr );
-        }
-
-        return ee2ads;
-    }
-
-    private static void addAllAds( Map<Long, Collection<Long>> ee2ads, List<Object[]> qr ) {
-        for ( Object[] ar : qr ) {
-            Long ee = ( Long ) ar[0];
-            Long ad = ( Long ) ar[1];
-            if ( !ee2ads.containsKey( ee ) ) {
-                ee2ads.put( ee, new HashSet<>() );
-            }
-            ee2ads.get( ee ).add( ad );
-        }
-    }
-
-    /**
      * Given a gene, get all the composite sequences that map to it.
      *
      * @param session session
@@ -152,7 +100,7 @@ public class CommonQueries {
         return session.createQuery( "select cs from Gene as gene "
                         + "join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                         + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene "
-                        + "group by cs")
+                        + "group by cs" )
                 .setParameter( "gene", gene )
                 .setCacheable( true )
                 .list();

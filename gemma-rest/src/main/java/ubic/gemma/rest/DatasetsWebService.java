@@ -836,18 +836,18 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
+            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
+            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
     ) {
         List<DifferentialExpressionAnalysisValueObject> result;
         Long eeId = datasetArgService.getEntity( datasetArg ).getId();
-        int offset = offsetArg.getValue();
-        int limit = limitArg.getValue();
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit, true );
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.findByExperimentIds( Collections.singleton( eeId ), true, true );
         if ( map == null || map.isEmpty() ) {
             result = Collections.emptyList();
         } else {
-            result = map.get( map.keySet().iterator().next() );
+            result = map.get( map.keySet().iterator().next() ).stream()
+                    .sorted( Comparator.comparing( DifferentialExpressionAnalysisValueObject::getId ) )
+                    .collect( Collectors.toList() );
         }
         return respond( result );
     }

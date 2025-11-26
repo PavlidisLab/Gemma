@@ -45,6 +45,7 @@ import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExper
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A controller used to get differential expression analysis and meta analysis results.
@@ -130,7 +131,7 @@ public class DifferentialExpressionSearchController {
 
         Collection<ExpressionExperimentExperimentalFactorValueObject> result = new HashSet<>();
 
-        final Collection<Long> securityFilteredIds = securityFilterExpressionExperimentIds( eeIds );
+        final Collection<ExpressionExperiment> securityFilteredIds = securityFilterExpressionExperimentIds( eeIds );
 
         if ( securityFilteredIds.isEmpty() ) {
             return result;
@@ -141,25 +142,30 @@ public class DifferentialExpressionSearchController {
 
         Collection<Long> filteredEeIds = new HashSet<>();
 
-        Map<Long, Collection<DifferentialExpressionAnalysis>> diffAnalyses = differentialExpressionAnalysisService
-                .findByExperimentIds( securityFilteredIds );
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> diffAnalyses = differentialExpressionAnalysisService
+                .findByExperiments( securityFilteredIds, false );
 
         if ( diffAnalyses.isEmpty() ) {
-            log.debug( "No differential expression analyses for given ids: " + StringUtils.join( filteredEeIds, ',' ) );
+            log.debug( "No differential expression analyses for given IDs: " + StringUtils.join( securityFilteredIds, ',' ) );
             return result;
         }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-                .loadValueObjectsByIds( diffAnalyses.keySet() );
+                .loadValueObjects( diffAnalyses.keySet() );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevoMap.put( eevo.getId(), eevo );
         }
 
-        for ( Long id : diffAnalyses.keySet() ) {
+        for ( ExpressionExperiment ee : diffAnalyses.keySet() ) {
 
-            Collection<DifferentialExpressionAnalysis> analyses = diffAnalyses.get( id );
+            filteredEeIds.add( ee.getId() );
+            ExpressionExperimentValueObject eevo = eevoMap.get( ee.getId() );
+            ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
+            eeefvo.setExpressionExperiment( eevo );
+
+            Collection<DifferentialExpressionAnalysis> analyses = diffAnalyses.get( ee );
 
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
                 analysis = differentialExpressionAnalysisService.thaw( analysis );
@@ -170,11 +176,6 @@ public class DifferentialExpressionSearchController {
                     // matter, because they will be included as main effects too. If not, this will be wrong!
                     factors.addAll( ears.getExperimentalFactors() );
                 }
-
-                filteredEeIds.add( id );
-                ExpressionExperimentValueObject eevo = eevoMap.get( id );
-                ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
-                eeefvo.setExpressionExperiment( eevo );
                 eeefvo.setNumFactors( factors.size() );
                 for ( ExperimentalFactor ef : factors ) {
                     ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
@@ -182,8 +183,8 @@ public class DifferentialExpressionSearchController {
                     eeefvo.getExperimentalFactors().add( efvo );
                 }
 
-                result.add( eeefvo );
             }
+            result.add( eeefvo );
         }
         log.info( "Filtered experiments.  Returning factors for experiments with ids: " + StringUtils
                 .abbreviate( filteredEeIds.toString(), 100 ) );
@@ -315,16 +316,10 @@ public class DifferentialExpressionSearchController {
         return experiments;
     }
 
-    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+    private Collection<ExpressionExperiment> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
         /*
          * Because this method returns the results, we have to screen.
          */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.load( ids );
-
-        Collection<Long> filteredIds = new HashSet<>();
-        for ( ExpressionExperiment ee : securityScreened ) {
-            filteredIds.add( ee.getId() );
-        }
-        return filteredIds;
+        return expressionExperimentService.load( ids );
     }
 }
