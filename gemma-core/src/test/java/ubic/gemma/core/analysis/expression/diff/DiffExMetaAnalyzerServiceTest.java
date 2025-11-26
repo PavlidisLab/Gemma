@@ -429,7 +429,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertFalse( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
+                .getAnalysesByExperiment( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), false );
 
         Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
         for ( ExpressionExperimentDetailsValueObject evo : analysesByExperiment.keySet() ) {

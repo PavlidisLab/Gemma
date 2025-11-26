@@ -91,16 +91,17 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
      * latter case, the return value will contain experiments that were not explicitly queried for.
      *
-     * @param ids of experiments or experimentsubsets.
+     * @param ids           of experiments or experimentsubsets.
+     * @param includeAssays
      * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids );
+            Collection<Long> ids, boolean includeAssays );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
     Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, int offset, int limit );
+            Collection<Long> ids, int offset, int limit, boolean includeAssays );
 
     /**
      * Remove analyses using the given factor.

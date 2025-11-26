@@ -167,16 +167,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids ) {
-        return this.getAnalysesByExperiment( ids, 0, -1 );
+            Collection<Long> ids, boolean includeAssays ) {
+        return this.getAnalysesByExperiment( ids, 0, -1, includeAssays );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, int offset, int limit ) {
+            Collection<Long> ids, int offset, int limit, boolean includeAssays ) {
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( ids, offset, limit, true );
+                .getAnalysesByExperimentIds( ids, offset, limit, true, includeAssays );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );

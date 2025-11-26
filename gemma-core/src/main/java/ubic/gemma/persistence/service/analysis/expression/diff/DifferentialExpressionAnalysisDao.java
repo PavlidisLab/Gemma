@@ -82,6 +82,12 @@ public interface DifferentialExpressionAnalysisDao extends ubic.gemma.persistenc
 
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
+    /**
+     * Retrieve analysis VOs for the given experiment IDs.
+     *
+     * @param includeSubSets include analyses for subsets of the requested experiment IDs
+     * @param includeAssays  include analyzed assays in the value object (can be large)
+     */
     Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> expressionExperimentIds, int offset, int limit, boolean includeSubSets );
+            Collection<Long> expressionExperimentIds, int offset, int limit, boolean includeSubSets, boolean includeAssays );
 }

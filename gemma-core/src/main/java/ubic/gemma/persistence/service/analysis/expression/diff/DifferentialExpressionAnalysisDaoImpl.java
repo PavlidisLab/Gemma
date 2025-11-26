@@ -45,6 +45,7 @@ import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Thaws;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -442,7 +443,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
 
     @Override
     public Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> experimentAnalyzedIds, int offset, int limit, boolean includeSubSets ) {
+            Collection<Long> experimentAnalyzedIds, int offset, int limit, boolean includeSubSets, boolean includeAssays ) {
 
         /*
          * There are three cases to consider: the ids are experiments; the ids are experiment subsets; the ids are
@@ -550,6 +551,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         if ( hits.isEmpty() ) {
             return r;
         }
+
+        if ( includeAssays ) {
+            hits.forEach( dea -> {
+                dea.getExperimentAnalyzed().getBioAssays().forEach( Thaws::thawBioAssay );
+            } );
+        }
+
         Collection<DifferentialExpressionAnalysisValueObject> summaries = this
                 .convertToValueObjects( hits, arrayDesignsUsed, ee2fv );
 

@@ -843,7 +843,7 @@ public class DatasetsWebService {
         Long eeId = datasetArgService.getEntity( datasetArg ).getId();
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
+        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit, true );
         if ( map == null || map.isEmpty() ) {
             result = Collections.emptyList();
         } else {

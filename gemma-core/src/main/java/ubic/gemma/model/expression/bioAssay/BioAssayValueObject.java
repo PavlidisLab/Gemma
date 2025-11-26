@@ -58,6 +58,17 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer sequenceReadLength;
 
+    // only for single-cell data
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCells;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfDesignElements;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCellsByDesignElements;
+
     // if it was removed as an outlier
     private boolean outlier = false;
     // if our algorithm says it might be an outlier.
@@ -134,6 +145,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         this.sequenceReadLength = bioAssay.getSequenceReadLength();
         this.sequenceReadCount = bioAssay.getSequenceReadCount();
         this.metadata = bioAssay.getMetadata();
+
+        this.numberOfCells = bioAssay.getNumberOfCells();
+        this.numberOfDesignElements = bioAssay.getNumberOfDesignElements();
+        this.numberOfCellsByDesignElements = bioAssay.getNumberOfCellsByDesignElements();
 
         if ( bioAssay.getAccession() != null ) {
             this.accession = new DatabaseEntryValueObject( bioAssay.getAccession() );
