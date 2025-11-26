@@ -888,7 +888,6 @@ Gemma.ExpressionExperimentDetails = Ext
                                 defaults: {
                                     border: false
                                 },
-                                hidden: !e.otherParts || e.otherParts.length === 0,
                                 items: [
                                     pubMedDisplay,
                                     pubMedForm,
@@ -898,7 +897,8 @@ Gemma.ExpressionExperimentDetails = Ext
                                     },
                                     {
                                         fieldLabel: 'Other parts' + '&nbsp;<i id="otherPartsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
-                                        items: this.renderOtherParts(e)
+                                        items: this.renderOtherParts(e),
+                                        hidden: !e.otherParts || e.otherParts.length === 0
                                     }
                                 ]
                             },
