@@ -139,7 +139,17 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     var analysisNameExtra = null;
                     var nodeText = '';
                     var primaryFactorID = null;
-                    // if analysis has only one result set, don't give
+
+
+                   var cellCountText = '';
+                   var cellCount = analysis.bioAssaysAnalyzed.reduce((acc,val)=>{acc = acc + val.numberOfCells;return acc},0)
+                   if(!isNaN(cellCount) && cellCount > 0){
+                      cellCountText = "<span>[Cells: <b>" + cellCount + "</b>]</span>";
+                   }
+                   subsetText += cellCountText
+
+
+                   // if analysis has only one result set, don't give
                     // it children and
                     // put all info in parent node
                     if (analysis.resultSets.length === 1) {
@@ -170,7 +180,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         /*
                          * How many levels were used.
                          */
-                        parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
+
+                       parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
                         parentNode.attributes.analysisId = resultSet.analysisId;
                         parentNode.attributes.resultSetId = resultSet.resultSetId;
                         if (resultSet.experimentalFactors.length === 1 && analysis.factorValuesUsed[resultSet.experimentalFactors[0].id] !== undefined) {
@@ -261,7 +272,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    // debugger
 
                     parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);
