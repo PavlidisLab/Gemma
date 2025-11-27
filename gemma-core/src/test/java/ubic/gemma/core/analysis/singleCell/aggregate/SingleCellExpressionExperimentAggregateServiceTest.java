@@ -720,7 +720,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         ArgumentCaptor<String> details = ArgumentCaptor.captor();
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), eq( "Created 1 aggregated raw vectors for " + newQt + "." ), details.capture() );
         assertThat( details.getValue() )
-                .contains( "BioAssay Name=s0c0 Number of cells=19 Number of design elements=1 Number of cells x design elements=19 Number of masked cells=29/264 Library Size=95,00" )
+                .contains( "BioAssay Name=s0c0 Number of cells=19 Number of design elements=1 Number of cells x design elements=19 Number of masked cells=29/264 Library Size=95.00" )
                 .contains( "Mask: GenericCellLevelCharacteristics Characteristics=false, true Number of characteristics=2 Number of assigned cells=4000" );
     }
 
