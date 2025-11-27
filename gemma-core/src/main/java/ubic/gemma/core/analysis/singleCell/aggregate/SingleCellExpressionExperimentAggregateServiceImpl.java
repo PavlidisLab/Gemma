@@ -277,7 +277,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         }
 
         int newVecs = expressionExperimentService.addRawDataVectors( ee, newQt, rawVectors );
-        String note = String.format( "Created %d aggregated raw vectors for %s.", newVecs, newQt );
+        String note = String.format( Locale.ENGLISH, "Created %d aggregated raw vectors for %s.", newVecs, newQt );
         StringBuilder details = new StringBuilder();
         details.append( "Single-cell quantitation type: " ).append( qt ).append( "\n" );
         details.append( "Single-cell dimension: " ).append( scd ).append( "\n" );
@@ -298,10 +298,10 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 if ( librarySize[i] == 0 ) {
                     details.append( " Library Size is zero, the aggregate is filled with NAs" );
                 } else {
-                    details.append( " Library Size=" ).append( String.format( "%.2f", librarySize[i] ) );
+                    details.append( " Library Size=" ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] ) );
                     Double lsa = sourceSampleLibrarySizeAdjustments.get( sourceBioAssayMap.get( cellBa ) );
                     if ( lsa != null && lsa != 1.0 ) {
-                        details.append( " (adjusted from " ).append( String.format( "%.2f", librarySize[i] / lsa ) ).append( " due to unmapped genes)" );
+                        details.append( " (adjusted from " ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] / lsa ) ).append( " due to unmapped genes)" );
                     }
                 }
             }
