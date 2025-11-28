@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -104,6 +105,9 @@ public class GeneralSearchController {
     @Autowired
     private HttpServletRequest request;
 
+    @org.springframework.beans.factory.annotation.Value( "${gemma.gemBrow.url}" )
+    private String gemBrowUrl;
+
     @SuppressWarnings("unused")
     public JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
         if ( settingsValueObject == null || StringUtils.isBlank( settingsValueObject.getQuery() ) || StringUtils
@@ -165,11 +169,12 @@ public class GeneralSearchController {
     }
 
     @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView search(
+    public Object search(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "termUri", required = false) String termUri,
             @RequestParam(value = "taxon", required = false) String taxon,
-            @RequestParam(value = "scope", required = false) String scope ) {
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "noRedirect", required = false, defaultValue = "false") boolean noRedirect ) {
         ModelAndView mav = new ModelAndView( "generalSearch" );
         if ( query != null || termUri != null ) {
             if ( query != null ) {
@@ -208,6 +213,15 @@ public class GeneralSearchController {
                     }
                 }
             }
+
+            if (!noRedirect) {
+                String gemBrowSearchUrl = UriComponentsBuilder.fromHttpUrl( gemBrowUrl )
+                        .fragment( "q/" + query )
+                        .build()
+                        .toUriString();
+                return new RedirectView( gemBrowSearchUrl );
+            }
+
             // Need this for the bookmarkable links
             mav.addObject( "SearchString", query != null ? query : termUri );
             mav.addObject( "SearchURI", termUri );

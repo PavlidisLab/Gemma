@@ -33,10 +33,6 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
                left : 20
             }
          }, {
-            ref : 'searchTypeCombo',
-            xtype : 'search.GeneralSearchSimpleCombo',
-            width : 100
-         }, {
             ref : 'queryField',
             xtype : 'textfield',
             emptyText : 'by keyword, ID...',
@@ -62,9 +58,8 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
       window.location.href = searchURL;
    },
    getSearchURL : function() {
-      var scopeLetterArr = this.searchTypeCombo.getURLScopeLetters();
       var query = this.queryField.getValue();
-      var url = Gemma.CONTEXT_PATH + "/searcher.html?query=" + query + "&scope=" + scopeLetterArr.join();
+      var url = Gemma.CONTEXT_PATH + "/searcher.html?query=" + query;
       return url;
    }
 } );
