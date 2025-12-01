@@ -428,7 +428,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                         subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
-                    log.error( "Failed to analyze subset " + subsetFactorValue + ".", e );
+                    log.warn( "Failed to analyze subset " + subsetFactorValue + ".", e );
                     subsetExceptions.add( e );
                 } else {
                     throw e;
