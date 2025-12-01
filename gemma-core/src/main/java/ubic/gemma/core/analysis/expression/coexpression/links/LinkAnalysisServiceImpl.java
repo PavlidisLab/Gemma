@@ -154,7 +154,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         try {
             datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
         } catch ( SVDException e ) {
-            throw new SVDRelatedPreprocessingException( datamatrix.getExpressionExperiment(), e );
+            throw new RuntimeException( e );
         }
 
         this.setUpForAnalysis( t, la, dataVectors, datamatrix );

@@ -50,6 +50,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Thaws;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,14 +89,14 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        return this.getFilteredMatrix( dataVectors, arrayDesignsUsed, filterConfig, logTransform );
+        return this.getFilteredMatrix( ee, dataVectors, arrayDesignsUsed, filterConfig, logTransform );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig,
             boolean logTransform ) throws FilteringException {
-        return this.getFilteredMatrix( dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform );
+        return this.getFilteredMatrix( null, dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform );
     }
 
     @Override
@@ -115,7 +116,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
                     .distinct()
                     .forEach( Thaws::thawBioAssayDimension );
         }
-        return new ExpressionDataDoubleMatrix( dataVectors );
+        return new ExpressionDataDoubleMatrix( ee, dataVectors );
     }
 
     @Override
@@ -123,7 +124,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples ) {
         Collection<ProcessedExpressionDataVector> dataVectors = expressionExperimentService.getProcessedDataVectors( ee, samples )
                 .orElseThrow( () -> new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." ) );
-        return new ExpressionDataDoubleMatrix( dataVectors );
+        return new ExpressionDataDoubleMatrix( ee, dataVectors );
     }
 
     @Override
@@ -133,7 +134,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( ee + " does not have any raw data vectors for " + quantitationType + "." );
         }
-        return new ExpressionDataDoubleMatrix( vectors );
+        return new ExpressionDataDoubleMatrix( ee, vectors );
     }
 
     @Override
@@ -205,13 +206,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      * @return filtered matrix
      * @throws NoDesignElementsException if filtering results in no row left in the expression matrix
      */
-    private ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors,
+    private ExpressionDataDoubleMatrix getFilteredMatrix( @Nullable ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors,
             Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform
     ) throws FilteringException {
         if ( dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( ee, dataVectors );
         if ( logTransform ) {
             eeDoubleMatrix = logTransform( eeDoubleMatrix, arrayDesignsUsed );
         }

@@ -76,7 +76,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         this.vectorsToMatrix( vectors );
     }
 
-    public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+    public ExpressionDataDoubleMatrix( @Nullable ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new IllegalStateException(

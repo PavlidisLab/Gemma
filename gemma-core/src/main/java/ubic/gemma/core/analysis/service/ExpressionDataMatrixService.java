@@ -67,9 +67,9 @@ public interface ExpressionDataMatrixService {
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
     /**
-     * @param ee the expression experiment.
-     * @return matrix of preferred data, with all missing values masked
+     * @param ee         the expression experiment.
      * @param thawAssays whether to thaw the assays or not using {@link ubic.gemma.persistence.util.Thaws#thawBioAssayDimension(BioAssayDimension)}
+     * @return matrix of preferred data, with all missing values masked
      */
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, boolean thawAssays );
 
@@ -77,6 +77,7 @@ public interface ExpressionDataMatrixService {
 
     /**
      * Obtain a raw expression data matrix for a given quantitation type
+     *
      * @throws IllegalStateException if there are no raw vectors for the given quantitation type
      */
     ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
