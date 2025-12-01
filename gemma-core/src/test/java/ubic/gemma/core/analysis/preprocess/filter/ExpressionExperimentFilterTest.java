@@ -37,8 +37,6 @@ public class ExpressionExperimentFilterTest {
             ee.getBioAssays().add( ba );
         }
         ExpressionExperimentFilterConfig config = new ExpressionExperimentFilterConfig();
-        // FIXME: ranks are not populated, so this filter does not work
-        config.setLowExpressionCut( 0.0 );
 
         // default is too stringent
         config.setLowVarianceCut( 0.5 );
@@ -63,13 +61,13 @@ public class ExpressionExperimentFilterTest {
         assertThat( filterResult.isZeroVarianceFilterApplied() ).isTrue();
         assertThat( filterResult.getAfterZeroVarianceFilter() ).isEqualTo( 100 );
 
-        assertThat( filterResult.isLowExpressionFilterApplied() ).isFalse();
-        assertThat( filterResult.getAfterLowExpressionFilter() ).isEqualTo( 100 );
+        assertThat( filterResult.isLowExpressionFilterApplied() ).isTrue();
+        assertThat( filterResult.getAfterLowExpressionFilter() ).isEqualTo( 81 );
 
         assertThat( filterResult.isLowVarianceFilterApplied() ).isTrue();
-        assertThat( filterResult.getAfterLowVarianceFilter() ).isEqualTo( 80 );
+        assertThat( filterResult.getAfterLowVarianceFilter() ).isEqualTo( 61 );
 
-        assertThat( filterResult.getFinalRows() ).isEqualTo( 80 );
+        assertThat( filterResult.getFinalRows() ).isEqualTo( 61 );
     }
 
     @Test
@@ -94,11 +92,10 @@ public class ExpressionExperimentFilterTest {
         ExpressionExperimentFilterConfig config = new ExpressionExperimentFilterConfig();
         config.setMaskOutliers( true );
         config.setLowVarianceCut( 0.5 );
-        config.setLowExpressionCut( 0.0 );
         ExpressionExperimentFilterResult result = new ExpressionExperimentFilterResult();
         ExpressionDataDoubleMatrix filteredMatrix = new ExpressionExperimentFilter( config ).filter( dataMatrix, result );
         assertThat( filteredMatrix.columns() ).isEqualTo( 25 );
-        assertThat( filteredMatrix.rows() ).isEqualTo( 84 );
+        assertThat( filteredMatrix.rows() ).isEqualTo( 65 );
         assertThat( ExpressionDataFilterUtils.countSamplesWithData( filteredMatrix ) ).isEqualTo( 24 );
         assertThat( result.getColumnsAfterOutliersFilter() ).isEqualTo( 24 );
         assertThat( result.getFinalColumns() ).isEqualTo( 24 );

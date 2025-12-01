@@ -155,7 +155,7 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
         // Filtering lowly expressed genes.
         if ( config.getLowExpressionCut() > 0.0 ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low or too high expression" );
-            Map<CompositeSequence, Double> ranks = dataMatrix.getRanks();
+            Map<CompositeSequence, Double> ranks = dataMatrix.getRanksByMean();
             dataMatrix = this.filterLowExpression( dataMatrix, ranks );
             result.setLowExpressionFilterApplied( true );
             result.setAfterLowExpressionFilter( dataMatrix.rows() );
@@ -266,15 +266,6 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
      */
     private ExpressionDataDoubleMatrix filterLowExpression( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Double> ranks ) {
-        // check for null ranks, in which case we can't use this.
-        for ( Double d : ranks.values() ) {
-            if ( d == null ) {
-                ExpressionExperimentFilter.log.info( "Ranks are null -- skipping expression level"
-                        + " filtering (This is okay if ranks cannot be computed)" );
-                return matrix;
-            }
-        }
-
         RowLevelFilter rowLevelFilter = new RowLevelFilter( ranks::get );
         rowLevelFilter.setLowCut( config.getLowExpressionCut() );
         rowLevelFilter.setHighCut( config.getHighExpressionCut() );

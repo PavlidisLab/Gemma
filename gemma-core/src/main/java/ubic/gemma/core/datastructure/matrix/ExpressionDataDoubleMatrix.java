@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
@@ -25,13 +26,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.Rank;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,7 +53,9 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
 
     private DoubleMatrix<CompositeSequence, BioMaterial> matrix;
-    private Map<CompositeSequence, Double> ranks = new HashMap<>();
+
+    @Nullable
+    private Map<CompositeSequence, Double> ranks = null;
 
     /**
      * To comply with bean specifications. Not to be instantiated.
@@ -141,7 +144,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     /**
      * Create a matrix based on another one's selected rows.
      *
-     * @param rowsToUse rows
+     * @param rowsToUse    rows
      * @param sourceMatrix matrix
      */
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
@@ -178,8 +181,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * Create a matrix given a 'raw' matrix that uses the same samples as the experiment. Only simple situations are
      * supported (one platform, not subsetting the dataset).
      *
-     * @param ee to be associated with this
-     * @param qt to be associated with this
+     * @param ee     to be associated with this
+     * @param qt     to be associated with this
      * @param matrix with valid row and column elements, and the data
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
@@ -240,8 +243,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );
         this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
         this.matrix.setColumnNames( columnsToUse );
-
-        this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
 
         this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
 
@@ -319,6 +320,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     /**
      * Obtain the raw matrix without boxing.
+     *
      * @see #getRawMatrix()
      */
     public double[][] getRawMatrixAsDoubles() {
@@ -378,6 +380,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         } else {
             matrix.set( row, column, value );
         }
+        // invalidate ranks
+        this.ranks = null;
     }
 
     public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
@@ -385,11 +389,26 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     /**
-     * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
-     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     * @return The expression level ranks (based on mean signal intensity in the vectors)
      */
-    public Map<CompositeSequence, Double> getRanks() {
+    public Map<CompositeSequence, Double> getRanksByMean() {
+        if ( this.ranks == null ) {
+            this.ranks = computeRanksByMean( this.matrix );
+        }
         return this.ranks;
+    }
+
+    private Map<CompositeSequence, Double> computeRanksByMean( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
+        DoubleArrayList means = new DoubleArrayList( matrix.rows() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            means.add( DescriptiveWithMissing.mean( matrix.getRowArrayList( i ) ) );
+        }
+        DoubleArrayList ranks = Rank.rankTransform( means );
+        Map<CompositeSequence, Double> rankMap = new HashMap<>( matrix.rows() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            rankMap.put( matrix.getRowName( i ), ranks.get( i ) / matrix.rows() );
+        }
+        return rankMap;
     }
 
     public List<CompositeSequence> getRowNames() {
@@ -417,16 +436,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             throw new IllegalArgumentException( "No vectors!" );
         }
 
-        for ( BulkExpressionDataVector vector : vectors ) {
-            if ( vector instanceof ProcessedExpressionDataVector ) {
-                this.ranks
-                        .put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
-            }
-        }
-
         int maxSize = this.setUpColumnElements();
         this.matrix = this.createMatrix( vectors, maxSize );
-
     }
 
     /**
@@ -497,5 +508,4 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         ExpressionDataDoubleMatrix.log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
     }
-
 }
