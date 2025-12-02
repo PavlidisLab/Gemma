@@ -413,6 +413,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     /**
      * Store vectors in the cache.
+     *
      * @param newResults Always provide full vectors, not subsets.
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -487,8 +488,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
-     *                            sample)
+     * @param bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
+     *                           sample)
      * @return bio assay dimension
      */
     private BioAssayDimension checkRagged( Collection<BioAssayDimension> bioAssayDimensions ) {
@@ -588,11 +589,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  ees  Experiments and/or subsets required
-     * @param  vecs vectors to select from and if necessary slice, obviously from the given ees.
+     * @param ees  Experiments and/or subsets required
+     * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
      * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged.
-     *              Otherwise
-     *              the data in a vector will be for the subset of samples in the ee subset.
+     * Otherwise
+     * the data in a vector will be for the subset of samples in the ee subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             @Nullable Collection<DoubleVectorValueObject> vecs ) {
@@ -622,11 +623,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  ee  ee
-     * @param  obs obs
+     * @param ee  ee
+     * @param obs obs
      * @return Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include
-     *             just the
-     *             data for the subset.
+     * just the
+     * data for the subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             @Nullable Collection<DoubleVectorValueObject> obs ) {
@@ -681,17 +682,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return result;
     }
 
-    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet ee ) {
-        return getBioAssayDimensionsForExperiment( getExperiment( ee ) );
-    }
-
-    /**
-     * Retrieve all the BADs for the experiment, including those from subsets.
-     */
-    private Collection<BioAssayDimension> getBioAssayDimensionsForExperiment( ExpressionExperiment ee ) {
-        HashSet<BioAssayDimension> dimensions = new HashSet<>( expressionExperimentService.getBioAssayDimensions( ee ) );
-        dimensions.addAll( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) );
-        return dimensions;
+    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet bas ) {
+        return expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( getExperiment( bas ) );
     }
 
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
@@ -709,11 +701,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     /**
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
-     *              just
-     *              have one
-     *              (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
-     *              for
-     *              details.
+     * just
+     * have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
+     * for
+     * details.
      */
     private <S, T> Map<S, T> createValueObjectCache( Collection<ProcessedExpressionDataVector> vectors, Function<ProcessedExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
         Map<S, T> result = new HashMap<>();

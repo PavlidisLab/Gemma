@@ -1266,18 +1266,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+    public Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
-        return bioAssayDimensions;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
-        Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
-                .getBioAssayDimensionsFromSubSets( expressionExperiment );
         bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
         return bioAssayDimensions;
     }
@@ -1292,6 +1283,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> getProcessedBioAssayDimensionsWithAssays( ExpressionExperiment ee ) {
+        Collection<BioAssayDimension> bad = expressionExperimentDao.getProcessedBioAssayDimensions( ee );
+        bad.forEach( Thaws::thawBioAssayDimension );
+        return bad;
     }
 
     @Override

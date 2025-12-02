@@ -100,7 +100,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
 
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) )
                 .thenReturn( ee );
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         Collection<DoubleVectorValueObject> voVectors = vectors.stream()
                 .map( v -> new DoubleVectorValueObject( v, eeVo, qtVo, badVo, adVo, null ) )
@@ -153,8 +153,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) ).thenReturn( ee );
 
         // for regular subsets, it's the same
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
-        when( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         ExpressionExperimentSubsetValueObject subsetZero = new ExpressionExperimentSubsetValueObject( subsets.get( 0 ) );
         BioAssayDimensionValueObject badZero = new BioAssayDimensionValueObject( BioAssayDimension.Factory.newInstance( new ArrayList<>( subsets.get( 0 ).getBioAssays() ) ) );
@@ -201,8 +200,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) )
                 .thenReturn( ee );
         // for single-cell subsets,
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.emptySet() );
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         assertThat( experimentalDesignVisualizationService.sortVectorDataByDesign( voVectors, null ) )
                 .containsKey( 1L );

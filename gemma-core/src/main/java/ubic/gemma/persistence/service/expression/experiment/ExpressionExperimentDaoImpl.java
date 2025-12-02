@@ -1295,17 +1295,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession().createQuery( "select b from BioAssayDimension b, ExpressionExperimentSubSet eess "
-                        + "join b.bioAssays bba join eess.bioAssays eb "
-                        + "where eb = bba and eess.sourceExperiment = :ee "
-                        + "group by b" )
-                .setParameter( "ee", expressionExperiment )
-                .list();
-    }
-
-    @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt ) {
         Set<Collection<BioAssayDimension>> dimensions = bulkDataVectorTypes.stream()
                 .map( vectorType -> getBioAssayDimensions( ee, qt, vectorType ) )
@@ -1364,6 +1353,17 @@ public class ExpressionExperimentDaoImpl
                 .add( Restrictions.eq( "bioAssayDimension.id", dimensionId ) )
                 .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
                 .uniqueResult();
+    }
+
+    @Override
+    public Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select pedv.bioAssayDimension from ProcessedExpressionDataVector pedv "
+                        + "where pedv.expressionExperiment = :ee "
+                        + "group by pedv.bioAssayDimension")
+                .setParameter( "ee", ee )
+                .list();
     }
 
     @Override
