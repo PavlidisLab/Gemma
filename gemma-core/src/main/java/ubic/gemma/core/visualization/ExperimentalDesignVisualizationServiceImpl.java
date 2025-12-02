@@ -404,18 +404,20 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         for ( BioMaterial bm : bms ) { // this will be for all samples in the experiment, we don't know about subsets here
             int j = mat.getColumnIndex( bm );
-
-            BioAssay ba = mat.getBioAssayForColumn( j );
+            Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
 
             Collection<FactorValue> fvs = bm.getAllFactorValues();
 
-
-            BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
-            result.put( baVo, new LinkedHashMap<>( fvs.size() ) );
+            LinkedHashMap<ExperimentalFactor, Double> v = new LinkedHashMap<>( fvs.size() );
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 Double value = fvV.get( fv ); // we use IDs to stratify the groups.
-                result.get( baVo ).put( ef, value );
+                v.put( ef, value );
+            }
+
+            for ( BioAssay ba : bas ) {
+                BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
+                result.put( baVo, v );
             }
         }
         return result;
