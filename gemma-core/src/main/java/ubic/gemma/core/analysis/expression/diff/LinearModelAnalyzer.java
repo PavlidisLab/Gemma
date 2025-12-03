@@ -308,8 +308,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
                 createBADMap( samplesUsed ) ); // enforce ordering
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
 
         /*
@@ -336,8 +335,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
         return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
     }
@@ -490,8 +488,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesInSubset, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, factors );
         dropIncompleteFactors( samplesInSubset, factors );
 
         if ( factors.isEmpty() ) {
@@ -691,8 +688,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         List<String[]> interactionFactorLists = new ArrayList<>();
         ObjectMatrix<String, String, Object> designMatrix = DiffExAnalyzerUtils
                 .buildRDesignMatrix( factors, samplesUsed, baselineConditions, false );
-
-        config.addBaseLineFactorValues( baselineConditions );
 
         final Map<String, Collection<ExperimentalFactor>> label2Factors = this.getRNames( factors );
 
@@ -958,7 +953,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         // remove any factors not in the given subset
         Set<ExperimentalFactor> factorsSet = new HashSet<>( factors );
         newConfig.getFactorsToInclude().removeIf( f -> !factorsSet.contains( f ) );
-        newConfig.getBaselineFactorValues().keySet().removeIf( fv -> !factorsSet.contains( fv ) );
         newConfig.getInteractionsToInclude().removeIf( fv -> !factorsSet.containsAll( fv ) );
         return newConfig;
     }
@@ -1099,7 +1093,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             @Nullable FactorValue subsetFactorValue, String filterResultDescription ) {
 
         DifferentialExpressionAnalysis expressionAnalysis = new DifferentialExpressionAnalysis();
-        expressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config ) );
+        expressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, baselineConditions ) );
         expressionAnalysis.setExperimentAnalyzed( bioAssaySet );
 
         /*

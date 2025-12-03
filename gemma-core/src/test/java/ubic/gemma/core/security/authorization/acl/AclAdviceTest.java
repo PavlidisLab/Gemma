@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
+import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.Assert.*;
@@ -303,7 +304,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
-        diffExpressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config ) );
+        diffExpressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, Collections.emptyMap() ) );
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
         resultSet.setAnalysis( diffExpressionAnalysis );

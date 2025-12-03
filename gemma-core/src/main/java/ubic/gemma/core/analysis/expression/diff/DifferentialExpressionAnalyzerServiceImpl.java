@@ -350,10 +350,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<ExpressionAnalysisResultSet> resultSets = dea.getResultSets();
         Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<>();
         Collection<Collection<ExperimentalFactor>> interactionsFromOldExp = new HashSet<>();
+        Map<ExperimentalFactor, FactorValue> baselinesFromOldExp = new HashMap<>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             factorsFromOldExp.addAll( rs.getExperimentalFactors() );
-            // if we included the interaction before, include it again.
-            if ( rs.getExperimentalFactors().size() >= 2 ) {
+            if ( rs.getExperimentalFactors().size() == 1 ) {
+                if ( rs.getBaselineGroup() != null ) {
+                    baselinesFromOldExp.put( rs.getExperimentalFactors().iterator().next(), rs.getBaselineGroup() );
+                }
+            } else if ( rs.getExperimentalFactors().size() >= 2 ) {
+                // if we included the interaction before, include it again.
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
                 interactionsFromOldExp.add( rs.getExperimentalFactors() );
             }

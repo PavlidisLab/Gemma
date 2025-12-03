@@ -354,7 +354,7 @@ public class DiffExAnalyzerUtils {
         }
     }
 
-    public static Protocol createProtocolForConfig( DifferentialExpressionAnalysisConfig config ) {
+    public static Protocol createProtocolForConfig( DifferentialExpressionAnalysisConfig config, Map<ExperimentalFactor, FactorValue> baselineFactorValues ) {
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Differential expression analysis settings" );
         StringBuilder writer = new StringBuilder();
@@ -386,14 +386,14 @@ public class DiffExAnalyzerUtils {
             writer.append( "# No interactions defined.\n" );
         }
 
-        if ( !config.getBaselineFactorValues().isEmpty() ) {
+        if ( !baselineFactorValues.isEmpty() ) {
             writer.append( "# Baselines:\n" );
-            List<ExperimentalFactor> factors = config.getBaselineFactorValues().keySet().stream()
+            List<ExperimentalFactor> factors = baselineFactorValues.keySet().stream()
                     .sorted( ExperimentalFactor.COMPARATOR )
                     .collect( Collectors.toList() );
             for ( ExperimentalFactor ef : factors ) {
                 writer.append( "# " ).append( formatFactor( ef, false ) ).append( ": Baseline = " )
-                        .append( formatFactorValue( config.getBaselineFactorValues().get( ef ), true ) )
+                        .append( formatFactorValue( baselineFactorValues.get( ef ), true ) )
                         .append( "\n" );
             }
         } else {

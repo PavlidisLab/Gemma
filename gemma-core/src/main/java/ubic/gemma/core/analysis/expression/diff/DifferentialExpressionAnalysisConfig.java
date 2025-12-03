@@ -26,7 +26,9 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Holds the settings used for differential expression analysis, and defines some defaults.
@@ -45,11 +47,6 @@ public class DifferentialExpressionAnalysisConfig {
      * Type of analysis to perform.
      */
     private AnalysisType analysisType;
-
-    /**
-     * For each categorical factor, indicate the baseline factor value to use.
-     */
-    private final Map<ExperimentalFactor, FactorValue> baselineFactorValues = new HashMap<>();
 
     /**
      * Whether moderated test statistics should be used.
@@ -155,7 +152,6 @@ public class DifferentialExpressionAnalysisConfig {
      */
     public DifferentialExpressionAnalysisConfig( DifferentialExpressionAnalysisConfig baseConfig ) {
         this.analysisType = baseConfig.getAnalysisType();
-        this.baselineFactorValues.putAll( baseConfig.getBaselineFactorValues() );
         this.moderateStatistics = baseConfig.isModerateStatistics();
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
@@ -193,9 +189,5 @@ public class DifferentialExpressionAnalysisConfig {
         for ( Collection<ExperimentalFactor> interaction : interactions ) {
             addInteractionToInclude( interaction );
         }
-    }
-
-    public void addBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baselineConditions ) {
-        baselineFactorValues.putAll( baselineConditions );
     }
 }
