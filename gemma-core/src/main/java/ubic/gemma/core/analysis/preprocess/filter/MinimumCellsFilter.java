@@ -57,7 +57,7 @@ public class MinimumCellsFilter implements ExpressionDataFilter<ExpressionDataDo
         }
 
         if ( numberOfCellsBySample.isEmpty() ) {
-            log.debug( "None of the assays have cell counts; skipping minimum cells filtering." );
+            log.debug( "None of the samples have assay(s) with cell counts; skipping minimum cells filtering." );
             return dataMatrix;
         }
 
@@ -76,7 +76,7 @@ public class MinimumCellsFilter implements ExpressionDataFilter<ExpressionDataDo
         }
 
         if ( filteredSamples.size() == dataMatrix.columns() ) {
-            throw new InsufficientSamplesException( "All assays were filtered out because they did not meet the minimum number of cells requirement." );
+            throw new InsufficientSamplesException( "All samples were filtered out because they did not meet the minimum number of cells requirement." );
         } else if ( !filteredSamples.isEmpty() ) {
             // FIXME: use a slice instead, but  the DiffEx analyzer needs to be changed to slice the design matrix too
             DoubleMatrix<CompositeSequence, BioMaterial> maskedMatrix = dataMatrix.getMatrix().copy();
