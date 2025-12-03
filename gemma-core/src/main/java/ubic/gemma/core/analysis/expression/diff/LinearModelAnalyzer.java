@@ -952,15 +952,14 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
             FactorValue subsetFactorValue, DifferentialExpressionAnalysisConfig config ) {
-        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
-        newConfig.addFactorsToInclude( factors );
-        for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
-            if ( new HashSet<>( factors ).containsAll( interactors ) ) {
-                newConfig.addInteractionToInclude( interactors );
-            }
-        }
+        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig( config );
         newConfig.setSubsetFactor( null );
         newConfig.setSubsetFactorValue( subsetFactorValue );
+        // remove any factors not in the given subset
+        Set<ExperimentalFactor> factorsSet = new HashSet<>( factors );
+        newConfig.getFactorsToInclude().removeIf( f -> !factorsSet.contains( f ) );
+        newConfig.getBaselineFactorValues().keySet().removeIf( fv -> !factorsSet.contains( fv ) );
+        newConfig.getInteractionsToInclude().removeIf( fv -> !factorsSet.containsAll( fv ) );
         return newConfig;
     }
 
@@ -1433,7 +1432,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         timer.start();
         LeastSquaresFit fit;
         if ( config.isUseWeights() ) {
-            MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+            MeanVarianceEstimator mv;
+            try {
+                mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+            } catch ( Exception e ) {
+                throw new MeanVarianceFailureException( config, e );
+            }
             LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + " ms" );
             timer.reset();
             timer.start();
@@ -1485,7 +1489,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             try {
                 ModeratedTstat.ebayes( fit );
             } catch ( Exception e ) {
-                throw new EbayesFailureException( e, config );
+                throw new EbayesFailureException( config, e );
             }
 
             // just for printing to logs:
