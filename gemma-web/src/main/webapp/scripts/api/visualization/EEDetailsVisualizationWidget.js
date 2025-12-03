@@ -187,7 +187,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       } );
       this.vizBtn = new Ext.Toolbar.Button( {
          tooltip : "Visualize selected gene(s)",
-         text : 'Visualize',
+         text : Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.random,
          cls : 'x-toolbar-standardbutton',
          handler : this.vizBtnHandler.createDelegate( this )
       } );
