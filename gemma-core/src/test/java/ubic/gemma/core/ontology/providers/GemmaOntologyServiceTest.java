@@ -1,20 +1,25 @@
 package ubic.gemma.core.ontology.providers;
 
+import org.junit.Rule;
 import org.junit.Test;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 public class GemmaOntologyServiceTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Test
+    @NetworkAvailable(url = "https://raw.githubusercontent.com/PavlidisLab/TGEMO/master/TGEMO.OWL")
     public void test() {
-        assumeThatResourceIsAvailable( "https://raw.githubusercontent.com/PavlidisLab/TGEMO/master/TGEMO.OWL" );
         GemmaOntologyService gemmaOntology = new GemmaOntologyService();
         gemmaOntology.setSearchEnabled( false );
         gemmaOntology.setProcessImports( false ); // FIXME: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged

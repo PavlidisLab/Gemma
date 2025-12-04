@@ -1,26 +1,32 @@
 package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.sra.model.*;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.StringReader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
+@NetworkAvailable(url = EntrezUtils.ESEARCH)
 public class SraFetcherTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null );
 
     @Test
+    @NetworkAvailable(url = EntrezUtils.EFETCH + "?db=sra&id=SRX12015965")
     public void testFetch() throws IOException {
-        assumeThatResourceIsAvailable( EntrezUtils.EFETCH + "?db=sra&id=SRX12015965" );
         SraExperimentPackageSet seps = sraFetcher.fetch( "SRX12015965" );
         checkExperiment( seps );
         assertThat( seps.getExperimentPackages() ).extracting( SraExperimentPackage::getOrganization )
@@ -75,8 +81,8 @@ public class SraFetcherTest {
     }
 
     @Test
+    @NetworkAvailable(url = EntrezUtils.EFETCH + "?db=sra&id=SRX12015965")
     public void testFetchRunInfo() throws IOException {
-        assumeThatResourceIsAvailable( EntrezUtils.EFETCH + "?db=sra&id=SRX12015965" );
         String runinfo = sraFetcher.fetchRunInfo( "SRX12015965" );
         assertThat( runinfo )
                 .hasLineCount( 1 + 8 )

@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.apache.commons.io.IOUtils;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -24,12 +24,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -39,19 +40,20 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
 
 /**
  * @author paul
  */
 @ContextConfiguration
 public class GeoBrowserServiceParseTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -100,25 +102,20 @@ public class GeoBrowserServiceParseTest extends BaseTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testParse() {
+    @NetworkAvailable
+    public void testParse() throws IOException {
         Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test.xml" ).getInputStream() ) {
             response = EntrezXmlUtils.parse( r );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-            return;
         }
-        try {
-            serv.formatDetails( response, "" );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        serv.formatDetails( response, "" );
         verify( ads ).findByShortName( "GPL1708" );
         verify( ees ).findByShortName( "GSE4595" );
     }
 
     @Test
-    public void testParse2() {
+    @NetworkAvailable
+    public void testParse2() throws IOException {
         Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test1.xml" ).getInputStream() ) {
             response = EntrezXmlUtils.parse( r );
@@ -126,17 +123,14 @@ public class GeoBrowserServiceParseTest extends BaseTest {
             throw new RuntimeException( e );
         }
         System.out.println( response );
-        try {
-            serv.formatDetails( response, "" );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        serv.formatDetails( response, "" );
         verify( ads ).findByShortName( "GPL570" );
 
     }
 
     @Test
-    public void testParse3() {
+    @NetworkAvailable
+    public void testParse3() throws IOException {
         Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test2.xml" ).getInputStream() ) {
             response = EntrezXmlUtils.parse( r );
@@ -144,11 +138,7 @@ public class GeoBrowserServiceParseTest extends BaseTest {
             throw new RuntimeException( e );
         }
         System.out.println( response );
-        try {
-            serv.formatDetails( response, "" );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        serv.formatDetails( response, "" );
         verify( ads ).findByShortName( "GPL3829" );
         verify( ees ).findByShortName( "GSE21230" );
     }

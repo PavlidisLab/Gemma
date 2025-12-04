@@ -18,11 +18,14 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -30,20 +33,23 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
  */
 @Category(GeoTest.class)
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
-    GeoBrowserService gbs;
+    private GeoBrowserService gbs;
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testFillDetails() throws Exception {
-        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
 
         try {
             String details = gbs.getDetails( "GSE15904", "" );
@@ -80,8 +86,8 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testGetRecentRecords() throws Exception {
-        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
 
         try {
             // I changed the skip because the very newest records can cause a problem with fetching details.

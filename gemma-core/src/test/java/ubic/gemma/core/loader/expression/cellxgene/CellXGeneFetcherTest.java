@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAssetDownloadMet
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -24,7 +27,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
+@NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
 public class CellXGeneFetcherTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Import(SettingsConfig.class)
     @Configuration

@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -38,6 +40,8 @@ import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -67,6 +71,9 @@ import static org.junit.Assert.*;
  */
 @Category(SlowTest.class)
 public class DiffExTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private GeoService geoService;
@@ -107,6 +114,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
      * Test differential expression analysis on RNA-seq data. See bug 3383. R code in voomtest.R
      */
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testCountData() throws Exception {
         ee = eeService.findByShortName( "GSE29006" );
         Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
@@ -237,6 +245,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
      * Test where probes have constant values. See bug 3177.
      */
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE35930() throws Exception {
         ee = eeService.findByShortName( "GSE35930" );
         Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),

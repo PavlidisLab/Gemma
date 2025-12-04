@@ -18,15 +18,17 @@
  */
 package ubic.gemma.core.loader.entrez;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.junit.Assert.assertNotNull;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -36,10 +38,13 @@ public class EutilFetchTest {
 
     private static final String ncbiApiKey = Settings.getString( "ncbi.efetch.apikey" );
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFetch() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Document result = EutilFetch.summary( "gds", "GSE4595", 2, ncbiApiKey );
         assertNotNull( result );
     }

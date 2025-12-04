@@ -17,12 +17,14 @@ package ubic.gemma.core.analysis.preprocess;
 import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -31,6 +33,8 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -54,6 +58,9 @@ import static org.junit.Assert.*;
  */
 @Category(GeoTest.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -83,6 +90,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateTwoColor() throws Exception {
         prepareGSE2892();
 
@@ -134,6 +142,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateOneColor() throws Exception {
         prepareGSE2892();
 
@@ -181,6 +190,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     final public void testServiceCreateCountData() throws Exception {
 
         // so it doesn't look for soft files
@@ -275,6 +285,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateExistingEe() throws Exception {
         prepareGSE2892();
 

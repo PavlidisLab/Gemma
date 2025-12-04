@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo;
 
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -51,16 +54,19 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * TODO: move SOFT files in test resources and mock FTP downloads
  */
 @Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
+@NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
 public class GeoSingleCellDetectorTest extends BaseTest {
 
     private static final SingleCellDataLoaderConfig DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG = SingleCellDataLoaderConfig.builder().build();
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -82,7 +88,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Before
     public void setUp() throws IOException {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );

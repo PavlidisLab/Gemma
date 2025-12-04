@@ -18,18 +18,21 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
 
 /**
  * @author pavlidis
@@ -37,73 +40,63 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
 @Category({ PubMedTest.class, SlowTest.class })
 public class PubMedXMLFetcherTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     private final PubMedSearch pmf = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
 
     @Test
-    public final void testRetrieveByHTTP() {
-        try {
-            BibliographicReference br = pmf.retrieve( "15173114" );
+    @NetworkAvailable
+    public final void testRetrieveByHTTP() throws IOException {
+        BibliographicReference br = pmf.retrieve( "15173114" );
 
-            assertNotNull( br );
+        assertNotNull( br );
 
-            assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
-            assertEquals( "Genome Res", br.getPublication() );
-            assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
+        assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
+        assertEquals( "Genome Res", br.getPublication() );
+        assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
-            assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
-        } catch ( Exception e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
+        assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
     }
 
     @Test
-    public final void testRetrieveByHTTP2() {
-        try {
-            BibliographicReference br = pmf.retrieve( "24850731" );
+    @NetworkAvailable
+    public final void testRetrieveByHTTP2() throws IOException {
+        BibliographicReference br = pmf.retrieve( "24850731" );
 
-            assertNotNull( br );
+        assertNotNull( br );
 
-            assertEquals(
-                    "Iwata-Yoshikawa, Naoko; Uda, Akihiko; Suzuki, Tadaki; Tsunetsugu-Yokota, Yasuko; Sato, Yuko; "
-                            + "Morikawa, Shigeru; Tashiro, Masato; Sata, Tetsutaro; Hasegawa, Hideki; Nagata, Noriyo",
-                    br.getAuthorList() );
-            assertEquals( "J Virol", br.getPublication() );
-
-        } catch ( Exception e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        assertEquals(
+                "Iwata-Yoshikawa, Naoko; Uda, Akihiko; Suzuki, Tadaki; Tsunetsugu-Yokota, Yasuko; Sato, Yuko; "
+                        + "Morikawa, Shigeru; Tashiro, Masato; Sata, Tetsutaro; Hasegawa, Hideki; Nagata, Noriyo",
+                br.getAuthorList() );
+        assertEquals( "J Virol", br.getPublication() );
     }
 
     /*
      * 23865096 is a NCBI bookshelf article, not a paper
      */
     @Test
-    public final void testRetrieveByHTTPBookshelf() {
-        try {
-            BibliographicReference br = pmf.retrieve( "23865096" );
+    @NetworkAvailable
+    public final void testRetrieveByHTTPBookshelf() throws IOException {
+        BibliographicReference br = pmf.retrieve( "23865096" );
 
-            assertNotNull( br );
+        assertNotNull( br );
 
-            assertEquals( "Ocansey, Sharon; Tatton-Brown, Katrina", br.getAuthorList() );
+        assertEquals( "Ocansey, Sharon; Tatton-Brown, Katrina", br.getAuthorList() );
 
-            assertEquals( "GeneReviews", br.getPublication().substring( 0, "GeneReviews".length() ) );
-            assertEquals( "EZH2-Related Overgrowth", br.getTitle() );
+        assertEquals( "GeneReviews", br.getPublication().substring( 0, "GeneReviews".length() ) );
+        assertEquals( "EZH2-Related Overgrowth", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
-            assertEquals( "2013", f.format( br.getPublicationDate() ) );
-        } catch ( Exception e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
+        assertEquals( "2013", f.format( br.getPublicationDate() ) );
     }
 
     @Test
-    public final void testRetrieveByHTTPNotFound() {
-        try {
-            BibliographicReference br = pmf.retrieve( "1517311444" );
-            assertNull( br );
-        } catch ( Exception e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+    @NetworkAvailable
+    public final void testRetrieveByHTTPNotFound() throws IOException {
+        BibliographicReference br = pmf.retrieve( "1517311444" );
+        assertNull( br );
     }
 }

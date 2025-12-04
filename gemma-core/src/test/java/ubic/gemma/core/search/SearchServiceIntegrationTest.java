@@ -22,6 +22,7 @@ package ubic.gemma.core.search;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,14 @@ import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -64,6 +68,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
     private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
     private static final String BRAIN_CAVITY = "http://purl.obolibrary.org/obo/FMA_242395";
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -208,6 +215,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.EFETCH)
     public void testSearchByBibRefIdProblems() throws SearchException, IOException {
         PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
         BibliographicReference bibref = fetcher.retrieve( "9600966" );
@@ -244,6 +252,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.EFETCH)
     public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
         PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
         BibliographicReference bibref = fetcher.retrieve( "22780917" );

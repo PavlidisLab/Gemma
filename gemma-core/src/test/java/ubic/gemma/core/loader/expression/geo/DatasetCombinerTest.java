@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.core.io.ClassPathResource;
@@ -27,6 +27,8 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.InputStream;
@@ -38,28 +40,30 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
  */
+@CommonsLog
 @Category(SlowTest.class)
 public class DatasetCombinerTest {
 
-    private static final Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     private Collection<GeoDataset> gds;
 
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGDSGrouping() {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 2, result.size() );
         assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
     }
 
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSEForGDS() {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Collection<String> result = DatasetCombiner.findGSEforGDS( "GDS472", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 1, result.size() );
         assertTrue( result.contains( "GSE674" ) );
@@ -108,8 +112,8 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSE267() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 0, result.size() );
     }

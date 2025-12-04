@@ -20,14 +20,16 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -38,30 +40,28 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
 /**
  * @author pavlidis
  */
 @Category(GeoTest.class)
+@NetworkAvailable(url = EntrezUtils.ESUMMARY)
 public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
 
     private static final String ncbiApiKey = Settings.getString( "entrez.efetch.apikey" );
 
-    private final GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
-    @BeforeClass
-    public static void checkThatGeoIsAvailable() {
-        assumeThatResourceIsAvailable( EntrezUtils.ESUMMARY );
-    }
+    private final GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public void testGetRecentGeoRecords() throws Exception {
-        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
         Collection<GeoRecord> res = b.getRecentGeoRecords( GeoRecordType.SERIES, 10, 10 );
         assertThat( res )
                 .isNotEmpty()

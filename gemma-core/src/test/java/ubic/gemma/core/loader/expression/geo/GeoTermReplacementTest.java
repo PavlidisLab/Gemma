@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.time.StopWatch;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -15,6 +16,8 @@ import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.concurrent.Executors;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.BufferedReader;
@@ -36,7 +39,11 @@ import static org.junit.Assume.assumeNoException;
  */
 @CommonsLog
 @Category(SlowTest.class)
+@NetworkAvailable(url = "http://purl.obolibrary.org/")
 public class GeoTermReplacementTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private static final List<OntologyService> ontologies = new ArrayList<>();
     private static final Map<OntologyService, Collection<String>> prefixesByOntology = new HashMap<>();

@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -48,10 +51,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 @ContextConfiguration
 public class MexSingleCellDataLoaderTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -299,8 +304,8 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
      */
     @Test
     @Category({ GeoTest.class, SlowTest.class })
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
@@ -429,6 +434,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
      */
     @Test
     @Category({ GeoTest.class, SlowTest.class })
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE125708" );
         GeoSample sample = series.getSamples().stream().filter( s -> "GSM3580724".equals( s.getGeoAccession() ) )

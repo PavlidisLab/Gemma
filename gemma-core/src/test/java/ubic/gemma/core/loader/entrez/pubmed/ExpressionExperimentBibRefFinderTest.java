@@ -18,9 +18,12 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -32,8 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
@@ -41,10 +42,13 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 @Category(GeoTest.class)
 public class ExpressionExperimentBibRefFinderTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Test
     @Category(SlowTest.class)
-    public void testLocatePrimaryReference() {
-        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
+    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
+    public void testLocatePrimaryReference() throws IOException {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -53,12 +57,7 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = null;
-        try {
-            bibref = finder.locatePrimaryReference( ee );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        BibliographicReference bibref = finder.locatePrimaryReference( ee );
         assertNotNull( bibref );
         assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
                 bibref.getTitle() );
@@ -66,8 +65,8 @@ public class ExpressionExperimentBibRefFinderTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testLocatePrimaryReferenceInvalidGSE() {
-        assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi" );
+    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
+    public void testLocatePrimaryReferenceInvalidGSE() throws IOException {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -76,12 +75,7 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = null;
-        try {
-            bibref = finder.locatePrimaryReference( ee );
-        } catch ( IOException e ) {
-            assumeThatExceptionIsDueToNetworkIssue( e );
-        }
+        BibliographicReference bibref = finder.locatePrimaryReference( ee );
         assertNull( bibref );
     }
 }

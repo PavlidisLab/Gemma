@@ -22,11 +22,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -34,6 +36,8 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -61,6 +65,9 @@ import static org.junit.Assert.*;
  */
 public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
     private ExpressionExperimentService eeService;
 
@@ -72,9 +79,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
@@ -171,6 +175,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     @SuppressWarnings("unchecked")
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
 
         try {
