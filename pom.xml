@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.25</version>
+		<version>1.2.27</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -891,6 +891,8 @@
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
+		<mockito.version>5.20.0</mockito.version>
+		<assertj.version>3.27.6</assertj.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<skipVersionFile>false</skipVersionFile>
