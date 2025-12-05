@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.model.common.DescribableUtils.*;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
@@ -130,16 +131,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private Collection<CellTypeAssignment> loadCellTypeAssignments( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
         QuantitationType qt = getQuantitationType( ee, config );
         SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-        Set<String> existingCtaNames = dimension.getCellTypeAssignments().stream()
-                .map( CellTypeAssignment::getName ).filter( Objects::nonNull )
-                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
+        Set<String> existingCtaNames = getNames( dimension.getCellTypeAssignments() );
         Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
-        Set<String> newCtaNames = new HashSet<>();
-        for ( CellTypeAssignment cta : ctas ) {
-            if ( cta.getName() != null && !newCtaNames.add( cta.getName() ) ) {
-                throw new IllegalArgumentException( cta + " has a non-unique name." );
-            }
-        }
+        checkNamesAreUnique( ctas );
         applyPreferredCellTypeAssignment( ctas, config );
         Set<CellTypeAssignment> created = new HashSet<>();
         for ( CellTypeAssignment cta : ctas ) {
@@ -147,9 +141,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 if ( config.isReplaceExistingCellTypeAssignment() ) {
                     log.info( "There is already a cell type assignment named " + cta.getName() + " in " + ee + ", replacing it..." );
                     singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, cta.getName() );
-                } else {
+                } else if ( config.isIgnoreExistingCellTypeAssignment() ) {
                     log.warn( "Cell type assignment with name " + cta.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingCellTypeAssignment to replace it." );
                     continue;
+                } else {
+                    throw new IllegalArgumentException( "Cell type assignment with name " + cta.getName() + " already exists in " + ee + ". Specify replaceExistingCellTypeAssignment to replace it or ignoreExistingCellTypeAssignment to ignore it." );
                 }
             }
             created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() ) );
@@ -181,25 +177,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
         SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-        Set<String> existingClcNames = dimension.getCellLevelCharacteristics().stream()
-                .map( CellLevelCharacteristics::getName ).filter( Objects::nonNull )
-                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
+        Set<String> existingClcNames = getNames( dimension.getCellLevelCharacteristics() );
         Set<CellLevelCharacteristics> clcs = loader.getOtherCellLevelCharacteristics( dimension );
-        Set<String> newClcNames = new HashSet<>();
-        for ( CellLevelCharacteristics clc : clcs ) {
-            if ( clc.getName() != null && !newClcNames.add( clc.getName() ) ) {
-                throw new IllegalArgumentException( clc + " has a non-unique name." );
-            }
-        }
+        checkNamesAreUnique( clcs );
         Collection<CellLevelCharacteristics> created = new HashSet<>();
         for ( CellLevelCharacteristics clc : clcs ) {
             if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
                 if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
                     log.info( "There is already a cell-level characteristics named " + clc.getName() + " in " + ee + ", replacing it..." );
                     singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, clc.getName() );
-                } else {
+                } else if ( config.isIgnoreExistingOtherCellLevelCharacteristics() ) {
                     log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
                     continue;
+                } else {
+                    throw new IllegalArgumentException( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ". Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
                 }
             }
             created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
@@ -262,9 +253,18 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 "Platform primary taxon does not match dataset." );
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );
         QuantitationType qt = loadQuantitationType( loader, ee, config );
-        loadCellTypeAssignments( loader, dim, config );
-        loadCellLevelCharacteristics( loader, dim );
-        loadSequencingMetadata( loader, dim );
+        Set<CellTypeAssignment> loadedCtas = loadCellTypeAssignments( loader, dim, config );
+        if ( !loadedCtas.isEmpty() ) {
+            log.info( "Loaded " + loadedCtas.size() + " cell type assignments." );
+        }
+        Collection<CellLevelCharacteristics> loadedClcs = loadOtherCellLevelCharacteristics( loader, dim, config );
+        if ( !loadedClcs.isEmpty() ) {
+            log.info( "Loaded " + loadedClcs.size() + " cell-level characteristics." );
+        }
+        Map<BioAssay, SequencingMetadata> loadedSm = loadSequencingMetadata( loader, dim );
+        if ( !loadedSm.isEmpty() ) {
+            log.info( "Loaded sequencing metadata for " + loadedSm.size() + " assays." );
+        }
         loadVectors( loader, ee, dim, qt, platform, config );
         return qt;
     }
@@ -384,13 +384,36 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+    private Set<CellTypeAssignment> loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+        Assert.isNull( dim.getId(), "This method can only load a CTA in a non-persistent dimension." );
         try {
+            Set<CellTypeAssignment> loaded = new HashSet<>();
+            Set<String> existingCtaNames = getNames( dim.getCellTypeAssignments() );
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dim );
+            checkNamesAreUnique( ctas );
             applyPreferredCellTypeAssignment( ctas, config );
-            dim.getCellTypeAssignments().addAll( ctas );
+            // if the names of the nce CTAs are uniques and the original collection is
+            for ( CellTypeAssignment cta : ctas ) {
+                if ( cta.getName() != null && existingCtaNames.contains( cta.getName() ) ) {
+                    if ( config.isReplaceExistingCellTypeAssignment() ) {
+                        removeByName( dim.getCellTypeAssignments(), cta.getName() );
+                    } else if ( config.isIgnoreExistingCellTypeAssignment() ) {
+                        log.warn( "Cell type assignment with name " + cta.getName() + " already exists, ignoring. Specify replaceExistingCellTypeAssignment to replace it." );
+                        continue;
+                    } else {
+                        throw new IllegalArgumentException( "Cell type assignment with name " + cta.getName() + " already exists. Specify replaceExistingCellTypeAssignment to replace it or ignoreExistingCellTypeAssignment to ignore it." );
+                    }
+                }
+                if ( dim.getCellTypeAssignments().add( cta ) ) {
+                    loaded.add( cta );
+                } else {
+                    throw new IllegalStateException( "Could not add " + cta + " to " + dim + "." );
+                }
+            }
+            return loaded;
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
+            return Collections.emptySet();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -426,11 +449,34 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private void loadCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim ) {
+    private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+        Assert.isNull( dim.getId() );
         try {
-            dim.getCellLevelCharacteristics().addAll( loader.getOtherCellLevelCharacteristics( dim ) );
+            Set<CellLevelCharacteristics> loaded = new HashSet<>();
+            Set<String> existingClcNames = getNames( dim.getCellLevelCharacteristics() );
+            Set<CellLevelCharacteristics> clcs = loader.getOtherCellLevelCharacteristics( dim );
+            checkNamesAreUnique( clcs );
+            for ( CellLevelCharacteristics clc : clcs ) {
+                if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
+                    if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
+                        removeByName( dim.getCellLevelCharacteristics(), clc.getName() );
+                    } else if ( config.isIgnoreExistingOtherCellLevelCharacteristics() ) {
+                        log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists, ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
+                        continue;
+                    } else {
+                        throw new RuntimeException( "Cell-level characteristics with name " + clc.getName() + " already exists. Specify replaceExistingOtherCellLevelCharacteristics to replace it or ignoreExistingOtherCellLevelCharacteristics to ignore it." );
+                    }
+                }
+                if ( dim.getCellLevelCharacteristics().add( clc ) ) {
+                    loaded.add( clc );
+                } else {
+                    throw new IllegalStateException( "Could not add " + clc + " to " + dim + "." );
+                }
+            }
+            return loaded;
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
+            return Collections.emptySet();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

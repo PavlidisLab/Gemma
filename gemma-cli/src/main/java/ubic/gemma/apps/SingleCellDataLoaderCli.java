@@ -604,6 +604,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .cellTypeAssignmentDescription( cellTypeAssignmentDescription )
                     .cellTypeAssignmentProtocol( cellTypeAssignmentProtocolName != null ? entityLocator.locateProtocol( cellTypeAssignmentProtocolName ) : null )
                     .replaceExistingCellTypeAssignment( replaceExistingCellTypeAssignments )
+                    .ignoreExistingCellTypeAssignment( mode == Mode.LOAD_EVERYTHING )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
         }
 
@@ -611,7 +612,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder
                     .otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile )
                     .otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames )
-                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics );
+                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics )
+                    .ignoreExistingOtherCellLevelCharacteristics( mode == Mode.LOAD_EVERYTHING );
         }
         // infer only on-demand
         configBuilder.inferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );

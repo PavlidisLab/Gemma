@@ -70,6 +70,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private boolean replaceExistingCellTypeAssignment;
 
     /**
+     * If true, ignore existing cell type assignment with the same name.
+     */
+    private boolean ignoreExistingCellTypeAssignment;
+
+    /**
      * A location where additional cell-level characteristics can be loaded.
      */
     @Nullable
@@ -89,6 +94,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      * Note that other CLCs with a {@code null} name cannot be replaced.
      */
     private boolean replaceExistingOtherCellLevelCharacteristics;
+
+    /**
+     * If true, ignore existing other CLCs with the same names.
+     */
+    private boolean ignoreExistingOtherCellLevelCharacteristics;
 
     /**
      * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap
