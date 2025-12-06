@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
+import static ubic.gemma.model.common.DescribableUtils.getNextAvailableName;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 @Service
@@ -156,7 +157,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
         // create vectors now
         QuantitationType newQt = QuantitationType.Factory.newInstance( qt );
-        newQt.setName( qt.getName() + " aggregated by " + cellTypeFactorName + ( canLog2cpm ? " (log2cpm)" : "" ) );
+        newQt.setName( getNextAvailableName( ee.getQuantitationTypes(), qt.getName() + " aggregated by " + cellTypeFactorName + ( canLog2cpm ? " (log2cpm)" : "" ) ) );
         newQt.setDescription( ( StringUtils.isNotBlank( qt.getDescription() ) ? qt.getDescription() + "\n" : "" )
                 + "Expression data has been aggregated by " + cellTypeFactorName + " using " + method + "."
                 + ( canLog2cpm ? " The data was subsequently converted to log2cpm." : "" ) );

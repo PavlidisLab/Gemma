@@ -42,6 +42,7 @@ import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
@@ -1361,7 +1362,7 @@ public class ExpressionExperimentDaoImpl
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select pedv.bioAssayDimension from ProcessedExpressionDataVector pedv "
                         + "where pedv.expressionExperiment = :ee "
-                        + "group by pedv.bioAssayDimension")
+                        + "group by pedv.bioAssayDimension" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -3978,8 +3979,9 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
-        Assert.isTrue( !ee.getQuantitationTypes().contains( newQt ),
-                "ExpressionExperiment already has a quantitation like " + newQt );
+        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        Assert.isTrue( newQt.getName() == null || !existingNames.contains( newQt.getName() ),
+                "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {

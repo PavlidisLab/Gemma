@@ -12,6 +12,7 @@ import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
@@ -344,9 +345,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional
     public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
-        Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
-                String.format( "%s already have vectors for the quantitation type: %s; use replaceSingleCellDataVectors() to replace existing vectors.",
-                        ee, quantitationType ) );
+        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        Assert.isTrue( quantitationType.getName() == null || !existingNames.contains( quantitationType.getName() ),
+                "There is already a quantitation type named " + quantitationType.getName() + " in " + ee + "." );
         validateSingleCellDataVectors( ee, quantitationType, vectors );
         if ( quantitationType.getId() == null ) {
             log.info( "Creating " + quantitationType + "..." );

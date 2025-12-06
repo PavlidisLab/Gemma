@@ -1,5 +1,6 @@
 package ubic.gemma.model.common;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import java.util.*;
@@ -41,5 +42,25 @@ public class DescribableUtils {
     public static boolean removeByName( Collection<? extends Describable> describables, String name ) {
         Assert.notNull( name, "Name to remove cannot be null" );
         return describables.removeIf( c -> name.equalsIgnoreCase( c.getName() ) );
+    }
+
+    /**
+     * Generate the next available name by appending a number to the given string.
+     * <p>
+     * The format is "name", "name (2)", "name (3)", etc.
+     * <p>
+     * The name comparison is case-insensitive.
+     */
+    public static String getNextAvailableName( Collection<? extends Describable> describables, String name ) {
+        Set<String> existingNames = getNames( describables );
+        if ( !existingNames.contains( name ) ) {
+            return name;
+        }
+        for ( int i = 2; ; i++ ) {
+            String candidate = String.format( "%s (%d)", StringUtils.stripEnd( name, " " ), i );
+            if ( !existingNames.contains( candidate ) ) {
+                return candidate;
+            }
+        }
     }
 }
