@@ -544,6 +544,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee.getBioAssays().add( ba1 );
         // create quantitations
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -600,6 +601,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         scd.getCellTypeAssignments().add( cta );
         sessionFactory.getCurrentSession().persist( scd );
         QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -645,6 +647,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetRawDataVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt1 = new QuantitationType();
+        qt1.setName( "log2cpm" );
         qt1.setGeneralType( GeneralType.QUANTITATIVE );
         qt1.setType( StandardQuantitationType.AMOUNT );
         qt1.setScale( ScaleType.LOG2 );
@@ -753,6 +756,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testRemoveRawDataVectorsWhenQtIsUnknown() {
         ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -817,6 +821,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee = createExpressionExperimentWithRawVectors();
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -878,6 +883,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee = createExpressionExperimentWithProcessedVectors();
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -929,6 +935,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().evict( ee );
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -984,6 +991,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperiment createExpressionExperimentWithRawVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -1009,6 +1017,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperiment createExpressionExperimentWithProcessedVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );

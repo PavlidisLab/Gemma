@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
 import javax.annotation.Nonnull;
-import javax.persistence.Transient;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable {

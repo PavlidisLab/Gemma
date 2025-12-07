@@ -374,6 +374,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     @Test
     public void testAddSingleCellDataVectorsWithInteger() {
         QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );

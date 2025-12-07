@@ -186,6 +186,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         sessionFactory.getCurrentSession().persist( ad );
 
         QuantitationType qt = new QuantitationType();
+        qt.setName( scaleType == ScaleType.COUNT ? "counts" : "log2cpm" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( scaleType );
         qt.setGeneralType( GeneralType.QUANTITATIVE );

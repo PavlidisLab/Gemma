@@ -117,6 +117,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         BioAssayDimension bad = new BioAssayDimension();
         bad = bioAssayDimensionService.create( bad );
         QuantitationType rawQt = QuantitationType.Factory.newInstance();
+        rawQt.setName( "log2cpm" );
         rawQt.setGeneralType( GeneralType.QUANTITATIVE );
         rawQt.setType( StandardQuantitationType.AMOUNT );
         rawQt.setScale( ScaleType.LOG2 );

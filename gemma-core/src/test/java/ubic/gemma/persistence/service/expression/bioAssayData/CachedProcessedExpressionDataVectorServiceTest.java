@@ -192,6 +192,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -243,6 +244,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -302,6 +304,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );

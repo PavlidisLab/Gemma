@@ -346,7 +346,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
-        Assert.isTrue( quantitationType.getName() == null || !existingNames.contains( quantitationType.getName() ),
+        Assert.notNull( quantitationType.getName(), "The quantitation type must have a name." );
+        Assert.isTrue( !existingNames.contains( quantitationType.getName() ),
                 "There is already a quantitation type named " + quantitationType.getName() + " in " + ee + "." );
         validateSingleCellDataVectors( ee, quantitationType, vectors );
         if ( quantitationType.getId() == null ) {

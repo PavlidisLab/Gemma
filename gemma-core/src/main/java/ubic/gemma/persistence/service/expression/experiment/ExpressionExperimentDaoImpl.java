@@ -3980,7 +3980,8 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
         Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
-        Assert.isTrue( newQt.getName() == null || !existingNames.contains( newQt.getName() ),
+        Assert.notNull( newQt.getName(), "The quantitation type must have a name." );
+        Assert.isTrue( !existingNames.contains( newQt.getName() ),
                 "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
         if ( newQt.getIsPreferred() ) {
