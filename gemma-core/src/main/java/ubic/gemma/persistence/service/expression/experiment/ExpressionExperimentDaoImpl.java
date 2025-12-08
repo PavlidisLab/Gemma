@@ -3986,7 +3986,7 @@ public class ExpressionExperimentDaoImpl
         checkVectors( ee, newQt, newVectors );
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                if ( !qt.equals( newQt ) ) {
+                if ( qt.getIsPreferred() && !qt.equals( newQt ) ) {
                     log.info( "Unmarking " + qt + " as preferred for " + ee + ", a new set of preferred raw vectors will be added." );
                     qt.setIsPreferred( false );
                     // we could break here since there is at most one, but we might as well check all of them and fix

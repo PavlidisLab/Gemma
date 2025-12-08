@@ -88,7 +88,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         assertEquals( AnalysisType.GENERICLM, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFilterMode( DifferentialExpressionAnalysisFilter.Mode.NOMINAL );
+        config.setRepetitiveValuesFilterMode( DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode.NOMINAL );
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 

@@ -27,7 +27,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
@@ -57,7 +57,7 @@ import static org.junit.Assert.*;
  */
 public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
-    private final FilterConfig filterConfig = new FilterConfig();
+    private final ExpressionExperimentFilterConfig filterConfig = new ExpressionExperimentFilterConfig();
     private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
     private ExpressionExperiment ee;
@@ -110,7 +110,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
         linkAnalysisConfig.setCheckCorrelationDistribution( false );
         linkAnalysisConfig.setCheckForBatchEffect( false );
-        filterConfig.setIgnoreMinimumSampleThreshold( true );
+        filterConfig.setIgnoreMinimumSamplesThreshold( true );
+        filterConfig.setMaskOutliers( true );
 
         // first time.
         //noinspection UnusedAssignment // we still want to do this for the testing sake

@@ -1,8 +1,12 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.MatrixStats;
+import ubic.basecode.math.Rank;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -20,6 +24,7 @@ import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUti
 
 /**
  * Utilities for generating random {@link ExpressionDataDoubleMatrix} following various random distributions.
+ *
  * @see RandomSingleCellDataUtils
  * @see RandomBulkDataUtils
  */
@@ -210,6 +215,19 @@ public class RandomExpressionDataMatrixUtils {
             }
         }
         return matrix;
+    }
+
+    public static ExpressionDataDoubleMatrix randomLog2cpmMatrix( ExpressionExperiment ee ) {
+        QuantitationType log2cpmQt = QuantitationType.Factory.newInstance();
+        log2cpmQt.setName( "log2cpm" );
+        log2cpmQt.setGeneralType( GeneralType.QUANTITATIVE );
+        log2cpmQt.setType( StandardQuantitationType.AMOUNT );
+        log2cpmQt.setScale( ScaleType.LOG2 );
+        log2cpmQt.setRepresentation( PrimitiveType.DOUBLE );
+        ExpressionDataDoubleMatrix dm = randomCountMatrix( ee );
+        DoubleMatrix1D librarySize = MatrixStats.colSums( dm.getMatrix() );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmData = MatrixStats.convertToLog2Cpm( dm.getMatrix(), librarySize );
+        return new ExpressionDataDoubleMatrix( dm, log2cpmData, Collections.singleton( log2cpmQt ) );
     }
 
     /**

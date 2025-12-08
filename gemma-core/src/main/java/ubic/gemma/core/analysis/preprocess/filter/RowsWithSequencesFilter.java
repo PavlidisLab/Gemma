@@ -22,33 +22,32 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Remove rows that have no BioSequence associated with the row.
+ * Only retain design elements that have a {@link BioSequence} associated.
  *
  * @author paul
  */
-public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class RowsWithSequencesFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private static final Log log = LogFactory.getLog( RowsWithSequencesFilter.class.getName() );
 
     @Override
-    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
+    public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) throws NoDesignElementsException {
+        List<CompositeSequence> kept = dataMatrix.getDesignElements().stream()
+                .filter( cs -> cs.getBiologicalCharacteristic() != null )
+                .collect( Collectors.toList() );
 
-        List<CompositeSequence> kept = new ArrayList<>();
-        int numRows = dataMatrix.rows();
-        for ( int i = 0; i < numRows; i++ ) {
-            CompositeSequence cs = dataMatrix.getDesignElementForRow( i );
-            if ( cs.getBiologicalCharacteristic() != null ) {
-                kept.add( cs );
-            }
+        if ( kept.isEmpty() ) {
+            throw new NoDesignElementsException( "No design element left after filtering for those having associated BioSequences." );
         }
 
-        RowsWithSequencesFilter.log
-                .info( "Retaining " + kept.size() + "/" + numRows + " rows that have associated BioSequences" );
+        log.info( String.format( "Retaining %d/%d design elements that have associated BioSequences", kept.size(),
+                dataMatrix.rows() ) );
 
         return dataMatrix.sliceRows( kept );
     }

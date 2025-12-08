@@ -308,8 +308,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
                 createBADMap( samplesUsed ) ); // enforce ordering
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
 
         /*
@@ -336,8 +335,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
         return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
     }
@@ -428,7 +426,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                         subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
-                    log.error( "Failed to analyze subset " + subsetFactorValue + ".", e );
+                    log.warn( "Failed to analyze subset " + subsetFactorValue + ".", e );
                     subsetExceptions.add( e );
                 } else {
                     throw e;
@@ -490,8 +488,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection
-                .getBaselineConditions( samplesInSubset, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, factors );
         dropIncompleteFactors( samplesInSubset, factors );
 
         if ( factors.isEmpty() ) {
@@ -655,7 +652,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @param samplesUsed        samples analyzed
      * @param factors            factors included in the model
      * @param baselineConditions for each categorical factor used in the model, the baseline condition
-     * @param subsetFactorValue null unless analyzing a subset (only used for book-keeping)
+     * @param subsetFactorValue  null unless analyzing a subset (only used for book-keeping)
      */
     @Nonnull
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
@@ -692,8 +689,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         ObjectMatrix<String, String, Object> designMatrix = DiffExAnalyzerUtils
                 .buildRDesignMatrix( factors, samplesUsed, baselineConditions, false );
 
-        config.addBaseLineFactorValues( baselineConditions );
-
         final Map<String, Collection<ExperimentalFactor>> label2Factors = this.getRNames( factors );
 
         boolean oneSampleTTest = interceptFactor != null && factors.size() == 1;
@@ -701,7 +696,17 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             this.buildModelFormula( config, label2Factors, interactionFactorLists );
         }
 
-        expressionData = filterAndLog2Transform( expressionData, config );
+        DifferentialExpressionAnalysisFilter filter = new DifferentialExpressionAnalysisFilter( config );
+        DifferentialExpressionAnalysisFilterResult filterResult = new DifferentialExpressionAnalysisFilterResult();
+        String filterResultDescription;
+        try {
+            expressionData = filter.filter( QuantitationTypeConversionUtils.ensureLog2Scale( expressionData ), filterResult );
+            filterResultDescription = filter.describeFilterResult( filterResult );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new InvalidQuantitationTypeConversionException( e, config );
+        } catch ( FilteringException e ) {
+            throw new FilteringRelatedAnalysisException( config, filterResult, e );
+        }
 
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
@@ -867,27 +872,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         this.fillRanksAndQvalues( resultLists, pvaluesForQvalue );
 
         DifferentialExpressionAnalysis expressionAnalysis = this
-                .makeAnalysisEntity( bioAssaySet, config, label2Factors, baselineConditions, interceptFactor,
-                        interactionFactorLists, oneSampleTTest, resultLists, subsetFactorValue );
+                .makeAnalysisEntity( bioAssaySet, expressionData.getQuantitationType(), config, label2Factors,
+                        baselineConditions, interceptFactor, interactionFactorLists, oneSampleTTest, resultLists,
+                        subsetFactorValue, filterResultDescription );
 
         LinearModelAnalyzer.log.info( "Analysis processing phase done ..." );
 
         return expressionAnalysis;
-    }
-
-    /**
-     * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
-     */
-    private ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix expressionData, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
-        try {
-            expressionData = new DifferentialExpressionAnalysisFilter( config )
-                    .filter( QuantitationTypeConversionUtils.ensureLog2Scale( expressionData ) );
-        } catch ( QuantitationTypeConversionException e ) {
-            throw new InvalidQuantitationTypeConversionException( e, config );
-        } catch ( FilteringException e ) {
-            throw new FilteringRelatedAnalysisException( config, e );
-        }
-        return expressionData;
     }
 
     private void warnForElement( CompositeSequence el, String s, int warned ) {
@@ -918,6 +909,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
     /**
      * Check if a factor has missing values (samples that lack an assigned value)
+     *
      * @param samplesUsed the samples used
      * @param factor      the factor
      * @return false if there are any missing values.
@@ -955,15 +947,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
             FactorValue subsetFactorValue, DifferentialExpressionAnalysisConfig config ) {
-        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
-        newConfig.addFactorsToInclude( factors );
-        for ( Collection<ExperimentalFactor> interactors : config.getInteractionsToInclude() ) {
-            if ( new HashSet<>( factors ).containsAll( interactors ) ) {
-                newConfig.addInteractionToInclude( interactors );
-            }
-        }
+        DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig( config );
         newConfig.setSubsetFactor( null );
         newConfig.setSubsetFactorValue( subsetFactorValue );
+        // remove any factors not in the given subset
+        Set<ExperimentalFactor> factorsSet = new HashSet<>( factors );
+        newConfig.getFactorsToInclude().removeIf( f -> !factorsSet.contains( f ) );
+        newConfig.getInteractionsToInclude().removeIf( fv -> !factorsSet.containsAll( fv ) );
         return newConfig;
     }
 
@@ -1009,7 +999,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * Needed to compute the number of genes tested/detected.
      */
     private Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap(
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists ) {
         Map<CompositeSequence, Collection<Gene>> result = new HashMap<>();
 
         for ( Collection<DifferentialExpressionAnalysisResult> resultList : resultLists.values() ) {
@@ -1034,7 +1024,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @param pvaluesForQvalue Map of factorName to results.
      */
     private void fillRanksAndQvalues(
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists,
             Map<String, List<Double>> pvaluesForQvalue ) {
         /*
          * qvalues and ranks, requires second pass over the result objects.
@@ -1094,24 +1084,29 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @return Analysis (no-npersistent)
      */
     private DifferentialExpressionAnalysis makeAnalysisEntity( BioAssaySet bioAssaySet,
+            QuantitationType quantitationType,
             DifferentialExpressionAnalysisConfig config,
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, @Nullable ExperimentalFactor interceptFactor,
             List<String[]> interactionFactorLists, boolean oneSampleTtest,
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
-            @Nullable FactorValue subsetFactorValue ) {
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists,
+            @Nullable FactorValue subsetFactorValue, String filterResultDescription ) {
 
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+        DifferentialExpressionAnalysis expressionAnalysis = new DifferentialExpressionAnalysis();
+        expressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, baselineConditions ) );
         expressionAnalysis.setExperimentAnalyzed( bioAssaySet );
 
         /*
          * Complete analysis config
          */
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
-                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
-                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" )
-                + ( subsetFactorValue == null ? "" : " Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+        expressionAnalysis.setDescription( String.format( "Linear model with %d factors%s%s.%s.\nQuantitation Type: %s\nData Filtering Result:\n%s",
+                config.getFactorsToInclude().size(), interceptFactor == null ? "" : " with intercept treated as factor",
+                interactionFactorLists.isEmpty() ? "" : " with interaction",
+                subsetFactorValue == null ? "" : " Using subset " + bioAssaySet + " subset value= " + subsetFactorValue,
+                quantitationType,
+                // the filter configuration is described in the protocol object
+                filterResultDescription ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Set<ExpressionAnalysisResultSet> resultSets = this
@@ -1126,7 +1121,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists ) {
 
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = this.getProbeToGeneMap( resultLists );
 
@@ -1279,9 +1274,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     /**
      * Build the design matrix, including interactions if possible
      *
-     * @param  designMatrix           partially setup matrix
-     * @param  interactionFactorLists interactions to consider
-     * @param  baselineConditions     designation of baseline conditions for each factor
+     * @param designMatrix           partially setup matrix
+     * @param interactionFactorLists interactions to consider
+     * @param baselineConditions     designation of baseline conditions for each factor
      * @return final design matrix
      */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
@@ -1431,7 +1426,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         timer.start();
         LeastSquaresFit fit;
         if ( config.isUseWeights() ) {
-            MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+            MeanVarianceEstimator mv;
+            try {
+                mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+            } catch ( Exception e ) {
+                throw new MeanVarianceFailureException( config, e );
+            }
             LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + " ms" );
             timer.reset();
             timer.start();
@@ -1483,7 +1483,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             try {
                 ModeratedTstat.ebayes( fit );
             } catch ( Exception e ) {
-                throw new EbayesFailureException( e, config );
+                throw new EbayesFailureException( config, e );
             }
 
             // just for printing to logs:

@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * @author pavlidis
  */
-public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class AffyProbeNameFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private static final Log log = LogFactory.getLog( AffyProbeNameFilter.class.getName() );
 

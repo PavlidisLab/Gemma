@@ -20,7 +20,7 @@
 package ubic.gemma.core.tasks.analysis.coexp;
 
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,11 +33,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class LinkAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
-    private final FilterConfig filterConfig;
+    private final ExpressionExperimentFilterConfig filterConfig;
     private final LinkAnalysisConfig linkAnalysisConfig;
     private ExpressionExperiment expressionExperiment;
 
-    public LinkAnalysisTaskCommand( ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
+    public LinkAnalysisTaskCommand( ExpressionExperiment ee, LinkAnalysisConfig lac, ExpressionExperimentFilterConfig fg ) {
         super();
         this.expressionExperiment = ee;
         this.filterConfig = fg;
@@ -53,7 +53,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
-    public FilterConfig getFilterConfig() {
+    public ExpressionExperimentFilterConfig getFilterConfig() {
         return this.filterConfig;
     }
 
