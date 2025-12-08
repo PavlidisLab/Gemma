@@ -153,12 +153,6 @@ public class GeneProduct extends ChromosomeFeature {
         this.ncbiGi = ncbiGi;
     }
 
-    @Override
-    @Field
-    public String getPreviousNcbiId() {
-        return super.getPreviousNcbiId();
-    }
-
     public boolean isDummy() {
         return dummy;
     }

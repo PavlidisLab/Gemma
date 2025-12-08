@@ -112,7 +112,7 @@ public abstract class GenomePersister extends CommonPersister {
             AbstractPersister.log
                     .info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
 
-            String previousIdString = newGeneInfo.getPreviousNcbiId();
+            String previousIdString = newGeneInfo.getPreviousNcbiGeneId();
             if ( StringUtils.isNotBlank( previousIdString ) ) {
                 /*
                  * Unfortunately, we need to check multiple 'previous' genes. The example I have run across is MTUS2-AS1
@@ -132,13 +132,13 @@ public abstract class GenomePersister extends CommonPersister {
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
                             + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
-                            .getPreviousNcbiId()
+                            .getPreviousNcbiGeneId()
                             + ") doesn't match." );
                 }
             }
 
             // swap
-            existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
+            existingGene.setPreviousNcbiGeneId( existingGene.getNcbiGeneId().toString() );
             existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
 
             /*

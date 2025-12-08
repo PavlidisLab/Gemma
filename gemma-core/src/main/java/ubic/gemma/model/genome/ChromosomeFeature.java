@@ -25,8 +25,6 @@ import ubic.gemma.model.common.AbstractDescribable;
  */
 public abstract class ChromosomeFeature extends AbstractDescribable {
 
-    private String previousNcbiId;
-
     private PhysicalLocation physicalLocation;
 
     public PhysicalLocation getPhysicalLocation() {
@@ -35,16 +33,5 @@ public abstract class ChromosomeFeature extends AbstractDescribable {
 
     public void setPhysicalLocation( PhysicalLocation physicalLocation ) {
         this.physicalLocation = physicalLocation;
-    }
-
-    /**
-     * @return The last-used NCBI id for this feature, according to the history information provided by NCBI. This may be empty.
-     */
-    public String getPreviousNcbiId() {
-        return this.previousNcbiId;
-    }
-
-    public void setPreviousNcbiId( String previousNcbiId ) {
-        this.previousNcbiId = previousNcbiId;
     }
 }

@@ -559,10 +559,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
              */
             Collection<Gene> toDelete = new HashSet<>();
             for ( Gene foundGene : results ) {
-                if ( StringUtils.isBlank( foundGene.getPreviousNcbiId() ) )
+                if ( StringUtils.isBlank( foundGene.getPreviousNcbiGeneId() ) )
                     continue;
                 // Note hack we used to allow multiple previous ids.
-                for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiId(), "," ) ) {
+                for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiGeneId(), "," ) ) {
                     try {
                         if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
                             toDelete.add( foundGene );

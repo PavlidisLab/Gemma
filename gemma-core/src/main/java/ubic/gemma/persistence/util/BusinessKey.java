@@ -265,10 +265,10 @@ public class BusinessKey {
              * These are unambiguous identifiers.
              */
 
-            if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
+            if ( StringUtils.isNotBlank( gene.getPreviousNcbiGeneId() ) ) {
                 Collection<Integer> ncbiIds = new HashSet<>();
                 ncbiIds.add( gene.getNcbiGeneId() );
-                for ( String previousId : StringUtils.split( gene.getPreviousNcbiId(), "," ) ) {
+                for ( String previousId : StringUtils.split( gene.getPreviousNcbiGeneId(), "," ) ) {
                     /*
                      * Check to see if the new gene used to use an id that is in the system. This is needed to deal with
                      * the case where NCBI changes a gene id (which is common, from gene_history).
