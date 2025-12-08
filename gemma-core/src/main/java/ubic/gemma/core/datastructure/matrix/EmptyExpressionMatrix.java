@@ -19,11 +19,16 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Used to make a 'dummy matrix' that has the column information populated. This is useful for processing where we want
@@ -36,28 +41,12 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
     private static final Object[][] EMPTY_MATRIX = new Object[0][0];
     private static final Object[] EMPTY_COLUMN = new Object[0];
 
-    private final int numCols;
-
-    public EmptyExpressionMatrix( BioAssayDimension ba ) {
-        CompositeSequence dummy = CompositeSequence.Factory.newInstance();
-        this.bioAssayDimensions.put( dummy, ba );
-        this.numCols = this.setUpColumnElements();
+    public EmptyExpressionMatrix( @Nullable ExpressionExperiment ee, BioAssayDimension ba ) {
+        super( ee, Collections.singleton( ba ) );
     }
 
-    public EmptyExpressionMatrix( Collection<BioAssayDimension> dims ) {
-        long i = -1;
-        for ( BioAssayDimension ba : dims ) {
-            CompositeSequence dummy = CompositeSequence.Factory.newInstance();
-            dummy.setId( i-- );
-            this.bioAssayDimensions.put( dummy, ba );
-        }
-
-        this.numCols = this.setUpColumnElements();
-    }
-
-    @Override
-    public int columns() {
-        return numCols;
+    public EmptyExpressionMatrix( @Nullable ExpressionExperiment ee, Collection<BioAssayDimension> dims ) {
+        super( ee, dims );
     }
 
     @Override
@@ -67,7 +56,7 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
 
     @Override
     public Object[] getColumn( int column ) {
-        if ( column >= 0 && column < numCols ) {
+        if ( column >= 0 && column < columns() ) {
             return EMPTY_COLUMN;
         } else {
             throw new IndexOutOfBoundsException();
@@ -80,16 +69,34 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
     }
 
     @Override
+    public BulkExpressionDataMatrix<Object> sliceColumns( List<BioMaterial> bioMaterials ) {
+        Set<BioAssayDimension> newDims = getBioAssayDimensions().stream()
+                .map( dim -> {
+                    BioAssayDimension newDim = new BioAssayDimension();
+                    newDim.setBioAssays( dim.getBioAssays().stream()
+                            .filter( ba -> bioMaterials.contains( ba.getSampleUsed() ) )
+                            .collect( Collectors.toList() ) );
+                    return newDim;
+                } ).collect( Collectors.toSet() );
+        return new EmptyExpressionMatrix( getExpressionExperiment(), newDims );
+    }
+
+    @Override
+    public EmptyExpressionMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        return new EmptyExpressionMatrix( getExpressionExperiment(), dimension );
+    }
+
+    @Override
     public Object[] getRow( int index ) {
         throw new IndexOutOfBoundsException();
     }
 
     @Override
-    public ExpressionDataMatrix<Object> sliceRows( List<CompositeSequence> designElements ) {
+    public EmptyExpressionMatrix sliceRows( List<CompositeSequence> designElements ) {
         if ( designElements.isEmpty() ) {
             return this;
         }
-        throw new IndexOutOfBoundsException();
+        throw new IllegalArgumentException( "None of the requested design elements are present in the matrix." );
     }
 
     @Override
@@ -98,17 +105,7 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
     }
 
     @Override
-    public int rows() {
-        return 0;
-    }
-
-    @Override
     protected String format( int row, int column ) {
         throw new IndexOutOfBoundsException();
-    }
-
-    @Override
-    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        throw new UnsupportedOperationException();
     }
 }

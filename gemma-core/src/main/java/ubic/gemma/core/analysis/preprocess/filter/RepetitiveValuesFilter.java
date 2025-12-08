@@ -9,6 +9,8 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.MatrixStats;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -16,7 +18,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 
@@ -198,7 +202,17 @@ public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDa
                 unnormalizedMatrix.set( i, j, unnormalizedMatrix.get( i, j ) + log2LibrarySize[j] );
             }
         }
-        ExpressionDataDoubleMatrix filteredMatrix = filterZeroVariance( new ExpressionDataDoubleMatrix( dmatrix, unnormalizedMatrix ) );
+        Map<QuantitationType, QuantitationType> unnormalizedQts = dmatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    qt = QuantitationType.Factory.newInstance( qt );
+                    qt.setName( qt.getName()
+                            .replaceAll( "\\s+(log2cpm)", "" )
+                            .replaceAll( "log2cpm", "" ) );
+                    // should go from AMOUNT -> COUNT
+                    qt.setScale( ScaleType.COUNT );
+                    return qt;
+                } ) );
+        ExpressionDataDoubleMatrix filteredMatrix = filterZeroVariance( dmatrix.withMatrix( unnormalizedMatrix, unnormalizedQts ) );
         List<CompositeSequence> kept = new ArrayList<>( dmatrix.getDesignElements() );
         kept.retainAll( filteredMatrix.getDesignElements() );
         return dmatrix.sliceRows( kept );
@@ -228,7 +242,15 @@ public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDa
         DenseDoubleMatrix<CompositeSequence, BioMaterial> rankMatrix = new DenseDoubleMatrix<>( MatrixStats.ranksByColumn( dmatrix.getMatrix() ).toArray() );
         rankMatrix.setRowNames( dmatrix.getMatrix().getRowNames() );
         rankMatrix.setColumnNames( dmatrix.getMatrix().getColNames() );
-        return new ExpressionDataDoubleMatrix( dmatrix, rankMatrix );
+        Map<QuantitationType, QuantitationType> rankQts = dmatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    qt = QuantitationType.Factory.newInstance( qt );
+                    qt.setName( qt.getName() + " (rank-transformed)" );
+                    qt.setType( StandardQuantitationType.OTHER ); // rank?
+                    qt.setScale( ScaleType.PERCENT1 );
+                    return qt;
+                } ) );
+        return dmatrix.withMatrix( rankMatrix, rankQts );
     }
 
     /**

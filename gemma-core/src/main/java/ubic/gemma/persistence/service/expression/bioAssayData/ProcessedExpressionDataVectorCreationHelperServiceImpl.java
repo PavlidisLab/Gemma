@@ -71,7 +71,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
         /* log-transform if necessary */
         // this will also consolidate sets of raw vectors that have multiple BADs
-        rawPreferredDataVectors = consolidateAndLogTransformVectors( rawPreferredDataVectors, ignoreQuantitationMismatch );
+        rawPreferredDataVectors = consolidateAndLogTransformVectors( expressionExperiment, rawPreferredDataVectors, ignoreQuantitationMismatch );
 
         // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
         RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
@@ -142,6 +142,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             vec.setDataAsDoubles( dvvo.getData() );
             vec.setRankByMax( dvvo.getRankByMax() );
             vec.setRankByMean( dvvo.getRankByMean() );
+            vec.setNumberOfCells( dvvo.getNumberOfCells() );
 
             newVectors.add( vec );
             seenDes.add( cs );
@@ -165,9 +166,10 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
      * assays per sample and then recover them on the other side.
      */
     private Collection<RawExpressionDataVector> consolidateAndLogTransformVectors(
+            ExpressionExperiment ee,
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( rawPreferredDataVectors );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, rawPreferredDataVectors );
         matrix = ensureLog2Scale( matrix, ignoreQuantitationMismatch );
         return BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class );
     }
@@ -202,7 +204,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     }
 
     /**
-     * @param  expressionExperiment ee
+     * @param expressionExperiment ee
      * @return true if any platform used by the ee is two-channel (including dual-mode)
      */
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
@@ -409,11 +411,11 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
     /**
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
-     *              just
-     *              have one
-     *              (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
-     *              for
-     *              details.
+     * just
+     * have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
+     * for
+     * details.
      */
     private <S, T> Map<S, T> createValueObjectCache( Collection<? extends BulkExpressionDataVector> vectors,
             Function<BulkExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {

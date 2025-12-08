@@ -173,7 +173,7 @@ public class ExpressionDataSVD {
             }
         }
 
-        return new ExpressionDataDoubleMatrix( this.expressionData, reconstructed, this.expressionData.getQuantitationTypes() );
+        return this.expressionData.withMatrix( reconstructed );
     }
 
     /**
@@ -301,7 +301,7 @@ public class ExpressionDataSVD {
             }
         }
 
-        return new ExpressionDataDoubleMatrix( this.expressionData, reconstructed, this.expressionData.getQuantitationTypes() );
+        return this.expressionData.withMatrix( reconstructed );
     }
 
     /**
@@ -337,7 +337,7 @@ public class ExpressionDataSVD {
         result.setRowNames( rawUMatrix.getRowNames() );
 
         // use that as the 'expression data'
-        return new ExpressionDataDoubleMatrix( this.expressionData, result, this.expressionData.getQuantitationTypes() );
+        return this.expressionData.withMatrix( result );
     }
 
     /**

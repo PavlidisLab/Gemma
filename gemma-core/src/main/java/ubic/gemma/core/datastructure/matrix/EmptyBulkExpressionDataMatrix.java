@@ -2,6 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 /**
  * An empty bulk expression data matrix.
+ *
  * @author poirigui
  */
 public class EmptyBulkExpressionDataMatrix extends AbstractBulkExpressionDataMatrix<Object> {
@@ -32,6 +34,22 @@ public class EmptyBulkExpressionDataMatrix extends AbstractBulkExpressionDataMat
     }
 
     @Override
+    public BulkExpressionDataMatrix<Object> sliceColumns( List<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() ) {
+            return this;
+        }
+        throw new IllegalArgumentException( "None of the requested samples are present in the matrix." );
+    }
+
+    @Override
+    public EmptyBulkExpressionDataMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        if ( bioMaterials.isEmpty() ) {
+            return this;
+        }
+        throw new IllegalArgumentException( "None of the requested samples are present in the matrix." );
+    }
+
+    @Override
     public Object[] getColumn( int column ) {
         if ( column >= 0 && column < columns() ) {
             return EMPTY_COLUMN;
@@ -50,7 +68,7 @@ public class EmptyBulkExpressionDataMatrix extends AbstractBulkExpressionDataMat
         if ( designElements.isEmpty() ) {
             return this;
         }
-        throw new IndexOutOfBoundsException();
+        throw new IllegalArgumentException( "None of the requested design elements are present in the matrix." );
     }
 
     @Override

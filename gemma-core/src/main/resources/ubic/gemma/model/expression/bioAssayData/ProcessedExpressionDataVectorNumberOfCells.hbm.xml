@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <class name="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorNumberOfCells"
+           table="PROCESSED_EXPRESSION_DATA_VECTOR_NUMBER_OF_CELLS">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="foreign">
+                <param name="property">vector</param>
+            </generator>
+        </id>
+        <one-to-one name="vector" class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector"
+                    constrained="true" foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_FKC"/>
+        <property name="numberOfCells">
+            <column name="NUMBER_OF_CELLS" not-null="true" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
+            </type>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -516,6 +516,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseTest {
 
         arrayDesign.setCompositeSequences( compositeSequences );
 
-        dmatrix = new ExpressionDataDoubleMatrix( this.vectors );
+        dmatrix = new ExpressionDataDoubleMatrix( expressionExperiment, this.vectors );
     }
 }

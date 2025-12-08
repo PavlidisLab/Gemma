@@ -16,7 +16,8 @@ import static ubic.gemma.core.analysis.preprocess.filter.ExpressionDataFilterUti
 @CommonsLog
 public class DifferentialExpressionAnalysisFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
-    public static final int DEFAULT_MINIMUM_NUMBER_OF_CELLS = MinimumCellsFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS;
+    public static final int DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE = MinimumCellsFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE;
+    public static final int DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE = MinimumCellsFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE;
     public static final RepetitiveValuesFilterMode DEFAULT_REPETITIVE_VALUES_FILTER_MODE = RepetitiveValuesFilterMode.fromRVFM( RepetitiveValuesFilter.DEFAULT_MODE );
     public static final int DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER = RepetitiveValuesFilter.DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_FILTER;
     public static final double DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES = RepetitiveValuesFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES;
@@ -61,8 +62,11 @@ public class DifferentialExpressionAnalysisFilter implements ExpressionDataFilte
 
     public DifferentialExpressionAnalysisFilter( DifferentialExpressionAnalysisConfig config ) {
         minimumCellsFilter = new MinimumCellsFilter();
-        if ( config.getMinimumNumberOfCells() != null ) {
-            minimumCellsFilter.setMinimumNumberOfCells( config.getMinimumNumberOfCells() );
+        if ( config.getMinimumNumberOfCellsPerSample() != null ) {
+            minimumCellsFilter.setMinimumNumberOfCellsPerSample( config.getMinimumNumberOfCellsPerSample() );
+        }
+        if ( config.getMinimumNumberOfCellsPerGene() != null ) {
+            minimumCellsFilter.setMinimumNumberOfCellsPerGene( config.getMinimumNumberOfCellsPerGene() );
         }
         repetitiveValuesFilter = new RepetitiveValuesFilter();
         if ( config.getRepetitiveValuesFilterMode() != null ) {

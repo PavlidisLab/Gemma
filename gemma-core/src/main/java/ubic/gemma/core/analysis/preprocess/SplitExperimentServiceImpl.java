@@ -29,9 +29,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
@@ -123,9 +122,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         // Get the expression data matrices for the experiment. We'll split them and generate new vectors
         boolean foundPreferred = false;
-        Map<QuantitationType, ExpressionDataMatrix<?>> qt2mat = new HashMap<>();
+        Map<QuantitationType, BulkExpressionDataMatrix<?>> qt2mat = new HashMap<>();
 
-        if ( qts.size() > 0 ) {
+        if ( !qts.isEmpty() ) {
             log.info( "Fetching raw expression data vectors ... " );
             for ( QuantitationType qt : qts ) {
                 if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -283,8 +282,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getQuantitationTypes().add( clonedQt );
 
                 // these bms are same as the ones associated with the vectors, not the clones
-                ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ( ExpressionDataDoubleMatrix ) qt2mat.get( qt ),
-                        bms, newBAD );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = qt2mat.get( qt ).sliceColumns( bms, newBAD );
 
                 Collection<RawExpressionDataVector> rawDataVectors = BulkExpressionDataMatrixUtils.toVectors( expressionDataMatrix, RawExpressionDataVector.class );
                 for ( RawExpressionDataVector v : rawDataVectors ) {

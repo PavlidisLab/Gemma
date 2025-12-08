@@ -316,9 +316,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         }
         BulkExpressionDataMatrix<?> matrix;
         if ( aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT || aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST ) {
-            matrix = new ExpressionDataIntegerMatrix( vecs );
+            matrix = new ExpressionDataIntegerMatrix( ee, vecs );
         } else {
-            matrix = new ExpressionDataDoubleMatrix( vecs );
+            matrix = new ExpressionDataDoubleMatrix( ee, vecs );
         }
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setExcludeSampleIdentifiers( excludeSampleIdentifiers );

@@ -411,10 +411,10 @@ public class DEDVController {
     /**
      * AJAX exposed method
      *
-     * @param resultSetId The resultset we're specifically interested. Note that this is what is used to choose the
-     *                    vectors, since it could be a subset of an experiment.
-     * @param givenThreshold   If non-null, a P-value threshold for retrieving associated vectors
-     * @param primaryFactorID  If non-null, the factor to use for sorting the samples before other factors are considered
+     * @param resultSetId     The resultset we're specifically interested. Note that this is what is used to choose the
+     *                        vectors, since it could be a subset of an experiment.
+     * @param givenThreshold  If non-null, a P-value threshold for retrieving associated vectors
+     * @param primaryFactorID If non-null, the factor to use for sorting the samples before other factors are considered
      * @return collection of visualization value objects
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId,
@@ -671,7 +671,7 @@ public class DEDVController {
     }
 
     private String format4File( ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
-        BulkExpressionDataMatrix<?> mat = new ExpressionDataDoubleMatrix( DoubleVectorValueObjectUtils.toBulkVectors( vectors ) );
+        BulkExpressionDataMatrix<?> mat = new ExpressionDataDoubleMatrix( ee, DoubleVectorValueObjectUtils.toBulkVectors( vectors ) );
         Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( mat.getDesignElements() );
         MatrixWriter writer = new MatrixWriter( entityUrlBuilder, buildInfo );
         try ( StringWriter buf = new StringWriter() ) {

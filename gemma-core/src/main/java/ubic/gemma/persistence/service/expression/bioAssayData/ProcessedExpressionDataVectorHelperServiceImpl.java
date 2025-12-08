@@ -31,8 +31,8 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -55,7 +55,7 @@ import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSor
  * Transactional methods.
  *
  * @author Paul
- * @see    ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
+ * @see ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
  */
 @Service
 class ProcessedExpressionDataVectorHelperServiceImpl
@@ -242,7 +242,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         } else {
             ProcessedExpressionDataVectorHelperServiceImpl.log
                     .info( "Computing intensities directly from processed data" );
-            intensities = new ExpressionDataDoubleMatrix( processedVectors );
+            intensities = new ExpressionDataDoubleMatrix( ee, processedVectors );
         }
 
         return intensities;
@@ -346,7 +346,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
      *
      * @param matrix matrix
-     * @param mask if null, masking is not attempted.
+     * @param mask   if null, masking is not attempted.
      */
     private void maskMatrix( ExpressionDataDoubleMatrix matrix, @Nullable ExpressionDataBooleanMatrix mask ) {
         if ( mask == null ) return;

@@ -3,6 +3,7 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.basecode.dataStructure.matrix.AbstractMatrix;
 import ubic.basecode.dataStructure.matrix.IntegerMatrix;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -11,6 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.*;
 
@@ -24,16 +26,16 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
 
     private static final Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
 
-    private IntegerMatrix<CompositeSequence, Integer> matrix;
+    private final IntegerMatrix<CompositeSequence, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+    public ExpressionDataIntegerMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+        super( ee );
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
                 throw new IllegalStateException( "Cannot convert non-integer quantitation types into int matrix" );
             }
         }
-        this.selectVectors( vectors );
-        this.vectorsToMatrix( vectors );
+        this.matrix = this.createMatrix( selectVectors( vectors ) );
     }
 
     @Override
@@ -61,6 +63,16 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
+    public BulkExpressionDataMatrix<Integer> sliceColumns( List<BioMaterial> bioMaterials ) {
+        throw new UnsupportedOperationException( "Slicing multi-assay integer matrices is not supported" );
+    }
+
+    @Override
+    public ExpressionDataIntegerMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        throw new UnsupportedOperationException( "Slicing multi-assay integer matrices is not supported" );
+    }
+
+    @Override
     public Integer[] getRow( int index ) {
         return this.matrix.getRow( index );
     }
@@ -82,30 +94,14 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
         return false;
     }
 
-    @Override
-    public int rows() {
-        return matrix.rows();
-    }
-
     public Integer get( CompositeSequence designElement, BioMaterial bioMaterial ) {
         return this.matrix.get( matrix.getRowIndexByName( designElement ),
-                matrix.getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
+                matrix.getColIndexByName( this.getColumnIndex( bioMaterial ) ) );
     }
 
     @Override
     protected String format( int row, int column ) {
         return String.valueOf( matrix.get( row, column ) );
-    }
-
-    @Override
-    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors.isEmpty() ) {
-            throw new IllegalArgumentException( "No vectors!" );
-        }
-
-        int maxSize = this.setUpColumnElements();
-
-        this.matrix = this.createMatrix( vectors, maxSize );
     }
 
     /**
@@ -114,11 +110,12 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
      * @return DoubleMatrixNamed
      */
     private IntegerMatrix<CompositeSequence, Integer> createMatrix(
-            Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
+            List<? extends BulkExpressionDataVector> vectors ) {
 
-        int numRows = this.rowDesignElementMapByInteger.size();
+        int numRows = rows();
+        int numCols = columns();
 
-        IntegerMatrix<CompositeSequence, Integer> mat = new IntegerMatrix<>( numRows, maxSize );
+        IntegerMatrix<CompositeSequence, Integer> mat = new IntegerMatrix<>( numRows, numCols );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( j );
@@ -137,8 +134,8 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No design element for " + vector;
 
-            Integer rowIndex = this.rowElementMap.get( designElement );
-            assert rowIndex != null;
+            int rowIndex = this.getRowIndex( designElement );
+            assert rowIndex != -1;
 
             rowNames.put( rowIndex, designElement );
 
@@ -162,4 +159,13 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
         return mat;
     }
 
+    private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
+            Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssay bioAssay = it.next();
+            int column = getColumnIndex( bioAssay );
+            assert column != -1;
+            mat.set( rowIndex, column, vals[j] );
+        }
+    }
 }

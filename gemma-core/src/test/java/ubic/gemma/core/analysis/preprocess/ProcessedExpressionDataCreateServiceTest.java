@@ -49,7 +49,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -198,7 +197,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         ee = this.eeService.thawLite( ee );
         preferredVectors = processedExpressionDataVectorService.thaw( preferredVectors );
 
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, preferredVectors );
         assertEquals( 10, mat.columns() );
 
         boolean found = false;

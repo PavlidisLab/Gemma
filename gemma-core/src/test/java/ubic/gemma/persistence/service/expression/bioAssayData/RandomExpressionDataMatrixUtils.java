@@ -6,7 +6,6 @@ import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
-import ubic.basecode.math.Rank;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -157,7 +156,7 @@ public class RandomExpressionDataMatrixUtils {
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
         matrix.setRowNames( designElements );
         matrix.setColumnNames( samples );
-        return new ExpressionDataDoubleMatrix( ee, qt, matrix );
+        return new ExpressionDataDoubleMatrix( ee, matrix, qt );
     }
 
     private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, IntegerDistribution distribution ) {
@@ -180,7 +179,7 @@ public class RandomExpressionDataMatrixUtils {
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
         matrix.setRowNames( new ArrayList<>( ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences() ) );
         matrix.setColumnNames( samples );
-        return new ExpressionDataDoubleMatrix( ee, qt, matrix );
+        return new ExpressionDataDoubleMatrix( ee, matrix, qt );
     }
 
     /**
@@ -227,7 +226,7 @@ public class RandomExpressionDataMatrixUtils {
         ExpressionDataDoubleMatrix dm = randomCountMatrix( ee );
         DoubleMatrix1D librarySize = MatrixStats.colSums( dm.getMatrix() );
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmData = MatrixStats.convertToLog2Cpm( dm.getMatrix(), librarySize );
-        return new ExpressionDataDoubleMatrix( dm, log2cpmData, Collections.singleton( log2cpmQt ) );
+        return dm.withMatrix( log2cpmData, Collections.singletonMap( dm.getQuantitationType(), log2cpmQt ) );
     }
 
     /**

@@ -173,7 +173,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
         }
 
         /* Constructor 1 */
-        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix(
+        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix( ee,
                 designElementDataVectors );
 
         /* Assertions */
@@ -280,7 +280,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         ee.setRawExpressionDataVectors( eeVectors );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, eeVectors );
 
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );

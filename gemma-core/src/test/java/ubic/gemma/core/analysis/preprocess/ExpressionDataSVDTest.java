@@ -269,8 +269,7 @@ public class ExpressionDataSVDTest extends BaseTest {
         assertEquals( 1, result.size() );
         ExpressionExperiment ee = result.iterator().next();
 
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee.getRawExpressionDataVectors(),
-                ee.getQuantitationTypes().iterator().next() );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, ee.getRawExpressionDataVectors() );
 
         svd = new ExpressionDataSVD( matrix, false );
 

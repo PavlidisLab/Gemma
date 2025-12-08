@@ -29,6 +29,7 @@ import java.util.Properties;
  *     <li>{@link String}, either zero-terminated or tab-delimited</li>
  * </ul>
  * Other types supported by {@link ByteArrayUtils} can be added if necessary.
+ *
  * @author poirigui
  * @see ByteArrayUtils
  */
@@ -124,8 +125,8 @@ public class ByteArrayType implements UserType, ParameterizedType {
     @Override
     public Object nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
         Blob blob = rs.getBlob( names[0] );
-        byte[] data = blob.getBytes( 1, ( int ) blob.length() );
-        if ( data != null ) {
+        if ( blob != null ) {
+            byte[] data = blob.getBytes( 1, ( int ) blob.length() );
             switch ( arrayType ) {
                 case BOOLEAN:
                     return ByteArrayUtils.byteArrayToBooleans( data );

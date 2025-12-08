@@ -307,7 +307,7 @@ public class QuantitationTypeDetectionUtilsTest {
             ee.setBioAssays( bas );
             ee.setNumberOfSamples( bas.size() );
             QuantitationType qt = new QuantitationType();
-            return new ExpressionDataDoubleMatrix( ee, qt, matrix );
+            return new ExpressionDataDoubleMatrix( ee, matrix, qt );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

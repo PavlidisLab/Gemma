@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -57,6 +59,42 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      */
     @Nullable
     private Double rankByMax;
+
+    /**
+     * Number of cells that were used to compute each value in this vector.
+     *
+     * @see ExpressionExperiment#getNumberOfCells()
+     * @see BioAssay#getNumberOfCells()
+     */
+    @Nullable
+    private ProcessedExpressionDataVectorNumberOfCells numberOfCellsObject;
+
+    @Nullable
+    ProcessedExpressionDataVectorNumberOfCells getNumberOfCellsObject() {
+        return numberOfCellsObject;
+    }
+
+    void setNumberOfCellsObject( @Nullable ProcessedExpressionDataVectorNumberOfCells numberOfCellsObject ) {
+        this.numberOfCellsObject = numberOfCellsObject;
+    }
+
+    @Nullable
+    @Override
+    public int[] getNumberOfCells() {
+        return numberOfCellsObject != null ? numberOfCellsObject.getNumberOfCells() : null;
+    }
+
+    public void setNumberOfCells( @Nullable int[] numberOfCells ) {
+        if ( numberOfCells != null ) {
+            if ( this.numberOfCellsObject != null ) {
+                this.numberOfCellsObject.setNumberOfCells( numberOfCells );
+            } else {
+                this.numberOfCellsObject = ProcessedExpressionDataVectorNumberOfCells.Factory.newInstance( this, numberOfCells );
+            }
+        } else {
+            this.numberOfCellsObject = null;
+        }
+    }
 
     @Override
     public int hashCode() {

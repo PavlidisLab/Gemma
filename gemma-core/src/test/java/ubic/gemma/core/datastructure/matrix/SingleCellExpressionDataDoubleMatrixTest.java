@@ -31,7 +31,7 @@ public class SingleCellExpressionDataDoubleMatrixTest {
                 .isEqualTo( "1232" );
         assertThat( mat.getBioAssayForColumn( 1231 ) )
                 .extracting( BioAssay::getName )
-                .isEqualTo( "ba1" );
+                .isEqualTo( "ba2" );
     }
 
     /**

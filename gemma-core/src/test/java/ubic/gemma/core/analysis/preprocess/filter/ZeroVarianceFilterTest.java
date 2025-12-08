@@ -38,7 +38,7 @@ public class ZeroVarianceFilterTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         ExpressionDataDoubleMatrix filteredMatrix = new ZeroVarianceFilter().filter( matrix );
         assertThat( filteredMatrix.rows() )

@@ -131,7 +131,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean ignoreFailingSubsets = false;
 
     @Nullable
-    private Integer filterMinNumberOfCells;
+    private Integer filterMinNumberOfCellsPerSample;
+    @Nullable
+    private Integer filterMinNumberOfCellsPerGene;
     private DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode filterMode;
     @Nullable
     private Integer filterMinSamples;
@@ -224,11 +226,17 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .get() );
 
         // filter options
-        options.addOption( Option.builder( "filterMinNumberOfCells" )
-                .longOpt( "filter-minimum-number-of-cells" )
+        options.addOption( Option.builder( "filterMinNumberOfCellsPerSample" )
+                .longOpt( "filter-minimum-number-of-cells-per-sample" )
                 .hasArg( true )
                 .type( Integer.class )
-                .desc( "Minimum number of cells required for a sample to be included in the analysis. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS + "." )
+                .desc( "Minimum number of cells required for a sample to be included in the analysis. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE + "." )
+                .get() );
+        options.addOption( Option.builder( "filterMinNumberOfCellsPerGene" )
+                .longOpt( "filter-minimum-number-of-cells-per-gene" )
+                .hasArg( true )
+                .type( Integer.class )
+                .desc( "Minimum number of cells required for a gene to be tested. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE + "." )
                 .get() );
         addEnumOption( options, "filterRepetitiveValuesMode", "filter-repetitive-values-mode", "Mode to use for filtering repetitive values. Default is to auto-detect based on the quantitation type.", DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode.class );
         options.addOption( Option.builder( "filterRepetitiveValuesMinSamples" )
@@ -342,7 +350,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
         this.result = getExpressionDataFileResult( commandLine, false, false, true );
-        this.filterMinNumberOfCells = commandLine.getParsedOptionValue( "filterMinNumberOfCells" );
+        this.filterMinNumberOfCellsPerSample = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerSample" );
+        this.filterMinNumberOfCellsPerGene = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerGene" );
         this.filterMode = getEnumOptionValue( commandLine, "filterRepetitiveValuesMode" );
         this.filterMinSamples = commandLine.getParsedOptionValue( "filterRepetitiveValuesMinSamples" );
         this.filterMinUniqueValues = commandLine.getParsedOptionValue( "filterRepetitiveValuesMinUniqueValues" );
@@ -428,7 +437,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setRepetitiveValuesFilterMode( this.filterMode );
         config.setMinimumNumberOfSamplesToApplyRepetitiveValuesFilter( this.filterMinSamples );
         config.setMinimumFractionOfUniqueValues( this.filterMinUniqueValues );
-        config.setMinimumNumberOfCells( this.filterMinNumberOfCells );
+        config.setMinimumNumberOfCellsPerSample( this.filterMinNumberOfCellsPerSample );
+        config.setMinimumNumberOfCellsPerGene( this.filterMinNumberOfCellsPerGene );
         config.setMinimumVariance( this.filterMinVariance );
 
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {

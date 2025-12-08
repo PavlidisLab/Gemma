@@ -47,6 +47,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * The data of this vector.
      */
     private double[] data;
+    @Nullable
+    private int[] numberOfCells;
     /**
      * Indicate if this vector is "masked", i.e. it is processed.
      */
@@ -86,6 +88,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.masked = true;
         }
         this.data = dedv.getDataAsDoubles();
+        this.numberOfCells = dedv.getNumberOfCells() != null ? dedv.getNumberOfCells() : null;
         if ( dedv instanceof ProcessedExpressionDataVector ) {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();

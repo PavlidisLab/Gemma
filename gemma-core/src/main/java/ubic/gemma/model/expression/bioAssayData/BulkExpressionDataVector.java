@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 /**
  * A data vector storing bulk expression data.
+ *
  * @author poirigui
  */
 @Getter
@@ -17,6 +18,15 @@ public abstract class BulkExpressionDataVector extends DesignElementDataVector {
      * A dimension of {@link ubic.gemma.model.expression.bioAssay.BioAssay} the elements of this vector apply to.
      */
     private BioAssayDimension bioAssayDimension;
+
+    /**
+     * Obtain the number of cells that were used to compute each value in this data vector, or {@code null} if now
+     * known/available.
+     */
+    @Nullable
+    public abstract int[] getNumberOfCells();
+
+    public abstract void setNumberOfCells( @Nullable int[] numberOfCells );
 
     /**
      * Bulk data vectors are never mapped from an external source, so this is always null.

@@ -22,7 +22,7 @@ import java.util.Set;
  */
 public class RandomBulkDataUtils {
 
-    public static void setSeed( int seed ) {
+    public static void setSeed( long seed ) {
         RandomDataUtils.setSeed( seed );
     }
 

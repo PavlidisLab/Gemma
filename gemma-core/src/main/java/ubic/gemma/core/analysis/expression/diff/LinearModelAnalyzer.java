@@ -305,8 +305,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          */
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
 
-        dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
-                createBADMap( samplesUsed ) ); // enforce ordering
+        dmatrix = dmatrix.sliceColumns( samplesUsed, createBADMap( samplesUsed ) ); // enforce ordering
 
         Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
@@ -480,8 +479,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         samplesInSubset = orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude(), null );
 
         // slice.
-        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
-                createBADMap( samplesInSubset ) );
+        ExpressionDataDoubleMatrix subsetMatrix = dmatrix.sliceColumns( samplesInSubset, createBADMap( samplesInSubset ) );
 
         List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
                 .sorted( FACTOR_COMPARATOR )
@@ -1356,8 +1354,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             }
             assert samplesInSubset.size() < samplesUsed.size();
             samplesInSubset = orderByExperimentalDesign( samplesInSubset, factors, null );
-            ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
-                    createBADMap( samplesInSubset ) );
+            ExpressionDataDoubleMatrix subMatrix = dmatrix.sliceColumns( samplesInSubset, createBADMap( samplesInSubset ) );
             subMatrices.put( fv, subMatrix );
         }
 

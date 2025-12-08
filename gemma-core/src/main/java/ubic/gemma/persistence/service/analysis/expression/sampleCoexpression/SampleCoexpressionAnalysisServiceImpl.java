@@ -401,7 +401,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
-        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
+        ExpressionDataDoubleMatrix dmatrix = matrix.sliceColumns( samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
         DoubleMatrix<String, String> sNamedMatrix = DiffExAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
@@ -420,7 +420,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 f.set( i, j, f.get( i, j ) + rowmean );
             }
         }
-        return new ExpressionDataDoubleMatrix( dmatrix, f, dmatrix.getQuantitationTypes() );
+        return dmatrix.withMatrix( f );
     }
 }
 

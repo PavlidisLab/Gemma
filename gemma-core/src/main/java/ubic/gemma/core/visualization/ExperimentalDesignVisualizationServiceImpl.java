@@ -349,7 +349,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<>();
 
-        MultiAssayBulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
+        MultiAssayBulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( ee, bds );
 
         // This is the place the actual sort order is determined.
         List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null, primaryFactor );

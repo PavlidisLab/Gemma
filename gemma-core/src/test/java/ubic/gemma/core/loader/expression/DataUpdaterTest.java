@@ -155,7 +155,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         QuantitationType qt = this.makeRawQt( "qt1", true );
 
-        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
+        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, rawMatrix, qt );
 
         assertNotNull( data.getBestBioAssayDimension() );
         assertEquals( rawMatrix.columns(), data.getBioAssayDimension().getBioAssays().size() );
@@ -197,7 +197,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          * Test adding data (non-preferred)
          */
         qt = this.makeRawQt( "qt2", false );
-        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
+        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, rawMatrix, qt );
         dataUpdater.addData( ee, targetArrayDesign, moreData );
 
         ee = experimentService.thaw( ee );

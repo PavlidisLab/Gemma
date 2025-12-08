@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -92,14 +93,25 @@ public class DifferentialExpressionAnalysisConfig {
     private boolean useWeights = false;
 
     /**
-     * Override the minimum number of cells for a particular assay to be included in the analysis.
+     * Override the minimum number of cells for a particular sample to be included in the analysis.
      * <p>
-     * This is only applied if {@link BioAssay#getNumberOfCells()} is populated.
+     * This is only applied if {@link ExpressionDataDoubleMatrix#getNumberOfCells()} or {@link BioAssay#getNumberOfCells()}
+     * is populated. Note that the {@link BioAssay}-level number of cells is only considered for preferred QTs.
      * <p>
-     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS}.
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE}.
      */
     @Nullable
-    private Integer minimumNumberOfCells = null;
+    private Integer minimumNumberOfCellsPerSample = null;
+
+    /**
+     * Override the minimum number of cells for a particular gene  to be included in the analysis.
+     * <p>
+     * This is only applied if {@link ExpressionDataDoubleMatrix#getNumberOfCells()} is populated.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE}.
+     */
+    @Nullable
+    private Integer minimumNumberOfCellsPerGene = null;
 
     /**
      * Override the default mode of operation for the {@link RepetitiveValuesFilter}.
@@ -165,7 +177,8 @@ public class DifferentialExpressionAnalysisConfig {
         this.repetitiveValuesFilterMode = baseConfig.getRepetitiveValuesFilterMode();
         this.minimumFractionOfUniqueValues = baseConfig.getMinimumFractionOfUniqueValues();
         this.minimumNumberOfSamplesToApplyRepetitiveValuesFilter = baseConfig.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter();
-        this.minimumNumberOfCells = baseConfig.getMinimumNumberOfCells();
+        this.minimumNumberOfCellsPerSample = baseConfig.getMinimumNumberOfCellsPerSample();
+        this.minimumNumberOfCellsPerGene = baseConfig.getMinimumNumberOfCellsPerGene();
         this.minimumVariance = baseConfig.getMinimumVariance();
     }
 
