@@ -46,7 +46,7 @@ public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDa
     public Compound find( Compound compound ) {
         return this.findByProperty( "name", compound.getName() )
                 .stream()
-                .max( Comparator.comparing( Compound::getId ) )
+                .max( Comparator.comparing( Compound::getRequiredId ) )
                 .orElse( null );
     }
 }

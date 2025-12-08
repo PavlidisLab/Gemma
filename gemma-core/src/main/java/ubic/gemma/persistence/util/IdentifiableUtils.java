@@ -29,7 +29,7 @@ public class IdentifiableUtils {
      * implement the Identifiable interface.
      */
     public static <T extends @MayBeUninitialized Identifiable> List<Long> getIds( Collection<T> entities ) {
-        return entities.stream().map( Identifiable::getId ).map( Objects::requireNonNull ).collect( Collectors.toList() );
+        return entities.stream().map( Identifiable::getRequiredId ).collect( Collectors.toList() );
     }
 
     /**
@@ -47,7 +47,7 @@ public class IdentifiableUtils {
     public static <T extends @MayBeUninitialized Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
         Map<Long, T> result = new HashMap<>();
         for ( T entity : entities ) {
-            result.putIfAbsent( requireNonNull( entity.getId() ), entity );
+            result.putIfAbsent( entity.getRequiredId(), entity );
         }
         return result;
     }

@@ -1686,7 +1686,7 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> list = QueryUtils.listByIdentifiableBatch( query, "ees", ees, 2048 );
 
         // collecting in a tree map in case BASs are proxies
-        Map<ExpressionExperiment, Taxon> result = new TreeMap<>( Comparator.comparing( ExpressionExperiment::getId ) );
+        Map<ExpressionExperiment, Taxon> result = new TreeMap<>( Comparator.comparing( ExpressionExperiment::getRequiredId ) );
         for ( Object[] row : list ) {
             result.put( ( ExpressionExperiment ) row[0], ( Taxon ) row[1] );
         }
@@ -1894,7 +1894,7 @@ public class ExpressionExperimentDaoImpl
 
                 // sort + distinct for cache consistency
                 List<Long> expressionExperimentIds = vos.stream()
-                        .map( Identifiable::getId )
+                        .map( Identifiable::getRequiredId )
                         .sorted()
                         .distinct()
                         .collect( Collectors.toList() );

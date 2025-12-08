@@ -157,7 +157,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * Check the cache.
          */
         // using a TreeSet to prevent hashCode() from initializing proxies
-        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( BioAssaySet::getRequiredId ) );
         Collection<Long> genesToSearch = new HashSet<>();
         this.checkCache( expressionExperiments, genes, results, needToSearch, genesToSearch );
         log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache" );

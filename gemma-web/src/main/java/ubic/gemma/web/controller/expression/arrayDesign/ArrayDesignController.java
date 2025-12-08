@@ -308,7 +308,7 @@ public class ArrayDesignController {
         }
         result.removeAll( toHide );
 
-        result.sort( Comparator.comparing( ArrayDesignValueObject::getId ) );
+        result.sort( Comparator.comparing( ArrayDesignValueObject::getRequiredId ) );
 
         return result;
     }

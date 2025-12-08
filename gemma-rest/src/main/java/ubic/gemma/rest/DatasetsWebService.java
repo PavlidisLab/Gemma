@@ -846,7 +846,7 @@ public class DatasetsWebService {
             result = Collections.emptyList();
         } else {
             result = map.get( map.keySet().iterator().next() ).stream()
-                    .sorted( Comparator.comparing( DifferentialExpressionAnalysisValueObject::getId ) )
+                    .sorted( Comparator.comparing( DifferentialExpressionAnalysisValueObject::getRequiredId ) )
                     .collect( Collectors.toList() );
         }
         return respond( result );

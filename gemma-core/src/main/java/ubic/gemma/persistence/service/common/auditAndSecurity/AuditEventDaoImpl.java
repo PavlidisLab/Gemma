@@ -213,7 +213,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         StopWatch timer = StopWatch.createStarted();
 
         // using a treeset to avoid initialization of proxies
-        Map<T, AuditEvent> result = new TreeMap<>( Comparator.comparing( Auditable::getId ) );
+        Map<T, AuditEvent> result = new TreeMap<>( Comparator.comparing( Auditable::getRequiredId ) );
 
         Set<Class<? extends AuditEventType>> classes = getClassHierarchy( types, excludedTypes );
         if ( classes.isEmpty() ) {

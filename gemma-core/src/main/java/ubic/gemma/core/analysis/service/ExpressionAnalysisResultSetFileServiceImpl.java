@@ -74,8 +74,8 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
         // this is the order the factor values are displayed
         // this is only relevant for interactions
         Comparator<Contrast> contrastResultComparator = Comparator
-                .comparing( Contrast::getFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId ) ) )
-                .thenComparing( Contrast::getSecondFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId ) ) );
+                .comparing( Contrast::getFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
+                .thenComparing( Contrast::getSecondFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) );
 
         // we need to peek in the contrast result to understand factor value interactions
         // i.e. interaction between genotype and time point might result in a contrast_male_3h column, although we would

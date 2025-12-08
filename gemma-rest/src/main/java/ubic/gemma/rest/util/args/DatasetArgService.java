@@ -285,7 +285,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
-        out.sort( Comparator.comparing( BibliographicReferenceValueObject::getId ) );
+        out.sort( Comparator.comparing( BibliographicReferenceValueObject::getRequiredId ) );
 
         return out;
     }

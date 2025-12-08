@@ -528,7 +528,7 @@ public class VectorMergingServiceImpl
      */
     private List<BioAssayDimension> sortedBioAssayDimensions( Collection<BioAssayDimension> oldBioAssayDims ) {
         List<BioAssayDimension> sortedOldDims = new ArrayList<>( oldBioAssayDims );
-        sortedOldDims.sort( Comparator.comparing( BioAssayDimension::getId ) );
+        sortedOldDims.sort( Comparator.comparing( BioAssayDimension::getRequiredId ) );
         return sortedOldDims;
     }
 }

@@ -51,7 +51,7 @@ public class DatabaseEntry extends AbstractIdentifiable {
                 // sort the remaining accessions lexicographically
                 .thenComparing( DatabaseEntry::getAccessionVersion )
                 // for ties, simply use the latest ID
-                .thenComparing( DatabaseEntry::getId );
+                .thenComparing( DatabaseEntry::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
     }
 
     private String accession;

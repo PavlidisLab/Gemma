@@ -110,7 +110,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
              * At this point we can trust that the genes are from the same taxon. This kind of confusion should
              * reduce with cruft-reduction.
              */
-            results.sort( Comparator.comparing( GeneProduct::getId ) ); // we tend to want to keep the one with the lowest ID
+            results.sort( Comparator.comparing( GeneProduct::getRequiredId ) ); // we tend to want to keep the one with the lowest ID
             Gene gene = geneProduct.getGene();
             if ( gene != null ) {
                 GeneProduct keeper = null;

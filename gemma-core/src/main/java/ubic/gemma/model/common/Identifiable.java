@@ -1,6 +1,8 @@
 package ubic.gemma.model.common;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 /**
  * Interface for objects that have a numerical id.
@@ -27,4 +29,14 @@ public interface Identifiable {
      */
     @Nullable
     Long getId();
+
+    /**
+     * Obtain the identifier of the object, throwing a {@link NullPointerException} if it is null.
+     *
+     * @throws NullPointerException if the identifier is null
+     */
+    @Nonnull
+    default Long getRequiredId() {
+        return Objects.requireNonNull( getId() );
+    }
 }

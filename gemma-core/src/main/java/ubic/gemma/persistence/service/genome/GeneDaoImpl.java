@@ -594,7 +594,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             if ( results.size() > 1 ) {
                 log.error( "Multiple genes found for " + gene + ":" );
                 this.debug( results );
-                results.sort( Comparator.comparing( Describable::getId ) );
+                results.sort( Comparator.comparing( Describable::getRequiredId ) );
                 result = results.iterator().next();
                 log.error( "Returning arbitrary gene: " + result );
             } else {

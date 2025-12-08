@@ -177,7 +177,7 @@ public class ExpressionExperimentEditController {
             this.id = scd.getId();
             if ( quantitationTypes != null ) {
                 this.quantitationTypes = quantitationTypes.stream()
-                        .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( QuantitationType::getId ) )
+                        .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( QuantitationType::getRequiredId ) )
                         .map( QuantitationTypeValueObject::new )
                         .collect( Collectors.toList() );
             } else {
@@ -380,8 +380,8 @@ public class ExpressionExperimentEditController {
         expressionExperimentEditControllerHelperService.populateForm( form, expressionExperiment );
 
         // FIXME: the update can alter properties affecting hashCode(), so an hash set is unsuitable here
-        Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
-        Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
+        Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getRequiredId ) );
+        Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getRequiredId ) );
         Map<Long, Class<? extends DataVector>> qtbv = new LinkedHashMap<>();
         if ( form.getQuantitationTypes() != null ) {
             Map<Class<? extends DataVector>, Set<QuantitationType>> qtbvt = expressionExperimentService
@@ -545,7 +545,7 @@ public class ExpressionExperimentEditController {
         Class<? extends DataVector> vectorType = null;
         for ( Entry<Class<? extends DataVector>, Set<QuantitationType>> entry : qtByVt.entrySet() ) {
             for ( QuantitationType qt2 : entry.getValue() ) {
-                if ( qt2.getId().equals( qtId ) ) {
+                if ( qtId.equals( qt2.getId() ) ) {
                     qt = qt2;
                     vectorType = entry.getKey();
                     break;
