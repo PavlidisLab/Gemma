@@ -6,3 +6,5 @@ set IS_AGGREGATED = true
 where NAME like '%aggregated by%'
   and ID in (select distinct QUANTITATION_TYPE_FK
              from RAW_EXPRESSION_DATA_VECTOR);
+alter table QUANTITATION_TYPE
+    modify column NAME varchar(255) not null;
