@@ -1117,13 +1117,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
+    public boolean removeCellTypeAssignmentByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
         List<CellTypeAssignment> toRemove = dimension.getCellTypeAssignments().stream()
                 .filter( cta -> name.equalsIgnoreCase( cta.getName() ) )
                 .collect( Collectors.toList() );
+        boolean anyRemoved = false;
         for ( CellTypeAssignment cta : toRemove ) {
             removeCellTypeAssignment( ee, dimension, cta );
+            anyRemoved = true;
         }
+        return anyRemoved;
     }
 
     @Override
@@ -1287,13 +1290,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public void removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
+    public boolean removeCellLevelCharacteristicsByName( ExpressionExperiment ee, SingleCellDimension dimension, String name ) {
         List<CellLevelCharacteristics> toRemove = dimension.getCellLevelCharacteristics().stream()
                 .filter( clc -> name.equalsIgnoreCase( clc.getName() ) )
                 .collect( Collectors.toList() );
+        boolean anyRemoved = false;
         for ( CellLevelCharacteristics clc : toRemove ) {
             removeCellLevelCharacteristics( ee, dimension, clc );
+            anyRemoved = true;
         }
+        return anyRemoved;
     }
 
     @Override

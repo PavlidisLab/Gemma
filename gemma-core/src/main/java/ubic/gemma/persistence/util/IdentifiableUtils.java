@@ -21,13 +21,15 @@ public class IdentifiableUtils {
 
     /**
      * Convert a collection of identifiable to their IDs.
+     * <p>
+     * This function cannot be used on non-persistent entities (i.e. those with null IDs).
      *
      * @param entities entities
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
     public static <T extends @MayBeUninitialized Identifiable> List<Long> getIds( Collection<T> entities ) {
-        return entities.stream().map( Identifiable::getId ).collect( Collectors.toList() );
+        return entities.stream().map( Identifiable::getId ).map( Objects::requireNonNull ).collect( Collectors.toList() );
     }
 
     /**
@@ -35,6 +37,8 @@ public class IdentifiableUtils {
      * <p>
      * Note: If more than one entity share the same ID, there is no guarantee on which will be kept in the final
      * mapping. If the collection is ordered, the first encountered entity will be kept.
+     * <p>
+     * This function cannot be used on non-persistent entities (i.e. those with null IDs).
      *
      * @param entities where id is called "id"
      * @param <T>      the type
@@ -43,7 +47,7 @@ public class IdentifiableUtils {
     public static <T extends @MayBeUninitialized Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
         Map<Long, T> result = new HashMap<>();
         for ( T entity : entities ) {
-            result.putIfAbsent( entity.getId(), entity );
+            result.putIfAbsent( requireNonNull( entity.getId() ), entity );
         }
         return result;
     }
@@ -53,11 +57,13 @@ public class IdentifiableUtils {
      * <p>
      * This uses {@link Identifiable#getId()} for comparing elements, making the collection safe for holding proxies
      * unlike a {@link java.util.HashSet} that relies on {@link Object#hashCode()}.
+     * <p>
+     * This collector cannot be used with non-persistent entities (i.e. those with null IDs).
      *
      * @see Collectors#toSet()
      */
     public static <T extends @MayBeUninitialized Identifiable> Collector<T, ?, Set<T>> toIdentifiableSet() {
-        return Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( Identifiable::getId ) ) );
+        return Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( i -> requireNonNull( i.getId() ) ) ) );
     }
 
     /**
@@ -65,11 +71,13 @@ public class IdentifiableUtils {
      * <p>
      * This uses {@link Identifiable#getId()} for comparing elements, making the collection safe for holding proxies
      * unlike a {@link java.util.HashMap} that relies on {@link Object#hashCode()}.
+     * <p>
+     * This collector cannot be used with non-persistent entities (i.e. those with null IDs).
      *
      * @see Collectors#toMap
      */
     public static <T, K extends @MayBeUninitialized Identifiable, U> Collector<T, ?, Map<K, U>> toIdentifiableMap( Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U> valueMapper ) {
-        return Collectors.toMap( keyMapper, valueMapper, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Identifiable::getId ) ) );
+        return Collectors.toMap( keyMapper, valueMapper, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( i -> requireNonNull( i.getId() ) ) ) );
     }
 
     /**
