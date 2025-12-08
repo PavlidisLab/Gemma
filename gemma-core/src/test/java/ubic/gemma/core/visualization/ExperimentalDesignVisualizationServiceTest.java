@@ -127,6 +127,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         }
         for ( int i = 0; i < 12; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, BioMaterial.Factory.newInstance( "bm" + i ) );
+            ba.setId( ( long ) i + 1 );
             ee.getBioAssays().add( ba );
             subsets.get( i % 4 ).getBioAssays().add( ba );
         }
