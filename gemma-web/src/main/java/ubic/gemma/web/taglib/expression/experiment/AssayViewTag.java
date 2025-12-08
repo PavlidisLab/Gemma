@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -183,7 +184,7 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
         while ( iter.hasNext() ) {
             materials.add( iter.next() );
         }
-        materials.sort( Comparator.comparing( BioMaterialValueObject::getName ) );
+        materials.sort( Comparator.comparing( BioMaterialValueObject::getName, DescribableUtils.NAME_COMPARATOR ) );
         for ( BioMaterialValueObject material : materials ) {
             writer.startTag( "tr" );
             if ( currentRow % 2 == 0 ) {

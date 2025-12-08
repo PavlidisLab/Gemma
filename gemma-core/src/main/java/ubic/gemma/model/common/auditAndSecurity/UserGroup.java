@@ -19,8 +19,9 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.DescribableUtils;
+
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -67,7 +68,7 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() );
+        return DescribableUtils.equalsByName( this, that );
     }
 
     public static final class Factory {

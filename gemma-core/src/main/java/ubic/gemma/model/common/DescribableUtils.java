@@ -18,6 +18,18 @@ import java.util.stream.Collectors;
 public class DescribableUtils {
 
     /**
+     * Comparator that sorts {@link Describable} objects by name, case-insensitively, with nulls last.
+     */
+    public static final Comparator<String> NAME_COMPARATOR = Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER );
+
+    /**
+     * Check if two {@link Describable} objects are considered equals by their names.
+     */
+    public static boolean equalsByName( Describable a, Describable b ) {
+        return a.getName() != null && b.getName() != null && a.getName().equalsIgnoreCase( b.getName() );
+    }
+
+    /**
      * Create a set of names from a collection of {@link Describable} objects.
      * <p>
      * The resulting set is case-insensitive.

@@ -15,10 +15,10 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
@@ -114,7 +114,7 @@ public class Reporter extends AbstractDescribable implements Serializable {
         if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() );
+        return DescribableUtils.equalsByName( this, that );
     }
 
     public static final class Factory {

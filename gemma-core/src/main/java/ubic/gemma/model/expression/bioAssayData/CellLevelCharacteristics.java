@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -10,6 +11,7 @@ import java.util.List;
 
 /**
  * Characteristics applicable to individual cells in a {@link SingleCellDimension}.
+ *
  * @author poirigui
  * @see CellTypeAssignment
  * @see GenericCellLevelCharacteristics
@@ -17,7 +19,7 @@ import java.util.List;
 public interface CellLevelCharacteristics extends Describable {
 
     Comparator<CellLevelCharacteristics> COMPARATOR = Comparator
-            .comparing( CellLevelCharacteristics::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .comparing( CellLevelCharacteristics::getName, DescribableUtils.NAME_COMPARATOR )
             .thenComparing( clc -> !clc.getCharacteristics().isEmpty() ? clc.getCharacteristics().iterator().next() : null, Comparator.nullsLast( Comparator.naturalOrder() ) )
             .thenComparing( CellLevelCharacteristics::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
@@ -67,6 +69,7 @@ public interface CellLevelCharacteristics extends Describable {
 
     /**
      * Obtain the characteristic assigned to a given cell.
+     *
      * @return the characteristic or {@code null} if the cell is assigned to {@link #UNKNOWN_CHARACTERISTIC}.
      * @throws IndexOutOfBoundsException if the cell index is out of bounds
      */

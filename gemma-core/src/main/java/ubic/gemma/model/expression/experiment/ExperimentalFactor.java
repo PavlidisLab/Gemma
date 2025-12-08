@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Category;
@@ -90,8 +91,8 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
 
     /**
      * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the
-     *         factorvalues,
-     *         Categorical ones must not.
+     * factorvalues,
+     * Categorical ones must not.
      */
     public FactorType getType() {
         return this.type;
@@ -156,7 +157,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         if ( getId() != null && other.getId() != null )
             return getId().equals( other.getId() );
         return Objects.equals( getCategory(), other.getCategory() )
-                && Objects.equals( getName(), other.getName() )
+                && DescribableUtils.equalsByName( this, other )
                 && Objects.equals( getDescription(), other.getDescription() );
     }
 

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.util.ModelUtils;
 
@@ -63,7 +64,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( characteristics, that.characteristics )
                 && Arrays.equals( indices, that.indices );
     }

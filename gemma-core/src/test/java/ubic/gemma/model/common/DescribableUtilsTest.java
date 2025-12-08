@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static ubic.gemma.model.common.DescribableUtils.*;
 
 public class DescribableUtilsTest {
@@ -21,6 +21,15 @@ public class DescribableUtilsTest {
     @After
     public void tearDown() {
         idGenerator.remove();
+    }
+
+    @Test
+    public void testEqualsByName() {
+        assertTrue( equalsByName( createDescribableWithName( "a" ), createDescribableWithName( "a" ) ) );
+        assertTrue( equalsByName( createDescribableWithName( "a" ), createDescribableWithName( "A" ) ) );
+        assertFalse( equalsByName( createDescribableWithName( "a" ), createDescribableWithName( "b" ) ) );
+        assertFalse( equalsByName( createDescribableWithName( "a" ), createDescribableWithName( null ) ) );
+        assertFalse( equalsByName( createDescribableWithName( null ), createDescribableWithName( null ) ) );
     }
 
     @Test
@@ -73,7 +82,7 @@ public class DescribableUtilsTest {
     @Test
     public void testAddByName() {
         List<Describable> col = createDescribablesWithNames( "a", "b" );
-        assertThat( addByName( col, createDescribablesWithNames( "c" ).get( 0 ) ) )
+        assertThat( addByName( col, createDescribableWithName( "c" ) ) )
                 .isNotNull();
         assertThat( col )
                 .extracting( Describable::getId )
@@ -83,7 +92,7 @@ public class DescribableUtilsTest {
     @Test
     public void testAddByNameWithDuplicate() {
         List<Describable> col = createDescribablesWithNames( "a", "b" );
-        assertThat( addByName( col, createDescribablesWithNames( "b" ).get( 0 ) ) )
+        assertThat( addByName( col, createDescribableWithName( "b" ) ) )
                 .isNull();
         assertThat( col )
                 .extracting( Describable::getId )
@@ -100,11 +109,15 @@ public class DescribableUtilsTest {
     private List<Describable> createDescribablesWithNames( String... names ) {
         List<Describable> d = new ArrayList<>();
         for ( String name : names ) {
-            QuantitationType qt = QuantitationType.Factory.newInstance();
-            qt.setId( idGenerator.get().incrementAndGet() );
-            qt.setName( name );
-            d.add( qt );
+            d.add( createDescribableWithName( name ) );
         }
         return d;
+    }
+
+    private Describable createDescribableWithName( String name ) {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setId( idGenerator.get().incrementAndGet() );
+        qt.setName( name );
+        return qt;
     }
 }

@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis.expression;
 
 import org.hibernate.search.annotations.*;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -64,11 +65,8 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
         ExpressionExperimentSet that = ( ExpressionExperimentSet ) object;
         if ( getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
-        } else if ( getName() != null && that.getName() != null ) {
-            return getName().equals( that.getName() );
-        } else {
-            return false;
         }
+        return DescribableUtils.equalsByName( this, that );
     }
 
     @Override

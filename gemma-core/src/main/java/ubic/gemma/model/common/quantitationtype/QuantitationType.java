@@ -18,16 +18,15 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable {
@@ -272,7 +271,7 @@ public class QuantitationType extends AbstractDescribable {
         if ( that.getId() != null && this.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return StringUtils.equalsIgnoreCase( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( generalType, that.generalType )
                 && Objects.equals( type, that.type )
                 && Objects.equals( scale, that.scale )

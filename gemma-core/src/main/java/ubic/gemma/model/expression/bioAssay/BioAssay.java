@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.bioAssay;
 
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -167,11 +168,8 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
         final BioAssay that = ( BioAssay ) object;
         if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
-        } else if ( getName() != null && that.getName() != null ) {
-            return getName().equals( that.getName() );
-        } else {
-            return false;
         }
+        return DescribableUtils.equalsByName( this, that );
     }
 
     @Override

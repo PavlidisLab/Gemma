@@ -19,6 +19,7 @@ package ubic.gemma.model.genome.gene;
  */
 
 import org.hibernate.search.annotations.*;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.ChromosomeFeature;
 import ubic.gemma.model.genome.Gene;
@@ -75,7 +76,7 @@ public class GeneProduct extends ChromosomeFeature {
         boolean bothHaveGene = this.getGene() != null && that.getGene() != null;
         boolean bothHaveSymbol = this.getName() != null && that.getName() != null;
         return bothHaveSymbol && bothHaveGene
-                && this.getName().equals( that.getName() )
+                && DescribableUtils.equalsByName( this, that )
                 && this.getGene().equals( that.getGene() );
     }
 
