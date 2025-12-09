@@ -1605,13 +1605,59 @@ public class ExpressionExperimentServiceImpl
                 && ee.getCharacteristics().stream()
                 .noneMatch( c -> hasCategory( c, Categories.ASSAY )
                         && hasValue( c, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) ) )
-                || expressionExperimentDao.hasSingleCellQuantitationTypes( ee );
+                // more expensive, check the presence of SC vectors
+                || hasSingleCellData( ee );
+    }
+
+    @Override
+    public boolean isBulkRNASeq( ExpressionExperiment ee ) {
+        return ee.getCharacteristics().stream()
+                .anyMatch( c -> hasCategory( c, Categories.ASSAY )
+                        && hasAnyValue( c ) )
+                ||
+                // include FAC-sorted single-cell datasets
+                ( ee.getCharacteristics().stream()
+                        .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
+                                Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
+                                Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY,
+                                Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS,
+                                Values.SINGLE_NUCLEUS_RNA_SEQUENCING,
+                                Values.SINGLE_CELL_RNA_SEQUENCING
+                        ) )
+                        && ee.getCharacteristics().stream()
+                        .anyMatch( c -> hasCategory( c, Categories.ASSAY )
+                                && hasValue( c, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) ) )
+                || hasBulkRnaSeqData( ee );
+        // TODO: check the presence of vectors from the RNA-Seq pipeline
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
-        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+    public boolean isRNASeq( ExpressionExperiment ee ) {
+        return ee.getCharacteristics().stream()
+                .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
+                        Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
+                        Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY,
+                        Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS,
+                        Values.SINGLE_NUCLEUS_RNA_SEQUENCING,
+                        Values.SINGLE_CELL_RNA_SEQUENCING,
+                        Values.BULK_RNA_SEQ
+                ) )
+                || ( !isMicroarray( ee ) && hasSequencingPlatform( ee ) )
+                || expressionExperimentDao.hasSingleCellQuantitationTypes( ee )
+                || hasBulkRnaSeqData( ee )
+                ;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isMicroarray( ExpressionExperiment ee ) {
+        return ee.getCharacteristics().stream()
+                .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasValue( c, Values.MICROARRAY ) );
+    }
+
+    private boolean hasSequencingPlatform( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( ee );
         /*
          * This isn't completely bulletproof. We are simply assuming that if any of the platforms isn't a microarray (or
          * 'OTHER'), it's RNA-seq.
@@ -1625,7 +1671,15 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return false;
+    }
 
+    private boolean hasBulkRnaSeqData( ExpressionExperiment ee ) {
+        // TODO: check for the presence of vectors from the RNA-Seq pipeline
+        return false;
+    }
+
+    private boolean hasSingleCellData(ExpressionExperiment ee) {
+        return expressionExperimentDao.hasSingleCellQuantitationTypes( ee );
     }
 
     /**

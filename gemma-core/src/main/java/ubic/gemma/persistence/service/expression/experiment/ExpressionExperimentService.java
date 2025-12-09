@@ -880,7 +880,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Taxon getTaxon( ExpressionExperiment expressionExperiment );
 
     /**
-     * Indicate if the given experiment is a single-cell experiment.
+     * Indicate if the given experiment is a single-cell RNA-Seq experiment.
      * <p>
      * Gemma does not treat single-cell experiments differently from other experiments, so we need to rely on various
      * aspect of the dataset to determine if it is a single-cell experiment.
@@ -888,10 +888,22 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     boolean isSingleCell( ExpressionExperiment ee );
 
     /**
-     * @param expressionExperiment ee
-     * @return true if this experiment was run on a sequencing-based platform.
+     * Indicate if the given experiment is a bulk RNA-Seq experiment.
+     */
+    boolean isBulkRNASeq( ExpressionExperiment ee );
+
+    /**
+     * Indicate if the given experiment is a RNA-Seq experiment.
+     * <p>
+     * This includes single-cell, bulk and potentially other kind of RNA-Seq experiments.
      */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Indicate if the given experiment is a microarray experiment.
+     * @return
+     */
+    boolean isMicroarray(ExpressionExperiment expressionExperiment);
 
     /**
      * Check if the dataset is either troubled or uses a troubled platform.
