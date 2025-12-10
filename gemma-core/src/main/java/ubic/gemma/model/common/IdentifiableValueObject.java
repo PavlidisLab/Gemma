@@ -1,7 +1,9 @@
 package ubic.gemma.model.common;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 
 /**
@@ -60,6 +62,13 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
      */
     final public void setId( Long id ) {
         this.id = id;
+    }
+
+    @Nonnull
+    @Override
+    @JsonIgnore
+    public Long getRequiredId() {
+        return Identifiable.super.getRequiredId();
     }
 
     @Override
