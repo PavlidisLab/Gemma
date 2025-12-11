@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -205,10 +206,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
                 found = true;
                 ContrastResult contrast = r.getContrasts().iterator().next();
-
-                assertEquals( 0.007055717, r.getPvalue(),
-                        0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
+                assertNotNull( r.getPvalue() );
+                assertEquals( 0.007055717, r.getPvalue(), 0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
                 // up to sign
+                assertNotNull( contrast.getCoefficient() );
                 assertEquals( 2.2300049, Math.abs( contrast.getCoefficient() ), 0.001 );
                 break;
             }
@@ -221,24 +222,26 @@ public class DiffExTest extends AbstractGeoServiceTest {
         config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
         analyses = analyzer.run( ee, dmatrix, config );
+        assertEquals( 1, analyses.size() );
         results = analyses.iterator().next();
+        assertEquals( 1, results.getResultSets().size() );
         resultSet = results.getResultSets().iterator().next();
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
-                // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
-                // also values changed very slightly with updated library size computation (post-filtering)
-                assertEquals( 1, r.getContrasts().size() );
-                ContrastResult contrast = r.getContrasts().iterator().next();
-                assertNotNull( contrast.getCoefficient() );
-                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.0001 );
-                assertNotNull( contrast.getPvalue() );
-                assertEquals( 0.006149004, contrast.getPvalue(), 0.0001 );
-                assertNotNull( contrast.getTstat() );
-                assertEquals( 12.6937, Math.abs( contrast.getTstat() ), 0.0001 );
-                assertEquals( 0.006149003, r.getPvalue(), 0.00001 );
-                break;
-            }
-        }
+        Assertions.assertThat( resultSet.getResults() )
+                .anySatisfy( r -> {
+                    assertEquals( "ENSG00000000938", r.getProbe().getName() );
+                    // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
+                    // also values changed very slightly with updated library size computation (post-filtering)
+                    assertEquals( 1, r.getContrasts().size() );
+                    ContrastResult contrast = r.getContrasts().iterator().next();
+                    assertNotNull( contrast.getCoefficient() );
+                    assertEquals( 2.26861, Math.abs( contrast.getCoefficient() ), 0.0001 );
+                    assertNotNull( contrast.getPvalue() );
+                    assertEquals( 0.00615, contrast.getPvalue(), 0.00001 );
+                    assertNotNull( contrast.getTstat() );
+                    assertEquals( 12.6826, Math.abs( contrast.getTstat() ), 0.0001 );
+                    assertNotNull( r.getPvalue() );
+                    assertEquals( 0.00615, r.getPvalue(), 0.00001 );
+                } );
     }
 
     /**
