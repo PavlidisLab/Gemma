@@ -4042,7 +4042,7 @@ public class ExpressionExperimentDaoImpl
                 .filter( v -> v.getQuantitationType().equals( qt ) )
                 .map( BulkExpressionDataVector::getBioAssayDimension )
                 .collect( Collectors.toSet() );
-        ee.getRawExpressionDataVectors().clear();
+        ee.getRawExpressionDataVectors().removeIf( vec -> vec.getQuantitationType().equals( qt ) );
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
