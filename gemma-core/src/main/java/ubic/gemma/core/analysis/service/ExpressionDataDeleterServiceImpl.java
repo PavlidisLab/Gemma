@@ -38,7 +38,7 @@ public class ExpressionDataDeleterServiceImpl implements ExpressionDataDeleterSe
 
     @Override
     public void deleteRawData( ExpressionExperiment ee, QuantitationType qt ) {
-        ee = expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thawLite( ee );
         if ( singleCellExpressionExperimentAggregateService.isAggregated( ee, qt ) ) {
             singleCellExpressionExperimentAggregateService.removeAggregatedVectors( ee, qt );
         } else {
@@ -49,7 +49,7 @@ public class ExpressionDataDeleterServiceImpl implements ExpressionDataDeleterSe
 
     @Override
     public void deleteProcessedData( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thawLite( ee );
         processedExpressionDataVectorService.removeProcessedDataVectors( ee );
         expressionDataFileService.deleteAllProcessedDataFiles( ee );
     }
