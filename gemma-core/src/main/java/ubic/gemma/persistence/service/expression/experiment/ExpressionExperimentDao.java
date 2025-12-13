@@ -250,6 +250,8 @@ public interface ExpressionExperimentDao
 
     long getRawDataVectorCount( ExpressionExperiment ee );
 
+    long getRawDataVectorCount( ExpressionExperiment ee, QuantitationType qt );
+
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
     Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
