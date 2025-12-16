@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.search;
 
-import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -26,6 +25,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -76,7 +77,7 @@ public class GeneralSearchController {
      */
     private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
-    @Value
+    @lombok.Value
     private static class Scope {
         char scope;
         Class<? extends Identifiable> resultType;
@@ -103,6 +104,9 @@ public class GeneralSearchController {
 
     @Autowired
     private HttpServletRequest request;
+
+    @Value("${gemma.gemBrow.url}")
+    private String gemBrowUrl;
 
     @SuppressWarnings("unused")
     public JsonReaderResponse<SearchResultValueObject<?>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
@@ -165,11 +169,12 @@ public class GeneralSearchController {
     }
 
     @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView search(
+    public Object search(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "termUri", required = false) String termUri,
             @RequestParam(value = "taxon", required = false) String taxon,
-            @RequestParam(value = "scope", required = false) String scope ) {
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "noRedirect", required = false, defaultValue = "false") boolean noRedirect ) {
         ModelAndView mav = new ModelAndView( "generalSearch" );
         if ( query != null || termUri != null ) {
             if ( query != null ) {
@@ -194,20 +199,23 @@ public class GeneralSearchController {
                     throw new IllegalArgumentException( "Unknown taxon " + taxon );
                 }
             }
+
+            Set<Scope> parsedScopes = null;
             if ( StringUtils.isNotBlank( scope ) ) {
-                for ( char s : scope.toCharArray() ) {
-                    boolean found = false;
-                    for ( Scope s2 : GeneralSearchController.scopes ) {
-                        if ( s2.scope == s ) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if ( !found ) {
-                        throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
-                    }
-                }
+                parsedScopes = getScopes( scope );
             }
+
+            if ( !noRedirect
+                    && parsedScopes != null
+                    && parsedScopes.size() == 1
+                    && parsedScopes.iterator().next().getResultType().equals( ExpressionExperiment.class ) ) {
+                String gemBrowSearchUrl = UriComponentsBuilder.fromHttpUrl( gemBrowUrl )
+                        .fragment( "q/" + query )
+                        .build()
+                        .toUriString();
+                return new RedirectView( gemBrowSearchUrl );
+            }
+
             // Need this for the bookmarkable links
             mav.addObject( "SearchString", query != null ? query : termUri );
             mav.addObject( "SearchURI", termUri );
@@ -216,6 +224,24 @@ public class GeneralSearchController {
             }
         }
         return mav;
+    }
+
+    private Set<Scope> getScopes( String scope ) {
+        Set<Scope> result = new HashSet<>();
+        for ( char s : scope.toCharArray() ) {
+            boolean found = false;
+            for ( Scope s2 : GeneralSearchController.scopes ) {
+                if ( s2.scope == s ) {
+                    result.add( s2 );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found ) {
+                throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
+            }
+        }
+        return result;
     }
 
     private Taxon getTaxon( String taxon ) {
@@ -283,7 +309,7 @@ public class GeneralSearchController {
         return ret;
     }
 
-    @Value
+    @lombok.Value
     public static class SearchResultValueObject<T extends IdentifiableValueObject<?>> {
 
         Class<?> resultClass;
