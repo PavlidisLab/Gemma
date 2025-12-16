@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -213,7 +214,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         StopWatch timer = StopWatch.createStarted();
 
         // using a treeset to avoid initialization of proxies
-        Map<T, AuditEvent> result = new TreeMap<>( Comparator.comparing( Auditable::getRequiredId ) );
+        Map<T, AuditEvent> result = new TreeMap<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         Set<Class<? extends AuditEventType>> classes = getClassHierarchy( types, excludedTypes );
         if ( classes.isEmpty() ) {

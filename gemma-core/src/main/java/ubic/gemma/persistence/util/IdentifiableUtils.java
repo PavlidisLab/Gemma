@@ -4,6 +4,7 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
@@ -20,6 +21,17 @@ import static java.util.Objects.requireNonNull;
 public class IdentifiableUtils {
 
     /**
+     * Obtain the identifier of the object, throwing a {@link NullPointerException} if it is null.
+     *
+     * @param identifiable an entity to get the ID from
+     * @throws NullPointerException if the identifier is null
+     */
+    @Nonnull
+    public static Long getRequiredId( Identifiable identifiable ) {
+        return requireNonNull( identifiable.getId() );
+    }
+
+    /**
      * Convert a collection of identifiable to their IDs.
      * <p>
      * This function cannot be used on non-persistent entities (i.e. those with null IDs).
@@ -29,7 +41,7 @@ public class IdentifiableUtils {
      * implement the Identifiable interface.
      */
     public static <T extends @MayBeUninitialized Identifiable> List<Long> getIds( Collection<T> entities ) {
-        return entities.stream().map( Identifiable::getRequiredId ).collect( Collectors.toList() );
+        return entities.stream().map( IdentifiableUtils::getRequiredId ).collect( Collectors.toList() );
     }
 
     /**
@@ -47,7 +59,7 @@ public class IdentifiableUtils {
     public static <T extends @MayBeUninitialized Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
         Map<Long, T> result = new HashMap<>();
         for ( T entity : entities ) {
-            result.putIfAbsent( entity.getRequiredId(), entity );
+            result.putIfAbsent( getRequiredId( entity ), entity );
         }
         return result;
     }

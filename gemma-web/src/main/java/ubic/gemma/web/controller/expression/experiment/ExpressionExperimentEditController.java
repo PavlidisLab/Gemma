@@ -177,7 +177,7 @@ public class ExpressionExperimentEditController {
             this.id = scd.getId();
             if ( quantitationTypes != null ) {
                 this.quantitationTypes = quantitationTypes.stream()
-                        .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( QuantitationType::getRequiredId ) )
+                        .sorted( Comparator.comparing( QuantitationType::getName ).thenComparing( IdentifiableUtils::getRequiredId ) )
                         .map( QuantitationTypeValueObject::new )
                         .collect( Collectors.toList() );
             } else {
@@ -380,8 +380,8 @@ public class ExpressionExperimentEditController {
         expressionExperimentEditControllerHelperService.populateForm( form, expressionExperiment );
 
         // FIXME: the update can alter properties affecting hashCode(), so an hash set is unsuitable here
-        Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getRequiredId ) );
-        Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getRequiredId ) );
+        Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
+        Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
         Map<Long, Class<? extends DataVector>> qtbv = new LinkedHashMap<>();
         if ( form.getQuantitationTypes() != null ) {
             Map<Class<? extends DataVector>, Set<QuantitationType>> qtbvt = expressionExperimentService

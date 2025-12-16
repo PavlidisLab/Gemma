@@ -25,6 +25,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
@@ -285,7 +286,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
-        out.sort( Comparator.comparing( BibliographicReferenceValueObject::getRequiredId ) );
+        out.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         return out;
     }

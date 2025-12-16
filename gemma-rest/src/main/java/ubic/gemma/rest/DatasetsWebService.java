@@ -90,6 +90,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.CacheControl;
@@ -846,7 +847,7 @@ public class DatasetsWebService {
             result = Collections.emptyList();
         } else {
             result = map.get( map.keySet().iterator().next() ).stream()
-                    .sorted( Comparator.comparing( DifferentialExpressionAnalysisValueObject::getRequiredId ) )
+                    .sorted( Comparator.comparing( IdentifiableUtils::getRequiredId ) )
                     .collect( Collectors.toList() );
         }
         return respond( result );

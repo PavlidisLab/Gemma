@@ -57,6 +57,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
@@ -308,7 +309,7 @@ public class ArrayDesignController {
         }
         result.removeAll( toHide );
 
-        result.sort( Comparator.comparing( ArrayDesignValueObject::getRequiredId ) );
+        result.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         return result;
     }

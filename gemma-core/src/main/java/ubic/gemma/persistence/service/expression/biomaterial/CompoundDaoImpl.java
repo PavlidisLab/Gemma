@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.Comparator;
 
@@ -46,7 +47,7 @@ public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDa
     public Compound find( Compound compound ) {
         return this.findByProperty( "name", compound.getName() )
                 .stream()
-                .max( Comparator.comparing( Compound::getRequiredId ) )
+                .max( Comparator.comparing( IdentifiableUtils::getRequiredId ) )
                 .orElse( null );
     }
 }

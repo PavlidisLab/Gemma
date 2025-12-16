@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -110,7 +111,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
              * At this point we can trust that the genes are from the same taxon. This kind of confusion should
              * reduce with cruft-reduction.
              */
-            results.sort( Comparator.comparing( GeneProduct::getRequiredId ) ); // we tend to want to keep the one with the lowest ID
+            results.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) ); // we tend to want to keep the one with the lowest ID
             Gene gene = geneProduct.getGene();
             if ( gene != null ) {
                 GeneProduct keeper = null;

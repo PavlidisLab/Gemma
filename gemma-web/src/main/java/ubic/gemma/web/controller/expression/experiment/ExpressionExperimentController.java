@@ -1016,7 +1016,7 @@ public class ExpressionExperimentController {
                         .comparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).stream().anyMatch( QuantitationType::getIsPreferred ), Comparator.reverseOrder() )
                         // show dimension with vectors first
                         .thenComparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
-                        .thenComparing( BioAssayDimension::getRequiredId ) ) )
+                        .thenComparing( IdentifiableUtils::getRequiredId ) ) )
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) ).collect( Collectors.toList() ), ( a, b ) -> b, LinkedHashMap::new ) );
         QuantitationType singleCellQt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ).orElse( null );
         int offset = 0, limit = 20;
