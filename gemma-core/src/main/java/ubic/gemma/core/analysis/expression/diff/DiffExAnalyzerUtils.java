@@ -410,12 +410,21 @@ public class DiffExAnalyzerUtils {
 
         writer.append( "\n" );
 
-        int minimumNumberOfCells = config.getMinimumNumberOfCells() != null ? config.getMinimumNumberOfCells() :
-                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS;
-        if ( minimumNumberOfCells > 0 ) {
-            writer.append( "# Minimum number of cells: " ).append( minimumNumberOfCells ).append( "\n" );
+        int minimumNumberOfCellsPerSample = config.getMinimumNumberOfCellsPerSample() != null ? config.getMinimumNumberOfCellsPerSample() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE;
+        if ( minimumNumberOfCellsPerSample > 0 ) {
+            writer.append( "# Minimum number of cells per sample: " ).append( minimumNumberOfCellsPerSample ).append( "\n" );
             writer.append( "# Samples with less cells than this value will be masked with missing values.\n" );
             writer.append( "# This filter is only applied if the number of cells is filled for the samples (i.e. for single-cell data).\n" );
+            writer.append( "\n" );
+        }
+
+        int minimumNumberOfCellsPerGene = config.getMinimumNumberOfCellsPerGene() != null ? config.getMinimumNumberOfCellsPerGene() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE;
+        if ( minimumNumberOfCellsPerGene > 0 ) {
+            writer.append( "# Minimum number of cells per gene: " ).append( minimumNumberOfCellsPerGene ).append( "\n" );
+            writer.append( "# Design elements with less cells than this value will be tested.\n" );
+            writer.append( "# This filter is only applied if the number of cells is filled for the data vector (i.e. for single-cell data).\n" );
             writer.append( "\n" );
         }
 

@@ -13,6 +13,8 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.experiment.RandomExpressionExperimentUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,17 +47,13 @@ public class RandomSingleCellDataUtils {
     }
 
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( QuantitationType quantitationType ) {
+        Taxon taxon = new Taxon();
         ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
         for ( int i = 0; i < 100; i++ ) {
             arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
         }
-        ExpressionExperiment ee = new ExpressionExperiment();
-        for ( int i = 0; i < 4; i++ ) {
-            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
-            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, arrayDesign, bm );
-            bm.getBioAssaysUsedIn().add( ba );
-            ee.getBioAssays().add( ba );
-        }
+        ExpressionExperiment ee = RandomExpressionExperimentUtils.randomExpressionExperiment( taxon, 4, arrayDesign );
         return randomSingleCellVectors( ee, arrayDesign, quantitationType, 1000, 0.9 );
     }
 
@@ -70,17 +68,13 @@ public class RandomSingleCellDataUtils {
     }
 
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, QuantitationType qt ) {
+        Taxon taxon = new Taxon();
         ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
         for ( int i = 0; i < numDesignElements; i++ ) {
             arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, arrayDesign ) );
         }
-        ExpressionExperiment ee = new ExpressionExperiment();
-        for ( int i = 0; i < numSamples; i++ ) {
-            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
-            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, arrayDesign, bm );
-            bm.getBioAssaysUsedIn().add( ba );
-            ee.getBioAssays().add( ba );
-        }
+        ExpressionExperiment ee = RandomExpressionExperimentUtils.randomExpressionExperiment( taxon, numSamples, arrayDesign );
         return randomSingleCellVectors( ee, arrayDesign, qt );
     }
 

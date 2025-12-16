@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.junit.Test;
 import ubic.gemma.core.analysis.preprocess.filter.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -11,6 +12,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils;
 
+import java.util.Random;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -18,19 +21,75 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class DifferentialExpressionAnalysisFilterTest {
 
+    private static final Random random = new Random();
+
     @Test
     public void test() {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysisFilter filter = new DifferentialExpressionAnalysisFilter( config );
         assertThat( filter ).hasToString( "DifferentialExpressionAnalysisFilter [%s] -> [%s] -> [%s] -> [%s]",
                 new OutliersFilter(),
-                new MinimumCellsFilter( 100 ),
+                new MinimumCellsFilter(),
                 new RepetitiveValuesFilter(),
                 new LowVarianceFilter( 1e-2 ) );
     }
 
     @Test
     public void testFilterSingleCellMatrix() throws FilteringException {
+        random.setSeed( 123L );
+        RandomExpressionDataMatrixUtils.setSeed( 123L );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( TechnologyType.SEQUENCING );
+        for ( int i = 0; i < 100; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
+        }
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        for ( int i = 0; i < 8; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        config.setMinimumVariance( 0.1 );
+        DifferentialExpressionAnalysisFilter filter = new DifferentialExpressionAnalysisFilter( config );
+        PoissonDistribution distribution = new PoissonDistribution( 1 );
+        distribution.reseedRandomGenerator( 123L );
+        int[][] noc = new int[100][8];
+        for ( int i = 0; i < 100; i++ ) {
+            for ( int j = 0; j < 8; j++ ) {
+                distribution.sample();
+                noc[i][j] = distribution.sample();
+            }
+        }
+        ExpressionDataDoubleMatrix dataMatrix = RandomExpressionDataMatrixUtils.randomLog2cpmMatrix( ee )
+                .withNumberOfCells( noc );
+        dataMatrix.getQuantitationType().setIsPreferred( true );
+        DifferentialExpressionAnalysisFilterResult filterResult = new DifferentialExpressionAnalysisFilterResult();
+        filter.filter( dataMatrix, filterResult );
+        assertThat( filterResult.isMinimumCellsFilterApplied() ).isTrue();
+        assertThat( filterResult.getStartingSamples() )
+                .hasSize( 8 );
+        assertThat( filterResult.getSamplesAfterMinimumCells() ).hasSize( 6 )
+                .extracting( BioMaterial::getName )
+                .containsExactlyInAnyOrder( "bm2", "bm3", "bm4", "bm5", "bm6", "bm7" );
+        assertThat( filterResult.getFinalSamples() ).hasSize( 6 )
+                .extracting( BioMaterial::getName )
+                .containsExactlyInAnyOrder( "bm2", "bm3", "bm4", "bm5", "bm6", "bm7" );
+
+        assertThat( filterResult.isRepetitiveValuesFilterApplied() ).isTrue();
+        assertThat( filterResult.getDesignElementsAfterRepetitiveValues() ).isEqualTo( 94 );
+
+        assertThat( filterResult.isLowVarianceFilterApplied() ).isTrue();
+        assertThat( filterResult.getDesignElementsAfterLowVariance() ).isEqualTo( 93 );
+
+        assertThat( filterResult.getFinalSamples() ).hasSize( 6 );
+        assertThat( filterResult.getFinalDesignElements() ).isEqualTo( 93 );
+    }
+
+    @Test
+    public void testFilterSingleCellMatrixWithAssayLevelCellCounts() throws FilteringException {
         RandomExpressionDataMatrixUtils.setSeed( 123L );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setTechnologyType( TechnologyType.SEQUENCING );
@@ -51,6 +110,7 @@ public class DifferentialExpressionAnalysisFilterTest {
         config.setMinimumVariance( 0.1 );
         DifferentialExpressionAnalysisFilter filter = new DifferentialExpressionAnalysisFilter( config );
         ExpressionDataDoubleMatrix dataMatrix = RandomExpressionDataMatrixUtils.randomLog2cpmMatrix( ee );
+        dataMatrix.getQuantitationType().setIsPreferred( true );
         DifferentialExpressionAnalysisFilterResult filterResult = new DifferentialExpressionAnalysisFilterResult();
         filter.filter( dataMatrix, filterResult );
         assertThat( filterResult.isMinimumCellsFilterApplied() ).isTrue();

@@ -4011,7 +4011,7 @@ public class ExpressionExperimentDaoImpl
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
         ee.getRawExpressionDataVectors().addAll( newVectors );
-        update( ee );
+        updateWithNewVectors( ee, newVectors );
         log.info( "Added " + newVectors.size() + " raw vectors to " + ee + " for " + newQt );
         return newVectors.size();
     }
@@ -4053,6 +4053,10 @@ public class ExpressionExperimentDaoImpl
                 dimensions = null;
             }
         }
+        getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVectorNumberOfCells v where v.vector in (select vector from RawExpressionDataVector vector where vector.expressionExperiment = :ee)" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
@@ -4098,6 +4102,11 @@ public class ExpressionExperimentDaoImpl
         } else {
             dimensions = null;
         }
+        getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVectorNumberOfCells v where v.vector in (select vector from RawExpressionDataVector vector where vector.expressionExperiment = :ee and vector.quantitationType = :qt)" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .executeUpdate();
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
@@ -4126,6 +4135,11 @@ public class ExpressionExperimentDaoImpl
                 .map( BulkExpressionDataVector::getBioAssayDimension )
                 .collect( Collectors.toSet() );
         ee.getRawExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( qt ) );
+        getSessionFactory().getCurrentSession()
+                .createQuery( "delete from RawExpressionDataVectorNumberOfCells v where v.vector in (select vector from RawExpressionDataVector vector where vector.expressionExperiment = :ee and vector.quantitationType = :qt)" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .executeUpdate();
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
@@ -4136,7 +4150,7 @@ public class ExpressionExperimentDaoImpl
             log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its replaced raw vectors, it will be added directly." );
         }
         ee.getRawExpressionDataVectors().addAll( vectors );
-        update( ee );
+        updateWithNewVectors( ee, vectors );
         removeUnusedDimensions( ee, dimensions );
         if ( deletedVectors > 0 ) {
             log.info( "Replaced " + deletedVectors + " raw data vectors from " + ee + " for " + qt );
@@ -4225,7 +4239,7 @@ public class ExpressionExperimentDaoImpl
         ee.getQuantitationTypes().add( qt );
         ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
-        update( ee );
+        updateWithNewVectors( ee, vectors );
         return vectors.size();
     }
 
@@ -4270,6 +4284,10 @@ public class ExpressionExperimentDaoImpl
 
         ee.setNumberOfDataVectors( 0 );
 
+        getSessionFactory().getCurrentSession()
+                .createQuery( "delete from ProcessedExpressionDataVectorNumberOfCells v where v.vector in (select vector from ProcessedExpressionDataVector vector where vector.expressionExperiment = :ee)" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
         int deletedVectors = this.getSessionFactory().getCurrentSession()
                 .createQuery( "delete from ProcessedExpressionDataVector pv where pv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
@@ -4311,6 +4329,10 @@ public class ExpressionExperimentDaoImpl
             log.info( newQt + " is being reused, will not remove it." );
         }
         ee.getProcessedExpressionDataVectors().clear();
+        getSessionFactory().getCurrentSession()
+                .createQuery( "delete from ProcessedExpressionDataVectorNumberOfCells v where v.vector in (select vector from ProcessedExpressionDataVector vector where vector.expressionExperiment = :ee)" )
+                .setParameter( "ee", ee )
+                .executeUpdate();
         int deletedVectors = this.getSessionFactory().getCurrentSession()
                 .createQuery( "delete from ProcessedExpressionDataVector pv where pv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
@@ -4319,7 +4341,7 @@ public class ExpressionExperimentDaoImpl
         ee.setNumberOfDataVectors( vectors.size() );
         ee.getQuantitationTypes().add( newQt );
         removeQts( ee, qtsToRemove );
-        update( ee );
+        updateWithNewVectors( ee, vectors );
         // remove unused dimensions, if the dimension is reused for the replaced vectors, nothing will happen
         removeUnusedDimensions( ee, dimensions );
         if ( deletedVectors > 0 ) {
@@ -4397,13 +4419,37 @@ public class ExpressionExperimentDaoImpl
                 .collect( Collectors.toSet() );
         Assert.isTrue( ee.getBioAssays().containsAll( directBas ), "The BioAssayDimension must be a subset of the experiment's BioAssays." );
         Assert.isTrue( vectors.stream().allMatch( v -> v.getId() == null ), "All vectors must be transient" );
-        Assert.isTrue( vectors.stream().map( DataVector::getExpressionExperiment ).allMatch( e -> e == ee ), "All vectors must belong to " + ee );
-        Assert.isTrue( vectors.stream().map( DesignElementDataVector::getQuantitationType ).allMatch( q -> q == qt ), "All vectors must use " + qt );
-        Assert.isTrue( vectors.stream().map( BulkExpressionDataVector::getBioAssayDimension ).allMatch( b -> b == bad ), "All vectors must use " + bad );
+        Assert.isTrue( vectors.stream().map( DataVector::getExpressionExperiment ).allMatch( e -> e == ee ), "All vectors must belong to " + ee + "." );
+        Assert.isTrue( vectors.stream().map( DesignElementDataVector::getQuantitationType ).allMatch( q -> q == qt ), "All vectors must use " + qt + "." );
+        Assert.isTrue( vectors.stream().map( BulkExpressionDataVector::getBioAssayDimension ).allMatch( b -> b == bad ), "All vectors must use " + bad + "." );
+        int expectedVectorSize = bad.getBioAssays().size();
+        Assert.isTrue( vectors.stream().map( BulkExpressionDataVector::getNumberOfCells )
+                        .allMatch( noc -> noc == null || noc.length == expectedVectorSize ),
+                "All vectors must contain " + expectedVectorSize + " number of cells." );
         if ( qt.getRepresentation().getSizeInBytes() != -1 ) {
-            int expectedVectorSizeInBytes = bad.getBioAssays().size() * qt.getRepresentation().getSizeInBytes();
+            int expectedVectorSizeInBytes = expectedVectorSize * qt.getRepresentation().getSizeInBytes();
             Assert.isTrue( vectors.stream().map( DesignElementDataVector::getData ).allMatch( b -> b.length == expectedVectorSizeInBytes ),
-                    "All vectors must contain " + bad.getBioAssays().size() + " values, expected size is " + expectedVectorSizeInBytes + " B." );
+                    "All vectors must contain " + expectedVectorSize + " values, expected size is " + expectedVectorSizeInBytes + " B." );
         }
+    }
+
+    /**
+     * Update the given experiment with the given newly added vectors, making sure that the vectors are persisted before
+     * their attached number of cells.
+     * <p>
+     * This is a workaround because {@code hibernate.order_inserts} does not appear to be working (see #1578).
+     */
+    private void updateWithNewVectors( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+        // make sure that the vectors are persisted before the nmber of cells, otherwise Hibernate will interleave inserts
+        Map<BulkExpressionDataVector, int[]> numberOfCells = vectors.stream()
+                .filter( v -> v.getNumberOfCells() != null )
+                .collect( Collectors.toMap( v -> v, BulkExpressionDataVector::getNumberOfCells ) );
+        vectors.forEach( v -> v.setNumberOfCells( null ) );
+        if ( !numberOfCells.isEmpty() ) {
+            update( ee ); // creates the vectors in cascade
+            getSessionFactory().getCurrentSession().flush();
+            numberOfCells.forEach( BulkExpressionDataVector::setNumberOfCells );
+        }
+        update( ee );
     }
 }

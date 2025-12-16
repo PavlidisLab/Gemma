@@ -44,7 +44,7 @@ public class QuantitationTypeConversionUtilsTest {
         ba.setSampleUsed( bm );
         bad.setBioAssays( Collections.singletonList( ba ) );
         ev.setBioAssayDimension( bad );
-        matrix = new ExpressionDataDoubleMatrix( Collections.singleton( ev ), Collections.singleton( qt ) );
+        matrix = new ExpressionDataDoubleMatrix( null, Collections.singleton( ev ), Collections.singleton( qt ) );
         matrix.set( 0, 0, 4.0 );
         RandomExpressionDataMatrixUtils.setSeed( 123L );
     }

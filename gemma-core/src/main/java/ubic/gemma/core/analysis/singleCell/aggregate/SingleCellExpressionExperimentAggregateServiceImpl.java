@@ -56,9 +56,6 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
     private AuditTrailService auditTrailService;
 
     @Autowired
-    private SingleCellSparsityMetrics metrics;
-
-    @Autowired
     private QuantitationTypeService quantitationTypeService;
 
     @Override
@@ -231,9 +228,11 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
+            int[] numberOfCells = new int[cellBAs.size()];
             rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
                     sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
-                    cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds ) );
+                    cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds, numberOfCells ) );
+            rawVector.setNumberOfCells( numberOfCells );
             rawVectors.add( rawVector );
             if ( rawVectors.size() % 100 == 0 ) {
                 if ( config.getConsole() != null ) {
@@ -500,9 +499,11 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             boolean performLog2cpm,
             @Nullable double[] normalizationFactor,
             @Nullable double[] librarySize,
-            int[] sourceSampleStarts, int[] sourceSampleEnds ) {
+            int[] sourceSampleStarts, int[] sourceSampleEnds,
+            int[] numberOfCells ) {
         Assert.isTrue( !performLog2cpm || ( normalizationFactor != null && librarySize != null ),
                 "Normalization factors and library size must be provided for log2cpm transformation." );
+        ScaleType scaleType = scv.getQuantitationType().getScale();
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] rv = new double[numSamples];
@@ -541,14 +542,18 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     continue;
                 }
                 if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
+                    double d = getDouble( scrv, k, representation );
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        rv[i] += getDouble( scrv, k, representation );
+                        rv[i] += d;
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        rv[i] += Math.exp( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.exp( d );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        rv[i] += Math.expm1( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.expm1( d );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
+                    }
+                    if ( SingleCellSparsityMetrics.isExpressed( d, scaleType ) ) {
+                        numberOfCells[i]++;
                     }
                 }
             }
@@ -569,13 +574,13 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             }
 
             if ( cellsByBioAssay != null ) {
-                metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, mask, cellsByBioAssay );
+                SingleCellSparsityMetrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, mask, cellsByBioAssay );
             }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
             }
 
         }

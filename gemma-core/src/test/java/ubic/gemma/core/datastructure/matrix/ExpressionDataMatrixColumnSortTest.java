@@ -156,7 +156,7 @@ public class ExpressionDataMatrixColumnSortTest {
 //            }
 //        }
 
-        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
+        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( null, bad );
 
         assertEquals( 100, mat.columns() );
 

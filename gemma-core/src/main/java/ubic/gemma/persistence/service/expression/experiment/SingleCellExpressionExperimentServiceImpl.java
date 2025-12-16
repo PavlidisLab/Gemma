@@ -64,9 +64,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
-    @Autowired
-    private SingleCellSparsityMetrics metrics;
-
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadWithSingleCellVectors( Long id ) {
@@ -489,7 +486,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      * Apply various single-cell sparsity metrics to the bioassays.
      */
     private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Collection<SingleCellExpressionDataVector> vectors ) {
-        boolean isSupported = metrics.isSupported( vectors.iterator().next() );
+        boolean isSupported = SingleCellSparsityMetrics.isSupported( vectors.iterator().next() );
         if ( !isSupported ) {
             log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be all set to null." );
         }
@@ -509,11 +506,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 ba.setNumberOfCellsByDesignElements( null );
                 continue;
             }
-            int numberOfCells = metrics.getNumberOfCells( vectors, sampleIndex, null, -1, null );
+            int numberOfCells = SingleCellSparsityMetrics.getNumberOfCells( vectors, sampleIndex, null, -1, null );
             totalNumberOfCells += numberOfCells;
             ba.setNumberOfCells( numberOfCells );
-            ba.setNumberOfDesignElements( metrics.getNumberOfDesignElements( vectors, sampleIndex, null, -1, null ) );
-            ba.setNumberOfCellsByDesignElements( metrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null, -1, null ) );
+            ba.setNumberOfDesignElements( SingleCellSparsityMetrics.getNumberOfDesignElements( vectors, sampleIndex, null, -1, null ) );
+            ba.setNumberOfCellsByDesignElements( SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null, -1, null ) );
             log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
                     ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
         }
@@ -550,9 +547,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 alreadyCheckedForSupport = true;
             }
             for ( int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++ ) {
-                metrics.addExpressedCells( vec, sampleIndex, null, -1, null, isExpressed );
-                numberOfDesignElements[sampleIndex] += metrics.getNumberOfDesignElements( vec, sampleIndex, null, -1, null );
-                numberOfCellByDesignElements[sampleIndex] += metrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1, null );
+                SingleCellSparsityMetrics.addExpressedCells( vec, sampleIndex, null, -1, null, isExpressed );
+                numberOfDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfDesignElements( vec, sampleIndex, null, -1, null );
+                numberOfCellByDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1, null );
                 sampleIndex++;
             }
         }

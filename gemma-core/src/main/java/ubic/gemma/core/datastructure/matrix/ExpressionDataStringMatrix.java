@@ -21,10 +21,10 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.StringMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -38,34 +38,11 @@ import java.util.List;
 public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionDataMatrix<String> {
 
     private static final Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
-    private StringMatrix<Integer, Integer> matrix;
+    private final StringMatrix<Integer, Integer> matrix;
 
-    public ExpressionDataStringMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        super();
-        this.selectVectors( vectors );
-        this.vectorsToMatrix( vectors );
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
-            QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment,
-            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int columns() {
-        return matrix.columns();
+    public ExpressionDataStringMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+        super( ee );
+        this.matrix = vectorsToMatrix( selectVectors( vectors ) );
     }
 
     @Override
@@ -88,13 +65,23 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
+    public BulkExpressionDataMatrix<String> sliceColumns( List<BioMaterial> bioMaterials ) {
+        throw new UnsupportedOperationException( "Slicing columns from a multi-assay string matrix is not supported." );
+    }
+
+    @Override
+    public ExpressionDataStringMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        throw new UnsupportedOperationException( "Slicing columns from a multi-assay string matrix is not supported." );
+    }
+
+    @Override
     public String[] getRow( int index ) {
         return matrix.getRow( index );
     }
 
     @Override
     public ExpressionDataMatrix<String> sliceRows( List<CompositeSequence> designElements ) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException( "Slicing rows from a multi-assay string matrix is not supported." );
     }
 
     @Override
@@ -110,32 +97,24 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
-    public int rows() {
-        return matrix.rows();
-    }
-
-    @Override
     protected String format( int row, int column ) {
         return matrix.get( row, column );
     }
 
-    @Override
-    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+    private StringMatrix<Integer, Integer> vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
 
-        int maxSize = this.setUpColumnElements();
-
-        this.matrix = this.createMatrix( vectors, maxSize );
+        return this.createMatrix( vectors );
     }
 
-    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends BulkExpressionDataVector> vectors,
-            int maxSize ) {
+    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
 
-        int numRows = this.rowDesignElementMapByInteger.size();
+        int numRows = rows();
+        int numCols = columns();
 
-        StringMatrix<Integer, Integer> mat = new StringMatrix<>( numRows, maxSize );
+        StringMatrix<Integer, Integer> mat = new StringMatrix<>( numRows, numCols );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( j );
@@ -153,8 +132,8 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;
 
-            Integer rowIndex = this.rowElementMap.get( designElement );
-            assert rowIndex != null;
+            int rowIndex = getRowIndex( designElement );
+            assert rowIndex != -1;
 
             mat.addRowName( rowIndex );
 
@@ -169,9 +148,9 @@ public class ExpressionDataStringMatrix extends AbstractMultiAssayExpressionData
             for ( int j = 0; j < bioAssays.size(); j++ ) {
 
                 BioAssay bioAssay = it.next();
-                Integer column = this.columnAssayMap.get( bioAssay );
+                int column = getColumnIndex( bioAssay );
 
-                assert column != null;
+                assert column != -1;
 
                 mat.setByKeys( rowIndex, column, vals[j] );
             }

@@ -110,6 +110,11 @@ public interface ExpressionDataMatrix<T> {
     @Nullable
     int[] getRowIndices( CompositeSequence designElement );
 
+    /**
+     * Slice the given design elements (rows) from the matrix.
+     *
+     * @throws IllegalArgumentException if any of the requested design element is not present in the matrix
+     */
     ExpressionDataMatrix<T> sliceRows( List<CompositeSequence> designElements );
 
     /**

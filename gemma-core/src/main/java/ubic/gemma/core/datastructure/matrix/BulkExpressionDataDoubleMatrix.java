@@ -8,6 +8,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -128,6 +129,16 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
             result[i] = getRow( i );
         }
         return result;
+    }
+
+    @Override
+    public BulkExpressionDataMatrix<Double> sliceColumns( List<BioMaterial> bioMaterials ) {
+        throw new UnsupportedOperationException( "Slicing columns from a bulk double matrix is not supported." );
+    }
+
+    @Override
+    public BulkExpressionDataDoubleMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        throw new UnsupportedOperationException( "Slicing columns from a bulk double matrix is not supported." );
     }
 
     @Override

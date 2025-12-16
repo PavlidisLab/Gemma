@@ -53,7 +53,7 @@ import static ubic.gemma.model.common.measurement.MeasurementUtils.measurement2d
  * Perform SVD on expression data and store the results.
  *
  * @author paul
- * @see    PrincipalComponentAnalysisService
+ * @see PrincipalComponentAnalysisService
  */
 @Service
 public class SVDServiceImpl implements SVDService {
@@ -91,6 +91,7 @@ public class SVDServiceImpl implements SVDService {
      * <p>
      * Continuous factor values are converted to a {@link Double} if possible, otherwise the {@link FactorValue#getId()}
      * is used. This is the case for categorical measurement.
+     *
      * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; factor value
      *                             (double value if possible otherwise ID)
      * @param bm                   to populate for
@@ -150,7 +151,7 @@ public class SVDServiceImpl implements SVDService {
             throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
         }
 
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, vectors );
 
         SVDServiceImpl.log.info( "Starting SVD" );
         ExpressionDataSVD svd = new ExpressionDataSVD( mat );

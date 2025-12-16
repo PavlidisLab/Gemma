@@ -57,7 +57,8 @@ public class OutliersFilter implements ExpressionDataFilter<ExpressionDataDouble
             }
         }
 
-        return new ExpressionDataDoubleMatrix( dataMatrix, maskedMatrix );
+        // this transformation does not alter QTs
+        return dataMatrix.withMatrix( maskedMatrix );
     }
 
     @Override

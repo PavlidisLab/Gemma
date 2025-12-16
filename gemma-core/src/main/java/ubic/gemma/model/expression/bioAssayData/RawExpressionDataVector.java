@@ -18,13 +18,56 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Getter;
+import lombok.Setter;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
  * Data for one design element, across one or more bioassays, for a single quantitation type. For example, the
  * "expression profile" for a probe (gene) across a set of samples
  */
+@Getter
+@Setter
 public class RawExpressionDataVector extends BulkExpressionDataVector {
+
+    /**
+     * Number of cells that were used to compute each value in this vector.
+     *
+     * @see ExpressionExperiment#getNumberOfCells()
+     * @see BioAssay#getNumberOfCells()
+     */
+    @Nullable
+    private RawExpressionDataVectorNumberOfCells numberOfCellsObject;
+
+    @Nullable
+    RawExpressionDataVectorNumberOfCells getNumberOfCellsObject() {
+        return numberOfCellsObject;
+    }
+
+    void setNumberOfCellsObject( @Nullable RawExpressionDataVectorNumberOfCells numberOfCellsObject ) {
+        this.numberOfCellsObject = numberOfCellsObject;
+    }
+
+    @Nullable
+    public int[] getNumberOfCells() {
+        return numberOfCellsObject != null ? numberOfCellsObject.getNumberOfCells() : null;
+    }
+
+    public void setNumberOfCells( @Nullable int[] numberOfCells ) {
+        if ( numberOfCells != null ) {
+            if ( numberOfCellsObject != null ) {
+                this.numberOfCellsObject.setNumberOfCells( numberOfCells );
+            } else {
+                this.numberOfCellsObject = RawExpressionDataVectorNumberOfCells.Factory.newInstance( this, numberOfCells );
+            }
+        } else {
+            this.numberOfCellsObject = null;
+        }
+    }
 
     @Override
     public int hashCode() {

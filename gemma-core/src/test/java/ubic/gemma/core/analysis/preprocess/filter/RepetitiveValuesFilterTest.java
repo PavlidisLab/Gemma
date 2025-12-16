@@ -41,7 +41,7 @@ public class RepetitiveValuesFilterTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LINEAR );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // fill a row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
@@ -50,7 +50,7 @@ public class RepetitiveValuesFilterTest {
             cm.set( 5, j, 0.0 );
         }
 
-        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+        countMatrix = countMatrix.withMatrix( cm );
 
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
@@ -81,7 +81,7 @@ public class RepetitiveValuesFilterTest {
             }
         }
 
-        ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmM );
+        ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmM, log2cpmQt );
         // calculate log2cpm
         ExpressionDataDoubleMatrix filteredMatrix = new RepetitiveValuesFilter().filter( log2cpmMatrix );
         assertThat( filteredMatrix.rows() ).isEqualTo( 99 );
@@ -109,7 +109,7 @@ public class RepetitiveValuesFilterTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LINEAR );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // fill a row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
@@ -118,7 +118,7 @@ public class RepetitiveValuesFilterTest {
             cm.set( 5, j, 0.0 );
         }
 
-        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+        countMatrix = countMatrix.withMatrix( cm );
 
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
@@ -149,7 +149,7 @@ public class RepetitiveValuesFilterTest {
             }
         }
 
-        ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmM );
+        ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmM, log2cpmQt );
 
         DoubleMatrix<CompositeSequence, BioMaterial> normalizedLog2cpm = new QuantileNormalizer()
                 .normalize( log2cpmMatrix.getMatrix() );
@@ -157,7 +157,7 @@ public class RepetitiveValuesFilterTest {
         QuantitationType normalizedQt = QuantitationType.Factory.newInstance( log2cpmQt );
         normalizedQt.setIsNormalized( true );
 
-        ExpressionDataDoubleMatrix normalizedLg2fcMatrix = new ExpressionDataDoubleMatrix( ee, normalizedQt, normalizedLog2cpm );
+        ExpressionDataDoubleMatrix normalizedLg2fcMatrix = new ExpressionDataDoubleMatrix( ee, normalizedLog2cpm, normalizedQt );
 
         ExpressionDataDoubleMatrix filteredMatrix = new RepetitiveValuesFilter().filter( normalizedLg2fcMatrix );
         assertThat( filteredMatrix.rows() ).isEqualTo( 99 );
@@ -185,7 +185,7 @@ public class RepetitiveValuesFilterTest {
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
@@ -198,7 +198,7 @@ public class RepetitiveValuesFilterTest {
             }
         }
 
-        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+        countMatrix = countMatrix.withMatrix( cm );
 
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
@@ -229,7 +229,7 @@ public class RepetitiveValuesFilterTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
@@ -242,7 +242,7 @@ public class RepetitiveValuesFilterTest {
             }
         }
 
-        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+        countMatrix = countMatrix.withMatrix( cm );
 
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )
@@ -273,7 +273,7 @@ public class RepetitiveValuesFilterTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
@@ -286,7 +286,7 @@ public class RepetitiveValuesFilterTest {
             }
         }
 
-        countMatrix = new ExpressionDataDoubleMatrix( countMatrix, cm );
+        countMatrix = countMatrix.withMatrix( cm );
 
         // filtering the count matrix should drop the row with all zeroes easily
         assertThat( new RepetitiveValuesFilter().filter( countMatrix ) )

@@ -100,6 +100,11 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
     }
 
     @Override
+    public List<BioMaterial> getBioMaterials() {
+        return bioMaterials;
+    }
+
+    @Override
     public int columns() {
         return bioAssays.size();
     }

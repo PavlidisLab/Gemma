@@ -50,6 +50,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
+        quantitationType.setIsRatio( true ); // must be for one-sample to make sense.
+        quantitationType.setScale( ScaleType.LOG2 );
         this.configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
@@ -68,8 +70,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             bm.getFactorValues().add( toUse );
         }
 
-        quantitationType.setIsRatio( true ); // must be for one-sample to make sense.
-        quantitationType.setScale( ScaleType.LOG2 );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );

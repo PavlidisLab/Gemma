@@ -63,7 +63,9 @@
         <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVectorNumberOfCells.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVectorNumberOfCells.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimension.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>

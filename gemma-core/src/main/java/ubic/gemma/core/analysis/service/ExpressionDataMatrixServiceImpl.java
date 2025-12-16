@@ -144,7 +144,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( ee + " does not have any raw data vectors for " + quantitationType + "." );
         }
-        return new ExpressionDataDoubleMatrix( vectors );
+        return new ExpressionDataDoubleMatrix( ee, vectors );
     }
 
     @Override
@@ -234,11 +234,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = datamatrix.getMatrix().copy();
         // this is a log2
         MatrixStats.logTransform( matrix );
-        Collection<QuantitationType> qts = datamatrix.getQuantitationTypes().stream()
-                .map( QuantitationType.Factory::newInstance )
-                .peek( qt -> qt.setScale( ScaleType.LOG2 ) )
-                .collect( Collectors.toList() );
-        return new ExpressionDataDoubleMatrix( datamatrix, matrix, qts );
+        Map<QuantitationType, QuantitationType> qts = datamatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    qt = QuantitationType.Factory.newInstance( qt );
+                    qt.setScale( ScaleType.LOG2 );
+                    return qt;
+                } ) );
+        return datamatrix.withMatrix( matrix, qts );
     }
 
     /**

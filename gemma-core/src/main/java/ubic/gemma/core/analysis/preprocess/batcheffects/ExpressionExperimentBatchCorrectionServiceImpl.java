@@ -257,7 +257,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         }
         ExpressionDataDoubleMatrix finalMatrix = originalDataMatrix;
         if ( columnsToKeep.size() < originalDataMatrix.columns() ) {
-            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, DiffExAnalyzerUtils.createBADMap( columnsToKeep ) );
+            finalMatrix = originalDataMatrix.sliceColumns( columnsToKeep, DiffExAnalyzerUtils.createBADMap( columnsToKeep ) );
         }
         return finalMatrix;
     }
@@ -358,11 +358,10 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         /*
          * It is easier if we make a new quantitationtype.
          */
-        QuantitationType oldQt = originalDataMatrix.getQuantitationTypes().iterator().next();
-        QuantitationType newQt = this.makeNewQuantitationType( oldQt );
-        ExpressionDataDoubleMatrix correctedExpressionDataMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix,
-                correctedDataMatrix, Collections.singleton( newQt ) );
-        assert correctedExpressionDataMatrix.getQuantitationTypes().size() == 1;
+        Map<QuantitationType, QuantitationType> newQts = originalDataMatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, this::makeNewQuantitationType ) );
+        ExpressionDataDoubleMatrix correctedExpressionDataMatrix = originalDataMatrix.withMatrix(
+                correctedDataMatrix, newQts );
 
         // Sanity check...
         for ( int i = 0; i < correctedExpressionDataMatrix.columns(); i++ ) {
