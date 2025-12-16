@@ -24,7 +24,7 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
       Ext.apply( this, {
          items : [ {
             xtype : 'box',
-            html : 'Search for',
+            html : 'Search for datasets:',
             cls : 'front-page-header-text',
             margins : {
                top : 0,
@@ -59,7 +59,7 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
    },
    getSearchURL : function() {
       var query = this.queryField.getValue();
-      var url = Gemma.CONTEXT_PATH + "/searcher.html?query=" + query;
+      var url = Gemma.CONTEXT_PATH + "/searcher.html?query=" + query + "&scope=E";
       return url;
    }
 } );
@@ -72,7 +72,7 @@ Gemma.Search.GeneralSearchSimpleCombo = Ext.extend( Ext.form.ComboBox, {
    forceSelection : true,
    lazyInit : false,
    value : 'experiments',
-   boxLabel : 'Search for',
+   boxLabel : 'Search for datasets:',
    store : new Ext.data.ArrayStore( {
       fields : [ 'myTextId', 'displayText' ],
       data : [ [ 'experiments', 'datasets' ] ,[ 'genes', 'genes' ] ]
