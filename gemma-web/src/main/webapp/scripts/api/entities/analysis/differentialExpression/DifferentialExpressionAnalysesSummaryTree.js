@@ -1,6 +1,12 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
+const NUMBER_FORMATTER = Intl.NumberFormat();
+
+function formatNumber( n ) {
+   return NUMBER_FORMATTER.format( n );
+}
+
 /**
  * This provides a summary of the differential analyses done for a particular dataset/expression experiment. It is
  * structured as a tree with each analysis as a node and its result sets as its children
@@ -144,7 +150,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                    var cellCountText = '';
                    var cellCount = analysis.bioAssaysAnalyzed.reduce((acc,val)=>{acc = acc + val.numberOfCells;return acc},0)
                    if(!isNaN(cellCount) && cellCount > 0){
-                      cellCountText = "<span>[Cells: <b>" + cellCount + "</b>]</span>";
+                      cellCountText = "<span>[Cells: <b>" + formatNumber(cellCount) + "</b>]</span>";
                    }
                    subsetText += cellCountText
 
