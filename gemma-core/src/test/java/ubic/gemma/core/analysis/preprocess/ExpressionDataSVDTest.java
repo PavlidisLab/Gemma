@@ -173,7 +173,7 @@ public class ExpressionDataSVDTest extends BaseTest {
     public void testMatrixReconstruct() {
         ExpressionDataDoubleMatrix svdNormalize = svd.removeHighestComponents( 0 );
         assertNotNull( svdNormalize );
-        RegressionTesting.closeEnough( testData.getMatrix(), svdNormalize.getMatrix(), 0.001 );
+        RegressionTesting.closeEnough( testData.asDoubleMatrix(), svdNormalize.asDoubleMatrix(), 0.001 );
     }
 
     /*

@@ -169,7 +169,7 @@ public class LinkAnalysis {
      */
     public Set<Gene> getGenesTested() {
         Set<Gene> genes = new HashSet<>();
-        for ( CompositeSequence cs : dataMatrix.getRowNames() ) {
+        for ( CompositeSequence cs : dataMatrix.getDesignElements() ) {
             Set<Gene> geneClusters = this.probeToGeneMap.get( cs );
             if ( geneClusters == null ) {
                 if ( numWarnings <= LinkAnalysis.MAX_WARNINGS ) {

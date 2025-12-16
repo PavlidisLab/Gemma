@@ -40,7 +40,7 @@ public class OutliersFilter implements ExpressionDataFilter<ExpressionDataDouble
         }
         log.info( "There are " + outlierAssays.size() + " outlier assays; masking them out..." );
 
-        DoubleMatrix<CompositeSequence, BioMaterial> maskedMatrix = dataMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> maskedMatrix = dataMatrix.asDoubleMatrix();
 
         Set<BioAssayDimension> dimensionWithOutliers = dataMatrix.getBioAssayDimensions().stream()
                 .filter( bad -> CollectionUtils.containsAny( bad.getBioAssays(), outlierAssays ) )

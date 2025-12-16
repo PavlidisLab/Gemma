@@ -6,12 +6,14 @@ import javax.annotation.Nullable;
 
 /**
  * Interface for bulk expression data matrices that can be efficiently accessed as a primitive int matrix.
+ *
  * @author poirigui
  */
 public interface BulkExpressionDataPrimitiveIntMatrix extends BulkExpressionDataMatrix<Integer>, ExpressionDataPrimitiveIntMatrix {
 
     /**
      * Retrieve the given column without boxing.
+     *
      * @see #getColumn(int)
      */
     @Nullable
@@ -19,7 +21,8 @@ public interface BulkExpressionDataPrimitiveIntMatrix extends BulkExpressionData
 
     /**
      * Obtain the raw matrix as a int array.
-     * @see #getRawMatrix()
+     *
+     * @see #getMatrix()
      */
-    int[][] getRawMatrixAsInts();
+    int[][] getMatrixAsInts();
 }

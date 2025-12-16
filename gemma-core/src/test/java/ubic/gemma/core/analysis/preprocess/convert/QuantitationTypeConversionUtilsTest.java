@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.preprocess.convert;
 
 import org.junit.Before;
 import org.junit.Test;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -45,7 +46,9 @@ public class QuantitationTypeConversionUtilsTest {
         bad.setBioAssays( Collections.singletonList( ba ) );
         ev.setBioAssayDimension( bad );
         matrix = new ExpressionDataDoubleMatrix( null, Collections.singleton( ev ), Collections.singleton( qt ) );
-        matrix.set( 0, 0, 4.0 );
+        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
+        dmatrix.set( 0, 0, 4.0 );
+        matrix = matrix.withMatrix( dmatrix );
         RandomExpressionDataMatrixUtils.setSeed( 123L );
     }
 
@@ -62,7 +65,7 @@ public class QuantitationTypeConversionUtilsTest {
         assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( Math.log( 4.0 ) / Math.log( 2 ) );
+                    assertThat( m.asDoubleMatrix().get( 0, 0 ) ).isEqualTo( Math.log( 4.0 ) / Math.log( 2 ) );
                 } );
     }
 
@@ -72,7 +75,7 @@ public class QuantitationTypeConversionUtilsTest {
         assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( 4.0 * Math.log( 10 ) / Math.log( 2 ), within( 1e-10 ) );
+                    assertThat( m.asDoubleMatrix().get( 0, 0 ) ).isEqualTo( 4.0 * Math.log( 10 ) / Math.log( 2 ), within( 1e-10 ) );
                 } );
     }
 
@@ -83,7 +86,7 @@ public class QuantitationTypeConversionUtilsTest {
         assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) )
+                    assertThat( m.asDoubleMatrix().get( 0, 0 ) )
                             .isEqualTo( Math.log( 1e6 * ( 4 + 0.5 ) / ( 4 + 1 ) ) / Math.log( 2 ), within( 1e-10 ) );
                 } );
     }

@@ -45,7 +45,7 @@ public class RepetitiveValuesFilterTest {
 
         // fill a row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
-        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.asDoubleMatrix();
         for ( int j = 0; j < cm.columns(); j++ ) {
             cm.set( 5, j, 0.0 );
         }
@@ -61,7 +61,7 @@ public class RepetitiveValuesFilterTest {
                 } );
 
         // calculate library sizes
-        DoubleMatrix1D librarySize = MatrixStats.colSums( new DenseDoubleMatrix<>( countMatrix.getRawMatrixAsDoubles() ) );
+        DoubleMatrix1D librarySize = MatrixStats.colSums( new DenseDoubleMatrix<>( countMatrix.getMatrixAsDoubles() ) );
         for ( int i = 0; i < librarySize.size(); i++ ) {
             countMatrix.getBioAssayDimension().getBioAssays().get( i )
                     .setSequenceReadCount( Math.round( librarySize.get( i ) ) );
@@ -73,7 +73,7 @@ public class RepetitiveValuesFilterTest {
         log2cpmQt.setType( StandardQuantitationType.AMOUNT );
         log2cpmQt.setScale( ScaleType.LOG2 );
         log2cpmQt.setRepresentation( PrimitiveType.DOUBLE );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmM = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmM = countMatrix.asDoubleMatrix();
 
         for ( int i = 0; i < log2cpmM.rows(); i++ ) {
             for ( int j = 0; j < log2cpmM.columns(); j++ ) {
@@ -113,7 +113,7 @@ public class RepetitiveValuesFilterTest {
 
         // fill a row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
-        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.asDoubleMatrix();
         for ( int j = 0; j < cm.columns(); j++ ) {
             cm.set( 5, j, 0.0 );
         }
@@ -129,7 +129,7 @@ public class RepetitiveValuesFilterTest {
                 } );
 
         // calculate library sizes
-        DoubleMatrix1D librarySize = MatrixStats.colSums( new DenseDoubleMatrix<>( countMatrix.getRawMatrixAsDoubles() ) );
+        DoubleMatrix1D librarySize = MatrixStats.colSums( new DenseDoubleMatrix<>( countMatrix.getMatrixAsDoubles() ) );
         for ( int i = 0; i < librarySize.size(); i++ ) {
             countMatrix.getBioAssayDimension().getBioAssays().get( i )
                     .setSequenceReadCount( Math.round( librarySize.get( i ) ) );
@@ -141,7 +141,7 @@ public class RepetitiveValuesFilterTest {
         log2cpmQt.setType( StandardQuantitationType.AMOUNT );
         log2cpmQt.setScale( ScaleType.LOG2 );
         log2cpmQt.setRepresentation( PrimitiveType.DOUBLE );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmM = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmM = countMatrix.asDoubleMatrix();
 
         for ( int i = 0; i < log2cpmM.rows(); i++ ) {
             for ( int j = 0; j < log2cpmM.columns(); j++ ) {
@@ -152,7 +152,7 @@ public class RepetitiveValuesFilterTest {
         ExpressionDataDoubleMatrix log2cpmMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmM, log2cpmQt );
 
         DoubleMatrix<CompositeSequence, BioMaterial> normalizedLog2cpm = new QuantileNormalizer()
-                .normalize( log2cpmMatrix.getMatrix() );
+                .normalize( log2cpmMatrix.asDoubleMatrix() );
 
         QuantitationType normalizedQt = QuantitationType.Factory.newInstance( log2cpmQt );
         normalizedQt.setIsNormalized( true );
@@ -189,7 +189,7 @@ public class RepetitiveValuesFilterTest {
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
-        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.asDoubleMatrix();
         for ( int j = 0; j < 10; j++ ) {
             if ( j < 7 ) {
                 cm.set( 5, j, 0.0 );
@@ -233,7 +233,7 @@ public class RepetitiveValuesFilterTest {
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
-        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.asDoubleMatrix();
         for ( int j = 0; j < 10; j++ ) {
             if ( j < 8 ) {
                 cm.set( 5, j, 0.0 );
@@ -277,7 +277,7 @@ public class RepetitiveValuesFilterTest {
 
         // only fill half the row with zeroes
         CompositeSequence deToDrop = countMatrix.getDesignElementForRow( 5 );
-        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> cm = countMatrix.asDoubleMatrix();
         for ( int j = 0; j < 10; j++ ) {
             if ( j < 8 ) {
                 cm.set( 5, j, 0.0 );

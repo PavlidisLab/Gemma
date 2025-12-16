@@ -101,7 +101,7 @@ public class QuantitationTypeConversionUtils {
         }
 
         StandardQuantitationType type = quantitationType.getType();
-        DoubleMatrix<CompositeSequence, BioMaterial> transformedMatrix = dmatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> transformedMatrix = dmatrix.asDoubleMatrix();
         switch ( quantitationType.getScale() ) {
             case LOG2:
                 log.warn( String.format( "Data was detected on a log2-scale, but the quantitation type indicate %s. No transformation is necessary.",

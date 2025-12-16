@@ -135,10 +135,7 @@ class MatrixMask {
         if ( mask != null && mask[row][column] ^ inverted ) {
             return true;
         }
-        if ( sparseMask != null && ( Arrays.binarySearch( sparseMask, row * cols + column ) >= 0 ) ^ inverted ) {
-            return true;
-        }
-        return false;
+        return sparseMask != null && ( Arrays.binarySearch( sparseMask, row * cols + column ) >= 0 ) ^ inverted;
     }
 
     /**

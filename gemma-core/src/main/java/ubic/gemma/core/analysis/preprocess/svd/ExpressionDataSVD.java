@@ -25,7 +25,6 @@ import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
@@ -122,7 +121,7 @@ public class ExpressionDataSVD {
         //        }
 
         this.normalized = normalizeMatrix;
-        DoubleMatrix<CompositeSequence, BioMaterial> matrix = this.expressionData.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = this.expressionData.asDoubleMatrix();
 
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
@@ -158,17 +157,13 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<CompositeSequence, BioMaterial> reconstructed = new DenseDoubleMatrix<>(
-                a.mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
-
-        reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
-        reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
+        DoubleMatrix2D reconstructed = a.mult( a.mult( u, s ), a.transpose( v ) );
 
         // re-mask the missing values.
         for ( int i = 0; i < reconstructed.rows(); i++ ) {
             for ( int j = 0; j < reconstructed.columns(); j++ ) {
                 if ( Double.isNaN( this.missingValueInfo.get( i, j ) ) ) {
-                    reconstructed.set( i, j, Double.NaN );
+                    reconstructed.setQuick( i, j, Double.NaN );
                 }
             }
         }
@@ -286,11 +281,7 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<CompositeSequence, BioMaterial> reconstructed = new DenseDoubleMatrix<>(
-                a.mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
-
-        reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
-        reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
+        DoubleMatrix2D reconstructed = a.mult( a.mult( u, s ), a.transpose( v ) );
 
         // re-mask the missing values.
         for ( int i = 0; i < reconstructed.rows(); i++ ) {
@@ -322,19 +313,14 @@ public class ExpressionDataSVD {
 
         DoubleMatrix<CompositeSequence, Integer> rawUMatrix = svd.getU();
 
-        DoubleMatrix<CompositeSequence, BioMaterial> result = new DenseDoubleMatrix<>( rawUMatrix.rows(),
-                rawUMatrix.columns() );
+        DenseDoubleMatrix2D result = new DenseDoubleMatrix2D( rawUMatrix.rows(), rawUMatrix.columns() );
 
         // take the absolute value of the U matrix.
         for ( int i = 0; i < rawUMatrix.rows(); i++ ) {
             for ( int j = 0; j < rawUMatrix.columns(); j++ ) {
-                result.set( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
+                result.setQuick( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
             }
         }
-        List<BioMaterial> colNames = svd.getV().getColNames();
-
-        result.setColumnNames( colNames );
-        result.setRowNames( rawUMatrix.getRowNames() );
 
         // use that as the 'expression data'
         return this.expressionData.withMatrix( result );

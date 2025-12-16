@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  *
  * @author pavlidis
  */
+@Deprecated
 public class ExpressionDataMatrixRowElement implements Comparable<ExpressionDataMatrixRowElement> {
 
     private final CompositeSequence designElement;

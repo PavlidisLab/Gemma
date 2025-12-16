@@ -185,7 +185,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
             log.debug( aRow );
         }
 
-        double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrixAsDoubles();
+        double[][] dMatrix = expressionDataDoubleMatrix.getMatrixAsDoubles();
         assertEquals( 200, dMatrix.length );
         assertEquals( 59, dMatrix[0].length );
 
