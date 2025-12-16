@@ -1,13 +1,4 @@
 
-<script type="text/javascript">
-	(function () {
-		var script = document.createElement("script");
-		script.type = "text/javascript";
-		script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-		document.getElementsByTagName("head")[0].appendChild(script);
-	})();
-</script>
-
 # Single Cell RNA-seq Experiments
 
 Gemma now supports single-cell data. This is still a work in progress, but the main features for compatibility are now in place and we have started to make data sets available through the Gemma web site and web services.
