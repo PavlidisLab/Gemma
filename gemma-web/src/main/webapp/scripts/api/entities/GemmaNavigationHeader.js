@@ -175,12 +175,7 @@ Gemma.GemmaNavigationHeader = Ext
                      text : 'Browse Datasets',
                      href : Gemma.GEMBROW_URL,
                      tooltip : "View the list of Gemma's expression data sets"
-                  },
-                  {
-                     text : 'Browse Datasets (legacy)',
-                     href : Gemma.CONTEXT_PATH + "/expressionExperiment/showAllExpressionExperiments.html",
-                     tooltip : "View the list of Gemma's expression data sets"
-                  },{
+                  }, {
                      text : 'Browse Platforms',
                      href : Gemma.CONTEXT_PATH + "/arrays/showAllArrayDesigns.html",
                      tooltip : "View the list of Gemma's platforms"
