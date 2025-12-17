@@ -159,7 +159,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         assertNotNull( data.getBestBioAssayDimension() );
         assertEquals( rawMatrix.columns(), data.getBioAssayDimension().getBioAssays().size() );
-        assertEquals( probes.size(), data.rows() );
+        assertEquals( probes.size(), data.getMatrix().rows() );
 
         /*
          * Replace it.

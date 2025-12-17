@@ -19,9 +19,8 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
 
     /**
      * Mask individual elements of the given matrix.
-     *
-     * @param maskedValue value to use for masked elements, usually {@code null}
      * @see MatrixMask#maskElements(int, int, boolean[][])
+     * @param maskedValue value to use for masked elements, usually {@code null}
      */
     public static <T> MaskedExpressionDataMatrix<T> maskElements( ExpressionDataMatrix<T> matrix, boolean[][] mask, @Nullable T maskedValue ) {
         return new MaskedExpressionDataMatrix<>( matrix, MatrixMask.maskElements( matrix.rows(), matrix.columns(), mask ), maskedValue );
@@ -32,7 +31,6 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
      * <p>
      * This uses a sparse representation internally, which is more efficient for large matrices with few masked
      * elements.
-     *
      * @see MatrixMask#maskElements(int, int, int[], int[])
      */
     public static <T> MaskedExpressionDataMatrix<T> maskElements( ExpressionDataMatrix<T> matrix, int[] i, int[] j, @Nullable T maskedValue ) {
@@ -41,7 +39,6 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
 
     /**
      * Mask whole rows of the given matrix.
-     *
      * @see MatrixMask#maskRows(int, int, boolean[])
      */
     public static <T> MaskedExpressionDataMatrix<T> maskRows( ExpressionDataMatrix<T> matrix, boolean[] rowMask, @Nullable T maskedValue ) {
@@ -50,7 +47,6 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
 
     /**
      * Mask whole columns of the given matrix.
-     *
      * @see MatrixMask#maskColumns(int, int, boolean[])
      */
     public static <T> MaskedExpressionDataMatrix<T> maskColumns( ExpressionDataMatrix<T> matrix, boolean[] columnMask, @Nullable T maskedValue ) {

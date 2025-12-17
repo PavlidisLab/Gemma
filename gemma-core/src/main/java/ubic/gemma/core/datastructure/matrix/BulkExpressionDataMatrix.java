@@ -91,7 +91,7 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      *
      * @return T[][]
      */
-    T[][] getMatrix();
+    T[][] getRawMatrix();
 
     List<BioMaterial> getBioMaterials();
 

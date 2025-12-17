@@ -47,7 +47,6 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
  * The data is written as a TAR archive containing the following entries for each bioassay: {@code {bioAssayName}/barcodes.tsv},
  * {@code {bioAssayName}/features.tsv}, {@code {bioAssayName}/matrix.mtx}. If using the directory output, individual
  * files are compressed and will have a {@code .gz} extension.
- *
  * @author poirigui
  */
 @CommonsLog

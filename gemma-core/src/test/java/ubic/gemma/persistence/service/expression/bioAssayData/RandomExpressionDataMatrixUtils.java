@@ -63,19 +63,17 @@ public class RandomExpressionDataMatrixUtils {
         if ( scaleType == ScaleType.COUNT || scaleType == ScaleType.LINEAR ) {
             return matrix;
         }
-        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 double val = matrix.getAsDouble( i, j );
                 try {
-                    double value = convertData( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0];
-                    dmatrix.set( i, j, value );
+                    matrix.set( i, j, convertData( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0] );
                 } catch ( UnsupportedQuantitationScaleConversionException e ) {
                     throw new RuntimeException( e );
                 }
             }
         }
-        return matrix.withMatrix( dmatrix );
+        return matrix;
     }
 
     public static ExpressionDataDoubleMatrix randomLinearMatrix( ExpressionExperiment ee ) {
@@ -226,8 +224,8 @@ public class RandomExpressionDataMatrixUtils {
         log2cpmQt.setScale( ScaleType.LOG2 );
         log2cpmQt.setRepresentation( PrimitiveType.DOUBLE );
         ExpressionDataDoubleMatrix dm = randomCountMatrix( ee );
-        DoubleMatrix1D librarySize = MatrixStats.colSums( dm.asDoubleMatrix() );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmData = MatrixStats.convertToLog2Cpm( dm.asDoubleMatrix(), librarySize );
+        DoubleMatrix1D librarySize = MatrixStats.colSums( dm.getMatrix() );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmData = MatrixStats.convertToLog2Cpm( dm.getMatrix(), librarySize );
         return dm.withMatrix( log2cpmData, Collections.singletonMap( dm.getQuantitationType(), log2cpmQt ) );
     }
 

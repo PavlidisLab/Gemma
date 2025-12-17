@@ -64,7 +64,7 @@ public class EmptyExpressionMatrix extends AbstractMultiAssayExpressionDataMatri
     }
 
     @Override
-    public Object[][] getMatrix() {
+    public Object[][] getRawMatrix() {
         return EMPTY_MATRIX;
     }
 

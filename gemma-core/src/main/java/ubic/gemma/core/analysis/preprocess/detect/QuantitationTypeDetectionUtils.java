@@ -107,7 +107,7 @@ public class QuantitationTypeDetectionUtils {
     private static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
-            matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).asDoubleMatrix().asArray() );
+            matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );
         } else if ( expressionData instanceof SingleCellExpressionDataDoubleMatrix ) {
             matrix = ( ( SingleCellExpressionDataDoubleMatrix ) expressionData ).getMatrix();
         } else {
@@ -453,7 +453,6 @@ public class QuantitationTypeDetectionUtils {
 
     /**
      * Check if any of the rows of a given matrix are normalized.
-     *
      * @see #isZScore(DoubleMatrix1D)
      */
     private static boolean isZScore( Object matrix ) {
@@ -536,11 +535,10 @@ public class QuantitationTypeDetectionUtils {
 
     /**
      * Detect suspicious values for a given quantitation type.
-     *
      * @throws SuspiciousValuesForQuantitationException if there are any suspicious values
      */
     public static void detectSuspiciousValues( ExpressionDataDoubleMatrix a, QuantitationType qt ) throws SuspiciousValuesForQuantitationException {
-        DoubleMatrix2D matrix = new DenseDoubleMatrix2D( a.getMatrixAsDoubles() );
+        DoubleMatrix2D matrix = new DenseDoubleMatrix2D( a.getMatrix().asArray() );
 
         List<SuspiciousValuesForQuantitationException.SuspiciousValueResult> flaggingResults = new ArrayList<>();
 

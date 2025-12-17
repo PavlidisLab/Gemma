@@ -276,7 +276,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     private DoubleMatrix<BioAssay, BioAssay> dataToDoubleMat( ExpressionDataDoubleMatrix matrix ) {
 
-        DoubleMatrix<BioMaterial, CompositeSequence> transposeR = matrix.asDoubleMatrix().transpose();
+        DoubleMatrix<BioMaterial, CompositeSequence> transposeR = matrix.getMatrix().transpose();
 
         DoubleMatrix<BioAssay, CompositeSequence> transpose = new DenseDoubleMatrix<>( transposeR.getRawMatrix() );
         transpose.setColumnNames( transposeR.getColNames() );
@@ -402,20 +402,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
         ExpressionDataDoubleMatrix dmatrix = matrix.sliceColumns( samplesUsed, bad );
-        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.asDoubleMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
         DoubleMatrix<String, String> sNamedMatrix = DiffExAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
         DoubleMatrix2D residuals = fit.getResiduals();
 
-        DoubleMatrix2D f = residuals.copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
+        f.setRowNames( dmatrix.getMatrix().getRowNames() );
+        f.setColumnNames( dmatrix.getMatrix().getColNames() );
 
         DoubleArrayList rowmeans = MatrixRowStats.means( sNamedMatrix );
         for ( int i = 0; i < f.rows(); i++ ) {
             double rowmean = rowmeans.get( i );
             for ( int j = 0; j < f.columns(); j++ ) {
-                f.setQuick( i, j, f.getQuick( i, j ) + rowmean );
+                f.set( i, j, f.get( i, j ) + rowmean );
             }
         }
         return dmatrix.withMatrix( f );

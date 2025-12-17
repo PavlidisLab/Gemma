@@ -92,7 +92,6 @@ public class ExperimentalDesignWriter {
 
     /**
      * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer}.
-     *
      * @see #write(ExpressionExperiment, Collection, boolean, Writer)
      */
     public void write( ExpressionExperiment ee, Writer writer ) throws IOException {
@@ -102,7 +101,6 @@ public class ExperimentalDesignWriter {
     /**
      * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer} for a given
      * collection of assays.
-     *
      * @param bioAssays       assays to write, the order is defined by the order of their corresponding biomaterials
      *                        as per {@link BioMaterial#COMPARATOR}.
      * @param writeBaseHeader whether to write the base header (experiment URL, build info, etc.), see

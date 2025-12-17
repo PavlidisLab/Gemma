@@ -46,7 +46,7 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
     }
 
     @Override
-    public Integer[][] getMatrix() {
+    public Integer[][] getRawMatrix() {
         Integer[][] result = new Integer[matrix.length][];
         for ( int i = 0; i < matrix.length; i++ ) {
             result[i] = ArrayUtils.toObject( matrix[i] );
@@ -65,7 +65,7 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
     }
 
     @Override
-    public int[][] getMatrixAsInts() {
+    public int[][] getRawMatrixAsInts() {
         return matrix;
     }
 

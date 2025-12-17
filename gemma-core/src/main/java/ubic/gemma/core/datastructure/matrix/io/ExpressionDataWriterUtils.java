@@ -45,7 +45,6 @@ import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Utilities for writing expression data files.
- *
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
@@ -129,7 +128,6 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct a sample name in case there is only one BioAssay attached to the corresponding BioMaterial.
-     *
      * @see #constructSampleName(BioMaterial, Collection, boolean, boolean, char)
      */
     public static String constructSampleName( BioMaterial bm, BioAssay ba, boolean useIds, boolean useRawColumnNames ) {
@@ -148,7 +146,6 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct a BioAssay column name prefixed by the {@link BioMaterial} from which it originates.
-     *
      * @param bioMaterial       the biomaterial
      * @param bioAssays         the bioassay(s) associated to the biomaterial
      * @param useIds            use biomaterial and bioassay IDs instead of names (or short names)
@@ -189,7 +186,6 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct an ExperimentalFactor column name.
-     *
      * @see StringUtil#makeNames(String)
      */
     public static String constructExperimentalFactorName( ExperimentalFactor ef ) {
@@ -198,7 +194,6 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Construct an ExperimentalFactor column names for a list of factors.
-     *
      * @see StringUtil#makeNames(String[], boolean)
      */
     public static String[] constructExperimentalFactorNames( List<ExperimentalFactor> factors ) {

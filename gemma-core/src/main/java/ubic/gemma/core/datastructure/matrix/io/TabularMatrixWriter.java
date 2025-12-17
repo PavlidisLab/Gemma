@@ -45,7 +45,6 @@ import static ubic.gemma.core.util.TsvUtils.formatFast;
  * - sample_name
  * - cell_id
  * - value
- *
  * @author poirigui
  */
 @Setter

@@ -29,7 +29,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Default filter used for various analyses of expression experiments.
@@ -152,11 +155,7 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
         // Filtering lowly expressed genes.
         if ( config.getLowExpressionCut() > 0.0 ) {
             ExpressionExperimentFilter.log.debug( "Filtering for low or too high expression" );
-            Map<CompositeSequence, Double> ranks = new HashMap<>();
-            double[] rbm = dataMatrix.getRanksByMean();
-            for ( int i = 0; i < dataMatrix.rows(); i++ ) {
-                ranks.put( dataMatrix.getDesignElementForRow( i ), rbm[i] );
-            }
+            Map<CompositeSequence, Double> ranks = dataMatrix.getRanksByMean();
             dataMatrix = this.filterLowExpression( dataMatrix, ranks );
             result.setLowExpressionFilterApplied( true );
             result.setAfterLowExpressionFilter( dataMatrix.rows() );

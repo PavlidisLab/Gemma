@@ -19,17 +19,17 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
+import ubic.basecode.dataStructure.matrix.AbstractMatrix;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -38,7 +38,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,12 +56,13 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
 
-    private final double[][] matrix;
+    private final DoubleMatrix<CompositeSequence, BioMaterial> matrix;
 
     /**
      * Indicate if {@link #matrix} contains missing values.
      */
-    private final boolean hasMissingValues;
+    @Nullable
+    private Boolean hasMissingValues = null;
 
     /**
      * Indicate how many cells were used to compute each value in the matrix.
@@ -76,40 +76,54 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * Indicate the rank (by mean signal intensity) of each row in the matrix.
      */
     @Nullable
-    private double[] ranks = null;
+    private Map<CompositeSequence, Double> ranks = null;
 
     public ExpressionDataDoubleMatrix( @Nullable ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
         super( ee );
+        for ( BulkExpressionDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException(
+                        "Cannot convert non-double quantitation types into double matrix:" + dedv
+                                .getQuantitationType() );
+            }
+        }
         List<BulkExpressionDataVector> selectedVectors = selectVectors( vectors );
         if ( selectedVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
         this.matrix = this.createMatrix( selectedVectors );
-        this.hasMissingValues = computeHasMissingValues( this.matrix );
         this.numberOfCells = getNumberOfCellsFromVectors( selectedVectors );
     }
 
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
         super( ee );
+        for ( QuantitationType qt : quantitationTypes ) {
+            if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException(
+                        "Cannot convert non-double quantitation types into double matrix: " + qt );
+            }
+        }
         List<BulkExpressionDataVector> selectedVectors = selectVectors( dataVectors, quantitationTypes );
         if ( selectedVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
         this.matrix = this.createMatrix( selectedVectors );
-        this.hasMissingValues = computeHasMissingValues( this.matrix );
         this.numberOfCells = getNumberOfCellsFromVectors( selectedVectors );
     }
 
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
         super( ee );
+        if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+            throw new IllegalStateException(
+                    "Cannot convert non-double quantitation types into double matrix: " + quantitationType );
+        }
         List<BulkExpressionDataVector> selectedVectors = selectVectors( dataVectors, quantitationType );
         if ( selectedVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
         this.matrix = this.createMatrix( selectedVectors );
-        this.hasMissingValues = computeHasMissingValues( this.matrix );
         this.numberOfCells = getNumberOfCellsFromVectors( selectedVectors );
     }
 
@@ -154,8 +168,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
         setUpColumnElements();
 
-        this.matrix = dataMatrix.getRawMatrix();
-        this.hasMissingValues = dataMatrix.hasMissingValues();
+        this.matrix = dataMatrix;
         this.numberOfCells = null;
     }
 
@@ -167,12 +180,13 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param sourceMatrix source matrix from which most of the meta-data will be imported
      * @param dataMatrix   data matrix to use, it must be compatible with sourceMatrix in terms of rows and columns
      */
-    private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, double[][] dataMatrix ) {
+    private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
+            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
         super( sourceMatrix );
-        Assert.isTrue( dataMatrix.length == rows() && dataMatrix[0].length == columns(),
-                "The new matrix has the same dimensions as the original matrix." );
+        Assert.isTrue( dataMatrix.getColNames().equals( sourceMatrix.getBioMaterials() )
+                        && dataMatrix.getRowNames().equals( sourceMatrix.getDesignElements() ),
+                "The rows and columns of the new matrix correspond to the original matrix." );
         this.matrix = dataMatrix;
-        this.hasMissingValues = computeHasMissingValues( dataMatrix );
         this.numberOfCells = sourceMatrix.numberOfCells;
     }
 
@@ -186,12 +200,13 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param quantitationTypes quantitation type(s) used by dataMatrix
      */
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
-            double[][] dataMatrix, Map<QuantitationType, QuantitationType> quantitationTypes ) {
+            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix, Map<QuantitationType, QuantitationType> quantitationTypes ) {
         super( sourceMatrix.getExpressionExperiment() );
-        Assert.isTrue( dataMatrix.length == sourceMatrix.rows() && dataMatrix[0].length == sourceMatrix.columns(),
+        Assert.isTrue( dataMatrix.getColNames().equals( sourceMatrix.getBioMaterials() )
+                        && dataMatrix.getRowNames().equals( sourceMatrix.getDesignElements() ),
                 "The rows and columns of the new matrix correspond to the original matrix." );
-        for ( int i = 0; i < sourceMatrix.rows(); i++ ) {
-            CompositeSequence element = sourceMatrix.getDesignElementForRow( i );
+        for ( int i = 0; i < dataMatrix.rows(); i++ ) {
+            CompositeSequence element = dataMatrix.getRowName( i );
             QuantitationType qt = sourceMatrix.getQuantitationType( element );
             if ( qt == null ) {
                 throw new IllegalArgumentException( "The source matrix does not have a quantitation type for " + element + "." );
@@ -210,7 +225,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         setUpColumnElements();
 
         this.matrix = dataMatrix;
-        this.hasMissingValues = computeHasMissingValues( dataMatrix );
         this.numberOfCells = sourceMatrix.numberOfCells;
     }
 
@@ -222,7 +236,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      */
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
         super( sourceMatrix.getExpressionExperiment() );
-        this.matrix = new double[rowsToUse.size()][sourceMatrix.columns()];
+        this.matrix = new DenseDoubleMatrix<>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix.setColumnNames( sourceMatrix.matrix.getColNames() );
         int[][] numberOfCells = null;
         for ( int i = 0; i < rowsToUse.size(); i++ ) {
             CompositeSequence element = rowsToUse.get( i );
@@ -233,7 +248,12 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
                 throw new IllegalArgumentException( "Source matrix does not have a row for " + element + "." );
             }
 
-            System.arraycopy( rowVals, 0, this.matrix[i], 0, rowVals.length );
+            this.matrix.addRowName( element );
+
+            for ( int j = 0; j < rowVals.length; j++ ) {
+                Double val = rowVals[j];
+                this.matrix.set( i, j, val );
+            }
             int[] noc = sourceMatrix.getNumberOfCellsForRow( i );
             if ( noc != null ) {
                 if ( numberOfCells == null ) {
@@ -254,17 +274,15 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             setUpColumnElements();
         }
 
-        this.hasMissingValues = sourceMatrix.hasMissingValues && computeHasMissingValues( this.matrix );
         this.numberOfCells = numberOfCells;
     }
 
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse, boolean dummy ) {
         super( sourceMatrix.getExpressionExperiment() );
 
-        this.matrix = new double[sourceMatrix.rows()][columnsToUse.size()];
-        for ( double[] row : matrix ) {
-            Arrays.fill( row, Double.NaN );
-        }
+        this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix.setRowNames( sourceMatrix.matrix.getRowNames() );
+        this.matrix.setColumnNames( columnsToUse );
 
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
@@ -296,7 +314,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             } );
             addToRowMaps( designElement, qt, slicedDim );
             for ( int j = 0; j < originalBioMaterialIndices.length; j++ ) {
-                this.matrix[i][j] = sourceRow[originalBioMaterialIndices[j]];
+                Double val = sourceRow[originalBioMaterialIndices[j]];
+                this.matrix.set( i, j, val );
                 if ( sourceNumberOfCells != null ) {
                     if ( numberOfCells == null ) {
                         numberOfCells = new int[sourceMatrix.rows()][];
@@ -311,7 +330,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
         setUpColumnElements();
 
-        this.hasMissingValues = sourceMatrix.hasMissingValues && computeHasMissingValues( this.matrix );
         this.numberOfCells = numberOfCells;
     }
 
@@ -327,7 +345,9 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             BioAssayDimension reorderedDim ) {
         super( sourceMatrix.getExpressionExperiment() );
 
-        this.matrix = new double[sourceMatrix.rows()][columnsToUse.size()];
+        this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix.setRowNames( sourceMatrix.matrix.getRowNames() );
+        this.matrix.setColumnNames( columnsToUse );
 
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
@@ -343,7 +363,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             int[] sourceNumberOfCells = sourceMatrix.getNumberOfCellsForRow( i );
             addToRowMaps( designElement, requireNonNull( sourceMatrix.getQuantitationType( designElement ) ), reorderedDim );
             for ( int j = 0; j < originalBioMaterialIndices.length; j++ ) {
-                this.matrix[i][j] = sourceRow[originalBioMaterialIndices[j]];
+                Double val = sourceRow[originalBioMaterialIndices[j]];
+                this.matrix.set( i, j, val );
                 if ( sourceNumberOfCells != null ) {
                     if ( numberOfCells == null ) {
                         numberOfCells = new int[sourceMatrix.rows()][];
@@ -358,7 +379,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
         setUpColumnElements();
 
-        this.hasMissingValues = sourceMatrix.hasMissingValues && computeHasMissingValues( this.matrix );
         this.numberOfCells = numberOfCells;
     }
 
@@ -366,38 +386,18 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         super( sourceMatrix );
         Assert.isTrue( numberOfCells == null || ( numberOfCells.length == sourceMatrix.rows() && Arrays.stream( numberOfCells ).allMatch( row -> row.length == sourceMatrix.columns() ) ) );
         this.matrix = sourceMatrix.matrix;
-        this.hasMissingValues = sourceMatrix.hasMissingValues;
         this.ranks = sourceMatrix.ranks;
         this.numberOfCells = numberOfCells;
     }
 
-    @Nonnull
     @Override
     public Double get( int row, int column ) {
-        return matrix[row][column];
+        return matrix.get( row, column );
     }
 
     @Override
     public double getAsDouble( int row, int column ) {
-        return matrix[row][column];
-    }
-
-    public double getAsDouble( CompositeSequence designElement, BioMaterial bioMaterial ) {
-        int row = getRowIndex( designElement );
-        int column = getColumnIndex( bioMaterial );
-        if ( row == -1 || column == -1 ) {
-            return Double.NaN;
-        }
-        return matrix[row][column];
-    }
-
-    public double getAsDouble( CompositeSequence designElement, BioAssay bioAssay ) {
-        int row = getRowIndex( designElement );
-        int column = getColumnIndex( bioAssay );
-        if ( row == -1 || column == -1 ) {
-            return Double.NaN;
-        }
-        return matrix[row][column];
+        return matrix.get( row, column );
     }
 
     @Override
@@ -410,27 +410,14 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
-    public Double[] getColumn( int column ) {
-        if ( column < 0 || column >= columns() ) {
-            throw new IndexOutOfBoundsException( "Column index out of bounds: " + column );
-        }
-        Double[] col = new Double[rows()];
-        for ( int i = 0; i < col.length; i++ ) {
-            col[i] = matrix[i][column];
-        }
-        return col;
+    public Double[] getColumn( int index ) {
+        // FIXME: DoubleMatrix.getColObj is not efficient
+        return ArrayUtils.toObject( matrix.getColumn( index ) );
     }
 
     @Override
-    public double[] getColumnAsDoubles( int column ) {
-        if ( column < 0 || column >= columns() ) {
-            throw new IndexOutOfBoundsException( "Column index out of bounds: " + column );
-        }
-        double[] col = new double[rows()];
-        for ( int i = 0; i < col.length; i++ ) {
-            col[i] = matrix[i][column];
-        }
-        return col;
+    public double[] getColumnAsDoubles( int index ) {
+        return this.matrix.getColumn( index );
     }
 
     @Override
@@ -444,10 +431,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
-    public Double[][] getMatrix() {
-        Double[][] dMatrix = new Double[matrix.length][];
-        for ( int i = 0; i < matrix.length; i++ ) {
-            dMatrix[i] = ArrayUtils.toObject( matrix[i] );
+    public Double[][] getRawMatrix() {
+        Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            // FIXME: getRowObj() is not efficient
+            dMatrix[i] = ArrayUtils.toObject( matrix.getRow( i ) );
         }
         return dMatrix;
     }
@@ -455,10 +443,10 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     /**
      * Obtain the raw matrix without boxing.
      *
-     * @see #getMatrix()
+     * @see #getRawMatrix()
      */
-    public double[][] getMatrixAsDoubles() {
-        return matrix;
+    public double[][] getRawMatrixAsDoubles() {
+        return matrix.getRawMatrix();
     }
 
     @Override
@@ -472,7 +460,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     @Override
     public Double[] getRow( int index ) {
-        return ArrayUtils.toObject( matrix[index] );
+        // FIXME: DoubleMatrix.getRowObj is not efficient
+        return ArrayUtils.toObject( matrix.getRow( index ) );
     }
 
     @Override
@@ -483,46 +472,55 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     @Override
     public double[] getRowAsDoubles( int index ) {
-        return matrix[index];
+        return matrix.getRow( index );
     }
 
     @Override
     public boolean hasMissingValues() {
+        if ( hasMissingValues == null ) {
+            hasMissingValues = computeHasMissingValues( matrix );
+        }
         return hasMissingValues;
     }
 
-    /**
-     * Convert this matrix to a {@link DoubleMatrix} object.
-     * <p>
-     * This always returns a copy.
-     */
-    public DoubleMatrix<CompositeSequence, BioMaterial> asDoubleMatrix() {
-        DenseDoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( matrix );
-        mat.setRowNames( getDesignElements() );
-        mat.setColumnNames( getBioMaterials() );
-        return mat;
+    private boolean computeHasMissingValues( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
+        int rows = matrix.rows();
+        int cols = matrix.columns();
+        for ( int i = 0; i < rows; i++ ) {
+            for ( int j = 0; j < cols; j++ ) {
+                if ( Double.isNaN( matrix.get( i, j ) ) )
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**
-     * Convert this matrix to a Colt {@link DoubleMatrix2D} object.
-     * <p>
-     * This always returns a copy.
+     * @deprecated modifying the matrix directly is not recommended, make a copy instead.
      */
-    public DoubleMatrix2D asDoubleMatrix2D() {
-        return new DenseDoubleMatrix2D( matrix );
+    @Deprecated
+    public void set( int row, int column, @Nullable Double value ) {
+        if ( value == null || value.isNaN() ) {
+            matrix.set( row, column, Double.NaN );
+            hasMissingValues = true;
+        } else {
+            matrix.set( row, column, value );
+            // invalidate missing values cache
+            hasMissingValues = null;
+        }
+        // invalidate ranks
+        this.ranks = null;
+    }
+
+    public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
+        return matrix;
     }
 
     /**
      * Create a copy of this matrix with the given data matrix.
      */
     public ExpressionDataDoubleMatrix withMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
-        Assert.isTrue( getDesignElements().equals( matrix.getRowNames() ) && getBioMaterials().equals( matrix.getColNames() ),
-                "New matrix must have matching design elements and biomaterials." );
-        return new ExpressionDataDoubleMatrix( this, matrix.getRawMatrix() );
-    }
-
-    public ExpressionDataDoubleMatrix withMatrix( DoubleMatrix2D matrix ) {
-        return new ExpressionDataDoubleMatrix( this, matrix.toArray() );
+        return new ExpressionDataDoubleMatrix( this, matrix );
     }
 
     /**
@@ -532,16 +530,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * {@link QuantitationType#setIsNormalized(boolean) flag to be altered}
      */
     public ExpressionDataDoubleMatrix withMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix, Map<QuantitationType, QuantitationType> quantitationTypes ) {
-        Assert.isTrue( getDesignElements().equals( matrix.getRowNames() ) && getBioMaterials().equals( matrix.getColNames() ),
-                "New matrix must have matching design elements and biomaterials." );
-        return withMatrix( matrix.getRawMatrix(), quantitationTypes );
-    }
-
-    public ExpressionDataDoubleMatrix withMatrix( DoubleMatrix2D matrix, Map<QuantitationType, QuantitationType> quantitationTypes ) {
-        return new ExpressionDataDoubleMatrix( this, matrix.toArray(), quantitationTypes );
-    }
-
-    public ExpressionDataDoubleMatrix withMatrix( double[][] matrix, Map<QuantitationType, QuantitationType> quantitationTypes ) {
         return new ExpressionDataDoubleMatrix( this, matrix, quantitationTypes );
     }
 
@@ -608,31 +596,40 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     /**
      * @return The expression level ranks (based on mean signal intensity in the vectors)
      */
-    public double[] getRanksByMean() {
+    public Map<CompositeSequence, Double> getRanksByMean() {
         if ( this.ranks == null ) {
             this.ranks = computeRanksByMean( this.matrix );
         }
         return this.ranks;
     }
 
-    private double[] computeRanksByMean( double[][] matrix ) {
-        int numRows = rows();
-        DoubleArrayList means = new DoubleArrayList( numRows );
-        for ( int i = 0; i < numRows; i++ ) {
-            means.add( DescriptiveWithMissing.mean( new DoubleArrayList( matrix[i] ) ) );
+    private Map<CompositeSequence, Double> computeRanksByMean( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
+        DoubleArrayList means = new DoubleArrayList( matrix.rows() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            means.add( DescriptiveWithMissing.mean( matrix.getRowArrayList( i ) ) );
         }
         DoubleArrayList ranks = Rank.rankTransform( means );
-        double[] ranksAsDoubles = ranks.elements();
-        // convert to [0, 1] range
-        for ( int i = 0; i < ranksAsDoubles.length; i++ ) {
-            ranksAsDoubles[i] = ranksAsDoubles[i] / numRows;
+        Map<CompositeSequence, Double> rankMap = new HashMap<>( matrix.rows() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            rankMap.put( matrix.getRowName( i ), ranks.get( i ) / matrix.rows() );
         }
-        return ranksAsDoubles;
+        return rankMap;
+    }
+
+    public List<CompositeSequence> getRowNames() {
+        return matrix.getRowNames();
+    }
+
+    @Deprecated
+    public void set( CompositeSequence designElement, BioAssay bioAssay, Double value ) {
+        int row = this.getRowIndex( designElement );
+        int column = this.getColumnIndex( bioAssay );
+        set( row, column, value );
     }
 
     @Override
     protected String format( int row, int column ) {
-        return format( matrix[row][column] );
+        return format( matrix.get( row, column ) );
     }
 
     /**
@@ -640,22 +637,68 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      *
      * @return DoubleMatrixNamed
      */
-    private double[][] createMatrix( List<? extends BulkExpressionDataVector> vectors ) {
-        double[][] mat = new double[rows()][columns()];
-        for ( double[] doubles : mat ) {
-            Arrays.fill( doubles, Double.NaN );
+    private DoubleMatrix<CompositeSequence, BioMaterial> createMatrix(
+            Collection<? extends BulkExpressionDataVector> vectors ) {
+
+        int numRows = rows();
+        int numColumns = columns();
+
+        DoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, numColumns );
+
+        for ( int j = 0; j < mat.columns(); j++ ) {
+            mat.addColumnName( this.getBioMaterialForColumn( j ) );
         }
-        for ( int i = 0; i < vectors.size(); i++ ) {
-            BulkExpressionDataVector vector = vectors.get( i );
-            BioAssayDimension dimension = vector.getBioAssayDimension();
-            double[] vals = vector.getDataAsDoubles();
-            List<BioAssay> bioAssays = dimension.getBioAssays();
-            for ( int j = 0; j < bioAssays.size(); j++ ) {
-                int column = getColumnIndex( bioAssays.get( j ) );
-                mat[i][column] = vals[j];
+
+        // initialize the matrix to -Infinity; this marks values that are not yet initialized.
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            for ( int j = 0; j < mat.columns(); j++ ) {
+                mat.set( i, j, Double.NEGATIVE_INFINITY );
             }
         }
-        ExpressionDataDoubleMatrix.log.debug( "Created a " + rows() + " x " + columns() + " double matrix." );
+
+        Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
+        for ( BulkExpressionDataVector vector : vectors ) {
+            BioAssayDimension dimension = vector.getBioAssayDimension();
+
+            CompositeSequence designElement = vector.getDesignElement();
+            assert designElement != null : "No design element for " + vector;
+
+            int rowIndex = getRowIndex( designElement );
+            assert rowIndex != -1;
+
+            rowNames.put( rowIndex, designElement );
+
+            double[] vals = vector.getDataAsDoubles();
+
+            Collection<BioAssay> bioAssays = dimension.getBioAssays();
+            if ( bioAssays.size() != vals.length )
+                throw new IllegalStateException(
+                        "Mismatch: " + vals.length + " values in vector ( " + vector.getData().length + " bytes) for "
+                                + designElement + " got " + bioAssays.size() + " bioassays in the bioAssayDimension" );
+
+            Iterator<BioAssay> it = bioAssays.iterator();
+
+            this.setMatBioAssayValues( mat, rowIndex, ArrayUtils.toObject( vals ), bioAssays, it );
+        }
+
+        /*
+         * Note: these row names aren't that important unless we use the bare matrix.
+         */
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            mat.addRowName( rowNames.get( i ) );
+        }
+        assert mat.getRowNames().size() == mat.rows();
+
+        // fill in remaining missing values.
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            for ( int j = 0; j < mat.columns(); j++ ) {
+                if ( mat.get( i, j ) == Double.NEGATIVE_INFINITY ) {
+                    // log.debug( "Missing value at " + i + " " + j );
+                    mat.set( i, j, Double.NaN );
+                }
+            }
+        }
+        ExpressionDataDoubleMatrix.log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
     }
 
@@ -674,13 +717,13 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         return result;
     }
 
-    private static boolean computeHasMissingValues( double[][] matrix ) {
-        for ( double[] doubles : matrix ) {
-            for ( double d : doubles ) {
-                if ( Double.isNaN( d ) )
-                    return true;
-            }
+    private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
+            Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssay bioAssay = it.next();
+            int column = getColumnIndex( bioAssay );
+            assert column != -1;
+            mat.set( rowIndex, column, vals[j] );
         }
-        return false;
     }
 }

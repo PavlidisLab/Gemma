@@ -317,13 +317,13 @@ public class DataUpdaterImpl implements DataUpdater {
             ee = experimentService.thawLite( ee ); // so updated QT is attached.
 
             QuantitationType log2cpmQt = this.makelog2cpmQt();
-            DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.asDoubleMatrix() );
+            DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
 
             /* FIXME: filter out rows from the count matrix that have all zero counts */
 
 
             DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
-                    .convertToLog2Cpm( countMatrix.asDoubleMatrix(), librarySize );
+                    .convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
 
             ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmMatrix, log2cpmQt );
 

@@ -1,9 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import cern.colt.matrix.DoubleMatrix2D;
 import org.junit.Before;
 import org.junit.Test;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.Constants;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,11 +54,9 @@ public class RowLevelFilterTest {
 
     @Test
     public void testFilterWithLowCutForDroppingZeros() {
-        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
         for ( int i = 0; i < 8; i++ ) {
-            dmatrix.set( 0, i, 0.0 );
+            matrix.set( 0, i, 0.0 );
         }
-        matrix = matrix.withMatrix( dmatrix );
         RowLevelFilter filter = new RowLevelFilter( RowLevelFilter.Method.VAR );
         filter.setLowCut( Constants.SMALLISH );
         ExpressionDataDoubleMatrix filteredMatrix = filter.filter( matrix );
@@ -169,11 +165,9 @@ public class RowLevelFilterTest {
 
     @Test
     public void testFilterWithMissingValues() {
-        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
         for ( int j = 0; j < 8; j++ ) {
-            dmatrix.set( 0, j, Double.NaN );
+            matrix.set( 0, j, Double.NaN );
         }
-        matrix = matrix.withMatrix( dmatrix );
 
         RowLevelFilter filter = new RowLevelFilter( RowLevelFilter.Method.VAR );
         ExpressionDataDoubleMatrix filteredMatrix = filter.filter( matrix );
@@ -203,13 +197,11 @@ public class RowLevelFilterTest {
 
     @Test
     public void testFilterMatrixFilledWithNaNs() {
-        DoubleMatrix2D dmatrix = matrix.asDoubleMatrix2D();
         for ( int i = 0; i < 100; i++ ) {
             for ( int j = 0; j < 8; j++ ) {
-                dmatrix.set( i, j, Double.NaN );
+                matrix.set( i, j, Double.NaN );
             }
         }
-        matrix = matrix.withMatrix( dmatrix );
         RowLevelFilter filter = new RowLevelFilter( RowLevelFilter.Method.MEAN );
         filter.filter( matrix.sliceRows( Collections.emptyList() ) );
         filter = new RowLevelFilter( RowLevelFilter.Method.MEAN );
@@ -221,13 +213,11 @@ public class RowLevelFilterTest {
 
     @Test
     public void testFilterMatrixFilledWithZeroes() {
-        DoubleMatrix2D dmatrix = matrix.asDoubleMatrix2D();
         for ( int i = 0; i < 100; i++ ) {
             for ( int j = 0; j < 8; j++ ) {
-                dmatrix.set( i, j, 0.0 );
+                matrix.set( i, j, 0.0 );
             }
         }
-        matrix = matrix.withMatrix( dmatrix );
 
         RowLevelFilter filter = new RowLevelFilter( RowLevelFilter.Method.MEAN );
         filter.setLowCut( Constants.SMALLISH );

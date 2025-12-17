@@ -1,6 +1,5 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import cern.colt.matrix.DoubleMatrix2D;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.junit.Test;
 import ubic.basecode.math.Constants;
@@ -36,7 +35,7 @@ public class ZeroVarianceFilterTest {
         }
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
@@ -46,11 +45,9 @@ public class ZeroVarianceFilterTest {
                 .isEqualTo( 10 );
 
         // fill a row with zeroes
-        DoubleMatrix2D dmatrix = matrix.asDoubleMatrix2D();
         for ( int j = 0; j < 10; j++ ) {
-            dmatrix.set( 5, j, 10.0 );
+            matrix.getMatrix().set( 5, j, 10.0 );
         }
-        matrix = matrix.withMatrix( dmatrix );
 
         filteredMatrix = new ZeroVarianceFilter().filter( matrix );
         assertThat( filteredMatrix.rows() )
@@ -58,11 +55,9 @@ public class ZeroVarianceFilterTest {
 
         // fill low-variance noise
         NormalDistribution dist = new NormalDistribution( 0, Math.sqrt( 0.1 * Constants.SMALLISH ) );
-        dmatrix = matrix.asDoubleMatrix2D();
         for ( int j = 0; j < 10; j++ ) {
-            dmatrix.set( 5, j, dist.sample() );
+            matrix.getMatrix().set( 5, j, dist.sample() );
         }
-        matrix = matrix.withMatrix( dmatrix );
 
         filteredMatrix = new ZeroVarianceFilter().filter( matrix );
         assertThat( filteredMatrix.rows() )
@@ -70,11 +65,9 @@ public class ZeroVarianceFilterTest {
 
         // fill noise above the detection threshold
         dist = new NormalDistribution( 0, Math.sqrt( 10 * Constants.SMALLISH ) );
-        dmatrix = matrix.asDoubleMatrix2D();
         for ( int j = 0; j < 10; j++ ) {
-            dmatrix.set( 5, j, dist.sample() );
+            matrix.getMatrix().set( 5, j, dist.sample() );
         }
-        matrix = matrix.withMatrix( dmatrix );
 
         filteredMatrix = new ZeroVarianceFilter().filter( matrix );
         assertThat( filteredMatrix.rows() )

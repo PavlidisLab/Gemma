@@ -27,11 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -237,7 +237,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
             }
 
             ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Masking ..." );
-            intensities = this.maskMissingValues( intensities, missingValues );
+            this.maskMissingValues( intensities, missingValues );
 
         } else {
             ProcessedExpressionDataVectorHelperServiceImpl.log
@@ -306,19 +306,22 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         ProcessedExpressionDataVectorHelperServiceImpl.log.debug( "Getting ranks" );
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
-        for ( int i = 0; i < intensities.rows(); i++ ) {
-            double[] rowObj = intensities.getRowAsDoubles( i );
-            double valueForRank;
-            DoubleArrayList row = new DoubleArrayList( rowObj );
-            switch ( method ) {
-                case max:
-                    valueForRank = DescriptiveWithMissing.max( row );
-                    break;
-                case mean:
-                    valueForRank = DescriptiveWithMissing.mean( row );
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+        for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
+            double[] rowObj = intensities.getRowAsDoubles( de.getDesignElement() );
+            double valueForRank = Double.MIN_VALUE;
+            if ( rowObj != null ) {
+                DoubleArrayList row = new DoubleArrayList( rowObj );
+                switch ( method ) {
+                    case max:
+                        valueForRank = DescriptiveWithMissing.max( row );
+                        break;
+                    case mean:
+                        valueForRank = DescriptiveWithMissing.mean( row );
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
+
             }
             result.add( valueForRank );
         }
@@ -332,8 +335,8 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      *
      * @param inMatrix The matrix to be masked
      */
-    private ExpressionDataDoubleMatrix maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
-        return maskMatrix( inMatrix, missingValues );
+    private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
+        maskMatrix( inMatrix, missingValues );
     }
 
     /**
@@ -345,30 +348,25 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      * @param matrix matrix
      * @param mask   if null, masking is not attempted.
      */
-    private ExpressionDataDoubleMatrix maskMatrix( ExpressionDataDoubleMatrix matrix, @Nullable ExpressionDataBooleanMatrix mask ) {
-        if ( mask == null ) return matrix;
-        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
+    private void maskMatrix( ExpressionDataDoubleMatrix matrix, @Nullable ExpressionDataBooleanMatrix mask ) {
+        if ( mask == null ) return;
         // checkConformant( a, b );
-        if ( dmatrix.columns() != mask.columns() )
+        if ( matrix.columns() != mask.columns() )
             throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
-        int rows = dmatrix.rows();
-        int columns = dmatrix.columns();
-        for ( int i = 0; i < rows; i++ ) {
-            CompositeSequence del = matrix.getDesignElementForRow( i );
-            if ( mask.getRowIndex( del ) == -1 ) {
+        int columns = matrix.columns();
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+            if ( mask.getRow( del ) == null ) {
                 log.warn( "Mask Matrix is missing a row for " + del );
                 continue;
             }
-            for ( int j = 0; j < columns; j++ ) {
-                BioAssay bm = matrix.getBioAssayForColumn( j );
-                // if mask says it's missing, set to NaN
-                // if mask is not defined for a particular element, ignore
-                Boolean present = mask.get( del, bm );
-                if ( present != null && !present ) {
-                    dmatrix.set( i, j, Double.NaN );
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = matrix.getBioAssayForColumn( i );
+                boolean present = mask.get( del, bm );
+                if ( !present ) {
+                    matrix.set( del, bm, Double.NaN );
                 }
             }
         }
-        return matrix.withMatrix( dmatrix );
     }
 }
