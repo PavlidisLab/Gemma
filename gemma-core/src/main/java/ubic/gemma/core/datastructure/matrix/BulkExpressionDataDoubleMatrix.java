@@ -69,6 +69,26 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     }
 
     @Override
+    public double getAsDouble( CompositeSequence designElement, BioMaterial bioMaterial ) {
+        int row = getRowIndex( designElement );
+        int column = getColumnIndex( bioMaterial );
+        if ( row == -1 || column == -1 ) {
+            return Double.NaN;
+        }
+        return matrix.get( row, column );
+    }
+
+    @Override
+    public double getAsDouble( CompositeSequence designElement, BioAssay bioAssay ) {
+        int row = getRowIndex( designElement );
+        int column = getColumnIndex( bioAssay );
+        if ( row == -1 || column == -1 ) {
+            return Double.NaN;
+        }
+        return matrix.get( row, column );
+    }
+
+    @Override
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
         int column = getColumnIndex( bioAssay );
         if ( column == -1 ) {
@@ -123,7 +143,7 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     }
 
     @Override
-    public Double[][] getRawMatrix() {
+    public Double[][] getMatrix() {
         Double[][] result = new Double[rows()][];
         for ( int i = 0; i < rows(); i++ ) {
             result[i] = getRow( i );
@@ -142,7 +162,7 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     }
 
     @Override
-    public double[][] getRawMatrixAsDoubles() {
+    public double[][] getMatrixAsDoubles() {
         return matrix.toArray();
     }
 

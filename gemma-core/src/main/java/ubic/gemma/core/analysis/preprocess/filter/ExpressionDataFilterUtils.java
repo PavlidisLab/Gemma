@@ -16,7 +16,7 @@ public class ExpressionDataFilterUtils {
         Set<BioMaterial> samplesWithData = new HashSet<>( dataMatrix.columns() );
         for ( int j = 0; j < dataMatrix.columns(); j++ ) {
             for ( int i = 0; i < dataMatrix.rows(); i++ ) {
-                if ( !Double.isNaN( dataMatrix.getMatrix().get( i, j ) ) ) {
+                if ( !Double.isNaN( dataMatrix.getAsDouble( i, j ) ) ) {
                     samplesWithData.add( dataMatrix.getBioMaterialForColumn( j ) );
                     break;
                 }
@@ -35,7 +35,7 @@ public class ExpressionDataFilterUtils {
         int samplesWithData = 0;
         for ( int j = 0; j < dataMatrix.columns(); j++ ) {
             for ( int i = 0; i < dataMatrix.rows(); i++ ) {
-                if ( !Double.isNaN( dataMatrix.getMatrix().get( i, j ) ) ) {
+                if ( !Double.isNaN( dataMatrix.getAsDouble( i, j ) ) ) {
                     samplesWithData++;
                     break;
                 }

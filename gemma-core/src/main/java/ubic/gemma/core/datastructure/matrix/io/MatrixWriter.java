@@ -50,6 +50,7 @@ import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Writes {@link BulkExpressionDataMatrix} to a tabular format.
+ *
  * @author pavlidis
  */
 @Setter
@@ -69,6 +70,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private boolean useBioAssayIds = false;
     /**
      * Do not make the column names R-friendly.
+     *
      * @see ubic.basecode.util.StringUtil#makeNames(String)
      */
     private boolean useRawColumnNames = false;

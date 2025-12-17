@@ -1,9 +1,8 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
+import cern.colt.matrix.DoubleMatrix2D;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.MatrixStats;
@@ -13,7 +12,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.ArrayList;
@@ -191,15 +189,15 @@ public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDa
 
     private ExpressionDataDoubleMatrix filterLog2cpm( ExpressionDataDoubleMatrix dmatrix, long[] librarySize ) throws
             NoDesignElementsException {
-        DoubleMatrix<CompositeSequence, BioMaterial> unnormalizedMatrix = dmatrix.getMatrix().copy();
+        double[][] unnormalizedMatrix = dmatrix.getMatrixAsDoubles();
         double[] log2LibrarySize = new double[librarySize.length];
         for ( int j = 0; j < librarySize.length; j++ ) {
             log2LibrarySize[j] = Math.log( librarySize[j] + 1.0 ) / Math.log( 2 );
         }
         // undo the log2cpm transformation, but keep values in the log2 scale
-        for ( int i = 0; i < unnormalizedMatrix.rows(); i++ ) {
-            for ( int j = 0; j < unnormalizedMatrix.columns(); j++ ) {
-                unnormalizedMatrix.set( i, j, unnormalizedMatrix.get( i, j ) + log2LibrarySize[j] );
+        for ( int i = 0; i < unnormalizedMatrix.length; i++ ) {
+            for ( int j = 0; j < unnormalizedMatrix[i].length; j++ ) {
+                unnormalizedMatrix[i][j] = unnormalizedMatrix[i][j] + log2LibrarySize[j];
             }
         }
         Map<QuantitationType, QuantitationType> unnormalizedQts = dmatrix.getQuantitationTypes().stream()
@@ -239,9 +237,7 @@ public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDa
     }
 
     private ExpressionDataDoubleMatrix rank( ExpressionDataDoubleMatrix dmatrix ) {
-        DenseDoubleMatrix<CompositeSequence, BioMaterial> rankMatrix = new DenseDoubleMatrix<>( MatrixStats.ranksByColumn( dmatrix.getMatrix() ).toArray() );
-        rankMatrix.setRowNames( dmatrix.getMatrix().getRowNames() );
-        rankMatrix.setColumnNames( dmatrix.getMatrix().getColNames() );
+        DoubleMatrix2D rankMatrix = MatrixStats.ranksByColumn( dmatrix.asDoubleMatrix() );
         Map<QuantitationType, QuantitationType> rankQts = dmatrix.getQuantitationTypes().stream()
                 .collect( Collectors.toMap( qt -> qt, qt -> {
                     qt = QuantitationType.Factory.newInstance( qt );

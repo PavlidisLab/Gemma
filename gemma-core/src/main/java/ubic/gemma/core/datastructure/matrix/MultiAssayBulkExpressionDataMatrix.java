@@ -110,15 +110,6 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
     BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
 
     /**
-     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
-     * design.
-     *
-     * @param el el
-     * @return int
-     */
-    int columns( CompositeSequence el );
-
-    /**
      * @param index i
      * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
      * used in the study.

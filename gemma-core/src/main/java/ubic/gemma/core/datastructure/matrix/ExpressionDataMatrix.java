@@ -136,5 +136,6 @@ public interface ExpressionDataMatrix<T> {
      *
      * @throws IndexOutOfBoundsException if either the row or column is outside the matrix bounds
      */
+    @Nullable
     T get( int row, int column );
 }

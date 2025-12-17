@@ -126,7 +126,7 @@ public class MinimumCellsFilter implements ExpressionDataFilter<ExpressionDataDo
             if ( allowSlicingColumns ) {
                 return dataMatrix.sliceColumns( keptSamples );
             } else {
-                DoubleMatrix<CompositeSequence, BioMaterial> maskedMatrix = dataMatrix.getMatrix().copy();
+                DoubleMatrix<CompositeSequence, BioMaterial> maskedMatrix = dataMatrix.asDoubleMatrix();
                 for ( int j = 0; j < dataMatrix.columns(); j++ ) {
                     BioMaterial sample = dataMatrix.getBioMaterialForColumn( j );
                     if ( !keptSamples.contains( sample ) ) {

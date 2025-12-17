@@ -186,11 +186,11 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
         assertTrue( missingValues.getQuantitationTypes().iterator().next().getDescription()
                 .contains( "signal threshold" ) );
-        Boolean[][] mm = missingValues.getRawMatrix();
+        Boolean[][] mm = missingValues.getMatrix();
         boolean hasPresent = false;
         for ( Boolean[] aMm : mm ) {
             for ( Boolean anAMm : aMm ) {
-                if ( anAMm ) {
+                if ( anAMm != null && anAMm ) {
                     hasPresent = true;
                     break;
                 }

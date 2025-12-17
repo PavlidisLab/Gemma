@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Base interface for writing {@link ExpressionDataMatrix}.
+ *
  * @author poirigui
  */
 public interface ExpressionDataMatrixWriter<T extends ExpressionDataMatrix<?>, VT extends DataVector> {
@@ -34,16 +35,18 @@ public interface ExpressionDataMatrixWriter<T extends ExpressionDataMatrix<?>, V
 
     /**
      * Write the matrix to the given writer.
+     *
      * @param vectorType the type of vectors to write. This helps the writer determine how the {@link QuantitationType}
-     *                  of the matrix should be interpreted.
+     *                   of the matrix should be interpreted.
      * @return the number of vectors written
      * @throws UnsupportedOperationException if the matrix cannot be written to a text output (i.e. if this is a binary
-     * format).
+     *                                       format).
      */
     int write( T matrix, Class<? extends VT> vectorType, Writer writer ) throws IOException, UnsupportedOperationException;
 
     /**
      * Write the matrix to the given output stream.
+     *
      * @return the number of vectors written
      */
     default int write( T matrix, Class<? extends VT> vectorType, OutputStream stream ) throws IOException {

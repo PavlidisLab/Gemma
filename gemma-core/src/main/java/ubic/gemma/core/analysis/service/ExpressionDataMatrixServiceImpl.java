@@ -231,7 +231,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( alreadyLogged ) {
             return datamatrix;
         }
-        DoubleMatrix<CompositeSequence, BioMaterial> matrix = datamatrix.getMatrix().copy();
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = datamatrix.asDoubleMatrix();
         // this is a log2
         MatrixStats.logTransform( matrix );
         Map<QuantitationType, QuantitationType> qts = datamatrix.getQuantitationTypes().stream()
