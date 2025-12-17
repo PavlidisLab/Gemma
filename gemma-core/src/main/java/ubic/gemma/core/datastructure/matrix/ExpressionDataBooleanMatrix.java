@@ -59,11 +59,6 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
-    public int columns() {
-        return matrix.columns();
-    }
-
-    @Override
     public Boolean get( int row, int column ) {
         return matrix.get( row, column );
     }

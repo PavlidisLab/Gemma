@@ -167,6 +167,9 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     @Override
     public int columns( CompositeSequence el ) {
         BioAssayDimension dimension = rowElementBioAssayDimensionMap.get( el );
+        if ( dimension == null ) {
+            throw new IllegalArgumentException( "No BioAssayDimension found for " + el + "." );
+        }
         return ( int ) dimension.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
                 .distinct() // in case a BioMaterial is used for more than one BioAssay in this dimension

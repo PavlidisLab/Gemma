@@ -39,11 +39,6 @@ public class ExpressionDataIntegerMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
-    public int columns() {
-        return matrix.columns();
-    }
-
-    @Override
     public Integer get( int row, int column ) {
         return matrix.get( row, column );
     }
