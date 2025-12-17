@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Bundles a directory containing MEX files into a TAR archive.
+ *
  * @author poirigui
  * @see MexMatrixWriter
  */

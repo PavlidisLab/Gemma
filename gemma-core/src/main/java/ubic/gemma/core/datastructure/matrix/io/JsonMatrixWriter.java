@@ -11,6 +11,7 @@ import java.io.Writer;
 
 /**
  * Writes a {@link BulkExpressionDataMatrix} to a JSON format.
+ *
  * @author paul
  */
 public class JsonMatrixWriter implements BulkExpressionDataMatrixWriter {

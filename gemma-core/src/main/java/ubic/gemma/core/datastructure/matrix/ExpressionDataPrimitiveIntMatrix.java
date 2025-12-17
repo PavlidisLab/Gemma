@@ -8,18 +8,21 @@ public interface ExpressionDataPrimitiveIntMatrix extends ExpressionDataMatrix<I
 
     /**
      * Retrieve the value at the given row and column without boxing.
+     *
      * @see #get(int, int)
      */
     int getAsInt( int row, int column );
 
     /**
      * Retrieve a row without boxing.
+     *
      * @see #getRow(int)
      */
     int[] getRowAsInts( int index );
 
     /**
      * Retrieve the row for the given design element without boxing.
+     *
      * @see #getRow(CompositeSequence)
      */
     @Nullable
@@ -27,6 +30,7 @@ public interface ExpressionDataPrimitiveIntMatrix extends ExpressionDataMatrix<I
 
     /**
      * Retrieve the given column without boxing.
+     *
      * @see #getColumn(int)
      */
     int[] getColumnAsInts( int column );

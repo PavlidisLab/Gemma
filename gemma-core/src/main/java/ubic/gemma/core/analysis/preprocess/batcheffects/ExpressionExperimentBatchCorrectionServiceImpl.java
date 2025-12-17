@@ -223,18 +223,19 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         Iterate over the rows and columns of the original matrix and copy the values from the corrected matrix.
         If the column is an outlier in the original matrix, just skip it.
          */
-        for ( int i = 0; i < originalDataMatrix.rows(); i++ ) {
+        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = originalDataMatrix.asDoubleMatrix();
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
             int skip = 0;
-            for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
+            for ( int j = 0; j < dmatrix.columns(); j++ ) {
                 if ( outlierColumns.contains( j ) ) {
                     skip++;
                     continue; // leave it alone; normally this will be an NaN.
                 }
-                originalDataMatrix.set( i, j, correctedMatrix.getAsDouble( i, j - skip ) );
+                dmatrix.set( i, j, correctedMatrix.getAsDouble( i, j - skip ) );
             }
         }
 
-        return originalDataMatrix;
+        return originalDataMatrix.withMatrix( dmatrix );
     }
 
     /**
@@ -312,7 +313,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                     originalDataMatrix,
             ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
         ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
-        DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.asDoubleMatrix();
 
         designU = this.orderMatrix( matrix, designU );
 

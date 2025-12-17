@@ -706,7 +706,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             throw new FilteringRelatedAnalysisException( config, filterResult, e );
         }
 
-        DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.asDoubleMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );
 

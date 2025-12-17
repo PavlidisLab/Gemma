@@ -27,7 +27,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -46,6 +45,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * Computes a missing value matrix for ratiometric data sets.
@@ -239,14 +239,14 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         Double signalThreshold = Double.NaN;
         if ( bkgChannelA == null && bkgChannelB == null ) {
-            signalThreshold = this.computeSignalThreshold( preferred, signalChannelA, signalChannelB, baseChannel );
+            signalThreshold = this.computeSignalThreshold( baseChannel, signalChannelA, signalChannelB );
         }
         QuantitationType present = this.getMissingDataQuantitationType( signalToNoiseThreshold, signalThreshold );
         source.getQuantitationTypes().add( present );
-        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
+        for ( CompositeSequence designElement : baseChannel.getDesignElements() ) {
             count = this.examineVector( source, preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
                     signalToNoiseThreshold, extraMissingValueIndicators, results, count, baseChannel,
-                    signalThreshold, present, element );
+                    signalThreshold, present, designElement );
 
         }
         TwoChannelMissingValuesImpl.log.info( "Finished: " + count + " vectors examined for missing values" );
@@ -268,16 +268,14 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             double signalToNoiseThreshold, @Nullable Collection<Double> extraMissingValueIndicators,
             Collection<RawExpressionDataVector> results, int count,
             ExpressionDataDoubleMatrix baseChannel, Double signalThreshold, QuantitationType present,
-            ExpressionDataMatrixRowElement element ) {
-        CompositeSequence designElement = element.getDesignElement();
-
+            CompositeSequence designElement ) {
         RawExpressionDataVector vect = RawExpressionDataVector.Factory.newInstance();
         vect.setQuantitationType( present );
         vect.setExpressionExperiment( source );
         vect.setDesignElement( designElement );
         vect.setBioAssayDimension( baseChannel.getBioAssayDimension( designElement ) );
 
-        int numCols = preferred.columns( designElement );
+        int numCols = vect.getBioAssayDimension().getBioAssays().size();
 
         Boolean[] detectionCalls = new Boolean[numCols];
         double[] prefRow = preferred.getRowAsDoubles( designElement );
@@ -357,17 +355,14 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     /**
      * Determine a threshold based on the data.
      */
-    private Double computeSignalThreshold( ExpressionDataDoubleMatrix preferred,
-            @Nullable ExpressionDataDoubleMatrix signalChannelA, @Nullable ExpressionDataDoubleMatrix signalChannelB,
-            ExpressionDataDoubleMatrix baseChannel ) {
+    private Double computeSignalThreshold( ExpressionDataDoubleMatrix baseChannel,
+            @Nullable ExpressionDataDoubleMatrix signalChannelA, @Nullable ExpressionDataDoubleMatrix signalChannelB ) {
 
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
 
-        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
-            CompositeSequence designElement = element.getDesignElement();
-
-            int numCols = preferred.columns( designElement );
+        for ( CompositeSequence designElement : baseChannel.getDesignElements() ) {
+            int numCols = Objects.requireNonNull( baseChannel.getBioAssayDimension( designElement ) ).getBioAssays().size();
             for ( int col = 0; col < numCols; col++ ) {
 
                 double[] signalA = null;
@@ -397,10 +392,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         }
 
         Histogram h = new Histogram( "range", 100, min, max );
-        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
-            CompositeSequence designElement = element.getDesignElement();
-
-            int numCols = preferred.columns( designElement );
+        for ( CompositeSequence designElement : baseChannel.getDesignElements() ) {
+            int numCols = Objects.requireNonNull( baseChannel.getBioAssayDimension( designElement ) ).getBioAssays().size();
             for ( int col = 0; col < numCols; col++ ) {
 
                 double[] signalA = null;

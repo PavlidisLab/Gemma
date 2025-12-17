@@ -29,7 +29,7 @@ public class EmptyBulkExpressionDataMatrix extends AbstractBulkExpressionDataMat
     }
 
     @Override
-    public Object[][] getRawMatrix() {
+    public Object[][] getMatrix() {
         return EMPTY_MATRIX;
     }
 

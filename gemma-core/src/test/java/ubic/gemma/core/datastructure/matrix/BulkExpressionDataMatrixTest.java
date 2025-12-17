@@ -29,7 +29,7 @@ public class BulkExpressionDataMatrixTest {
         assertThrows( IndexOutOfBoundsException.class, () -> matrix.get( 0, 0 ) );
         assertThrows( IndexOutOfBoundsException.class, () -> matrix.getRow( 0 ) );
         assertEquals( 0, matrix.getColumn( 0 ).length );
-        assertEquals( 0, matrix.getRawMatrix().length );
+        assertEquals( 0, matrix.getMatrix().length );
         assertEquals( -1, matrix.getRowIndex( new CompositeSequence() ) );
         Assertions.assertThat( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) )
                 .isEmpty();

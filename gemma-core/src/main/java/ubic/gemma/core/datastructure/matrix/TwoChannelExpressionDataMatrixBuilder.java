@@ -18,9 +18,12 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -31,6 +34,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ChannelUtils;
@@ -307,24 +311,24 @@ public class TwoChannelExpressionDataMatrixBuilder {
             }
 
             if ( backgroundA != null && signalA != null ) {
-                subtractMatrices( signalA, backgroundA );
+                signalA = subtractMatrices( signalA, backgroundA );
             }
 
             if ( backgroundB != null && signalB != null ) {
-                subtractMatrices( signalB, backgroundB );
+                signalB = subtractMatrices( signalB, backgroundB );
             }
 
             if ( signalA != null ) {
-                logTransformMatrix( signalA );
+                signalA = logTransformMatrix( signalA );
             }
 
             if ( signalB != null ) {
-                logTransformMatrix( signalB );
+                signalB = logTransformMatrix( signalB );
             }
 
             if ( signalA != null && signalB != null ) {
-                addMatrices( signalA, signalB );
-                scalarDivideMatrix( signalA, 2.0 );
+                signalA = addMatrices( signalA, signalB );
+                signalA = scalarDivideMatrix( signalA, 2.0 );
             }
 
             if ( signalA == null ) {
@@ -471,15 +475,18 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * add the background values back on.
      *
      * @param signalDataA - already background subtracted
+     * @return
      */
-    private void addBackgroundBack( ExpressionDataDoubleMatrix signalDataA, ExpressionDataDoubleMatrix bkgDataA ) {
-        for ( int i = 0; i < signalDataA.rows(); i++ ) {
-            for ( int j = 0; j < signalDataA.columns(); j++ ) {
-                double oldVal = signalDataA.getAsDouble( i, j );
+    private ExpressionDataDoubleMatrix addBackgroundBack( ExpressionDataDoubleMatrix signalDataA, ExpressionDataDoubleMatrix bkgDataA ) {
+        DoubleMatrix2D dmatrix = new DenseDoubleMatrix2D( signalDataA.getMatrixAsDoubles() );
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
+            for ( int j = 0; j < dmatrix.columns(); j++ ) {
+                double oldVal = dmatrix.get( i, j );
                 double bkg = bkgDataA.getAsDouble( i, j );
-                signalDataA.set( i, j, oldVal + bkg );
+                dmatrix.set( i, j, oldVal + bkg );
             }
         }
+        return signalDataA.withMatrix( dmatrix );
     }
 
     private ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
@@ -702,7 +709,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
             assert bkgDataA != null;
             assert bkgSubChannelA != null;
             signalDataA = new ExpressionDataDoubleMatrix( expressionExperiment, vectors, bkgSubChannelA );
-            this.addBackgroundBack( signalDataA, bkgDataA );
+            signalDataA = this.addBackgroundBack( signalDataA, bkgDataA );
             return signalDataA;
 
         }
@@ -753,21 +760,22 @@ public class TwoChannelExpressionDataMatrixBuilder {
      *
      * @param matrix matrix
      */
-    public static void logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
-        int columns = matrix.columns();
+    public static ExpressionDataDoubleMatrix logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
+        DoubleMatrix<CompositeSequence, BioMaterial> dmatrix = matrix.asDoubleMatrix();
+        int rows = dmatrix.rows();
+        int columns = dmatrix.columns();
         double log2 = Math.log( LOGARITHM_BASE );
-        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            CompositeSequence del = el.getDesignElement();
-            for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = matrix.getBioAssayForColumn( i );
-                double valA = matrix.get( del, bm );
+        for ( int i = 0; i < rows; i++ ) {
+            for ( int j = 0; j < columns; j++ ) {
+                double valA = matrix.getAsDouble( i, j );
                 if ( valA <= 0 ) {
-                    matrix.set( del, bm, Double.NaN );
+                    dmatrix.set( i, j, Double.NaN );
                 } else {
-                    matrix.set( del, bm, Math.log( valA ) / log2 );
+                    dmatrix.set( i, j, Math.log( valA ) / log2 );
                 }
             }
         }
+        return matrix.withMatrix( dmatrix );
     }
 
     /**
@@ -782,28 +790,30 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * @param b matrix b
      * @throws IllegalArgumentException if the matrices are not column-conformant.
      */
-    private void subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
+    private ExpressionDataDoubleMatrix subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         // checkConformant( a, b );
         if ( a.columns() != b.columns() )
             throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
 
+        DoubleMatrix2D dmatrix = a.asDoubleMatrix2D();
         int columns = a.columns();
-        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
-            int rowNum = el.getIndex();
-            CompositeSequence del = el.getDesignElement();
-
-            if ( b.getRowAsDoubles( del ) == null ) {
+        List<CompositeSequence> designElements = a.getDesignElements();
+        for ( int i = 0; i < designElements.size(); i++ ) {
+            CompositeSequence del = designElements.get( i );
+            if ( b.getRowIndex( del ) == -1 ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
                 continue;
             }
-
-            for ( int i = 0; i < columns; i++ ) {
+            for ( int j = 0; j < columns; j++ ) {
                 BioAssay assay = a.getBioAssayForColumn( i );
-                double valA = a.get( del, assay );
-                double valB = b.get( del, assay );
-                a.set( rowNum, i, valA - valB );
+                double valA = a.get( i, j );
+                Double valB = b.get( del, assay );
+                if ( valB != null ) {
+                    dmatrix.set( i, j, valA - valB );
+                }
             }
         }
+        return a.withMatrix( dmatrix );
     }
 
 
@@ -819,25 +829,29 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * @param b matrix b
      * @throws IllegalArgumentException if the matrices are not column-conformant.
      */
-    public void addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
+    public ExpressionDataDoubleMatrix addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         // checkConformant( a, b );
         if ( a.columns() != b.columns() )
             throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
+        DoubleMatrix2D dmatrix = new DenseDoubleMatrix2D( a.getMatrixAsDoubles() );
         int columns = a.columns();
-        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
-            CompositeSequence del = el.getDesignElement();
-
-            if ( b.getRowAsDoubles( del ) == null ) {
+        List<CompositeSequence> designElements = a.getDesignElements();
+        for ( int i = 0; i < designElements.size(); i++ ) {
+            CompositeSequence del = designElements.get( i );
+            if ( b.getRowIndex( del ) == -1 ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
                 continue;
             }
-            for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = a.getBioAssayForColumn( i );
-                double valA = a.get( del, bm );
-                double valB = b.get( del, bm );
-                a.set( del, bm, valA + valB );
+            for ( int j = 0; j < columns; j++ ) {
+                BioAssay bm = a.getBioAssayForColumn( j );
+                double valA = a.get( i, j );
+                Double valB = b.get( del, bm );
+                if ( valB != null ) {
+                    dmatrix.set( i, j, valA + valB );
+                }
             }
         }
+        return a.withMatrix( dmatrix );
     }
 
     /**
@@ -847,18 +861,18 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * @param dividend dividend
      * @throws IllegalArgumentException if dividend == 0.
      */
-    public void scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
+    public ExpressionDataDoubleMatrix scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
         if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
+        DoubleMatrix2D dmatrix = matrix.asDoubleMatrix2D();
         int columns = matrix.columns();
-        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            CompositeSequence del = el.getDesignElement();
-            for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = matrix.getBioAssayForColumn( i );
-                double valA = matrix.get( del, bm );
-                matrix.set( del, bm, valA / dividend );
-
+        List<CompositeSequence> designElements = matrix.getDesignElements();
+        for ( int i = 0; i < designElements.size(); i++ ) {
+            for ( int j = 0; j < columns; j++ ) {
+                double valA = matrix.getAsDouble( i, j );
+                dmatrix.set( i, j, valA / dividend );
             }
         }
+        return matrix.withMatrix( dmatrix );
     }
 
     /**

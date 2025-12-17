@@ -71,6 +71,7 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     private Map<BioAssay, Integer> columnAssayMap;
 
     @Nullable
+    @Deprecated
     private List<ExpressionDataMatrixRowElement> rowElements = null;
 
     /**
@@ -165,16 +166,6 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     }
 
     @Override
-    public int columns( CompositeSequence el ) {
-        BioAssayDimension dimension = rowElementBioAssayDimensionMap.get( el );
-        return ( int ) dimension.getBioAssays().stream()
-                .map( BioAssay::getSampleUsed )
-                .distinct() // in case a BioMaterial is used for more than one BioAssay in this dimension
-                .filter( columnBioMaterialMap::containsKey )
-                .count();
-    }
-
-    @Override
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
         if ( index < 0 || index >= columns() ) {
             throw new IndexOutOfBoundsException();
@@ -241,6 +232,7 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
         return this.rowDesignElements.get( index );
     }
 
+    @Nullable
     @Override
     public T get( CompositeSequence designElement, BioAssay bioAssay ) {
         Integer index = this.rowElementMap.get( designElement );
@@ -254,6 +246,7 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
         return get( index, j );
     }
 
+    @Nullable
     @Override
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
@@ -279,6 +272,7 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     }
 
     @Override
+    @Deprecated
     public List<ExpressionDataMatrixRowElement> getRowElements() {
         if ( this.rowElements == null ) {
             int rows = rows();
@@ -308,6 +302,7 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     }
 
     @Override
+    @Deprecated
     public ExpressionDataMatrixRowElement getRowElement( int index ) {
         if ( rowElements != null ) {
             return rowElements.get( index );
