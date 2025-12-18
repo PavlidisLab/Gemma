@@ -112,7 +112,7 @@ public class BulkDataSlicerUtils {
             throw new UnsupportedOperationException( "Cannot slice data of unknown size." );
         }
         byte[] data = new byte[bioAssayMapping.indices.length * sizeInBytes];
-        if ( bioAssayMapping.isContiguous && !allowMissing ) {
+        if ( bioAssayMapping.indices.length > 0 && bioAssayMapping.isContiguous && !allowMissing ) {
             System.arraycopy( vec.getData(), bioAssayMapping.indices[0] * sizeInBytes, data, 0, bioAssayMapping.indices.length * sizeInBytes );
         } else {
             for ( int i = 0; i < bioAssayMapping.indices.length; i++ ) {
