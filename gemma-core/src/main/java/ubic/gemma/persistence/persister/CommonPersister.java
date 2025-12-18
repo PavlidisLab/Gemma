@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -75,32 +76,31 @@ public abstract class CommonPersister extends AbstractPersister {
     private DatabaseEntryDao databaseEntryDao;
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof AuditTrail ) {
-            return this.persistAuditTrail( ( AuditTrail ) entity );
+            return ( T ) this.persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
             // return persistUser( ( User ) entity );
         } else if ( entity instanceof Person ) {
-            return this.persistPerson( ( Person ) entity );
+            return ( T ) this.persistPerson( ( Person ) entity );
         } else if ( entity instanceof Contact ) {
-            return this.persistContact( ( Contact ) entity );
+            return ( T ) this.persistContact( ( Contact ) entity );
         } else if ( entity instanceof Unit ) {
-            return this.persistUnit( ( Unit ) entity );
+            return ( T ) this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
-            return this.persistQuantitationType( ( QuantitationType ) entity, caches );
+            return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof ExternalDatabase ) {
-            return this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
+            return ( T ) this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
         } else if ( entity instanceof Protocol ) {
-            return this.persistProtocol( ( Protocol ) entity );
+            return ( T ) this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof Characteristic ) {
             return null; // cascade
-        } else if ( entity instanceof Collection ) {
-            return super.doPersist( ( Collection<?> ) entity, caches );
         } else if ( entity instanceof BibliographicReference ) {
-            return this.persistBibliographicReference( ( BibliographicReference ) entity, caches );
+            return ( T ) this.persistBibliographicReference( ( BibliographicReference ) entity, caches );
         } else if ( entity instanceof DatabaseEntry ) {
-            return this.persistDatabaseEntry( ( DatabaseEntry ) entity, caches );
+            return ( T ) this.persistDatabaseEntry( ( DatabaseEntry ) entity, caches );
         } else {
             return super.doPersist( entity, caches );
         }

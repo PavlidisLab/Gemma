@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
@@ -48,13 +49,14 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof Gene2GOAssociation ) {
-            return this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches );
+            return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches );
         } else if ( entity instanceof CoexpressionAnalysis ) {
-            return this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
+            return ( T ) this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
-            return this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches );
+            return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches );
         } else {
             return super.doPersist( entity, caches );
         }
@@ -65,7 +67,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         for ( ExpressionExperiment baSet : entity.getExperiments() ) {
             if ( baSet.getId() == null ) {
-                baSet = ( ExpressionExperiment ) this.doPersist( baSet, caches );
+                baSet = this.doPersist( baSet, caches );
             }
             setMembers.add( baSet );
         }
@@ -79,7 +81,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         try {
             FieldUtils.writeField( association, "gene", this.persistGene( association.getGene(), caches ), true );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
         return gene2GoAssociationDao.create( association );
     }

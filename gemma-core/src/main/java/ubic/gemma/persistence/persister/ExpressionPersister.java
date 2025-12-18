@@ -23,8 +23,7 @@ import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -93,15 +92,17 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         AbstractPersister.log.debug( ">>>>>>>>>> Persisting " + ee );
 
         if ( ee.getPrimaryPublication() != null ) {
-            ee.setPrimaryPublication( ( BibliographicReference ) this.doPersist( ee.getPrimaryPublication(), caches ) );
+            ee.setPrimaryPublication( this.doPersist( ee.getPrimaryPublication(), caches ) );
         }
         if ( ee.getOwner() != null ) {
-            ee.setOwner( ( Contact ) this.doPersist( ee.getOwner(), caches ) );
+            ee.setOwner( this.doPersist( ee.getOwner(), caches ) );
         }
-        ee.setTaxon( this.persistTaxon( ee.getTaxon(), caches ) );
+        if ( ee.getTaxon() != null ) {
+            ee.setTaxon( this.persistTaxon( ee.getTaxon(), caches ) );
+        }
 
-        this.doPersist( ee.getQuantitationTypes(), caches );
-        this.doPersist( ee.getOtherRelevantPublications(), caches );
+        ee.setQuantitationTypes( this.doPersist( ee.getQuantitationTypes(), caches ) );
+        ee.setOtherRelevantPublications( this.doPersist( ee.getOtherRelevantPublications(), caches ) );
 
         if ( ee.getAccession() != null ) {
             this.fillInDatabaseEntry( ee.getAccession(), caches );
@@ -133,23 +134,24 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     }
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof ExpressionExperiment ) {
             if ( caches.getArrayDesignCache() == null ) {
                 AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
                 caches = caches.withArrayDesignCache( this.prepare( ( ExpressionExperiment ) entity ) );
             }
-            return this.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
+            return ( T ) this.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
         } else if ( entity instanceof BioAssayDimension ) {
-            return this.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
+            return ( T ) this.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
         } else if ( entity instanceof BioMaterial ) {
-            return this.persistBioMaterial( ( BioMaterial ) entity, caches );
+            return ( T ) this.persistBioMaterial( ( BioMaterial ) entity, caches );
         } else if ( entity instanceof BioAssay ) {
-            return this.persistBioAssay( ( BioAssay ) entity, caches );
+            return ( T ) this.persistBioAssay( ( BioAssay ) entity, caches );
         } else if ( entity instanceof Compound ) {
-            return this.persistCompound( ( Compound ) entity );
+            return ( T ) this.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
-            return this.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
+            return ( T ) this.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
         } else {
             return super.doPersist( entity, caches );
         }
@@ -166,7 +168,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
         Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
 
-        if ( efs.size() == 0 )
+        if ( efs.isEmpty() )
             return;
 
         AbstractPersister.log.debug( "Checking experimental design for valid setup" );
@@ -264,7 +266,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         }
 
         // BioMaterials
-        bioAssay.setSampleUsed( ( BioMaterial ) this.doPersist( bioAssay.getSampleUsed(), caches ) );
+        bioAssay.setSampleUsed( this.doPersist( bioAssay.getSampleUsed(), caches ) );
 
         AbstractPersister.log.debug( "Done with " + bioAssay );
 
@@ -366,7 +368,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             }
         }
         AbstractPersister.log.debug( "Done persisting " + persistedBioAssays.size() + " bioassays" );
-        assert persistedBioAssays.size() > 0;
+        assert !persistedBioAssays.isEmpty();
         bioAssayDimension.setBioAssays( persistedBioAssays );
         // bioAssayDimension.setId( null ); // in case of retry.
         return bioAssayDimensionDao.findOrCreate( bioAssayDimension );

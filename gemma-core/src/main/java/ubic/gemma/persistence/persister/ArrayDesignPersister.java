@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -46,9 +47,10 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     private ArrayDesignDao arrayDesignDao;
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof ArrayDesign ) {
-            return this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches );
+            return ( T ) this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches );
         } else {
             return super.doPersist( entity, caches );
         }
@@ -88,7 +90,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
             throw new IllegalArgumentException( "Primary taxon cannot be null" );
         }
 
-        arrayDesign.setPrimaryTaxon( ( Taxon ) this.doPersist( arrayDesign.getPrimaryTaxon(), caches ) );
+        arrayDesign.setPrimaryTaxon( this.doPersist( arrayDesign.getPrimaryTaxon(), caches ) );
 
         for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
             externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), caches ) );

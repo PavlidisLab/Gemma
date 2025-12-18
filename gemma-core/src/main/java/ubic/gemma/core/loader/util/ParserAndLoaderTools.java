@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.persister.Persister;
 
 import java.lang.reflect.Method;
@@ -43,7 +44,7 @@ public class ParserAndLoaderTools {
      * @param loader loader
      * @param col    collection
      */
-    public static void loadDatabase( Persister loader, Collection<?> col ) {
+    public static void loadDatabase( Persister loader, Collection<? extends Identifiable> col ) {
         assert ( loader != null );
         assert ( col != null );
         if ( col.size() == 0 )
