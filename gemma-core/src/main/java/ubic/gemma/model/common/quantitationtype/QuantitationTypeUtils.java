@@ -3,6 +3,7 @@ package ubic.gemma.model.common.quantitationtype;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -115,6 +116,42 @@ public class QuantitationTypeUtils {
             return getDefaultCountValueAsDouble( qt );
         } else {
             return 0;
+        }
+    }
+
+    /**
+     * Obtain the default value for a vector as an encoded {@code byte[]}.
+     */
+    public static byte[] getDefaultValueAsBytes( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                double d;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    d = getDefaultCountValueAsDouble( quantitationType );
+                } else {
+                    d = Double.NaN;
+                }
+                return ByteArrayUtils.doubleArrayToBytes( new double[] { d } );
+            case FLOAT:
+                float f;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    f = getDefaultCountValueAsFloat( quantitationType );
+                }
+                f = Float.NaN;
+                ByteArrayUtils.floatArrayToBytes( new float[] { f } );
+            case STRING:
+                return new byte[] { 0 };
+            case CHAR:
+                return new byte[] { 0, 0 };
+            case INT:
+                return new byte[] { 0, 0, 0, 0 };
+            case LONG:
+                return new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            case BOOLEAN:
+                return new byte[] { 0 };
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
         }
     }
 

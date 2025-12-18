@@ -292,7 +292,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
     private Map<CompositeSequence, double[]> unpackDoubles( Collection<? extends BulkExpressionDataVector> vectors, BioAssayDimension dimension ) {
         ArrayList<BulkExpressionDataVector> orderedVectors = new ArrayList<>( vectors );
-        List<double[]> sliced = BulkDataSlicerUtils.sliceDoubles( orderedVectors, dimension.getBioAssays() );
+        List<double[]> sliced = BulkDataSlicerUtils.sliceDoubles( orderedVectors, dimension.getBioAssays(), false );
         Map<CompositeSequence, double[]> result = new HashMap<>( vectors.size() );
         for ( int i = 0; i < orderedVectors.size(); i++ ) {
             result.put( orderedVectors.get( i ).getDesignElement(), sliced.get( i ) );
@@ -302,7 +302,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
     private Map<CompositeSequence, boolean[]> unpackBooleans( Collection<? extends BulkExpressionDataVector> vectors, BioAssayDimension dimension ) {
         ArrayList<BulkExpressionDataVector> orderedVectors = new ArrayList<>( vectors );
-        List<boolean[]> sliced = BulkDataSlicerUtils.sliceBooleans( orderedVectors, dimension.getBioAssays() );
+        List<boolean[]> sliced = BulkDataSlicerUtils.sliceBooleans( orderedVectors, dimension.getBioAssays(), false );
         Map<CompositeSequence, boolean[]> result = new HashMap<>( vectors.size() );
         for ( int i = 0; i < orderedVectors.size(); i++ ) {
             result.put( orderedVectors.get( i ).getDesignElement(), sliced.get( i ) );

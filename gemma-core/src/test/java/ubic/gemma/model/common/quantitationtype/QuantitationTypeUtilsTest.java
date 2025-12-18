@@ -3,11 +3,11 @@ package ubic.gemma.model.common.quantitationtype;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class QuantitationTypeUtilsTest {
 
@@ -24,20 +24,27 @@ public class QuantitationTypeUtilsTest {
     @Test
     public void testAmount() {
         assertEquals( Double.NaN, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.AMOUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { Double.NaN } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.AMOUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ) ) );
         assertEquals( Double.NaN, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.AMOUNT, ScaleType.LINEAR, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { Double.NaN } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.AMOUNT, ScaleType.LINEAR, PrimitiveType.DOUBLE ) ) );
         assertEquals( Double.NaN, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.AMOUNT, ScaleType.LOG2, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { Double.NaN } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.AMOUNT, ScaleType.LOG2, PrimitiveType.DOUBLE ) ) );
     }
 
     @Test
     public void testCount() {
         assertEquals( 0.0, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { 0.0f } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ) ) );
         assertEquals( 0.0, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.COUNT, ScaleType.LINEAR, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { 0.0f } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.COUNT, ScaleType.LINEAR, PrimitiveType.DOUBLE ) ) );
         assertEquals( Double.NEGATIVE_INFINITY, QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.COUNT, ScaleType.LOG2, PrimitiveType.DOUBLE ) ) );
+        assertArrayEquals( ByteArrayUtils.doubleArrayToBytes( new double[] { Double.NEGATIVE_INFINITY } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.COUNT, ScaleType.LOG2, PrimitiveType.DOUBLE ) ) );
     }
 
     @Test
     public void testString() {
         assertEquals( "", QuantitationTypeUtils.getDefaultValue( createQt( StandardQuantitationType.OTHER, ScaleType.OTHER, PrimitiveType.STRING ) ) );
+        assertArrayEquals( ByteArrayUtils.stringsToByteArray( new String[] { "" } ), QuantitationTypeUtils.getDefaultValueAsBytes( createQt( StandardQuantitationType.OTHER, ScaleType.OTHER, PrimitiveType.STRING ) ) );
     }
 
     @Test

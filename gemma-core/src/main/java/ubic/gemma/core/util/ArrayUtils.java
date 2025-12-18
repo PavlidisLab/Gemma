@@ -2,12 +2,14 @@ package ubic.gemma.core.util;
 
 /**
  * Utilities and algorithms for arrays.
+ *
  * @author poirigui
  */
 public class ArrayUtils {
 
     /**
      * A binary search that returns the index of the first occurrence of the value in the array.
+     *
      * @see java.util.Arrays#binarySearch(double[], double)
      */
     public static int binarySearchFirst( double[] array, double value ) {
@@ -37,5 +39,17 @@ public class ArrayUtils {
                 assert high >= low;
             }
         }
+    }
+
+    public static boolean isContiguous( int[] sampleIndices ) {
+        if ( sampleIndices.length <= 1 ) {
+            return true;
+        }
+        for ( int i = 1; i < sampleIndices.length; i++ ) {
+            if ( sampleIndices[i] != sampleIndices[i - 1] + 1 ) {
+                return false;
+            }
+        }
+        return true;
     }
 }
