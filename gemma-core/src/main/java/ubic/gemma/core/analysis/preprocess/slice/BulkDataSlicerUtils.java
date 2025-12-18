@@ -46,36 +46,6 @@ public class BulkDataSlicerUtils {
         return bulkDataVector -> slice( bulkDataVector, assays, badCache, bioAssayMappingCache, vectorType, getDataVectorIgnoredProperties( vectorType ), allowMissing, missingValueCache );
     }
 
-    /**
-     * Slice a collection of bulk data vectors into double arrays.
-     */
-    public static <T extends BulkExpressionDataVector> List<double[]> sliceDoubles( List<T> vector, List<BioAssay> assays, boolean allowMissing ) {
-        Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache = new HashMap<>();
-        Map<QuantitationType, byte[]> missingValueCache = new HashMap<>();
-        List<double[]> result = new ArrayList<>( vector.size() );
-        for ( T v : vector ) {
-            BioAssayMapping bioAssayMapping = bioAssayMappingCache.computeIfAbsent( v.getBioAssayDimension(), k -> createSampleMapping( v.getBioAssayDimension().getBioAssays(), assays, allowMissing ) );
-            byte[] missingValue = missingValueCache.computeIfAbsent( v.getQuantitationType(), QuantitationTypeUtils::getDefaultValueAsBytes );
-            result.add( ByteArrayUtils.byteArrayToDoubles( sliceData( v, bioAssayMapping, allowMissing, missingValue ) ) );
-        }
-        return result;
-    }
-
-    /**
-     * Slice a collection of bulk data vectors into boolean arrays.
-     */
-    public static <T extends BulkExpressionDataVector> List<boolean[]> sliceBooleans( List<T> vector, List<BioAssay> assays, boolean allowMissing ) {
-        Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache = new HashMap<>();
-        Map<QuantitationType, byte[]> missingValueCache = new HashMap<>();
-        List<boolean[]> result = new ArrayList<>( vector.size() );
-        for ( T v : vector ) {
-            BioAssayMapping bioAssayMapping = bioAssayMappingCache.computeIfAbsent( v.getBioAssayDimension(), k -> createSampleMapping( v.getBioAssayDimension().getBioAssays(), assays, allowMissing ) );
-            byte[] missingValue = missingValueCache.computeIfAbsent( v.getQuantitationType(), QuantitationTypeUtils::getDefaultValueAsBytes );
-            result.add( ByteArrayUtils.byteArrayToBooleans( sliceData( v, bioAssayMapping, allowMissing, missingValue ) ) );
-        }
-        return result;
-    }
-
     private static String[] getDataVectorIgnoredProperties( Class<?> vectorType ) {
         List<String> ignoredPropertiesList = new ArrayList<>();
         for ( PropertyDescriptor pd : BeanUtils.getPropertyDescriptors( vectorType ) ) {
@@ -94,6 +64,56 @@ public class BulkDataSlicerUtils {
         byte[] missingValue = missingValueCache.computeIfAbsent( vec.getQuantitationType(), QuantitationTypeUtils::getDefaultValueAsBytes );
         newVec.setData( sliceData( vec, bioAssayMapping, allowMissing, missingValue ) );
         return newVec;
+    }
+
+    private static BioAssayDimension sliceDimension( BioAssayDimension bioAssayDimension, List<BioAssay> bioAssays, boolean allowMissing ) {
+        Assert.isTrue( allowMissing || new HashSet<>( bioAssayDimension.getBioAssays() ).containsAll( bioAssays ), "All the requested assays must be in " + bioAssayDimension + "." );
+        Assert.isTrue( new HashSet<>( bioAssays ).size() == bioAssays.size(), "Requested assays must be unique." );
+        return BioAssayDimension.Factory.newInstance( bioAssays );
+    }
+
+    /**
+     * Slice a collection of bulk data vectors into double arrays.
+     */
+    public static <T extends BulkExpressionDataVector> List<double[]> sliceDoubles( Collection<T> vectors, List<BioAssay> assays, boolean allowMissing ) {
+        return vectors.stream().map( createDoubleSlicer( assays, allowMissing ) ).collect( Collectors.toList() );
+    }
+
+    /**
+     * Create a slicer function for bulk data vectors that can be applied on a {@link Stream}.
+     */
+    public static <T extends BulkExpressionDataVector> Function<T, double[]> createDoubleSlicer( List<BioAssay> assays, boolean allowMissing ) {
+        Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache = new HashMap<>();
+        Map<QuantitationType, byte[]> missingValueCache = new HashMap<>();
+        return bulkDataVector -> sliceDoubles( bulkDataVector, assays, bioAssayMappingCache, allowMissing, missingValueCache );
+    }
+
+    private static double[] sliceDoubles( BulkExpressionDataVector vec, List<BioAssay> assays, Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache, boolean allowMissing, Map<QuantitationType, byte[]> missingValueCache ) {
+        BioAssayMapping bioAssayMapping = bioAssayMappingCache.computeIfAbsent( vec.getBioAssayDimension(), k -> createSampleMapping( vec.getBioAssayDimension().getBioAssays(), assays, allowMissing ) );
+        byte[] missingValue = missingValueCache.computeIfAbsent( vec.getQuantitationType(), QuantitationTypeUtils::getDefaultValueAsBytes );
+        return ByteArrayUtils.byteArrayToDoubles( sliceData( vec, bioAssayMapping, allowMissing, missingValue ) );
+    }
+
+    /**
+     * Slice a collection of bulk data vectors into boolean arrays.
+     */
+    public static <T extends BulkExpressionDataVector> List<boolean[]> sliceBooleans( Collection<T> vectors, List<BioAssay> assays, boolean allowMissing ) {
+        return vectors.stream().map( createBooleanSlicer( assays, allowMissing ) ).collect( Collectors.toList() );
+    }
+
+    /**
+     * Create a slicer function for bulk data vectors that can be applied on a {@link Stream}.
+     */
+    public static <T extends BulkExpressionDataVector> Function<T, boolean[]> createBooleanSlicer( List<BioAssay> assays, boolean allowMissing ) {
+        Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache = new HashMap<>();
+        Map<QuantitationType, byte[]> missingValueCache = new HashMap<>();
+        return bulkDataVector -> sliceBooleans( bulkDataVector, assays, bioAssayMappingCache, allowMissing, missingValueCache );
+    }
+
+    private static boolean[] sliceBooleans( BulkExpressionDataVector vec, List<BioAssay> assays, Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache, boolean allowMissing, Map<QuantitationType, byte[]> missingValueCache ) {
+        BioAssayMapping bioAssayMapping = bioAssayMappingCache.computeIfAbsent( vec.getBioAssayDimension(), k -> createSampleMapping( vec.getBioAssayDimension().getBioAssays(), assays, allowMissing ) );
+        byte[] missingValue = missingValueCache.computeIfAbsent( vec.getQuantitationType(), QuantitationTypeUtils::getDefaultValueAsBytes );
+        return ByteArrayUtils.byteArrayToBooleans( sliceData( vec, bioAssayMapping, allowMissing, missingValue ) );
     }
 
     private static BioAssayMapping createSampleMapping( List<BioAssay> fromAssays, List<BioAssay> toAssays, boolean allowMissing ) {
@@ -124,12 +144,6 @@ public class BulkDataSlicerUtils {
             }
         }
         return data;
-    }
-
-    private static BioAssayDimension sliceDimension( BioAssayDimension bioAssayDimension, List<BioAssay> bioAssays, boolean allowMissing ) {
-        Assert.isTrue( allowMissing || new HashSet<>( bioAssayDimension.getBioAssays() ).containsAll( bioAssays ), "All the requested assays must be in " + bioAssayDimension + "." );
-        Assert.isTrue( new HashSet<>( bioAssays ).size() == bioAssays.size(), "Requested assays must be unique." );
-        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     @AllArgsConstructor
