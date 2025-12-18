@@ -6,12 +6,15 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Slice bulk data vectors.
@@ -26,9 +29,7 @@ public class BulkDataSlicerUtils {
      * @param vectorType the type of vector produced
      */
     public static <T extends BulkExpressionDataVector> Collection<T> slice( Collection<T> vectors, List<BioAssay> assays, Class<T> vectorType ) {
-        return vectors.stream()
-                .map( createSlicer( assays, vectorType ) )
-                .collect( Collectors.toList() );
+        return vectors.stream().map( createSlicer( assays, vectorType ) ).collect( Collectors.toList() );
     }
 
     /**
@@ -38,6 +39,32 @@ public class BulkDataSlicerUtils {
         Map<BioAssayDimension, BioAssayDimension> badCache = new HashMap<>();
         Map<BioAssayDimension, int[]> sampleIndicesCache = new HashMap<>();
         return bulkDataVector -> slice( bulkDataVector, assays, badCache, sampleIndicesCache, vectorType, getDataVectorIgnoredProperties( vectorType ) );
+    }
+
+    /**
+     * Slice a collection of bulk data vectors into double arrays.
+     */
+    public static <T extends BulkExpressionDataVector> List<double[]> sliceDoubles( List<T> vector, List<BioAssay> assays ) {
+        Map<BioAssayDimension, int[]> sampleIndicesCache = new HashMap<>();
+        List<double[]> result = new ArrayList<>( vector.size() );
+        for ( T v : vector ) {
+            int[] sampleIndices = sampleIndicesCache.computeIfAbsent( v.getBioAssayDimension(), k -> createSampleMapping( v.getBioAssayDimension().getBioAssays(), assays ) );
+            result.add( ByteArrayUtils.byteArrayToDoubles( sliceData( v, sampleIndices ) ) );
+        }
+        return result;
+    }
+
+    /**
+     * Slice a collection of bulk data vectors into boolean arrays.
+     */
+    public static <T extends BulkExpressionDataVector> List<boolean[]> sliceBooleans( List<T> vector, List<BioAssay> assays ) {
+        Map<BioAssayDimension, int[]> sampleIndicesCache = new HashMap<>();
+        List<boolean[]> result = new ArrayList<>( vector.size() );
+        for ( T v : vector ) {
+            int[] sampleIndices = sampleIndicesCache.computeIfAbsent( v.getBioAssayDimension(), k -> createSampleMapping( v.getBioAssayDimension().getBioAssays(), assays ) );
+            result.add( ByteArrayUtils.byteArrayToBooleans( sliceData( v, sampleIndices ) ) );
+        }
+        return result;
     }
 
     private static String[] getDataVectorIgnoredProperties( Class<?> vectorType ) {
@@ -54,17 +81,19 @@ public class BulkDataSlicerUtils {
         T newVec = BeanUtils.instantiate( vectorType );
         BeanUtils.copyProperties( vec, newVec, ignoredProperties );
         newVec.setBioAssayDimension( badCache.computeIfAbsent( vec.getBioAssayDimension(), bad -> sliceDimension( bad, assays ) ) );
-        int[] sampleIndices = sampleIndicesCache.computeIfAbsent( vec.getBioAssayDimension(), k -> {
-            Map<BioAssay, Integer> ba2index = ListUtils.indexOfElements( vec.getBioAssayDimension().getBioAssays() );
-            int[] result = new int[assays.size()];
-            for ( int i = 0; i < assays.size(); i++ ) {
-                BioAssay ba = assays.get( i );
-                result[i] = ba2index.get( ba );
-            }
-            return result;
-        } );
+        int[] sampleIndices = sampleIndicesCache.computeIfAbsent( vec.getBioAssayDimension(), k -> createSampleMapping( vec.getBioAssayDimension().getBioAssays(), assays ) );
         newVec.setData( sliceData( vec, sampleIndices ) );
         return newVec;
+    }
+
+    private static int[] createSampleMapping( List<BioAssay> fromAssays, List<BioAssay> toAssays ) {
+        Map<BioAssay, Integer> ba2index = ListUtils.indexOfElements( fromAssays );
+        int[] result = new int[toAssays.size()];
+        for ( int i = 0; i < result.length; i++ ) {
+            BioAssay ba = toAssays.get( i );
+            result[i] = requireNonNull( ba2index.get( ba ), () -> ba + " was not found in source assays." );
+        }
+        return result;
     }
 
     private static byte[] sliceData( BulkExpressionDataVector vec, int[] sampleIndices ) {
@@ -80,10 +109,8 @@ public class BulkDataSlicerUtils {
     }
 
     private static BioAssayDimension sliceDimension( BioAssayDimension bioAssayDimension, List<BioAssay> bioAssays ) {
-        Assert.isTrue( new HashSet<>( bioAssayDimension.getBioAssays() ).containsAll( bioAssays ),
-                "All the requested assays must be in " + bioAssayDimension + "." );
-        Assert.isTrue( new HashSet<>( bioAssays ).size() == bioAssays.size(),
-                "Requested assays must be unique." );
+        Assert.isTrue( new HashSet<>( bioAssayDimension.getBioAssays() ).containsAll( bioAssays ), "All the requested assays must be in " + bioAssayDimension + "." );
+        Assert.isTrue( new HashSet<>( bioAssays ).size() == bioAssays.size(), "Requested assays must be unique." );
         return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 }
