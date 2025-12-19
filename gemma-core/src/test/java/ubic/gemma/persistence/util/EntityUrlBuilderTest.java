@@ -5,6 +5,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Gene;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +39,10 @@ public class EntityUrlBuilderTest {
 
         // no web/rest is set by default
         assertThrows( IllegalStateException.class, () -> entityUrlBuilder.fromHostUrl().entity( ee ).toUriString() );
+
+        Gene gene = new Gene();
+        gene.setId( 4L );
+        assertEquals( "/rest/v2/genes/4", entityUrlBuilder.fromHostUrl().entity( gene ).rest().toUriString() );
     }
 
     @Test

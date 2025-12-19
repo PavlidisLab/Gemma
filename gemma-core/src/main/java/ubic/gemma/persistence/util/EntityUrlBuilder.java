@@ -348,6 +348,8 @@ public class EntityUrlBuilder {
                 this.entityPath = "/taxa";
             } else if ( entity instanceof ExpressionAnalysisResultSet ) {
                 this.entityPath = "/resultSets";
+            } else if ( entity instanceof Gene ) {
+                this.entityPath = "/genes";
             } else {
                 throw new UnsupportedEntityUrlException( "Cannot generate a REST URL for entities of type " + entity.getClass() + ".", entity.getClass() );
             }
