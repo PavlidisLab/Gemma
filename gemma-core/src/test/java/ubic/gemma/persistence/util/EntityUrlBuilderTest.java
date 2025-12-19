@@ -79,6 +79,6 @@ public class EntityUrlBuilderTest {
         Characteristic c2 = new Characteristic();
         c.setId( 4L );
         c.setValueUri( "http://purl.obolibrary.org/ont/NCBITaxon_9606" );
-        assertThrows( UnsupportedOperationException.class, () -> entityUrlBuilder.fromHostUrl().entity( c ).ont().toUriString() );
+        assertThrows( UnsupportedEntityUrlException.class, () -> entityUrlBuilder.fromHostUrl().entity( c ).ont().toUriString() );
     }
 }
