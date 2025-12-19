@@ -321,7 +321,8 @@ public class DatasetsWebService {
         try {
             return entityUrlBuilder
                     .fromHostUrl()
-                    .entity( searchResult.getResultType(), searchResult.getResultId() );
+                    .entity( searchResult.getResultType(), searchResult.getResultId() )
+                    .rest();
         } catch ( UnsupportedEntityUrlException e ) {
             return null;
         }

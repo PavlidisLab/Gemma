@@ -236,7 +236,7 @@ public class EntityUrlBuilder {
             } else if ( entity instanceof CompositeSequence ) {
                 this.entityPath = "/compositeSequence/show.html?id=";
             } else {
-                throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entity.getClass() + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate a Web URL for entities of type " + entity.getClass() + ".", entity.getClass() );
             }
         }
 
@@ -349,7 +349,7 @@ public class EntityUrlBuilder {
             } else if ( entity instanceof ExpressionAnalysisResultSet ) {
                 this.entityPath = "/resultSets";
             } else {
-                throw new UnsupportedOperationException( "Cannot generate a REST URL for entities of type " + entity.getClass() + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate a REST URL for entities of type " + entity.getClass() + ".", entity.getClass() );
             }
         }
 
@@ -426,7 +426,7 @@ public class EntityUrlBuilder {
             } else if ( ExpressionAnalysisResultSet.class.isAssignableFrom( entityType ) ) {
                 this.entityPath = "/resultSets";
             } else {
-                throw new UnsupportedOperationException( "Cannot generate a REST URL for entities of type " + entityType + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate a REST URL for entities of type " + entityType + ".", entityType );
             }
         }
 
@@ -485,7 +485,7 @@ public class EntityUrlBuilder {
             } else if ( ArrayDesign.class.isAssignableFrom( entityType ) ) {
                 this.entityPath = "/arrays/showAllArrayDesigns.html?id=";
             } else {
-                throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entityType + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate a Web URL for entities of type " + entityType + ".", entityType );
             }
         }
 
@@ -498,7 +498,7 @@ public class EntityUrlBuilder {
 
         public SomeRestEntitiesUrl( String baseUrl, Class<T> entityType, Collection<Long> ids ) {
             super( baseUrl, entityType, ids );
-            throw new UnsupportedOperationException( "Cannot generate a REST URL for entities of type " + entityType + "." );
+            throw new UnsupportedEntityUrlException( "Cannot generate a REST URL for entities of type " + entityType + ".", entityType );
         }
     }
 
@@ -558,10 +558,10 @@ public class EntityUrlBuilder {
                 } else if ( c.getCategoryUri() != null && c.getCategoryUri().startsWith( GEMMA_ONTOLOGY_PREFIX ) ) {
                     entityPath = "/ont" + c.getCategoryUri().substring( GEMMA_ONTOLOGY_PREFIX.length() );
                 } else {
-                    throw new UnsupportedOperationException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + "." );
+                    throw new UnsupportedEntityUrlException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + ".", entity.getClass() );
                 }
             } else {
-                throw new UnsupportedOperationException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + ".", entity.getClass() );
             }
         }
 
@@ -584,10 +584,10 @@ public class EntityUrlBuilder {
                 if ( ( ( BlacklistedEntity ) entity ).getExternalAccession() != null ) {
                     url = getDatabaseEntryUrl( ( ( BlacklistedEntity ) entity ).getExternalAccession() );
                 } else {
-                    throw new UnsupportedOperationException( "Cannot generate an external URL for blacklisted entities that lack an external accession." );
+                    throw new UnsupportedEntityUrlException( "Cannot generate an external URL for blacklisted entities that lack an external accession.", BlacklistedEntity.class );
                 }
             } else {
-                throw new UnsupportedOperationException( "Cannot generate an external URL for entities of type " + entity.getClass() + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entities of type " + entity.getClass() + ".", entity.getClass() );
             }
         }
 
@@ -595,7 +595,7 @@ public class EntityUrlBuilder {
             if ( entity.getWebUri() != null ) {
                 return entity.getWebUri();
             } else {
-                throw new UnsupportedOperationException( "Cannot generate an external URL for " + entity + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for " + entity + ".", entity.getClass() );
             }
         }
 
@@ -612,12 +612,12 @@ public class EntityUrlBuilder {
                     case ExternalDatabases.GO:
                         return "https://amigo.geneontology.org/amigo/term/" + urlEncode( entity.getAccession() );
                     default:
-                        throw new UnsupportedOperationException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + "." );
+                        throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
                 }
             } else if ( entity.getUri() != null ) {
                 return entity.getUri();
             } else {
-                throw new UnsupportedOperationException( "Cannot generate an external URL for " + entity + "." );
+                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for " + entity + ".", entity.getClass() );
             }
         }
 

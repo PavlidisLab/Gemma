@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyTest;
@@ -106,6 +107,11 @@ public class SearchWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public DatasetArgService datasetArgService() {
+            return mock();
+        }
+
+        @Bean
         public AnalyticsProvider analyticsProvider() {
             return mock();
         }
@@ -113,6 +119,11 @@ public class SearchWebServiceTest extends BaseJerseyTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock();
+        }
+
+        @Bean
+        public EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "http://localhost:8080" );
         }
     }
 

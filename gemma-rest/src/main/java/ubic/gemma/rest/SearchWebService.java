@@ -220,7 +220,8 @@ public class SearchWebService {
                         boolean resultUrlExternal;
                         try {
                             EntityUrlBuilder.EntityUrl<? extends Identifiable> builder = entityUrlBuilder.fromHostUrl()
-                                    .entity( sr.getResultType(), sr.getResultId() );
+                                    .entity( sr.getResultType(), sr.getResultId() )
+                                    .rest();
                             resultUrl = builder.toUriString();
                             resultUrlExternal = builder.isExternal();
                         } catch ( UnsupportedEntityUrlException e ) {
