@@ -3,12 +3,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Helper service for creating processed data vectors.
  * <p>
  * This shouldn't be used directly, instead use {@link ProcessedExpressionDataVectorService}.
+ *
  * @author Paul
  * @author poirigui
  */
@@ -22,8 +24,9 @@ interface ProcessedExpressionDataVectorCreationHelperService {
      * @param expressionExperiment       ee
      * @param ignoreQuantitationMismatch use raw data to infer scale type and the adequate transformation for producing
      *                                   processed EVs instead of relying on the QT
+     * @param summary                    summary object to populate
      * @return the number of created vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+    QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 }

@@ -392,7 +392,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );

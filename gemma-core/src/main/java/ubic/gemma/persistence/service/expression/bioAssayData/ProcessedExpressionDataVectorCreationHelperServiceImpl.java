@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +16,12 @@ import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -47,20 +47,20 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
 
     @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private QuantitationTypeDao quantitationTypeDao;
+    private QuantitationTypeService quantitationTypeService;
 
     @Override
     @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
-        expressionExperimentDao.removeProcessedDataVectors( expressionExperiment );
+        expressionExperimentService.removeProcessedDataVectors( expressionExperiment );
 
         log.info( "Computing processed expression vectors for " + expressionExperiment );
 
-        Collection<RawExpressionDataVector> rawPreferredDataVectors = expressionExperimentDao.getPreferredRawDataVectors( expressionExperiment );
+        Collection<RawExpressionDataVector> rawPreferredDataVectors = expressionExperimentService.getPreferredRawDataVectors( expressionExperiment );
         if ( rawPreferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
@@ -71,15 +71,17 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         // this will also consolidate sets of raw vectors that have multiple BADs
         rawPreferredDataVectors = consolidateAndLogTransformVectors( expressionExperiment, rawPreferredDataVectors, ignoreQuantitationMismatch );
 
-        // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
-        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
-        QuantitationType preferredQt = this
-                .createPreferredMaskedDataQuantitationType( preferredDataVectorExemplar.getQuantitationType() );
-
         // once the vectors have been consolidated, we can recover the dimension
         // no that if multiple BADs were consolidated, this will return a new BAD, otherwise the same BAD that was used
         // for the raw vectors will be re-used
-        BioAssayDimension dimension = rawPreferredDataVectors.iterator().next().getBioAssayDimension();
+        // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
+        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
+        QuantitationType preferredQt = preferredDataVectorExemplar.getQuantitationType();
+        BioAssayDimension dimension = preferredDataVectorExemplar.getBioAssayDimension();
+
+        summary.setRawQuantitationType( preferredQt );
+
+        QuantitationType processedQt = createPreferredMaskedDataQuantitationType( preferredQt );
 
         Map<CompositeSequence, int[]> numberOfCells = rawPreferredDataVectors.stream()
                 .filter( v -> v.getNumberOfCells() != null )
@@ -87,36 +89,43 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
                         DesignElementDataVector::getDesignElement,
                         RawExpressionDataVector::getNumberOfCells ) );
 
-        // mask raw vectors
-        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<>();
-        boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
-        if ( isTwoChannel ) {
-            missingValueVectors = this.getMissingValueVectors( expressionExperiment );
+        Map<CompositeSequence, double[]> preferredData = unpackData( rawPreferredDataVectors, dimension );
+
+        boolean isTwoChannel = expressionExperimentService.isTwoChannel( expressionExperiment );
+        Collection<RawExpressionDataVector> missingValueVectors = getMissingValueVectors( expressionExperiment );
+        if ( isTwoChannel && missingValueVectors != null ) {
+            maskMissingValues( preferredData, missingValueVectors, dimension, summary );
         }
-        Map<CompositeSequence, double[]> preferredData = unpackAndMask( rawPreferredDataVectors, missingValueVectors, dimension );
+
+        maskOutliers( preferredData, dimension, summary );
 
         /*
          * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
          * moved to using non-count summaries for the primary data type.
          */
-        if ( preferredQt.getType().equals( StandardQuantitationType.COUNT ) ) {
+        if ( processedQt.getType().equals( StandardQuantitationType.COUNT ) ) {
             /*
              * Backfill target
              */
             log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
-        if ( preferredQt.getIsRatio() ) {
-            log.info( "Data is on a ratio scale, skipping normalization step." );
+        if ( processedQt.getIsRatio() ) {
+            String m = "Data is on a ratio scale, skipping normalization step.";
+            log.info( m );
+            summary.addComment( m );
         } else if ( preferredData.size() < MIN_SIZE_FOR_RENORMALIZATION ) {
-            log.info( "Not enough data vectors (" + preferredData.size() + ") to perform normalization." );
+            String m = "Not enough data vectors (" + preferredData.size() + ") to perform normalization.";
+            log.info( m );
+            summary.addComment( m );
         } else {
             log.info( "Normalizing the data" );
-            preferredData = renormalize( preferredData );
-            preferredQt.setIsNormalized( true );
+            quantileNormalize( preferredData );
+            processedQt.setIsNormalized( true );
+            summary.setQuantileNormalized( true );
         }
 
-        preferredQt = quantitationTypeDao.create( preferredQt, ProcessedExpressionDataVector.class );
+        processedQt = quantitationTypeService.create( processedQt, ProcessedExpressionDataVector.class );
 
         /*
          * Done with processing, now build the vectors and persist; Do a sanity check that we don't have more than we
@@ -126,11 +135,9 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         for ( Map.Entry<CompositeSequence, double[]> e : preferredData.entrySet() ) {
             ProcessedExpressionDataVector vec = ProcessedExpressionDataVector.Factory.newInstance();
             vec.setExpressionExperiment( expressionExperiment );
-            // assert this.getBioAssays().size() > 0;
-            vec.setQuantitationType( preferredQt );
+            vec.setQuantitationType( processedQt );
             vec.setBioAssayDimension( dimension );
             vec.setDesignElement( e.getKey() );
-            // assert this.getBioAssays().size() > 0;
             vec.setDataAsDoubles( e.getValue() );
             vec.setNumberOfCells( numberOfCells.get( e.getKey() ) );
             newVectors.add( vec );
@@ -139,7 +146,12 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         log.info( String.format( "Persisting %d processed data vectors...",
                 newVectors.size() ) );
 
-        return expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
+        int createdVectors = expressionExperimentService.createProcessedDataVectors( expressionExperiment, newVectors );
+
+        summary.setNumberOfDataVectors( createdVectors );
+        log.info( String.format( "Persisted %d processed data vectors.", createdVectors ) );
+
+        return processedQt;
     }
 
     /**
@@ -159,7 +171,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
     @Nullable
     private Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        Map<QuantitationType, Collection<RawExpressionDataVector>> mvv = expressionExperimentDao.getMissingValueVectors( ee );
+        Map<QuantitationType, Collection<RawExpressionDataVector>> mvv = expressionExperimentService.getMissingValuesVectors( ee );
         if ( mvv.isEmpty() ) {
             return null;
         } else if ( mvv.size() > 1 ) {
@@ -184,26 +196,6 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         processedQt.setIsNormalized( false );
         processedQt.setIsMaskedPreferred( true );
         return processedQt;
-    }
-
-    /**
-     * @param expressionExperiment ee
-     * @return true if any platform used by the ee is two-channel (including dual-mode)
-     */
-    private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
-        boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            TechnologyType technologyType = ad.getTechnologyType();
-            if ( technologyType == null ) {
-                throw new IllegalStateException(
-                        "Array designs must have a technology type assigned before processed vector computation" );
-            }
-            if ( technologyType.equals( TechnologyType.TWOCOLOR ) || technologyType.equals( TechnologyType.DUALMODE ) ) {
-                isTwoChannel = true;
-            }
-        }
-        return isTwoChannel;
     }
 
     /**
@@ -252,16 +244,19 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
      *
      * @param dimension dimension to target when unpacking data
      */
-    private Map<CompositeSequence, double[]> unpackAndMask( Collection<RawExpressionDataVector> preferredData,
-            @Nullable Collection<RawExpressionDataVector> missingValueData,
-            BioAssayDimension dimension ) {
-        Map<CompositeSequence, double[]> unpackedData = unpackDoubles( preferredData, dimension );
-
-        if ( missingValueData == null || missingValueData.isEmpty() ) {
-            log.debug( "There is no separate missing data information, simply using the data as is" );
-            return unpackedData;
+    private Map<CompositeSequence, double[]> unpackData( Collection<RawExpressionDataVector> preferredData, BioAssayDimension dimension ) {
+        ArrayList<BulkExpressionDataVector> orderedVectors = new ArrayList<>( preferredData );
+        List<double[]> sliced = BulkDataSlicerUtils.sliceDoubles( orderedVectors, dimension.getBioAssays(), false );
+        Map<CompositeSequence, double[]> result = new HashMap<>( preferredData.size() );
+        for ( int i = 0; i < orderedVectors.size(); i++ ) {
+            result.put( orderedVectors.get( i ).getDesignElement(), sliced.get( i ) );
         }
+        return result;
+    }
 
+    private void maskMissingValues( Map<CompositeSequence, double[]> unpackedData, Collection<RawExpressionDataVector> missingValueData, BioAssayDimension dimension, ProcessedExpressionDataVectorCreationSummary summary ) {
+        Assert.isTrue( !missingValueData.isEmpty(), "At least one missing values vector is required." );
+        int maskedValues = 0;
         Map<CompositeSequence, boolean[]> missingValueMap = unpackBooleans( missingValueData, dimension );
         boolean warned = false;
         for ( Map.Entry<CompositeSequence, double[]> rv : unpackedData.entrySet() ) {
@@ -283,21 +278,11 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             for ( int i = 0; i < data.length; i++ ) {
                 if ( !mvData[i] ) {
                     data[i] = Double.NaN;
+                    maskedValues++;
                 }
             }
         }
-
-        return unpackedData;
-    }
-
-    private Map<CompositeSequence, double[]> unpackDoubles( Collection<? extends BulkExpressionDataVector> vectors, BioAssayDimension dimension ) {
-        ArrayList<BulkExpressionDataVector> orderedVectors = new ArrayList<>( vectors );
-        List<double[]> sliced = BulkDataSlicerUtils.sliceDoubles( orderedVectors, dimension.getBioAssays(), false );
-        Map<CompositeSequence, double[]> result = new HashMap<>( vectors.size() );
-        for ( int i = 0; i < orderedVectors.size(); i++ ) {
-            result.put( orderedVectors.get( i ).getDesignElement(), sliced.get( i ) );
-        }
-        return result;
+        summary.setNumberOfMaskedMissingValues( maskedValues );
     }
 
     private Map<CompositeSequence, boolean[]> unpackBooleans( Collection<? extends BulkExpressionDataVector> vectors, BioAssayDimension dimension ) {
@@ -310,12 +295,33 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         return result;
     }
 
+    private void maskOutliers( Map<CompositeSequence, double[]> data, BioAssayDimension dimension, ProcessedExpressionDataVectorCreationSummary summary ) {
+        List<Integer> outliers = new ArrayList<>();
+        List<BioAssay> bioAssays = dimension.getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            BioAssay ba = bioAssays.get( i );
+            if ( ba.getIsOutlier() ) {
+                outliers.add( i );
+            }
+        }
+        if ( outliers.isEmpty() ) {
+            log.info( "There are no outlier assays to mask." );
+            return;
+        }
+        int[] outliersI = ArrayUtils.toPrimitive( outliers.toArray( new Integer[0] ) );
+        log.info( "There are " + outliers.size() + " outlier assays; masking their values in processed data." );
+        for ( double[] vector : data.values() ) {
+            for ( int k : outliersI ) {
+                vector[k] = Double.NaN;
+            }
+        }
+        summary.setNumberOfMaskedOutliers( outliers.size() );
+    }
+
     /**
      * Quantile normalize data. This should be one of the last steps in processing before persisting
-     *
-     * @param vectors vectors
      */
-    private Map<CompositeSequence, double[]> renormalize( Map<CompositeSequence, double[]> vectors ) {
+    private void quantileNormalize( Map<CompositeSequence, double[]> vectors ) {
         Assert.isTrue( vectors.size() >= MIN_SIZE_FOR_RENORMALIZATION,
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );
 
@@ -349,15 +355,13 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         assert normalizedMat.columns() == cols;
         assert normalizedMat.rows() == rows;
 
-        Map<CompositeSequence, double[]> normalizedVectors = new HashMap<>( vectors.size() );
+        // rewrite the vectors with normalized data
         for ( i = 0; i < rows; i++ ) {
             CompositeSequence c = normalizedMat.getRowName( i );
-            double[] normalizedData = new double[cols];
+            double[] vector = vectors.get( c );
             for ( int j = 0; j < cols; j++ ) {
-                normalizedData[j] = normalizedMat.get( i, j );
+                vector[j] = normalizedMat.get( i, j );
             }
-            normalizedVectors.put( c, normalizedData );
         }
-        return normalizedVectors;
     }
 }

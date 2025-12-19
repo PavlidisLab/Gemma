@@ -3,6 +3,7 @@ package ubic.gemma.core.analysis.preprocess;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 public interface TwoChannelMissingValues {
@@ -28,6 +29,6 @@ public interface TwoChannelMissingValues {
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee, double signalToNoiseThreshold,
-            Collection<Double> extraMissingValueIndicators );
+            @Nullable Collection<Double> extraMissingValueIndicators );
 
 }

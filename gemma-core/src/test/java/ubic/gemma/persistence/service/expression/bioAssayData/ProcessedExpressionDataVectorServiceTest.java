@@ -134,7 +134,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ee.getRawExpressionDataVectors().add( vec );
         }
         expressionExperimentService.update( ee );
-        assertEquals( 10, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
         ee = expressionExperimentService.thaw( ee );
@@ -182,7 +182,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             }
         }
 
-        assertEquals( 40, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 40, v.size() );
 
@@ -245,6 +245,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 cs.setBiologicalCharacteristic( bs );
                 compositeSequenceService.update( cs );
 
+                assertNotNull( cs.getId() );
                 cs = compositeSequenceService.load( cs.getId() );
                 assertNotNull( cs );
 

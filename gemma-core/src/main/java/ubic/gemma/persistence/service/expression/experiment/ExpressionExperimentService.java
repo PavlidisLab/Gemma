@@ -133,6 +133,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt );
 
     /**
+     * @see ExpressionExperimentDao#getPreferredRawDataVectors(ExpressionExperiment)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @see ExpressionExperimentDao#getMissingValuesVectors(ExpressionExperiment)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee );
+
+    /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      *
      * @param eeToUpdate experiment to be updated.
@@ -892,6 +904,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return true if this experiment was run on a sequencing-based platform.
      */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Test if this experiment was run on a two-color microarray platform.
+     */
+    boolean isTwoChannel( ExpressionExperiment expressionExperiment );
 
     /**
      * Check if the dataset is either troubled or uses a troubled platform.

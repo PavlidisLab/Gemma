@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObje
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
@@ -72,7 +74,7 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(rollbackFor = { QuantitationTypeConversionException.class })
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
+    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
             return createProcessedDataVectors( expressionExperiment, true, true );
         } catch ( QuantitationTypeDetectionException e ) {
@@ -83,11 +85,27 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        int created;
+    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        QuantitationType qt;
         try {
-            created = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
-            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
+            ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+            qt = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch, summary );
+            StringBuilder details = new StringBuilder();
+            details.append( "QuantitationType: " ).append( summary.getRawQuantitationType() ).append( "\n" );
+            details.append( "QuantitationType: " ).append( qt ).append( "\n" );
+            if ( summary.getNumberOfMaskedMissingValues() > 0 ) {
+                details.append( "Number of masked missing values: " ).append( summary.getNumberOfMaskedMissingValues() ).append( "\n" );
+            }
+            if ( summary.getNumberOfMaskedOutliers() > 0 ) {
+                details.append( "Number of masked outliers: " ).append( summary.getNumberOfMaskedOutliers() ).append( "\n" );
+            }
+            if ( summary.isQuantileNormalized() ) {
+                details.append( "Data was quantile normalized.\n" );
+            }
+            if ( StringUtils.isNotBlank( summary.getComment() ) ) {
+                details.append( summary.getComment() ).append( "\n" );
+            }
+            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ), details.toString() );
         } catch ( Exception e ) {
             // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be
             //       rolled back
@@ -99,7 +117,7 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
         // cached vectors are no-longer valid
         cachedProcessedExpressionDataVectorService.evict( expressionExperiment );
-        return created;
+        return qt;
     }
 
     @Override

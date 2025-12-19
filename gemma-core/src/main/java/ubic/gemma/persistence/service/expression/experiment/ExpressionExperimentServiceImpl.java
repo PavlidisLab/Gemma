@@ -307,6 +307,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getPreferredRawDataVectors( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getMissingValuesVectors( ee );
+    }
+
+    @Override
     @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
@@ -1618,14 +1630,24 @@ public class ExpressionExperimentServiceImpl
          */
         for ( ArrayDesign ad : ads ) {
             TechnologyType techtype = ad.getTechnologyType();
-
-            if ( techtype.equals( TechnologyType.SEQUENCING )
-                    || techtype.equals( TechnologyType.GENELIST ) ) {
+            if ( techtype.equals( TechnologyType.SEQUENCING ) || techtype.equals( TechnologyType.GENELIST ) ) {
                 return true;
             }
         }
         return false;
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            TechnologyType technologyType = ad.getTechnologyType();
+            if ( technologyType.equals( TechnologyType.TWOCOLOR ) || technologyType.equals( TechnologyType.DUALMODE ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

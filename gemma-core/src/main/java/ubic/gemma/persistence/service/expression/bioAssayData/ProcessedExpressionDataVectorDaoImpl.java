@@ -23,34 +23,17 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
-import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.Function;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
@@ -59,11 +42,6 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 @Repository
 public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorDao {
-
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-    @Autowired
-    private QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
     public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
@@ -140,8 +118,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     /**
      * Obtain a random sample of processed vectors for the given experiment.
-     * @param  ee    ee
-     * @param  limit if {@code >0}, you will get a "random" set of vectors for the experiment
+     *
+     * @param ee    ee
+     * @param limit if {@code >0}, you will get a "random" set of vectors for the experiment
      * @return processed data vectors
      */
     @Override

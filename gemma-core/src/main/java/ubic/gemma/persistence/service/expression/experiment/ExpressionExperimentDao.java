@@ -500,7 +500,7 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the missing value vectors for a given experiment.
      */
-    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee );
+    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee );
 
     /**
      * Add raw data vectors with the given quantitation type.
@@ -864,7 +864,7 @@ public interface ExpressionExperimentDao
      *
      * @param quantitationType quantitation to remove
      * @param deleteQt         if true, detach the QT from the experiment and delete it
-     *                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
+     *                                                                                                                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 

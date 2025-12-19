@@ -3976,7 +3976,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee ) {
+    public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee ) {
         //noinspection unchecked
         return ( ( List<RawExpressionDataVector> ) getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from RawExpressionDataVector dedv "

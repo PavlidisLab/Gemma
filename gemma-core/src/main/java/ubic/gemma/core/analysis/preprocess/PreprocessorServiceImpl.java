@@ -40,7 +40,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelatio
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -51,7 +50,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -166,26 +164,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void processBatchInfo( ExpressionExperiment ee ) {
         expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
-    }
-
-    /**
-     * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
-     *
-     * @param  ee the expression experiment to be checked
-     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
-     *            of.
-     */
-    private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
-        Collection<OutlierDetails> outliers = new LinkedList<>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getIsOutlier() ) {
-                OutlierDetails od = new OutlierDetails( ba.getId() );
-                if ( !outliers.contains( od ) ) {
-                    outliers.add( od );
-                }
-            }
-        }
-        return outliers;
     }
 
     /**
