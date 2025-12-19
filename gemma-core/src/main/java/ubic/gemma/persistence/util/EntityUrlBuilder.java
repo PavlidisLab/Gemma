@@ -110,7 +110,7 @@ public class EntityUrlBuilder {
             if ( entity instanceof AbstractIdentifiable ) {
                 ( ( AbstractIdentifiable ) entity ).setId( id );
             } else {
-                throw new UnsupportedEntityUrlException( entityType );
+                throw new UnsupportedEntityUrlException( "Cannot assign an ID to an entity of type " + entityType.getSimpleName() + ".", entityType );
             }
             return new EntityUrl<>( baseUrl, entity );
         }
