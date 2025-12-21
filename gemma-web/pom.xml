@@ -9,7 +9,7 @@
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
 	<name>Gemma Web</name>
-	<description>Gemma web application</description>
+	<description>Module containing the Gemma Web application</description>
 	<build>
 		<finalName>Gemma</finalName>
 		<testResources>

@@ -12,6 +12,7 @@
     <artifactId>gemma-rest</artifactId>
 
     <name>Gemma REST</name>
+    <description>Module containing the Gemma REST API</description>
 
     <build>
         <plugins>

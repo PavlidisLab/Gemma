@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
     <name>Gemma Core</name>
-    <description>Module containing Gemma backend logic (everything but web-related)</description>
+    <description>Module containing Gemma core features</description>
     <build>
         <plugins>
             <plugin>
