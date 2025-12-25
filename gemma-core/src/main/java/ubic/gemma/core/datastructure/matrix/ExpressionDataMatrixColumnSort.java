@@ -22,9 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -359,11 +357,7 @@ public class ExpressionDataMatrixColumnSort {
             return bms;
         }
 
-        if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
-            ExpressionDataMatrixColumnSort.sortByMeasurement( factorValues );
-        } else {
-            ExpressionDataMatrixColumnSort.sortByControl( factorValues );
-        }
+        ExpressionDataMatrixColumnSort.sortFactorValues( factorValues );
 
         LinkedHashMap<FactorValue, List<BioMaterial>> chunks = new LinkedHashMap<>();
         List<BioMaterial> organized = new ArrayList<>();
@@ -538,32 +532,9 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * Put control factor values first.
+     * Sort factor values.
      */
-    private static void sortByControl( List<FactorValue> factorValues ) {
-        factorValues.sort( ( o1, o2 ) -> {
-            if ( BaselineSelection.isBaselineCondition( o1 ) ) {
-                if ( o2.getIsBaseline() == null ) {
-                    return -1;
-                } else if ( BaselineSelection.isBaselineCondition( o2 ) ) {
-                    return 0;
-                }
-                return -1;
-            } else if ( BaselineSelection.isBaselineCondition( o2 ) ) {
-                return 1;
-            }
-            return 0;
-        } );
-
-    }
-
-    /**
-     * Sort the factor values by measurement values.
-     * <p>
-     * NAs are sorted to the end.
-     */
-    private static void sortByMeasurement( List<FactorValue> factorValues ) {
-        ExpressionDataMatrixColumnSort.log.debug( "Sorting measurements" );
-        factorValues.sort( Comparator.comparing( FactorValue::getMeasurement, Comparator.nullsLast( Comparator.comparingDouble( MeasurementUtils::measurement2double ) ) ) );
+    public static void sortFactorValues( List<FactorValue> factorValues ) {
+        factorValues.sort( FactorValue.COMPARATOR );
     }
 }

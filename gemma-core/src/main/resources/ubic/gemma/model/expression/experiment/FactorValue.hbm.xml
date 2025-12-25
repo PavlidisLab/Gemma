@@ -18,6 +18,9 @@
       <property name="needsAttention" type="java.lang.Boolean">
          <column name="NEEDS_ATTENTION" not-null="true" default="false" unique="false" sql-type="TINYINT"/>
       </property>
+      <property name="ordering" type="java.lang.Integer">
+         <column name="ORDERING" not-null="false" default="null" sql-type="INTEGER"/>
+      </property>
       <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactor"
                    cascade="none" lazy="proxy" fetch="select">
          <column name="EXPERIMENTAL_FACTOR_FK" not-null="true" sql-type="BIGINT"/>

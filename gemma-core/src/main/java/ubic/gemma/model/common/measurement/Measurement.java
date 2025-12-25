@@ -23,9 +23,17 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Measurement extends AbstractIdentifiable {
+
+    /**
+     * This comparator only works for numerical measurements.
+     * <p>
+     * It also assumes that all measurements being compared have the same unit.
+     */
+    public static final Comparator<Measurement> COMPARATOR = MeasurementUtils::compare;
 
     private MeasurementType type;
     /**
