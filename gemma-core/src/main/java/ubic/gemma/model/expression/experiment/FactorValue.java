@@ -22,6 +22,7 @@ import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
@@ -30,6 +31,7 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -40,6 +42,29 @@ import java.util.stream.Collectors;
  */
 @Indexed
 public class FactorValue extends AbstractIdentifiable implements SecuredChild {
+
+    /**
+     * Comparator for factor values.
+     * <p>
+     * This comparator assumes that two FVs belong to the same factor.
+     */
+    public static Comparator<FactorValue> COMPARATOR = Comparator
+            .comparing( FactorValue::getOrdering, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .thenComparing( FactorValue::getMeasurement, Comparator.nullsLast( Measurement.COMPARATOR ) )
+            // try to put baseline first, this includes checking for the FactorValue.isBaseline field
+            .thenComparing( BaselineSelection::isBaselineCondition, Comparator.nullsLast( Comparator.reverseOrder() ) )
+            .thenComparing( ( a, b ) -> {
+                if ( a.getCharacteristics().size() == 1 && b.getCharacteristics().size() == 1 ) {
+                    // singleton statements
+                    return Statement.getComparator().compare( a.getCharacteristics().iterator().next(), b.getCharacteristics().iterator().next() );
+                } else {
+                    return 0;
+                }
+            } )
+            // favour simpler FVs
+            .thenComparing( FactorValue::getCharacteristics, Comparator.comparingInt( Set::size ) )
+            // deprecated value, but last resort
+            .thenComparing( FactorValue::getValue, Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
 
     private ExperimentalFactor experimentalFactor;
     @Nullable
@@ -52,6 +77,13 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild {
     private Set<Statement> characteristics = new HashSet<>();
     @Deprecated
     private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
+    /**
+     * If this is an ordinal factor, the ordering of this value among others.
+     * <p>
+     * This takes precedence over any other ordering.
+     */
+    @Nullable
+    private Integer ordering;
 
     private boolean needsAttention;
 
@@ -150,6 +182,15 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild {
 
     public void setNeedsAttention( boolean troubled ) {
         this.needsAttention = troubled;
+    }
+
+    @Nullable
+    public Integer getOrdering() {
+        return ordering;
+    }
+
+    public void setOrdering( @Nullable Integer ordering ) {
+        this.ordering = ordering;
     }
 
     @Transient
