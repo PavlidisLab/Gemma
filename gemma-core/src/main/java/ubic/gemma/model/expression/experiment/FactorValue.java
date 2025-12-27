@@ -56,7 +56,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild {
             .thenComparing( ( a, b ) -> {
                 if ( a.getCharacteristics().size() == 1 && b.getCharacteristics().size() == 1 ) {
                     // singleton statements
-                    return Statement.getComparator().compare( a.getCharacteristics().iterator().next(), b.getCharacteristics().iterator().next() );
+                    return a.getCharacteristics().iterator().next().compareTo( b.getCharacteristics().iterator().next() );
                 } else {
                     return 0;
                 }
@@ -278,6 +278,19 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild {
             Assert.isTrue( factor.getType() == FactorType.CONTINUOUS, "Only continuous factors can have a measurement." );
             FactorValue entity = newInstance( factor );
             entity.setMeasurement( measurement );
+            return entity;
+        }
+
+        /**
+         * Create a factor value with a value.
+         *
+         * @deprecated this is deprecated, create a factor with a single characteristic instead with
+         * {@link #newInstance(ExperimentalFactor, Characteristic)}
+         */
+        @Deprecated
+        public static FactorValue newInstance( ExperimentalFactor factor, String value ) {
+            FactorValue entity = newInstance( factor );
+            entity.setValue( value );
             return entity;
         }
     }
