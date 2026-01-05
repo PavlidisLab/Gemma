@@ -5,7 +5,10 @@
    http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <util:properties id="dataSourceProps">
+        <!-- The properties here are specific to MySQL and are documented in https://dev.mysql.com/doc/connectors/en/connector-j-connp-props-performance-extensions.html -->
+        <!-- this is necessary to enable cursor fetching -->
         <prop key="useCursorFetch">true</prop>
+        <!-- this will merge multiple insert/update statements into a single batch -->
         <prop key="rewriteBatchedStatements">true</prop>
         <!-- Default timezone for storage of DATETIME that are mapped to exact moments (i.e. java.util.Date) -->
         <prop key="connectionTimeZone">America/Vancouver</prop>
