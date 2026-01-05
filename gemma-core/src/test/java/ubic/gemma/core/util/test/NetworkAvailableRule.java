@@ -122,6 +122,8 @@ public class NetworkAvailableRule implements TestRule {
             assumeNoException( "Test skipped due to unknown host exception", e );
         } else if ( e instanceof SSLException ) {
             assumeNoException( "SSL issue attempting to connect.", e );
+        } else if ( e instanceof SocketTimeoutException ) {
+            assumeNoException( "Test skipped due to a socket timeout.", e );
         } else if ( e.getMessage() != null && e.getMessage().contains( "504" ) ) {
             assumeNoException( "Test skipped due to a 504 error", e );
         } else if ( e.getMessage() != null && e.getMessage().contains( "503" ) ) {
