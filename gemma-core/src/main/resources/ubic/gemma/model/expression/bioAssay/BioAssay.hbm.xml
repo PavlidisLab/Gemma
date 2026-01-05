@@ -64,6 +64,13 @@
                    lazy="false" fetch="join">
          <column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
+      <set name="otherAccessions" cascade="all-delete-orphan">
+         <cache usage="read-write"/>
+         <key foreign-key="OTHER_ACCESSIONS_FKC">
+            <column name="BIO_ASSAY_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntry"/>
+      </set>
       <!-- BioMaterial are in the second-level cached, so a select fetching is efficient -->
       <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"
                    lazy="false" fetch="select">
