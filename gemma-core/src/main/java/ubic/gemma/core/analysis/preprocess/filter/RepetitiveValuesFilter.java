@@ -9,6 +9,8 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.MatrixStats;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -16,27 +18,31 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 
 /**
- * Filter design elements with repetitive values across bioassays.
+ * Filter design elements with repetitive values across samples.
  * <p>
  * If log2cpm data is encountered, the filter will attempt to use the library sizes from {@link BioAssay#getSequenceReadCount()}
  * to remove the library size correction which introduces variance. This trick does not work if the data has been
  * quantile-normalized or batch-corrected.
  * <p>
- * For quantile-normalized data, we exploit the fact that values of same ranks across assays are deemed to be the same.
- * However, ties are not valued the same because it depends on the number of ties in each assay for that particular
- * rank. To work around this annoyance, we rank-transform the data without averaging ties and apply the the unique value
+ * For quantile-normalized data, we exploit the fact that values of same ranks across samples are deemed to be the same.
+ * However, ties are not valued the same because it depends on the number of ties in each sample for that particular
+ * rank. To work around this annoyance, we rank-transform the data without averaging ties and apply the unique value
  * filter.
+ *
  * @author paul
  */
 @CommonsLog
-public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
-    public static final int DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER = 4;
+    public static final Mode DEFAULT_MODE = Mode.AUTODETECT;
+    public static final int DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_FILTER = 4;
     public static final double DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES = 0.3;
 
     public enum Mode {
@@ -54,9 +60,9 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
         RANK
     }
 
-    private Mode mode = Mode.AUTODETECT;
+    private Mode mode = DEFAULT_MODE;
 
-    private int minimumNumberOfAssaysToApplyFilter = DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER;
+    private int minimumNumberOfSamplesToApplyFilter = DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_FILTER;
 
     private double minimumFractionOfUniqueValues = DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES;
 
@@ -70,13 +76,14 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
     }
 
     /**
-     * Minimum number of assays (columns) in the matrix to apply the unique values filter.
+     * Minimum number of samples (columns) in the matrix to apply the unique values filter.
      * <p>
      * We don't apply the "unique values" filter to matrices with fewer columns than this.
      */
-    public void setMinimumNumberOfAssaysToApplyFilter( int minimumNumberOfAssaysToApplyFilter ) {
-        Assert.isTrue( minimumNumberOfAssaysToApplyFilter >= 0 );
-        this.minimumNumberOfAssaysToApplyFilter = minimumNumberOfAssaysToApplyFilter;
+    public void setMinimumNumberOfSamplesToApplyFilter( int minimumNumberOfSamplesToApplyFilter ) {
+        Assert.isTrue( minimumNumberOfSamplesToApplyFilter >= 0,
+                "The minimum number of samples must be zero or greater." );
+        this.minimumNumberOfSamplesToApplyFilter = minimumNumberOfSamplesToApplyFilter;
     }
 
     /**
@@ -105,6 +112,13 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
      */
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dmatrix ) throws FilteringException {
+        int numberOfSamples = ExpressionDataFilterUtils.countSamplesWithData( dmatrix );
+        if ( numberOfSamples < minimumNumberOfSamplesToApplyFilter ) {
+            log.warn( String.format( "Matrix has too few samples (%d) to apply repetitive values filter; the minimum is %d.",
+                    numberOfSamples, minimumNumberOfSamplesToApplyFilter ) );
+            return dmatrix;
+        }
+
         QuantitationType qt = dmatrix.getQuantitationType();
 
         if ( mode == Mode.RANK ) {
@@ -135,7 +149,7 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
                 log.info( "Matrix contains log2cpm data with known library sizes, the repetitive values filter will use values that are not corrected for library size." );
                 return filterLog2cpm( dmatrix, librarySize );
             } else {
-                log.warn( dmatrix + " contains is log2cpm, but no library sizes were found in the BioAssays, filtering of repetitive values will use ranks." );
+                log.warn( "Matrix contains is log2cpm, but no library sizes were found in the BioAssays, filtering of repetitive values will use ranks." );
                 return filterDistinctValuesByRanks( dmatrix, rank( dmatrix ) );
             }
         }
@@ -151,6 +165,11 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
                 throw new FilteringException( "Failed to convert matrix to log2 scale for filtering", e );
             }
         }
+    }
+
+    @Override
+    public boolean appliesTo( ExpressionDataDoubleMatrix dataMatrix ) {
+        return dataMatrix.columns() >= minimumNumberOfSamplesToApplyFilter && minimumFractionOfUniqueValues > 0;
     }
 
     /**
@@ -170,7 +189,8 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
         return Optional.of( librarySize );
     }
 
-    private ExpressionDataDoubleMatrix filterLog2cpm( ExpressionDataDoubleMatrix dmatrix, long[] librarySize ) throws NoDesignElementsException {
+    private ExpressionDataDoubleMatrix filterLog2cpm( ExpressionDataDoubleMatrix dmatrix, long[] librarySize ) throws
+            NoDesignElementsException {
         DoubleMatrix<CompositeSequence, BioMaterial> unnormalizedMatrix = dmatrix.getMatrix().copy();
         double[] log2LibrarySize = new double[librarySize.length];
         for ( int j = 0; j < librarySize.length; j++ ) {
@@ -182,13 +202,24 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
                 unnormalizedMatrix.set( i, j, unnormalizedMatrix.get( i, j ) + log2LibrarySize[j] );
             }
         }
-        ExpressionDataDoubleMatrix filteredMatrix = filterZeroVariance( new ExpressionDataDoubleMatrix( dmatrix, unnormalizedMatrix ) );
+        Map<QuantitationType, QuantitationType> unnormalizedQts = dmatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    qt = QuantitationType.Factory.newInstance( qt );
+                    qt.setName( qt.getName()
+                            .replaceAll( "\\s+(log2cpm)", "" )
+                            .replaceAll( "log2cpm", "" ) );
+                    // should go from AMOUNT -> COUNT
+                    qt.setScale( ScaleType.COUNT );
+                    return qt;
+                } ) );
+        ExpressionDataDoubleMatrix filteredMatrix = filterZeroVariance( dmatrix.withMatrix( unnormalizedMatrix, unnormalizedQts ) );
         List<CompositeSequence> kept = new ArrayList<>( dmatrix.getDesignElements() );
         kept.retainAll( filteredMatrix.getDesignElements() );
         return dmatrix.sliceRows( kept );
     }
 
-    private ExpressionDataDoubleMatrix filterZeroVariance( ExpressionDataDoubleMatrix dmatrix ) throws NoDesignElementsException {
+    private ExpressionDataDoubleMatrix filterZeroVariance( ExpressionDataDoubleMatrix dmatrix ) throws
+            NoDesignElementsException {
         int r = dmatrix.rows();
         ZeroVarianceFilter zeroVarianceFilter = new ZeroVarianceFilter();
         ExpressionDataDoubleMatrix filteredMatrix = zeroVarianceFilter.filter( dmatrix );
@@ -200,7 +231,8 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
         return filteredMatrix;
     }
 
-    private ExpressionDataDoubleMatrix filterDistinctValuesByRanks( ExpressionDataDoubleMatrix dmatrix, ExpressionDataDoubleMatrix ranks ) throws NoDesignElementsException {
+    private ExpressionDataDoubleMatrix filterDistinctValuesByRanks( ExpressionDataDoubleMatrix
+            dmatrix, ExpressionDataDoubleMatrix ranks ) throws NoDesignElementsException {
         List<CompositeSequence> kept = new ArrayList<>( dmatrix.getDesignElements() );
         kept.retainAll( filterDistinctValues( ranks ).getDesignElements() );
         return dmatrix.sliceRows( kept );
@@ -210,36 +242,44 @@ public class RepetitiveValuesFilter implements Filter<ExpressionDataDoubleMatrix
         DenseDoubleMatrix<CompositeSequence, BioMaterial> rankMatrix = new DenseDoubleMatrix<>( MatrixStats.ranksByColumn( dmatrix.getMatrix() ).toArray() );
         rankMatrix.setRowNames( dmatrix.getMatrix().getRowNames() );
         rankMatrix.setColumnNames( dmatrix.getMatrix().getColNames() );
-        return new ExpressionDataDoubleMatrix( dmatrix, rankMatrix );
+        Map<QuantitationType, QuantitationType> rankQts = dmatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    qt = QuantitationType.Factory.newInstance( qt );
+                    qt.setName( qt.getName() + " (rank-transformed)" );
+                    qt.setType( StandardQuantitationType.OTHER ); // rank?
+                    qt.setScale( ScaleType.PERCENT1 );
+                    return qt;
+                } ) );
+        return dmatrix.withMatrix( rankMatrix, rankQts );
     }
 
     /**
      * @throws NoDesignElementsException if no rows are left after filtering and noOtherRowsAreKept is true
      */
-    private ExpressionDataDoubleMatrix filterDistinctValues( ExpressionDataDoubleMatrix dmatrix ) throws NoDesignElementsException {
+    private ExpressionDataDoubleMatrix filterDistinctValues( ExpressionDataDoubleMatrix dmatrix ) throws
+            NoDesignElementsException {
         ExpressionDataDoubleMatrix filteredMatrix = dmatrix;
-        if ( dmatrix.columns() >= minimumNumberOfAssaysToApplyFilter ) {
-            int r = filteredMatrix.rows();
-            /* This threshold had been 10^-5, but it's probably too stringent. Also remember
-             * the data are log transformed the threshold should be transformed as well (it's not that simple),
-             * but that's a minor effect.
-             * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
-            TooFewDistinctValuesFilter distinctValuesFilter = new TooFewDistinctValuesFilter( minimumFractionOfUniqueValues );
-            filteredMatrix = distinctValuesFilter.filter( filteredMatrix );
-            if ( filteredMatrix.rows() == 0 ) {
-                throw new NoDesignElementsException( "No rows left after filtering for repetitive values with " + distinctValuesFilter + "." );
-            } else if ( filteredMatrix.rows() < r ) {
-                log.info( ( r - filteredMatrix.rows() ) + " rows removed due to too many identical values" );
-            }
+        int r = filteredMatrix.rows();
+        /* This threshold had been 10^-5, but it's probably too stringent. Also remember
+         * the data are log transformed the threshold should be transformed as well (it's not that simple),
+         * but that's a minor effect.
+         * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
+        TooFewDistinctValuesFilter distinctValuesFilter = new TooFewDistinctValuesFilter( minimumFractionOfUniqueValues );
+        filteredMatrix = distinctValuesFilter.filter( filteredMatrix );
+        if ( filteredMatrix.rows() == 0 ) {
+            throw new NoDesignElementsException( "No rows left after filtering for repetitive values with " + distinctValuesFilter + "." );
+        } else if ( filteredMatrix.rows() < r ) {
+            log.info( ( r - filteredMatrix.rows() ) + " rows removed due to too many identical values" );
         }
         return filteredMatrix;
     }
 
     @Override
     public String toString() {
-        return String.format( "RepetitiveValuesFilter Mode=%s Minimum Samples To Apply Filter=%d Minimum Distinct Values=%f%%",
+        return String.format( "RepetitiveValuesFilter Mode=%s Minimum Distinct Values=%.2f%% Minimum Number Of Samples=%d",
                 mode,
-                minimumNumberOfAssaysToApplyFilter,
-                100 * minimumFractionOfUniqueValues );
+                100 * minimumFractionOfUniqueValues,
+                minimumNumberOfSamplesToApplyFilter
+        );
     }
 }

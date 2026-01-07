@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -45,11 +48,15 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
     public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
     public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
-    ArrayDesignSequenceProcessingService app;
+    private ArrayDesignSequenceProcessingService app;
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );
 

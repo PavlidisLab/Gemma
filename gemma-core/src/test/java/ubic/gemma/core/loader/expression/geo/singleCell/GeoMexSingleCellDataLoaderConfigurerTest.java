@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -42,6 +45,9 @@ import static org.junit.Assert.assertTrue;
 
 @ContextConfiguration
 public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -63,6 +69,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     private Path downloadDir;
 
     @Test
+    @NetworkAvailable
     public void testDetect10xUnfiltered10XData() throws IOException {
         GeoSample sample = readSeriesFromGeo( "GSE269482" ).getSamples().stream()
                 .findFirst()
@@ -72,6 +79,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     }
 
     @Test
+    @NetworkAvailable
     public void testGSE269482() throws IOException, NoSingleCellDataFoundException {
         testUnfiltered10xDataset( "GSE269482", "GSM8316309", "Mus musculus", "SC3Pv3-polyA-OCM" );
     }
@@ -81,57 +89,70 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE217511() throws IOException, NoSingleCellDataFoundException {
         testUnfiltered10xDataset( "GSE217511", "GSM6720852", "Homo sapiens", "SC3Pv3-polyA" );
     }
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE178226() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE178226", "GSM5384778", "Mus musculus", "SC3Pv3-polyA" );
     }
 
+    @Test
+    @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE280175() throws NoSingleCellDataFoundException, IOException {
-        testUnfiltered10xDataset( "GSE280175", "GSM8591175", "Homo sapiens", "SC3Pv3-polyA" );
+        testUnfiltered10xDataset( "GSE280175", "GSM8591175", "Homo sapiens", null );
     }
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE221042() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE221042", "GSM6841143", "Homo sapiens", "SC3Pv3-polyA" );
     }
 
     @Test
+    @NetworkAvailable
     public void testGSE223423() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE223423", "GSM6948202", "Mus musculus", "SC3Pv3-polyA" );
     }
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE143355() throws NoSingleCellDataFoundException, IOException {
         // the extraction protocol does not specify if it's 3' or 5' v3
         testUnfiltered10xDataset( "GSE143355", "GSM4257550", "Mus musculus", null );
     }
 
     @Test
+    @NetworkAvailable
     public void testGSE198033() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE198033", "GSM5936167", "Homo sapiens", "SC3Pv3-polyA" );
     }
 
     @Test
+    @Category(SlowTest.class)
+    @NetworkAvailable
     public void testGSE132355() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE132355", "GSM3860733", "Mus musculus", null );
     }
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE295078() throws NoSingleCellDataFoundException, IOException {
         // TODO: this is a dataset with a 5' chemistry
         testUnfiltered10xDataset( "GSE295078", "GSM8941791", "Mus musculus", null );
     }
 
     @Test
-    public void testGSE255369() throws NoSingleCellDataFoundException, IOException {
+    @NetworkAvailable
+    public void testGSE255369() throws IOException {
         // data is not in GEO, so just use an empty placeholder
         Path mexDir = Files.createTempDirectory( "GSE255369" );
         Path sampleDir = mexDir.resolve( "GSM8070652" );
@@ -168,6 +189,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testParallelFiltering() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
         Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );

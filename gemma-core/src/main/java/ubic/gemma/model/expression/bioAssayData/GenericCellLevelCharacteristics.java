@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
  * <p>
  * This is not meant to be used directly, prefer {@link CellLevelCharacteristics.Factory#newInstance} for creating
  * cell-level characteristics or {@link CellTypeAssignment} for cell types.
+ *
  * @author poirigui
  */
 @Getter
@@ -48,7 +51,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
 
     @Override
     public int hashCode() {
-        return Objects.hash( characteristics, Arrays.hashCode( indices ) );
+        return super.hashCode();
     }
 
     @Override
@@ -61,7 +64,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( characteristics, that.characteristics )
                 && Arrays.equals( indices, that.indices );
     }
@@ -69,7 +72,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
     @Override
     public String toString() {
         return super.toString()
-                + ( characteristics != null ? " Characteristics=" + characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( characteristics != null && ModelUtils.isInitialized( characteristics ) ? " Characteristics=" + characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
                 + ( " Number of characteristics=" + numberOfCharacteristics )
                 + ( numberOfAssignedCells != null ? " Number of assigned cells=" + numberOfAssignedCells : "" );
     }

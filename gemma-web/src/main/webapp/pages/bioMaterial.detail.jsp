@@ -173,18 +173,9 @@
     <input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
     <input type="hidden" name="bmClass" id="bmClass"
             value="${bioMaterial['class'].name}" />
-    <input type="hidden" name="canEdit" id="canEdit" value="true" />
-
-    <br>
 
     <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(#bioMaterial, 'WRITE')">
-        <td colspan="2">
-            <div>
-                <input type="button"
-                        onclick="location.href='${pageContext.request.contextPath}/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
-                        value="Edit">
-            </div>
-        </td>
+        <input type="hidden" name="canEdit" id="canEdit" value="true" />
     </security:authorize>
 
 </div>
@@ -203,8 +194,8 @@ Ext.onReady( function() {
          id : bmId,
          classDelegatingFor : bmClass
       } ],
-      writeMethod : AnnotationController.createBioMaterialTag,
-      removeMethod : AnnotationController.removeBioMaterialTag,
+      writeMethod : BioMaterialController.createBioMaterialTag,
+      removeMethod : BioMaterialController.removeBioMaterialTag,
       entId : bmId,
       editable : canEdit,
       mgedTermKey : "experiment"

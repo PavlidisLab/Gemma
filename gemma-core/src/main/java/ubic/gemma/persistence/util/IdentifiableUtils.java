@@ -1,8 +1,10 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Hibernate;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
@@ -13,18 +15,33 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Utilities for {@link ubic.gemma.model.common.Identifiable}.
+ *
  * @author poirigui
  */
 public class IdentifiableUtils {
 
     /**
+     * Obtain the identifier of the object, throwing a {@link NullPointerException} if it is null.
+     *
+     * @param identifiable an entity to get the ID from
+     * @throws NullPointerException if the identifier is null
+     */
+    @Nonnull
+    public static Long getRequiredId( Identifiable identifiable ) {
+        return requireNonNull( identifiable.getId() );
+    }
+
+    /**
      * Convert a collection of identifiable to their IDs.
+     * <p>
+     * This function cannot be used on non-persistent entities (i.e. those with null IDs).
+     *
      * @param entities entities
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
-    public static <T extends Identifiable> List<Long> getIds( Collection<T> entities ) {
-        return entities.stream().map( Identifiable::getId ).collect( Collectors.toList() );
+    public static <T extends @MayBeUninitialized Identifiable> List<Long> getIds( Collection<T> entities ) {
+        return entities.stream().map( IdentifiableUtils::getRequiredId ).collect( Collectors.toList() );
     }
 
     /**
@@ -32,15 +49,17 @@ public class IdentifiableUtils {
      * <p>
      * Note: If more than one entity share the same ID, there is no guarantee on which will be kept in the final
      * mapping. If the collection is ordered, the first encountered entity will be kept.
+     * <p>
+     * This function cannot be used on non-persistent entities (i.e. those with null IDs).
      *
      * @param entities where id is called "id"
      * @param <T>      the type
      * @return the created map
      */
-    public static <T extends Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
+    public static <T extends @MayBeUninitialized Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
         Map<Long, T> result = new HashMap<>();
         for ( T entity : entities ) {
-            result.putIfAbsent( entity.getId(), entity );
+            result.putIfAbsent( getRequiredId( entity ), entity );
         }
         return result;
     }
@@ -50,10 +69,13 @@ public class IdentifiableUtils {
      * <p>
      * This uses {@link Identifiable#getId()} for comparing elements, making the collection safe for holding proxies
      * unlike a {@link java.util.HashSet} that relies on {@link Object#hashCode()}.
+     * <p>
+     * This collector cannot be used with non-persistent entities (i.e. those with null IDs).
+     *
      * @see Collectors#toSet()
      */
-    public static <T extends Identifiable> Collector<T, ?, Set<T>> toIdentifiableSet() {
-        return Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( Identifiable::getId ) ) );
+    public static <T extends @MayBeUninitialized Identifiable> Collector<T, ?, Set<T>> toIdentifiableSet() {
+        return Collectors.toCollection( () -> new TreeSet<>( Comparator.comparing( i -> requireNonNull( i.getId() ) ) ) );
     }
 
     /**
@@ -61,16 +83,19 @@ public class IdentifiableUtils {
      * <p>
      * This uses {@link Identifiable#getId()} for comparing elements, making the collection safe for holding proxies
      * unlike a {@link java.util.HashMap} that relies on {@link Object#hashCode()}.
+     * <p>
+     * This collector cannot be used with non-persistent entities (i.e. those with null IDs).
+     *
      * @see Collectors#toMap
      */
-    public static <T, K extends Identifiable, U> Collector<T, ?, Map<K, U>> toIdentifiableMap( Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U> valueMapper ) {
-        return Collectors.toMap( keyMapper, valueMapper, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( Identifiable::getId ) ) );
+    public static <T, K extends @MayBeUninitialized Identifiable, U> Collector<T, ?, Map<K, U>> toIdentifiableMap( Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U> valueMapper ) {
+        return Collectors.toMap( keyMapper, valueMapper, ( a, b ) -> b, () -> new TreeMap<>( Comparator.comparing( i -> requireNonNull( i.getId() ) ) ) );
     }
 
     /**
      * Converts an identifiable to string, avoiding its initialization of it is a proxy.
      */
-    public static <T extends Identifiable> String toString( T identifiable, Class<T> clazz ) {
+    public static <T extends @MayBeUninitialized Identifiable> String toString( T identifiable, Class<T> clazz ) {
         if ( Hibernate.isInitialized( identifiable ) ) {
             return Objects.toString( identifiable );
         } else {
@@ -83,7 +108,7 @@ public class IdentifiableUtils {
      * <p>
      * Hashing an entity that does ont have an assigned ID is not allowed as its hash code would change once persisted.
      */
-    public static int hash( Identifiable... identifiables ) {
+    public static int hash( @MayBeUninitialized Identifiable... identifiables ) {
         Object[] ids = new Long[identifiables.length];
         for ( int i = 0; i < identifiables.length; i++ ) {
             ids[i] = identifiables[i] != null ? requireNonNull( identifiables[i].getId(), "Cannot hash a transient entity, either persist it first or use a different collection type." ) : null;
@@ -93,9 +118,10 @@ public class IdentifiableUtils {
 
     /**
      * Compare two identifiables of the same type without risking initializing them.
+     *
      * @return true if they have the same ID or are equal according to {@link Objects#equals(Object, Object)}.
      */
-    public static <T extends Identifiable> boolean equals( @Nullable T a, @Nullable T b ) {
+    public static <T extends Identifiable> boolean equals( @Nullable @MayBeUninitialized T a, @Nullable @MayBeUninitialized T b ) {
         if ( a == b ) {
             return true;
         } else if ( a == null ^ b == null ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Implementation of <code>TagExtraInfo</code> for the <b>constants</b> tag, identifying the scripting object(s) to be
  * made visible.
- * 
+ *
  * @author Matt Raible
  *
  */
@@ -63,16 +63,15 @@ public class ConstantsTei extends TagExtraInfo {
 
                 AccessibleObject.setAccessible( fields, true );
 
-                for ( int i = 0; i < fields.length; i++ ) {
-                    vars.add( new VariableInfo( fields[i].getName(), "java.lang.String", true, VariableInfo.AT_END ) );
+                for ( Field field : fields ) {
+                    vars.add( new VariableInfo( field.getName(), "java.lang.String", true, VariableInfo.AT_END ) );
                 }
             } else {
                 String var = data.getAttributeString( "var" );
                 vars.add( new VariableInfo( c.getField( var ).getName(), "java.lang.String", true, VariableInfo.AT_END ) );
             }
         } catch ( Exception cnf ) {
-            log.error( cnf.getMessage() );
-            cnf.printStackTrace();
+            log.error( cnf.getMessage(), cnf );
         }
 
         return vars.toArray( new VariableInfo[] {} );

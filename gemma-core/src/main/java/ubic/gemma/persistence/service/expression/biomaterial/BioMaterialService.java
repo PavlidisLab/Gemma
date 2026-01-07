@@ -33,6 +33,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author kelsey
@@ -87,6 +88,9 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> loadAll();
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    <T extends Exception> BioMaterial loadAndThawOrFail( Long bmId, Function<String, T> exceptionSupplier, String message ) throws T;
+
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioMaterial bioMaterial );
@@ -114,29 +118,31 @@ public interface BioMaterialService extends BaseService<BioMaterial>, BaseVoEnab
      * @param valueObjects VOs
      * @return the biomaterials that were modified.
      */
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
 
     /**
      * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
      *
-     * @param d2fv  map of dates to factor values
+     * @param d2fv map of dates to factor values
      */
     @Secured({ "GROUP_ADMIN" })
     <T> void associateBatchFactor( Map<BioMaterial, T> descriptors, Map<T, FactorValue> d2fv );
 
-    String getBioMaterialIdList( Collection<BioMaterial> bioMaterials );
-
     /**
      * Will persist the give vocab characteristic to the given biomaterial
+     *
      * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#addCharacteristic(ExpressionExperiment, Characteristic)
      */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addCharacteristic( BioMaterial bm, Characteristic vc );
 
 
     /**
      * Remove the given characteristic from the given biomaterial
+     *
      * @throws IllegalArgumentException if the characteristic does not belong to the biomaterial
      */
-    void removeCharacteristic( BioMaterial bm, Characteristic vc );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCharacteristics( BioMaterial bm, Collection<Characteristic> vc );
 }

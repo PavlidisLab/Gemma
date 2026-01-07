@@ -6,6 +6,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 /**
  * A bulk expression data matrix that can be efficiently accessed as a primitive int matrix.
+ *
  * @author poirigui
  */
 public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatrix<Integer> implements BulkExpressionDataPrimitiveIntMatrix {
@@ -53,6 +55,16 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
     }
 
     @Override
+    public BulkExpressionDataMatrix<Integer> sliceColumns( List<BioMaterial> bioMaterials ) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BulkExpressionDataIntMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int[][] getRawMatrixAsInts() {
         return matrix;
     }
@@ -86,7 +98,7 @@ public class BulkExpressionDataIntMatrix extends AbstractBulkExpressionDataMatri
     }
 
     @Override
-    public ExpressionDataMatrix<Integer> sliceRows( List<CompositeSequence> designElements ) {
+    public BulkExpressionDataIntMatrix sliceRows( List<CompositeSequence> designElements ) {
         int[][] slicedMatrix = new int[designElements.size()][];
         for ( int i = 0; i < designElements.size(); i++ ) {
             CompositeSequence de = designElements.get( i );

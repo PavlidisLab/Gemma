@@ -105,7 +105,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
             return Collections.emptyList();
         }
         // using a treeset to avoid initializing proxies
-        Set<BioMaterial> fringe = new TreeSet<>( Comparator.comparing( BioMaterial::getId ) );
+        Set<BioMaterial> fringe = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
         fringe.addAll( bioMaterials );
         Set<BioMaterial> visited = new HashSet<>();
         List<BioMaterial> results = new ArrayList<>();

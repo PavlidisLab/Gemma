@@ -12,5 +12,7 @@ public final class ExternalDatabases {
             GO = "go",
             MULTIFUNCTIONALITY = "multifunctionality",
             GENE2CS = "gene2cs",
-            PUBMED = "pubmed";
+            PUBMED = "PubMed",
+            ARXIV = "arXiv",
+            BIORXIV = "bioRxiv";
 }

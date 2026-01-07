@@ -7,8 +7,13 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -21,15 +26,16 @@ import java.util.DoubleSummaryStatistics;
 import java.util.Set;
 
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.isGoId;
-import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.quote;
+import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 
 /**
  * GO-based search source.
  * <p>
  * This does not exactly fit the {@link OntologySearchSource} because it is specialized for the {@link GeneOntologyService}
  * and uses higher-level method to retrieve GO-gene associations.
+ *
  * @author poirigui
  */
 @Component
@@ -55,7 +61,9 @@ public class GeneOntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseGeneOntology();
+        return settings.isUseGeneOntology()
+                && settings.hasResultType( Gene.class )
+                && settings.getMode().isAtLeast( SearchSettings.SearchMode.FAST );
     }
 
     @Override
@@ -150,9 +158,9 @@ public class GeneOntologySearchSource implements SearchSource {
             // query all genes for the given platform?
             genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint() ) );
         }
-        if ( settings.getExperimentConstraint() != null ) {
+        if ( settings.getDatasetConstraint() != null ) {
             // query all the genes used by the *preferred* set of vectors, or any vector?
-            genes.retainAll( expressionExperimentService.getGenesUsedByPreferredVectors( settings.getExperimentConstraint() ) );
+            genes.retainAll( expressionExperimentService.getGenesUsedByPreferredVectors( settings.getDatasetConstraint() ) );
         }
         return genes;
     }

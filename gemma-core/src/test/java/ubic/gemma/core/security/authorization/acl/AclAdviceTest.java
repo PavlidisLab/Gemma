@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -46,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
+import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.Assert.*;
@@ -301,7 +303,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();
+        DifferentialExpressionAnalysis diffExpressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        diffExpressionAnalysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, Collections.emptyMap() ) );
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
         resultSet.setAnalysis( diffExpressionAnalysis );

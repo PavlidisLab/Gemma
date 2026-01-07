@@ -122,7 +122,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             assert info.getHistory().getPreviousIds() != null;
             if ( !info.getHistory().getPreviousIds().isEmpty() ) {
                 String previousIds = StringUtils.join( info.getHistory().getPreviousIds(), "," );
-                gene.setPreviousNcbiId( previousIds );
+                gene.setPreviousNcbiGeneId( previousIds );
             }
 
         } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
@@ -130,7 +130,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 NcbiGeneConverter.log
                         .debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
                                 + info.getDiscontinuedId() );
-            gene.setPreviousNcbiId( info.getDiscontinuedId() );
+            gene.setPreviousNcbiGeneId( info.getDiscontinuedId() );
         }
 
         gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );

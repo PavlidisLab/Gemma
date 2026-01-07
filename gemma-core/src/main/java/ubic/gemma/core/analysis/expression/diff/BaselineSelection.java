@@ -169,7 +169,7 @@ public class BaselineSelection {
      *                    used by any of the samples. This is important for subsets. If null, this is ignored.
      * @return map of factors to the baseline factorvalue for that factor.
      */
-    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors, @Nullable List<BioMaterial> samplesUsed ) {
+    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors, @Nullable Collection<BioMaterial> samplesUsed ) {
 
         Map<ExperimentalFactor, FactorValue> result = new HashMap<>();
 
@@ -302,8 +302,8 @@ public class BaselineSelection {
         return getBaselineLevels( factors, null );
     }
 
-    public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( List<BioMaterial> samplesUsed,
-            List<ExperimentalFactor> factors ) {
+    public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( Collection<BioMaterial> samplesUsed,
+            Collection<ExperimentalFactor> factors ) {
         Map<ExperimentalFactor, FactorValue> baselineConditions = getBaselineLevels( factors, samplesUsed );
 
         /*
@@ -336,7 +336,7 @@ public class BaselineSelection {
      * @return true if the factorvalue is used by at least one of the samples.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
-    private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
+    private static boolean used( FactorValue fv, Collection<BioMaterial> samplesUsed ) {
         for ( BioMaterial bm : samplesUsed ) {
             for ( FactorValue bfv : bm.getAllFactorValues() ) {
                 if ( fv.equals( bfv ) ) {

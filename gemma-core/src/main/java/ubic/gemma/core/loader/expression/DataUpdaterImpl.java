@@ -134,10 +134,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * an alt CDF or exon-level, so be sure never to use an alt CDF
      * for processing raw data.
      *
-     * @param  ee                  ee
-     * @param  pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
-     *                             exon-level)
-     * @throws IOException         when IO problems occur.
+     * @param ee                  ee
+     * @param pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
+     *                            exon-level)
+     * @throws IOException when IO problems occur.
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
@@ -193,7 +193,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
      * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param sequencingMetadata  sequencing metadata
-     *                            TODO: have per-assay sequencing metadata
+     *                                                                                  TODO: have per-assay sequencing metadata
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
      */
     @Override
@@ -246,7 +246,7 @@ public class DataUpdaterImpl implements DataUpdater {
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                 .convertToLog2Cpm( properCountMatrix, librarySize );
 
-        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmMatrix, log2cpmQt );
 
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
         this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
@@ -258,7 +258,7 @@ public class DataUpdaterImpl implements DataUpdater {
                 break;
             }
         }
-        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
+        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, properCountMatrix, countqt );
 
         this.addData( ee, targetArrayDesign, countEEMatrix );
 
@@ -281,7 +281,7 @@ public class DataUpdaterImpl implements DataUpdater {
                 }
             }
 
-            ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
+            ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, properRPKMMatrix, rpkmqt );
 
             this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
@@ -306,7 +306,7 @@ public class DataUpdaterImpl implements DataUpdater {
          * We need to do this from the Raw data, not the data that has been normalized etc.
          */
         Collection<RawExpressionDataVector> counts = rawExpressionDataVectorService.find( qt );
-        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( ee, counts );
 
         try {
             /*
@@ -325,7 +325,7 @@ public class DataUpdaterImpl implements DataUpdater {
             DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                     .convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
 
-            ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+            ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmMatrix, log2cpmQt );
 
             assert log2cpmEEMatrix.getQuantitationTypes().iterator().next().getIsPreferred();
 
@@ -352,10 +352,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
      *
-     * @param  ee             ee
-     * @param  targetPlatform (this only works for a single-platform data set)
-     * @param  qt             qt
-     * @param  data           data
+     * @param ee             ee
+     * @param targetPlatform (this only works for a single-platform data set)
+     * @param qt             qt
+     * @param data           data
      * @return ee
      */
     @Override
@@ -368,7 +368,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         DoubleMatrix<CompositeSequence, BioMaterial> rdata = this.matchElementsToRowNames( targetPlatform, data );
         this.matchBioMaterialsToColNames( ee, data, rdata );
-        ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
+        ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, rdata, qt );
 
         this.replaceData( ee, targetPlatform, eematrix );
     }
@@ -554,11 +554,11 @@ public class DataUpdaterImpl implements DataUpdater {
      * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
      * a preferred quantitation type, an error will be thrown.
      *
-     * @param  ee             ee
-     * @param  targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
-     *                        this
-     *                        for a multi-platform dataset)
-     * @param  data           to slot in
+     * @param ee             ee
+     * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
+     *                       this
+     *                       for a multi-platform dataset)
+     * @param data           to slot in
      * @return ee
      */
     @Override
@@ -619,10 +619,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param  ee             the experiment to be modified
-     * @param  targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
-     *                        experiment will be switched to it if necessary.
-     * @param  data           the data to be used
+     * @param ee             the experiment to be modified
+     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
+     *                       experiment will be switched to it if necessary.
+     * @param data           the data to be used
      * @return ee
      */
     @Override
@@ -681,8 +681,8 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * RNA-seq
      *
-     * @param ee            experiment
-     * @param countEEMatrix count ee matrix
+     * @param ee                 experiment
+     * @param countEEMatrix      count ee matrix
      * @param sequencingMetadata sequencing metadata
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
@@ -742,9 +742,9 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * RNA-seq
      *
-     * @param  ee                  experiment
-     * @param  countMatrix         count matrix
-     * @param  allowMissingSamples allow missing samples
+     * @param ee                  experiment
+     * @param countMatrix         count matrix
+     * @param allowMissingSamples allow missing samples
      * @return experiment
      */
     private void dealWithMissingSamples( ExpressionExperiment ee,
@@ -802,11 +802,11 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Affymetrix
      *
-     * @param  ee    (lightly thawed)
-     * @param  files CEL files
+     * @param ee    (lightly thawed)
+     * @param files CEL files
      * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily
-     *               the
-     *               "original platform".
+     * the
+     * "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee,
             Collection<File> files ) {
@@ -849,7 +849,7 @@ public class DataUpdaterImpl implements DataUpdater {
      * versions of exon
      * arrays - no custom CDFs!
      *
-     * @param  ad array design we are starting with
+     * @param ad array design we are starting with
      * @return platform we should actually use. It can be the same as the input (thawed)
      */
     private ArrayDesign getAffymetrixTargetPlatform( ArrayDesign ad ) {
@@ -893,7 +893,7 @@ public class DataUpdaterImpl implements DataUpdater {
     }
 
     /**
-     * @param  a auditable
+     * @param a auditable
      * @return true if auditable has vector merge event
      */
     private boolean hasVectorMergeEvent( Auditable a ) {
@@ -912,7 +912,7 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Generic (non-Affymetrix)
      *
-     * @param  ee ee
+     * @param ee ee
      * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
      */
     private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
@@ -1008,10 +1008,10 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Non-Affymetrix
      *
-     * @param  ee             experiment
-     * @param  targetPlatform target platform
-     * @param  data           data
-     * @param  qt             QT
+     * @param ee             experiment
+     * @param targetPlatform target platform
+     * @param data           data
+     * @param qt             QT
      * @return raw vectors
      */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -1078,8 +1078,8 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Generic
      *
-     * @param  rawMatrix         matrix
-     * @param  targetArrayDesign ad
+     * @param rawMatrix         matrix
+     * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
     private DoubleMatrix<CompositeSequence, BioMaterial> matchElementsToRowNames( ArrayDesign targetArrayDesign,
@@ -1140,7 +1140,7 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Generic
      *
-     * @param  ee experiment
+     * @param ee experiment
      * @return experiment
      */
     private void postprocess( ExpressionExperiment ee ) {
@@ -1169,10 +1169,10 @@ public class DataUpdaterImpl implements DataUpdater {
      * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
      * will be done)
      *
-     * @param  ee             presumed thawed
-     * @param  targetPlatform target platform
-     * @param  toBeSwitched   if necessary, specific which bioassays need to be switched (case: merged and re-run); or
-     *                        null
+     * @param ee             presumed thawed
+     * @param targetPlatform target platform
+     * @param toBeSwitched   if necessary, specific which bioassays need to be switched (case: merged and re-run); or
+     *                       null
      * @return how many were switched
      */
     private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform, @Nullable Collection<BioAssay> toBeSwitched ) {

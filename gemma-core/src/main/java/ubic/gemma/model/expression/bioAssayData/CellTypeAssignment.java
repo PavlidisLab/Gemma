@@ -4,14 +4,20 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.annotations.MayBeUninitialized;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Represents a cell type assignment where cells from a given dataset are assigned cell types.
+ *
  * @author poirigui
  * @see SingleCellDimension
  */
@@ -20,7 +26,7 @@ import java.util.stream.Collectors;
 public class CellTypeAssignment extends Analysis implements CellLevelCharacteristics {
 
     public static final Comparator<CellTypeAssignment> COMPARATOR = Comparator
-            .comparing( CellTypeAssignment::getName, Comparator.nullsLast( Comparator.naturalOrder() ) )
+            .comparing( CellTypeAssignment::getName, DescribableUtils.NAME_COMPARATOR )
             .thenComparing( clc -> clc.getProtocol() != null ? clc.getProtocol().getName() : null, Comparator.nullsLast( Comparator.naturalOrder() ) )
             .thenComparing( CellTypeAssignment::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
@@ -113,7 +119,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
 
     @Override
     public int hashCode() {
-        return Objects.hash( super.hashCode(), Arrays.hashCode( cellTypeIndices ), cellTypes );
+        return super.hashCode();
     }
 
     @Override
@@ -126,17 +132,18 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
-                && Objects.equals( cellTypes, that.cellTypes )
+        return DescribableUtils.equalsByName( this, that )
+                // cellTypes might be uninitialized, ignore it when comparing
+                && ModelUtils.equals( cellTypes, that.cellTypes ) == ModelUtils.EqualityOutcome.EQUAL
                 && Arrays.equals( cellTypeIndices, that.cellTypeIndices );
     }
 
     @Override
     public String toString() {
         return super.toString()
-                + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( cellTypes != null && ModelUtils.isInitialized( cellTypes ) ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
                 + ( " Number of Cell Types=" + numberOfCellTypes )
-                + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : null )
+                + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : "" )
                 + ( preferred ? " [Preferred]" : "" );
     }
 

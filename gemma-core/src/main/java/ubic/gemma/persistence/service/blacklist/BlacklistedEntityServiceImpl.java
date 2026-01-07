@@ -4,12 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
@@ -43,6 +43,12 @@ public class BlacklistedEntityServiceImpl extends AbstractVoEnabledService<Black
     @Transactional(readOnly = true)
     public boolean isBlacklisted( ExpressionExperiment dataset ) {
         return blacklistedEntityDao.isBlacklisted( dataset );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BlacklistedEntity findByShortName( String shortName ) {
+        return blacklistedEntityDao.findByShortName( shortName );
     }
 
     @Override

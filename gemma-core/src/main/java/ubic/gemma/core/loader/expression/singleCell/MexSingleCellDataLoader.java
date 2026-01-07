@@ -118,9 +118,11 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds = discardEmptyCells ?
+                List<String> sampleCellIds = ( discardEmptyCells ?
                         readLinesFromPath( barcodeFiles.get( i ), getNonEmptyColumns( matrixFiles.get( i ) ) ) :
-                        readLinesFromPath( barcodeFiles.get( i ) );
+                        readLinesFromPath( barcodeFiles.get( i ) ) ).stream()
+                        .map( line -> line.split( "\t", 2 )[0] )
+                        .collect( Collectors.toList() );
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }

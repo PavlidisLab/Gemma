@@ -61,6 +61,7 @@ public class BioAssayUtils {
      * <p>
      * Unlike {@link BioMaterial}s, assays do not hold a collection of characteristics and instead have a few fields
      * that are converted to characteristics.
+     *
      * @see BioMaterialUtils#createCharacteristicMap(Collection)
      * @see #getCharacteristics(BioAssay)
      */

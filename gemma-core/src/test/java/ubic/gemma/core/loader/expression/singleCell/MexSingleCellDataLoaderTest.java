@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
@@ -24,6 +26,8 @@ import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -47,10 +51,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 @ContextConfiguration
 public class MexSingleCellDataLoaderTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -298,8 +304,8 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
      */
     @Test
     @Category({ GeoTest.class, SlowTest.class })
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
@@ -421,6 +427,27 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
                     assertThat( vec.getData() ).isEmpty();
                     assertThat( vec.getDataIndices() ).isEmpty();
                 } );
+    }
+
+    /**
+     * This GEO series inclues cell types in the barcodes.tsv.gz files.
+     */
+    @Test
+    @Category({ GeoTest.class, SlowTest.class })
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE125708" );
+        GeoSample sample = series.getSamples().stream().filter( s -> "GSM3580724".equals( s.getGeoAccession() ) )
+                .findFirst()
+                .orElseThrow( IllegalArgumentException::new );
+        detector.downloadSingleCellData( series, sample );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder().ignoreSamplesLackingData( true ).build() );
+        BioAssay ba = BioAssay.Factory.newInstance( sample.getGeoAccession() );
+        ba.setSampleUsed( BioMaterial.Factory.newInstance( sample.getGeoAccession() ) );
+        SingleCellDimension dimension = loader.getSingleCellDimension( Collections.singletonList( ba ) );
+        assertThat( dimension.getCellIds() )
+                .hasSize( 9939 )
+                .contains( "AAACCTGAGGTGACCA-1" );
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {

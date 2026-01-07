@@ -1,6 +1,12 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
+const NUMBER_FORMATTER = Intl.NumberFormat();
+
+function formatNumber( n ) {
+   return NUMBER_FORMATTER.format( n );
+}
+
 /**
  * This provides a summary of the differential analyses done for a particular dataset/expression experiment. It is
  * structured as a tree with each analysis as a node and its result sets as its children
@@ -139,7 +145,17 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     var analysisNameExtra = null;
                     var nodeText = '';
                     var primaryFactorID = null;
-                    // if analysis has only one result set, don't give
+
+
+                   var cellCountText = '';
+                   var cellCount = analysis.bioAssaysAnalyzed.reduce((acc,val)=>{acc = acc + val.numberOfCells;return acc},0)
+                   if(!isNaN(cellCount) && cellCount > 0){
+                      cellCountText = "<span>[Cells: <b>" + formatNumber(cellCount) + "</b>]</span>";
+                   }
+                   subsetText += cellCountText
+
+
+                   // if analysis has only one result set, don't give
                     // it children and
                     // put all info in parent node
                     if (analysis.resultSets.length === 1) {
@@ -170,7 +186,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         /*
                          * How many levels were used.
                          */
-                        parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
+
+                       parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
                         parentNode.attributes.analysisId = resultSet.analysisId;
                         parentNode.attributes.resultSetId = resultSet.resultSetId;
                         if (resultSet.experimentalFactors.length === 1 && analysis.factorValuesUsed[resultSet.experimentalFactors[0].id] !== undefined) {
@@ -261,7 +278,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    // debugger
 
                     parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);

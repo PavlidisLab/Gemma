@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
-import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
@@ -82,11 +81,6 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         }
 
         @Bean
-        public SingleCellSparsityMetrics singleCellSparsityMetrics() {
-            return new SingleCellSparsityMetrics();
-        }
-
-        @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
@@ -121,7 +115,10 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         RandomSingleCellDataUtils.setSeed( 123 );
         random = new Random( 123 );
         ad = new ArrayDesign();
-        ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs1" ) );
+        for ( int i = 0; i < 10; i++ ) {
+            ad.getCompositeSequences()
+                    .add( CompositeSequence.Factory.newInstance( "cs" + ( i + 1 ) ) );
+        }
         ee = new ExpressionExperiment();
         ee.setId( 1L );
         ee.setShortName( "test" );
@@ -242,37 +239,39 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getSequenceReadCount )
-                            .containsExactly( 116L,
-                                    116L,
-                                    116L,
-                                    116L,
-                                    128L,
-                                    128L,
-                                    128L,
-                                    128L,
-                                    190L,
-                                    190L,
-                                    190L,
-                                    190L,
-                                    206L,
-                                    206L,
-                                    206L,
-                                    206L );
+                            .containsExactly(
+                                    1549L,
+                                    1549L,
+                                    1549L,
+                                    1549L,
+                                    1467L,
+                                    1467L,
+                                    1467L,
+                                    1467L,
+                                    1625L,
+                                    1625L,
+                                    1625L,
+                                    1625L,
+                                    1648L,
+                                    1648L,
+                                    1648L,
+                                    1648L
+                            );
                 } )
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                            .containsExactly( 167, 167, 167, 167, 144, 144, 144, 144, 177, 177, 177, 177, 176, 176, 176, 176 );
                 } )
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfDesignElements )
-                            .containsExactly( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
+                            .containsExactly( 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 );
                 } )
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCellsByDesignElements )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                            .containsExactly( 263, 263, 263, 263, 220, 220, 220, 220, 266, 266, 266, 266, 264, 264, 264, 264 );
                 } );
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
@@ -295,7 +294,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
+                            .containsExactly( 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.934190857306152, 16.934190857306152, 16.934190857306152, 16.934190857306152 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .isNotNull()
+                            .hasSize( 16 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -310,7 +313,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         qt.setRepresentation( PrimitiveType.DOUBLE );
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
-        long[] sourceLibrarySize = { ( long ) ( 1.1 * 2236 ), ( long ) ( 1.1 * 2392 ), ( long ) ( 1.1 * 2260 ), ( long ) ( 1.1 * 2460 ) };
+        long[] sourceLibrarySize = { ( long ) ( 1.1 * 23788 ), ( long ) ( 1.1 * 24456 ), ( long ) ( 1.1 * 23628 ), ( long ) ( 1.1 * 23956 ) };
         int i = 0;
         for ( BioAssay ba : dimension.getBioAssays() ) {
             ba.setSequenceReadCount( sourceLibrarySize[i++] );
@@ -350,32 +353,31 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getSequenceReadCount )
-                            .containsExactly(
-                                    128L,
-                                    128L,
-                                    128L,
-                                    128L,
-                                    141L,
-                                    141L,
-                                    141L,
-                                    141L,
-                                    209L,
-                                    209L,
-                                    209L,
-                                    209L,
-                                    227L,
-                                    227L,
-                                    227L,
-                                    227L );
+                            .containsExactly( 1704L,
+                                    1704L,
+                                    1704L,
+                                    1704L,
+                                    1614L,
+                                    1614L,
+                                    1614L,
+                                    1614L,
+                                    1787L,
+                                    1787L,
+                                    1787L,
+                                    1787L,
+                                    1813L,
+                                    1813L,
+                                    1813L,
+                                    1813L );
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                            .containsExactly( 167, 167, 167, 167, 144, 144, 144, 144, 177, 177, 177, 177, 176, 176, 176, 176 );
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfDesignElements )
-                            .containsExactly( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
+                            .containsExactly( 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 );
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCellsByDesignElements )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                            .containsExactly( 263, 263, 263, 263, 220, 220, 220, 220, 266, 266, 266, 266, 264, 264, 264, 264 );
                     assertThat( bas )
                             .extracting( BioAssay::getSequenceReadLength )
                             .containsOnly( 100 );
@@ -405,8 +407,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.789357121212962, 19.789357121212962, 19.789357121212962, 19.789357121212962, 19.7895882875424, 19.7895882875424, 19.7895882875424, 19.7895882875424, 19.790970239151374, 19.790970239151374, 19.790970239151374, 19.790970239151374, 19.7912097933244, 19.7912097933244, 19.7912097933244, 19.7912097933244 )
-                    ;
+                            .containsExactly( 16.06032739054481, 16.06032739054481, 16.06032739054481, 16.06032739054481, 16.280174844306096, 16.280174844306096, 16.280174844306096, 16.280174844306096, 16.70072573600578, 16.70072573600578, 16.70072573600578, 16.70072573600578, 16.79679970229158, 16.79679970229158, 16.79679970229158, 16.79679970229158 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .isNotNull()
+                            .hasSize( 16 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -450,7 +455,10 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.9287347434194, 19.9287347434194, 19.9287347434194, 19.9287347434194, 19.929196198277772, 19.929196198277772, 19.929196198277772, 19.929196198277772, 19.93002776164528, 19.93002776164528, 19.93002776164528, 19.93002776164528, 19.930184629445435, 19.930184629445435, 19.930184629445435, 19.930184629445435 );
+                            .containsExactly( 16.04211876227875, 16.04211876227875, 16.04211876227875, 16.04211876227875, 16.3329604373504, 16.3329604373504, 16.3329604373504, 16.3329604373504, 16.8658311330104, 16.8658311330104, 16.8658311330104, 16.8658311330104, 16.962401638370054, 16.962401638370054, 16.962401638370054, 16.962401638370054 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .hasSize( 16 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
@@ -492,7 +500,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
+                            .containsExactly( 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.934190857306152, 16.934190857306152, 16.934190857306152, 16.934190857306152 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .isNotNull()
+                            .hasSize( 16 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
@@ -536,7 +548,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
+                            .containsExactly( 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.934190857306152, 16.934190857306152, 16.934190857306152, 16.934190857306152 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .isNotNull()
+                            .hasSize( 16 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
@@ -620,17 +636,17 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31 );
+                            .containsExactly( 167, 167, 167, 167, 144, 144, 144, 144, 177, 177, 177, 177 );
                 } )
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfDesignElements )
-                            .containsExactly( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
+                            .containsExactly( 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 );
                 } )
                 .satisfies( bas -> {
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCellsByDesignElements )
-                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31 );
+                            .containsExactly( 263, 263, 263, 263, 220, 220, 220, 220, 266, 266, 266, 266 );
                 } );
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
@@ -653,7 +669,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 12 )
-                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175 );
+                            .containsExactly( 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.197702213816857, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.41755686567484, 16.83810421474247, 16.83810421474247, 16.83810421474247, 16.83810421474247 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .isNotNull()
+                            .hasSize( 12 )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -684,6 +704,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
 
         SingleCellAggregationConfig config = SingleCellAggregationConfig.builder()
                 .mask( mask )
+                .makePreferred( true )
                 .build();
         QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( ee, cellBAs, config );
 
@@ -701,6 +722,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     // offset will be pretty large. This is attenuated by large library sizes.
                     assertThat( total ).isEqualTo( 1e6, Offset.offset( 1e5 ) );
                 } )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getBioAssayDimension().getBioAssays() )
+                            .extracting( BioAssay::getNumberOfCells )
+                            .containsExactly( 144, 144, 144, 144, 128, 128, 128, 128, 151, 151, 151, 151, 167, 167, 167, 167 );
+                } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
@@ -708,8 +734,17 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.924034896638766, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.92533661561266, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927242643921385, 19.927826167638358, 19.927826167638358, 19.927826167638358, 19.927826167638358 );
+                            .containsExactly( 16.11775380793248, 16.11775380793248, 16.11775380793248, 16.11775380793248, 16.433483519282987, 16.433483519282987, 16.433483519282987, 16.433483519282987, 16.938081876282848, 16.938081876282848, 16.938081876282848, 16.938081876282848, 16.910181141906776, 16.910181141906776, 16.910181141906776, 16.910181141906776 );
+                    assertThat( rawVec.getNumberOfCells() )
+                            .hasSize( 16 )
+                            .containsExactly( 19, 19, 19, 19, 18, 18, 18, 18, 28, 28, 28, 28, 30, 30, 30, 30 );
                 } );
+
+        ArgumentCaptor<String> details = ArgumentCaptor.captor();
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), eq( "Created 10 aggregated raw vectors for " + newQt + "." ), details.capture() );
+        assertThat( details.getValue() )
+                .contains( "BioAssay Name=s0c0 Number of cells=144 Number of design elements=10 Number of cells x design elements=227 Number of masked cells=29/264 Library Size=1342.00" )
+                .contains( "Mask: GenericCellLevelCharacteristics Characteristics=false, true Number of characteristics=2 Number of assigned cells=4000" );
     }
 
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {

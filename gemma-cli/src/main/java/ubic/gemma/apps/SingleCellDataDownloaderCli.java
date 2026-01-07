@@ -12,7 +12,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
+import ubic.gemma.cli.util.EnumeratedStringConverter;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -45,6 +52,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.cli.util.OptionsUtils.*;
 
 public class SingleCellDataDownloaderCli extends AbstractCLI {
 
@@ -72,6 +80,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             MEX_FEATURES_FILE_SUFFIX = "mexFeaturesFile",
             MEX_MATRIX_FILE_SUFFIX = "mexMatrixFile";
 
+    private static final String
+            CELLXGENE_CHECK = "cellxgene",
+            CELLXGENE_COLLECTION_ID = "cellxgeneCollectionId",
+            CELLXGENE_ALL_DATASETS = "cellxgeneAllDatasets",
+            CELLXGENE_DATASET_ID = "cellxgeneDatasetId",
+            CELLXGENE_ASSET_ID = "cellxgeneAssetId",
+            CELLXGENE_ASSAYS = "cellxgeneAssays";
+
     private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "data_in_sra", "comment" };
 
     private static final String
@@ -93,6 +109,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+
+    @Value("${cellxgene.local.singleCellData.basepath}")
+    private Path cellXGeneDownloadPath;
 
     private final Set<String> accessions = new HashSet<>();
     @Nullable
@@ -119,6 +138,24 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     private String matrixFileSuffix;
 
+    // CELLxGENE options
+    /**
+     * Allow for generic checking in CELLxGENE.
+     */
+    private boolean cellXGeneCheck;
+    @Nullable
+    private String cellXGeneCollectionId;
+    /**
+     * Download all matching datasets in CELLxGENE.
+     */
+    private boolean cellXGeneAllDatasets;
+    @Nullable
+    private String cellXGeneDatasetId;
+    @Nullable
+    private String cellXGeneAssetId;
+    @Nullable
+    private Set<String> cellXGeneAssays;
+
     private SimpleRetryPolicy retryPolicy;
 
     @Nullable
@@ -141,21 +178,30 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Override
     protected void buildOptions( Options options ) {
         // options are consistent with those of LoadExpressionDataCli
-        options.addOption( Option.builder( ACCESSIONS_FILE_OPTION ).longOpt( "file" ).type( File.class ).hasArg().desc( "File containing accessions to download." ).build() );
-        options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download." ).build() );
-        options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
-        options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
-        options.addOption( Option.builder( RESUME_IGNORE_UNKNOWN_DATASETS ).longOpt( "resume-ignore-unknown-datasets" ).desc( "Ignore unknown datasets when resuming." ).build() );
-        options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
-        options.addOption( Option.builder( RETRY_COUNT_OPTION ).longOpt( "retry-count" ).hasArg().type( Integer.class ).desc( "Number of times to retry a download operation." ).build() );
+        options.addOption( Option.builder( ACCESSIONS_FILE_OPTION ).longOpt( "file" ).type( File.class ).hasArg().desc( "File containing accessions to download." ).get() );
+        options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download." ).get() );
+        options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).get() );
+        options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).get() );
+        options.addOption( Option.builder( RESUME_IGNORE_UNKNOWN_DATASETS ).longOpt( "resume-ignore-unknown-datasets" ).desc( "Ignore unknown datasets when resuming." ).get() );
+        options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).get() );
+        options.addOption( Option.builder( RETRY_COUNT_OPTION ).longOpt( "retry-count" ).hasArg().type( Integer.class ).desc( "Number of times to retry a download operation." ).get() );
         options.addOption( SKIP_DOWNLOAD_OPTION, "skip-download", false, "Skip download of single-cell data." );
-        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
-        options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
-        options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
-        options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
-        options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Only works if -dataType/--data-type is set to MEX." ).build() );
-        options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Only works if -dataType/--data-type is set to MEX." ).build() );
-        options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Only works if -dataType/--data-type is set to MEX." ).build() );
+        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Integer.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).get() );
+        options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).get() );
+        options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).get() );
+        options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).get() );
+        options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Glob patterns may be used (i.e. raw_*_barcodes.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
+        options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Glob patterns may be used (i.e. raw_*_features.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
+        options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Glob patterns may be used (i.e. raw_*_matrix.mtx.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
+        options.addOption( Option.builder( CELLXGENE_CHECK ).longOpt( "cellxgene" ).desc( "Check if there is single-cell data in CELLxGENE before looking up GEO supplementary materials." ).get() );
+        options.addOption( Option.builder( CELLXGENE_COLLECTION_ID ).longOpt( "cellxgene-collection-id" ).hasArg().desc( "CELLxGENE collection identifier" ).get() );
+        options.addOption( Option.builder( CELLXGENE_ALL_DATASETS ).longOpt( "cellxgene-all-datasets" ).desc( "CELLxGENE dataset identifier" ).get() );
+        options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArg().get() );
+        options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArg().get() );
+        options.addOption( Option.builder( CELLXGENE_ASSAYS ).longOpt( "cellxgene-assays" ).hasArgs().valueSeparator( ',' )
+                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                        .collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
+                .desc( "CELLxGENE assay identifiers to use to look for. Defaults to a predefined list of single-cell gene expression assays." ).get() );
         addBatchOption( options );
         addThreadsOption( options );
     }
@@ -312,6 +358,22 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             supplementaryFile = commandLine.getOptionValue( SUPPLEMENTARY_FILE_OPTION );
         }
+        cellXGeneCheck = commandLine.hasOption( CELLXGENE_CHECK );
+        if ( commandLine.hasOption( CELLXGENE_COLLECTION_ID ) ) {
+            if ( !singleAccessionMode ) {
+                throw new IllegalArgumentException( "The -cellxgeneCollectionId/--cellxgene-collection-id option requires that only one accession be supplied via -e/--acc." );
+            }
+        }
+        cellXGeneCollectionId = commandLine.getOptionValue( CELLXGENE_COLLECTION_ID );
+        // applies to both generic checking and specific collection ID
+        cellXGeneAllDatasets = hasOption( commandLine, CELLXGENE_ALL_DATASETS, requires( anyOf( toBeSet( CELLXGENE_CHECK ), toBeSet( CELLXGENE_COLLECTION_ID ) ) ) );
+        cellXGeneDatasetId = getOptionValue( commandLine, CELLXGENE_DATASET_ID, requires( allOf( toBeSet( CELLXGENE_COLLECTION_ID ), toBeUnset( CELLXGENE_ALL_DATASETS ) ) ) );
+        cellXGeneAssetId = getOptionValue( commandLine, CELLXGENE_ASSET_ID, requires( toBeSet( CELLXGENE_DATASET_ID ) ) );
+        if ( commandLine.hasOption( CELLXGENE_ASSAYS ) ) {
+            cellXGeneAssays = Arrays.stream( commandLine.getOptionValues( CELLXGENE_ASSAYS ) ).collect( Collectors.toSet() );
+        } else {
+            cellXGeneAssays = null;
+        }
     }
 
     @Override
@@ -337,6 +399,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setRetryPolicy( retryPolicy );
             SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
             detector.setSraFetcher( sraFetcher );
+            CellXGeneFetcher cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
+            cellXGeneFetcher.setFileLockManager( fileLockManager );
+            detector.setCellXGeneFetcher( cellXGeneFetcher );
+            detector.setCellXGeneAssays( cellXGeneAssays );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
             }
@@ -346,6 +412,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                     ( ( FTPClientFactoryImpl ) ftpClientFactory ).setMaxTotalConnections( fetchThreads );
                 }
                 detector.setNumberOfFetchThreads( fetchThreads );
+            }
+            if ( getCliContext().getConsole() != null ) {
+                ConsoleProgressReporterFactory prc = new ConsoleProgressReporterFactory( getCliContext().getConsole() );
+                detector.setProgressReporterFactory( prc );
+                cellXGeneFetcher.setProgressReporterFactory( prc );
             }
             log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
             for ( String geoAccession : accessions ) {
@@ -379,7 +450,57 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             }
                             series.keepSamples( samplesToKeep );
                         }
-                        if ( detector.hasSingleCellData( series ) ) {
+                        if ( cellXGeneCollectionId != null ) {
+                            // data is in CELLxGENE
+                            if ( cellXGeneDatasetId != null ) {
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
+                            } else if ( cellXGeneAllDatasets ) {
+                                Collection<DatasetMetadata> dm = detector.getAllDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = ( int ) dm.stream().mapToLong( DatasetMetadata::getCellCount ).sum();
+                                numberOfSamples = ( int ) dm.stream().map( DatasetMetadata::getDonorId ).flatMap( Collection::stream ).distinct().count();
+                            } else {
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series, cellXGeneCollectionId );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
+                            }
+                            // TODO: numberOfGenes = dm.getMeanGenesPerCell();
+                            if ( !skipDownload ) {
+                                if ( cellXGeneAssetId != null ) {
+                                    assert cellXGeneDatasetId != null;
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId, cellXGeneAssetId );
+                                } else if ( cellXGeneDatasetId != null ) {
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId, cellXGeneDatasetId );
+                                } else if ( cellXGeneAllDatasets ) {
+                                    detector.downloadAllSingleCellDataInCellXGene( series, cellXGeneCollectionId );
+                                } else {
+                                    detector.downloadSingleCellDataInCellXGene( series, cellXGeneCollectionId );
+                                }
+                            }
+                        } else if ( cellXGeneCheck && detector.hasSingleCellDataInCellXGene( series ) ) {
+                            if ( cellXGeneAllDatasets ) {
+                                Collection<DatasetMetadata> dm = detector.getAllDatasetMetadataFromCellXGene( series );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = ( int ) dm.stream().mapToLong( DatasetMetadata::getCellCount ).sum();
+                                numberOfSamples = ( int ) dm.stream().map( DatasetMetadata::getDonorId ).flatMap( Collection::stream ).distinct().count();
+                            } else {
+                                DatasetMetadata dm = detector.getDatasetMetadataFromCellXGene( series );
+                                detectedDataType = "ANNDATA";
+                                numberOfCellIds = dm.getCellCount();
+                                numberOfSamples = dm.getDonorId().size();
+                            }
+                            if ( !skipDownload ) {
+                                if ( cellXGeneAllDatasets ) {
+                                    detector.downloadAllSingleCellDataInCellXGene( series );
+                                } else {
+                                    detector.downloadSingleCellDataInCellXGene( series );
+                                }
+                            }
+                        } else if ( detector.hasSingleCellData( series ) ) {
                             if ( dataType != null && supplementaryFile != null ) {
                                 detectedDataType = dataType.name();
                             } else {
@@ -433,8 +554,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         }
 
                         addSuccessObject( geoAccession, String.format( "Data Type=%s%s%s%s",
-                                dataType,
-                                numberOfSamples != null ? "Number of samples=" + numberOfSamples : "",
+                                detectedDataType,
+                                numberOfSamples != null ? " Number of samples=" + numberOfSamples : "",
                                 numberOfCellIds != null ? " Number of cell IDs=" + numberOfCellIds : "",
                                 numberOfGenes != null ? " Number of genes=" + numberOfGenes : "" ) );
 
@@ -540,6 +661,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         GeoFetcher geoFetcher = new GeoFetcher( retryPolicy, geoSeriesDownloadPath );
         geoFetcher.setFtpClientFactory( ftpClientFactory );
         geoFetcher.setFileLockManager( fileLockManager );
+        if ( getCliContext().getConsole() != null ) {
+            geoFetcher.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+        }
         Path dest = geoFetcher.fetchSeriesFamilySoftFile( accession );
         try ( InputStream is = FileUtils.openCompressedFile( dest ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();

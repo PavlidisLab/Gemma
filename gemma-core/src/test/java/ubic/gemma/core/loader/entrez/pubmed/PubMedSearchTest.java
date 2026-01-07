@@ -19,11 +19,14 @@
 package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -32,20 +35,18 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author pavlidis
  */
 @Category(PubMedTest.class)
+@NetworkAvailable(url = EntrezUtils.ESEARCH)
 public class PubMedSearchTest {
 
-    private final PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
-    @Before
-    public void setUp() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
-    }
+    private final PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
 
     @Test
     public void testSearchAndRetrieveByHTTP() throws Exception {

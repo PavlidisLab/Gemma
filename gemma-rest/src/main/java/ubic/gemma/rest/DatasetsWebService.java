@@ -56,17 +56,18 @@ import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -88,9 +89,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.annotations.CacheControl;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
@@ -188,6 +187,8 @@ public class DatasetsWebService {
     private AccessDecisionManager accessDecisionManager;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     @Context
     private UriInfo uriInfo;
@@ -279,11 +280,14 @@ public class DatasetsWebService {
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
             payload = new Slice<>( vos, sort, offset, limit, ( long ) ids.size() )
-                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) );
+                    .map( vo -> {
+                        EntityUrlBuilder.EntityUrl<?> entityUrl = getResultObjectUrlSafely( resultById.get( vo.getId() ) );
+                        return new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ), entityUrl.toUriString(), entityUrl.isExternal() );
+                    } );
         } else {
             Sort sort = sortArg != null ? datasetArgService.getSort( sortArg ) : datasetArgService.getSort( SortArg.valueOf( "+id" ) );
             payload = expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit )
-                    .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) );
+                    .map( ExpressionExperimentWithSearchResultValueObject::new );
         }
         return paginate( payload, query != null ? query.getValue() : null, filters, new String[] { "id" }, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
@@ -297,13 +301,30 @@ public class DatasetsWebService {
         @JsonInclude(JsonInclude.Include.NON_NULL)
         SearchWebService.SearchResultValueObject<ExpressionExperimentValueObject> searchResult;
 
-        public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo, @Nullable SearchResult<ExpressionExperiment> result ) {
+        public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo ) {
+            super( vo );
+            this.searchResult = null;
+        }
+
+        public ExpressionExperimentWithSearchResultValueObject( ExpressionExperimentValueObject vo, @Nullable SearchResult<ExpressionExperiment> result, String resultObjectUrl, boolean resultObjectUrlExternal ) {
             super( vo );
             if ( result != null ) {
-                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ) );
+                this.searchResult = new SearchWebService.SearchResultValueObject<>( result.withResultObject( null ), resultObjectUrl, resultObjectUrlExternal );
             } else {
                 this.searchResult = null;
             }
+        }
+    }
+
+    @Nullable
+    private EntityUrlBuilder.EntityUrl<?> getResultObjectUrlSafely( SearchResult<?> searchResult ) {
+        try {
+            return entityUrlBuilder
+                    .fromHostUrl()
+                    .entity( searchResult.getResultType(), searchResult.getResultId() )
+                    .rest();
+        } catch ( UnsupportedEntityUrlException e ) {
+            return null;
         }
     }
 
@@ -835,18 +856,18 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
+            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
+            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
     ) {
         List<DifferentialExpressionAnalysisValueObject> result;
         Long eeId = datasetArgService.getEntity( datasetArg ).getId();
-        int offset = offsetArg.getValue();
-        int limit = limitArg.getValue();
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.findByExperimentIds( Collections.singleton( eeId ), true, true );
         if ( map == null || map.isEmpty() ) {
             result = Collections.emptyList();
         } else {
-            result = map.get( map.keySet().iterator().next() );
+            result = map.get( map.keySet().iterator().next() ).stream()
+                    .sorted( Comparator.comparing( IdentifiableUtils::getRequiredId ) )
+                    .collect( Collectors.toList() );
         }
         return respond( result );
     }
@@ -1070,11 +1091,11 @@ public class DatasetsWebService {
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
                 .collect( Collectors.toList() );
         // obtain result set IDs of results that lack baselines (i.e. for interactions)
-        Set<ExpressionAnalysisResultSet> missingBaselines = payload.stream()
+        Set<@MayBeUninitialized ExpressionAnalysisResultSet> missingBaselines = payload.stream()
                 .filter( vo -> baselineMap.get( vo ) == null )
                 .map( DifferentialExpressionAnalysisResult::getResultSet )
                 .collect( toIdentifiableSet() );
-        Map<ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
+        Map<@MayBeUninitialized ExpressionAnalysisResultSet, Baseline> b = expressionAnalysisResultSetService.getBaselinesForInteractions( missingBaselines, false );
         for ( DifferentialExpressionAnalysisResult r : payload ) {
             Baseline b2 = b.get( r.getResultSet() );
             if ( b2 == null ) {
@@ -1554,7 +1575,7 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true ) )
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true, null ) )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
@@ -2139,6 +2160,7 @@ public class DatasetsWebService {
 
     /**
      * A group of subsets, logically organized by a {@link BioAssayDimension}.
+     *
      * @author poirigui
      */
     @Getter

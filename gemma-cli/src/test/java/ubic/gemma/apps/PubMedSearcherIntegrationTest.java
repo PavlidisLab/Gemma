@@ -18,19 +18,21 @@
  */
 package ubic.gemma.apps;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.CLIContext;
 import ubic.gemma.cli.util.test.BaseCliIntegrationTest;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.ByteArrayOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
@@ -38,6 +40,9 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
  * @author pavlidis
  */
 public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private PubMedSearcher p;
@@ -47,8 +52,8 @@ public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public final void testMain() {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         assertThat( p )
                 .withArguments( "hippocampus", "diazepam", "juvenile" )

@@ -20,6 +20,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 
 import java.util.Objects;
 
@@ -51,7 +52,7 @@ public class Contact extends AbstractDescribable {
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( getEmail(), that.getEmail() );
     }
 

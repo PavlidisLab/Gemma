@@ -21,10 +21,6 @@
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
-        <property name="previousNcbiId" type="java.lang.String">
-            <column name="PREVIOUS_NCBI_ID" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)" index="CHROMOSOME_FEATURE_PREVIOUS_NCBI_ID"/>
-        </property>
         <many-to-one name="physicalLocation" class="ubic.gemma.model.genome.PhysicalLocation" cascade="all"
                      lazy="proxy" fetch="select">
             <column name="PHYSICAL_LOCATION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
@@ -62,6 +58,10 @@
             </property>
             <property name="ncbiGeneId" type="java.lang.Integer">
                 <column name="NCBI_GENE_ID" not-null="false" unique="false" sql-type="INTEGER" index="NCBI_GENE_ID"/>
+            </property>
+            <property name="previousNcbiGeneId" type="java.lang.String">
+                <column name="PREVIOUS_NCBI_ID" not-null="false" unique="false"
+                        sql-type="VARCHAR(255)" index="CHROMOSOME_FEATURE_PREVIOUS_NCBI_ID"/>
             </property>
             <property name="ensemblId" type="java.lang.String">
                 <column name="ENSEMBL_ID" not-null="false" unique="false"

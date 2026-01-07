@@ -37,6 +37,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 /**
  * A simple downloader for FTP and HTTP(s) URLs.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -60,6 +61,11 @@ public class SimpleDownloader {
      */
     @Nullable
     private FileLockManager fileLockManager;
+
+    /**
+     * The factory to use to create progress reporter for downloads.
+     */
+    private ProgressReporterFactory progressReporterFactory = new DefaultProgressReporterFactory();
 
     /**
      * If enabled, the integrity of archive (i.e. ZIP, TAR and Gzipped files) will be checked after downloading.
@@ -89,6 +95,10 @@ public class SimpleDownloader {
 
     public void setFileLockManager( @Nullable FileLockManager fileLockManager ) {
         this.fileLockManager = fileLockManager;
+    }
+
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        this.progressReporterFactory = progressReporterFactory;
     }
 
     /**
@@ -157,6 +167,7 @@ public class SimpleDownloader {
 
     /**
      * Download a file from a URL to a local destination.
+     *
      * @param url   URL to download
      * @param dest  destination for the download
      * @param force download even if the file exists, has the same size and is up to date
@@ -223,8 +234,8 @@ public class SimpleDownloader {
                 PathUtils.createParentDirectories( dest );
                 try {
                     CopyStreamListener previousCSL = client.getCopyStreamListener();
-                    try ( OutputStream out = Files.newOutputStream( dest ) ) {
-                        ProgressReporter pr = new ProgressReporter( url.toString(), SimpleDownloader.class.getName() );
+                    try ( OutputStream out = Files.newOutputStream( dest );
+                            ProgressReporter pr = progressReporterFactory.createProgressReporter( url.toString(), SimpleDownloader.class.getName() ) ) {
                         client.setCopyStreamListener( new CopyStreamListener() {
                             @Override
                             public void bytesTransferred( CopyStreamEvent event ) {
@@ -290,7 +301,7 @@ public class SimpleDownloader {
                 PathUtils.createParentDirectories( dest );
                 try {
                     long downloadedBytes;
-                    try ( InputStream in = new ProgressInputStream( connection.getInputStream(), url.toString(), SimpleDownloader.class.getName(), size );
+                    try ( InputStream in = new ProgressInputStream( connection.getInputStream(), progressReporterFactory.createProgressReporter( url.toString(), SimpleDownloader.class.getName() ), size );
                             OutputStream out = Files.newOutputStream( dest ) ) {
                         downloadedBytes = IOUtils.copyLarge( in, out );
                     }

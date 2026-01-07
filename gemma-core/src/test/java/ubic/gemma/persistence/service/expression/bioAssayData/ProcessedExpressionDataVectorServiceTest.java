@@ -21,15 +21,19 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -61,6 +65,9 @@ import static org.junit.Assume.assumeNoException;
  * @author Paul
  */
 public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
@@ -110,6 +117,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         BioAssayDimension bad = new BioAssayDimension();
         bad = bioAssayDimensionService.create( bad );
         QuantitationType rawQt = QuantitationType.Factory.newInstance();
+        rawQt.setName( "log2cpm" );
         rawQt.setGeneralType( GeneralType.QUANTITATIVE );
         rawQt.setType( StandardQuantitationType.AMOUNT );
         rawQt.setScale( ScaleType.LOG2 );
@@ -126,7 +134,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ee.getRawExpressionDataVectors().add( vec );
         }
         expressionExperimentService.update( ee );
-        assertEquals( 10, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
         ee = expressionExperimentService.thaw( ee );
@@ -160,6 +168,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGetProcessedDataMatrices() throws Exception {
         ExpressionExperiment ee;
         try {
@@ -173,7 +182,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             }
         }
 
-        assertEquals( 40, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 40, v.size() );
 
@@ -236,6 +245,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 cs.setBiologicalCharacteristic( bs );
                 compositeSequenceService.update( cs );
 
+                assertNotNull( cs.getId() );
                 cs = compositeSequenceService.load( cs.getId() );
                 assertNotNull( cs );
 

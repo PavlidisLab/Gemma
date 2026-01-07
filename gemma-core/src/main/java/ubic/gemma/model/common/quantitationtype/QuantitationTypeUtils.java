@@ -1,7 +1,9 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for working with {@link QuantitationType}s.
+ *
  * @author poirigui
  */
 public class QuantitationTypeUtils {
@@ -20,7 +23,7 @@ public class QuantitationTypeUtils {
      * Check if a given quantitation type holds log2 CPM.
      */
     public static boolean isLog2cpm( QuantitationType qt ) {
-        return StringUtils.containsIgnoreCase( qt.getName(), "log2cpm" ) &&
+        return Strings.CI.contains( qt.getName(), "log2cpm" ) &&
                 qt.getGeneralType() == GeneralType.QUANTITATIVE &&
                 qt.getType() == StandardQuantitationType.AMOUNT &&
                 qt.getScale() == ScaleType.LOG2;
@@ -117,6 +120,42 @@ public class QuantitationTypeUtils {
     }
 
     /**
+     * Obtain the default value for a vector as an encoded {@code byte[]}.
+     */
+    public static byte[] getDefaultValueAsBytes( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                double d;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    d = getDefaultCountValueAsDouble( quantitationType );
+                } else {
+                    d = Double.NaN;
+                }
+                return ByteArrayUtils.doubleArrayToBytes( new double[] { d } );
+            case FLOAT:
+                float f;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    f = getDefaultCountValueAsFloat( quantitationType );
+                }
+                f = Float.NaN;
+                ByteArrayUtils.floatArrayToBytes( new float[] { f } );
+            case STRING:
+                return new byte[] { 0 };
+            case CHAR:
+                return new byte[] { 0, 0 };
+            case INT:
+                return new byte[] { 0, 0, 0, 0 };
+            case LONG:
+                return new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            case BOOLEAN:
+                return new byte[] { 0 };
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+        }
+    }
+
+    /**
      * Obtain the value that indicates a missing value for counting data.
      * <p>
      * The default count is zero, but if the data is on a log-scale, it will be mapped to {@link Double#NEGATIVE_INFINITY}.
@@ -209,7 +248,7 @@ public class QuantitationTypeUtils {
     public static void appendToDescription( QuantitationType qt, String s ) {
         String description;
         if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
-            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
+            description = Strings.CS.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
         } else {
             description = "";
         }

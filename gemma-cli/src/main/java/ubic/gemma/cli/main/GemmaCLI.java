@@ -23,6 +23,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.*;
@@ -32,12 +33,14 @@ import ubic.gemma.cli.logging.LoggingConfigurer;
 import ubic.gemma.cli.logging.log4j.Log4jConfigurer;
 import ubic.gemma.cli.util.*;
 import ubic.gemma.core.context.SpringContextUtils;
+import ubic.gemma.core.logging.log4j.ThreadContextPopulator;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -68,6 +71,9 @@ public class GemmaCLI {
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
             COMPLETION_OPTION = "c",
+            COMPLETION_WIKI_OPTION = "cw",
+            COMPLETION_WIKI_PAGE_SUFFIX_OPTION = "cwp",
+            COMPLETION_WIKI_OUTPUT_DIR_OPTION = "cwo",
             COMPLETION_EXECUTABLE_OPTION = "ce",
             COMPLETION_SHELL_OPTION = "cs",
             COMPLETE_LOGGERS = "cl",
@@ -77,6 +83,11 @@ public class GemmaCLI {
             VERBOSITY_OPTION = "v",
             PROFILING_OPTION = "profiling",
             TESTDB_OPTION = "testdb";
+
+    /**
+     * Key used in the Log4j context data.
+     */
+    public static final String CLI_ARGUMENTS_CONTEXT_KEY = ThreadContextPopulator.KEY_PREFIX + ".cliArguments";
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
 
@@ -99,6 +110,9 @@ public class GemmaCLI {
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
+                .addOption( COMPLETION_WIKI_OPTION, "completion-wiki", false, "Generate completion in Wiki markup" )
+                .addOption( COMPLETION_WIKI_PAGE_SUFFIX_OPTION, "completion-wiki-page-suffix", true, "Suffix to add to generated Wiki pages" )
+                .addOption( Option.builder( COMPLETION_WIKI_OUTPUT_DIR_OPTION ).longOpt( "completion-wiki-output-dir" ).hasArg().type( Path.class ).desc( "Output directory to use to write Wiki markup" ).get() )
                 .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to " + GEMMA_CLI_EXE + ")" )
                 .addOption( Option.builder( COMPLETION_SHELL_OPTION )
                         .longOpt( "completion-shell" )
@@ -187,6 +201,11 @@ public class GemmaCLI {
 
         loggingConfigurer.apply();
 
+        // this has to be done after configuring Log4j
+        ThreadContext.put( CLI_ARGUMENTS_CONTEXT_KEY, Arrays.stream( args )
+                .map( ShellUtils::quoteIfNecessary )
+                .collect( Collectors.joining( " " ) ) );
+
         List<String> profiles = new ArrayList<>();
         profiles.add( "cli" );
 
@@ -271,32 +290,57 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( COMPLETION_OPTION ) ) {
+            String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, GEMMA_CLI_EXE );
             CompletionGenerator completionGenerator;
-            String shellName;
-            if ( commandLine.hasOption( COMPLETION_SHELL_OPTION ) ) {
-                shellName = commandLine.getOptionValue( COMPLETION_SHELL_OPTION );
-            } else {
-                // attempt to guess the intended shell from $SHELL
-                String shell = System.getenv( "SHELL" );
-                if ( StringUtils.isNotBlank( shell ) ) {
-                    shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
-                } else {
-                    System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
+            if ( commandLine.hasOption( COMPLETION_WIKI_OPTION ) ) {
+                try {
+                    Path outputDir = commandLine.getParsedOptionValue( COMPLETION_WIKI_OUTPUT_DIR_OPTION );
+                    if ( outputDir == null ) {
+                        throw new MissingOptionException( "The -" + COMPLETION_WIKI_OUTPUT_DIR_OPTION + ",--completion-wiki-output-dir option must be provided." );
+                    }
+                    String pageSuffix = commandLine.getOptionValue( COMPLETION_WIKI_PAGE_SUFFIX_OPTION, "" );
+                    SortedMap<CLI.CommandGroup, SortedMap<String, ConfluenceWikiHtmlGenerator.CommandMeta>> wikiCommands = new TreeMap<>();
+                    for ( Map.Entry<CLI.CommandGroup, SortedMap<String, Command>> entry : commandGroups.entrySet() ) {
+                        SortedMap<String, ConfluenceWikiHtmlGenerator.CommandMeta> cmdsInGroup = new TreeMap<>();
+                        for ( Map.Entry<String, Command> cmdEntry : entry.getValue().entrySet() ) {
+                            Command c = cmdEntry.getValue();
+                            cmdsInGroup.put( cmdEntry.getKey(),
+                                    new ConfluenceWikiHtmlGenerator.CommandMeta( c.getCommandName(), c.getShortDesc() ) );
+                        }
+                        wikiCommands.put( entry.getKey(), cmdsInGroup );
+                    }
+                    completionGenerator = new WikiCompletionGenerator( executableName, wikiCommands, pageSuffix, outputDir );
+                } catch ( ParseException e ) {
+                    System.err.printf( e.getMessage() );
                     System.exit( 1 );
                     return;
                 }
-            }
-            String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, GEMMA_CLI_EXE );
-            Set<String> subcommands = new HashSet<>( commandsByName.keySet() );
-            subcommands.addAll( commandsByClassName.keySet() );
-            if ( shellName.equals( "bash" ) ) {
-                completionGenerator = new BashCompletionGenerator( executableName, subcommands );
-            } else if ( shellName.equals( "fish" ) ) {
-                completionGenerator = new FishCompletionGenerator( executableName, subcommands, ctx, Locale.getDefault() );
             } else {
-                System.err.printf( "Completion is not support for %s.%n", shellName );
-                System.exit( 1 );
-                return;
+                String shellName;
+                if ( commandLine.hasOption( COMPLETION_SHELL_OPTION ) ) {
+                    shellName = commandLine.getOptionValue( COMPLETION_SHELL_OPTION );
+                } else {
+                    // attempt to guess the intended shell from $SHELL
+                    String shell = System.getenv( "SHELL" );
+                    if ( StringUtils.isNotBlank( shell ) ) {
+                        shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
+                    } else {
+                        System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
+                        System.exit( 1 );
+                        return;
+                    }
+                }
+                Set<String> subcommands = new HashSet<>( commandsByName.keySet() );
+                subcommands.addAll( commandsByClassName.keySet() );
+                if ( shellName.equals( "bash" ) ) {
+                    completionGenerator = new BashCompletionGenerator( executableName, subcommands );
+                } else if ( shellName.equals( "fish" ) ) {
+                    completionGenerator = new FishCompletionGenerator( executableName, subcommands, ctx, Locale.getDefault() );
+                } else {
+                    System.err.printf( "Completion is not support for %s.%n", shellName );
+                    System.exit( 1 );
+                    return;
+                }
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
             completionGenerator.beforeCompletion( completionWriter );

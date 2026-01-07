@@ -22,7 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.With;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -47,17 +46,35 @@ public class SearchSettings {
 
     public enum SearchMode {
         /**
-         * Prefer correctness to speed.
+         * Very fast search mode, designed for exact matching of identifiers, etc.
          */
-        ACCURATE,
+        EXACT,
+        /**
+         * Fast search mode, designed for autocompletion.
+         */
+        FAST,
         /**
          * Normal search mode with trade-offs to make it usable.
          */
         BALANCED,
         /**
-         * Fast search mode, designed for autocompletion.
+         * Prefer correctness to speed.
          */
-        FAST
+        ACCURATE;
+
+        /**
+         * Check if a search mode is at least as thorough as the given one.
+         */
+        public boolean isAtLeast( SearchMode other ) {
+            return this.ordinal() >= other.ordinal();
+        }
+
+        /**
+         * Check if a search mode is at most as thorough as the given one.
+         */
+        public boolean isAtMost( SearchMode searchMode ) {
+            return this.ordinal() <= searchMode.ordinal();
+        }
     }
 
     /**
@@ -69,7 +86,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings arrayDesignSearch( String query ) {
@@ -79,7 +96,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings bibliographicReferenceSearch( String query ) {
@@ -89,8 +106,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query       query
-     * @param  arrayDesign the array design to limit the search to
+     * @param query       query
+     * @param arrayDesign the array design to limit the search to
      * @return search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, @Nullable ArrayDesign arrayDesign ) {
@@ -103,7 +120,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
@@ -116,7 +133,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @param taxon if you want to filter by taxon (can be null)
      * @return search settings
      */
@@ -131,8 +148,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
-     * @param  taxon the taxon to limit the search to (can be null)
+     * @param query query
+     * @param taxon the taxon to limit the search to (can be null)
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {
@@ -151,10 +168,19 @@ public class SearchSettings {
     private Set<Class<? extends Identifiable>> resultTypes;
 
     /* optional search constraints */
+    /**
+     * Constraint results to be related to the given platform.
+     */
     @Nullable
     private ArrayDesign platformConstraint;
+    /**
+     * Constraint results to be related to the given dataset.
+     */
     @Nullable
-    private ExpressionExperiment experimentConstraint;
+    private ExpressionExperiment datasetConstraint;
+    /**
+     * Constraint results to to be related to the given taxon.
+     */
     @Nullable
     private Taxon taxonConstraint;
 
@@ -218,12 +244,32 @@ public class SearchSettings {
     public String toString() {
         StringBuilder s = new StringBuilder( "'" + query + "'" );
         s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( datasetConstraint != null ) {
+            s.append( " " ).append( "[" ).append( datasetConstraint ).append( "]" );
+        }
         if ( platformConstraint != null ) {
             s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
         }
         if ( taxonConstraint != null ) {
             s.append( " " ).append( "[" ).append( taxonConstraint ).append( "]" );
         }
+        if ( useDatabase ) {
+            s.append( " [Use Database]" );
+        }
+        if ( useOntology ) {
+            s.append( " [Use Ontology]" );
+        }
+        if ( useGeneOntology ) {
+            s.append( " [Use Gene Ontology]" );
+        }
+        if ( useFullTextIndex ) {
+            s.append( " [Use Full-Text Index]" );
+        }
+        s.append( " Max Results=" ).append( maxResults );
+        if ( fillResults ) {
+            s.append( " [Fill Results]" );
+        }
+        s.append( " Mode=" ).append( mode );
         return s.toString();
     }
 }

@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +26,15 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
+import java.io.Console;
 import java.nio.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
-import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
-import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
+import static ubic.gemma.model.common.DescribableUtils.getNextAvailableName;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 @Service
 @CommonsLog
@@ -52,9 +54,6 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
     @Autowired
     private AuditTrailService auditTrailService;
-
-    @Autowired
-    private SingleCellSparsityMetrics metrics;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -84,7 +83,16 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 .includeData( true )
                 .includeDataIndices( true )
                 .build();
-        Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, vectorInitConfig );
+        log.info( "Loading single-cell data vectors for aggregation for " + qt + "..." );
+        long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
+        Collection<SingleCellExpressionDataVector> vectors;
+        if ( config.getFetchSize() > 0 ) {
+            vectors = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, config.getFetchSize(), config.isUseCursorFetchIfSupported(), false, vectorInitConfig )
+                    .peek( createStreamMonitor( ee, qt, SingleCellExpressionExperimentAggregateServiceImpl.class.getName(), 100, numVecs, config.getConsole() ) )
+                    .collect( Collectors.toList() );
+        } else {
+            vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, vectorInitConfig );
+        }
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( ee + " does not have single-cell vectors for " + qt + "." );
         }
@@ -146,13 +154,14 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
         // create vectors now
         QuantitationType newQt = QuantitationType.Factory.newInstance( qt );
-        newQt.setName( qt.getName() + " aggregated by " + cellTypeFactorName + ( canLog2cpm ? " (log2cpm)" : "" ) );
+        newQt.setName( getNextAvailableName( ee.getQuantitationTypes(), qt.getName() + " aggregated by " + cellTypeFactorName + ( canLog2cpm ? " (log2cpm)" : "" ) ) );
         newQt.setDescription( ( StringUtils.isNotBlank( qt.getDescription() ) ? qt.getDescription() + "\n" : "" )
                 + "Expression data has been aggregated by " + cellTypeFactorName + " using " + method + "."
                 + ( canLog2cpm ? " The data was subsequently converted to log2cpm." : "" ) );
         newQt.setIsPreferred( config.isMakePreferred() );
         // we're always aggregating into doubles, regardless of the input representation
         newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsAggregated( true );
 
         boolean[] mask;
         if ( config.getMask() != null ) {
@@ -161,7 +170,11 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             mask = null;
         }
 
-        Map<BioAssay, Integer> sourceSampleToIndex = ListUtils.indexOfElements( vectors.iterator().next().getSingleCellDimension().getBioAssays() );
+        Map<BioAssay, Integer> sourceSampleToIndex = ListUtils.indexOfElements( scd.getBioAssays() );
+        int numSourceSamples = sourceSampleToIndex.size();
+
+        int[] sourceSampleStarts = new int[numSourceSamples];
+        int[] sourceSampleEnds = new int[numSourceSamples];
 
         double[] normalizationFactor;
         double[] librarySize;
@@ -177,7 +190,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     // when including masked cells, do not allow the calculation to consider the mask
                     config.isIncludeMaskedCellsInLibrarySize() ? null : mask,
                     sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices,
-                    method, config.isAdjustLibrarySizes() );
+                    method, config.isAdjustLibrarySizes(), sourceSampleStarts, sourceSampleEnds, config.getConsole() );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -194,19 +207,20 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         }
 
         // sparsity metrics, only needed for preferred QTs
-        Map<BioAssay, boolean[]> cellsByBioAssay;
+        boolean[] expressedCells;
         Map<BioAssay, Integer> designElementsByBioAssay;
         Map<BioAssay, Integer> cellByDesignElementByBioAssay;
         if ( config.isMakePreferred() ) {
-            cellsByBioAssay = new HashMap<>();
+            expressedCells = new boolean[scd.getNumberOfCellIds()];
             designElementsByBioAssay = new HashMap<>();
             cellByDesignElementByBioAssay = new HashMap<>();
         } else {
-            cellsByBioAssay = null;
+            expressedCells = null;
             designElementsByBioAssay = null;
             cellByDesignElementByBioAssay = null;
         }
 
+        StopWatch timer = StopWatch.createStarted();
         Collection<RawExpressionDataVector> rawVectors = new ArrayList<>( vectors.size() );
         for ( SingleCellExpressionDataVector v : vectors ) {
             RawExpressionDataVector rawVector = new RawExpressionDataVector();
@@ -214,29 +228,48 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
-            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
+            int[] numberOfCells = new int[cellBAs.size()];
+            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
+                    sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
+                    cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds, numberOfCells ) );
+            rawVector.setNumberOfCells( numberOfCells );
             rawVectors.add( rawVector );
-            if ( rawVectors.size() % 1000 == 0 ) {
-                log.info( String.format( "Aggregated %d/%d single-cell vectors.", rawVectors.size(), vectors.size() ) );
+            if ( rawVectors.size() % 100 == 0 ) {
+                if ( config.getConsole() != null ) {
+                    config.getConsole().printf( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.\r",
+                            rawVectors.size(), vectors.size(), 1000.0 * rawVectors.size() / timer.getTime() );
+                } else {
+                    log.info( String.format( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.",
+                            rawVectors.size(), vectors.size(), 1000.0 * rawVectors.size() / timer.getTime() ) );
+                }
             }
         }
 
+        log.info( String.format( "Aggregated %d single-cell vectors @ %.2f vectors/sec.",
+                rawVectors.size(), 1000.0 * rawVectors.size() / timer.getTime() ) );
+
+        int[] maskedCells = new int[cellBAs.size()];
+        int[] totalCells = new int[cellBAs.size()];
         if ( config.isMakePreferred() ) {
             log.info( "Applying single-cell sparsity metrics to the aggregated assays..." );
-            for ( BioAssay ba : cellBAs ) {
-                assert cellsByBioAssay != null;
-                boolean[] expressedCells = cellsByBioAssay.get( ba );
-                if ( expressedCells != null ) {
-                    int count = 0;
-                    for ( boolean b : expressedCells ) {
-                        if ( b ) {
+            for ( int j = 0; j < cellBAs.size(); j++ ) {
+                BioAssay ba = cellBAs.get( j );
+                assert expressedCells != null;
+                int sourceSampleIndex = sourceSampleToIndex.get( sourceBioAssayMap.get( ba ) );
+                int cellTypeIndex = cellTypeIndices.get( ba );
+                int count = 0;
+                for ( int i = scd.getBioAssaysOffset()[sourceSampleIndex]; i < scd.getBioAssaysOffset()[sourceSampleIndex] + scd.getNumberOfCellIdsBySample( sourceSampleIndex ); i++ ) {
+                    if ( cellLevelCharacteristics.getIndices()[i] == cellTypeIndex ) {
+                        if ( expressedCells[i] ) {
                             count++;
                         }
+                        if ( mask != null && mask[i] ) {
+                            maskedCells[j]++;
+                        }
+                        totalCells[j]++;
                     }
-                    ba.setNumberOfCells( count );
-                } else {
-                    ba.setNumberOfCells( 0 );
                 }
+                ba.setNumberOfCells( count );
                 ba.setNumberOfDesignElements( designElementsByBioAssay.getOrDefault( ba, 0 ) );
                 ba.setNumberOfCellsByDesignElements( cellByDesignElementByBioAssay.getOrDefault( ba, 0 ) );
             }
@@ -244,7 +277,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         }
 
         int newVecs = expressionExperimentService.addRawDataVectors( ee, newQt, rawVectors );
-        String note = String.format( "Created %d aggregated raw vectors for %s.", newVecs, newQt );
+        String note = String.format( Locale.ENGLISH, "Created %d aggregated raw vectors for %s.", newVecs, newQt );
         StringBuilder details = new StringBuilder();
         details.append( "Single-cell quantitation type: " ).append( qt ).append( "\n" );
         details.append( "Single-cell dimension: " ).append( scd ).append( "\n" );
@@ -253,18 +286,22 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             BioAssay cellBa = cellBAs.get( i );
             details.append( "\n" ).append( "\t" ).append( cellBa );
             if ( config.isMakePreferred() ) {
-                details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() )
+                details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() );
+                details
                         .append( " Number of design elements=" ).append( cellBa.getNumberOfDesignElements() )
                         .append( " Number of cells x design elements=" ).append( cellBa.getNumberOfCellsByDesignElements() );
+            }
+            if ( mask != null ) {
+                details.append( " Number of masked cells=" ).append( maskedCells[i] ).append( "/" ).append( totalCells[i] );
             }
             if ( librarySize != null ) {
                 if ( librarySize[i] == 0 ) {
                     details.append( " Library Size is zero, the aggregate is filled with NAs" );
                 } else {
-                    details.append( " Library Size=" ).append( String.format( "%.2f", librarySize[i] ) );
+                    details.append( " Library Size=" ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] ) );
                     Double lsa = sourceSampleLibrarySizeAdjustments.get( sourceBioAssayMap.get( cellBa ) );
                     if ( lsa != null && lsa != 1.0 ) {
-                        details.append( " (adjusted from " ).append( String.format( "%.2f", librarySize[i] / lsa ) ).append( " due to unmapped genes)" );
+                        details.append( " (adjusted from " ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] / lsa ) ).append( " due to unmapped genes)" );
                     }
                 }
             }
@@ -330,7 +367,14 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
     private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors,
             BioAssayDimension bad, CellLevelCharacteristics cta,
             @Nullable boolean[] mask,
-            Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method, boolean adjustLibrarySizes ) throws IllegalStateException {
+            Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex,
+            Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices,
+            SingleCellExpressionAggregationMethod method,
+            boolean adjustLibrarySizes,
+            int[] sourceSampleStarts, int[] sourceSampleEnds,
+            @Nullable Console console ) throws IllegalStateException {
+        StopWatch timer = StopWatch.createStarted();
+        log.info( "Computing library sizes for " + bad.getBioAssays().size() + " pseudo-bulk assays..." );
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         int numSourceSamples = sourceSampleToIndex.size();
@@ -338,7 +382,10 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         double[] librarySize = new double[numSamples];
         // library sizes of the source assays
         double[] sourceLibrarySize = new double[numSourceSamples];
+        int w = 0;
         for ( SingleCellExpressionDataVector scv : vectors ) {
+            Arrays.fill( sourceSampleStarts, -1 );
+            Arrays.fill( sourceSampleEnds, -1 );
             PrimitiveType representation = scv.getQuantitationType().getRepresentation();
             Buffer scrv = scv.getDataAsBuffer();
             for ( int i = 0; i < numSamples; i++ ) {
@@ -348,9 +395,24 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 int cellTypeIndex = cellTypeIndices.get( sample );
                 int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                         () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
+                int start, end;
                 // samples are not necessarily ordered, so we cannot use the start=end trick
-                int start = getSampleStart( scv, sourceSampleIndex, 0 );
-                int end = getSampleEnd( scv, sourceSampleIndex, start );
+                if ( sourceSampleStarts[sourceSampleIndex] != -1 ) {
+                    start = sourceSampleStarts[sourceSampleIndex];
+                } else {
+                    int after;
+                    if ( sourceSampleIndex > 0 && sourceSampleStarts[sourceSampleIndex - 1] != -1 ) {
+                        after = sourceSampleEnds[sourceSampleIndex - 1];
+                    } else {
+                        after = 0;
+                    }
+                    start = sourceSampleStarts[sourceSampleIndex] = getSampleStart( scv, sourceSampleIndex, after );
+                }
+                if ( sourceSampleEnds[sourceSampleIndex] != -1 ) {
+                    end = sourceSampleEnds[sourceSampleIndex];
+                } else {
+                    end = sourceSampleEnds[sourceSampleIndex] = getSampleEnd( scv, sourceSampleIndex, start );
+                }
                 for ( int k = start; k < end; k++ ) {
                     int cellIndex = scv.getDataIndices()[k];
                     if ( mask != null && mask[cellIndex] ) {
@@ -372,7 +434,19 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     sourceLibrarySize[sourceSampleIndex] += unscaledValue;
                 }
             }
+            w++;
+            if ( w % 100 == 0 ) {
+                if ( console != null ) {
+                    console.printf( "Computing library size [%d/%d] @ %.2f vector/sec.\r", w, vectors.size(),
+                            1000.0 * w / timer.getTime() );
+                } else {
+                    log.info( String.format( "Computing library size [%d/%d] @ %.2f vector/sec.", w, vectors.size(),
+                            1000.0 * w / timer.getTime() ) );
+                }
+            }
         }
+        log.info( String.format( "Computed library size for %d vectors @ %.2f vector/sec.", vectors.size(),
+                1000.0 * vectors.size() / timer.getTime() ) );
         if ( adjustLibrarySizes ) {
             log.info( "Adjusting library sizes..." );
             for ( Map.Entry<BioAssay, Integer> e : sourceSampleToIndex.entrySet() ) {
@@ -419,28 +493,48 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             Map<BioAssay, Integer> sourceSampleToIndex,
             Map<BioAssay, Integer> cellTypeIndices,
             SingleCellExpressionAggregationMethod method,
-            @Nullable Map<BioAssay, boolean[]> cellsByBioAssay,
+            @Nullable boolean[] cellsByBioAssay,
             @Nullable Map<BioAssay, Integer> designElementsByBioAssay,
             @Nullable Map<BioAssay, Integer> cellByDesignElementByBioAssay,
             boolean performLog2cpm,
             @Nullable double[] normalizationFactor,
-            @Nullable double[] librarySize ) {
+            @Nullable double[] librarySize,
+            int[] sourceSampleStarts, int[] sourceSampleEnds,
+            int[] numberOfCells ) {
         Assert.isTrue( !performLog2cpm || ( normalizationFactor != null && librarySize != null ),
                 "Normalization factors and library size must be provided for log2cpm transformation." );
+        ScaleType scaleType = scv.getQuantitationType().getScale();
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] rv = new double[numSamples];
         Buffer scrv = scv.getDataAsBuffer();
         PrimitiveType representation = scv.getQuantitationType().getRepresentation();
+        Arrays.fill( sourceSampleStarts, -1 );
+        Arrays.fill( sourceSampleEnds, -1 );
         for ( int i = 0; i < numSamples; i++ ) {
             BioAssay sample = samples.get( i );
             BioAssay sourceSample = sourceBioAssayMap.get( sample );
             int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                     () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
             Integer cellTypeIndex = cellTypeIndices.get( sample );
+            int start, end;
             // samples are not necessarily ordered, so we cannot use the start=end trick
-            int start = getSampleStart( scv, sourceSampleIndex, 0 );
-            int end = getSampleEnd( scv, sourceSampleIndex, start );
+            if ( sourceSampleStarts[sourceSampleIndex] != -1 ) {
+                start = sourceSampleStarts[sourceSampleIndex];
+            } else {
+                int after;
+                if ( sourceSampleIndex > 0 && sourceSampleStarts[sourceSampleIndex - 1] != -1 ) {
+                    after = sourceSampleEnds[sourceSampleIndex - 1];
+                } else {
+                    after = 0;
+                }
+                start = sourceSampleStarts[sourceSampleIndex] = getSampleStart( scv, sourceSampleIndex, after );
+            }
+            if ( sourceSampleEnds[sourceSampleIndex] != -1 ) {
+                end = sourceSampleEnds[sourceSampleIndex];
+            } else {
+                end = sourceSampleEnds[sourceSampleIndex] = getSampleEnd( scv, sourceSampleIndex, start );
+            }
             rv[i] = 0;
             for ( int k = start; k < end; k++ ) {
                 int cellIndex = scv.getDataIndices()[k];
@@ -448,14 +542,18 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     continue;
                 }
                 if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
+                    double d = getDouble( scrv, k, representation );
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        rv[i] += getDouble( scrv, k, representation );
+                        rv[i] += d;
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        rv[i] += Math.exp( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.exp( d );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        rv[i] += Math.expm1( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.expm1( d );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
+                    }
+                    if ( SingleCellSparsityMetrics.isExpressed( d, scaleType ) ) {
+                        numberOfCells[i]++;
                     }
                 }
             }
@@ -476,19 +574,13 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             }
 
             if ( cellsByBioAssay != null ) {
-                cellsByBioAssay.compute( sample, ( k, v ) -> {
-                    if ( v == null ) {
-                        v = new boolean[scv.getSingleCellDimension().getNumberOfCellIds()];
-                    }
-                    metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, v );
-                    return v;
-                } );
+                SingleCellSparsityMetrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, mask, cellsByBioAssay );
             }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
             }
 
         }
@@ -509,6 +601,21 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             default:
                 throw new UnsupportedOperationException( "Unsupported representation " + representation );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAggregated( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        if ( quantitationType.getIsAggregated() ) {
+            return true;
+        }
+        // TODO: remove this once all QTs have the isAggregated flag set correctly
+        //       processed vectors also contain "aggregated by" in their name, so we also need to check the vector type
+        if ( quantitationType.getName().contains( "aggregated by" ) ) {
+            Class<? extends DataVector> dataVectorType = quantitationTypeService.getDataVectorType( quantitationType );
+            return dataVectorType != null && RawExpressionDataVector.class.isAssignableFrom( dataVectorType );
+        }
+        return false;
     }
 
     @Override
@@ -561,6 +668,6 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         /**
          * Equivalent to {@link #SUM} for data transformed by {@code log 1 + X}
          */
-        LOG1P_SUM;
+        LOG1P_SUM
     }
 }

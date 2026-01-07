@@ -20,6 +20,7 @@
 package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -28,7 +29,6 @@ import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -153,7 +153,7 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
         ExternalDatabase that = ( ExternalDatabase ) object;
         if ( this.getId() != null && that.getId() != null )
             return getId().equals( that.getId() );
-        return Objects.equals( this.getName(), that.getName() );
+        return DescribableUtils.equalsByName( this, that );
     }
 
     public static final class Factory {

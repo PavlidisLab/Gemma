@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -39,6 +41,8 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMeta
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.locking.LockedPath;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -68,6 +72,9 @@ import static org.junit.Assert.*;
  * @author pavlidis
  */
 public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private SimpleExpressionExperimentMetadata metaData = null;
 
@@ -166,7 +173,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
         }
 
         /* Constructor 1 */
-        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix(
+        ExpressionDataDoubleMatrix expressionDataDoubleMatrix = new ExpressionDataDoubleMatrix( ee,
                 designElementDataVectors );
 
         /* Assertions */
@@ -273,7 +280,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         ee.setRawExpressionDataVectors( eeVectors );
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
+        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ee, eeVectors );
 
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );
@@ -282,6 +289,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testMatrixConversion() throws Exception {
 
         try {

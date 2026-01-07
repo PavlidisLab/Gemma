@@ -4,6 +4,9 @@
 <title>${fn:escapeXml(expressionExperiment.shortName)} - ${fn:escapeXml(expressionExperiment.name)}</title>
 <meta name="description" content="${fn:escapeXml(expressionExperiment.description)}" />
 <meta name="keywords" content="${fn:escapeXml(keywords)}" />
+<c:if test="${not empty expressionExperiment.primaryPublication}">
+<Gemma:citationMeta citation="${expressionExperiment.primaryPublication}" />
+</c:if>
 <Gemma:script src='/scripts/app/eeDataFetch.js' />
 </head>
 
@@ -19,7 +22,7 @@
 
 <div id="eepage"></div>
 
-<script type="application/javascript">
+<script>
 Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
 Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );

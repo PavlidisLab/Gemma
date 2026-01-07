@@ -1,0 +1,72 @@
+/* Utilities for styling forms and input elements */
+
+.btn-unstyled {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+}
+
+.btn-refresh {
+    border-radius: 10px;
+    background-color: whitesmoke !important;
+}
+
+.btn-refresh:hover {
+    background-color: lightgray !important;
+}
+
+.btn-refresh * {
+    font-weight: bold;
+    background: transparent !important;
+    cursor: pointer;
+    font-size: 106% !important;
+    color: royalblue !important;
+}
+
+.error {
+    border: 2px solid red;
+    /* font-weight: normal; */
+    /* margin: 2px auto; */
+    /* padding: 0.25em; */
+    /* text-align: left;*/
+    /* vertical-align: bottom;*/
+}
+
+.error-feedback {
+    color: red;
+    font-size: 0.75em; /* see .smaller */
+}
+
+.warning {
+    border: 2px solid yellow;
+    /* font-weight: normal; */
+    /* padding: 0.25em; */
+    /* text-align: left; */
+    /* vertical-align: bottom; */
+}
+
+.warning-feedback {
+    color: yellow;
+    font-size: 0.75em; /* see .smaller */
+}
+
+img.validationWarning, div.error img.icon, div.message img.icon, li.error img.icon {
+    border: 0 !important;
+    width: 14px;
+    height: 13px;
+    vertical-align: middle;
+    margin-left: 3px;
+    background: transparent !important;
+    /* important added because some themes define div#main img */
+}
+
+.fieldError, .errorMessage {
+    color: red;
+    font-size: .95em;
+    font-weight: bold;
+    display: block;
+}

@@ -38,6 +38,8 @@ public class Gene extends ChromosomeFeature {
     private String officialName;
     private Integer ncbiGeneId;
     @Nullable
+    private String previousNcbiGeneId;
+    @Nullable
     private String ensemblId; //Non-unique for roughly 2000 genes as of Aug 11th 2017
     private Set<GeneProduct> products = new HashSet<>();
     private Set<GeneAlias> aliases = new HashSet<>();
@@ -169,6 +171,15 @@ public class Gene extends ChromosomeFeature {
 
     public void setNcbiGeneId( Integer ncbiGeneId ) {
         this.ncbiGeneId = ncbiGeneId;
+    }
+
+    @Nullable
+    public String getPreviousNcbiGeneId() {
+        return previousNcbiGeneId;
+    }
+
+    public void setPreviousNcbiGeneId( @Nullable String previousNcbiGeneId ) {
+        this.previousNcbiGeneId = previousNcbiGeneId;
     }
 
     @Field(analyze = Analyze.NO)

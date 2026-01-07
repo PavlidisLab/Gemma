@@ -28,7 +28,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -559,10 +558,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
              */
             Collection<Gene> toDelete = new HashSet<>();
             for ( Gene foundGene : results ) {
-                if ( StringUtils.isBlank( foundGene.getPreviousNcbiId() ) )
+                if ( StringUtils.isBlank( foundGene.getPreviousNcbiGeneId() ) )
                     continue;
                 // Note hack we used to allow multiple previous ids.
-                for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiId(), "," ) ) {
+                for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiGeneId(), "," ) ) {
                     try {
                         if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
                             toDelete.add( foundGene );
@@ -594,7 +593,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             if ( results.size() > 1 ) {
                 log.error( "Multiple genes found for " + gene + ":" );
                 this.debug( results );
-                results.sort( Comparator.comparing( Describable::getId ) );
+                results.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
                 result = results.iterator().next();
                 log.error( "Returning arbitrary gene: " + result );
             } else {

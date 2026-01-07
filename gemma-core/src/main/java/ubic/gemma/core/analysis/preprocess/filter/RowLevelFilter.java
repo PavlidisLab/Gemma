@@ -39,9 +39,10 @@ import java.util.function.Function;
  * Filter data at the row-level.
  * <p>
  * This is a low-level filter utility meant to be used by other filters.
+ *
  * @author pavlidis
  */
-class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
+class RowLevelFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private static final Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
 
@@ -75,8 +76,9 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
      * Create a filter that will use the specified method to compute criteria for each row.
+     *
      * @param method the method that will be used for filtering. Those rows with the lowest values are removed during
-     *              'low' filtering.
+     *               'low' filtering.
      */
     public RowLevelFilter( Method method ) {
         this.method = method;
@@ -143,7 +145,7 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         // quickly check if all rows are to be kept
         // note: we're not checking up to numValues, because we want to filter out rows with NaN values
         if ( sortedCriteria.isEmpty() || ( sortedCriteria.get( 0 ) >= realLowCut && sortedCriteria.get( sortedCriteria.size() - 1 ) <= realHighCut ) ) {
-            log.info( "All rows are within the low/high threshold, returning the original matrix." );
+            log.info( "All rows are within the low/high threshold for " + method + ", returning the original matrix." );
             return data;
         }
 
@@ -182,6 +184,7 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
      * Set the high threshold for removal interpreted as a fraction of the rows.
+     *
      * @param highCut the threshold, inclusive
      */
     public void setHighCutAsFraction( double highCut ) {
@@ -198,7 +201,8 @@ class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /**
      * Set the low threshold for removal interpreted as a fraction of the rows.
-     * @param lowCut     the threshold, inclusive
+     *
+     * @param lowCut the threshold, inclusive
      */
     public void setLowCutAsFraction( double lowCut ) {
         Assert.isTrue( Stats.isValidFraction( lowCut ) );

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -156,7 +157,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * Check the cache.
          */
         // using a TreeSet to prevent hashCode() from initializing proxies
-        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
         Collection<Long> genesToSearch = new HashSet<>();
         this.checkCache( expressionExperiments, genes, results, needToSearch, genesToSearch );
         log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache" );
@@ -412,6 +413,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     /**
      * Store vectors in the cache.
+     *
      * @param newResults Always provide full vectors, not subsets.
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -486,8 +488,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
-     *                            sample)
+     * @param bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
+     *                           sample)
      * @return bio assay dimension
      */
     private BioAssayDimension checkRagged( Collection<BioAssayDimension> bioAssayDimensions ) {
@@ -587,11 +589,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  ees  Experiments and/or subsets required
-     * @param  vecs vectors to select from and if necessary slice, obviously from the given ees.
+     * @param ees  Experiments and/or subsets required
+     * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
      * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged.
-     *              Otherwise
-     *              the data in a vector will be for the subset of samples in the ee subset.
+     * Otherwise
+     * the data in a vector will be for the subset of samples in the ee subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             @Nullable Collection<DoubleVectorValueObject> vecs ) {
@@ -621,11 +623,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  ee  ee
-     * @param  obs obs
+     * @param ee  ee
+     * @param obs obs
      * @return Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include
-     *             just the
-     *             data for the subset.
+     * just the
+     * data for the subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             @Nullable Collection<DoubleVectorValueObject> obs ) {
@@ -639,11 +641,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
         DoubleVectorValueObject exemplar = obs.iterator().next();
 
-        BioAssayDimensionValueObject bad = new BioAssayDimensionValueObject();
-        bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
-        bad.setDescription( "Subset slice" );
-        bad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
-        bad.setIsSubset( true );
+        BioAssayDimensionValueObject slicedBad = new BioAssayDimensionValueObject();
+        slicedBad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
+        slicedBad.setDescription( "Subset slice" );
+        slicedBad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
+        slicedBad.setIsSubset( true );
         Collection<Long> subsetBioAssayIds = IdentifiableUtils.getIds( ee.getBioAssays() );
 
         for ( BioAssayValueObject ba : exemplar.getBioAssays() ) {
@@ -654,10 +656,18 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             sliceBioAssays.add( ba );
         }
 
-        bad.addBioAssays( sliceBioAssays );
+        slicedBad.addBioAssays( sliceBioAssays );
         ExpressionExperimentSubsetValueObject eeVo = new ExpressionExperimentSubsetValueObject( ee );
+
+        List<BioAssayValueObject> assays = obs.iterator().next().getBioAssays();
+        Map<BioAssayValueObject, Integer> ba2i = ListUtils.indexOfElements( assays );
+        int[] bioAssayIndex = new int[sliceBioAssays.size()];
+        for ( int i = 0; i < sliceBioAssays.size(); i++ ) {
+            bioAssayIndex[i] = ba2i.get( sliceBioAssays.get( i ) );
+        }
+
         for ( DoubleVectorValueObject vec : obs ) {
-            sliced.add( vec.slice( eeVo, bad ) );
+            sliced.add( vec.slice( eeVo, slicedBad, bioAssayIndex ) );
         }
 
         return sliced;
@@ -672,17 +682,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return result;
     }
 
-    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet ee ) {
-        return getBioAssayDimensionsForExperiment( getExperiment( ee ) );
-    }
-
-    /**
-     * Retrieve all the BADs for the experiment, including those from subsets.
-     */
-    private Collection<BioAssayDimension> getBioAssayDimensionsForExperiment( ExpressionExperiment ee ) {
-        HashSet<BioAssayDimension> dimensions = new HashSet<>( expressionExperimentService.getBioAssayDimensions( ee ) );
-        dimensions.addAll( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) );
-        return dimensions;
+    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet bas ) {
+        return expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( getExperiment( bas ) );
     }
 
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
@@ -700,11 +701,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     /**
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
-     *              just
-     *              have one
-     *              (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
-     *              for
-     *              details.
+     * just
+     * have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
+     * for
+     * details.
      */
     private <S, T> Map<S, T> createValueObjectCache( Collection<ProcessedExpressionDataVector> vectors, Function<ProcessedExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
         Map<S, T> result = new HashMap<>();

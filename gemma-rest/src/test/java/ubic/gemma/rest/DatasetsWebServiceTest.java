@@ -4,7 +4,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,13 +30,13 @@ import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -55,10 +54,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
@@ -242,6 +238,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AsyncTaskExecutor taskExecutor() {
             return mock( AsyncTaskExecutor.class );
+        }
+
+        @Bean
+        public EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "http://localhost:8080" );
         }
     }
 

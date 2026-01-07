@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -66,6 +67,11 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
      */
     @JsonIgnore
     private Long bioAssaySetAnalyzedId;
+
+    /**
+     * List of BioAssays analyzed
+     */
+    private Collection<BioAssayValueObject> bioAssaysAnalyzed;
 
     private Integer numberOfGenesAnalyzed;
 

@@ -21,16 +21,20 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
@@ -53,6 +57,9 @@ import static org.junit.Assert.*;
  */
 @DirtiesContext
 public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private BatchInfoPopulationService batchInfoPopulationService;
@@ -112,6 +119,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGetBatches() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -153,6 +161,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE14285OneBatch() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
@@ -177,6 +186,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE156689NoBatchinfo() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );

@@ -32,11 +32,11 @@ import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -748,6 +748,21 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         if ( removedTroubledExperiments.get() > 0 ) {
             log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
                     removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
+        }
+    }
+
+    /**
+     * A silent version of {@link #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)} that
+     * produces a warning via {@link #addWarningObject(ExpressionExperiment, String, Throwable)} instead of throwing an
+     * exception.
+     *
+     * @see #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)
+     */
+    protected void refreshExpressionExperimentFromGemmaWebSilently( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) {
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web.", e );
         }
     }
 

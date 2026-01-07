@@ -22,6 +22,7 @@ import cern.colt.list.DoubleArrayList;
 import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
@@ -46,6 +47,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * The data of this vector.
      */
     private double[] data;
+    @Nullable
+    private int[] numberOfCells;
     /**
      * Indicate if this vector is "masked", i.e. it is processed.
      */
@@ -85,6 +88,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.masked = true;
         }
         this.data = dedv.getDataAsDoubles();
+        this.numberOfCells = dedv.getNumberOfCells() != null ? dedv.getNumberOfCells() : null;
         if ( dedv instanceof ProcessedExpressionDataVector ) {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
@@ -102,9 +106,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
      *
-     * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
-     *        that aren't in the dedv's bioAssayDimension.
-     * @param dedv dedv
+     * @param dimToMatch   ensure that the vector missing values to match the locations of any bioassays in dimToMatch
+     *                     that aren't in the dedv's bioAssayDimension.
+     * @param dedv         dedv
      * @param eevo         a VO for the experiment
      * @param qtvo         a VO for the quantitation type
      * @param vectorsBadVo BA dimension vo
@@ -163,17 +167,50 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return new DoubleVectorValueObject( this );
     }
 
+    public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubsetValueObject subset, BioAssayDimensionValueObject slicedBad ) {
+        Map<BioAssayValueObject, Integer> ba2i = ListUtils.indexOfElements( getBioAssays() );
+        int[] bioAssayIndexMap = new int[slicedBad.getBioAssays().size()];
+        for ( int i = 0; i < slicedBad.getBioAssays().size(); i++ ) {
+            bioAssayIndexMap[i] = ba2i.get( slicedBad.getBioAssays().get( i ) );
+        }
+        return slice( subset, slicedBad, bioAssayIndexMap );
+    }
+
     /**
      * Crate a vector that is a slice of this one.
      * <p>
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
      * bioassay dimension.
      *
-     * @param subset a subset by which we are slicing
-     * @param bad all we nee is the id, the name and the list of bioassays from this.S
+     * @param subset        a subset by which we are slicing
+     * @param slicedBad     all we need is the id, the name and the list of bioassays from this.
+     * @param bioAssayIndex position of each sliced bioassay in the original vector's dimension to avoid costly
+     *                      recomputation
      */
-    public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubsetValueObject subset, BioAssayDimensionValueObject bad ) {
-        return new SlicedDoubleVectorValueObject( this, subset, bad );
+    public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubsetValueObject subset,
+            BioAssayDimensionValueObject slicedBad, int[] bioAssayIndex ) {
+        Assert.isTrue( getExpressionExperiment() == null || getExpressionExperiment().getId().equals( subset.getSourceExperimentId() ),
+                "The subset must belong to " + getExpressionExperiment() + "." );
+        Assert.isTrue( bioAssayIndex.length == slicedBad.getBioAssays().size(),
+                "The bioassay index length must match the number of bioassays in the sliced dimension." );
+        SlicedDoubleVectorValueObject slicedVector = new SlicedDoubleVectorValueObject();
+        // because this is a 'slice', not a persistent one,
+        slicedVector.setId( null );
+        slicedVector.setSourceVectorId( getId() );
+        slicedVector.setExpressionExperiment( subset );
+        slicedVector.setBioAssayDimension( slicedBad );
+        slicedVector.setMasked( isMasked() );
+        slicedVector.setQuantitationType( getQuantitationType() );
+        slicedVector.setDesignElement( getDesignElement() );
+        slicedVector.setGenes( getGenes() );
+        double[] slicedData = new double[slicedBad.getBioAssays().size()];
+        List<BioAssayValueObject> bioAssays = slicedBad.getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            slicedData[i] = getData()[bioAssayIndex[i]];
+        }
+        slicedVector.setData( slicedData );
+        // not copying ranks because slicing affects them, those can be recomputed if needed
+        return slicedVector;
     }
 
     /**

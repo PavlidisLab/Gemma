@@ -46,10 +46,24 @@ public abstract class AbstractDescribable extends AbstractIdentifiable implement
         this.description = description;
     }
 
+    /**
+     * The default hash code for a describable is based on its name, ignoring case.
+     * <p>
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
-        return Objects.hash( getName() );
+        return Objects.hash( name != null ? name.toLowerCase() : null );
     }
+
+    /**
+     * <b>Important note:</b> The name should be compared in a case-insensitive manner. You can use
+     * {@link DescribableUtils#equalsByName(Describable, Describable)} to get the correct behavior.
+     * <p>
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract boolean equals( Object object );
 
     @Override
     public String toString() {

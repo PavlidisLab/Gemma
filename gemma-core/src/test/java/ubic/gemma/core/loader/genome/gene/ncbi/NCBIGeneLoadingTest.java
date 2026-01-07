@@ -143,7 +143,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         Collection<Gene> updatedTestGene = geneService.findByOfficialSymbol( "TEAD1" );
         assertEquals( 1, updatedTestGene.size() );
         g = updatedTestGene.iterator().next();
-        assertEquals( "7003", g.getPreviousNcbiId() );
+        assertEquals( "7003", g.getPreviousNcbiGeneId() );
         assertEquals( new Integer( 44444 ), g.getNcbiGeneId() );
 
         g = geneService.findByNCBIId( 1 );

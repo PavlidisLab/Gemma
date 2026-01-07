@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.AbstractAsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -48,7 +51,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
@@ -58,6 +60,9 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 @ContextConfiguration
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class HomologeneServiceTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -135,8 +140,8 @@ public class HomologeneServiceTest extends BaseTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/last-archive/homologene.data")
     public final void testHomologeneFromFtpServer() throws Exception {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/last-archive/homologene.data" );
         hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );
         Future<HomologeneService> homologeneService = hgs.getObject();
         assertThat( homologeneService ).succeedsWithin( 30, TimeUnit.SECONDS );

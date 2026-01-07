@@ -130,11 +130,17 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean ignoreFailingSubsets = false;
 
-    private DifferentialExpressionAnalysisFilter.Mode filterMode;
     @Nullable
-    private Integer filterMinAssays;
+    private Integer filterMinNumberOfCellsPerSample;
+    @Nullable
+    private Integer filterMinNumberOfCellsPerGene;
+    private DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode filterMode;
+    @Nullable
+    private Integer filterMinSamples;
     @Nullable
     private Double filterMinUniqueValues;
+    @Nullable
+    private Double filterMinVariance;
 
     private ExpressionDataFileResult result;
 
@@ -220,18 +226,36 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .get() );
 
         // filter options
-        addEnumOption( options, "filterMode", "filter-mode", "Mode to use for filtering repetitive values. Default is to auto-detect.", DifferentialExpressionAnalysisFilter.Mode.class );
-        options.addOption( Option.builder( "filterMinAssays" )
-                .longOpt( "filter-minimum-assays" )
+        options.addOption( Option.builder( "filterMinNumberOfCellsPerSample" )
+                .longOpt( "filter-minimum-number-of-cells-per-sample" )
                 .hasArg( true )
                 .type( Integer.class )
-                .desc( "Minimum number of assays to apply the repetitive values filter. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_ASSAYS_TO_APPLY_FILTER + "." )
+                .desc( "Minimum number of cells required for a sample to be included in the analysis. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE + "." )
                 .get() );
-        options.addOption( Option.builder( "filterMinUniqueValues" )
-                .longOpt( "filter-minimum-unique-values" )
+        options.addOption( Option.builder( "filterMinNumberOfCellsPerGene" )
+                .longOpt( "filter-minimum-number-of-cells-per-gene" )
+                .hasArg( true )
+                .type( Integer.class )
+                .desc( "Minimum number of cells required for a gene to be tested. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE + "." )
+                .get() );
+        addEnumOption( options, "filterRepetitiveValuesMode", "filter-repetitive-values-mode", "Mode to use for filtering repetitive values. Default is to auto-detect based on the quantitation type.", DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode.class );
+        options.addOption( Option.builder( "filterRepetitiveValuesMinSamples" )
+                .longOpt( "filter-repetitive-values-minimum-number-of-samples" )
+                .hasArg( true )
+                .type( Integer.class )
+                .desc( "Minimum number of samples to apply the repetitive values filter. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER + "." )
+                .get() );
+        options.addOption( Option.builder( "filterRepetitiveValuesMinUniqueValues" )
+                .longOpt( "filter-repetitive-values-minimum-unique-values" )
                 .hasArg( true )
                 .type( Double.class )
-                .desc( "Minimum fraction of unique values to retain a design element. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES + "." )
+                .desc( "Minimum fraction of unique values to retain a design element when filtering repetitive values. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES + "." )
+                .get() );
+        options.addOption( Option.builder( "filterMinVariance" )
+                .longOpt( "filter-minimum-variance" )
+                .hasArg( true )
+                .type( Double.class )
+                .desc( "Minimum variance required for a design element to be included in the analysis. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_VARIANCE + "." )
                 .get() );
 
         // delete mode
@@ -326,9 +350,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
         this.result = getExpressionDataFileResult( commandLine, false, false, true );
-        this.filterMode = getEnumOptionValue( commandLine, "filterMode" );
-        this.filterMinAssays = commandLine.getParsedOptionValue( "filterMinAssays" );
-        this.filterMinUniqueValues = commandLine.getParsedOptionValue( "filterMinUniqueValues" );
+        this.filterMinNumberOfCellsPerSample = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerSample" );
+        this.filterMinNumberOfCellsPerGene = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerGene" );
+        this.filterMode = getEnumOptionValue( commandLine, "filterRepetitiveValuesMode" );
+        this.filterMinSamples = commandLine.getParsedOptionValue( "filterRepetitiveValuesMinSamples" );
+        this.filterMinUniqueValues = commandLine.getParsedOptionValue( "filterRepetitiveValuesMinUniqueValues" );
+        this.filterMinVariance = commandLine.getParsedOptionValue( "filterMinVariance" );
         // TODO: check if the analysis being redone is a subset analysis
         this.ignoreFailingSubsets = hasOption( commandLine, "ignoreFailingSubsets",
                 requires( anyOf( toBeSet( "subset" ), toBeSet( "redo" ) ) ) );
@@ -407,9 +434,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setUseWeights( super.eeService.isRNASeq( ee ) );
 
         // filtering
-        config.setFilterMode( this.filterMode );
-        config.setMinimumNumberOfAssaysToApplyFilter( this.filterMinAssays );
+        config.setRepetitiveValuesFilterMode( this.filterMode );
+        config.setMinimumNumberOfSamplesToApplyRepetitiveValuesFilter( this.filterMinSamples );
         config.setMinimumFractionOfUniqueValues( this.filterMinUniqueValues );
+        config.setMinimumNumberOfCellsPerSample( this.filterMinNumberOfCellsPerSample );
+        config.setMinimumNumberOfCellsPerGene( this.filterMinNumberOfCellsPerGene );
+        config.setMinimumVariance( this.filterMinVariance );
 
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {
             // selection of factors will be based on the existing analysis

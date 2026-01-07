@@ -50,26 +50,30 @@ public interface ProcessedExpressionDataVectorService
      * Mismatch between quantitation type and data is ignored.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
      * @param updateRanks whether to update the rnaks of the vectors or not
+     * @return the created processed QT
+     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      * @see #updateRanks(ExpressionExperiment)
      * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
-     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException;
+    QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException;
 
     /**
      * Create processed vectors and optionally update ranks.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
+     * @return the created processed QT
+     * @throws QuantitationTypeDetectionException  if the QT caanot be detected from data, never raised if
+     *                                             ignoreQuantitationMismatch is set to true
+     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
      * @see #updateRanks(ExpressionExperiment)
-     * @throws QuantitationTypeDetectionException if the QT caanot be detected from data, never raised if
-     * ignoreQuantitationMismatch is set to true
-     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+    QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * Replace the processed vectors of a EE with the given vectors.
@@ -78,8 +82,8 @@ public interface ProcessedExpressionDataVectorService
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
      *
-     * @param ee      ee
-     * @param vectors non-persistent, all of the same {@link QuantitationType}
+     * @param ee          ee
+     * @param vectors     non-persistent, all of the same {@link QuantitationType}
      * @param updateRanks whether to update ranks or not
      * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
@@ -90,6 +94,7 @@ public interface ProcessedExpressionDataVectorService
      * Remove the processed vectors of an EE.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
      * @see ExpressionExperimentService#removeProcessedDataVectors(ExpressionExperiment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -124,6 +129,7 @@ public interface ProcessedExpressionDataVectorService
 
     /**
      * Retrieve expression levels by dataset IDs.
+     *
      * @see #getExpressionLevels(Collection, Collection, boolean, String)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -204,6 +210,7 @@ public interface ProcessedExpressionDataVectorService
 
     /**
      * Retrieve and thaw a collection of vectors for a given experiment.
+     *
      * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
      * @see ProcessedExpressionDataVectorDao#thaw(Collection)
      */

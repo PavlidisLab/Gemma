@@ -145,19 +145,19 @@ public class QuantitationTypeConversionUtils {
         }
 
         StandardQuantitationType finalType = type;
-        List<QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
-                .map( QuantitationType.Factory::newInstance )
-                .peek( qt -> {
-                    qt.setType( finalType );
-                    qt.setScale( ScaleType.LOG2 );
-                    QuantitationTypeUtils.appendToDescription( qt, "Data was converted from " + quantitationType.getScale() + " to " + ScaleType.LOG2 + "." );
-                } )
-                .collect( Collectors.toList() );
+        Map<QuantitationType, QuantitationType> log2Qts = dmatrix.getQuantitationTypes().stream()
+                .collect( Collectors.toMap( qt -> qt, qt -> {
+                    QuantitationType log2Qt = QuantitationType.Factory.newInstance( qt );
+                    log2Qt.setType( finalType );
+                    log2Qt.setScale( ScaleType.LOG2 );
+                    QuantitationTypeUtils.appendToDescription( log2Qt, "Data was converted from " + quantitationType.getScale() + " to " + ScaleType.LOG2 + "." );
+                    return log2Qt;
+                } ) );
 
-        ExpressionDataDoubleMatrix log2Matrix = new ExpressionDataDoubleMatrix( dmatrix, transformedMatrix, log2Qts );
+        ExpressionDataDoubleMatrix log2Matrix = dmatrix.withMatrix( transformedMatrix, log2Qts );
 
         try {
-            detectSuspiciousValues( log2Matrix, log2Qts.iterator().next() );
+            detectSuspiciousValues( log2Matrix, log2Qts.values().iterator().next() );
         } catch ( SuspiciousValuesForQuantitationException e ) {
             if ( ignoreQuantitationMismatch ) {
                 log.warn( String.format( "Expression data matrix contains suspicious values:\n\n - %s",

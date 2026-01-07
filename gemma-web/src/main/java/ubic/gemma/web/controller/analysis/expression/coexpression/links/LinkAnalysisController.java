@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.coexp.LinkAnalysisTaskCommand;
@@ -56,7 +56,7 @@ public class LinkAnalysisController {
         experimentReportService.evictFromCache( id );
 
         LinkAnalysisConfig lac = new LinkAnalysisConfig();
-        FilterConfig fc = new FilterConfig();
+        ExpressionExperimentFilterConfig fc = new ExpressionExperimentFilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( ee, lac, fc );
 
         return taskRunningService.submitTaskCommand( cmd );

@@ -63,6 +63,10 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ArrayDesign loadWithAuditTrail( Long id );
+
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
@@ -96,6 +100,9 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByName( String name );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> findByCompositeSequenceName( String name );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
@@ -360,6 +367,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     /**
      * Thaw a given platform.
+     *
      * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
@@ -368,6 +376,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     /**
      * Thaw a collection of platforms.
+     *
      * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
@@ -376,6 +385,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     /**
      * Thaw the composite sequences of a given platform
+     *
      * @see ArrayDesignDao#thawCompositeSequences(ArrayDesign)
      */
     @CheckReturnValue
@@ -424,6 +434,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     /**
      * No need for ACL_VALUE_OBJECT_COLLECTION_READ because the filtering is done in the query.
+     *
      * @see ArrayDesignDao#loadBlacklistedValueObjects(Filters, Sort, int, int)
      */
     @Secured("GROUP_ADMIN")

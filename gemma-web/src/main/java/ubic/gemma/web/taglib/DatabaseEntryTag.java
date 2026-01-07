@@ -18,12 +18,14 @@
  */
 package ubic.gemma.web.taglib;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -31,13 +33,11 @@ import javax.servlet.jsp.tagext.TagSupport;
 /**
  * @author keshav
  */
+@CommonsLog
 @SuppressWarnings("unused") // Frontend use
 public class DatabaseEntryTag extends TagSupport {
 
-    private static final long serialVersionUID = -8225561718129593445L;
-
-    private static Log log = LogFactory.getLog( DatabaseEntryTag.class );
-
+    @Nullable
     private DatabaseEntryValueObject databaseEntry;
 
     @Override
@@ -64,7 +64,7 @@ public class DatabaseEntryTag extends TagSupport {
                             .append( "/images/logo/geoTiny.png' /></a>" );
                 } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
                     buf.append( accession ).append( "&nbsp;<a title='ArrayExpress page for this entry'" ).append(
-                            " target='_blank' href='https://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
+                                    " target='_blank' href='https://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
                             .append( accession ).append( "'><img src='" ).append( contextPath )
                             .append( "/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
@@ -92,7 +92,7 @@ public class DatabaseEntryTag extends TagSupport {
         return Tag.EVAL_PAGE;
     }
 
-    public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
+    public void setDatabaseEntry( @Nullable DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) {
             // if it is a user-owned data set.
             this.databaseEntry = null;

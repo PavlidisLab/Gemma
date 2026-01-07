@@ -53,6 +53,14 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
+    void evictCharacteristicsCache( ExpressionExperiment ee );
+
+    void evictBioAssaysCache( ExpressionExperiment ee );
+
+    void evictOtherPartsCache( ExpressionExperiment ee );
+
+    void evictQuantitationTypesCache( ExpressionExperiment ee );
+
     @Data
     class Identifiers {
         Long id;
@@ -205,18 +213,13 @@ public interface ExpressionExperimentDao
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
-     * Retrieve {@link BioAssayDimension} that are used by subsets of a given {@link ExpressionExperiment}.
-     * <p>
-     * This covers cases where BAs in a subset are not the same as the BAs in the experiment such as for single-cell
-     * data where we use sub-assays.
-     */
-    Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment );
-
-    /**
      * Retrieve a dimension for a given experiment and quantitation type.
+     *
      * @param dataVectorType the type of data vectors to consider, this is necessary because otherwise all the vector
      *                       tables would have to be looked at. If you do nto know the type of vector, use {@link #getBioAssayDimension(ExpressionExperiment, QuantitationType)}.
-     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors,
+     *                                                use {@link #getBioAssayDimensions(ExpressionExperiment, QuantitationType, Class)}
+     *                                                to deal with multi-assays cases.
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
@@ -224,10 +227,14 @@ public interface ExpressionExperimentDao
     /**
      * Retrieve a dimension for a given experiment and quantitation type.
      *
-     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors,
+     *                                                use {@link #getBioAssayDimensions(ExpressionExperiment, QuantitationType)}
+     *                                                to deal with multi-assay cases
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
 
@@ -242,6 +249,8 @@ public interface ExpressionExperimentDao
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     long getRawDataVectorCount( ExpressionExperiment ee );
+
+    long getRawDataVectorCount( ExpressionExperiment ee, QuantitationType qt );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
@@ -284,6 +293,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain the quantitation type for the processed vectors, if available.
+     *
      * @throws org.hibernate.NonUniqueResultException if there is more than one set of processed vectors
      */
     @Nullable
@@ -310,6 +320,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Determine the taxon for a given experiment or subset.
+     *
      * @return a unique taxon for the dataset, or null if no taxon could be determined
      */
     @Nullable
@@ -377,6 +388,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain all annotations, grouped by applicable level.
+     *
      * @param useEe2c use the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table to retrieve annotations
      */
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
@@ -488,10 +500,11 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the missing value vectors for a given experiment.
      */
-    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValueVectors( ExpressionExperiment ee );
+    Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee );
 
     /**
      * Add raw data vectors with the given quantitation type.
+     *
      * @return the number of raw data vectors created
      */
     int addRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> newVectors );
@@ -507,6 +520,7 @@ public interface ExpressionExperimentDao
      * Remove raw data vectors for a given quantitation type.
      * <p>
      * Unused {@link BioAssayDimension} are removed unless keepDimension is set to {@code true}.
+     *
      * @param keepDimension keep the {@link BioAssayDimension} if it is not used by any other vectors. Use this only if
      *                      you intend to reuse the dimension for another set of vectors. Alternatively,
      *                      {@link #replaceRawDataVectors(ExpressionExperiment, QuantitationType, Collection)} can be
@@ -517,6 +531,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Replace raw data vectors for a given quantitation type.
+     *
      * @return the number of replaced raw vectors
      */
     int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
@@ -526,14 +541,16 @@ public interface ExpressionExperimentDao
      * <p>
      * Unlike {@link ExpressionExperiment#getProcessedExpressionDataVectors()}, this is guaranteed to return only one
      * set of vectors and will raise a {@link NonUniqueResultException} if there is more than one processed QTs.
-     * @see #getProcessedQuantitationType(ExpressionExperiment)
+     *
      * @return the processed vectors, or null if there are no processed vectors
+     * @see #getProcessedQuantitationType(ExpressionExperiment)
      */
     @Nullable
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
      * Retrieve a slice of processed vectors for an experiment.
+     *
      * @return the processed vectors, or null if there are no processed vectors
      */
     @Nullable
@@ -543,6 +560,7 @@ public interface ExpressionExperimentDao
      * Add processed data vectors
      * <p>
      * The number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
+     *
      * @return the number of created processed vectors
      */
     int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
@@ -552,6 +570,7 @@ public interface ExpressionExperimentDao
      * <p>
      * Their corresponding QT is detached from the experiment and removed. The number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
      * is set to zero. Unused dimensions are removed.
+     *
      * @return the number of removed processed vectors
      */
     int removeProcessedDataVectors( ExpressionExperiment ee );
@@ -561,6 +580,7 @@ public interface ExpressionExperimentDao
      * <p>
      * The QT is reused and the number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * Unused dimensions are removed.
+     *
      * @return the number of vectors replaced
      */
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
@@ -579,11 +599,22 @@ public interface ExpressionExperimentDao
 
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Obtain the single-cell dimension used by a specific QT.
      */
     @Nullable
     SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain a single-cell dimension by ID.
+     * <p>
+     * This also ensures that the SCD belongs to the given experiment.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long id );
 
     /**
      * Load a single-cell dimension used by a specific QT without its cell IDs.
@@ -593,6 +624,12 @@ public interface ExpressionExperimentDao
 
     @Nullable
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
+    @Nullable
+    SingleCellDimension getSingleCellDimensionForCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId );
+
+    @Nullable
+    SingleCellDimension getSingleCellDimensionForCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId );
 
     /**
      * Obtain the preferred single-cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -611,12 +648,14 @@ public interface ExpressionExperimentDao
 
     /**
      * Create a single-cell dimension for a given experiment.
+     *
      * @throws IllegalArgumentException if the single-cell dimension is invalid
      */
     void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
      * Update a single-cell dimensino for a given experiment.
+     *
      * @throws IllegalArgumentException if the single-cell dimension is invalid
      */
     void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
@@ -627,7 +666,17 @@ public interface ExpressionExperimentDao
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
+     * Reload a single-cell dimension.
+     * <p>
+     * Use this on a detached single-cell dimension such as those returned by {@link #getSingleCellDimensionWithoutCellIds(ExpressionExperiment, QuantitationType)}.
+     *
+     * @see #reload(Identifiable)
+     */
+    SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension );
+
+    /**
      * Stream the cell IDs of a dimension.
+     *
      * @param createNewSession create a new session held by the stream, allowing to use the stream beyond the lifetime
      *                         current session. If you set this to true, make absolutely sure that the resulting stream
      *                         is closed.
@@ -671,14 +720,6 @@ public interface ExpressionExperimentDao
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt );
-
-    /**
-     * Obtain the preferred assignment of the preferred single-cell vectors.
-     *
-     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
-     */
-    @Nullable
-    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
 
     /**
      * Obtain the preferred assignment for the given quantitation type.
@@ -768,6 +809,8 @@ public interface ExpressionExperimentDao
      */
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
+    Map<SingleCellDimension, Set<QuantitationType>> getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
+
     /**
      * Indicate if the given experiment has single-cell quantitation types.
      */
@@ -781,21 +824,21 @@ public interface ExpressionExperimentDao
     /**
      * Obtain a set of single-cell data vectors for the given quantitation type.
      */
-    List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
+    List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeBiologicalCharacteristics, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
 
     /**
      * Obtain a stream over the vectors for a given QT.
      * <p>
      *
-     * @param fetchSize                 number of vectors to fetch at once
-     * @param createNewSession          create a new session held by the stream. If you set this to true, make absolutely sure
-     *                                  that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
-     *                                  object.
+     * @param fetchSize        number of vectors to fetch at once
+     * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
+     *                         that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     *                         object.
      * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, Class, int, boolean, boolean)
      */
     Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession );
 
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean useCursorFetchIfSupported, boolean createNewSession, boolean includeBiologicalCharacteristics, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
 
     SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement );
 
@@ -818,9 +861,10 @@ public interface ExpressionExperimentDao
 
     /**
      * Remove the given single-cell data vectors.
+     *
      * @param quantitationType quantitation to remove
      * @param deleteQt         if true, detach the QT from the experiment and delete it
-     *                         TODO: add a replaceSingleCellDataVectors to avoid needing this
+     *                                                                                                                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 

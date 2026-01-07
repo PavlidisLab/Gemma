@@ -34,7 +34,6 @@ import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -43,6 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -60,6 +60,8 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -129,6 +131,10 @@ public class ExpressionExperimentServiceImpl
     private CoexpressionService coexpressionService;
     @Autowired
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -298,6 +304,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt ) {
         return expressionExperimentDao.getRawDataVectors( ee, samples, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getPreferredRawDataVectors( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getMissingValuesVectors( ee );
     }
 
     @Override
@@ -492,10 +510,7 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             if ( ee.getPrimaryPublication() != null ) {
-                Hibernate.initialize( ee.getPrimaryPublication() );
-                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
-                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
-                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
             }
         }
         return ee;
@@ -507,21 +522,10 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment ee = load( id );
         if ( ee != null ) {
             if ( ee.getPrimaryPublication() != null ) {
-                Hibernate.initialize( ee.getPrimaryPublication() );
-                Hibernate.initialize( ee.getPrimaryPublication().getMeshTerms() );
-                Hibernate.initialize( ee.getPrimaryPublication().getChemicals() );
-                Hibernate.initialize( ee.getPrimaryPublication().getKeywords() );
+                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
             }
-            Set<BibliographicReference> pubs = ee.getOtherRelevantPublications();
-
-            for ( BibliographicReference pub : pubs ) {
-                Hibernate.initialize( pub );
-                Hibernate.initialize( pub.getMeshTerms() );
-                Hibernate.initialize( pub.getChemicals() );
-                Hibernate.initialize( pub.getKeywords() );
-            }
+            ee.getOtherRelevantPublications().forEach( Thaws::thawBibliographicReference );
         }
-
         return ee;
     }
 
@@ -694,6 +698,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment findByShortName( final String shortName ) {
         return this.expressionExperimentDao.findByShortName( shortName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByShortNameWithPrimaryPublication( String shortName ) {
+        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
+        if ( ee != null && ee.getPrimaryPublication() != null ) {
+            Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
+        }
+        return ee;
     }
 
     @Override
@@ -966,11 +980,22 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * FIXME: There seems to be a bug in Hibernate where collections are not evicted, so newly added entities might
+     *        not appear as a result of using the {@link CacheMode#REFRESH} mode. To workaround this, we explicitly
+     *        evict collections that are cached prior to thawing their contents.
+     */
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
+            this.expressionExperimentDao.evictCharacteristicsCache( ee );
+            this.expressionExperimentDao.evictBioAssaysCache( ee );
+            this.expressionExperimentDao.evictQuantitationTypesCache( ee );
+            this.expressionExperimentDao.evictOtherPartsCache( ee );
             this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
@@ -1253,18 +1278,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+    public Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
-        return bioAssayDimensions;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
-        Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
-                .getBioAssayDimensionsFromSubSets( expressionExperiment );
         bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
         return bioAssayDimensions;
     }
@@ -1279,6 +1295,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> getProcessedBioAssayDimensionsWithAssays( ExpressionExperiment ee ) {
+        Collection<BioAssayDimension> bad = expressionExperimentDao.getProcessedBioAssayDimensions( ee );
+        bad.forEach( Thaws::thawBioAssayDimension );
+        return bad;
     }
 
     @Override
@@ -1606,14 +1630,24 @@ public class ExpressionExperimentServiceImpl
          */
         for ( ArrayDesign ad : ads ) {
             TechnologyType techtype = ad.getTechnologyType();
-
-            if ( techtype.equals( TechnologyType.SEQUENCING )
-                    || techtype.equals( TechnologyType.GENELIST ) ) {
+            if ( techtype.equals( TechnologyType.SEQUENCING ) || techtype.equals( TechnologyType.GENELIST ) ) {
                 return true;
             }
         }
         return false;
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            TechnologyType technologyType = ad.getTechnologyType();
+            if ( technologyType.equals( TechnologyType.TWOCOLOR ) || technologyType.equals( TechnologyType.DUALMODE ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1730,6 +1764,16 @@ public class ExpressionExperimentServiceImpl
 
         ee.getCharacteristics().add( vc );
         this.update( ee );
+    }
+
+    @Override
+    @Transactional
+    public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
+        Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
+        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) );
+        ee.getCharacteristics().removeAll( characteristicsToRemove );
+        update( ee );
+        characteristicService.remove( characteristicsToRemove );
     }
 
     @Override
@@ -1867,44 +1911,63 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt ) {
+    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt, @Nullable QuantitationType previousPreferredQt ) {
         Assert.notNull( ee.getId(), "The experiment must be persistent." );
         Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
         // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
         //        cannot use contains
         Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
                 "The quantitation type does not belong to " + ee + "." );
-        if ( qt.getIsSingleCellPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsSingleCellPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for single-cell data." );
-                    otherQt.setIsSingleCellPreferred( false );
-                    quantitationTypeService.update( otherQt );
+
+        Class<? extends DataVector> vectorType = quantitationTypeService.getDataVectorType( qt );
+
+        if ( vectorType != null ) {
+            if ( qt.isPreferred( vectorType ) ) {
+                // set all other QTs to non-preferred (regardless of their type)
+                for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                    if ( otherQt.isPreferred( vectorType ) && !otherQt.equals( qt ) ) {
+                        log.info( "Marking " + otherQt + " as non-preferred for " + vectorType + "." );
+                        otherQt.setIsPreferred( false, vectorType );
+                        quantitationTypeService.update( otherQt );
+                    }
+                }
+                if ( !qt.equals( previousPreferredQt ) ) {
+                    Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
+                    String message = String.format( "The preferred quantitation type for %s changed%s to %s.",
+                            vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt );
+                    if ( eventType != null ) {
+                        auditTrailService.addUpdateEvent( ee, eventType, message );
+                    } else {
+                        log.warn( message + " There is no audit event type for this change." );
+                    }
+                }
+            } else if ( previousPreferredQt != null && previousPreferredQt.isPreferred( vectorType ) && qt.equals( previousPreferredQt ) ) {
+                Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
+                String message = String.format( "The preferred quantitation type for %s was cleared (previously %s).",
+                        vectorType.getSimpleName(), previousPreferredQt );
+                if ( eventType != null ) {
+                    auditTrailService.addUpdateEvent( ee, eventType, message );
+                } else {
+                    log.warn( message + " There is no audit event type for this change." );
                 }
             }
+        } else {
+            log.warn( qt + " does not have a vector type, likely cause is the absence of data vectors." );
         }
-        if ( qt.getIsPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for raw data." );
-                    otherQt.setIsPreferred( false );
-                    quantitationTypeService.update( otherQt );
-                }
-            }
-        }
-        if ( qt.getIsMaskedPreferred() ) {
-            // set all other QTs to non-preferred
-            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                if ( otherQt.getIsMaskedPreferred() && !otherQt.equals( qt ) ) {
-                    log.info( "Marking " + otherQt + " as non-preferred for processed data." );
-                    otherQt.setIsMaskedPreferred( false );
-                    quantitationTypeService.update( otherQt );
-                }
-            }
-        }
+
         quantitationTypeService.update( qt );
+    }
+
+    @Nullable
+    private Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
+        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return PreferredSingleCellDataChangedEvent.class;
+        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+            return PreferredRawDataChangedEvent.class;
+        } else {
+            // there is no event for a change of processed data because we don't allow more than one set of processed
+            return null;
+        }
     }
 
     @Override

@@ -15,14 +15,16 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,7 +42,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Switching of platforms that have no composite sequences.
@@ -48,6 +49,9 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
  * @author Paul
  */
 public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private GeoService geoService;
@@ -61,16 +65,13 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    @Value("${entrez.efetch.apikey}")
-    private String ncbiApiKey;
-
     /**
      * for bug 3451
      */
     @Test
     @Category({ GeoTest.class, SlowTest.class })
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE36025() {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
 
         // GSE36025
         //

@@ -24,12 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.util.BaseSpringWebTest;
 import ubic.gemma.web.controller.util.EntityDelegator;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Paul
@@ -52,14 +51,11 @@ public class AuditControllerTest extends BaseSpringWebTest {
 
         auditController.addAuditEvent( ed, "CommentedEvent", "foo", "bar" );
 
-        e = expressionExperimentService.load( e.getId() );
-        assertNotNull( e );
-        e = expressionExperimentService.thawLite( e );
-        assertNotNull( e );
+        e = expressionExperimentService.loadWithAuditTrail( e.getId() );
+        assertThat( e ).isNotNull();
 
         assertThat( e.getAuditTrail().getEvents() )
                 .extracting( "eventType" )
                 .containsExactly( null, new CommentedEvent() );
-
     }
 }

@@ -20,6 +20,7 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,8 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,12 +59,14 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
  */
 public class DataUpdaterTest extends AbstractGeoServiceTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private GeoService geoService;
@@ -95,6 +100,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testAddData() throws Exception {
         /*
          * Load a regular data set that has no data. Platform is (basically) irrelevant.
@@ -149,7 +155,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         QuantitationType qt = this.makeRawQt( "qt1", true );
 
-        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
+        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, rawMatrix, qt );
 
         assertNotNull( data.getBestBioAssayDimension() );
         assertEquals( rawMatrix.columns(), data.getBioAssayDimension().getBioAssays().size() );
@@ -191,7 +197,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          * Test adding data (non-preferred)
          */
         qt = this.makeRawQt( "qt2", false );
-        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
+        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, rawMatrix, qt );
         dataUpdater.addData( ee, targetArrayDesign, moreData );
 
         ee = experimentService.thaw( ee );
@@ -209,8 +215,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESUMMARY)
     public void testLoadRNASeqData() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESUMMARY );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );
@@ -309,6 +315,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -55,6 +58,9 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.*;
  */
 public class GeoConverterTest extends BaseIntegrationTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
     private GeoConverterImpl gc;
 
@@ -64,6 +70,7 @@ public class GeoConverterTest extends BaseIntegrationTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void test5C() {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();

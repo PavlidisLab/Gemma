@@ -21,6 +21,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -32,6 +33,8 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.persistence.util.UnsupportedEntityUrlException;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -61,7 +64,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, DatasetArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -81,6 +84,8 @@ public class SearchWebService {
     @Autowired
     private TaxonService taxonService;
     @Autowired
+    private DatasetArgService datasetArgService;
+    @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
     private TaxonArgService taxonArgService;
@@ -89,6 +94,8 @@ public class SearchWebService {
 
     @Context
     private UriInfo uriInfo;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     /**
      * Highlights search result.
@@ -136,6 +143,7 @@ public class SearchWebService {
     })
     public SearchResultsResponseDataObject search(
             @QueryParam("query") QueryArg query,
+            @QueryParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
@@ -171,6 +179,7 @@ public class SearchWebService {
 
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query.getValue() )
+                .datasetConstraint( datasetArg != null ? datasetArgService.getEntity( datasetArg ) : null )
                 .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
@@ -201,11 +210,36 @@ public class SearchWebService {
         }
 
         // convert the response to search results of VOs
-        return new SearchResultsResponseDataObject( searchResultVos.stream()
-                .sorted() // SearchResults are sorted by descending score order
-                .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
-                .map( SearchResultValueObject::new )
-                .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+        List<Exception> exceptions = new ArrayList<>();
+        try {
+            return new SearchResultsResponseDataObject( searchResultVos.stream()
+                    .sorted() // SearchResults are sorted by descending score order
+                    .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
+                    .map( sr -> {
+                        String resultUrl;
+                        boolean resultUrlExternal;
+                        try {
+                            EntityUrlBuilder.EntityUrl<? extends Identifiable> builder = entityUrlBuilder.fromHostUrl()
+                                    .entity( sr.getResultType(), sr.getResultId() )
+                                    .rest();
+                            resultUrl = builder.toUriString();
+                            resultUrlExternal = builder.isExternal();
+                        } catch ( UnsupportedEntityUrlException e ) {
+                            exceptions.add( e );
+                            resultUrl = null;
+                            resultUrlExternal = false;
+                        }
+                        return new SearchResultValueObject<>( sr, resultUrl, resultUrlExternal );
+                    } )
+                    .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+        } finally {
+            if ( !exceptions.isEmpty() ) {
+                Iterator<Exception> it = exceptions.iterator();
+                Exception e = it.next();
+                it.forEachRemaining( e::addSuppressed );
+                log.warn( "Failed to generate URLs for " + exceptions.size() + " search results.", e );
+            }
+        }
     }
 
     private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
@@ -294,10 +328,20 @@ public class SearchWebService {
         @JsonInclude(JsonInclude.Include.NON_NULL)
         T resultObject;
 
-        public SearchResultValueObject( SearchResult<T> searchResult ) {
+        @Nullable
+        String resultObjectUrl;
+
+        /**
+         * Indicate that the result object URL is external and not under Gemma's control.
+         */
+        boolean resultObjectUrlExternal;
+
+        public SearchResultValueObject( SearchResult<T> searchResult, @Nullable String resultObjectUrl, boolean resultObjectUrlExternal ) {
             this.resultId = searchResult.getResultId();
             this.resultType = searchResult.getResultType().getName();
             this.resultObject = searchResult.getResultObject();
+            this.resultObjectUrl = resultObjectUrl;
+            this.resultObjectUrlExternal = resultObjectUrlExternal;
             this.score = searchResult.getScore();
             this.highlights = searchResult.getHighlights();
             this.source = searchResult.getSource().toString();

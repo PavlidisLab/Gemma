@@ -9,14 +9,19 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
 
 /**
  * An interface for bulk matrices that supports multiple {@link BioAssay} per {@link BioMaterial}.
  * <p>
- * This is usually achieved by stacking data matrices from multiple {@link QuantitationType}.
+ * This is usually achieved by stacking data matrices from multiple {@link QuantitationType}. Thus, this interface
+ * allows you to keep track of {@link QuantitationType} and {@link BioAssayDimension} at row-level. Data held in the
+ * matrix is always reordered to match the sample ordering from {@link #getBioMaterials()}.
+ *
  * @param <T>
  */
 public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDataMatrix<T> {
@@ -29,16 +34,17 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
      */
     static MultiAssayBulkExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         Assert.isTrue( !vectors.isEmpty(), "No vectors." );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
         PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
         switch ( representation ) {
             case DOUBLE:
-                return new ExpressionDataDoubleMatrix( vectors );
+                return new ExpressionDataDoubleMatrix( ee, vectors );
             case STRING:
-                return new ExpressionDataStringMatrix( vectors );
+                return new ExpressionDataStringMatrix( ee, vectors );
             case INT:
-                return new ExpressionDataIntegerMatrix( vectors );
+                return new ExpressionDataIntegerMatrix( ee, vectors );
             case BOOLEAN:
-                return new ExpressionDataBooleanMatrix( vectors );
+                return new ExpressionDataBooleanMatrix( ee, vectors );
             default:
                 throw new UnsupportedOperationException( "Don't know how to deal with matrices of " + representation + "." );
         }
@@ -49,6 +55,7 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
      * <p>
      * In the case of multi-assay matrices, more than one quantitation type may be present. When possible, those are
      * merged with {@link QuantitationTypeUtils#mergeQuantitationTypes(Collection)}.
+     *
      * @throws IllegalStateException if the matrix has more than one quantitation type that cannot be combined
      */
     @Override
@@ -60,12 +67,22 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
     Collection<QuantitationType> getQuantitationTypes();
 
     /**
+     * Return the quantitation type used for data from the given design element.
+     *
+     * @return the quantitation type applicable for the row or {@code null} if the design element is not present in the
+     * matrix
+     */
+    @Nullable
+    QuantitationType getQuantitationType( CompositeSequence designElement );
+
+    /**
      * Obtain all the {@link BioAssayDimension}s that are used in this matrix.
      */
     Collection<BioAssayDimension> getBioAssayDimensions();
 
     /**
      * {@inheritDoc}
+     *
      * @throws IllegalStateException if no {@link BioAssayDimension} covers all the biomaterials in this matrix
      */
     @Override
@@ -73,6 +90,7 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
 
     /**
      * Obtain the largest {@link BioAssayDimension} that covers all the biomaterials in this matrix.
+     *
      * @return the best {@link BioAssayDimension} for this matrix, or {@link Optional#empty()} if no such dimension
      * exists
      */
@@ -85,8 +103,10 @@ public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDat
      * 'fake'.
      *
      * @param designElement de
-     * @return bad
+     * @return the dimension applicable to the design element or {@code null} if the design element is not present in
+     * the matrix
      */
+    @Nullable
     BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
 
     /**

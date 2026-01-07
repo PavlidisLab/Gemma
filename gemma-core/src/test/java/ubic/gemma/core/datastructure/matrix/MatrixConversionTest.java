@@ -51,7 +51,7 @@ public class MatrixConversionTest extends TestCase {
         quantTypes.add( quantType );
 
         Collection<RawExpressionDataVector> vectors = this.getDesignElementDataVectors( quantTypes );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( null, vectors );
         MatrixConversionTest.log.debug( vectors.size() + " vectors" );
 
         TestCase.assertEquals( MatrixConversionTest.NUM_CS, mat.rows() );

@@ -1250,8 +1250,8 @@ public class ExpressionExperimentQCController {
         }
 
         String unit = QuantitationTypeUtils.getUnit( quantitationType );
-        String xAxisLabel = "Mean (" + unit + ")";
-        String yAxisLabel = "Variance (" + unit + "²)";
+        String xAxisLabel = "Mean" + ( unit != null ? " (" + unit + ")" : "" );
+        String yAxisLabel = "Variance" + ( unit != null ? " (" + unit + "²)" : " " );
 
         ChartFactory.setChartTheme( theme );
         JFreeChart chart = ChartFactory

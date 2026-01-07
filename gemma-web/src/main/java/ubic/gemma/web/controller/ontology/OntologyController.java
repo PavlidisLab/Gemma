@@ -14,6 +14,8 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Slice;
@@ -27,6 +29,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +38,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Provide minimal support for exposing Gemma ontology.
+ *
  * @author poirigui
  */
 @RequestMapping("/ont")
@@ -62,6 +67,9 @@ public class OntologyController {
 
     @Autowired
     private DownloadUtil downloadUtil;
+
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Value("${tgfvo.path}")
     private Path tgfvoPath;
@@ -149,7 +157,14 @@ public class OntologyController {
             contentEncoding = "gzip";
             downloadName = "TGFVO.OWL";
         }
-        downloadUtil.download( tgfvoPath, contentType, contentEncoding, true, downloadName, request, response );
+        try ( LockedPath ignored = fileLockManager.tryAcquirePathLock( tgfvoPath, false, 5, TimeUnit.SECONDS ) ) {
+            downloadUtil.download( tgfvoPath, contentType, contentEncoding, true, downloadName, request, response );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "TGFVO.OWL is not available at this time.", e );
+        }
     }
 
     @RequestMapping(value = "/TGFVO/{factorValueId}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })

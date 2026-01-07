@@ -19,9 +19,8 @@
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
 import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.SecurityConfig;
@@ -31,17 +30,15 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 
 import javax.servlet.jsp.tagext.Tag;
 
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static org.springframework.web.util.HtmlUtils.htmlEscape;
 
 
 /**
  * @author pavlidis
  */
 @Setter
+@CommonsLog
 public class ExceptionTag extends RequestContextAwareTag {
-
-    private static final long serialVersionUID = 4323477499674966726L;
-    private static final Log log = LogFactory.getLog( ExceptionTag.class.getName() );
 
     /**
      * Exception to display.
@@ -63,17 +60,17 @@ public class ExceptionTag extends RequestContextAwareTag {
             if ( this.exception == null ) {
                 buf.append( "Error was not recovered" );
             } else {
-                buf.append( "<p class=\"message\">" ).append( escapeHtml4( exception.getMessage() ) ).append( "</p>" );
+                buf.append( "<p class=\"message\">" ).append( htmlEscape( exception.getMessage() ) ).append( "</p>" );
                 if ( showStackTrace && ( isDev() || isAdmin() ) ) {
                     buf.append( "<div class=\"stacktrace mb-3\">" );
-                    buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ) );
+                    buf.append( htmlEscape( ExceptionUtils.getStackTrace( exception ) ) );
                     buf.append( "</div>" );
                     if ( exception.getCause() != null ) {
                         Throwable rootCause = ExceptionUtils.getRootCause( exception );
                         buf.append( "<h2>Root cause</h2>" );
-                        buf.append( "<p class=\"message\">" ).append( escapeHtml4( rootCause.getMessage() ) ).append( "</p>" );
+                        buf.append( "<p class=\"message\">" ).append( htmlEscape( rootCause.getMessage() ) ).append( "</p>" );
                         buf.append( "<div class=\"stacktrace mb-3\">" );
-                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( rootCause ) ) );
+                        buf.append( htmlEscape( ExceptionUtils.getStackTrace( rootCause ) ) );
                         buf.append( "</div>" );
                     }
                     if ( isDev() && !isAdmin() ) {

@@ -40,6 +40,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -528,7 +529,7 @@ public class VectorMergingServiceImpl
      */
     private List<BioAssayDimension> sortedBioAssayDimensions( Collection<BioAssayDimension> oldBioAssayDims ) {
         List<BioAssayDimension> sortedOldDims = new ArrayList<>( oldBioAssayDims );
-        sortedOldDims.sort( Comparator.comparing( BioAssayDimension::getId ) );
+        sortedOldDims.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
         return sortedOldDims;
     }
 }

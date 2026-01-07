@@ -19,10 +19,13 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.Blat;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -38,6 +41,9 @@ import static org.junit.Assert.*;
 @Category(GoldenPathTest.class)
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
     private ArrayDesignSequenceProcessingService app;
 
@@ -46,6 +52,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void testProcessArrayDesign() throws Exception {
 
         ad = arrayDesignService.thaw( ad );

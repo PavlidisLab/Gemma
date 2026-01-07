@@ -29,5 +29,9 @@
                      cascade="none" lazy="proxy" fetch="select">
             <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
+        <one-to-one name="numberOfCellsObject"
+                    class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorNumberOfCells"
+                    lazy="false" fetch="join" cascade="all-delete-orphan">
+        </one-to-one>
     </class>
 </hibernate-mapping>

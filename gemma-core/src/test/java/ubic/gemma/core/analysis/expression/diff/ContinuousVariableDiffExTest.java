@@ -16,17 +16,21 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -49,7 +53,8 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.deter
  */
 public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
-    private ExpressionExperiment ee;
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private DiffExAnalyzer analyzer;
@@ -72,15 +77,18 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
+    private ExpressionExperiment ee;
+
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void test() {
         AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.GENERICLM, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFilterMode( DifferentialExpressionAnalysisFilter.Mode.NOMINAL );
+        config.setRepetitiveValuesFilterMode( DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode.NOMINAL );
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 

@@ -1,7 +1,5 @@
 package ubic.gemma.core.analysis.singleCell;
 
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -16,60 +14,40 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 
 /**
  * Compute sparsity metrics for single-cell data.
+ *
  * @author poirigui
  */
-@Component
 public class SingleCellSparsityMetrics {
 
     /**
-     * Default threshold to use when determining if a value is expressed.
+     * Exclusive value to use to assess if data on a {@link ScaleType#LINEAR} scale is expressed. The
+     * threshold is transformed depending on the scale type of the vectors being tested:
+     * <ul>
+     * <li>{@link ScaleType#COUNT} uses {@link Math#rint(double)}</li>
+     * <li>{@link ScaleType#LOG1P} uses {@link Math#log1p(double)}</li>
+     * <li>{@link ScaleType#LOG2} uses {@link Math#log(double)} / {@code Math.log(2)}</li>
+     * <li>{@link ScaleType#LN} uses {@link Math#log(double)}</li>
+     * <li>{@link ScaleType#LOG10} uses {@link Math#log10(double)}</li>
+     * </ul>
+     * Note that for {@link ScaleType#PERCENT}, {@link ScaleType#PERCENT1} and {@link ScaleType#LOGBASEUNKNOWN},
+     * only zero is supported. If a scale type is not supported, an exception will be raised. You can
+     * use {@link #isSupported(SingleCellExpressionDataVector)} to safely perform the check.
      */
-    public static final double DEFAULT_THRESHOLD = 0.0;
-
-    private final double
-            threshold,
-            thresholdCount,
-            thresholdLn,
-            thresholdLog2,
-            thresholdLog1p,
-            thresholdLog10;
-
-    public SingleCellSparsityMetrics() {
-        this( DEFAULT_THRESHOLD );
-    }
-
-    /**
-     *
-     * @param threshold exclusive value to use to assess if data on a {@link ScaleType#LINEAR} scale is expressed. The
-     *                  threshold is transformed depending on the scale type of the vectors being tested:
-     *                  <ul>
-     *                  <li>{@link ScaleType#COUNT} uses {@link Math#rint(double)}</li>
-     *                  <li>{@link ScaleType#LOG1P} uses {@link Math#log1p(double)}</li>
-     *                  <li>{@link ScaleType#LOG2} uses {@link Math#log(double)} / {@code Math.log(2)}</li>
-     *                  <li>{@link ScaleType#LN} uses {@link Math#log(double)}</li>
-     *                  <li>{@link ScaleType#LOG10} uses {@link Math#log10(double)}</li>
-     *                  </ul>
-     *                  Note that for {@link ScaleType#PERCENT}, {@link ScaleType#PERCENT1} and {@link ScaleType#LOGBASEUNKNOWN},
-     *                  only zero is supported. If a scale type is not supported, an exception will be raised. You can
-     *                  use {@link #isSupported(SingleCellExpressionDataVector)} to safely perform the check.
-     */
-    public SingleCellSparsityMetrics( double threshold ) {
-        Assert.isTrue( threshold >= 0.0, "The threshold must be zero or greated." );
-        this.threshold = threshold;
-        this.thresholdCount = Math.rint( threshold );
-        this.thresholdLog1p = Math.log1p( threshold );
-        this.thresholdLog2 = Math.log( threshold ) / Math.log( 2 );
-        this.thresholdLn = Math.log( threshold );
-        this.thresholdLog10 = Math.log10( threshold );
-    }
+    private static final double
+            THRESHOLD = 0.0,
+            THRESHOLD_COUNT = Math.rint( THRESHOLD ),
+            THRESHOLD_LN = Math.log( THRESHOLD ),
+            THRESHOLD_LOG2 = Math.log( THRESHOLD ) / Math.log( 2 ),
+            THRESHOLD_LOG1P = Math.log1p( THRESHOLD ),
+            THRESHOLD_LOG10 = Math.log10( THRESHOLD );
 
     /**
      * Check if sparsity metrics can be computed for a given collection of vectors.
      */
-    public boolean isSupported( SingleCellExpressionDataVector vector ) {
+    public static boolean isSupported( SingleCellExpressionDataVector vector ) {
         try {
             //noinspection ResultOfMethodCallIgnored
-            isExpressed( threshold + 0.1, vector.getQuantitationType().getScale() );
+            isExpressed( THRESHOLD + 0.1, vector.getQuantitationType().getScale() );
             return true;
         } catch ( IllegalArgumentException e ) {
             return false;
@@ -78,12 +56,13 @@ public class SingleCellSparsityMetrics {
 
     /**
      * Calculate the number of cells with at least one gene expressed.
+     *
      * @param characteristicIndex only cell with the given characteristic index will be considered
      */
-    public int getNumberOfCells( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public static int getNumberOfCells( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         boolean[] isExpressed = new boolean[vectors.iterator().next().getSingleCellDimension().getNumberOfCellIds()];
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            addExpressedCells( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, isExpressed );
+            addExpressedCells( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, mask, isExpressed );
         }
         int count = 0;
         for ( boolean b : isExpressed ) {
@@ -97,7 +76,7 @@ public class SingleCellSparsityMetrics {
     /**
      * Populate a boolean vector that indicates if a cell has at least one expressed gene.
      */
-    public void addExpressedCells( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, boolean[] isExpressed ) {
+    public static void addExpressedCells( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask, boolean[] isExpressed ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         Buffer buf = vector.getDataAsBuffer();
@@ -106,13 +85,15 @@ public class SingleCellSparsityMetrics {
             if ( isExpressed[cellIndex] ) {
                 continue;
             }
-            if ( isExpressed( getDouble( buf, i, vector.getQuantitationType().getRepresentation() ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, vector.getQuantitationType().getRepresentation() ), vector.getQuantitationType().getScale() )
+                    && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 isExpressed[cellIndex] = true;
             }
         }
     }
 
-    private double getDouble( Buffer buffer, int k, PrimitiveType representation ) {
+    private static double getDouble( Buffer buffer, int k, PrimitiveType representation ) {
         switch ( representation ) {
             case FLOAT:
                 return ( ( FloatBuffer ) buffer ).get( k );
@@ -130,22 +111,24 @@ public class SingleCellSparsityMetrics {
     /**
      * Calculate the number of genes expressed in at least one cell.
      */
-    public int getNumberOfDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex ) {
+    public static int getNumberOfDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            count += getNumberOfDesignElements( vector, sampleIndex, characteristic, characteristicIndex );
+            count += getNumberOfDesignElements( vector, sampleIndex, characteristic, characteristicIndex, mask );
         }
         return count;
     }
 
-    public int getNumberOfDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex ) {
+    public static int getNumberOfDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex, @Nullable boolean[] mask ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         Buffer buf = vector.getDataAsBuffer();
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() )
+                    && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 return 1;
             }
         }
@@ -155,15 +138,15 @@ public class SingleCellSparsityMetrics {
     /**
      * Calculate the number of expressed cell by gene pairs.
      */
-    public int getNumberOfCellsByDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public static int getNumberOfCellsByDesignElements( Collection<SingleCellExpressionDataVector> vectors, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            count += getNumberOfCellsByDesignElements( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex );
+            count += getNumberOfCellsByDesignElements( vector, sampleIndex, cellLevelCharacteristics, characteristicIndex, mask );
         }
         return count;
     }
 
-    public int getNumberOfCellsByDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    public static int getNumberOfCellsByDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, @Nullable boolean[] mask ) {
         int count = 0;
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
@@ -171,7 +154,9 @@ public class SingleCellSparsityMetrics {
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() )
+                    && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) )
+                    && ( mask == null || !mask[cellIndex] ) ) {
                 count++;
             }
         }
@@ -181,40 +166,32 @@ public class SingleCellSparsityMetrics {
     /**
      * Check if a given cell has a given characteristic.
      */
-    private boolean hasCharacteristic( int cellIndex, CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
+    private static boolean hasCharacteristic( int cellIndex, CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex ) {
         return cellLevelCharacteristics.getIndices()[cellIndex] == characteristicIndex;
     }
 
     /**
      * Check if a value is expressed on a given scale.
      */
-    private boolean isExpressed( double value, ScaleType scaleType ) {
+    public static boolean isExpressed( double value, ScaleType scaleType ) {
         switch ( scaleType ) {
             case LINEAR:
-                return value > threshold;
+                return value > THRESHOLD;
             case COUNT:
-                return value > thresholdCount;
+                return value > THRESHOLD_COUNT;
             case PERCENT:
             case PERCENT1:
-                if ( threshold == 0.0 ) {
-                    return value > 0;
-                } else {
-                    throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed for a non-zero threshold." );
-                }
+                return value > 0;
             case LOG1P:
-                return value > thresholdLog1p;
+                return value > THRESHOLD_LOG1P;
             case LOG2:
-                return value > thresholdLog2;
+                return value > THRESHOLD_LOG2;
             case LN:
-                return value > thresholdLn;
+                return value > THRESHOLD_LN;
             case LOG10:
-                return value > thresholdLog10;
+                return value > THRESHOLD_LOG10;
             case LOGBASEUNKNOWN:
-                if ( threshold == 0.0 ) {
-                    return value > Double.NEGATIVE_INFINITY;
-                } else {
-                    throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed for a non-zero threshold." );
-                }
+                return value > Double.NEGATIVE_INFINITY;
             default:
                 throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed." );
         }

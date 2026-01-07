@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.dataStructure.CountingMap;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
@@ -46,6 +47,7 @@ import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.tasks.EntityTaskCommand;
@@ -104,6 +106,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
@@ -177,6 +180,8 @@ public class ExpressionExperimentController {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private ExpressionExperimentControllerHelperService expressionExperimentControllerHelperService;
+    @Autowired
+    private OntologyService ontologyService;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -942,7 +947,7 @@ public class ExpressionExperimentController {
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
         ExpressionExperiment expressionExperiment;
-        expressionExperiment = expressionExperimentService.load( id );
+        expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with ID " + id + "." );
         }
@@ -951,7 +956,7 @@ public class ExpressionExperimentController {
 
     @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentByShortName( @RequestParam(value = "shortName") String shortName ) {
-        ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortName( shortName );
+        ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortNameWithPrimaryPublication( shortName );
         if ( experimentExperiment == null ) {
             throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
         }
@@ -1011,7 +1016,7 @@ public class ExpressionExperimentController {
                         .comparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).stream().anyMatch( QuantitationType::getIsPreferred ), Comparator.reverseOrder() )
                         // show dimension with vectors first
                         .thenComparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
-                        .thenComparing( BioAssayDimension::getId ) ) )
+                        .thenComparing( IdentifiableUtils::getRequiredId ) ) )
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) ).collect( Collectors.toList() ), ( a, b ) -> b, LinkedHashMap::new ) );
         QuantitationType singleCellQt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ).orElse( null );
         int offset = 0, limit = 20;
@@ -1725,5 +1730,52 @@ public class ExpressionExperimentController {
             throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
         }
         return ee;
+    }
+
+    /**
+     * Add a tag to an experiment.
+     * <p>
+     * AJAX
+     *
+     * @param vc   If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param eeId of the expression experiment
+     */
+    @SuppressWarnings("unused")
+    public void createExperimentTag( Characteristic vc, Long eeId ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( eeId,
+                EntityNotFoundException::new, "No such experiment with id=" + eeId );
+        if ( vc == null ) {
+            throw new IllegalArgumentException( "Null characteristic" );
+        }
+        try {
+            OntologyTerm term = ontologyService.getTerm( vc.getValueUri(), 5000, TimeUnit.MILLISECONDS );
+            if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
+                throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
+            }
+        } catch ( TimeoutException e ) {
+            log.error( "Obtaining term for " + vc.getValueUri() + " timed out, will not check if it is obsolete.", e );
+        }
+        expressionExperimentService.addCharacteristic( ee, vc );
+    }
+
+    /**
+     * Remove a number of characteristics from an experiment.
+     * <p>
+     * AJAX
+     */
+    @SuppressWarnings("unused")
+    public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( eeId, EntityNotFoundException::new );
+        Map<Long, Characteristic> cbi = IdentifiableUtils.getIdMap( ee.getCharacteristics() );
+        Collection<Characteristic> toRemove = new HashSet<>();
+        for ( Long cid : characterIds ) {
+            Characteristic c = cbi.get( cid );
+            if ( c == null ) {
+                throw new EntityNotFoundException( "No such characteristic with id=" + cid );
+            }
+            toRemove.add( c );
+        }
+        log.info( "Removing " + toRemove.size() + " characteristics from " + ee + "." );
+        expressionExperimentService.removeCharacteristics( ee, toRemove );
     }
 }

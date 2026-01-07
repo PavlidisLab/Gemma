@@ -18,13 +18,13 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.type.LongType;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -56,7 +56,7 @@ public class CommonQueries {
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed ad "
                         + "where ee = :ee "
-                        + "group by ad")
+                        + "group by ad" )
                 .setParameter( "ee", getExperiment( bas ) )
                 .list();
     }
@@ -64,7 +64,7 @@ public class CommonQueries {
     /**
      * Retrieve a list of array designs used by the given experiments.
      */
-    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees, Session session ) {
+    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends @MayBeUninitialized BioAssaySet> ees, Session session ) {
         // Safety 1st....
         if ( ees == null || ees.isEmpty() )
             return Collections.emptySet();
@@ -74,68 +74,17 @@ public class CommonQueries {
                 + "group by ad" ), "ees", getExperiments( ees ), 2048 );
     }
 
-    private static Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
+    private static Collection<@MayBeUninitialized ExpressionExperiment> getExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
         return bioAssaySets.stream().map( CommonQueries::getExperiment ).collect( IdentifiableUtils.toIdentifiableSet() );
     }
 
-    private static ExpressionExperiment getExperiment( BioAssaySet bas ) {
+    private static ExpressionExperiment getExperiment( @MayBeUninitialized BioAssaySet bas ) {
         if ( bas instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) bas;
         } else if ( bas instanceof ExpressionExperimentSubSet ) {
             return ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
         } else {
             throw new UnsupportedOperationException( "Couldn't handle a " + bas.getClass() );
-        }
-    }
-
-    /**
-     * @param ees     experiments
-     * @param session session
-     * @return map of experiment to collection of array design ids. If any of the ids given are for subsets, then the
-     * key in the return value will be for the subset, not the source experiment (so it is consistent with the
-     * input)
-     */
-    public static Map<Long, Collection<Long>> getArrayDesignsUsedEEMap( Collection<Long> ees, Session session ) {
-        if ( ees == null || ees.isEmpty() )
-            return Collections.emptyMap();
-
-        Map<Long, Collection<Long>> ee2ads = new HashMap<>();
-
-        //noinspection unchecked
-        List<Object[]> qr = session.createQuery( "select ee.id, ad.id from ExpressionExperiment as ee "
-                        + "join ee.bioAssays b join b.arrayDesignUsed ad where ee.id in (:ees) group by ee.id, ad.id" )
-                .setParameterList( "ees", optimizeParameterList( ees ) )
-                .list();
-        CommonQueries.addAllAds( ee2ads, qr );
-
-        if ( ee2ads.size() < ees.size() ) {
-            // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
-            // source.
-            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() );
-            // note: CollectionUtils.removeAll has a bug.
-
-            //noinspection unchecked
-            qr = session.createQuery( "select ees.id, ad.id from ExpressionExperimentSubSet as ees "
-                            + "join ees.sourceExperiment ee "
-                            + "join ee.bioAssays b "
-                            + "join b.arrayDesignUsed ad where ees.id in (:ees) "
-                            + "group by ees.id, ad.id" )
-                    .setParameterList( "ees", optimizeParameterList( possibleEEsubsets ) )
-                    .list();
-            CommonQueries.addAllAds( ee2ads, qr );
-        }
-
-        return ee2ads;
-    }
-
-    private static void addAllAds( Map<Long, Collection<Long>> ee2ads, List<Object[]> qr ) {
-        for ( Object[] ar : qr ) {
-            Long ee = ( Long ) ar[0];
-            Long ad = ( Long ) ar[1];
-            if ( !ee2ads.containsKey( ee ) ) {
-                ee2ads.put( ee, new HashSet<>() );
-            }
-            ee2ads.get( ee ).add( ad );
         }
     }
 
@@ -151,7 +100,7 @@ public class CommonQueries {
         return session.createQuery( "select cs from Gene as gene "
                         + "join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                         + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene "
-                        + "group by cs")
+                        + "group by cs" )
                 .setParameter( "gene", gene )
                 .setCacheable( true )
                 .list();

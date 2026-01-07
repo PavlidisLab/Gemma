@@ -277,7 +277,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         vect.setDesignElement( designElement );
         vect.setBioAssayDimension( baseChannel.getBioAssayDimension( designElement ) );
 
-        int numCols = preferred.columns( designElement );
+        int numCols = baseChannel.columns( designElement );
 
         Boolean[] detectionCalls = new Boolean[numCols];
         double[] prefRow = preferred.getRowAsDoubles( designElement );
@@ -367,7 +367,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             CompositeSequence designElement = element.getDesignElement();
 
-            int numCols = preferred.columns( designElement );
+            int numCols = baseChannel.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
                 double[] signalA = null;
@@ -400,7 +400,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             CompositeSequence designElement = element.getDesignElement();
 
-            int numCols = preferred.columns( designElement );
+            int numCols = baseChannel.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
                 double[] signalA = null;

@@ -19,15 +19,17 @@
 package ubic.gemma.core.loader.expression.arrayExpress;
 
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -35,14 +37,16 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 @Category(SlowTest.class)
 public class SDRFFetcherTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Test
     @Ignore("This test is broken due to a missing remote file. See https://github.com/PavlidisLab/Gemma/issues/766 for details.")
     @Category(SlowTest.class)
+    @NetworkAvailable(url = "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt")
     public final void testFetch() throws Exception {
-        assumeThatResourceIsAvailable( "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt" );
         SDRFFetcher f = new SDRFFetcher();
         Collection<File> fetch = f.fetch( "E-SMDB-1853" );
         assertEquals( 1, fetch.size() );
     }
-
 }

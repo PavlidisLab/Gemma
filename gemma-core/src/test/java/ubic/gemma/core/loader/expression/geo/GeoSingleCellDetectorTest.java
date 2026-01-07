@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo;
 
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
@@ -29,6 +31,8 @@ import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -40,6 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,16 +54,19 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * TODO: move SOFT files in test resources and mock FTP downloads
  */
 @Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
+@NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
 public class GeoSingleCellDetectorTest extends BaseTest {
 
     private static final SingleCellDataLoaderConfig DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG = SingleCellDataLoaderConfig.builder().build();
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
@@ -73,15 +81,23 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
 
+    @Value("${gemma.download.path}/singleCellData/CELLxGENE")
+    private Path cellXGenePath;
+
     private GeoSingleCellDetector detector;
 
     @Before
     public void setUp() throws IOException {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
         detector.setSraFetcher( new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null ) );
+        detector.setCellXGeneFetcher( new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGenePath ) );
+        detector.setCellXGeneAssays( new HashSet<>( Arrays.asList(
+                // 10x 3' v3
+                "EFO:0009922",
+                // Smart-seq
+                "EFO:0008930" ) ) );
     }
 
     /**
@@ -834,10 +850,68 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    public void testGSE251724() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE251724" );
+        detector.setMexFileSuffixes( "raw_*_barcodes.tsv.gz", "raw_*_features.tsv.gz", "raw_*_matrix.mtx.gz" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+    }
+
+    @Test
     public void testHasSingleCellDataInSra() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE278619" );
         assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();
         assertThat( detector.hasSingleCellDataInSra( series.getSamples().iterator().next() ) ).isTrue();
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testHasSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        detector.getDatasetMetadataFromCellXGene( series );
+    }
+
+    @Test
+    public void testDownloadSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) ).isTrue();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e", "03390dd0-fe16-4cef-b430-ab451e85c448" ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                } );
+        detector.getDatasetMetadataFromCellXGene( series );
+    }
+
+    @Test
+    public void testGSE71585() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE71585" );
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        assertThat( detector.hasSingleCellDataInCellXGene( series, "a3c37598-b8e8-47db-92a9-eb91a77c9529" ) )
+                .isTrue();
     }
 
     @Test

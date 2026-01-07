@@ -16,15 +16,19 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -46,7 +50,8 @@ import static org.junit.Assert.assertNotNull;
  */
 public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
-    private ExpressionExperiment ee;
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private AnalysisSelectionAndExecutionService analyzer;
@@ -65,6 +70,8 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeoService geoService;
+
+    private ExpressionExperiment ee;
 
     @Before
     public void setUp() throws Exception {
@@ -110,6 +117,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
      */
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void test() {
 
         ee = expressionExperimentService.thaw( ee );

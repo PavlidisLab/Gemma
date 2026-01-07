@@ -59,6 +59,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Add a few utilities on top of {@link BaseIntegrationTest}.
+ *
  * @author pavlidis
  * @deprecated favour the simpler {@link BaseIntegrationTest} for new tests
  */

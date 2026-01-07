@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.stereotype.Service;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 
 /**
@@ -33,7 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.Auditable;
 public class PersisterHelperImpl extends RelationshipPersister implements PersisterHelper {
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof Auditable ) {
             Auditable auditable = ( Auditable ) entity;
             if ( auditable.getAuditTrail().getId() == null ) {

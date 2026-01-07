@@ -30,7 +30,7 @@ import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -206,11 +206,11 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * Checks whether the regressed matrix should be computed for the given ee.
      *
-     * @param ee the experiment that will be checked for meeting all the conditions to have regressed matrix computed.
+     * @param ee       the experiment that will be checked for meeting all the conditions to have regressed matrix computed.
      * @param analysis the analysis that will be checked for already having a regressed matrix or not.
      * @return true, if the regression matrix should be run for the given combination of experiment and analysis. False
-     *         if
-     *         computing it is not necessary or possible.
+     * if
+     * computing it is not necessary or possible.
      */
     private boolean shouldComputeRegressed( ExpressionExperiment ee, SampleCoexpressionAnalysis analysis ) {
         return analysis.getRegressedCoexpressionMatrix() == null && !this.getImportantFactors( ee ).isEmpty();
@@ -313,9 +313,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
-        FilterConfig fConfig = new FilterConfig();
-        fConfig.setIgnoreMinimumRowsThreshold( true );
-        fConfig.setIgnoreMinimumSampleThreshold( true );
+        ExpressionExperimentFilterConfig fConfig = new ExpressionExperimentFilterConfig();
+        fConfig.setIgnoreMinimumDesignElementsThreshold( true );
+        fConfig.setIgnoreMinimumSamplesThreshold( true );
         fConfig.setRequireSequences( requireSequences );
         // Loads using new array designs will fail. So we allow special case where there are no sequences.
         return expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
@@ -324,7 +324,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * Regress out any 'major' factors, work with residuals only
      *
-     * @param ee the experiment to load the factors from
+     * @param ee  the experiment to load the factors from
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
@@ -360,8 +360,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * @param matrix on which to perform regression.
      * @param config containing configuration of factors to include. Any interactions or subset configuration is
-     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
-     *        ignored)
+     *               ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
+     *               ignored)
      * @return residuals from the regression.
      */
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
@@ -401,7 +401,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
-        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
+        ExpressionDataDoubleMatrix dmatrix = matrix.sliceColumns( samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
         DoubleMatrix<String, String> sNamedMatrix = DiffExAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
@@ -420,7 +420,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 f.set( i, j, f.get( i, j ) + rowmean );
             }
         }
-        return new ExpressionDataDoubleMatrix( dmatrix, f, dmatrix.getQuantitationTypes() );
+        return dmatrix.withMatrix( f );
     }
 }
 

@@ -24,6 +24,7 @@ import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
@@ -180,7 +181,7 @@ public class BioSequence extends AbstractDescribable {
         final BioSequence that = ( BioSequence ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( getSequenceDatabaseEntry(), that.getSequenceDatabaseEntry() )
                 && Objects.equals( getTaxon(), that.getTaxon() )
                 && Objects.equals( getLength(), that.getLength() )
@@ -192,14 +193,20 @@ public class BioSequence extends AbstractDescribable {
             return new BioSequence();
         }
 
+        public static BioSequence newInstance( String name ) {
+            BioSequence entity = newInstance();
+            entity.setName( name );
+            return entity;
+        }
+
         public static BioSequence newInstance( Taxon taxon ) {
-            final BioSequence entity = new BioSequence();
+            final BioSequence entity = newInstance();
             entity.setTaxon( taxon );
             return entity;
         }
 
         public static BioSequence newInstance( String name, Taxon taxon ) {
-            final BioSequence entity = new BioSequence();
+            final BioSequence entity = newInstance();
             entity.setName( name );
             entity.setTaxon( taxon );
             return entity;

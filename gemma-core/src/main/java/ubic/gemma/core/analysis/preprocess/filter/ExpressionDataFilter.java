@@ -24,11 +24,32 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
  * Base interface for expression data filters.
  * <p>
  * A filter is a function that takes an expression data matrix and produces a filtered version of it.
- * @author pavlidis
+ *
  * @param <T> the type of expression data matrix this filter operates on
+ * @author pavlidis
  */
 @FunctionalInterface
-public interface Filter<T extends ExpressionDataMatrix<?>> {
+public interface ExpressionDataFilter<T extends ExpressionDataMatrix<?>> {
 
+    /**
+     * Apply the filter to the given data matrix.
+     * <p>
+     * If the filter is not applicable as per {@link #appliesTo(ExpressionDataMatrix)}, the original data matrix must be
+     * returned unchanged.
+     * <p>
+     * Filters should not modify the input data matrix in place, and always returned a new filtered instance, unless no
+     * change is needed in which case the original instance can be returned.
+     *
+     * @param dataMatrix the data matrix to filter
+     * @return a filtered data matrix
+     * @throws FilteringException if anything went wrong during filtering, usually when no rows or columns are left
+     */
     T filter( T dataMatrix ) throws FilteringException;
+
+    /**
+     * Check if the filter is applicable to the given data matrix.
+     */
+    default boolean appliesTo( T dataMatrix ) {
+        return true;
+    }
 }

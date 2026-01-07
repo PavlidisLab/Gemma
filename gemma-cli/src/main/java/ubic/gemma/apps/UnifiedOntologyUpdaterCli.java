@@ -21,6 +21,7 @@ import org.springframework.core.io.Resource;
 import ubic.basecode.ontology.jena.TdbOntologyService;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -137,6 +138,9 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 downloader.setFtpClientFactory( ftpClientFactory );
                 downloader.setTaskExecutor( executor );
                 downloader.setFileLockManager( fileLockManager );
+                if ( getCliContext().getConsole() != null ) {
+                    downloader.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+                }
                 List<SimpleDownloader.URLAndDestination> url2dest = new ArrayList<>();
                 for ( String urlS : urls ) {
                     URL url = new URL( urlS );

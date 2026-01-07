@@ -19,6 +19,7 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.ArrayUtils;
+import ubic.basecode.dataStructure.matrix.AbstractMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -26,7 +27,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.*;
 
@@ -37,28 +40,22 @@ import java.util.*;
  */
 public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDataMatrix<Boolean> {
 
-    private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
+    private final ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
-    public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+    public ExpressionDataBooleanMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors ) {
+        super( ee );
         for ( BulkExpressionDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
                 throw new IllegalStateException( "Cannot convert non-boolean quantitation types into boolean matrix" );
             }
         }
-
-        this.selectVectors( vectors );
-        this.vectorsToMatrix( vectors );
+        this.matrix = vectorsToMatrix( selectVectors( vectors ) );
     }
 
-    public ExpressionDataBooleanMatrix( Collection<? extends BulkExpressionDataVector> vectors,
+    public ExpressionDataBooleanMatrix( ExpressionExperiment ee, Collection<? extends BulkExpressionDataVector> vectors,
             List<QuantitationType> qtypes ) {
-        Collection<BulkExpressionDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
-        this.vectorsToMatrix( selectedVectors );
-    }
-
-    @Override
-    public int columns() {
-        return matrix.columns();
+        super( ee );
+        this.matrix = vectorsToMatrix( selectVectors( vectors, qtypes ) );
     }
 
     @Override
@@ -87,6 +84,16 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
+    public BulkExpressionDataMatrix<Boolean> sliceColumns( List<BioMaterial> bioMaterials ) {
+        throw new UnsupportedOperationException( "Slicing rows is not supported for multi-assay boolean matrices." );
+    }
+
+    @Override
+    public ExpressionDataBooleanMatrix sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension ) {
+        throw new UnsupportedOperationException( "Slicing rows is not supported for multi-assay boolean matrices." );
+    }
+
+    @Override
     public Boolean[] getRow( int index ) {
         Boolean[] row = new Boolean[matrix.columns()];
         for ( int j = 0; j < row.length; j++ ) {
@@ -96,7 +103,7 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
-    public ExpressionDataMatrix<Boolean> sliceRows( List<CompositeSequence> designElements ) {
+    public ExpressionDataBooleanMatrix sliceRows( List<CompositeSequence> designElements ) {
         throw new UnsupportedOperationException( "Slicing rows is not supported for multi-assay boolean matrices." );
     }
 
@@ -112,34 +119,24 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     }
 
     @Override
-    public int rows() {
-        return matrix.rows();
-    }
-
-    @Override
     protected String format( int row, int column ) {
         Boolean val = matrix.get( row, column );
         return val != null ? String.valueOf( val ) : "";
     }
 
-    @Override
-    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+    private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors.isEmpty() ) {
             throw new IllegalArgumentException();
         }
-
-        int maxSize = this.setUpColumnElements();
-
-        this.matrix = this.createMatrix( vectors, maxSize );
-
+        return this.createMatrix( vectors );
     }
 
     /**
      * Fill in the data
      */
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> createMatrix(
-            Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
-        ObjectMatrixImpl<CompositeSequence, Integer, Boolean> mat = new ObjectMatrixImpl<>( vectors.size(), maxSize );
+            Collection<? extends BulkExpressionDataVector> vectors ) {
+        ObjectMatrixImpl<CompositeSequence, Integer, Boolean> mat = new ObjectMatrixImpl<>( vectors.size(), columns() );
 
         // initialize the matrix to false
         for ( int i = 0; i < mat.rows(); i++ ) {
@@ -158,8 +155,8 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
 
             CompositeSequence designElement = vector.getDesignElement();
 
-            Integer rowIndex = this.rowElementMap.get( designElement );
-            assert rowIndex != null;
+            int rowIndex = getRowIndex( designElement );
+            assert rowIndex != -1;
 
             rowNames.put( rowIndex, designElement );
 
@@ -239,4 +236,13 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
         return vals;
     }
 
+    private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
+            Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssay bioAssay = it.next();
+            int column = getColumnIndex( bioAssay );
+            assert column != -1;
+            mat.set( rowIndex, column, vals[j] );
+        }
+    }
 }

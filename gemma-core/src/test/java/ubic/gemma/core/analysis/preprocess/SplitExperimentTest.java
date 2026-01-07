@@ -21,15 +21,19 @@ package ubic.gemma.core.analysis.preprocess;
 
 import gemma.gsec.SecurityService;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -55,6 +59,9 @@ import static org.junit.Assume.assumeNoException;
  */
 public class SplitExperimentTest extends BaseSpringContextTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
     private SplitExperimentService splitService;
 
@@ -79,6 +86,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE17183ByOrganismPart() throws Exception {
 
         String geoId = "GSE17183";
@@ -159,6 +167,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {
 
         String geoId = "GSE123753";

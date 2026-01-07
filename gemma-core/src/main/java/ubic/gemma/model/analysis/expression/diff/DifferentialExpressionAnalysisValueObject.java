@@ -19,17 +19,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.AnalysisValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.util.ModelUtils;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Summary of a differential expression analysis
@@ -52,6 +55,15 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<Long> arrayDesignsUsed;
     private Long experimentAnalyzedId;
+    /**
+     * The {@link ubic.gemma.model.expression.bioAssay.BioAssay}s analyzed in this differential expression analysis.
+     * <p>
+     * This is filled in very narrow cases since it can be quite large. Use {@link #experimentAnalyzedId} for a more
+     * reliable way of retrieving the analyzed experiment and then its assays.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<BioAssayValueObject> bioAssaysAnalyzed;
 
     // for subsets
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -79,6 +91,11 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         super( analysis );
         this.experimentAnalyzedId = analysis.getExperimentAnalyzed().getId();
+        if ( ModelUtils.isInitialized( analysis.getExperimentAnalyzed().getBioAssays() ) ) {
+            this.bioAssaysAnalyzed = analysis.getExperimentAnalyzed().getBioAssays().stream()
+                    .map( ba -> new BioAssayValueObject( ba, null, null, false, true ) )
+                    .collect( Collectors.toSet() );
+        }
         // experimentAnalyzed is eagerly fetched
         if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
             // sourceExperiment is eagerly fetched too
@@ -121,8 +138,8 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     }
 
     /**
-     * @deprecated This was renamed for clarity.
      * @see #getFactorValuesUsedByExperimentalFactorId()
+     * @deprecated This was renamed for clarity.
      */
     @Deprecated
     public Map<Long, Collection<FactorValueValueObject>> getFactorValuesUsed() {

@@ -13,6 +13,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -25,6 +26,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
@@ -65,7 +67,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Obtain a list of exclude URIs from an argument containing excluded URIs.
-     * @param excludedUrisArg    argument containing excluded URIs or null if unspecified
+     *
+     * @param excludedUrisArg argument containing excluded URIs or null if unspecified
      * @param excludeFreeText if true, null will be included in the returned list which will result in the exclusion of
      *                        free-text categories or terms
      * @return null if excludedUrisArg is null and excludeFreeText is false, otherwise a list of excluded URIs
@@ -138,6 +141,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Shortcut for extracting the result IDs and scores from {@link #getResultsForSearchQuery(QueryArg, Highlighter, Collection)}.
+     *
      * @see #getResultsForSearchQuery(QueryArg, Highlighter, Collection)
      */
     public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById, @Nullable Collection<Throwable> queryWarnings ) {
@@ -150,6 +154,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * Shortcut for extracting the result IDs from {@link #getResultsForSearchQuery(QueryArg, Highlighter, Collection)}.
+     *
      * @see #getResultsForSearchQuery(QueryArg, Highlighter, Collection)
      */
     public Set<Long> getIdsForSearchQuery( QueryArg query, @Nullable Collection<Throwable> queryWarnings ) {
@@ -285,7 +290,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
-        out.sort( Comparator.comparing( BibliographicReferenceValueObject::getId ) );
+        out.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         return out;
     }

@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +85,16 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign loadWithAuditTrail( Long id ) {
+        ArrayDesign ad = load( id );
+        if ( ad != null ) {
+            Hibernate.initialize( ad.getAuditTrail() );
+        }
+        return ad;
+    }
+
+    @Override
     @Transactional
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
         this.arrayDesignDao.addProbes( arrayDesign, newProbes );
@@ -126,6 +137,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByName( String name ) {
         return this.arrayDesignDao.findByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> findByCompositeSequenceName( String name ) {
+        return arrayDesignDao.findByCompositeSequenceName( name );
     }
 
     @Override

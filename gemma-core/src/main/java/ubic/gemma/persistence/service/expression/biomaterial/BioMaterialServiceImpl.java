@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
@@ -101,6 +102,14 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
         return this.bioMaterialDao.findByFactor( experimentalFactor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> BioMaterial loadAndThawOrFail( Long bmId, Function<String, T> exceptionSupplier, String message ) throws T {
+        BioMaterial bm = loadOrFail( bmId, exceptionSupplier, message );
+        thawBioMaterial( bm );
+        return bm;
     }
 
     @Override
@@ -190,17 +199,6 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
-    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials ) {
-        StringBuilder buf = new StringBuilder();
-        for ( BioMaterial bm : bioMaterials ) {
-            buf.append( bm.getId() );
-            buf.append( "," );
-        }
-        return buf.toString().replaceAll( ",$", "" );
-
-    }
-
-    @Override
     @Transactional
     public void addCharacteristic( BioMaterial bm, Characteristic vc ) {
         BioMaterialServiceImpl.log.debug( "Vocab Characteristic: " + vc );
@@ -225,12 +223,12 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
     @Override
     @Transactional
-    public void removeCharacteristic( BioMaterial bm, Characteristic characterId ) {
-        Assert.notNull( characterId.getId(), "The characteristic must be persistent." );
-        if ( !bm.getCharacteristics().remove( characterId ) ) {
-            throw new IllegalArgumentException( String.format( "%s does not belong to %s", characterId, bm ) );
-        }
-        characteristicService.remove( characterId );
+    public void removeCharacteristics( BioMaterial bm, Collection<Characteristic> characteristicsToRemove ) {
+        Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
+        Assert.isTrue( bm.getCharacteristics().containsAll( characteristicsToRemove ) );
+        bm.getCharacteristics().removeAll( characteristicsToRemove );
+        update( bm );
+        characteristicService.remove( characteristicsToRemove );
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {

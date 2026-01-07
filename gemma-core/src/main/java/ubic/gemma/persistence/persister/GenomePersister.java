@@ -23,6 +23,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.*;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -66,34 +67,36 @@ public abstract class GenomePersister extends CommonPersister {
     private AnnotationAssociationDao annotationAssociationDao;
 
     @Override
-    protected Object doPersist( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof Gene ) {
-            return this.persistGene( ( Gene ) entity, caches );
+            return ( T ) this.persistGene( ( Gene ) entity, caches );
         } else if ( entity instanceof GeneProduct ) {
-            return this.persistGeneProduct( ( GeneProduct ) entity, caches );
+            return ( T ) this.persistGeneProduct( ( GeneProduct ) entity, caches );
         } else if ( entity instanceof BioSequence ) {
-            return this.persistBioSequence( ( BioSequence ) entity, caches );
+            return ( T ) this.persistBioSequence( ( BioSequence ) entity, caches );
         } else if ( entity instanceof Taxon ) {
-            return this.persistTaxon( ( Taxon ) entity, caches );
+            return ( T ) this.persistTaxon( ( Taxon ) entity, caches );
         } else if ( entity instanceof BioSequence2GeneProduct ) {
-            return this.persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity, caches );
+            return ( T ) this.persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity, caches );
         } else if ( entity instanceof SequenceSimilaritySearchResult ) {
-            return this.persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity, caches );
+            return ( T ) this.persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity, caches );
         } else if ( entity instanceof Chromosome ) {
-            return this.persistChromosome( ( Chromosome ) entity, null, caches );
+            return ( T ) this.persistChromosome( ( Chromosome ) entity, null, caches );
         } else {
             return super.doPersist( entity, caches );
         }
     }
 
     @Override
-    protected Object doPersistOrUpdate( Object entity, Caches caches ) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Caches caches ) {
         if ( entity instanceof BioSequence ) {
-            return this.persistOrUpdateBioSequence( ( BioSequence ) entity, caches );
+            return ( T ) this.persistOrUpdateBioSequence( ( BioSequence ) entity, caches );
         } else if ( entity instanceof Gene ) {
-            return this.persistOrUpdateGene( ( Gene ) entity, caches );
+            return ( T ) this.persistOrUpdateGene( ( Gene ) entity, caches );
         } else if ( entity instanceof GeneProduct ) {
-            return this.persistOrUpdateGeneProduct( ( GeneProduct ) entity, caches );
+            return ( T ) this.persistOrUpdateGeneProduct( ( GeneProduct ) entity, caches );
         } else {
             return super.doPersistOrUpdate( entity, caches );
         }
@@ -112,7 +115,7 @@ public abstract class GenomePersister extends CommonPersister {
             AbstractPersister.log
                     .info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
 
-            String previousIdString = newGeneInfo.getPreviousNcbiId();
+            String previousIdString = newGeneInfo.getPreviousNcbiGeneId();
             if ( StringUtils.isNotBlank( previousIdString ) ) {
                 /*
                  * Unfortunately, we need to check multiple 'previous' genes. The example I have run across is MTUS2-AS1
@@ -132,13 +135,13 @@ public abstract class GenomePersister extends CommonPersister {
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
                             + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
-                            .getPreviousNcbiId()
+                            .getPreviousNcbiGeneId()
                             + ") doesn't match." );
                 }
             }
 
             // swap
-            existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
+            existingGene.setPreviousNcbiGeneId( existingGene.getNcbiGeneId().toString() );
             existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
 
             /*
@@ -429,7 +432,7 @@ public abstract class GenomePersister extends CommonPersister {
             }
         }
 
-        if ( gene.getAccessions().size() > 0 ) {
+        if ( !gene.getAccessions().isEmpty() ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
                 this.fillInDatabaseEntry( de, caches );
             }
@@ -578,8 +581,7 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( bioSequence.getSequenceDatabaseEntry() != null && !bioSequence.getSequenceDatabaseEntry()
                 .equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
-            existingBioSequence.setSequenceDatabaseEntry(
-                    ( DatabaseEntry ) this.doPersist( bioSequence.getSequenceDatabaseEntry(), caches ) );
+            existingBioSequence.setSequenceDatabaseEntry( this.doPersist( bioSequence.getSequenceDatabaseEntry(), caches ) );
         }
 
         // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
@@ -861,7 +863,7 @@ public abstract class GenomePersister extends CommonPersister {
                             this.doPersist( chromosome.getAssemblyDatabase(), caches ), true );
                 }
             } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
+                throw new IllegalArgumentException( e );
             }
             chromosome = chromosomeDao.create( chromosome );
         } else if ( chromosomes.size() == 1 ) {

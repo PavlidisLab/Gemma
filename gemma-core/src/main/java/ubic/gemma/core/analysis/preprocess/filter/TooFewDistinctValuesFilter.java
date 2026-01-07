@@ -9,9 +9,10 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
  * <p>
  * This happens when people "set values less than 10 equal to 10" for example. This effectively filters rows that have
  * too many missing values, because missing values are counted as a single value.
+ *
  * @author paul
  */
-public class TooFewDistinctValuesFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class TooFewDistinctValuesFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private final double threshold;
 
@@ -33,7 +34,12 @@ public class TooFewDistinctValuesFilter implements Filter<ExpressionDataDoubleMa
     }
 
     @Override
+    public boolean appliesTo( ExpressionDataDoubleMatrix dataMatrix ) {
+        return threshold > 0;
+    }
+
+    @Override
     public String toString() {
-        return String.format( "TooFewDistinctValuesFilter Threshold=%f%%", threshold );
+        return String.format( "TooFewDistinctValuesFilter Threshold=%.2f%%", 100 * threshold );
     }
 }

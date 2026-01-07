@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -37,6 +36,7 @@ import ubic.gemma.web.controller.util.EntityDelegator;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * This is required solely for exposing auditables to remote services would try to marshall the abstract class
@@ -94,20 +94,10 @@ public class AuditController {
         }
         assert entity.getAuditTrail().getId() != null;
 
-        Collection<AuditEvent> events = auditEventService.getEvents( entity );
-        for ( AuditEvent ev : events ) {
-            if ( ev == null )
-                continue;
-            /*
-             * Hide generic update events.
-             */
-            if ( ev.getAction().equals( AuditAction.UPDATE ) && ev.getEventType() == null )
-                continue;
-
-            result.add( new AuditEventValueObject( ev ) );
-        }
-
-        return result;
+        return auditEventService.getEventsWithType( entity )
+                .stream()
+                .map( AuditEventValueObject::new )
+                .collect( Collectors.toSet() );
     }
 
     private Auditable getAuditable( EntityDelegator<? extends Auditable> e ) {

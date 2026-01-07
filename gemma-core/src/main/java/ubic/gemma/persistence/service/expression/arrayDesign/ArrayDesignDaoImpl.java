@@ -257,6 +257,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Collection<ArrayDesign> findByCompositeSequenceName( String name ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad join ad.compositeSequences cs where cs.name = :name group by ad" )
+                .setParameter( "name", name )
+                .list();
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
@@ -464,7 +473,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Get the ids of experiments that "originally" used this platform, but which don't any more due to a platform
      * switch.
      *
-     * @param  arrayDesign a platform for which the statistic is computed
+     * @param arrayDesign a platform for which the statistic is computed
      * @return collection of experiment IDs.
      */
     @Override
@@ -854,8 +863,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
         Hibernate.initialize( arrayDesign.getMergees() );
         Hibernate.initialize( arrayDesign.getDesignProvider() );
-        Hibernate.initialize( arrayDesign.getAuditTrail() );
-        Hibernate.initialize( arrayDesign.getAuditTrail().getEvents() );
         Hibernate.initialize( arrayDesign.getExternalReferences() );
         Hibernate.initialize( arrayDesign.getSubsumingArrayDesign() );
         Hibernate.initialize( arrayDesign.getMergedInto() );

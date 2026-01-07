@@ -6,6 +6,7 @@
 <title>${fn:escapeXml(bibliographicReference.pubAccession.accession)}
     from ${fn:escapeXml(bibliographicReference.pubAccession.externalDatabase.name)}</title>
 <meta name="description" content="${fn:escapeXml(bibliographicReference.description)}">
+<Gemma:citationMeta citation="${bibliographicReference}"/>
 </head>
 <div id="detailPanel"></div>
 

@@ -25,11 +25,11 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
@@ -51,6 +51,14 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
     @Autowired
     public BlacklistedEntityDaoImpl( SessionFactory sessionFactory ) {
         super( BlacklistedEntity.class, sessionFactory );
+    }
+
+    @Override
+    public BlacklistedEntity findByShortName( String shortName ) {
+        return ( BlacklistedEntity ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select b from BlacklistedEntity b where b.shortName = :shortName" )
+                .setParameter( "shortName", shortName )
+                .uniqueResult();
     }
 
     /*
@@ -128,7 +136,7 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
                                 + "where ad = :ad "
                                 + "and (ee.shortName not in (select be.externalAccession.accession from BlacklistedExperiment be)  "
                                 + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be)) "
-                                + "group by ee")
+                                + "group by ee" )
                 .setParameter( "ad", arrayDesign )
                 .list();
     }

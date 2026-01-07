@@ -71,6 +71,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
 
     private static final String
+            REPLACE_CELL_TYPE_FACTOR_OPTION = "replaceCtf",
+            KEEP_CELL_TYPE_FACTOR_OPTION = "keepCtf";
+
+    private static final String
             SEQUENCING_METADATA_FILE_OPTION = "sequencingMetadataFile",
             SEQUENCING_READ_LENGTH_OPTION = "sequencingReadLength",
             SEQUENCING_IS_PAIRED_OPTION = "sequencingIsPaired",
@@ -157,6 +161,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Path renamingFile;
     @Nullable
     private Integer transformThreads;
+
+    @Nullable
+    private Boolean replaceCellTypeFactor;
 
     // sequencing metadata
     @Nullable
@@ -269,6 +276,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
         options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
 
+        // for the cell type factor
+        OptionsUtils.addAutoOption( options,
+                REPLACE_CELL_TYPE_FACTOR_OPTION, "replace-cell-type-factor", "Replace the existing cell type factor even if is compatible with the new preferred cell type assignment. If no cell type factor exists, it will be created.",
+                KEEP_CELL_TYPE_FACTOR_OPTION, "keep-cell-type-factor", "Keep the existing cell type factor as-is even if it becomes misaligned with the preferred cell type assignment. If no cell type factor exists, it will be created.",
+                "The default is to re-create the cell type factor if necessary." );
+
         options.addOption( Option.builder( SEQUENCING_READ_LENGTH_OPTION )
                 .longOpt( "sequencing-read-length" )
                 .hasArg().type( Integer.class )
@@ -333,14 +346,18 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( hasOption( commandLine, LOAD_CELL_TYPE_ASSIGNMENT_OPTION,
                 noneOf( toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_TYPE_ASSIGNMENTS;
+            dataType = SingleCellDataType.NULL;
         } else if ( hasOption( commandLine, LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION,
                 noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_LEVEL_CHARACTERISTICS;
+            dataType = SingleCellDataType.NULL;
         } else if ( hasOption( commandLine, LOAD_SEQUENCING_METADATA_OPTION,
                 noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) ) ) {
             mode = Mode.LOAD_SEQUENCING_METADATA;
+            dataType = SingleCellDataType.NULL;
         } else {
             mode = Mode.LOAD_EVERYTHING;
+            dataType = null; // this will auto-datect the data type
             platformName = commandLine.getOptionValue( PLATFORM_OPTION );
             if ( platformName == null ) {
                 throw new MissingOptionException( "The -" + PLATFORM_OPTION + " option is required when loading vectors." );
@@ -348,8 +365,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             dataType = commandLine.getParsedOptionValue( DATA_TYPE_OPTION );
-        } else {
-            dataType = null;
         }
         dataPath = getParsedOptionValue( commandLine, DATA_PATH_OPTION, requires( toBeSet( DATA_TYPE_OPTION ) ) );
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
@@ -395,6 +410,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
         ignoreUnmatchedCellIds = hasOption( commandLine, IGNORE_UNMATCHED_CELL_IDS_OPTION,
                 requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
+
+        // cell type factor
+        replaceCellTypeFactor = getAutoOptionValue( commandLine, REPLACE_CELL_TYPE_FACTOR_OPTION, KEEP_CELL_TYPE_FACTOR_OPTION );
 
         // sequencing metadata
         sequencingMetadataFile = commandLine.getParsedOptionValue( SEQUENCING_METADATA_FILE_OPTION );
@@ -496,7 +514,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 }
                 if ( qt.getIsSingleCellPreferred() ) {
                     log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, true ) ) {
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, useCursorFetchIfSupported, true, getCliContext().getConsole() ) ) {
                         log.info( "Generated MEX data file for " + qt + " at " + lockedPath.getPath() + "." );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to generate MEX data files for " + qt + ".", e );
@@ -574,7 +592,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .markQuantitationTypeAsRecomputedFromRawData( recomputedFromRawData )
                 .preferSinglePrecision( preferSinglePrecision )
                 .markQuantitationTypeAsPreferred( preferredQt )
-                .transformExecutor( transformExecutor );
+                .transformExecutor( transformExecutor )
+                .console( getCliContext().getConsole() );
         if ( renamingFile != null ) {
             configBuilder.renamingFile( renamingFile );
         }
@@ -585,6 +604,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .cellTypeAssignmentDescription( cellTypeAssignmentDescription )
                     .cellTypeAssignmentProtocol( cellTypeAssignmentProtocolName != null ? entityLocator.locateProtocol( cellTypeAssignmentProtocolName ) : null )
                     .replaceExistingCellTypeAssignment( replaceExistingCellTypeAssignments )
+                    .ignoreExistingCellTypeAssignment( mode == Mode.LOAD_EVERYTHING )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
         }
 
@@ -592,7 +612,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder
                     .otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile )
                     .otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames )
-                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics );
+                    .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics )
+                    .ignoreExistingOtherCellLevelCharacteristics( mode == Mode.LOAD_EVERYTHING );
         }
         // infer only on-demand
         configBuilder.inferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );
@@ -600,6 +621,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         configBuilder.useCellIdsIfSampleNameIsMissing( true );
         // ignore only on-demand
         configBuilder.ignoreUnmatchedCellIds( ignoreUnmatchedCellIds );
+        // cell type factor options
+        configBuilder
+                // the default is to recreate if necessary
+                .recreateCellTypeFactorIfNecessary( replaceCellTypeFactor == null || replaceCellTypeFactor )
+                .ignoreCompatibleCellTypeFactor( replaceCellTypeFactor != null && replaceCellTypeFactor );
         if ( sequencingMetadataFile != null ) {
             configBuilder.sequencingMetadataFile( sequencingMetadataFile );
         }

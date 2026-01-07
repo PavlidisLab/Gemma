@@ -4,6 +4,10 @@
 <head>
 <title>Home</title>
 <%-- <Gemma:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
+<meta name="description"
+        content="Database of curated, reanalyzed genomics datasets for meta-analysis" />
+<meta name="keywords"
+        content="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software" />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="false">

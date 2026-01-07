@@ -3,18 +3,18 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.4</version>
+        <version>1.32.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
     <name>Gemma Core</name>
-    <description>Module containing Gemma backend logic (everything but web-related)</description>
+    <description>Module containing Gemma core features</description>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <id>version-file</id>
@@ -52,6 +52,8 @@
                                 <include>ubic/gemma/core/ontology/TestOntologyConfig.class</include>
                                 <include>ubic/gemma/core/util/test/**/*.class</include>
                                 <!-- FIXME: this is not a scalable approach, we should have a separate test module -->
+                                <include>ubic/gemma/persistence/service/expression/experiment/RandomExpressionExperimentUtils.class</include>
+                                <include>ubic/gemma/persistence/service/expression/experiment/RandomExperimentalDesignUtils.class</include>
                                 <include>ubic/gemma/persistence/service/expression/bioAssayData/NegativeBinomialDistribution.class</include>
                                 <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomBulkDataUtils.class</include>
                                 <include>ubic/gemma/persistence/service/expression/bioAssayData/RandomDataUtils.class</include>
@@ -185,6 +187,16 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
             <version>1.14.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -195,6 +207,12 @@
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.12.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->

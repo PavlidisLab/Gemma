@@ -144,7 +144,7 @@ Gemma.ExpressionExperimentDetails = Ext
               if ( ee.numberOfCellsIds !== null ) {
                  result += formatNumber( ee.numberOfCellIds );
                  if ( ee.numberOfCells !== null && ee.numberOfCells < 0.9 * ee.numberOfCellIds ) {
-                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."/> ';
+                    result += ' <i class="qtp fa fa-exclamation-triangle fa-fw" ext:qtip="Only ' + formatNumber( ee.numberOfCells ) + ' cells have expression data in Gemma."></i>';
                  }
               } else if ( ee.numberOfCells !== null ) {
                  result += formatNumber( ee.numberOfCells );
@@ -858,7 +858,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         width: 80
                                     }*/
                                     , {
-                                        fieldLabel: 'Differential Expr. Analyses (<a href="https://academic.oup.com/database/article/doi/10.1093/database/baab006/6143045#228516893">ANOVA</a>)',
+                                        fieldLabel: 'Differential Expr. Analyses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7904053/#s2-s16">ANOVA</a>)',
                                         items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
                                             experimentDetails: e,
                                             editable: this.editable,
@@ -888,6 +888,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                 defaults: {
                                     border: false
                                 },
+                                hidden: !e.otherParts || e.otherParts.length === 0,
                                 items: [
                                     pubMedDisplay,
                                     pubMedForm,

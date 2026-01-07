@@ -213,6 +213,10 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testLoadWithRefreshCacheMode() {
         ee = createExpressionExperiment();
         assertNotNull( expressionExperimentDao.load( ee.getId(), CacheMode.REFRESH ) );
+        expressionExperimentDao.evictCharacteristicsCache( ee );
+        expressionExperimentDao.evictBioAssaysCache( ee );
+        expressionExperimentDao.evictOtherPartsCache( ee );
+        expressionExperimentDao.evictQuantitationTypesCache( ee );
     }
 
     @Test
@@ -540,6 +544,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee.getBioAssays().add( ba1 );
         // create quantitations
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -596,6 +601,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         scd.getCellTypeAssignments().add( cta );
         sessionFactory.getCurrentSession().persist( scd );
         QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -641,6 +647,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetRawDataVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt1 = new QuantitationType();
+        qt1.setName( "log2cpm" );
         qt1.setGeneralType( GeneralType.QUANTITATIVE );
         qt1.setType( StandardQuantitationType.AMOUNT );
         qt1.setScale( ScaleType.LOG2 );
@@ -716,6 +723,41 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testAddRawDataVectorsWithNumberOfCells() {
+        ee = createExpressionExperiment();
+        ArrayDesign platform = createPlatform();
+        assertNotNull( platform.getId() );
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        int i = 0;
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "qt" + i );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        sessionFactory.getCurrentSession().persist( qt );
+        Collection<RawExpressionDataVector> vectors = new ArrayList<>();
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qt );
+            v.setData( new byte[0] );
+            v.setNumberOfCells( new int[] {} );
+            vectors.add( v );
+        }
+        // sessionFactory.getCurrentSession().evict( ee );
+        assertEquals( 10, expressionExperimentDao.addRawDataVectors( ee, qt, vectors ) );
+        assertThat( ee.getQuantitationTypes() )
+                .hasSize( i + 1 )
+                .contains( qt );
+        assertThat( ee.getRawExpressionDataVectors() )
+                .hasSize( 10 * ( i + 1 ) );
+    }
+
+    @Test
     public void testRemoveAllRawDataVectors() {
         ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = ee.getQuantitationTypes().iterator().next();
@@ -749,12 +791,29 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testRemoveRawDataVectorsWhenQtIsUnknown() {
         ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         sessionFactory.getCurrentSession().persist( qt );
         assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
+    }
+
+    @Test
+    public void testRemoveRawDataVectorsWithNumberOfCells() {
+        ExpressionExperiment ee = createExpressionExperimentWithRawVectors();
+
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            v.setNumberOfCells( new int[] { 5 } );
+        }
+        expressionExperimentDao.update( ee );
+
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        BioAssayDimension bad = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( qt ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( bad ) );
     }
 
     @Test
@@ -813,6 +872,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee = createExpressionExperimentWithRawVectors();
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -874,6 +934,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee = createExpressionExperimentWithProcessedVectors();
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -925,6 +986,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().evict( ee );
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );
@@ -980,6 +1042,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperiment createExpressionExperimentWithRawVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -1005,6 +1068,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     private ExpressionExperiment createExpressionExperimentWithProcessedVectors() {
         ee = new ExpressionExperiment();
         QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );

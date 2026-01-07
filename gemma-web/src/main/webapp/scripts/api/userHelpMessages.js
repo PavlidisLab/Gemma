@@ -361,12 +361,12 @@ Gemma.HelpText.WidgetDefaults = {
 			+ ' Click "show" to view the data for those genes. '
 			+ 'Note that when viewing gene groups, not all genes in the group are necessarily in the data set.',
 		GoButtonText: {
-			random: 'Visualize \'random\' genes',
-			one: 'Visualize 1 gene',
+			random: 'Visualize 20 random genes',
+			one: 'Visualize one gene',
 			multiple: 'Visualize {0} genes'
 		},
 		StatusText: {
-			random: 'Visualizing 20 \'random\' elements/probes.',
+			random: 'Visualizing 20 random design elements.',
 			one: 'Visualizing selected gene.',
 			multiple: 'Visualizing selected genes. Note that not all genes are necessarily in the data set.',
 			geneMatchCount: 'Found data for {0} of {1} genes.'

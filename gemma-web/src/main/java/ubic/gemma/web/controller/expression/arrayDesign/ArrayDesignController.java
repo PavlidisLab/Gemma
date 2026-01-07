@@ -42,11 +42,11 @@ import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -57,12 +57,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.util.DownloadUtil;
 import ubic.gemma.web.controller.util.EntityDelegator;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.ListBatchCommand;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
-import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.ServletContext;
@@ -309,7 +309,7 @@ public class ArrayDesignController {
         }
         result.removeAll( toHide );
 
-        result.sort( Comparator.comparing( ArrayDesignValueObject::getId ) );
+        result.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         return result;
     }
@@ -418,7 +418,7 @@ public class ArrayDesignController {
         if ( summary == null )
             result.put( "html", "Not available" );
         else
-            result.put( "html", ArrayDesignHtmlUtil.getSummaryHtml( summary ) );
+            result.put( "html", getSummaryHtml( summary ) );
         return result;
     }
 
@@ -432,7 +432,7 @@ public class ArrayDesignController {
         StringBuilder buf = new StringBuilder();
         buf.append( "<div style=\"float:left\" >" );
         if ( advo.getNumProbeAlignments() != null ) {
-            buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
+            buf.append( getSummaryHtml( advo ) );
         } else {
             buf.append( "[Not avail.]" );
         }
@@ -595,6 +595,28 @@ public class ArrayDesignController {
     }
 
     /**
+     * Generate a pretty HTML table with the array design stats summary, used for AJAX version.
+     *
+     * @param object object
+     * @return string
+     */
+    private String getSummaryHtml( ArrayDesignValueObject object ) {
+        return "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td><tr>  "
+                + "<td colspan='2' <strong style='font-size:smaller'>Sequence analysis details</strong></td> "
+                + " </tr></tr>" + "<tr><td>Elements</td><td align=\"right\" >" + object.getDesignElementCount()
+                + "</td></tr>" + "<tr><td title=\"Number of elements with sequences\">" + "With seq"
+                + "</td><td align=\"right\" >" + object.getNumProbeSequences() + "</td></tr>"
+                + "<tr><td title=\"Number of elements with at least one genome alignment (if available)\">"
+                + "With align" + "</td>" + "<td align=\"right\" >" + object.getNumProbeAlignments() + "</td></tr>"
+                + "<tr><td title=\"Number of elements mapped to genes\">" + "Mapped to genes"
+                + "</td><td align=\"right\" >" + object.getNumProbesToGenes() + "</td></tr>"
+                + "<tr><td title=\"Number of unique genes represented on the platform\" >" + "Unique genes"
+                + "</td><td align=\"right\" >" + object.getNumGenes() + "</td></tr>"
+                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")"
+                + "</td></tr>" + "</table>";
+    }
+
+    /**
      * Inner class used for building array design summary
      */
     class GenerateArraySummaryLocalTask extends AbstractTask<EntityTaskCommand<ArrayDesign>> {
@@ -632,7 +654,6 @@ public class ArrayDesignController {
             ArrayDesign ad = arrayDesignService.loadOrFail( getTaskCommand().getEntityId(),
                     EntityNotFoundException::new, "Could not load platform with id=" + getTaskCommand().getEntityId() );
             arrayDesignService.remove( ad );
-            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
             return newTaskResult( "Array " + ad.getShortName() + " removed from Database." );
         }
     }

@@ -157,11 +157,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testGetSingleCellDimensionWithoutCellIds() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         assertThat( scd.getCellIds() ).isNotNull();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         assertThat( scExpressionExperimentService.streamCellIds( ee, qt, false ) )
@@ -280,10 +280,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     @Test
     public void testGetSingleCellDataMatrix() {
         RandomSingleCellDataUtils.setSeed( 123 );
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         SingleCellExpressionDataMatrix<?> matrix = scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
         assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
@@ -301,10 +301,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     @Test
     public void testGetSingleCellDataVectors() {
         RandomSingleCellDataUtils.setSeed( 123 );
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( true, true, true ) );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( true, true, false ) );
@@ -331,11 +331,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testAddSingleCellDataVectors() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
 
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() )
                 .contains( vectors.iterator().next().getQuantitationType() );
@@ -355,10 +355,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                             .satisfies( c -> assertThat( c.getValue() ).isEqualTo( "B" ) );
                 } );
 
-        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( "counts (2)", true );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
         SingleCellDimension scd2 = vectors2.iterator().next().getSingleCellDimension();
-        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null ) )
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null, true, false ) )
                 .isEqualTo( 10 );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 20 );
@@ -374,6 +374,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     @Test
     public void testAddSingleCellDataVectorsWithInteger() {
         QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
@@ -383,7 +384,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( qt );
 
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() )
                 .contains( vectors.iterator().next().getQuantitationType() );
@@ -413,32 +414,32 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testAddSingleCellDataVectorsTwice() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
-        assertThatThrownBy( () -> scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null ) )
+        assertThatThrownBy( () -> scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "already have vectors for the quantitation type" );
+                .hasMessage( "There is already a quantitation type named counts in " + ee + "." );
         verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
     }
 
     @Test
     public void testAddSingleCellDataVectorsWhenThereIsAlreadyAPreferredSetOfVectors() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         CellTypeAssignment ctl = scd.getCellTypeAssignments().iterator().next();
         ExperimentalFactor ctf = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
         assertThat( ctf.getName() ).isEqualTo( "cell type" );
         assertThat( ctf.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
-        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( "counts (2)", true );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
         SingleCellDimension scd2 = vectors2.iterator().next().getSingleCellDimension();
-        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null ) )
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null, true, true ) )
                 .isEqualTo( 10 );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() )
@@ -457,17 +458,17 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testReplaceVectors() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( qt );
         SingleCellDimension scd2 = vectors2.iterator().next().getSingleCellDimension();
-        assertThat( scExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors2, null ) )
+        assertThat( scExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors2, null, true, false ) )
                 .isEqualTo( 10 );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
@@ -481,18 +482,18 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testRemoveVectors() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         when( quantitationTypeService.reload( qt ) ).thenReturn( qt );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( false );
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( "counts (2)", false );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 20 );
@@ -511,18 +512,18 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testRemoveVectorsSharingADimension() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() ).contains( qt );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( scd );
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( "counts (2)", scd );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getQuantitationTypes() ).contains( qt2 );
         assertThat( ee.getSingleCellExpressionDataVectors() )
@@ -542,10 +543,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testRelabelCellTypes() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
         assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
                 .hasSize( 1 );
@@ -562,7 +563,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 75 ? "A" : "B";
         }
-        CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, qt, scd, Arrays.asList( ct ), null, null );
+        CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, qt, scd, Arrays.asList( ct ), null, null, true, true );
         String newLabellingS = newLabelling.toString();
         ExperimentalFactor newCtf = scExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( NullPointerException::new );
@@ -583,14 +584,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEmpty();
+        assertThat( scExpressionExperimentService.getCellTypeFactor( ee ) ).isPresent();
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctaS + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Removed the cell type factor " + ctf + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
                 "Created a cell type factor " + newCtf + " from preferred cell type assignment " + newLabellingS + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Removed the cell type factor " + newCtf + "." );
     }
 
     /**
@@ -599,13 +599,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
      */
     @Test
     public void testGetPreferredCellTypeLabellingWhenNonUnique() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
 
-        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
+        Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( "counts (2)", true );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt2, vectors2, null, true, false );
         assertThat( qt.getIsSingleCellPreferred() ).isFalse();
         assertThat( qt2.getIsSingleCellPreferred() ).isTrue();
 
@@ -617,17 +617,43 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     }
 
     @Test
-    public void testRecreateCellTypeFactor() {
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
-        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+    public void testCreateCellTypeFactor() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null, true, false );
+        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
                 .orElseThrow( AssertionError::new );
         assertThat( ee.getExperimentalDesign() ).isNotNull();
         ExperimentalFactor factor = ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( ef -> ef.getCategory() != null && CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
                 .findFirst()
                 .orElseThrow( AssertionError::new );
-        ExperimentalFactor recreatedFactor = scExpressionExperimentService.recreateCellTypeFactor( ee );
+        ExperimentalFactor recreatedFactor = scExpressionExperimentService.createCellTypeFactor( ee, true, false );
+        assertThat( recreatedFactor ).isNotNull();
+        assertThat( recreatedFactor ).isSameAs( factor );
+        assertThat( recreatedFactor.getName() ).isEqualTo( "cell type" );
+        assertThat( recreatedFactor.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
+        assertThat( recreatedFactor.getCategory() ).isNotNull().satisfies( f -> {
+            assertThat( f.getCategory() ).isEqualTo( "cell type" );
+            assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
+        } );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+    }
+
+    @Test
+    public void testCreateCellTypeFactorIgnoreCompatibleFactor() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null, true, false );
+        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignmentWithoutIndices( ee )
+                .orElseThrow( AssertionError::new );
+        assertThat( ee.getExperimentalDesign() ).isNotNull();
+        ExperimentalFactor factor = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( ef -> ef.getCategory() != null && CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
+                .findFirst()
+                .orElseThrow( AssertionError::new );
+        ExperimentalFactor recreatedFactor = scExpressionExperimentService.createCellTypeFactor( ee, true, true );
+        assertThat( recreatedFactor ).isNotNull();
+        assertThat( recreatedFactor ).isNotSameAs( factor );
         assertThat( recreatedFactor.getName() ).isEqualTo( "cell type" );
         assertThat( recreatedFactor.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
         assertThat( recreatedFactor.getCategory() ).isNotNull().satisfies( f -> {
@@ -652,8 +678,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
         CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( null, null, characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", dimension );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null, true, false );
 
         assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee ) )
                 .hasSize( 2 )
@@ -694,8 +720,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
         CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( "foo", null, characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );
-        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
-        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", dimension );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors, null, true, false );
 
         int[] indices2 = new int[100];
         List<Characteristic> characteristics2 = new ArrayList<>();
@@ -714,9 +740,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testUpdateSparsityMetrics() {
-        Collection<SingleCellExpressionDataVector> vecs = createSingleCellVectors( false );
+        Collection<SingleCellExpressionDataVector> vecs = createSingleCellVectors( "counts", false );
         QuantitationType qt = vecs.iterator().next().getQuantitationType();
-        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vecs, null );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vecs, null, true, false );
         assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
             assertThat( ba.getNumberOfCells() ).isNull();
             assertThat( ba.getNumberOfDesignElements() ).isNull();
@@ -754,8 +780,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         return scd;
     }
 
-    private Collection<SingleCellExpressionDataVector> createSingleCellVectors( boolean preferred ) {
+    private Collection<SingleCellExpressionDataVector> createSingleCellVectors( String name, boolean preferred ) {
         QuantitationType qt = new QuantitationType();
+        qt.setName( name );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -769,8 +796,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         return createSingleCellVectors( createSingleCellDimension(), qt );
     }
 
-    private Collection<SingleCellExpressionDataVector> createSingleCellVectors( SingleCellDimension singleCellDimension ) {
+    private Collection<SingleCellExpressionDataVector> createSingleCellVectors( String name, SingleCellDimension singleCellDimension ) {
         QuantitationType qt = new QuantitationType();
+        qt.setName( name );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );

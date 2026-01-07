@@ -175,12 +175,7 @@ Gemma.GemmaNavigationHeader = Ext
                      text : 'Browse Datasets',
                      href : Gemma.GEMBROW_URL,
                      tooltip : "View the list of Gemma's expression data sets"
-                  },
-                  {
-                     text : 'Browse Datasets (legacy)',
-                     href : Gemma.CONTEXT_PATH + "/expressionExperiment/showAllExpressionExperiments.html",
-                     tooltip : "View the list of Gemma's expression data sets"
-                  },{
+                  }, {
                      text : 'Browse Platforms',
                      href : Gemma.CONTEXT_PATH + "/arrays/showAllArrayDesigns.html",
                      tooltip : "View the list of Gemma's platforms"
@@ -524,7 +519,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : Gemma.CONTEXT_PATH + '/home.html',
-                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/gemma-headerlogo.png" height="63" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
+                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/gemma-headerlogo.png" height="60" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
                          }
                       }, '->', {
                          ref : 'navToolbar',

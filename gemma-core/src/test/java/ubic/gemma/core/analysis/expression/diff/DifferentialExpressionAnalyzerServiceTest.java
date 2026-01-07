@@ -134,9 +134,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ), true );
         assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
 
-        assertTrue( differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
-
         differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
     }
@@ -303,23 +300,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
 
         // check that we read it back correctly.
-        {
-            Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
-                    .getAnalysesByExperiment( Collections.singleton( ee.getId() ) );
-            // it will retrieve the analysis of the subset.
-            assertEquals( 1, vos.size() );
-        }
-
-        // retrieve the analysis of the subset directly.
-        {
-            Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
-                    .getAnalysesByExperiment( Collections.singleton( eeset.getId() ) );
-            assertEquals( 1, vos.size() );
-            for ( DifferentialExpressionAnalysisValueObject vo : vos.entrySet().iterator().next().getValue() ) {
-                assertNotNull( vo.getSubsetFactorValue() );
-            }
-        }
-
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+                .findByExperimentIds( Collections.singleton( ee.getId() ), true, false );
+        // it will retrieve the analysis of the subset.
+        assertEquals( 1, vos.size() );
     }
 
     @Test
@@ -408,7 +392,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee, false ) );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );

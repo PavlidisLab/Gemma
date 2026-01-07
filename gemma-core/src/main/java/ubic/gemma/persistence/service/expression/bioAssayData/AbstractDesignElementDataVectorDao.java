@@ -38,7 +38,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
 
 /**
  * @author pavlidis
- * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
+ * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
 public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressionDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
@@ -74,6 +74,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
     @Override
     public void thaw( T vector ) {
         Hibernate.initialize( vector.getExpressionExperiment() );
+        Hibernate.initialize( vector.getExpressionExperiment().getBioAssays() );
         thawDesignElement( vector.getDesignElement() );
         thawBioAssayDimension( vector.getBioAssayDimension() );
     }

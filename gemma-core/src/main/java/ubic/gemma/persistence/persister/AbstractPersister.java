@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -96,11 +97,11 @@ public abstract class AbstractPersister implements Persister {
 
     @Override
     @Transactional
-    public Object persist( Object entity ) {
+    public <T extends Identifiable> T persist( T entity ) {
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
-            Object persistedEntity = doPersist( entity, Caches.empty( null ) );
+            T persistedEntity = doPersist( entity, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -110,11 +111,11 @@ public abstract class AbstractPersister implements Persister {
 
     @Override
     @Transactional
-    public Object persistOrUpdate( Object entity ) {
+    public <T extends Identifiable> T persistOrUpdate( T entity ) {
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
-            Object persistedEntity = doPersistOrUpdate( entity, Caches.empty( null ) );
+            T persistedEntity = doPersistOrUpdate( entity, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -124,11 +125,11 @@ public abstract class AbstractPersister implements Persister {
 
     @Override
     @Transactional
-    public List<?> persist( Collection<?> col ) {
+    public <T extends Identifiable> List<T> persist( Collection<T> col ) {
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
-            List<?> result = doPersist( col, Caches.empty( null ) );
+            List<T> result = doPersist( col, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
@@ -141,14 +142,26 @@ public abstract class AbstractPersister implements Persister {
     }
 
     @OverridingMethodsMustInvokeSuper
-    protected Object doPersist( Object entity, Caches caches ) {
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         throw new UnsupportedOperationException( String.format( "Don't know how to persist a %s.", formatEntity( entity ) ) );
     }
 
-    protected final List<?> doPersist( Collection<?> entities, Caches caches ) {
-        List<Object> result = new ArrayList<>( entities.size() );
+    protected final <T extends Identifiable> Set<T> doPersist( Set<T> entities, Caches caches ) {
+        Set<T> result = new HashSet<>( entities.size() );
         int i = 0;
-        for ( Object entity : entities ) {
+        for ( T entity : entities ) {
+            result.add( this.doPersist( entity, caches ) );
+            if ( i++ % REPORT_BATCH_SIZE == 0 ) {
+                AbstractPersister.log.debug( String.format( "Persisted %d/%d entities.", result.size(), entities.size() ) );
+            }
+        }
+        return result;
+    }
+
+    protected final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Caches caches ) {
+        List<T> result = new ArrayList<>( entities.size() );
+        int i = 0;
+        for ( T entity : entities ) {
             result.add( this.doPersist( entity, caches ) );
             if ( i++ % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.debug( String.format( "Persisted %d/%d entities.", result.size(), entities.size() ) );
@@ -158,7 +171,7 @@ public abstract class AbstractPersister implements Persister {
     }
 
     @OverridingMethodsMustInvokeSuper
-    protected Object doPersistOrUpdate( Object entity, Caches caches ) {
+    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Caches caches ) {
         throw new UnsupportedOperationException( String.format( "Don't know how to persist or update a %s.", formatEntity( entity ) ) );
     }
 

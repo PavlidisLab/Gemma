@@ -15,14 +15,18 @@
 package ubic.gemma.core.analysis.preprocess.svd;
 
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -40,8 +44,11 @@ import static org.junit.Assert.assertNotNull;
 @Category(SlowTest.class)
 public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+
     @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
     @Autowired
     private AnalysisUtilService analysisUtilService;
     @Autowired
@@ -53,7 +60,8 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
-    public void testsvd() throws Exception {
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
+    public void testSvd() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "shortTest" ) ) );
@@ -88,7 +96,8 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
      * See bug 2139; two different sets of bioassays in the data.
      */
     @Test
-    public void testsvdGapped() throws Exception {
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
+    public void testSvdGapped() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse482short" ) ) );
