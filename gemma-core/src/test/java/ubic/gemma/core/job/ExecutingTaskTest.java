@@ -55,7 +55,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         try {
             taskResult = future.get();
         } catch ( InterruptedException | ExecutionException e ) {
-            e.printStackTrace();
+            log.error( "Future failed.", e );
             fail();
         }
         Exception exception = taskResult.getException();

@@ -316,7 +316,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         try {
             FieldUtils.writeField( chrom, "sequence", chromSeq, true );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
 
     }

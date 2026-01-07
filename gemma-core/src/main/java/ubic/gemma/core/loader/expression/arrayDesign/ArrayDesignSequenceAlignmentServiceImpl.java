@@ -204,7 +204,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             try {
                 FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true );
             } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
+                throw new RuntimeException( e );
             }
             result.getTargetChromosome().getSequence().setTaxon( taxon );
 
@@ -375,7 +375,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             try {
                 FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon, true );
             } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
+                throw new RuntimeException( e );
             }
             br.getTargetChromosome().getSequence().setTaxon( taxon );
 
