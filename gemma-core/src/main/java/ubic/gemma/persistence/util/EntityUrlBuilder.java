@@ -240,6 +240,11 @@ public class EntityUrlBuilder {
             }
         }
 
+        private WebEntityUrl( String baseUrl, U entity, String entityPath ) {
+            super( baseUrl, entity );
+            this.entityPath = entityPath;
+        }
+
         public URI toUri() {
             return URI.create( baseUrl + entityPath + entity.getId() );
         }
@@ -247,19 +252,22 @@ public class EntityUrlBuilder {
 
     public class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
 
-        private boolean byShortName = false;
-
-        private String entityPath = "/expressionExperiment/showExpressionExperiment.html";
-        private String additionalQuery = "";
+        private final boolean byShortName;
+        private final String additionalQuery;
 
         private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity ) {
-            super( baseUrl, entity );
+            this( baseUrl, entity, "/expressionExperiment/showExpressionExperiment.html", false, "" );
+        }
+
+        private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity, String entityPath, boolean byShortName, String additionalQuery ) {
+            super( baseUrl, entity, entityPath );
+            this.byShortName = byShortName;
+            this.additionalQuery = additionalQuery;
         }
 
         public ExpressionExperimentWebUrl byShortName() {
             Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
-            byShortName = true;
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, true, additionalQuery );
         }
 
         public ExperimentalDesignWebUrl design() {
@@ -268,27 +276,21 @@ public class EntityUrlBuilder {
         }
 
         public ExpressionExperimentWebUrl edit() {
-            entityPath = "/expressionExperiment/editExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/editExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl bioAssays() {
-            entityPath = "/expressionExperiment/showBioAssaysFromExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/showBioAssaysFromExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl bioMaterials() {
-            entityPath = "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl showSingleCellExpressionData( QuantitationType quantitationType, CompositeSequence designElement, @Nullable List<BioAssay> assays, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic ) {
             Assert.state( !byShortName, "Single-cell box plots cannot be visualized by short name." );
-            entityPath = "/expressionExperiment/showSingleCellExpressionData.html";
-            additionalQuery = "&quantitationType=" + quantitationType.getId();
+            String entityPath = "/expressionExperiment/showSingleCellExpressionData.html";
+            String additionalQuery = "&quantitationType=" + quantitationType.getId();
             additionalQuery += "&designElement=" + designElement.getId();
             if ( assays != null ) {
                 for ( BioAssay assay : assays ) {
@@ -303,7 +305,7 @@ public class EntityUrlBuilder {
             if ( focusedCharacteristic != null ) {
                 additionalQuery += "&focusedCharacteristic=" + focusedCharacteristic.getId();
             }
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, false, additionalQuery );
         }
 
         @Override

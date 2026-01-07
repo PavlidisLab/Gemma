@@ -29,9 +29,6 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
 
-    @Autowired
-    private EntityLocator entityLocator;
-
     @Nullable
     private String analysisIdentifier;
 
