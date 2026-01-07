@@ -32,7 +32,6 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
-import java.util.Collection;
 
 /**
  * @author pavlidis
@@ -102,10 +101,10 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
-        String queryString = MessageFormat.format( "select {0} "
-                + "from Taxon as {0} " // taxon
-                + "left join {0}.externalDatabase as ED " // external db
-                + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
+        String queryString = "select taxon "
+                + "from Taxon as taxon " // taxon
+                + "left join taxon.externalDatabase as ED " // external db
+                + "where taxon.id is not null ";// needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
