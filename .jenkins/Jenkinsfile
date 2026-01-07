@@ -220,7 +220,7 @@ pipeline {
                         lock('gemma-sonarqube-analysis') {
                             setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                             withSonarQubeEnv('UBC SonarQube') {
-                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile dependency-check:check org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
                             }
                         }
                     }
