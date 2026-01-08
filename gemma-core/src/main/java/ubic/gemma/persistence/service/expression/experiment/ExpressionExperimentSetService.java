@@ -74,6 +74,9 @@ public interface ExpressionExperimentSetService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> findByName( String name );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSet> findByAccession( String accession );
+
     /**
      * security at DAO level
      *
@@ -168,6 +171,7 @@ public interface ExpressionExperimentSetService
      * has the right to edit the experiment itself.
      * <p>
      * If a set ends-up empty as a result, it is removed as well.
+     *
      * @return the number of sets this experiment was removed from
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })

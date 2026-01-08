@@ -455,24 +455,24 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequences( g, true );
         assertFalse( compSequences.isEmpty() );
 
-        Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
+        Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g, false );
         assertEquals( 1, collection.size() );
 
         ArrayDesign ad = experimentService.getArrayDesignsUsed( ds1 ).iterator().next();
-        collection = compositeSequenceService.findByGene( g, ad );
+        collection = compositeSequenceService.findByGene( g, ad, false );
         assertEquals( 1, collection.size() );
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "200974_at" );
         assertFalse( css.isEmpty() );
         CompositeSequence cs = css.iterator().next();
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs, true );
         assertEquals( 1, genes.size() );
         assertEquals( g, genes.iterator().next() );
 
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
 
-        Map<CompositeSequence, Collection<Gene>> gm = compositeSequenceService.getGenes( css );
+        Map<CompositeSequence, Collection<Gene>> gm = compositeSequenceService.getGenes( css, true );
         assertEquals( 1, gm.size() );
         assertEquals( g, gm.values().iterator().next().iterator().next() );
     }

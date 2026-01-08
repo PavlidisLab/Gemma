@@ -41,11 +41,45 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     Collection<CompositeSequence> findByBioSequenceName( String name );
 
-    Collection<CompositeSequence> findByGene( Gene gene );
+    /**
+     * Find composite sequences mapped to a given gene.
+     *
+     * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                   accurate lookup
+     */
+    Collection<CompositeSequence> findByGene( Gene gene, boolean useGene2Cs );
 
-    Slice<CompositeSequence> findByGene( Gene gene, int start, int limit );
+    /**
+     * Find a slice of composite sequences mapped to a given gene.
+     *
+     * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                   accurate lookup
+     */
+    Slice<CompositeSequence> findByGene( Gene gene, int start, int limit, boolean useGene2Cs );
 
-    Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
+    /**
+     * Find composite sequences mapped to a given gene, restricted to a given platform.
+     *
+     * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                   accurate lookup
+     */
+    Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs );
+
+    /**
+     * Find composite sequences mapped to the given genes.
+     *
+     * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                   accurate lookup
+     */
+    Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, boolean useGene2Cs );
+
+    /**
+     * Find composite sequences mapped to the given genes, restricted to a given platform.
+     *
+     * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                   accurate lookup
+     */
+    Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, ArrayDesign arrayDesign, boolean useGene2Cs );
 
     Collection<CompositeSequence> findByName( String name );
 
@@ -55,9 +89,11 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
      * Given a collection of composite sequences returns a map of the given composite sequences to a collection of genes
      *
      * @param compositeSequences composite sequences
+     * @param useGene2Cs         whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                           accurate lookup
      * @return map
      */
-    Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences );
+    Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences, boolean useGene2Cs );
 
     /**
      * given a composite sequence returns a collection of genes
@@ -65,9 +101,11 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
      * @param compositeSequence sequence
      * @param offset            offset
      * @param limit             limit
+     * @param useGene2Cs        whether to use the {@code GENE2CS} mapping table for faster, but potentially less
+     *                          accurate lookup
      * @return collection of genes
      */
-    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
 
     /**
      * @param compositeSequences sequences
@@ -83,5 +121,4 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     void thaw( Collection<CompositeSequence> compositeSequences );
 
     void thaw( CompositeSequence compositeSequence );
-
 }

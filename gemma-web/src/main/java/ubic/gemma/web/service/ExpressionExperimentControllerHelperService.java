@@ -447,7 +447,7 @@ public class ExpressionExperimentControllerHelperService {
                     .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
         }
         Gene gene;
-        Collection<Gene> genes = compositeSequenceService.getGenes( designElement );
+        Collection<Gene> genes = compositeSequenceService.getGenes( designElement, true );
         if ( genes.size() == 1 ) {
             gene = genes.iterator().next();
         } else {

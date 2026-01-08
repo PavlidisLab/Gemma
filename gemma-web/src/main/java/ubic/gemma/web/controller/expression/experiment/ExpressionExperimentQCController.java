@@ -675,7 +675,7 @@ public class ExpressionExperimentQCController {
         }
         CompositeSequence designElement = compositeSequenceService.loadOrFail( designElementId, EntityNotFoundException::new );
         Collection<Gene> genes;
-        genes = compositeSequenceService.getGenes( designElement );
+        genes = compositeSequenceService.getGenes( designElement, true );
         Gene gene;
         if ( genes.isEmpty() ) {
             log.warn( "No gene mapped by " + designElement );

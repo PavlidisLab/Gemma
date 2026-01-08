@@ -71,6 +71,12 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSet> findByAccession( String accession ) {
+        return expressionExperimentSetDao.findByAccession( accession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Long> findIds( ExpressionExperiment ee ) {
         Collection<Long> ids = new ArrayList<>();
         Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( ee );

@@ -1012,7 +1012,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             return new HashMap<>();
         }
 
-        return compositeSequenceService.getGenes( result.keySet() );
+        return compositeSequenceService.getGenes( result.keySet(), true );
 
     }
 

@@ -74,7 +74,18 @@ public interface CompositeSequenceService
     Collection<CompositeSequence> findByBioSequenceName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
-    Collection<CompositeSequence> findByGene( Gene gene );
+    Collection<CompositeSequence> findByGene( Gene gene, boolean useGene2Cs );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
+    Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs );
+
+    // FIXME: add ACL support for mapping of collections
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, boolean useGene3Cs );
+
+    // FIXME: add ACL support for mapping of collections
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, ArrayDesign arrayDesign, boolean useGene2Cs );
 
     /**
      * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
@@ -83,10 +94,7 @@ public interface CompositeSequenceService
     @Transactional(readOnly = true)
     CompositeSequenceValueObject loadValueObjectWithGeneMappingSummary( CompositeSequence cs );
 
-    Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
-    Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
+    Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit, boolean useGene2Cs );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
@@ -98,17 +106,11 @@ public interface CompositeSequenceService
     Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns );
 
-    /**
-     * Given a Collection of composite sequences returns of map of a composite sequence to a collection of genes
-     *
-     * @param sequences sequences
-     * @return map
-     */
-    Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences );
+    Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences, boolean useGene2Cs );
 
-    Collection<Gene> getGenes( CompositeSequence compositeSequence );
+    Collection<Gene> getGenes( CompositeSequence compositeSequence, boolean useGene2Cs );
 
-    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
 
     /**
      * @param compositeSequences sequences
@@ -129,5 +131,4 @@ public interface CompositeSequenceService
 
     @CheckReturnValue
     CompositeSequence thaw( CompositeSequence compositeSequence );
-
 }

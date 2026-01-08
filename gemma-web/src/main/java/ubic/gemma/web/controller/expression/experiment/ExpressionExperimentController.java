@@ -1025,7 +1025,7 @@ public class ExpressionExperimentController {
         for ( BioAssayDimension dimension : subsetsByDimension.keySet() ) {
             Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( ee, dimension, offset, limit );
             if ( !designElements.isEmpty() ) {
-                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements, true );
                 List<Gene> genes = designElements.stream()
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );
@@ -1112,7 +1112,7 @@ public class ExpressionExperimentController {
             int offset = 0, limit = 20;
             Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( subset.getSourceExperiment(), dimension, offset, limit );
             if ( !designElements.isEmpty() ) {
-                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements, true );
                 List<Gene> genes = designElements.stream()
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );

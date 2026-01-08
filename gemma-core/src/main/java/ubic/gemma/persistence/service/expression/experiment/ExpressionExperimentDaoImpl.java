@@ -1150,7 +1150,7 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        return streamByBatch( q, "ids", eeIds, getBatchSize(), Object[].class )
+        return QueryUtils.<Long, Object[]>streamByBatch( q, "ids", eeIds, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -1485,7 +1485,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in :eeIds "
                         + "group by ee.taxon" )
                 .setCacheable( true );
-        return streamByBatch( query, "eeIds", ids, getBatchSize(), Object[].class )
+        return QueryUtils.<Long, Object[]>streamByBatch( query, "eeIds", ids, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> ( Taxon ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -3897,7 +3897,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in (:ids) "
                         + "group by ee" )
                 .setCacheable( true );
-        Map<Long, Long> adCountById = streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048, Object[].class )
+        Map<Long, Long> adCountById = QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );

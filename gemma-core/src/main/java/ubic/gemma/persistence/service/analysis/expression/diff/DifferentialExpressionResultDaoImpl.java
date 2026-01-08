@@ -110,9 +110,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Map<Long, Long> subsetIdToExperimentId = null;
         // create a mapping of subset ID to source experiment ID
         if ( sourceExperimentIdMap != null ) {
-            subsetIdToExperimentId = QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
+            subsetIdToExperimentId = QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
                             .createQuery( "select eess.id, eess.sourceExperiment.id from ExpressionExperimentSubSet eess"
-                                    + " where eess.sourceExperiment.id in :eeIds or eess.id in :eeIds" ), "eeIds", experimentAnalyzedIds, 2048, Object[].class )
+                                    + " where eess.sourceExperiment.id in :eeIds or eess.id in :eeIds" ), "eeIds", experimentAnalyzedIds, 2048 )
                     .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
             if ( includeSubsets ) {
                 bioAssaySetIds.addAll( subsetIdToExperimentId.keySet() );
@@ -408,6 +408,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     /**
      * Lookup probes for a gene using the GENE2CS table.
+     *
      * @param gene                  a gene to lookup the probes for
      * @param keepNonSpecificProbes keep non-specific probes (those that map to multiple genes in the platform).
      */
@@ -758,7 +759,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
      * that if a gene is missing from the results, there are none for that resultSet for that gene. It then stores a
      * dummy entry.
      *
-     * @param results - which might be empty.
+     * @param results      - which might be empty.
      * @param resultSetids - the ones which we searched for in the database. Put in dummy results if we have to.
      */
     private void addToCache( Map<Long, Map<Long, DiffExprGeneSearchResult>> results, Collection<Long> resultSetids,
@@ -892,9 +893,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     /**
-     * @param results map of gene id to result, which the result gets added to.
+     * @param results  map of gene id to result, which the result gets added to.
      * @param resultId the specific DifferentialExpressionAnalysisResult, corresponds to an entry for one probe in the
-     *        resultSet
+     *                 resultSet
      */
     private void processDiffExResultHit( Map<Long, DiffExprGeneSearchResult> results, Long resultSetId, Long geneId,
             Long resultId, double correctedPvalue, double uncorrectedPvalue ) {
