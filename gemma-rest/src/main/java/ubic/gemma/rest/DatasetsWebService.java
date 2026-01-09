@@ -1598,14 +1598,26 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("useProcessedQuantitationType") @DefaultValue("false") Boolean useProcessedQuantitationType, // Optional, default false
+            @Parameter(description = "Quantitation type to produce the experimental design for. This only works for raw data vectors. The default is to produce the design for the experiment.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Produce an experimental design compatible with the preferred data vectors. The default is to produce the design for the experiment.") @QueryParam("useProcessedQuantitationType") @DefaultValue("false") Boolean useProcessedQuantitationType, // Optional, default false
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( quantitationTypeArg != null && useProcessedQuantitationType ) {
+            throw new BadRequestException( "Cannot use both 'quantitationType' and 'useProcessedQuantitationType' parameters together." );
+        }
         if ( force ) {
             checkIsAdmin();
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( quantitationTypeArg != null ) {
+            QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
+            String filename = getDesignFileName( ee, qt );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, qt, RawExpressionDataVector.class, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        }
         try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedQuantitationType, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
             String filename = file.getPath().getFileName().toString();
