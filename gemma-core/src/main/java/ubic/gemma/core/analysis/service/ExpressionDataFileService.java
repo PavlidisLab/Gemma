@@ -61,6 +61,8 @@ public interface ExpressionDataFileService {
      */
     boolean deleteDesignFile( ExpressionExperiment ee );
 
+    boolean deleteProcessedDataDesignFile( ExpressionExperiment ee );
+
     /**
      * Delete all files that contain platform annotations for a given experiment.
      * <p>
@@ -329,7 +331,7 @@ public interface ExpressionDataFileService {
      *
      * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
-    void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException;
+    void writeDesignMatrix( ExpressionExperiment ee, boolean useProcessedData, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -372,14 +374,17 @@ public interface ExpressionDataFileService {
      * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was
      * a recent change (more recent than the last modified date of the existing file) to any of the experiments platforms.
      *
-     * @param ee         the experiment
-     * @param forceWrite force re-write even if file already exists and is up to date
+     * @param ee                           the experiment
+     * @param useProcessedQuantitationType if true, produce the design for the assays of the processed data instead of
+     *                                     the assays of the experiment. These two are usually the same, but they will
+     *                                     differ if there is a sub-sample structure (i.e. single-cell data).
+     * @param forceWrite                   force re-write even if file already exists and is up to date
      * @return a file or empty if the experiment does not have a design
-     * @see #writeDesignMatrix(ExpressionExperiment, Writer, boolean)
+     * @see #writeDesignMatrix(ExpressionExperiment, boolean, Writer, boolean)
      */
-    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedQuantitationType, boolean forceWrite ) throws IOException;
 
-    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedQuantitationType, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)

@@ -822,18 +822,18 @@ Gemma.ExpressionExperimentDetails = Ext
                                     {
                                         fieldLabel: 'Profiles',
                                         // id: 'processedExpressionVectorCount-region',
-                                        html: '<div id="downloads"> '
-                                        + this.renderProcessedExpressionVectorCount(e)
-                                        + '&nbsp;&nbsp;'
-                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the filtered tab-delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
+                                        html: '<div id="downloads" class="flex g-3"> '
+                                        + '<span>' + this.renderProcessedExpressionVectorCount( e  ) + '</span>'
+                                        + '<i>Downloads:</i> <span class="link" ext:qtip="Download the filtered tab-delimited data." onClick="Gemma.ExpressionExperimentDataFetch.fetchData(true,'
                                         + e.id
-                                        + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                        + '<span class="link" ext:qtip="Download the unfiltered tab-delimited data" onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
+                                        + ', \'text\', null, null)">Data (filtered)</span>'
+                                        + '<span class="link" ext:qtip="Download the unfiltered tab-delimited data." onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false,'
                                         + e.id
-                                        + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
+                                        + ', \'text\', null, null)">Data (unfiltered)</span>'
+                                        + '<a href="' + Gemma.CONTEXT_PATH + '/rest/v2/datasets/' + e.id + '/design?useProcessedQuantitationType=true&download=true" ext:qtip="Download the tab-delimited experimental design.">Experimental Design</a>'
                                         + '<i class="qtp fa fa-question-circle fa-fw"></i>'
                                         + '</div>',
-                                        width: 400,
+                                        width: 600,
                                         listeners: {
                                             'afterrender': function (c) {
                                                 window.jQuery('#downloads').find('i')

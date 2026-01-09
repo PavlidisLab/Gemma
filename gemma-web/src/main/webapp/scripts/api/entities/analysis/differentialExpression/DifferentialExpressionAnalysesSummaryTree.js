@@ -329,18 +329,18 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             getExpressionNumbers: function (resultSet, nodeId, showThreshold) {
                 /* Show how many elements are differentially expressed; */
 
-                var numbers = resultSet.numberOfDiffExpressedProbes + ' of ' + this.totalProbes
+                var numbers = formatNumber(resultSet.numberOfDiffExpressedProbes) + ' of ' + formatNumber(this.totalProbes)
                     + ' elements were differentially expressed<br>';
 
                 // if (resultSet.upregulatedCount != 0) {
-                numbers += resultSet.upregulatedCount + "&nbsp;Up";
+                numbers += formatNumber(resultSet.upregulatedCount) + "&nbsp;Up";
                 // }
 
                 // if (resultSet.downregulatedCount != 0) {
-                numbers += ';&nbsp;' + resultSet.downregulatedCount + "&nbsp;Down";
+                numbers += ';&nbsp;' + formatNumber(resultSet.downregulatedCount) + "&nbsp;Down";
                 // }
                 if (showThreshold) {
-                    numbers += '. <br>Threshold value = ' + resultSet.threshold;
+                    numbers += '. <br>Threshold value = ' + formatNumber(resultSet.threshold);
                     numbers += (resultSet.qValue) ? (', qvalue = ' + resultSet.qValue) : '';
                 }
 

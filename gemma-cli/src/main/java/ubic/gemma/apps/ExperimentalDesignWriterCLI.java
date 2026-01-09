@@ -52,7 +52,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
             USE_MULTIPLE_ROWS_FOR_ASSAYS = "useMultipleRowsForAssays",
             SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION = "separateSampleFromAssayIdentifiers",
             USE_BIO_ASSAY_IDS = "useBioAssayIds",
-            USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames";
+            USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames",
+            USE_PROCESSED_DATA_OPTION = "useProcessedData";
 
     @Autowired
     private BuildInfo buildInfo;
@@ -65,6 +66,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private boolean separateSampleFromAssaysIdentifiers;
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
+    private boolean useProcessedData;
     @Nullable
     private String outFileName;
 
@@ -87,6 +89,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                 "Separate sample and assay(s) identifiers in distinct columns named 'Sample' and 'Assays' (instead of a single 'Bioassay' column). The assays will be delimited by a '" + TsvUtils.SUB_DELIMITER + "' character." );
         options.addOption( USE_BIO_ASSAY_IDS, "use-bioassay-ids", false, "Use IDs instead of names or short names for bioassays and samples." );
         options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( USE_PROCESSED_DATA_OPTION, "use-processed-data", false, "Write the experimental design for the assays of the processed data." );
         addForceOption( options );
     }
 
@@ -98,6 +101,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         separateSampleFromAssaysIdentifiers = commandLine.hasOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION );
         useBioAssayIds = commandLine.hasOption( USE_BIO_ASSAY_IDS );
         useRawColumnNames = commandLine.hasOption( USE_RAW_COLUMN_NAMES_OPTION );
+        useProcessedData = commandLine.hasOption( USE_PROCESSED_DATA_OPTION );
     }
 
     @Override
@@ -106,7 +110,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         Path dest;
         if ( standardLocation ) {
             ExpressionExperiment finalEe = ee;
-            dest = expressionDataFileService.writeOrLocateDesignFile( ee, isForce() )
+            dest = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedData, isForce() )
                     .map( LockedPath::closeAndGetPath )
                     .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {

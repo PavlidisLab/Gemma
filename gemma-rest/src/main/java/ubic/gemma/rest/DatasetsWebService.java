@@ -1598,6 +1598,7 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @QueryParam("useProcessedQuantitationType") @DefaultValue("false") Boolean useProcessedQuantitationType, // Optional, default false
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
@@ -1605,7 +1606,7 @@ public class DatasetsWebService {
             checkIsAdmin();
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
+        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedQuantitationType, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
             String filename = file.getPath().getFileName().toString();
             return sendfile( file.getPath() )
@@ -1616,8 +1617,8 @@ public class DatasetsWebService {
             throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
-            String filename = getDesignFileName( ee );
-            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
+            String filename = getDesignFileName( ee, useProcessedQuantitationType );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, useProcessedQuantitationType, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
