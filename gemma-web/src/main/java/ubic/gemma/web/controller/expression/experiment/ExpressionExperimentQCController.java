@@ -222,10 +222,10 @@ public class ExpressionExperimentQCController {
         StringWriter writer = new StringWriter();
         appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, new Date(), writer );
         new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false )
-                .write( ee, bioAssays, false, writer );
+                .write( ee, null, null, bioAssays, false, writer );
 
         TextView tv = new TextView( "tab-separated-values" );
-        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
+        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee, false ) ) + "\"" );
         return new ModelAndView( tv ).addObject( TextView.TEXT_PARAM, writer.toString() );
     }
 
@@ -260,10 +260,10 @@ public class ExpressionExperimentQCController {
         StringWriter writer = new StringWriter();
         appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, new Date(), writer );
         new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false )
-                .write( ee, bioAssays, false, writer );
+                .write( ee, null, null, bioAssays, false, writer );
 
         TextView tv = new TextView( "tab-separated-values" );
-        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" );
+        tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee, false ) ) + "\"" );
         return new ModelAndView( tv )
                 .addObject( TextView.TEXT_PARAM, writer.toString() );
     }

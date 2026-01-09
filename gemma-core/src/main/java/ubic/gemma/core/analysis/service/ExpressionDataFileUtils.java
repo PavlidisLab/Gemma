@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * Generate filenames for various types of data files.
+ *
  * @author poirigui
  */
 public class ExpressionDataFileUtils {
@@ -72,8 +73,8 @@ public class ExpressionDataFileUtils {
         return formatExpressionExperimentFilename( ee ) + "_coExp" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
-    public static String getDesignFileName( ExpressionExperiment ee ) {
-        return formatExpressionExperimentFilename( ee ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    public static String getDesignFileName( ExpressionExperiment ee, boolean useProcessedData ) {
+        return formatExpressionExperimentFilename( ee ) + "_expdesign" + ( useProcessedData ? "_processed" : "" ) + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     public static String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
