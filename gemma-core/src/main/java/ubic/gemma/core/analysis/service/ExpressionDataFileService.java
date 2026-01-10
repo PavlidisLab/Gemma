@@ -21,6 +21,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
@@ -332,6 +333,11 @@ public interface ExpressionDataFileService {
      * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
     void writeDesignMatrix( ExpressionExperiment ee, boolean useProcessedData, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
+     * Writes out the experimental design for the given experiment and quantitation type.
+     */
+    void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment

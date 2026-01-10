@@ -5,6 +5,9 @@
 Add a `useProcessedQuantitationType` option to the `getDatasetDesign` endpoint to generate a design matrix that is
 tailored to the processed data vectors.
 
+Add a `quantitationType` option to `getDatasetDesign` endpoint to generate a design matrix that is tailored to any data
+vectors.
+
 ### Update 2.9.3
 
 Add various single-cell metrics to the `BioAssayValueObject` model.

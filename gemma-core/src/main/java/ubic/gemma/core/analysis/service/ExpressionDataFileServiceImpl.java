@@ -724,14 +724,35 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     .orElseThrow( () -> new IllegalStateException( "No processed data for " + finalEe + "." ) );
             Collection<BioAssayDimension> processedDimension = expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee );
             if ( processedDimension.isEmpty() ) {
-                throw new IllegalStateException( "No processed data for " + ee + "." );
-            } else if ( processedDimension.size() > 1 ) {
-                throw new IllegalStateException( "Multiple processed bioassay dimensions found for " + ee + "." );
-            } else {
-                edWriter.write( ee, processedQuantitationType, ProcessedExpressionDataVector.class, processedDimension.iterator().next().getBioAssays(), true, writer );
+                throw new IllegalStateException( processedQuantitationType + " does not have a dimension." );
             }
+            if ( processedDimension.size() > 1 ) {
+                log.warn( "Multiple dimensions found for " + processedQuantitationType + ", this is not supposed to happen for processed data." );
+            }
+            Set<BioAssay> assays = processedDimension.stream()
+                    .map( BioAssayDimension::getBioAssays )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toSet() );
+            edWriter.write( ee, processedQuantitationType, ProcessedExpressionDataVector.class, assays, true, writer );
         } else {
             edWriter.write( ee, writer );
+        }
+    }
+
+    @Override
+    public void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException {
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "No experimental design for " + ee );
+        }
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush );
+        Collection<BioAssayDimension> processedDimension = expressionExperimentService.getBioAssayDimensionsWithAssays( ee, qt );
+        if ( processedDimension.isEmpty() ) {
+            throw new IllegalStateException( "No dimension for " + ee + " and " + qt + "." );
+        } else if ( processedDimension.size() > 1 ) {
+            throw new IllegalStateException( "Multiple dimensions found for " + ee + " and " + qt + "." );
+        } else {
+            edWriter.write( ee, qt, vectorType, processedDimension.iterator().next().getBioAssays(), true, writer );
         }
     }
 

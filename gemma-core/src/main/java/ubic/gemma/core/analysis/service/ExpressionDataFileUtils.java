@@ -73,8 +73,18 @@ public class ExpressionDataFileUtils {
         return formatExpressionExperimentFilename( ee ) + "_coExp" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
+    /**
+     * Obtain the filename for writing experimental design.
+     */
     public static String getDesignFileName( ExpressionExperiment ee, boolean useProcessedData ) {
-        return formatExpressionExperimentFilename( ee ) + "_expdesign" + ( useProcessedData ? "_processed" : "" ) + TABULAR_BULK_DATA_FILE_SUFFIX;
+        return formatExpressionExperimentFilename( ee ) + ( useProcessedData ? "_processed" : "" ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Obtain the filename for writing experimental design for a specific QT.
+     */
+    public static String getDesignFileName( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( quantitationType, QuantitationType::getName ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     public static String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
