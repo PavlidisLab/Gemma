@@ -19,11 +19,14 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
@@ -57,6 +60,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private static final String
             STANDARD_LOCATION_OPTION = "standardLocation",
             OUT_FILE_PREFIX_OPTION = "o",
+            OUTPUT_DIR_OPTION = "d",
             USE_MULTIPLE_ROWS_FOR_ASSAYS = "useMultipleRowsForAssays",
             SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION = "separateSampleFromAssayIdentifiers",
             USE_BIO_ASSAY_IDS = "useBioAssayIds",
@@ -76,9 +80,12 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
     private boolean useProcessedData;
+    @Nullable
     private String quantitationTypeIdentifier;
     @Nullable
-    private String outFileName;
+    private String outFilePrefix;
+    @Nullable
+    private Path outputDir;
 
     @Override
     public String getCommandName() {
@@ -94,6 +101,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void buildExperimentOptions( Options options ) {
         options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
         options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( Option.builder( OUTPUT_DIR_OPTION ).longOpt( "output-dir" ).hasArg().type( Path.class ).desc( "Directory where to write output files. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." ).get() );
         options.addOption( USE_MULTIPLE_ROWS_FOR_ASSAYS, "use-multiple-rows-for-assays", false, "Use multiple rows for assays." );
         options.addOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION, "separate-sample-from-assays-identifiers", false,
                 "Separate sample and assay(s) identifiers in distinct columns named 'Sample' and 'Assays' (instead of a single 'Bioassay' column). The assays will be delimited by a '" + TsvUtils.SUB_DELIMITER + "' character." );
@@ -107,7 +115,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
-        outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
+        outFilePrefix = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
+        outputDir = commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION );
         useMultipleRowsForAssays = commandLine.hasOption( USE_MULTIPLE_ROWS_FOR_ASSAYS );
         separateSampleFromAssaysIdentifiers = commandLine.hasOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION );
         useBioAssayIds = commandLine.hasOption( USE_BIO_ASSAY_IDS );
@@ -129,7 +138,21 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                     .map( LockedPath::closeAndGetPath )
                     .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {
-            dest = Paths.get( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" );
+            String filename;
+            if ( outFilePrefix != null ) {
+                filename = outFilePrefix + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt";
+            } else if ( quantitationTypeIdentifier != null ) {
+                QuantitationType qt = entityLocator.locateQuantitationType( ee, quantitationTypeIdentifier, RawExpressionDataVector.class );
+                filename = ExpressionDataFileUtils.getDesignFileName( ee, qt );
+            } else {
+                filename = ExpressionDataFileUtils.getDesignFileName( ee, useProcessedData );
+            }
+            if ( outputDir != null ) {
+                dest = outputDir.resolve( filename );
+            } else {
+                dest = Paths.get( filename );
+            }
+            PathUtils.createParentDirectories( dest );
             try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
                 edWriter.setUseMultipleRowsForAssays( useMultipleRowsForAssays );
