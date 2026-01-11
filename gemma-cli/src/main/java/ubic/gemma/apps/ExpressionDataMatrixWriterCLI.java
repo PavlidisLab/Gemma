@@ -65,7 +65,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private boolean excludeSampleIdentifiers;
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
-    private ExpressionDataFileResult result;
+    private DataFileOptionValue destination;
     private boolean filter;
 
     @Override
@@ -80,7 +80,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "processed data", true );
+        addDataFileOptions( options, "processed data", true );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output. This is incompatible with -standardLocation/--standard-location.", ScaleType.class );
@@ -92,13 +92,13 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        result = getExpressionDataFileResult( commandLine, true );
+        destination = getDataFileOptionValue( commandLine, true );
         samples = commandLine.getOptionValues( "samples" );
-        if ( result.isStandardLocation() && samples != null ) {
+        if ( destination.isStandardLocation() && samples != null ) {
             throw new ParseException( "Cannot specify samples when writing to standard location." );
         }
         scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
-        if ( result.isStandardLocation() && scaleType != null ) {
+        if ( destination.isStandardLocation() && scaleType != null ) {
             throw new ParseException( "Cannot specify scale type when writing to standard location." );
         }
         filter = commandLine.hasOption( "filter" );
@@ -111,7 +111,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         int written;
         Path fileName;
-        if ( result.isStandardLocation() ) {
+        if ( destination.isStandardLocation() ) {
             try ( LockedPath lockedPath = fs.writeOrLocateProcessedDataFile( ee, filter, isForce() )
                     .orElseThrow( () -> new IllegalStateException( ee + " does not have processed vectors." ) ) ) {
                 fileName = lockedPath.getPath();
@@ -126,14 +126,14 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 List<BioAssay> assays = Arrays.stream( samples )
                         .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                         .collect( Collectors.toList() );
-                fileName = result.getOutputFile( getDataOutputFilename( ee, assays, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
+                fileName = destination.getOutputFile( getDataOutputFilename( ee, assays, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
                     written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException | FilteringException e ) {
                     throw new RuntimeException( e );
                 }
             } else {
-                fileName = result.getOutputFile( getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
+                fileName = destination.getOutputFile( getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
                 try ( Writer writer = openOutputFile( fileName ) ) {
                     written = fs.writeProcessedExpressionData( ee, filter, scaleType, excludeSampleIdentifiers, useBioAssayIds, useRawColumnNames, writer, true );
                 } catch ( IOException | FilteringException e ) {

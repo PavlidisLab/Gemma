@@ -31,7 +31,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
     private boolean separateSampleFromAssaysIdentifiers;
     private boolean useBioAssayIds;
     private boolean useRawColumnNames;
-    private ExpressionDataFileResult result;
+    private DataFileOptionValue destination;
 
     public CellLevelMetadataWriterCli() {
         super( SingleCellExpressionDataVector.class );
@@ -50,7 +50,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
                 "Separate sample and assay identifiers in distinct columns named 'Sample' and 'Assay' (instead of a single 'Bioassay' column)." );
         options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names in the 'cellId' column. This does not affect the 'Bioassay', 'Sample' and 'Assay' columns." );
         options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used." );
-        addExpressionDataFileOptions( options, "cell-level metadata", false );
+        addDataFileOptions( options, "cell-level metadata", false );
         addForceOption( options );
     }
 
@@ -59,7 +59,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
         separateSampleFromAssaysIdentifiers = commandLine.hasOption( "separateSampleFromAssayIdentifiers" );
         useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
         useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
-        result = getExpressionDataFileResult( commandLine, false );
+        destination = getDataFileOptionValue( commandLine, false );
     }
 
     @Override
@@ -71,9 +71,9 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
             return;
         }
         Path dest;
-        if ( result.isStandardLocation() ) {
+        if ( destination.isStandardLocation() ) {
             throw new UnsupportedOperationException( "Cell Browser-compatible metadata cannot be written to the standard location." );
-        } else if ( result.isStandardOutput() ) {
+        } else if ( destination.isStandardOutput() ) {
             dest = null;
             try ( Writer out = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
@@ -84,7 +84,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
                 writer.write( ee, scd, out );
             }
         } else {
-            dest = result.getOutputFile( getMetadataOutputFilename( ee, qt, CELL_BROWSER_SC_METADATA_SUFFIX ) );
+            dest = destination.getOutputFile( getMetadataOutputFilename( ee, qt, CELL_BROWSER_SC_METADATA_SUFFIX ) );
             try ( Writer out = new OutputStreamWriter( openOutputFile( dest ), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
                 writer.setSeparateSampleFromAssayIdentifiers( separateSampleFromAssaysIdentifiers );

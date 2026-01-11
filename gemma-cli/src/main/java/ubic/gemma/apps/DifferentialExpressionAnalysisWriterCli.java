@@ -4,7 +4,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -32,7 +31,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
     @Nullable
     private String analysisIdentifier;
 
-    private ExpressionDataFileResult result;
+    private DataFileOptionValue result;
 
     @Override
     public String getCommandName() {
@@ -46,7 +45,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        addExpressionDataFileOptions( options, "differential expression data", true );
+        addDataFileOptions( options, "differential expression data", true );
         addSingleExperimentOption( options, "a", "analysis", true, "Identifier for an analysis." );
         addForceOption( options );
     }
@@ -54,7 +53,7 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         analysisIdentifier = commandLine.getOptionValue( "a" );
-        result = getExpressionDataFileResult( commandLine, true );
+        result = getDataFileOptionValue( commandLine, true );
     }
 
     @Override

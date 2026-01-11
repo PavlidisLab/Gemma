@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,9 +56,6 @@ import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String
-            STANDARD_LOCATION_OPTION = "standardLocation",
-            OUT_FILE_PREFIX_OPTION = "o",
-            OUTPUT_DIR_OPTION = "d",
             USE_MULTIPLE_ROWS_FOR_ASSAYS = "useMultipleRowsForAssays",
             SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION = "separateSampleFromAssayIdentifiers",
             USE_BIO_ASSAY_IDS = "useBioAssayIds",
@@ -74,7 +69,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
 
-    private boolean standardLocation;
     private boolean useMultipleRowsForAssays;
     private boolean separateSampleFromAssaysIdentifiers;
     private boolean useBioAssayIds;
@@ -82,10 +76,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     private boolean useProcessedData;
     @Nullable
     private String quantitationTypeIdentifier;
-    @Nullable
-    private String outFilePrefix;
-    @Nullable
-    private Path outputDir;
+    private DataFileOptionValue destination;
 
     @Override
     public String getCommandName() {
@@ -100,7 +91,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @Override
     protected void buildExperimentOptions( Options options ) {
         options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
-        options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
         options.addOption( Option.builder( OUTPUT_DIR_OPTION ).longOpt( "output-dir" ).hasArg().type( Path.class ).desc( "Directory where to write output files. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." ).get() );
         options.addOption( USE_MULTIPLE_ROWS_FOR_ASSAYS, "use-multiple-rows-for-assays", false, "Use multiple rows for assays." );
         options.addOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION, "separate-sample-from-assays-identifiers", false,
@@ -109,14 +99,13 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
         options.addOption( USE_PROCESSED_DATA_OPTION, "use-processed-data", false, "Write the experimental design for the assays of the processed data. This option is incompatible with -quantitationType,--quantitation-type." );
         options.addOption( QUANTITATION_TYPE_OPTION, "quantitation-type", true, "Quantitation type identifier to use when writing the experimental design. If not specified, a generic experimental design will be written. This option is incompatible with -useProcessedData/--use-processed-data." );
+        addDataFileOptions( options, "experimental design", true );
         addForceOption( options );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
-        outFilePrefix = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
-        outputDir = commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION );
+        destination = getDataFileOptionValue( commandLine, true );
         useMultipleRowsForAssays = commandLine.hasOption( USE_MULTIPLE_ROWS_FOR_ASSAYS );
         separateSampleFromAssaysIdentifiers = commandLine.hasOption( SEPARATE_SAMPLE_FROM_ASSAYS_IDENTIFIERS_OPTION );
         useBioAssayIds = commandLine.hasOption( USE_BIO_ASSAY_IDS );
@@ -132,26 +121,20 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void processExpressionExperiment( ExpressionExperiment ee ) throws IOException {
         ee = eeService.thawLite( ee );
         Path dest;
-        if ( standardLocation ) {
+        if ( destination.isStandardLocation() ) {
             ExpressionExperiment finalEe = ee;
             dest = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedData, isForce() )
                     .map( LockedPath::closeAndGetPath )
                     .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {
             String filename;
-            if ( outFilePrefix != null ) {
-                filename = outFilePrefix + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt";
-            } else if ( quantitationTypeIdentifier != null ) {
+            if ( quantitationTypeIdentifier != null ) {
                 QuantitationType qt = entityLocator.locateQuantitationType( ee, quantitationTypeIdentifier, RawExpressionDataVector.class );
                 filename = ExpressionDataFileUtils.getDesignFileName( ee, qt );
             } else {
                 filename = ExpressionDataFileUtils.getDesignFileName( ee, useProcessedData );
             }
-            if ( outputDir != null ) {
-                dest = outputDir.resolve( filename );
-            } else {
-                dest = Paths.get( filename );
-            }
+            dest = destination.getOutputFile( filename );
             PathUtils.createParentDirectories( dest );
             try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );

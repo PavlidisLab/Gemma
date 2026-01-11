@@ -142,7 +142,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     @Nullable
     private Double filterMinVariance;
 
-    private ExpressionDataFileResult result;
+    private DataFileOptionValue destination;
 
     enum FactorSelectionMode {
         REDO,
@@ -199,7 +199,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
         options.addOption( "ignoreFailingSubsets", "ignore-failing-subsets", false, "Ignore failing subsets and continue processing other subsets. Requires the " + formatOption( options, "subset" ) + " option to be set or -redo,--redo option with existing subset analyses." );
 
-        addExpressionDataFileOptions( options, "diff. ex. archive files", false, false, true, true, false );
+        addDataFileOptions( options, "diff. ex. archive files", false, false, true, true, false );
 
         // destination (db, standard location or custom directory)
         options.addOption( "nodb", "no-db", false, "Do not persist diff. ex. results to the database and instead save them to the current directory (or the location defined by " + formatOption( options, OUTPUT_DIR_OPTION ) + ")." );
@@ -349,7 +349,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.moderateStatistics = !commandLine.hasOption( "nobayes" );
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
-        this.result = getExpressionDataFileResult( commandLine, false, false, true );
+        this.destination = getDataFileOptionValue( commandLine, false, false, true );
         this.filterMinNumberOfCellsPerSample = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerSample" );
         this.filterMinNumberOfCellsPerGene = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerGene" );
         this.filterMode = getEnumOptionValue( commandLine, "filterRepetitiveValuesMode" );
@@ -534,7 +534,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             refreshDeaFromGemmaWeb( ee );
         } else {
             // defaults to the current directory
-            Path outputDir = requireNonNull( result.getOutputDir() );
+            Path outputDir = requireNonNull( destination.getOutputDir() );
             log.info( "Writing diff. ex. results to " + outputDir.toAbsolutePath() + "..." );
             try {
                 expressionDataFileService.writeDiffExAnalysisArchiveFiles( results, outputDir, isForce() );
