@@ -11,6 +11,7 @@ import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.model.common.DescribableUtils;
+import ubic.gemma.model.common.NonUniqueDescribableByNameException;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -133,11 +134,15 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
         Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
         applyPreferredCellTypeAssignment( ctas, config );
-        return DescribableUtils.addAllByName( dimension.getCellTypeAssignments(), ctas,
-                // because we're dealing with a persistent dimension, we need to use the service to add/remove CTAs
-                ( ignored, cta ) -> singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() ),
-                ( ignored, cta ) -> singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, requireNonNull( cta.getName() ) ),
-                config.isReplaceExistingCellTypeAssignment(), config.isReplaceExistingCellTypeAssignment() );
+        try {
+            return DescribableUtils.addAllByName( dimension.getCellTypeAssignments(), ctas,
+                    // because we're dealing with a persistent dimension, we need to use the service to add/remove CTAs
+                    ( ignored, cta ) -> singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() ),
+                    ( ignored, cta ) -> singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, requireNonNull( cta.getName() ) ),
+                    config.isReplaceExistingCellTypeAssignment(), config.isReplaceExistingCellTypeAssignment() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellTypeAssignmentByNameException( e );
+        }
     }
 
     @Override
@@ -165,11 +170,15 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
         SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
         Set<CellLevelCharacteristics> clcs = loader.getOtherCellLevelCharacteristics( dimension );
-        return DescribableUtils.addAllByName( dimension.getCellLevelCharacteristics(), clcs,
-                // because we're dealing with a persistent dimension, we need to use the service to add/remove CLCs
-                ( ignored, clc ) -> singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ),
-                ( ignored, clc ) -> singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, requireNonNull( clc.getName() ) ),
-                config.isReplaceExistingOtherCellLevelCharacteristics(), config.isIgnoreExistingOtherCellLevelCharacteristics() );
+        try {
+            return DescribableUtils.addAllByName( dimension.getCellLevelCharacteristics(), clcs,
+                    // because we're dealing with a persistent dimension, we need to use the service to add/remove CLCs
+                    ( ignored, clc ) -> singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ),
+                    ( ignored, clc ) -> singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, requireNonNull( clc.getName() ) ),
+                    config.isReplaceExistingOtherCellLevelCharacteristics(), config.isIgnoreExistingOtherCellLevelCharacteristics() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellLevelCharacteristicsByNameException( e );
+        }
     }
 
     private QuantitationType getQuantitationType( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
@@ -366,6 +375,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             return DescribableUtils.addAllByName( dim.getCellTypeAssignments(), ctas,
                     config.isReplaceExistingCellTypeAssignment(),
                     config.isIgnoreExistingCellTypeAssignment() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellTypeAssignmentByNameException( e );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
             return Collections.emptySet();
@@ -411,6 +422,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     loader.getOtherCellLevelCharacteristics( dim ),
                     config.isReplaceExistingOtherCellLevelCharacteristics(),
                     config.isIgnoreExistingOtherCellLevelCharacteristics() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellLevelCharacteristicsByNameException( e );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
             return Collections.emptySet();

@@ -481,19 +481,27 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         switch ( mode ) {
             case LOAD_CELL_TYPE_ASSIGNMENTS:
                 Collection<CellTypeAssignment> cta;
-                if ( dataType != null ) {
-                    cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, dataType, config );
-                } else {
-                    cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, config );
+                try {
+                    if ( dataType != null ) {
+                        cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, dataType, config );
+                    } else {
+                        cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, config );
+                    }
+                } catch ( NonUniqueCellTypeAssignmentByNameException e ) {
+                    throw new IllegalArgumentException( "There is already a cell type assignment with the same name, use " + formatOption( REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, "replace-cell-type-assignment" ) + " to replace it.", e );
                 }
                 addSuccessObject( ee, "Loaded cell type assignments " + cta );
                 break;
             case LOAD_CELL_LEVEL_CHARACTERISTICS:
                 Collection<CellLevelCharacteristics> clc;
-                if ( dataType != null ) {
-                    clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, dataType, config );
-                } else {
-                    clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, config );
+                try {
+                    if ( dataType != null ) {
+                        clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, dataType, config );
+                    } else {
+                        clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, config );
+                    }
+                } catch ( NonUniqueCellLevelCharacteristicsByNameException e ) {
+                    throw new IllegalArgumentException( "There is already a CLC with the same name, use " + formatOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics" ) + " to replace it." );
                 }
                 addSuccessObject( ee, "Loaded cell-level characteristics " + clc );
                 break;

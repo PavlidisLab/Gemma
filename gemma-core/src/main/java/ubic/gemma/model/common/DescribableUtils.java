@@ -103,9 +103,10 @@ public class DescribableUtils {
      * @param ignoreExisting  if true, existing describables with the same name will be ignored.
      * @param <T>             type of describable.
      * @return a collection of elements that were actually added to the collection.
-     * @throws IllegalArgumentException if the added describable have duplicated names or if a describable with the same
-     *                                  name exists and neither {@code replaceExisting} nor {@code ignoreExisting} is
-     *                                  true. Note that {@code null} names are not considered for uniqueness.
+     * @throws NonUniqueDescribableByNameException if the added describable have duplicated names or if a describable
+     *                                             with the same name exists and neither {@code replaceExisting} nor
+     *                                             {@code ignoreExisting} is true. Note that {@code null} names are
+     *                                             not considered for uniqueness.
      */
     public static <T extends Describable, S extends T> Collection<S> addAllByName(
             Collection<T> describables,
@@ -132,7 +133,7 @@ public class DescribableUtils {
                     log.warn( "Collection already contains " + what + " with name " + d.getName() + ", ignoring. Specify replaceExisting to replace it." );
                     continue;
                 } else {
-                    throw new IllegalArgumentException( "Collection already contains a " + what + " with name " + d.getName() + ". Specify ignoreExisting to ignore it." );
+                    throw new NonUniqueDescribableByNameException( "Collection already contains a " + what + " with name " + d.getName() + ". Specify ignoreExisting to ignore it." );
                 }
             }
             S e;
