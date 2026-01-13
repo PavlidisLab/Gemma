@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for slicing single-cell data.
+ *
  * @author poirigui
  * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */
@@ -41,8 +42,12 @@ public class SingleCellSlicerUtils {
     }
 
     public static Collection<SingleCellExpressionDataVector> slice( Collection<SingleCellExpressionDataVector> vectors, List<BioAssay> bioAssays ) {
+        return slice( vectors, bioAssays, new HashMap<>() );
+    }
+
+    public static Collection<SingleCellExpressionDataVector> slice( Collection<SingleCellExpressionDataVector> vectors, List<BioAssay> bioAssays, Map<SingleCellDimension, SingleCellDimension> singleCellDimensionCache ) {
         return vectors.stream()
-                .map( createSlicer( bioAssays ) )
+                .map( createSlicer( bioAssays, singleCellDimensionCache ) )
                 .collect( Collectors.toList() );
     }
 
@@ -50,20 +55,30 @@ public class SingleCellSlicerUtils {
      * Create a slicer for single-cell data vectors.
      */
     public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays ) {
-        return createSlicer( assays, null, null, null );
+        return createSlicer( assays, null, null, null, new HashMap<>() );
+    }
+
+    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays, Map<SingleCellDimension, SingleCellDimension> singleCellDimensionCache ) {
+        return createSlicer( assays, null, null, null, singleCellDimensionCache );
     }
 
     /**
      * Create a slicer for single-cell data vectors whose cell IDs, CTAs, and CLCs are already pre-sliced.
      * <p>
      * Unlike sparse vectors, these structures can be sliced in the database.
+     *
      * @param cellIds pre-sliced cell IDs
      * @param ctas    pre-sliced CTAs
      * @param clcs    pre-sliced CLCs
      */
     public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays,
             @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs ) {
-        Map<SingleCellDimension, SingleCellDimension> scdCache = new HashMap<>();
+        return createSlicer( assays, cellIds, ctas, clcs, new HashMap<>() );
+    }
+
+    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays,
+            @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs,
+            Map<SingleCellDimension, SingleCellDimension> scdCache ) {
         Map<SingleCellDimension, int[]> sampleIndicesCache = new HashMap<>();
         return vec -> sliceVector( vec, assays, cellIds, ctas, clcs, scdCache, sampleIndicesCache );
     }

@@ -127,7 +127,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        results = splitService.split( ee, splitOn, true );
+        results = splitService.split( ee, splitOn, true, false );
 
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
 
@@ -208,7 +208,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         assertNotNull( splitOn );
 
-        results = splitService.split( ee, splitOn, false );
+        results = splitService.split( ee, splitOn, false, false );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
