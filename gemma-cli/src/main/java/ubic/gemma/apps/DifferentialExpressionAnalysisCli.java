@@ -29,6 +29,8 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.completion.CompletionSource;
 import ubic.gemma.cli.completion.CompletionUtils;
+import ubic.gemma.cli.options.DataFileOptionValue;
+import ubic.gemma.cli.options.DataFileOptionsUtils;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -202,7 +204,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         addDataFileOptions( options, "diff. ex. archive files", false, false, true, true, false );
 
         // destination (db, standard location or custom directory)
-        options.addOption( "nodb", "no-db", false, "Do not persist diff. ex. results to the database and instead save them to the current directory (or the location defined by " + formatOption( options, OUTPUT_DIR_OPTION ) + ")." );
+        options.addOption( "nodb", "no-db", false, "Do not persist diff. ex. results to the database and instead save them to the current directory (or the location defined by " + formatOption( options, DataFileOptionsUtils.OUTPUT_DIR_OPTION ) + ")." );
         options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with " + formatOption( options, "nodb" ) + "." );
 
         // redo mode

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.apps;
 
-import lombok.Value;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +26,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.options.*;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
@@ -55,9 +55,9 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
@@ -230,142 +230,67 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         singleExperimentOptions.add( option.getOpt() );
     }
 
-    protected static final String OUTPUT_FILE_OPTION = "o",
-            OUTPUT_DIR_OPTION = "d",
-            STANDARD_LOCATION_OPTION = "standardLocation",
-            STANDARD_OUTPUT_OPTION = "stdout";
-
+    /**
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, BiConsumer)
+     */
     protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
-        addDataFileOptions( options, what, allowStandardLocation, true, true, false, true );
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
     /**
-     * Add options for writing data files, such as raw or processed data files.
-     *
-     * @param allowStandardLocation if true, the standard location option will be added
-     * @param allowFile             if true, the output file option will be added, otherwise only the output directory
-     *                              will be added
-     * @param allowDirectory        if true, the output directory option will be added
-     * @param allowCurrentDirectory if true, writing to the current directory will be allowed
-     * @param allowStdout           if true, the standard output option will be added
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, boolean, boolean, boolean, boolean, BiConsumer)
      */
     protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
-        Assert.isTrue( !allowCurrentDirectory || allowDirectory, "Cannot allow current directory without allowing output directory." );
-        OptionGroup og = new OptionGroup();
-        if ( allowFile ) {
-            addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
-                    .longOpt( "output-file" ).hasArg().type( Path.class )
-                    .desc( "Write " + what + " to the given output file." ).get() );
-        }
-        if ( allowDirectory ) {
-            og.addOption( Option.builder( OUTPUT_DIR_OPTION )
-                    .longOpt( "output-dir" ).hasArg().type( Path.class )
-                    .desc( "Write " + what + " inside the given directory." + ( !allowStandardLocation && allowCurrentDirectory && !allowStdout ? " Defaults to the current directory of no other destination is selected." : "" ) )
-                    .get() );
-        }
-        if ( allowStandardLocation ) {
-            og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
-                    .longOpt( "standard-location" )
-                    .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
-                    .get() );
-        }
-        if ( allowStdout ) {
-            addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
-                    .longOpt( "stdout" )
-                    .desc( "Write " + what + " to standard output." + ( !allowStandardLocation && !allowCurrentDirectory ? " This is the default if no other destination is selected." : "" ) )
-                    .get() );
-        }
-        options.addOptionGroup( og );
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, allowFile, allowDirectory, allowCurrentDirectory, allowStdout, this::addSingleExperimentOption );
     }
 
     /**
-     * Holds the result of parsing data file options added by {@link #addDataFileOptions(Options, String, boolean, boolean, boolean, boolean, boolean)}.
+     * @see DataFileOptionsUtils#addExpressionDataFileOptions(Options, String, boolean, BiConsumer)
      */
-    @Value
-    protected class DataFileOptionValue {
-        /**
-         * Write the file to the standard location in the {@code ${gemma.appdata.home}/dataFiles} directory.
-         */
-        boolean standardLocation;
-        /**
-         * Write the file to standard output.
-         */
-        boolean standardOutput;
-        /**
-         * Write the file to the given output file.
-         */
-        @Nullable
-        Path outputFile;
-        /**
-         * Write the file to the given output directory.
-         */
-        @Nullable
-        Path outputDir;
+    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
 
-        /**
-         *
-         * @param filenameToUseIfDirectory if the output directory is set, this filename will be used to create the
-         *                                 output file. Use utilities in {@link ubic.gemma.core.analysis.service.ExpressionDataFileUtils}
-         *                                 to generate the filename.
-         */
-        public Path getOutputFile( String filenameToUseIfDirectory ) {
-            if ( getOutputFile() != null ) {
-                return checkIfExists( outputFile );
-            } else if ( getOutputDir() != null ) {
-                return checkIfExists( getOutputDir().resolve( filenameToUseIfDirectory ) );
-            } else {
-                throw new IllegalStateException( "This result does not have an output file or directory set." );
-            }
-        }
+    protected void addSingleCellExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addSingleCellExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
 
-        private Path checkIfExists( Path o ) {
-            if ( !isForce() && Files.exists( o ) ) {
-                throw new RuntimeException( o + " already exists, use -" + FORCE_OPTION + " to overwrite it." );
-            }
-            return o;
-        }
+    /**
+     * @see DataFileOptionsUtils#addDesignFileOptions(Options, String, boolean, BiConsumer)
+     */
+    protected void addDesignFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addDesignFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
+
+    /**
+     * @see DataFileOptionsUtils#addCellMetadataFileOptions(Options, String, boolean, BiConsumer)
+     */
+    protected void addCellMetadataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addCellMetadataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
     protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
-        return getDataFileOptionValue( commandLine, allowStandardLocation, true, true );
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
     }
 
-    /**
-     * Obtain the result of the data file options added by {@link #addDataFileOptions(Options, String, boolean)}.
-     *
-     * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
-     *                              other destination is selected. Otherwise, standard output will be used as a default.
-     * @param allowStdout           if true, the standard output option will be considered and used as a default if no
-     *                              other destination is selected. Otherwise, the current directory will be used as a
-     *                              default.
-     * @param allowCurrentDirectory if true, the current directory will be used as a default if no other destination is
-     *                              selected. Note that a file can be written to inside that directory via
-     *                              {@link DataFileOptionValue#getOutputFile(String)}
-     * @throws MissingOptionException if no destination is selected and no default location is allowed.
-     */
-    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine,
-            boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
-        if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
-            if ( allowStandardLocation ) {
-                log.debug( "No data file options provided, defaulting to -standardLocation/--standard-location." );
-                return new DataFileOptionValue( true, false, null, null );
-            } else if ( allowStdout ) {
-                log.debug( "No data file options provided, defaulting to -standardOutput/--standard-output." );
-                return new DataFileOptionValue( false, true, null, null );
-            } else if ( allowCurrentDirectory ) {
-                log.debug( "No data file options provided, defaulting to the current directory." );
-                return new DataFileOptionValue( false, true, null, Paths.get( "" ) );
-            } else {
-                throw new MissingOptionException( "No destination is selected and no default location is allowed." );
-            }
-        }
-        return new DataFileOptionValue(
-                commandLine.hasOption( STANDARD_LOCATION_OPTION ),
-                commandLine.hasOption( STANDARD_OUTPUT_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_FILE_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION ) );
+    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, allowStdout, allowCurrentDirectory, FORCE_OPTION, isForce() );
+    }
+
+    protected ExpressionDataFileOptionValue getExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected SingleCellExpressionDataFileOptionValue getSingleCellExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getSingleCellExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected DesignFileOptionValue getDesignFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getDesignFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected CellMetadataFileOptionValue getCellMetadataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getCellMetadataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.options.DataFileOptionValue;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -21,6 +22,7 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * Writes differential expression analysis files to disk.
+ *
  * @author poirigui
  */
 public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimentManipulatingCLI {
