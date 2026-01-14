@@ -167,7 +167,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         if ( cs == null )
             return;
 
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs, true );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs, false );
 
         assertNotNull( genes );
         assertEquals( 1, genes.size() );
