@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1822,6 +1823,8 @@ public class GeoConverterImpl implements GeoConverter {
 
         this.convertSeriesTypes( series, expExp );
 
+        this.convertAdditionalTags( series, expExp );
+
         expExp.setDescription( String.join( "\n\n", series.getSummaries() ) );
         if ( series.getLastUpdateDate() != null ) {
             expExp.setDescription( expExp.getDescription() + "\n\n" + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() );
@@ -2012,7 +2015,6 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Detect the most specific assay type that we can.
      */
-    @Nullable
     private Characteristic convertSeriesType( GeoSeries series, GeoSeriesType seriesType ) {
         switch ( seriesType ) {
             case EXPRESSION_PROFILING_BY_RT_PRC:
@@ -2034,22 +2036,18 @@ public class GeoConverterImpl implements GeoConverter {
             case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
                 return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
             case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
-                for ( GeoSample sample : series.getSamples() ) {
-                    if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
-                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY );
-                    } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                        // check for evidence of conding RNA
-                        if ( isCodingRNA( series ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS );
-                        } else if ( isNonCodingRNA( series ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
-                        } else {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY );
-                        }
+                if ( singleCellDetector.isSingleNuclei( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY );
+                } else if ( singleCellDetector.isSingleCell( series ) ) {
+                    // check for evidence of conding RNA
+                    if ( isCodingRNA( series ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS );
+                    } else if ( isNonCodingRNA( series ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
+                    } else {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY );
                     }
-                }
-                if ( isTotalRNA( series ) ) {
+                } else if ( isTotalRNA( series ) ) {
                     return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of total RNA", "http://www.ebi.ac.uk/efo/EFO_0009653" );
                 } else if ( isCodingRNA( series ) ) {
                     return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
@@ -2089,6 +2087,48 @@ public class GeoConverterImpl implements GeoConverter {
     private boolean isNonCodingRNA( GeoSeries series ) {
         // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
         return false;
+    }
+
+    /**
+     * Convert any additional tags that might be relevant.
+     */
+    private void convertAdditionalTags( GeoSeries series, ExpressionExperiment expressionExperiment ) {
+        if ( isFacSorted( series ) ) {
+            GeoConverterImpl.log.info( String.format( "%s will be tagged as FACS-sorted due to presence of keywords in its GEO series.", expressionExperiment ) );
+            expressionExperiment.getCharacteristics().add( Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) );
+        }
+    }
+
+    /**
+     * List of keywords to look for to detect FACS-sorted assays.
+     * <p>
+     */
+    private static final String[] FACS_SORTED_KEYWORDS = {
+            "FACS", "FAC sorted", "FAC-sorted",
+            "flow cytometry",
+            // descriptions often contain the word "sorted", but it's too generic to confidently make a call
+            "cells sorted", "sorted cells" };
+
+    /**
+     * Check if a series is FAC-sorted.
+     */
+    private boolean isFacSorted( GeoSeries series ) {
+        return series.getSummaries().stream().anyMatch( s -> Strings.CI.containsAny( s, FACS_SORTED_KEYWORDS ) )
+                || Strings.CI.containsAny( series.getOverallDesign(), FACS_SORTED_KEYWORDS )
+                || series.getSamples().stream().anyMatch( this::isFacSorted );
+    }
+
+    private boolean isFacSorted( GeoSample geoSample ) {
+        return geoSample.getChannels().stream()
+                .anyMatch( this::isFacSorted );
+    }
+
+    private boolean isFacSorted( GeoChannel geoChannel ) {
+        return Strings.CI.containsAny( geoChannel.getSourceName(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getGrowthProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getTreatmentProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getExtractProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getLabelProtocol(), FACS_SORTED_KEYWORDS );
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism, boolean skipDataVectors ) {
