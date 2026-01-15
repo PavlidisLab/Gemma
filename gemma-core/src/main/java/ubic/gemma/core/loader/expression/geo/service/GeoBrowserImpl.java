@@ -61,7 +61,6 @@ import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
-import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForSeriesFamily;
 import static ubic.gemma.core.util.XMLUtils.*;
 
 @CommonsLog
@@ -719,7 +718,8 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     @Nullable
     private Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession, @Nullable String encoding ) throws IOException {
-        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
+        // we use the "brief" mode because we don't need to parse the data tables
+        URL documentUrl = GeoUtils.getUrl( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML, GeoScope.FAMILY, GeoAmount.BRIEF );
         return execute( ( ctx ) -> {
             // important note: GZIPInputStream can fail and prevent the stream from being closed, so there must be two
             // try-with-resources statements
@@ -746,7 +746,8 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     @Nullable
     Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException {
-        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.DIRECT, GeoFormat.MINIML );
+        // we use the "brief" mode because we don't need to parse the data tables
+        URL documentUrl = GeoUtils.getUrl( geoAccession, GeoSource.DIRECT, GeoFormat.MINIML, GeoScope.FAMILY, GeoAmount.BRIEF );
         return execute( ( ctx ) -> {
             try ( InputStream tis = documentUrl.openStream() ) {
                 log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );

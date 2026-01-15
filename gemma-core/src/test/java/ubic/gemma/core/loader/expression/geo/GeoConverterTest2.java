@@ -7,9 +7,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
-import ubic.gemma.core.loader.expression.geo.service.GeoSource;
-import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.test.NetworkAvailable;
@@ -19,6 +17,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,8 +96,8 @@ public class GeoConverterTest2 {
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        URL url = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.DIRECT, GeoFormat.SOFT );
-        try ( InputStream is = ( url.openStream() ) ) {
+        URL url = GeoUtils.getUrl( accession, GeoSource.FTP, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
+        try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             GeoSeries geoSeries = requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );

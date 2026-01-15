@@ -515,7 +515,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {
@@ -588,7 +590,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {

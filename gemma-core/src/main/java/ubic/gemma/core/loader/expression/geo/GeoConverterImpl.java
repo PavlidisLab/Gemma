@@ -1881,8 +1881,10 @@ public class GeoConverterImpl implements GeoConverter {
         expExp.setBioAssays( new HashSet<>() );
         // numberOfSample is updated later when the BAs are populated
 
-        if ( series.getSampleCorrespondence().size() == 0 ) {
-            throw new IllegalArgumentException( "No sample correspondence!" );
+        if ( series.getSampleCorrespondence() == null ) {
+            throw new IllegalArgumentException( "No sample correspondence is populated, use DatasetCombiner.findGSECorrespondence() before using this." );
+        } else if ( series.getSampleCorrespondence().size() == 0 ) {
+            throw new IllegalArgumentException( "The sample correspondence is empty." );
         }
 
         // spits out a big summary of the correspondence.
@@ -2187,15 +2189,17 @@ public class GeoConverterImpl implements GeoConverter {
         /*
          * Strip out sample correspondence for samples not for this organism.
          */
-        GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
-
-        for ( String o : organismSampleMap.keySet() ) {
-            if ( o.equals( organism ) ) {
-                continue;
+        if ( series.getSampleCorrespondence() != null ) {
+            GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
+            for ( String o : organismSampleMap.keySet() ) {
+                if ( o.equals( organism ) ) {
+                    continue;
+                }
+                for ( GeoSample s : organismSampleMap.get( o ) ) {
+                    sampleCorrespondence.removeSample( s.getGeoAccession() );
+                }
             }
-            for ( GeoSample s : organismSampleMap.get( o ) ) {
-                sampleCorrespondence.removeSample( s.getGeoAccession() );
-            }
+            speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
         }
 
         /*
@@ -2208,7 +2212,6 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setOverallDesign( series.getOverallDesign() );
         speciesSpecific.setPubmedIds( series.getPubmedIds() );
         speciesSpecific.setReplicates( series.getReplicates() );
-        speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
         speciesSpecific.setSummaries( series.getSummaries() );
         speciesSpecific.setTitle( makeTitle( series.getTitle(), organism ) );
         speciesSpecific.setWebLinks( series.getWebLinks() );
@@ -2633,7 +2636,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
         if ( result == null || result.getName() == null ) {
-            throw new IllegalStateException( "No external database was identified" );
+            throw new IllegalStateException( "No external database was identified for " + likelyExternalDatabaseIdentifier + "." );
         }
         return result;
     }

@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -55,6 +56,7 @@ public class GeoSeries extends GeoData {
     private String overallDesign = "";
     private Collection<String> pubmedIds = new HashSet<>();
     private Map<Integer, GeoReplication> replicates = new HashMap<>();
+    @Nullable
     private GeoSampleCorrespondence sampleCorrespondence;
     private List<String> summaries = new ArrayList<>();
     private final Collection<String> supplementaryFiles = new LinkedHashSet<>();
