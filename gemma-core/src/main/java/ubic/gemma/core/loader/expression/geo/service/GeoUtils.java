@@ -15,20 +15,35 @@ public class GeoUtils {
     private static final String GEO_FTP_BASE_URL = "ftp://ftp.ncbi.nlm.nih.gov/geo";
 
     /**
-     * Obtain a URL for a series family file.
+     * Obtain a URL for GEO entry.
      */
-    public static URL getUrlForSeriesFamily( String geoAccession, GeoSource source, GeoFormat format ) {
+    public static URL getUrl( String geoAccession, GeoSource source, GeoFormat format, GeoScope scope, GeoAmount amount ) {
         if ( source == GeoSource.DIRECT ) {
             String form;
             if ( format == GeoFormat.SOFT ) {
                 form = "text";
             } else if ( format == GeoFormat.MINIML ) {
                 form = "xml";
+            } else if ( format == GeoFormat.HTML ) {
+                form = null;
             } else {
-                throw new UnsupportedOperationException( "Unsupported GEO source: " + source + "." );
+                throw new UnsupportedOperationException( "Unsupported GEO source: " + source + " for the direct GEO source." );
             }
+            String view;
+            switch ( amount ) {
+                case QUICK:
+                    view = "quick";
+                    break;
+                case BRIEF:
+                    view = "brief";
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source." );
+            }
+
             try {
-                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession + "&targ=all&form=" + form + "&view=brief" );
+                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession + "&targ=all"
+                        + ( form != null ? "&form=" + form : "" ) + "&view=" + view );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
@@ -47,8 +62,12 @@ public class GeoUtils {
                 formatDir = "miniml";
                 ext = ".xml.tgz";
             } else {
-                throw new UnsupportedOperationException( "Unsupported GEO format: " + format + "." );
+                throw new UnsupportedOperationException( "Unsupported GEO format: " + format + " for the FTP GEO source." );
             }
+            if ( scope != GeoScope.FAMILY ) {
+                throw new UnsupportedOperationException( "Only family scope is supported for the FTP GEO source." );
+            }
+            // we support all amount because the FTP files are complete
             try {
                 return new URL( baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext );
             } catch ( MalformedURLException e ) {

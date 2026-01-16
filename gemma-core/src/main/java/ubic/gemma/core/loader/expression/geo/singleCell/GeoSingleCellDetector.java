@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.entrez.EntrezException;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
@@ -377,7 +377,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     /**
      * Download single-cell data from a GEO series to disk.
      * <p>
-     * This has to be done prior to {@link #getSingleCellDataLoader(GeoSeries)}.
+     * This has to be done prior to {@link #getSingleCellDataLoader(GeoSeries, SingleCellDataLoaderConfig)}.
      *
      * @throws NoSingleCellDataFoundException if no single-cell data is found either at the series level or in individual samples
      * @throws UnsupportedOperationException  if single-cell data is found at the series level
@@ -493,7 +493,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private Path downloadSamplesInParallel( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
         Assert.notNull( series.getGeoAccession() );
-        Assert.notNull( downloadDirectory, "A downlodad directory must be set." );
+        Assert.notNull( downloadDirectory, "A download directory must be set." );
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ), "Only MEX data can be downloaded at the sample-level." );
         ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<>( getExecutor() );
 
@@ -814,7 +814,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( Objects.equals( ep.getDesign().getLibraryDescriptor().getSource(), "TRANSCRIPTOMIC SINGLE CELL" ) ) {
             return true;
         }
-        if ( StringUtils.containsAnyIgnoreCase( ep.getDesign().getLibraryDescriptor().getConstructionProtocol(), SINGLE_CELL_KEYWORDS ) ) {
+        if ( Strings.CI.containsAny( ep.getDesign().getLibraryDescriptor().getConstructionProtocol(), SINGLE_CELL_KEYWORDS ) ) {
             log.warn( ep.getAccession() + ": does not use the 'TRANSCRIPTOMIC SINGLE CELL' library source, but keywords in its construction protocol indicate it is single-cell." );
             return true;
         }
@@ -1184,6 +1184,14 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     /**
+     * Check if a GEO series is single-cell by looking up its metadata.
+     */
+    public boolean isSingleCell( GeoSeries series ) {
+        boolean hasSingleCellDataInSeries = hasSingleCellDataInSeries( series );
+        return series.getSamples().stream().anyMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) );
+    }
+
+    /**
      * Check if a GEO sample is single-cell by looking up its metadata.
      *
      * @param hasSingleCellDataInSeries indicate if the series has single-cell data, this is used as a last resort to
@@ -1212,16 +1220,16 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC )
                 && Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
                 || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
-            if ( StringUtils.containsAnyIgnoreCase( sample.getTitle(), SINGLE_CELL_KEYWORDS )
-                    || StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_CELL_KEYWORDS ) ) {
+            if ( Strings.CI.containsAny( sample.getTitle(), SINGLE_CELL_KEYWORDS )
+                    || Strings.CI.containsAny( sample.getDescription(), SINGLE_CELL_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its description indicate it is single-cell." );
                 return true;
             }
-            if ( StringUtils.containsAnyIgnoreCase( sample.getDataProcessing(), SINGLE_CELL_DATA_PROCESSING_KEYWORDS ) ) {
+            if ( Strings.CI.containsAny( sample.getDataProcessing(), SINGLE_CELL_DATA_PROCESSING_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its data processing section indicate it is single-cell." );
                 return true;
             }
-            if ( sample.getChannels().stream().anyMatch( channel -> StringUtils.containsAnyIgnoreCase( channel.getExtractProtocol(), SINGLE_CELL_KEYWORDS ) ) ) {
+            if ( sample.getChannels().stream().anyMatch( channel -> Strings.CI.containsAny( channel.getExtractProtocol(), SINGLE_CELL_KEYWORDS ) ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its extraction protocol indicate it is single-cell." );
                 return true;
             }
@@ -1244,6 +1252,14 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     /**
+     * Check if a GEO series is single-nuclei by looking up its metadata.
+     */
+    public boolean isSingleNuclei( GeoSeries series ) {
+        boolean hasSingleCellDataInSeries = hasSingleCellDataInSeries( series );
+        return series.getSamples().stream().anyMatch( s -> isSingleNuclei( s, hasSingleCellDataInSeries ) );
+    }
+
+    /**
      * Check if a GEO sample is single-nuclei by looking up its metadata.
      */
     public boolean isSingleNuclei( GeoSample sample, boolean hasSingleCellDataInSeries ) {
@@ -1251,11 +1267,11 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
             if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SNRNA_SEQ ) ) {
                 return true;
             }
-            if ( StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_NUCLEI_KEYWORDS ) ) {
+            if ( Strings.CI.containsAny( sample.getDescription(), SINGLE_NUCLEI_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its description indicate it is single-nuclei." );
                 return true;
             }
-            if ( sample.getChannels().stream().anyMatch( channel -> StringUtils.containsAnyIgnoreCase( channel.getExtractProtocol(), SINGLE_NUCLEI_EXTRACTION_KEYWORD ) ) ) {
+            if ( sample.getChannels().stream().anyMatch( channel -> Strings.CI.containsAny( channel.getExtractProtocol(), SINGLE_NUCLEI_EXTRACTION_KEYWORD ) ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its extraction protocol indicate it is single-nuclei." );
                 return true;
             }
