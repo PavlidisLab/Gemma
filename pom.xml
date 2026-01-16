@@ -3,18 +3,13 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
-	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
 	<version>1.33.0-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
-	<organization>
-		<name>Pavlidis lab, Michael Smith Laboratories and Department of Psychiatry, University of British Columbia</name>
-		<url>https://pavlab.msl.ubc.ca/</url>
-	</organization>
 	<parent>
-		<groupId>ubc.pavlab</groupId>
+		<groupId>ca.ubc.msl.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
 		<version>1.3.0-SNAPSHOT</version>
 	</parent>
@@ -137,13 +132,13 @@
 	</contributors>
 	<dependencies>
 		<dependency>
-			<groupId>baseCode</groupId>
+			<groupId>ca.ubc.msl.pavlab</groupId>
 			<artifactId>baseCode</artifactId>
 			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
-			<groupId>pavlab</groupId>
+			<groupId>ca.ubc.msl.pavlab</groupId>
 			<artifactId>gemma-gsec</artifactId>
 			<version>${gsec.version}</version>
 		</dependency>

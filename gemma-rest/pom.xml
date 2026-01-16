@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
+        <groupId>ca.ubc.msl.pavlab</groupId>
         <artifactId>gemma</artifactId>
-        <groupId>gemma</groupId>
         <version>1.33.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -32,13 +32,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>gemma</groupId>
+            <groupId>ca.ubc.msl.pavlab</groupId>
             <artifactId>gemma-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>gemma</groupId>
+            <groupId>ca.ubc.msl.pavlab</groupId>
             <artifactId>gemma-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
