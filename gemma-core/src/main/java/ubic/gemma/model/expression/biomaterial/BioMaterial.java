@@ -63,8 +63,15 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
     private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
     private Set<Treatment> treatments = new HashSet<>();
     private Set<Characteristic> characteristics = new HashSet<>();
+    /**
+     * Primary external accession for this biomaterial, if any.
+     */
     @Nullable
     private DatabaseEntry externalAccession;
+    /**
+     * Other external accessions that this biomaterial is associated with.
+     */
+    private Set<DatabaseEntry> otherExternalAccessions = new HashSet<>();
 
     @Override
     @DocumentId
@@ -152,6 +159,25 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
         this.externalAccession = externalAccession;
     }
 
+    @IndexedEmbedded
+    public Set<DatabaseEntry> getOtherExternalAccessions() {
+        return otherExternalAccessions;
+    }
+
+    public void setOtherExternalAccessions( Set<DatabaseEntry> otherExternalAccessions ) {
+        this.otherExternalAccessions = otherExternalAccessions;
+    }
+
+
+    @Transient
+    public Set<DatabaseEntry> getAllExternalAccessions() {
+        Set<DatabaseEntry> allAccessions = new HashSet<>();
+        if ( this.externalAccession != null ) {
+            allAccessions.add( this.externalAccession );
+        }
+        allAccessions.addAll( this.otherExternalAccessions );
+        return allAccessions;
+    }
     /**
      * Obtain the values that this BioAssay is associated with for the experiment.
      */

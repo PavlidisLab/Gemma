@@ -2111,6 +2111,10 @@ public class ExpressionExperimentDaoImpl
             thawDatabaseEntry( expressionExperiment.getAccession() );
         }
 
+        for ( DatabaseEntry de : expressionExperiment.getOtherAccessions() ) {
+            thawDatabaseEntry( de );
+        }
+
         if ( expressionExperiment.getMeanVarianceRelation() != null ) {
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
         }

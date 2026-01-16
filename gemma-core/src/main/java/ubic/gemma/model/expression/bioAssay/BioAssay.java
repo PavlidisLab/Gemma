@@ -29,6 +29,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
@@ -67,10 +69,15 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     private BioMaterial sampleUsed;
 
     /**
-     * Accession for this assay.
+     * Primary accession for this assay, usually from GEO.
      */
     @Nullable
     private DatabaseEntry accession;
+
+    /**
+     * Other accessions for this assay.
+     */
+    private Set<DatabaseEntry> otherAccessions = new HashSet<>();
 
     /**
      * Indicates if the assay should be considered an outlier based on QC.
@@ -204,6 +211,25 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
 
     public void setAccession( @Nullable DatabaseEntry accession ) {
         this.accession = accession;
+    }
+
+    @IndexedEmbedded
+    public Set<DatabaseEntry> getOtherAccessions() {
+        return otherAccessions;
+    }
+
+    public void setOtherAccessions( Set<DatabaseEntry> otherAccessions ) {
+        this.otherAccessions = otherAccessions;
+    }
+
+    @Transient
+    public Set<DatabaseEntry> getAllAccessions() {
+        Set<DatabaseEntry> allAccessions = new HashSet<>();
+        if ( this.accession != null ) {
+            allAccessions.add( this.accession );
+        }
+        allAccessions.addAll( this.otherAccessions );
+        return allAccessions;
     }
 
     public ArrayDesign getArrayDesignUsed() {
