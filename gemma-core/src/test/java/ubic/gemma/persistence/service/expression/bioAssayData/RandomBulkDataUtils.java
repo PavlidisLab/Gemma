@@ -17,6 +17,7 @@ import java.util.Set;
 
 /**
  * Utilities for generating random bulk vectors.
+ *
  * @see RandomExpressionDataMatrixUtils
  * @see RandomSingleCellDataUtils
  */

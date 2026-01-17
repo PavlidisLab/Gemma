@@ -24,8 +24,6 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.util.Collection;
-
 /**
  * TODO Document Me
  *
@@ -37,11 +35,13 @@ public interface SplitExperimentService {
      * Split an experiment into multiple experiments based on a factor. The new experiments will automatically be given
      * short names to suit and the names will be appended with an indicator of the split.
      *
-     * @param expressionExperiment the experiment to split
-     * @param splitOn              the factor to split the experiment on
-     * @param postProcess          post-process the experiments resulting from the split
+     * @param expressionExperiment     the experiment to split
+     * @param splitOn                  the factor to split the experiment on
+     * @param postProcess              post-process the experiments resulting from the split
+     * @param deleteOriginalExperiment whether to delete the original experiment after splitting, otherwise it will only
+     *                                 be marked as private
      * @return results of the split
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
-    ExpressionExperimentSet split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess );
+    ExpressionExperimentSet split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess, boolean deleteOriginalExperiment );
 }
