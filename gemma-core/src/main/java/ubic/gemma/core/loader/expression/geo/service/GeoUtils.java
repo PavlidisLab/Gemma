@@ -29,21 +29,60 @@ public class GeoUtils {
             } else {
                 throw new UnsupportedOperationException( "Unsupported GEO source: " + source + " for the direct GEO source." );
             }
-            String view;
-            switch ( amount ) {
-                case QUICK:
-                    view = "quick";
+            String targ;
+            switch ( scope ) {
+                case SELF:
+                    // in the HTML view, the default is self
+                    targ = format == GeoFormat.HTML ? null : "self";
                     break;
-                case BRIEF:
-                    view = "brief";
+                case SAMPLES:
+                    targ = "samples";
+                    break;
+                case PLATFORM:
+                    targ = "platform";
+                    break;
+                case SERIES:
+                    targ = "series";
+                    break;
+                case FAMILY:
+                    targ = "all";
                     break;
                 default:
-                    throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source." );
+                    throw new UnsupportedOperationException( "Unsupported GEO scope: " + scope + " for the direct GEO source." );
             }
-
+            String view;
+            if ( format == GeoFormat.HTML ) {
+                if ( amount == GeoAmount.BRIEF ) {
+                    // in the HTML view, the default is brief
+                    view = null;
+                } else if ( amount == GeoAmount.QUICK ) {
+                    view = "quick";
+                } else {
+                    throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source with HTML format." );
+                }
+            } else {
+                switch ( amount ) {
+                    case BRIEF:
+                        view = "brief";
+                        break;
+                    case QUICK:
+                        view = "quick";
+                        break;
+                    case FULL:
+                        view = "full";
+                        break;
+                    case DATA:
+                        view = "data";
+                        break;
+                    default:
+                        throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source." );
+                }
+            }
             try {
-                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession + "&targ=all"
-                        + ( form != null ? "&form=" + form : "" ) + "&view=" + view );
+                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession
+                        + ( targ != null ? "&targ=" + targ : "" )
+                        + ( form != null ? "&form=" + form : "" )
+                        + ( view != null ? "&view=" + view : "" ) );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
