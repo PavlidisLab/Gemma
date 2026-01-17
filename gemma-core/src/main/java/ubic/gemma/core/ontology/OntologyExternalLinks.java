@@ -13,13 +13,12 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * Provides external links for ontology resources based on their URIs and other metadata.
@@ -122,16 +121,5 @@ public class OntologyExternalLinks {
         }
 
         return null;
-    }
-
-    private String urlEncode( String s ) {
-        if ( s == null ) {
-            return null;
-        }
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

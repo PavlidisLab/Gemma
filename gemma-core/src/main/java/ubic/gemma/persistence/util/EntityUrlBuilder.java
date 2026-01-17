@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -10,7 +11,6 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,13 +26,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * This builder allows for generating URLs for entities in Gemma Web and REST.
@@ -576,7 +576,7 @@ public class EntityUrlBuilder {
 
     public class ExternalEntityUrl<T extends Identifiable> extends EntityUrl<T> {
 
-        private final String url;
+        private String url;
 
         private ExternalEntityUrl( String baseUrl, T entity ) {
             super( baseUrl, entity );
@@ -607,21 +607,11 @@ public class EntityUrlBuilder {
          * TODO: move this in some kind of re-usable utility class
          */
         private String getDatabaseEntryUrl( DatabaseEntry entity ) {
-            if ( entity.getExternalDatabase() != null ) {
-                switch ( entity.getExternalDatabase().getName() ) {
-                    case ExternalDatabases.GEO:
-                        return "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + urlEncode( entity.getAccession() );
-                    case ExternalDatabases.PUBMED:
-                        return "https://pubmed.ncbi.nlm.nih.gov/" + urlEncode( entity.getAccession() ) + "/";
-                    case ExternalDatabases.GO:
-                        return "https://amigo.geneontology.org/amigo/term/" + urlEncode( entity.getAccession() );
-                    default:
-                        throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
-                }
-            } else if ( entity.getUri() != null ) {
-                return entity.getUri();
+            URL externalUrl = ExternalDatabaseUtils.getUrl( entity );
+            if ( externalUrl != null ) {
+                return externalUrl.toString();
             } else {
-                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for " + entity + ".", entity.getClass() );
+                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
             }
         }
 
@@ -638,13 +628,5 @@ public class EntityUrlBuilder {
         // FIXME: do better...
         //noinspection unchecked
         return ( Class<T> ) elements.iterator().next().getClass();
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

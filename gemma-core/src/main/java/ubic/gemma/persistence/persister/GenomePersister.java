@@ -704,7 +704,7 @@ public abstract class GenomePersister extends CommonPersister {
             boolean deleteIt = true;
             for ( GeneProduct ngp : usedGIs.values() ) {
                 if ( !existingGp.getName().equals( ngp.getName() ) ) {
-                    // this is the only way we can tell it is the same. Since Genbank Accessions are good
+                    // this is the only way we can tell it is the same. Since GenBank accessions are good
                     // identifiers when you don't have a GI, this is reasonable.
                     continue;
                 }

@@ -1,11 +1,5 @@
 /*  
 // Icon Classes */
-.x-tab-strip-over .icon-neurocarta, .x-tab-strip-active .icon-neurocarta {
-	background-image:url(../images/logo/neurocarta-icon.png) ! important;
-}
-.icon-neurocarta {
-	background-image:url(../images/logo/neurocarta-icon-inactive.png) ! important;
-}
 
 .icon-graph {
 	background-image:url(../images/icons/chart_curve.png) ! important;
