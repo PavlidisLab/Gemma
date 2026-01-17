@@ -19,6 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
+import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;

@@ -8,11 +8,15 @@ public final class ExternalDatabases {
 
     public static final String
             GEO = "GEO",
+            SRA = "SRA",
+            ARRAY_EXPRESS = "ArrayExpress",
             GENE = "gene",
             GO = "go",
             MULTIFUNCTIONALITY = "multifunctionality",
             GENE2CS = "gene2cs",
             PUBMED = "PubMed",
             ARXIV = "arXiv",
-            BIORXIV = "bioRxiv";
+            BIORXIV = "bioRxiv",
+            CELLXGENE = "CELLxGENE",
+            GENBANK = "GenBank";
 }

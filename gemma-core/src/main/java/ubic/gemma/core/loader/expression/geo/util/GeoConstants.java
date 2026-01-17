@@ -30,7 +30,7 @@ public class GeoConstants {
 
     private static final Collection<String> idNames;
     /**
-     * Collection of strings used to identify the column holding external database identifiers, usually Genbank
+     * Collection of strings used to identify the column holding external database identifiers, usually GenBank
      * accession or ORF numbers. This must be added to when new ones are encountered.
      */
     private static final Collection<String> extRefNames;

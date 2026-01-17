@@ -19,7 +19,7 @@
 package ubic.gemma.core.loader.genome;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.loader.util.parser.RecordParser;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -200,7 +200,7 @@ public class FastaParser extends RecordParser<BioSequence> {
             if ( string.startsWith( "gb|" ) || string.startsWith( "gb:" ) ) {
                 String[] splits = StringUtils.split( string, ":|" );
                 String genbankAcc = splits[1];
-                DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+                DatabaseEntry genbank = GenBankUtils.getGenBankAccession( genbankAcc );
                 bioSequence.setName( genbank.getAccession() );
                 bioSequence.setSequenceDatabaseEntry( genbank );
                 if ( RecordParser.log.isDebugEnabled() )
@@ -249,7 +249,7 @@ public class FastaParser extends RecordParser<BioSequence> {
         if ( firstTag.equals( "gi" ) ) {
             bioSequence.setDescription( split[4] );
             String genbankAcc = split[3]; // with version number, possibly
-            DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+            DatabaseEntry genbank = GenBankUtils.getGenBankAccession( genbankAcc );
             bioSequence.setName( genbank.getAccession() ); // without version number.
             bioSequence.setSequenceDatabaseEntry( genbank );
         } else if ( firstTag.equals( "pir" ) ) {

@@ -6,9 +6,13 @@ import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.Link;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * @author poirigui
@@ -66,6 +70,14 @@ public class CellXGeneUtils {
     };
 
     private static final Set<OntologyTerm> GENE_EXPRESSION_ASSAYS_SET = new HashSet<>( Arrays.asList( GENE_EXPRESSION_ASSAYS ) );
+
+    public static URL getDatasetUrl( String datasetId ) {
+        try {
+            return new URL( "https://cellxgene.cziscience.com/collections/" + urlEncode( datasetId ) );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Extract GEO accessions from the given collection metadata.

@@ -10,7 +10,7 @@
         <image src="/images/gemma-headerlogo.png"/>
     </bannerLeft>
     <bannerRight href="https://www.ubc.ca/">
-        <image src="/images/ubc-logo-2018-crest-blue-rgb72.jpg"/>
+        <image src="/images/ubc-logo-2018.png"/>
     </bannerRight>
     <body>
         <menu name="Overview" inherit="top">

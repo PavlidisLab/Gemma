@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We

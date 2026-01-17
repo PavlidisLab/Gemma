@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
-import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -64,7 +64,7 @@ public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> 
         result.setName( probeid );
         result.setDescription( description );
 
-        DatabaseEntry dbEntry = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+        DatabaseEntry dbEntry = GenBankUtils.getGenBankAccession( genbankAcc );
 
         BioSequence biologicalCharacteristic = BioSequence.Factory.newInstance();
         biologicalCharacteristic.setName( genbankAcc ); // this will be changed later, typically.

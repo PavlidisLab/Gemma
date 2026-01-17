@@ -2,9 +2,9 @@ Ext.namespace( 'Gemma' );
 
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
-Gemma.UCSC_ICON = Gemma.CONTEXT_PATH + "/images/logo/ucsc.gif";
-Gemma.NCBI_ICON = Gemma.CONTEXT_PATH + "/images/logo/ncbi.gif";
-UCSC_TRACKS = 'https://genome.ucsc.edu/cgi-bin/hgTracks';
+Gemma.UCSC_ICON = Gemma.CONTEXT_PATH + "/images/logo/ucsc-logo.png";
+Gemma.NCBI_ICON = Gemma.CONTEXT_PATH + "/images/logo/ncbi-symbol.svg";
+const UCSC_TRACKS = 'https://genome.ucsc.edu/cgi-bin/hgTracks';
 /**
  * 
  * @class Gemma.GenomeAlignmentsGrid; based on old ProbeDetailsGrid
@@ -76,10 +76,13 @@ Gemma.GenomeAlignmentsGrid = Ext.extend( Ext.grid.GridPanel, {
       var organism = d.taxon;
       var database = this.getDb( organism );
       if ( database ) {
-         var link = UCSC_TRACKS + "?org=" + organism.commonName + "&pix=850&db=" + database + "&hgt.customText="
-            + Gemma.HOST_URL + "/blatTrack.html?id=" + d.id;
+         var link = UCSC_TRACKS + "?org=" + encodeURIComponent( organism.commonName ) + "&pix=850"
+            + "&db=" + encodeURIComponent( database )
+            // We're using a custom track here, so the URL must be publicly accessible by UCSC servers, so Gemma.HOST_URL
+            // is not suitable since it may refer to a local/development instance.
+            + "&hgt.customText=" + encodeURIComponent( "https://gemma.msl.ubc.ca/blatTrack.html?id=" + d.id );
          res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
-            + "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
+            + "'><img src='" + Gemma.UCSC_ICON + "' height='10' alt='UCSC Genome Browser logo' /></a>";
       }
       return res;
    },

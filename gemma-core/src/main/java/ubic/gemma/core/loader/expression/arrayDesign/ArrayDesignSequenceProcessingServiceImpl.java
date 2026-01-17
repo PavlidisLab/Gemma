@@ -33,6 +33,7 @@ import ubic.gemma.core.loader.genome.ProbeSequenceParser;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -380,7 +381,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         ArrayDesignSequenceProcessingServiceImpl.log
                 .info( numMatchedByAccession + "/" + arrayDesign.getCompositeSequences().size()
-                        + " composite sequences were matched to sequences by Genbank accession" );
+                        + " composite sequences were matched to sequences by GenBank accession" );
         ArrayDesignSequenceProcessingServiceImpl.log
                 .info( numMatchedByProbeName + "/" + arrayDesign.getCompositeSequences().size()
                         + " composite sequences were matched to sequences by probe name" );
@@ -548,7 +549,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         BioSequence found = this.searchBlastDbs( databaseNames, sequenceId, new SimpleFastaCmd( fastaCmdExe ) );
         if ( found == null )
             return null;
-        return this.createOrUpdateGenbankSequence( found, force );
+        return this.createOrUpdateGenBankSequence( found, force );
 
     }
 
@@ -624,14 +625,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * @param  found a new (non-persistent) biosequence that can be used to create a new entry or update an existing one
-     *               with the sequence. The sequence would have come from Genbank.
+     *               with the sequence. The sequence would have come from GenBank.
      * @param  force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *               information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if
      *               the
      *               actual sequence information was missing in our DB and 'found' has a sequence.
      * @return persistent BioSequence.
      */
-    private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
+    private BioSequence createOrUpdateGenBankSequence( BioSequence found, boolean force ) {
         assert found != null;
         DatabaseEntry sequenceDatabaseEntry = found.getSequenceDatabaseEntry();
 
@@ -693,8 +694,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
     }
 
-    private void fillInGenbank( Collection<BioSequence> retrievedSequences ) {
-        ExternalDatabase genbank = this.getGenbank();
+    private void fillInGenBank( Collection<BioSequence> retrievedSequences ) {
+        ExternalDatabase genbank = this.getGenBank();
         assert genbank.getId() != null;
         for ( BioSequence bioSequence : retrievedSequences ) {
             if ( bioSequence.getSequenceDatabaseEntry() == null ) {
@@ -739,7 +740,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             if ( ArrayDesignSequenceProcessingServiceImpl.log.isDebugEnabled() )
                 ArrayDesignSequenceProcessingServiceImpl.log.debug( "Processing retrieved sequence: " + sequence );
             sequence.setTaxon( taxon );
-            sequence = this.createOrUpdateGenbankSequence( sequence, force );
+            sequence = this.createOrUpdateGenBankSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
@@ -789,7 +790,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                             .warn( "Sequence from BLAST db lacks database entry: " + sequence + "; skipping" );
                     continue;
                 }
-                sequence = this.createOrUpdateGenbankSequence( sequence, force );
+                sequence = this.createOrUpdateGenBankSequence( sequence, force );
                 sequence = this.bioSequenceService.thaw( sequence );
                 String accession = sequence.getSequenceDatabaseEntry().getAccession();
                 found.put( accession, sequence );
@@ -835,8 +836,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
-    private ExternalDatabase getGenbank() {
-        return this.externalDatabaseService.findByName( "Genbank" );
+    private ExternalDatabase getGenBank() {
+        return this.externalDatabaseService.findByName( ExternalDatabases.GENBANK );
     }
 
     private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
@@ -1044,7 +1045,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             retrievedSequences.addAll( moreBioSequences );
         }
 
-        this.fillInGenbank( retrievedSequences );
+        this.fillInGenBank( retrievedSequences );
 
         return retrievedSequences;
     }

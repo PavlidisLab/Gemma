@@ -356,7 +356,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     /**
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
-     * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This
+     * oligonucleotide is not given. Instead the submitter provides GenBank accessions, which are misleading. This
      * method can be used to clear those until the "right" sequences can be identified and filled in. Note that this
      * does not remove the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
      *
