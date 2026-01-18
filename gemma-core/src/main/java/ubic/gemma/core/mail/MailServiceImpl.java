@@ -6,12 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 @CommonsLog
 @Service
@@ -89,13 +88,5 @@ public class MailServiceImpl implements MailService {
         model.put( "taskStatus", taskStatus );
         model.put( "taskLogs", logs );
         mailEngine.sendMessage( user.getEmail(), "Your Gemma task is completed", "taskCompleted", model );
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

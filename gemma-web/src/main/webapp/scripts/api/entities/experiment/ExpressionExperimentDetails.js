@@ -101,26 +101,29 @@ Gemma.ExpressionExperimentDetails = Ext
             },
 
             renderSourceDatabaseEntry: function (ee) {
-                var result = '';
-
-                var logo = '';
-                if (ee.externalDatabase == 'GEO') {
-                    var acc = ee.accession;
-                    acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/geoTiny.png';
-                    result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
-                        + '"><img src="' + logo + '"/></a>';
-
-                } else if (ee.externalDatabase == 'ArrayExpress') {
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/arrayExpressTiny.png';
-                    result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
-                        + ee.accession + '"><img src="' + logo + '"/></a>';
+                if ( ee.accession !== null ) {
+                    let externalDatabaseLogo;
+                    if ( ee.externalDatabase === 'GEO' ) {
+                        externalDatabaseLogo = '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/geo-logo.png' + '" height="16" alt="GEO logo"/>';
+                    } else if ( ee.externalDatabase === 'ArrayExpress' ) {
+                        externalDatabaseLogo = '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/arrayexpress-logo-with-large-text.png' + '" height="16" alt="ArrayExpress logo"/>';
+                    } else if ( ee.externalDatabase === 'CELLxGENE' ) {
+                        externalDatabaseLogo = '<img style="background: black; height: 12px; padding: 2px;" src="' + Gemma.CONTEXT_PATH + '/images/logo/cellxgene-logo-with-text.svg' + '" height="16" alt="CELLxGENE logo"/>';
+                    } else {
+                        externalDatabaseLogo = ee.externalDatabase;
+                    }
+                    if ( ee.externalUri !== null ) {
+                        return '<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLogo + '</a>';
+                    } else if ( ee.externalDatabaseUri !== null ) {
+                        // no link available
+                        return ee.accession + ' from ' + '<a target="_blank" rel="noopener noreferrer" href="' + ee.externalDatabaseUri + '">' + externalDatabaseLogo + '</a>';
+                    } else {
+                        // no link available
+                        return ee.accession + ' from ' + externalDatabaseLogo;
+                    }
                 } else {
-                    result = "Direct upload";
+                    return "Direct Upload";
                 }
-
-                return result;
-
             },
 
             /**

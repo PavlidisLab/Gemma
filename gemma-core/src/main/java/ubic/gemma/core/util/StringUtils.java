@@ -3,21 +3,23 @@ package ubic.gemma.core.util;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Various utilities for manipulating strings.
  * <p>
  * This is mean to extend missing functionality in {@link org.apache.commons.lang3.StringUtils}.
+ *
  * @author poirigui
  */
 public class StringUtils {
 
     /**
      * Abbreviate the value of a field stored with the given charset if it exceeds a certain length in bytes.
+     *
      * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
      */
     @Nullable
@@ -27,8 +29,9 @@ public class StringUtils {
 
     /**
      * Abbreviate the value of a field stored with the given charset if it exceeds a certain length in bytes.
-     * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
+     *
      * @param stripBeforeAddingMarker if true, the string will be stripped before adding the marker
+     * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
      */
     @Nullable
     public static String abbreviateInBytes( @Nullable String value, String abbrevMarker, int maxLengthInBytes, boolean stripBeforeAddingMarker, Charset charset ) {
@@ -67,7 +70,7 @@ public class StringUtils {
     /**
      * @see org.apache.commons.lang3.StringUtils#truncate(String, int)
      */
-    public static String truncateInBytes( String s, int maxBytes, Charset charset ) {
+    public static String truncateInBytes( @Nullable String s, int maxBytes, Charset charset ) {
         if ( charset.equals( StandardCharsets.UTF_8 ) ) {
             return truncateWhenUTF8( s, maxBytes );
         } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
@@ -82,7 +85,10 @@ public class StringUtils {
     /**
      * Borrowed from <a href="https://stackoverflow.com/questions/119328/how-do-i-truncate-a-java-string-to-fit-in-a-given-number-of-bytes-once-utf-8-en">How do I truncate a java string to fit in a given number of bytes, once UTF-8 encoded? on Stackoverflow</a>.
      */
-    private static String truncateWhenUTF8( String s, int maxBytes ) {
+    private static String truncateWhenUTF8( @Nullable String s, int maxBytes ) {
+        if ( s == null || s.isEmpty() ) {
+            return s;
+        }
         int b = 0;
         for ( int i = 0; i < s.length(); i++ ) {
             char c = s.charAt( i );
@@ -113,7 +119,10 @@ public class StringUtils {
         return s;
     }
 
-    private static int sizeInBytes( String s, Charset charset ) {
+    private static int sizeInBytes( @Nullable String s, Charset charset ) {
+        if ( s == null || s.isEmpty() ) {
+            return 0;
+        }
         if ( charset.equals( StandardCharsets.UTF_8 ) ) {
             return s.getBytes( charset ).length;
         } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
@@ -125,7 +134,10 @@ public class StringUtils {
         }
     }
 
-    private static int largestSizeInBytes( String s, Charset charset ) {
+    private static int largestSizeInBytes( @Nullable String s, Charset charset ) {
+        if ( s == null || s.isEmpty() ) {
+            return 0;
+        }
         if ( charset.equals( StandardCharsets.UTF_8 ) ) {
             return 4 * s.length();
         } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
@@ -154,6 +166,22 @@ public class StringUtils {
             return s + suffix;
         } else {
             return s + delimiter + suffix;
+        }
+    }
+
+    /**
+     * Encode the given string for use in a URL.
+     * <p>
+     * The charset encoding is UTF-8.
+     */
+    public static String urlEncode( @Nullable String s ) {
+        if ( s == null || s.isEmpty() ) {
+            return s;
+        }
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.toString() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
         }
     }
 }

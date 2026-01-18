@@ -345,7 +345,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * @param identifier A Genbank accession referring to an EST or mRNA. For other types of queries this will not
+     * @param identifier A GenBank accession referring to an EST or mRNA. For other types of queries this will not
      *        return any results.
      * @return Set containing Lists of PhysicalLocation representing places GoldenPath says the sequence referred to by
      *         the identifier aligns. If no results are found the Set will be empty.
@@ -713,7 +713,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     if ( name.startsWith( "ENST" ) ) {
                         accession.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
                     } else {
-                        accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
+                        accession.setExternalDatabase( NcbiGeneConverter.getGenBank() );
                     }
 
                     product.getAccessions().add( accession );

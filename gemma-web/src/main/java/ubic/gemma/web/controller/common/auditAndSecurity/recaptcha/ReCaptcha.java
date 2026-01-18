@@ -32,6 +32,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.StringUtils.urlEncode;
+
 public class ReCaptcha {
 
     public static final String URL = "https://www.google.com/recaptcha/api/siteverify";
@@ -87,13 +89,5 @@ public class ReCaptcha {
         return POST_PARAM_SECRET + "=" + urlEncode( privateKey )
                 + "&" + POST_PARAM_RESPONSE + "=" + urlEncode( request.getParameter( RESPONSE_REQUEST_PARAMETER ) )
                 + "&" + POST_PARAM_IP + "=" + urlEncode( request.getRemoteAddr() );
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

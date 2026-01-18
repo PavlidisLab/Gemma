@@ -89,7 +89,7 @@ public class ShortBibliographicReferenceTag extends TagSupport {
                     String link = citationVO.getPubmedURL();
 
                     buf.append( "<a target='_blank' href='" ).append( link ).append( "' ><img src='" )
-                            .append( contextPath ).append( "/images/pubmed.gif' /> </a>&nbsp;" );
+                            .append( contextPath ).append( "/images/logo/pubmed-logo-blue.svg' /> </a>&nbsp;" );
 
                     /*
                      * Add link to edit page within Gemma

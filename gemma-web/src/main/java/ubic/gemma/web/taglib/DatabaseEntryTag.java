@@ -19,8 +19,8 @@
 package ubic.gemma.web.taglib;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.expression.arrayExpress.ArrayExpressUtils;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -59,14 +59,15 @@ public class DatabaseEntryTag extends TagSupport {
 
                     accession = accession.replaceAll( "\\.[1-9]$", "" );
                     buf.append( accession ).append( "&nbsp;<a title='NCBI page for this entry'" )
-                            .append( " target='_blank' href='https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" )
-                            .append( accession ).append( "'><img src='" ).append( contextPath )
-                            .append( "/images/logo/geoTiny.png' /></a>" );
-                } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
+                            .append( " target='_blank' href='" )
+                            .append( GeoUtils.getUrl( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF ) )
+                            .append( "'><img src='" ).append( contextPath )
+                            .append( "/images/logo/geo-logo.png' /></a>" );
+                } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( ExternalDatabases.ARRAY_EXPRESS ) ) {
                     buf.append( accession ).append( "&nbsp;<a title='ArrayExpress page for this entry'" ).append(
-                                    " target='_blank' href='https://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
-                            .append( accession ).append( "'><img src='" ).append( contextPath )
-                            .append( "/images/logo/arrayExpressTiny.png' /></a>" );
+                                    " target='_blank' href='" ).append( ArrayExpressUtils.getUrl( accession ) )
+                            .append( "'><img src='" ).append( contextPath )
+                            .append( "/images/logo/arrayexpress-logo.png' /></a>" );
                 } else {
                     buf.append( accession ).append( "(" ).append( databaseEntry.getExternalDatabase().getName() )
                             .append( ":" ).append( ")" );

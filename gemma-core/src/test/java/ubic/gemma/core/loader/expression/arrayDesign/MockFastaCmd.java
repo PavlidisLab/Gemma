@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.core.loader.genome.FastaCmd;
-import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -64,7 +64,7 @@ class MockFastaCmd implements FastaCmd {
         result.setIsCircular( false );
         result.setFractionRepeats( 0.0 );
         result.setSequence( RandomStringUtils.insecure().next( 100, "ATGC" ) );
-        DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( object.toString() );
+        DatabaseEntry genbank = GenBankUtils.getGenBankAccession( object.toString() );
         result.setSequenceDatabaseEntry( genbank );
         return result;
     }

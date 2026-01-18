@@ -13,7 +13,7 @@
         <img src="${pageContext.request.contextPath}/images/logo/gemma-headerlogo.png" height="60" alt="Gemma Logo"/>
     </a>
     <a href="https://www.ubc.ca/" class="right-logo">
-        <img src="${pageContext.request.contextPath}/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo"/>
+        <img src="${pageContext.request.contextPath}/images/logo/ubc-logo.png" height="40" alt="UBC Logo"/>
     </a>
 </header>
 <div id="swagger-ui"></div>

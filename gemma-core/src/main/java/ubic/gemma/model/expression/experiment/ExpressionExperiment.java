@@ -50,6 +50,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public static final int MAX_NAME_LENGTH = 255;
 
+    /**
+     * The primary accession for this experiment (e.g. GEO or SRA accession).
+     */
     @Nullable
     private DatabaseEntry accession;
 

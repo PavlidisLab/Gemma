@@ -76,6 +76,7 @@
 						fonts/**,
 						<!-- TODO: exclude images too, but many of them are not resolved with Webpack -->
 						<!-- images/**, -->
+						images/**/*.xcf,
 						node_modules/**,
 						package-lock.json,
 						package.json,

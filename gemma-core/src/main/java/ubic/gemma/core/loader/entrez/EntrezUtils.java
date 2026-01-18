@@ -15,6 +15,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
+import static ubic.gemma.core.util.StringUtils.urlEncode;
+
 /**
  * Low-level utilities for generating Entrez URLs.
  * <p>
@@ -194,14 +196,6 @@ public class EntrezUtils {
                     + "&email=" + urlEncode( EMAIL )
                     + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
         } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    private static String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
     }
