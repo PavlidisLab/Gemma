@@ -2,7 +2,10 @@ package ubic.gemma.apps;
 
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.ucsc.cellbrowser.UcscCellBrowserUtils;
+import ubic.gemma.core.loader.expression.ucsc.cellbrowser.model.DatasetDescription;
 import ubic.gemma.core.loader.expression.ucsc.cellbrowser.model.DatasetSummary;
+
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Lists available datasets from the UCSC Cell Browser.
@@ -18,12 +21,17 @@ public class UcscCellBrowserGrabberCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        getCliContext().getOutputStream().println( "dataset_id\tdataset_name\ttaxa\ttissues\tdiseases\n" );
+        getCliContext().getOutputStream().println( "dataset_id\tdataset_name\ttaxa\ttissues\tdiseases\tgeo_accession\tpubmed_id\n" );
         for ( DatasetSummary dataset : UcscCellBrowserUtils.getDatasets() ) {
-            getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s%n", dataset.getName(), dataset.getShortLabel(),
-                    dataset.getOrganisms() != null ? String.join( "|", dataset.getOrganisms() ) : "",
-                    dataset.getBodyParts() != null ? String.join( "|", dataset.getBodyParts() ) : "",
-                    dataset.getDiseases() != null ? String.join( "|", dataset.getDiseases() ) : "" );
+            DatasetDescription desc = UcscCellBrowserUtils.getDatasetDescription( dataset.getName() );
+            getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
+                    format( dataset.getName() ),
+                    format( dataset.getShortLabel() ),
+                    format( dataset.getOrganisms() ),
+                    format( dataset.getBodyParts() ),
+                    format( dataset.getDiseases() ),
+                    format( desc.getGeoSeries() ),
+                    format( desc.getPmid() ) );
         }
     }
 }
