@@ -85,7 +85,9 @@
 						<!-- scripts/app/**, -->
 						scripts/lib/**,
 						styles/**,
-						webpack.config.js
+						webpack.config.js,
+						**/README.md,
+						**/README.txt
 					</warSourceExcludes>
 				</configuration>
 			</plugin>
