@@ -5,6 +5,7 @@ import ubic.gemma.core.loader.expression.arrayExpress.ArrayExpressUtils;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.expression.sra.SraUtils;
+import ubic.gemma.core.loader.expression.ucsc.cellbrowser.UcscCellBrowserUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -61,6 +62,12 @@ public class ExternalDatabaseUtils {
         } else if ( ExternalDatabases.GO.equalsIgnoreCase( databaseName ) ) {
             try {
                 return new URL( "https://amigo.geneontology.org/amigo/term/" + urlEncode( accession ) );
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException( e );
+            }
+        } else if ( ExternalDatabases.UCSC_CELL_BROWSER.equalsIgnoreCase( databaseName ) ) {
+            try {
+                return new URL( UcscCellBrowserUtils.getDatasetUrl( accession ) );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }

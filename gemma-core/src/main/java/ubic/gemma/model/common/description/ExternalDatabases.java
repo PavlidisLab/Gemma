@@ -2,6 +2,7 @@ package ubic.gemma.model.common.description;
 
 /**
  * Enumerates various globally available {@link ExternalDatabase} by name.
+ *
  * @author poirigui
  */
 public final class ExternalDatabases {
@@ -19,5 +20,6 @@ public final class ExternalDatabases {
             ARXIV = "arXiv",
             BIORXIV = "bioRxiv",
             CELLXGENE = "CELLxGENE",
-            GENBANK = "GenBank";
+            GENBANK = "GenBank",
+            UCSC_CELL_BROWSER = "UCSC Cell Browser";
 }

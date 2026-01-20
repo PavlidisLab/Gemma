@@ -43,6 +43,10 @@ Gemma.ExternalDatabaseUtils = {
         {
             name: 'arXiv',
             logo: '/images/logo/arxiv-logo.png'
+        },
+        {
+            name : 'UCSC Cell Browser',
+            logo : '/images/logo/ucsc-cellbrowser-logo.png'
         }
     ]
 };
