@@ -35,7 +35,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationTyp
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
-import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -1417,7 +1417,7 @@ public class GeoConverterImpl implements GeoConverter {
         boolean isRefseq = false;
 
         // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
-        if ( StringUtils.isNotBlank( externalAccession ) && this.isGenbank( externalDb ) ) {
+        if ( StringUtils.isNotBlank( externalAccession ) && this.isGenBank( externalDb ) ) {
             Matcher refSeqAccessionMatcher = refSeqAccessionPattern.matcher( externalAccession );
             isRefseq = refSeqAccessionMatcher.matches();
             bs.setName( externalAccession );
@@ -2526,9 +2526,9 @@ public class GeoConverterImpl implements GeoConverter {
 
     private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
         DatabaseEntry dbe;
-        if ( this.isGenbank( externalDb ) ) {
+        if ( this.isGenBank( externalDb ) ) {
             // deal with accessions in the form XXXXX.N
-            dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
+            dbe = GenBankUtils.getGenBankAccession( externalRef );
             dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
             bs.setName( dbe.getAccession() ); // trimmed version.
         } else {
@@ -2614,9 +2614,9 @@ public class GeoConverterImpl implements GeoConverter {
         if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) || likelyExternalDatabaseIdentifier.equalsIgnoreCase( "genbank" ) ) {
             if ( genbank == null ) {
                 if ( externalDatabaseService != null ) {
-                    genbank = externalDatabaseService.findByName( "Genbank" );
+                    genbank = externalDatabaseService.findByName( ExternalDatabases.GENBANK );
                 } else {
-                    result.setName( "Genbank" );
+                    result.setName( ExternalDatabases.GENBANK );
                     result.setType( DatabaseType.SEQUENCE );
                     genbank = result;
                 }
@@ -2905,8 +2905,8 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private boolean isGenbank( ExternalDatabase externalDb ) {
-        return externalDb != null && externalDb.getName().equalsIgnoreCase( "Genbank" );
+    private boolean isGenBank( ExternalDatabase externalDb ) {
+        return externalDb != null && externalDb.getName().equalsIgnoreCase( ExternalDatabases.GENBANK );
     }
 
     /**

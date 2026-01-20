@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 import static ubic.gemma.core.visualization.cellbrowser.CellBrowserUtils.constructDatasetName;
 
 @Service
@@ -29,13 +30,5 @@ public class CellBrowserServiceImpl implements CellBrowserService {
     @Override
     public boolean hasBrowser( ExpressionExperiment ee ) {
         return Files.exists( cellBrowserDir.resolve( constructDatasetName( ee ) ) );
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

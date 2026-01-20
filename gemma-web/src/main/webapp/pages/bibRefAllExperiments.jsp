@@ -32,7 +32,7 @@
                 </td>
                 <td style="padding-right: 10px">
                     <a target="_blank" href="${citationToEE.key.pubmedURL}" rel="noopener noreferrer">
-                        <Gemma:img src="/images/pubmed.gif" alt="PubMed link" />
+                        <Gemma:img src="/images/logo/pubmed-logo-blue.svg" height="16" alt="PubMed logo" />
                     </a>
                 </td>
                 <td>

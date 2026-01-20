@@ -101,26 +101,31 @@ Gemma.ExpressionExperimentDetails = Ext
             },
 
             renderSourceDatabaseEntry: function (ee) {
-                var result = '';
-
-                var logo = '';
-                if (ee.externalDatabase == 'GEO') {
-                    var acc = ee.accession;
-                    acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/geoTiny.png';
-                    result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
-                        + '"><img src="' + logo + '"/></a>';
-
-                } else if (ee.externalDatabase == 'ArrayExpress') {
-                    logo = Gemma.CONTEXT_PATH + '/images/logo/arrayExpressTiny.png';
-                    result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
-                        + ee.accession + '"><img src="' + logo + '"/></a>';
+                if (ee.accession !== null) {
+                    let edMeta = Gemma.ExternalDatabaseUtils.externalDatabases
+                        .find(ed => ed.name === ee.externalDatabase);
+                    if (edMeta) {
+                        let externalDatabaseLogo = '<img src="' + Gemma.CONTEXT_PATH + edMeta.logo + '" height="16" alt="' + htmlEncode(edMeta.name) + ' logo"/>';
+                        if (ee.externalUri !== null) {
+                            return htmlEncode(ee.accession) + ' ' + '<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLogo + '</a>';
+                        } else if (ee.externalDatabaseUri !== null) {
+                            return htmlEncode(ee.accession) + ' <a target="_blank" rel="noopener noreferrer" href="' + ee.externalDatabaseUri + '">' + externalDatabaseLogo + '</a>';
+                        } else {
+                            // no link available
+                            return htmlEncode(ee.accession) + ' ' + externalDatabaseLogo;
+                        }
+                    } else {
+                        let externalDatabaseLinkText = htmlEncode(ee.externalDatabase) + ' <i class="fa fa-external-link"></i>';
+                        if (ee.externalUri !== null) {
+                            return htmlEncode(ee.accession) + ' (<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLinkText + '</a>)';
+                        } else {
+                            // no link available
+                            return htmlEncode(ee.accession) + ' (' + externalDatabaseLinkText + "')";
+                        }
+                    }
                 } else {
-                    result = "Direct upload";
+                    return "Direct Upload";
                 }
-
-                return result;
-
             },
 
             /**

@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.loader.util.converter.Converter;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -59,8 +60,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     private static final ExternalDatabase ensembl;
 
     static {
-        genBank = ExternalDatabase.Factory.newInstance();
-        NcbiGeneConverter.genBank.setName( "Genbank" );
+        genBank = GenBankUtils.getGenBank();
         ensembl = ExternalDatabase.Factory.newInstance();
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
@@ -71,7 +71,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     /**
      * @return the genBank
      */
-    public static ExternalDatabase getGenbank() {
+    public static ExternalDatabase getGenBank() {
         return NcbiGeneConverter.genBank;
     }
 

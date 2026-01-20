@@ -22,7 +22,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * Used to indicate that all associations that this array design has with BioSequences have been removed. This is needed
  * for cases where the original import has associated the probes with the wrong sequences. A common case is for GEO data
- * sets where the actual oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are
+ * sets where the actual oligonucleotide is not given. Instead the submitter provides GenBank accessions, which are
  * misleading.
  * </p>
  */

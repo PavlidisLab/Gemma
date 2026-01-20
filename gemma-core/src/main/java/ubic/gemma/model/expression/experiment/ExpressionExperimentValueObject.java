@@ -10,16 +10,17 @@ import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.util.ModelUtils;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +35,15 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     protected String description;
     protected String name;
 
+    @Nullable
     private String accession;
+    @Nullable
+    private String externalUri;
+    @Nullable
+    private String externalDatabase;
+    @Nullable
+    private String externalDatabaseUri;
+
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
     private String batchConfound;
@@ -52,9 +61,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Integer bioMaterialCount;
     @JsonIgnore
     private Long experimentalDesign;
-    private String externalDatabase;
-    private String externalDatabaseUri;
-    private String externalUri;
     private GeeqValueObject geeq;
     private String metadata;
     @JsonProperty("numberOfProcessedExpressionVectors")
@@ -119,11 +125,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // accession
         if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
+            URL url = ExternalDatabaseUtils.getUrl( ee.getAccession() );
+            this.externalUri = url != null ? url.toString() : null;
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
-            if ( ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-                this.externalUri = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ee.getAccession().getAccession();
-            }
         }
 
         // EE
