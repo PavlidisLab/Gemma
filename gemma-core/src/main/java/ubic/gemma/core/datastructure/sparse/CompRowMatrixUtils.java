@@ -1,14 +1,49 @@
 package ubic.gemma.core.datastructure.sparse;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 /**
  * Utilities for {@link CompRowMatrix}.
+ *
  * @author poirigui
  */
 public class CompRowMatrixUtils {
+
+    /**
+     * Create a compressed row matrix from its internal arrays using reflection.
+     * <p>
+     * This is much faster than using the public constructor, but no validation is performed, so you have to make sure
+     * that it is correct.
+     */
+    public static CompRowMatrix newCompRowMatrix( int numRows, int numColumns, int[] rowptr, int[] colind, double[] data ) {
+        CompRowMatrix mat = new CompRowMatrix( 0, 0, new int[0][0] );
+
+        Field field = ReflectionUtils.findField( CompRowMatrix.class, "data" );
+        ReflectionUtils.makeAccessible( field );
+        ReflectionUtils.setField( field, mat, data );
+
+        field = ReflectionUtils.findField( CompRowMatrix.class, "columnIndex" );
+        ReflectionUtils.makeAccessible( field );
+        ReflectionUtils.setField( field, mat, colind );
+
+        field = ReflectionUtils.findField( CompRowMatrix.class, "rowPointer" );
+        ReflectionUtils.makeAccessible( field );
+        ReflectionUtils.setField( field, mat, rowptr );
+
+        field = ReflectionUtils.findField( CompRowMatrix.class, "numRows" );
+        ReflectionUtils.makeAccessible( field );
+        ReflectionUtils.setField( field, mat, numRows );
+
+        field = ReflectionUtils.findField( CompRowMatrix.class, "numColumns" );
+        ReflectionUtils.makeAccessible( field );
+        ReflectionUtils.setField( field, mat, numColumns );
+
+        return mat;
+    }
 
     /**
      * Select the specified rows from a compressed row matrix.
