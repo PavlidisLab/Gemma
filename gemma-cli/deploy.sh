@@ -3,6 +3,12 @@
 #
 # Deploy the Gemma CLI
 #
+# Usage: ./deploy <ref>
+#
+# The <ref> argument is a name under which the CLI is deployed. Note that this
+# script is designed to re-use an existing deployment under that name to
+# minimize the amount of data transferred with rsync.
+#
 # Environment variables:
 # GEMMA_CLI_DEPLOY_SERVER: The server to deploy the Gemma CLI to.
 # GEMMA_CLI_PREFIX:        The prefix for the Gemma CLI deployment directory (defaults to /space/opt/gemma-cli).
