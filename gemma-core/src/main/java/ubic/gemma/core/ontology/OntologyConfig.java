@@ -129,12 +129,6 @@ public class OntologyConfig {
     }
 
     @Bean
-    @Deprecated
-    public FactoryBean<HumanDevelopmentOntologyService> humanDevelopmentOntologyServiceOntologyService() {
-        return createOntologyFactory( HumanDevelopmentOntologyService.class, "http://purl.obolibrary.org/obo/EHDAA2_" );
-    }
-
-    @Bean
     public FactoryBean<SequenceOntologyService> sequenceOntologyService() {
         return createOntologyFactory( SequenceOntologyService.class, "http://purl.obolibrary.org/obo/SO_" );
     }
