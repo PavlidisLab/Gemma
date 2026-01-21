@@ -100,7 +100,7 @@ pipeline {
         stage('Run quick unit tests') {
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest -DskipVersionFile'
+                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
             }
             post {
                 always {
@@ -117,7 +117,7 @@ pipeline {
         stage('Package') {
             steps {
                 setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests -DskipVersionFile'
+                sh 'mvn -B package -DskipTests'
             }
             post {
                 success {
@@ -158,7 +158,7 @@ pipeline {
                     steps {
                         lock('gemma-slow-tests') {
                             setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack -DskipVersionFile'
+                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack'
                         }
                     }
                     post {
@@ -187,7 +187,7 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/gemdtest') {
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack -DskipVersionFile'
+                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack'
                         }
                     }
                     post {
@@ -220,7 +220,7 @@ pipeline {
                         lock('gemma-sonarqube-analysis') {
                             setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                             withSonarQubeEnv('UBC SonarQube') {
-                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile dependency-check:check org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack dependency-check:check org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
                             }
                         }
                     }
@@ -247,7 +247,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack -DskipVersionFile'
+                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack'
                     }
                 }
                 stage('Deploy Maven website') {
@@ -261,7 +261,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B site-deploy -DskipWebpack -DskipVersionFile'
+                        sh 'mvn -B site-deploy -DskipWebpack'
                         script {
                             if (dataDir != null) {
                                 sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"

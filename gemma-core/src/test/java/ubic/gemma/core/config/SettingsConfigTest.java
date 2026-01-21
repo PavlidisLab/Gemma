@@ -6,12 +6,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
@@ -42,7 +42,11 @@ public class SettingsConfigTest extends BaseTest {
             MutablePropertySources result = new MutablePropertySources();
             result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
             result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
-            result.addLast( new ResourcePropertySource( new ClassPathResource( "ubic/gemma/version.properties" ) ) );
+            Properties buildProps = new Properties();
+            buildProps.setProperty( "gemma.version", "1.32.0-SNAPSHOT" );
+            buildProps.setProperty( "gemma.build.timestamp", "2026-01-21T20:47:30Z" );
+            buildProps.setProperty( "gemma.build.gitHash", "07f91f2083d625f05d367a7a8e6100bfbf83fea8" );
+            result.addLast( new PropertiesPropertySource( "manifest", buildProps ) );
             return result;
         }
     }
