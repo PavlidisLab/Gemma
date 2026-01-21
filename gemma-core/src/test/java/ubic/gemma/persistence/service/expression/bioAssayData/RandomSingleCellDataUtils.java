@@ -10,7 +10,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -80,6 +79,8 @@ public class RandomSingleCellDataUtils {
 
     /**
      * Generate random single-cell vectors with 1000 cells/sample and 90% sparsity.
+     * <p>
+     * The quantitation type and vectors will be added to the expression experiment.
      *
      * @see #randomSingleCellVectors(ExpressionExperiment, ArrayDesign, QuantitationType, int, double)
      */
@@ -117,6 +118,8 @@ public class RandomSingleCellDataUtils {
 
     /**
      * Generate a single random single-cell vector.
+     * <p>
+     * The quantitation type and vector will be added to the expression experiment.
      */
     public static SingleCellExpressionDataVector randomSingleCellVector( ExpressionExperiment ee, CompositeSequence compositeSequence, QuantitationType qt, SingleCellDimension dimension, double sparsity ) {
         Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE,
@@ -150,6 +153,8 @@ public class RandomSingleCellDataUtils {
             default:
                 throw new UnsupportedOperationException( "Sampling " + qt.getRepresentation() + " is not supported." );
         }
+        ee.getQuantitationTypes().add( qt );
+        ee.getSingleCellExpressionDataVectors().add( vector );
         return vector;
     }
 
