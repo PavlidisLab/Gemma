@@ -628,7 +628,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -810,7 +810,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>

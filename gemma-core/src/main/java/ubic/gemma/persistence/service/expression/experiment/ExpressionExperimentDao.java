@@ -828,7 +828,6 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain a stream over the vectors for a given QT.
-     * <p>
      *
      * @param fetchSize        number of vectors to fetch at once
      * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
@@ -864,7 +863,6 @@ public interface ExpressionExperimentDao
      *
      * @param quantitationType quantitation to remove
      * @param deleteQt         if true, detach the QT from the experiment and delete it
-     *                                                                                                                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 

@@ -382,7 +382,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
         return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property, null );
     }

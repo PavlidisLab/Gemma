@@ -57,7 +57,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
     /**
-     * @see QuantitationTypeDao#reload(Object)
+     * @see QuantitationTypeDao#reload(ubic.gemma.model.common.Identifiable)
      */
     QuantitationType reload( QuantitationType quantitationType );
 

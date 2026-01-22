@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
@@ -86,7 +87,7 @@ public class AuditAdvice {
      * This audit will cascade on {@link CascadeStyle#PERSIST}.
      *
      * @see Pointcuts#creator()
-     * @see ubic.gemma.persistence.service.BaseDao#create(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#create(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
     @Order(4)
@@ -101,7 +102,7 @@ public class AuditAdvice {
      * This audit will cascade on {@link CascadeStyle#UPDATE}.
      *
      * @see Pointcuts#updater()
-     * @see ubic.gemma.persistence.service.BaseDao#update(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#update(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#update(Collection)
      */
     @Order(4)
@@ -117,7 +118,7 @@ public class AuditAdvice {
      * {@link CascadeStyle#MERGE}.
      *
      * @see Pointcuts#saver()
-     * @see ubic.gemma.persistence.service.BaseDao#save(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#save(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#save(Collection)
      */
     @Order(4)
@@ -132,7 +133,7 @@ public class AuditAdvice {
      * This audit will cascade on {@link CascadeStyle#DELETE}.
      *
      * @see Pointcuts#deleter()
-     * @see ubic.gemma.persistence.service.BaseDao#remove(Object)
+     * @see ubic.gemma.persistence.service.BaseDao#remove(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
     @Order(4)

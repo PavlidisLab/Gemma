@@ -20,23 +20,28 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.persistence.Transient;
 
 /**
- * A subset of samples from an ExpressionExperiment
+ * A subset of assays (or derived assays) from an {@link ExpressionExperiment}.
+ * <p>
+ * In the case of a "derived" assay, it is possible to walk up to the samples of the assays of the source experiment via
+ * {@link BioMaterial#getSourceBioMaterial()}.
+ * <p>
+ * This is used for single-cell datasets to represent aggregated pseudo-bulks.
+ *
+ * @author Paul
  */
 public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
 
     public static final int MAX_NAME_LENGTH = 255;
 
-
     private ExpressionExperiment sourceExperiment;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public ExpressionExperimentSubSet() {
     }

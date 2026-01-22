@@ -356,7 +356,6 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param targetPlatform (this only works for a single-platform data set)
      * @param qt             qt
      * @param data           data
-     * @return ee
      */
     @Override
     @SuppressWarnings("UnusedReturnValue") // Possible external use
@@ -559,7 +558,6 @@ public class DataUpdaterImpl implements DataUpdater {
      *                       this
      *                       for a multi-platform dataset)
      * @param data           to slot in
-     * @return ee
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
@@ -623,7 +621,6 @@ public class DataUpdaterImpl implements DataUpdater {
      * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
      *                       experiment will be switched to it if necessary.
      * @param data           the data to be used
-     * @return ee
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)

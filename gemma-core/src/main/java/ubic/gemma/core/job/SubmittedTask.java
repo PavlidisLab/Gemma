@@ -27,7 +27,6 @@ import java.util.concurrent.ExecutionException;
  * submitted to TaskRunningService. It provides access to task status, task progress updates and task result. It allows
  * to request task cancellation, add email notification of task completion.
  *
- * @param <T> TaskResult (or subclass) representing type of result of submitted task.
  * @author anton
  */
 public interface SubmittedTask {

@@ -25,6 +25,8 @@ import java.io.Serializable;
  * reporters, and all analysis would take place at the level of CompositeSequences.
  * For a brief time this was part of our core data model; but currently this is used only transiently during parsing
  * etc. of Affymetrix platform sequence files.
+ *
+ * @author Paul
  */
 @SuppressWarnings("unused") // Possible external use
 public class Reporter extends AbstractDescribable implements Serializable {
@@ -42,8 +44,6 @@ public class Reporter extends AbstractDescribable implements Serializable {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     @SuppressWarnings("WeakerAccess") // Required by Spring
     public Reporter() {

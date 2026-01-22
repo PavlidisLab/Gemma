@@ -22,6 +22,7 @@ import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -100,7 +101,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
     /**
-     * @see ExpressionExperimentDao#reload(Object)
+     * @see ExpressionExperimentDao#reload(Identifiable)
      */
     ExpressionExperiment reload( ExpressionExperiment ee );
 
@@ -882,9 +883,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees );
 
     /**
-     * Returns the taxon of the given experiment or subset.
+     * Returns the taxon of the given experiment.
      *
-     * @param bioAssaySet bioAssaySet.
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples).
      */
     @Nullable

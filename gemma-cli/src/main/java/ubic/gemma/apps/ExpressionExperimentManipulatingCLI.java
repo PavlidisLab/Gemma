@@ -682,7 +682,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * A silent version of {@link #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)} that
-     * produces a warning via {@link #addWarningObject(ExpressionExperiment, String, Throwable)} instead of throwing an
+     * produces a warning via {@link #addWarningObject(Serializable, String, Throwable)} instead of throwing an
      * exception.
      *
      * @see #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)
@@ -691,7 +691,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
         } catch ( Exception e ) {
-            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web.", e );
+            addWarningObject( ee, "Failed to refresh dataset from Gemma Web.", e );
         }
     }
 

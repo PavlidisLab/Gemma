@@ -31,6 +31,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Utilities for parsing search queries using Lucene.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -75,6 +76,7 @@ public class LuceneQueryUtils {
     /**
      * Safely parse the given search query into a Lucene query, falling back on a query with special characters
      * escaped if necessary.
+     *
      * @param report a consumer for potential {@link ParseException} when attempting to parse the query, ignored if null
      */
     public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<Throwable> report ) throws SearchException {
@@ -143,6 +145,7 @@ public class LuceneQueryUtils {
      * interleaved.
      * <p>
      * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
+     *
      * @param allowWildcards allow {@link PrefixQuery} and {@link WildcardQuery} clauses
      */
     public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
@@ -223,6 +226,7 @@ public class LuceneQueryUtils {
 
     /**
      * Escape the query for a database match.
+     *
      * @see #prepareDatabaseQuery(SearchSettings, boolean, Consumer)
      */
     @Nullable
@@ -238,7 +242,7 @@ public class LuceneQueryUtils {
      * <p>
      * The resulting string is free from character that would usually be used for a free-text match unless
      * {@code allowWildcards} is set to true.
-     * <p>
+     *
      * @param allowWildcards if true, wildcards are supported (i.e. '*' and '?') and translated to their corresponding
      *                       LIKE SQL syntax (i.e. '%' and '_'), all other special characters are escaped.
      * @return the first suitable term in the query, or null if none of them are applicable for a database query

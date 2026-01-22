@@ -174,7 +174,6 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate any data file in the data directory.
-     * <p>
      *
      * @param exclusive if true, acquire an exclusive lock on the file
      */
@@ -267,7 +266,7 @@ public interface ExpressionDataFileService {
      *                                  the {@code ${gemma.appdata.home}/dateFiles} directory using this method, use
      *                                  {@link #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean, Console)}
      *                                  instead.
-     * @param console
+     * @param console                   console to write progress to, ignored if null
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
     int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush, @Nullable Console console ) throws IOException;
@@ -298,7 +297,8 @@ public interface ExpressionDataFileService {
      * @param ee                       the expression experiment
      * @param qt                       a quantitation type to use
      * @param scaleType                a scale type to use or null to leave the data untransformed
-     * @param excludeSampleIdentifiers
+     * @param excludeSampleIdentifiers whether to exclude sample identifiers for the output file and only use assay
+     *                                 identifiers
      * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
      * @param writer                   the destination for the raw expression data
@@ -315,7 +315,8 @@ public interface ExpressionDataFileService {
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
      * @param ee                       the expression experiment
-     * @param excludeSampleIdentifiers
+     * @param excludeSampleIdentifiers whether to exclude sample identifiers for the output file and only use assay
+     *                                 identifiers
      * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
      * @param writer                   the destination for the raw expression data

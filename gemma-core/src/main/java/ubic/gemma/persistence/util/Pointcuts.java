@@ -81,7 +81,6 @@ public class Pointcuts {
 
     /**
      * This is a specially behaved method that create transient entities or save persistent one.
-     * @see ubic.gemma.persistence.service.BaseDao#save(Object)
      */
     @Pointcut("daoMethod() && execution(* save*(*, ..))")
     public void saver() {
