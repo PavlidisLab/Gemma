@@ -1,3 +1,5 @@
+import ExternalDatabaseUtils from '../common/ExternalDatabaseUtils';
+
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
@@ -102,8 +104,8 @@ Gemma.ExpressionExperimentDetails = Ext
 
             renderSourceDatabaseEntry: function (ee) {
                 if (ee.accession !== null) {
-                    let edMeta = Gemma.ExternalDatabaseUtils.externalDatabases
-                        .find(ed => ed.name === ee.externalDatabase);
+                    let edMeta = ExternalDatabaseUtils.externalDatabases
+                       .find(ed => ed.name === ee.externalDatabase);
                     if (edMeta) {
                         let externalDatabaseLogo = '<img src="' + Gemma.CONTEXT_PATH + edMeta.logo + '" height="16" alt="' + htmlEncode(edMeta.name) + ' logo"/>';
                         if (ee.externalUri !== null) {
