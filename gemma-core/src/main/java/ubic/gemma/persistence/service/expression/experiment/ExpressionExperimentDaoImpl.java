@@ -3735,7 +3735,7 @@ public class ExpressionExperimentDaoImpl
         configurer.registerProperties( "taxon", "bioAssayCount" );
 
         // irrelevant
-        configurer.unregisterProperty( "accession.Uri" );
+        configurer.unregisterProperty( "accession.uri" );
         configurer.unregisterProperty( "geeq.id" );
         configurer.unregisterProperty( "source" );
         configurer.unregisterProperty( "otherParts.size" );
@@ -3754,7 +3754,7 @@ public class ExpressionExperimentDaoImpl
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
         configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
-        configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
+        configurer.unregisterProperty( "primaryPublication.pubAccession.uri" );
 
         // attached terms
         configurer.registerObjectAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
@@ -3789,7 +3789,7 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
         configurer.registerObjectAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
-        configurer.unregisterProperty( "bioAssays.accession.Uri" );
+        configurer.unregisterProperty( "bioAssays.accession.uri" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
 

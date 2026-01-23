@@ -44,10 +44,12 @@ public class ExternalDatabaseUtils {
         return getUrl( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
+    @Nullable
     public static URL getUrl( DatabaseEntryValueObject accession ) {
         return getUrl( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
+    @Nullable
     private static URL getUrl( String accession, String databaseName ) {
         if ( ExternalDatabases.GEO.equalsIgnoreCase( databaseName ) ) {
             return GeoUtils.getUrl( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF );
