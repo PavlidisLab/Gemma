@@ -22,8 +22,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -45,10 +43,6 @@ import static java.util.Objects.requireNonNull;
  * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing
  * with mock requests and responses. Also provides a safe port to send email on for testing (for example, using
  * dumbster)
- * <p>
- * This is meant for integration tests, if you want to perform unit tests, consider using {@link WebAppConfiguration}
- * and {@link ContextConfiguration} with a static inner class annotated with {@link org.springframework.context.annotation.Configuration}.
- * See {@link ubic.gemma.web.services.rest.SearchWebServiceTest} for a complete example.
  * @author pavlidis
  * @deprecated favour the simpler {@link BaseWebIntegrationTest} for new tests
  */
