@@ -63,7 +63,7 @@ public class ExternalDatabaseUtils {
             return PubMedUtils.getUrl( accession );
         } else if ( ExternalDatabases.GO.equalsIgnoreCase( databaseName ) ) {
             try {
-                return new URL( "https://amigo.geneontology.org/amigo/term/" + urlEncode( accession ) );
+                return new URL( "https://amigo.geneontology.org/amigo/term/" + urlEncode( accession.replace( "_", ":" ) ) );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
