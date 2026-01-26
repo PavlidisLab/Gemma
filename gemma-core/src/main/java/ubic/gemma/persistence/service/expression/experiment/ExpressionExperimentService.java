@@ -637,10 +637,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Obtain the dimension associated to the processed data for the given experiment.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee );
+
+    /**
+     * Obtain the dimension associated to the processed data for the given experiment.
      * <p>
      * Assays are initialized as per {@link Thaws#thawBioAssay(BioAssay)}.
      * <p>
-     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}.
+     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}. If you
+     * cannot handle this, use {@link #getProcessedBioAssayDimension(ExpressionExperiment)} instead.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> getProcessedBioAssayDimensionsWithAssays( ExpressionExperiment ee );

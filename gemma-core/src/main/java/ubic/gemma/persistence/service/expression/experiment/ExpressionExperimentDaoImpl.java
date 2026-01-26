@@ -1347,6 +1347,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee ) {
+        return null;
+    }
+
+    @Override
     public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
         return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )

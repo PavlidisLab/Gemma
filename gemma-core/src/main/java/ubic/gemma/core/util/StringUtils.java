@@ -119,7 +119,7 @@ public class StringUtils {
         return s;
     }
 
-    private static int sizeInBytes( @Nullable String s, Charset charset ) {
+    public static int sizeInBytes( @Nullable String s, Charset charset ) {
         if ( s == null || s.isEmpty() ) {
             return 0;
         }

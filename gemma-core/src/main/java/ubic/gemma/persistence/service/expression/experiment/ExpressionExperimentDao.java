@@ -234,6 +234,15 @@ public interface ExpressionExperimentDao
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
 
+    /**
+     * Retrieve the dimension associated to the procesed data vectors.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension associated to the processed
+     *                                                data vectors.
+     */
+    @Nullable
+    BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee );
+
     Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );

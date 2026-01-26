@@ -23,6 +23,9 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.persistence.Transient;
+import java.nio.charset.StandardCharsets;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 /**
  * A subset of assays (or derived assays) from an {@link ExpressionExperiment}.
@@ -36,7 +39,15 @@ import javax.persistence.Transient;
  */
 public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
 
+    /**
+     * Maximum length of the name of a subset.
+     */
     public static final int MAX_NAME_LENGTH = 255;
+
+    /**
+     * Delimiter used to separate the source experiment name from the subset name.
+     */
+    public static final String NAME_DELIMITER = " - ";
 
     private ExpressionExperiment sourceExperiment;
 
@@ -76,9 +87,12 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
 
     public static final class Factory {
 
+        /**
+         * Subsets are named by appending the name to the source experiment name, separated by {@link #NAME_DELIMITER}.
+         */
         public static ExpressionExperimentSubSet newInstance( String name, ExpressionExperiment sourceExperiment ) {
             ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
-            subset.setName( name );
+            subset.setName( abbreviateWithSuffix( sourceExperiment.getName(), " - " + name, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
             subset.setSourceExperiment( sourceExperiment );
             return subset;
         }

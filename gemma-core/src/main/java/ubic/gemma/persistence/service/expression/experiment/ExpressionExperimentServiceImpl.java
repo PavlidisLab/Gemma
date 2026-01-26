@@ -1299,6 +1299,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee ) {
+        return getProcessedQuantitationType( ee )
+                .map( qt -> expressionExperimentDao.getBioAssayDimension( ee, qt ) )
+                .orElse( null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getProcessedBioAssayDimensionsWithAssays( ExpressionExperiment ee ) {
         Collection<BioAssayDimension> bad = expressionExperimentDao.getProcessedBioAssayDimensions( ee );
         bad.forEach( Thaws::thawBioAssayDimension );

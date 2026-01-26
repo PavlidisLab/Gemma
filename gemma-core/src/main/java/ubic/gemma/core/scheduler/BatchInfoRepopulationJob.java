@@ -67,7 +67,7 @@ public class BatchInfoRepopulationJob extends SecureQuartzJobBean implements Sta
                 continue;
             }
             try {
-                expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+                expressionExperimentReportService.recalculateExperimentBatchInfoAsAdmin( ee );
             } catch ( Exception e ) {
                 log.warn( "Batch effect recalculation failed for " + ee, e );
                 failedEeIds.add( ee.getId() );
