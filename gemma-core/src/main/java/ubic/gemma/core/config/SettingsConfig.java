@@ -14,6 +14,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import ubic.gemma.core.util.ManifestUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -169,16 +170,8 @@ public class SettingsConfig {
             result.addLast( new ResourcePropertySource( new ClassPathResource( loc ) ) );
         }
 
-        ClassPathResource versionResource = new ClassPathResource( "ubic/gemma/version.properties" );
-        if ( versionResource.exists() ) {
-            result.addLast( new ResourcePropertySource( versionResource ) );
-        } else {
-            String mvnPath = System.getenv( "MAVEN" );
-            if ( mvnPath == null ) {
-                mvnPath = "mvn";
-            }
-            log.warn( "The ubic/gemma/version.properties resource was not found; run `" + mvnPath + " generate-resources -pl gemma-core` to generate it." );
-        }
+        // include build information from the manifest
+        result.addLast( new PropertiesPropertySource( "manifest", ManifestUtils.readGemmaPropertiesFromManifest() ) );
 
         cachedSettingsPropertySources = result;
 

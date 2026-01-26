@@ -784,7 +784,6 @@
 		<profile>
 			<id>fast</id>
 			<properties>
-				<skipVersionFile>true</skipVersionFile>
 				<skipJavadoc>true</skipJavadoc>
 				<skipTests>true</skipTests>
 				<skipWebpack>true</skipWebpack>
@@ -888,7 +887,6 @@
 		<assertj.version>3.27.6</assertj.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
-		<skipVersionFile>false</skipVersionFile>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>

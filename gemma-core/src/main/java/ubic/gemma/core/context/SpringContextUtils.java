@@ -136,7 +136,7 @@ public class SpringContextUtils {
                 ( ( AbstractXmlApplicationContext ) context ).setValidating( false );
             }
         }
-        BuildInfo buildInfo = BuildInfo.fromClasspath();
+        BuildInfo buildInfo = BuildInfo.fromManifest();
         SpringContextUtils.log.info( String.format( "Loading Gemma %s%s, hold on!",
                 buildInfo,
                 context.getEnvironment().getActiveProfiles().length > 0 ?

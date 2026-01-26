@@ -3,14 +3,12 @@ package ubic.gemma.core.util;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.util.hdf5.H5Utils;
 
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,15 +37,14 @@ public class BuildInfo implements InitializingBean {
     }
 
     /**
-     * Retrieve build information directly from the classpath.
+     * Retrieve build information directly from the manifest of gemma-core.
      */
-    public static BuildInfo fromClasspath() {
-        Properties props = new Properties();
-        try ( InputStream reader = new ClassPathResource( "/ubic/gemma/version.properties" ).getInputStream() ) {
-            props.load( reader );
-            return new BuildInfo( props.getProperty( "gemma.version" ),
-                    props.getProperty( "gemma.build.timestamp" ),
-                    props.getProperty( "gemma.build.gitHash" ) );
+    public static BuildInfo fromManifest() {
+        try {
+            Properties buildProps = ManifestUtils.readGemmaPropertiesFromManifest();
+            return new BuildInfo( buildProps.getProperty( "gemma.version" ),
+                    buildProps.getProperty( "gemma.build.timestamp" ),
+                    buildProps.getProperty( "gemma.build.gitHash" ) );
         } catch ( FileNotFoundException e ) {
             return new BuildInfo();
         } catch ( IOException e ) {

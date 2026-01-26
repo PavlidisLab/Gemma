@@ -25,7 +25,7 @@ public class TabularMatrixWriterTest {
     @Before
     public void setUp() {
         EntityUrlBuilder entityUrlBuilder = new EntityUrlBuilder( "https://gemma.msl.ubc.ca" );
-        writer = new TabularMatrixWriter( entityUrlBuilder, BuildInfo.fromClasspath() );
+        writer = new TabularMatrixWriter( entityUrlBuilder, BuildInfo.fromManifest() );
     }
 
     @Test
