@@ -544,6 +544,18 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.9.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
 				<configuration>
@@ -908,6 +920,7 @@
 			${jvmOptions}
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
+			-javaagent:${org.mockito:mockito-core:jar}
 		</testJvmOptions>
 		<delombok.output>${project.build.directory}/delombok</delombok.output>
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>
