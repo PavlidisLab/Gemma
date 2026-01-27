@@ -1,7 +1,6 @@
 //file:noinspection GrUnresolvedAccess
 
 def buildHash
-def testdbUrl
 def gemmaVersion
 def baseCodeVersion
 def dataDir
