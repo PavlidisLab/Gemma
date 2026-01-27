@@ -35,7 +35,7 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
     private final Protocol cellTypeAssignmentProtocol;
 
     public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, String cellTypeAssignmentName, @Nullable String cellTypeAssignmentDescription, @Nullable Protocol cellTypeAssignmentProtocol ) {
-        super( singleCellDimension, bioAssayMapper, Collections.singletonList( cellTypeAssignmentName ) );
+        super( singleCellDimension, bioAssayMapper, Collections.singletonList( cellTypeAssignmentName ), null, null );
         this.cellTypeAssignmentDescription = cellTypeAssignmentDescription;
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }

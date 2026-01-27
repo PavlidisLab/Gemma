@@ -42,6 +42,8 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     private final BioAssayMapper bioAssayMapper;
     @Nullable
     private final List<String> names;
+    private final List<String> defaultValues;
+    private final List<String> defaultValueUris;
 
     /**
      * If the sample name is missing, use the cell ID to infer it. If the cell ID is ambiguous (i.e. a barcode
@@ -74,12 +76,18 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
      * @param bioAssayMapper      strategy to use to match sample name from the file to bioassays
      * @param names               names to use for naming the resulting CLCs, those must match the number and ordering
      *                            encountered by the parser
+     * @param defaultValues       default values to use for unassigned cells for each characteristic
+     * @param defaultValueUris    default value URIs to use for unassigned cells for each characteristic
      */
-    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names ) {
+    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension,
+            BioAssayMapper bioAssayMapper, @Nullable List<String> names, @Nullable List<String> defaultValues,
+            @Nullable List<String> defaultValueUris ) {
         this.singleCellDimension = singleCellDimension;
         this.bioAssayMapper = bioAssayMapper;
         this.cellIds = singleCellDimension.getCellIds();
         this.names = names;
+        this.defaultValues = defaultValues;
+        this.defaultValueUris = defaultValueUris;
         this.bioAssayToIndex = ListUtils.indexOfElements( singleCellDimension.getBioAssays() );
         // we don't need the position in the bioassay
         reverseIndex = createReverseIndex( singleCellDimension ).entrySet()
@@ -241,6 +249,49 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
             }
         } else {
             nameByCategoryId = null;
+        }
+
+        if ( defaultValues != null ) {
+            if ( defaultValues.size() != categoryIds.size() ) {
+                throw new IllegalStateException( "The number of default values provided (" + defaultValues.size() + ") does not match the number of categories found in the metadata file (" + categoryIds.size() + ")." );
+            }
+            if ( defaultValueUris != null ) {
+                if ( defaultValueUris.size() != categoryIds.size() ) {
+                    throw new IllegalStateException( "The number of default value URIs provided (" + defaultValueUris.size() + ") does not match the number of categories found in the metadata file (" + categoryIds.size() + ")." );
+                }
+            }
+            int i = 0;
+            for ( String cid : categoryIds ) {
+                List<Characteristic> characteristics = characteristicsByCategoryId.get( cid );
+                Map<Characteristic, Integer> cellTypesToId = cellTypesToIdByCategoryId.get( cid );
+                Characteristic sampleC = characteristicsByCategoryId.get( cid ).iterator().next();
+                String defaultValue = defaultValues.get( i );
+                String defaultValueUri = defaultValueUris != null ? defaultValueUris.get( i ) : null;
+                if ( defaultValue == null ) {
+                    if ( defaultValueUri != null ) {
+                        throw new IllegalArgumentException( "A default value URI (" + defaultValueUri + ") without a default value is not allowed." );
+                    }
+                    continue;
+                }
+                Characteristic defaultC = Characteristic.Factory.newInstance( sampleC.getCategory(), sampleC.getCategoryUri(), defaultValue, defaultValueUri );
+                cellTypesToIdByCategoryId.get( cid ).get( defaultC );
+                int defaultCode;
+                if ( cellTypesToId.containsKey( defaultC ) ) {
+                    defaultCode = cellTypesToId.get( defaultC );
+                } else {
+                    defaultCode = characteristics.size();
+                    characteristics.add( defaultC );
+                    cellTypesToId.put( defaultC, defaultCode );
+                }
+                log.debug( "Filling-in default values for category " + cid + ": " + defaultValue );
+                int[] indices = indicesByCategoryId.get( cid );
+                for ( int j = 0; j < indices.length; j++ ) {
+                    if ( indices[j] == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) {
+                        indices[j] = defaultCode;
+                    }
+                }
+                i++;
+            }
         }
 
         StringBuilder descriptionBuilder = new StringBuilder();
