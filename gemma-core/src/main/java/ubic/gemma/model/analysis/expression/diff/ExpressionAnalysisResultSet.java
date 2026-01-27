@@ -20,7 +20,6 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -33,7 +32,7 @@ import java.util.Set;
 /**
  * A group of results for an ExpressionExperiment.
  */
-public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> implements SecuredChild {
+public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> implements SecuredChild<DifferentialExpressionAnalysis> {
 
     private Integer numberOfProbesTested;
     private Integer numberOfGenesTested;
@@ -115,8 +114,8 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
 
     @Override
     @Transient
-    public Securable getSecurityOwner() {
-        return analysis;
+    public DifferentialExpressionAnalysis getSecurityOwner() {
+        return this.analysis;
     }
 
     @Override
