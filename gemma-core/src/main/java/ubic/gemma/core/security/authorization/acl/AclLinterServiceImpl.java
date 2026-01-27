@@ -6,7 +6,10 @@ import gemma.gsec.acl.domain.AclService;
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.type.IntegerType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
@@ -303,6 +306,11 @@ public class AclLinterServiceImpl implements AclLinterService {
     }
 
     private void lintPermissions( Class<? extends Securable> clazz, @Nullable Long identifier, String grantedAuthority, Permission permission, @SuppressWarnings("SameParameterValue") boolean granting, AclLinterConfig config, Collection<LintResult> result ) {
+        SQLFunction bitwiseAnd = ( ( SessionFactoryImplementor ) sessionFactory )
+                .getSqlFunctionRegistry()
+                .findSQLFunction( "bitwise_and" );
+        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( "ace.MASK", permission.getMask() ),
+                ( SessionFactoryImplementor ) sessionFactory );
         Query query = sessionFactory.getCurrentSession()
                 .createSQLQuery( "select aoi.OBJECT_CLASS, aoi.OBJECT_ID "
                         + "from ACLOBJECTIDENTITY aoi "
@@ -318,11 +326,10 @@ public class AclLinterServiceImpl implements AclLinterService {
                         + ( identifier != null ? " and aoi2.OBJECT_ID = :identifier " : "" )
                         + "and sid.GRANTED_AUTHORITY = :grantedAuthority "
                         + "and ace.GRANTING = :granting "
-                        + "and (ace.MASK & :permissionMask) <> 0)" )
+                        + "and (" + renderedMask + ") <> 0)" )
                 .setParameter( "type", clazz.getName() )
                 .setParameter( "grantedAuthority", grantedAuthority )
-                .setParameter( "granting", granting )
-                .setParameter( "permissionMask", permission.getMask() );
+                .setParameter( "granting", granting );
         if ( identifier != null ) {
             query.setParameter( "identifier", identifier );
         }
