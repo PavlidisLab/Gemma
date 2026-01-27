@@ -743,6 +743,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return this.expressionExperimentDao.findByMeanVarianceRelation( mvr );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }

@@ -498,6 +498,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return findOneByProperty( "meanVarianceRelation", mvr );
+    }
+
+    @Override
     public Map<Long, Long> getAnnotationCounts( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             return Collections.emptyMap();

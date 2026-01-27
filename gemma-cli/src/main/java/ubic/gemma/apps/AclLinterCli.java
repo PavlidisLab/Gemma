@@ -104,6 +104,7 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
                 .lintDanglingIdentities( true )
                 .lintSecurablesLackingIdentities( true )
                 .lintChildWithoutParent( true )
+                .lintChildWithIncorrectParent( true )
                 .lintNotChildWithParent( true )
                 .lintPermissions( lintPermissions )
                 .applyFixes( applyFixes )

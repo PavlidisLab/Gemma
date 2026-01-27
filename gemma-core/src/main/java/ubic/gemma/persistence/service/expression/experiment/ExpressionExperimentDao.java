@@ -135,6 +135,9 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
+    @Nullable
+    ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr );
+
     /**
      * Find experiments updated on or after a given date.
      */

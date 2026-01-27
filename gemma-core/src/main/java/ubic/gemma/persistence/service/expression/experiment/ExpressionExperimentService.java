@@ -442,6 +442,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr );
+
     /**
      * @param ids ids
      * @return the map of ids to number of terms associated with each expression experiment.

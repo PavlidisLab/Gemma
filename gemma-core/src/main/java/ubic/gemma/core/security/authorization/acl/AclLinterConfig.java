@@ -24,6 +24,10 @@ public class AclLinterConfig {
      */
     boolean lintChildWithoutParent;
     /**
+     * Check for {@link ubic.gemma.model.common.auditAndSecurity.SecuredChild} that have an incorrect parent ACL entry.
+     */
+    boolean lintChildWithIncorrectParent;
+    /**
      * Check for {@link ubic.gemma.model.common.auditAndSecurity.SecuredNotChild} that have a parent ACL entry.
      */
     boolean lintNotChildWithParent;

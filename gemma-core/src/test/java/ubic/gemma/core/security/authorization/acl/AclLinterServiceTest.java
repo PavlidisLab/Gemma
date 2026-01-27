@@ -12,7 +12,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -31,6 +35,11 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         public ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy() {
             return new ObjectIdentityRetrievalStrategyImpl();
         }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -43,6 +52,7 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                 .lintDanglingIdentities( true )
                 .lintSecurablesLackingIdentities( true )
                 .lintChildWithoutParent( true )
+                .lintChildWithIncorrectParent( true )
                 .lintNotChildWithParent( true )
                 .lintPermissions( true )
                 .applyFixes( false )
@@ -51,10 +61,13 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         aclLinterService.lintAcls( ExpressionExperiment.class, config );
         aclLinterService.lintAcls( ExpressionExperiment.class, 1L, config );
 
+        aclLinterService.lintAcls( ExpressionAnalysisResultSet.class, 1L, config );
+
         config = AclLinterConfig.builder()
                 .lintDanglingIdentities( true )
                 .lintSecurablesLackingIdentities( true )
                 .lintChildWithoutParent( true )
+                .lintChildWithIncorrectParent( true )
                 .lintNotChildWithParent( true )
                 .lintPermissions( true )
                 .applyFixes( true )
