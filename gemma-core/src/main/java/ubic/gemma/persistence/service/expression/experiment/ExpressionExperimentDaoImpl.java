@@ -283,24 +283,54 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+        return findByBioAssay( ba, false );
+    }
+
+    @Override
+    public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        ExpressionExperiment ee = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.bioAssays as ba "
                         + "where ba = :ba "
                         + "group by ee" )
                 .setParameter( "ba", ba )
                 .uniqueResult();
+        if ( ee == null && includeSubSets ) {
+            ee = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba "
+                            + "where ba = :ba "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "ba", ba )
+                    .uniqueResult();
+        }
+        return ee;
     }
 
     @Override
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm ) {
+        return findByBioMaterial( bm, false );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
+        if ( results == null && includeSubSets ) {
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "bm", bm )
+                    .list();
+        }
+        return results;
     }
 
     @Override

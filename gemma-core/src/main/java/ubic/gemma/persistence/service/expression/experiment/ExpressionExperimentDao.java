@@ -97,7 +97,12 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
+    @Nullable
+    ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets );
+
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
+
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> bms );
 

@@ -1,6 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
+import gemma.gsec.acl.*;
+import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,8 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -35,6 +38,17 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         @Bean
         public ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy() {
             return new ObjectIdentityRetrievalStrategyImpl();
+        }
+
+        @Bean
+        public ParentObjectRetrievalStrategy parentObjectRetrievalStrategy() {
+            return new ParentObjectRetrievalStrategyImpl();
+        }
+
+        @Bean
+        public ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy( SessionFactory sessionFactory,
+                ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy, ParentObjectRetrievalStrategy parentObjectRetrievalStrategy ) {
+            return new ParentIdentityRetrievalStrategyImpl( sessionFactory, objectIdentityRetrievalStrategy, parentObjectRetrievalStrategy );
         }
 
         @Bean
@@ -62,8 +76,17 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         aclLinterService.lintAcls( ExpressionExperiment.class, config );
         aclLinterService.lintAcls( ExpressionExperiment.class, 1L, config );
 
+        aclLinterService.lintAcls( ExpressionAnalysisResultSet.class, config );
         aclLinterService.lintAcls( ExpressionAnalysisResultSet.class, 1L, config );
+
+        aclLinterService.lintAcls( DifferentialExpressionAnalysis.class, config );
         aclLinterService.lintAcls( DifferentialExpressionAnalysis.class, 1L, config );
+
+        aclLinterService.lintAcls( BioAssay.class, config );
+        aclLinterService.lintAcls( BioAssay.class, 1L, config );
+
+        aclLinterService.lintAcls( BioMaterial.class, config );
+        aclLinterService.lintAcls( BioMaterial.class, 1L, config );
 
         config = AclLinterConfig.builder()
                 .lintDanglingIdentities( true )

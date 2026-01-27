@@ -578,6 +578,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByBioAssay( ba );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findByBioAssay( ba, includeSubSets );
+    }
+
     /**
      * @see ExpressionExperimentService#findByBioMaterial(BioMaterial)
      */
@@ -585,6 +591,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findByBioMaterial( bm, includeSubSets );
     }
 
     @Override

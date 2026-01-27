@@ -19,8 +19,9 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.BaseAclAdvice;
+import gemma.gsec.acl.ObjectTransientnessRetrievalStrategy;
+import gemma.gsec.acl.ParentIdentityRetrievalStrategy;
 import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.User;
 import gemma.gsec.model.UserGroup;
@@ -28,22 +29,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.model.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Pointcuts;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
 
 /**
  * For permissions modification to be triggered, the method name must match certain patterns, which include "create", or
@@ -58,14 +52,17 @@ public class AclAdvice extends BaseAclAdvice {
     private static final Log log = LogFactory.getLog( AclAdvice.class );
 
     @Autowired
-    public AclAdvice( AclService aclService, SessionFactory sessionFactory, ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy ) {
-        super( aclService, sessionFactory, objectIdentityRetrievalStrategy );
+    public AclAdvice( AclService aclService, SessionFactory sessionFactory,
+            ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy,
+            ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy,
+            ObjectTransientnessRetrievalStrategy objectTransientnessRetrievalStrategy ) {
+        super( aclService, sessionFactory, objectIdentityRetrievalStrategy, parentIdentityRetrievalStrategy,
+                objectTransientnessRetrievalStrategy );
     }
 
     @Override
     protected boolean canSkipAclCheck( Object object ) {
-        return AuditTrail.class.isAssignableFrom( object.getClass() ) || CurationDetails.class
-                .isAssignableFrom( object.getClass() );
+        return object instanceof AuditTrail || object instanceof CurationDetails;
     }
 
     @Override
@@ -75,7 +72,7 @@ public class AclAdvice extends BaseAclAdvice {
          * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
          * would be expensive to traverse.
          */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
+        if ( object instanceof ExpressionExperiment
                 && ( propertyName.equals( "rawExpressionDataVectors" )
                 || propertyName.equals( "processedExpressionDataVectors" )
                 || propertyName.equals( "singleCellExpressionDataVectors" ) ) ) {
@@ -87,7 +84,7 @@ public class AclAdvice extends BaseAclAdvice {
         /*
          * Array design has some non (directly) securable associations that would be expensive to load
          */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && propertyName.equals( "compositeSequences" ) ) {
+        if ( object instanceof ArrayDesign && propertyName.equals( "compositeSequences" ) ) {
             if ( AclAdvice.log.isTraceEnabled() )
                 AclAdvice.log.trace( "Skipping checking acl on probes on " + object );
             return true;
@@ -97,60 +94,13 @@ public class AclAdvice extends BaseAclAdvice {
     }
 
     @Override
-    protected void createOrUpdateAclSpecialCases( MutableAcl acl, @Nullable Acl parentAcl, Sid sid, Securable object ) {
-
-        // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
-        // If aclParent is passed to this method we overwrite it.
-        if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-            SingleExperimentAnalysis<?> experimentAnalysis = ( SingleExperimentAnalysis<?> ) object;
-
-            BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
-            ObjectIdentity oi_temp = this.makeObjectIdentity( bioAssaySet );
-
-            parentAcl = this.getAclService().readAclById( oi_temp );
-            if ( parentAcl == null ) {
-                // This is possible if making an EESubSet is part of the transaction.
-                parentAcl = this.getAclService().createAcl( oi_temp );
-            }
-            acl.setEntriesInheriting( true );
-            acl.setParent( parentAcl );
-            //noinspection UnusedAssignment //Owner of the experiment owns analyses even if administrator ran them.
-            sid = parentAcl.getOwner();
-        }
-
+    protected boolean canFollowAssociation( Object object, String property ) {
+        return object instanceof BioAssay && ( property.equals( "sampleUsed" ) || property.equals( "arrayDesignUsed" ) );
     }
 
     @Override
-    protected GrantedAuthority getUserGroupGrantedAuthority( Securable object ) {
-        Collection<? extends GroupAuthority> authorities = ( ( UserGroup ) object ).getAuthorities();
-        assert authorities.size() == 1;
-        return new SimpleGrantedAuthority( authorities.iterator().next().getAuthority() );
-    }
-
-    @Override
-    protected String getUserName( Securable user ) {
-        return ( ( User ) user ).getUserName();
-    }
-
-    @Override
-    protected boolean objectIsUser( Securable object ) {
-        return User.class.isAssignableFrom( object.getClass() );
-    }
-
-    @Override
-    protected boolean objectIsUserGroup( Securable object ) {
-        return UserGroup.class.isAssignableFrom( object.getClass() );
-    }
-
-    @Override
-    protected boolean specialCaseForAssociationFollow( Object object, String property ) {
-        return BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "sampleUsed" ) || property
-                .equals( "arrayDesignUsed" ) );
-    }
-
-    @Override
-    protected boolean specialCaseToKeepPrivateOnCreation( Securable object ) {
-        return super.specialCaseToKeepPrivateOnCreation( object )
+    protected boolean isKeepPrivateOnCreation( Securable object ) {
+        return super.isKeepPrivateOnCreation( object )
                 || object instanceof UserGroup
                 || object instanceof User
                 || object instanceof Investigation;
