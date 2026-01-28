@@ -43,6 +43,6 @@ echo "Generating Gemma CLI Wiki pages under $gemma_cli_wiki_dir..."
 
 # Deploy each page separately, or else sync will delete everything else
 echo "Deploying Gemma CLI Wiki to $wiki_dest..."
-rclone sync "$gemma_cli_wiki_dir/List of Gemma CLI Tools$gemma_cli_wiki_page_suffix/" "$wiki_dest" --exclude '@*/**' --exclude '*.url' --dry-run
+rclone sync "$gemma_cli_wiki_dir/List of Gemma CLI Tools$gemma_cli_wiki_page_suffix/" "$wiki_dest" --exclude '@*/**' --exclude '*.url'
 
 echo "Deployment completed!"
