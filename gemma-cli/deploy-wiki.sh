@@ -8,7 +8,8 @@
 # The <dest> argument must be a valid rclone destination.
 #
 # Environment variables:
-# GEMMA_CLI_WIKI_PAGE_SUFFIX: Suffix to append to each generated wiki page (defaults to " (generated)").
+# GEMMA_CLI_WIKI_PAGE_SUFFIX:  Suffix to append to each generated wiki page (defaults to " (generated)").
+# GEMMA_CLI_WIKI_DEPLOY_TOKEN: Token to use for deploying
 #
 
 set -e
@@ -25,6 +26,11 @@ if [ -z "$GEMMA_CLI_WIKI_PAGE_SUFFIX" ]; then
   gemma_cli_wiki_page_suffix=" (generated)"
 else
   gemma_cli_wiki_page_suffix="$GEMMA_CLI_WIKI_PAGE_SUFFIX"
+fi
+# shellcheck disable=SC2236
+if [ -n "$GEMMA_CLI_WIKI_DEPLOY_TOKEN" ]; then
+  echo "Using provided deployment token."
+  export RCLONE_WEBDAV_BEARER_TOKEN="$GEMMA_CLI_WIKI_DEPLOY_TOKEN"
 fi
 wiki_dest="$1"
 

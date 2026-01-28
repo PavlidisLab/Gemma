@@ -24,6 +24,9 @@ pipeline {
     tools {
         maven 'Maven 3.6.3'
     }
+    environment {
+        CONFLUENCE_WIKI_TOKEN = credential('confluence-wiki-token')
+    }
     parameters {
         string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
         string(name: 'STAGING_DATA_DIR', defaultValue: '/space/staginggemmaData', description: 'Directory where staging data is stored.')
@@ -299,7 +302,7 @@ pipeline {
                     }
                     steps {
                         sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
-                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
+                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' GEMMA_CLI_WIKI_DEPLOY_TOKEN='${CONFLUENCE_WIKI_TOKEN}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
                     }
                 }
             }
