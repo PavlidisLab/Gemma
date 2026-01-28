@@ -55,6 +55,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
                     "load.ontologies=false",
                     "gemma.ontology.unified.enabled=false",
                     "gemma.ontology.unified.tdb.dir=",
+                    "gemma.ontology.unified.tdb.tempDir=",
                     "gemma.ontology.loader.corePoolSize=4"
             );
         }
