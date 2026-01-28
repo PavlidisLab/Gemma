@@ -25,7 +25,7 @@ pipeline {
         maven 'Maven 3.6.3'
     }
     environment {
-        CONFLUENCE_WIKI_TOKEN = credential('confluence-wiki-token')
+        CONFLUENCE_WIKI_TOKEN = credentials('confluence-wiki-token')
     }
     parameters {
         string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
