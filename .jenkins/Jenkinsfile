@@ -7,6 +7,7 @@ def dataDir
 def deployRef
 def deployServer
 def cliRef
+def cliWikiPageSuffix
 
 void setBuildStatus(String context, String message, String state) {
     step([
@@ -57,6 +58,7 @@ pipeline {
                         deployServer = 'moe'
                         deployRef = 'gemma'
                         cliRef = 'production'
+                        cliWikiPageSuffix = ' (generated)'
                     } else if (supportBuild) {
                         if (gemmaVersion.endsWith('-SNAPSHOT')) {
                             error("A support build must not have a -SNAPSHOT suffix.")
@@ -69,6 +71,7 @@ pipeline {
                         deployServer = 'chalmers'
                         deployRef = 'gemma-staging'
                         cliRef = 'staging'
+                        cliWikiPageSuffix = ' (staging)'
                     } else {
                         if (!gemmaVersion.endsWith("-SNAPSHOT")) {
                             error("A development build must have a -SNAPSHOT suffix.")
@@ -77,6 +80,7 @@ pipeline {
                         deployServer = 'chalmers'
                         deployRef = 'gemma'
                         cliRef = gemmaVersion
+                        cliWikiPageSuffix = ' (development)'
                     }
                 }
                 sh 'mvn -B clean'
@@ -295,6 +299,7 @@ pipeline {
                     }
                     steps {
                         sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
+                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
                     }
                 }
             }
