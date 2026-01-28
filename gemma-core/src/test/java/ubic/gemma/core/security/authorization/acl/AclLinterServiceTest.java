@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -62,6 +63,7 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         aclLinterService.lintAcls( ExpressionExperiment.class, 1L, config );
 
         aclLinterService.lintAcls( ExpressionAnalysisResultSet.class, 1L, config );
+        aclLinterService.lintAcls( DifferentialExpressionAnalysis.class, 1L, config );
 
         config = AclLinterConfig.builder()
                 .lintDanglingIdentities( true )
