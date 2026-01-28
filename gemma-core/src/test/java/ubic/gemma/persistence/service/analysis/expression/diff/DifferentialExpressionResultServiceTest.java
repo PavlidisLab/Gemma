@@ -23,6 +23,8 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DifferentialExpressionResultServiceTest extends BaseIntegrationTest {
@@ -58,7 +60,7 @@ public class DifferentialExpressionResultServiceTest extends BaseIntegrationTest
      * This test mainly exercise the ACL annotation for filtering DEA results.
      */
     @Test
-    public void testFindByGene2() {
+    public void testFindByGeneAndExperimentAnalyzed() {
         Taxon taxon = Taxon.Factory.newInstance( "hooman" );
         taxon = taxonService.create( taxon );
 
@@ -100,15 +102,16 @@ public class DifferentialExpressionResultServiceTest extends BaseIntegrationTest
         DifferentialExpressionAnalysisResult result = DifferentialExpressionAnalysisResult.Factory.newInstance();
         result.setProbe( probe );
         result.setResultSet( resultSet );
+        result.setCorrectedPvalue( 0.0001 );
         resultSet.getResults().add( result );
 
         dea = differentialExpressionAnalysisService.create( dea );
 
-        assertThat( differentialExpressionResultService.findByGene2( gene, false, true ) )
+        assertThat( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, false, true, Collections.singleton( ee ), false, 0.05, -1 ) )
                 .hasSize( 1 );
 
         testAuthenticationUtils.runAsAnonymous();
-        assertThat( differentialExpressionResultService.findByGene2( gene, false, true ) )
+        assertThat( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( gene, false, true, Collections.singleton( ee ), false, 0.05, -1 ) )
                 .isEmpty();
     }
 }

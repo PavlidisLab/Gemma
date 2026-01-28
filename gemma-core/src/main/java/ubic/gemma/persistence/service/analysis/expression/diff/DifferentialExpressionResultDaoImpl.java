@@ -257,12 +257,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                             + "join a.experimentAnalyzed e "
                             + "join a.resultSets rs join rs.results r "
                             + "where r.probe.id in :probeIds "
-                            + "and e.id in (:experimentAnalyzed) "
+                            + "and e.id in (:experimentAnalyzedIds) "
                             + "and r.correctedPvalue <= :threshold "
                             + "group by e, r"
                             + ( limit > 0 ? " order by r.correctedPvalue nulls last" : "" ) )
-                    .setParameter( "probeIds", optimizeParameterList( probeIds ) )
-                    .setParameterList( "experimentsAnalyzed", optimizeParameterList( experimentAnalyzedIds ) )
+                    .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
+                    .setParameterList( "experimentAnalyzedIds", optimizeParameterList( experimentAnalyzedIds ) )
                     .setParameter( "threshold", threshold )
                     .setMaxResults( limit )
                     .setCacheable( true )
@@ -454,7 +454,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<>();
@@ -698,7 +698,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
      * Key method for getting contrasts associated with results.
      */
     @Override
-    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
+    public Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids ) {
         Map<Long, ContrastsValueObject> probeResults = new HashMap<>();
         if ( ids.isEmpty() ) {
             return probeResults;

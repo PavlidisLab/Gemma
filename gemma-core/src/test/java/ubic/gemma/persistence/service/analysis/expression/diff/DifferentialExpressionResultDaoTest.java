@@ -178,7 +178,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
         DifferentialExpressionAnalysis dea = randomAnalysis( ee, ed, ad );
         dea = differentialExpressionAnalysisDao.create( dea );
         DifferentialExpressionAnalysisResult dear = dea.getResultSets().iterator().next().getResults().iterator().next();
-        assertThat( differentialExpressionResultDao.loadContrastDetailsForResults( Collections.singletonList( dear.getId() ) ) )
+        assertThat( differentialExpressionResultDao.findContrastsByAnalysisResultIds( Collections.singletonList( dear.getId() ) ) )
                 .hasSize( 1 );
     }
 

@@ -29,7 +29,6 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -45,14 +44,6 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao ) {
         super( DERDao );
         this.DERDao = DERDao;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findByGene2( Gene gene, boolean useGene2Cs, boolean keepNonSpecific ) {
-        return DERDao.findByGene( gene, useGene2Cs, keepNonSpecific ).values().stream()
-                .flatMap( List::stream )
-                .collect( Collectors.toList() );
     }
 
     @Override
@@ -103,9 +94,9 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
-        return this.DERDao.findDiffExAnalysisResultIdsInResultSets( resultSets, geneIds );
+        return this.DERDao.findGeneResultsByResultSetIdsAndGeneIds( resultSets, geneIds );
     }
 
     @Override
@@ -117,8 +108,8 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
-        return this.DERDao.loadContrastDetailsForResults( ids );
+    public Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids ) {
+        return this.DERDao.findContrastsByAnalysisResultIds( ids );
     }
 
     private Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> groupDiffExResultVos( Map<? extends BioAssaySet, List<DifferentialExpressionAnalysisResult>> qResult ) {

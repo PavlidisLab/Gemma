@@ -56,12 +56,6 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
     Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit );
 
     /**
-     * @see DifferentialExpressionResultDao#findByGene(Gene, boolean, boolean)
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_COLLECTION_READ" })
-    List<DifferentialExpressionAnalysisResult> findByGene2( Gene gene, boolean useGene2Cs, boolean keepNonSpecific );
-
-    /**
      * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, Map, Map, double, boolean, boolean, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_COLLECTION_READ" })
@@ -82,9 +76,9 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
             boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
 
     /**
-     * @see DifferentialExpressionResultDao#findDiffExAnalysisResultIdsInResultSets(Collection, Collection)
+     * @see DifferentialExpressionResultDao#findGeneResultsByResultSetIdsAndGeneIds(Collection, Collection)
      */
-    Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
     /**
@@ -96,7 +90,7 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
             int maxResultsToReturn, int minNumberOfResults );
 
     /**
-     * @see DifferentialExpressionResultDao#loadContrastDetailsForResults(Collection)
+     * @see DifferentialExpressionResultDao#findContrastsByAnalysisResultIds(Collection)
      */
-    Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
+    Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids );
 }

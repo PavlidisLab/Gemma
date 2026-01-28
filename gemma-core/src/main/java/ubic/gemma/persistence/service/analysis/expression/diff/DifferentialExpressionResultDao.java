@@ -58,10 +58,10 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * Given a list of experiments and a threshold value finds all the probes that met the cut-off in the given
      * experiments
      *
-     * @param experimentsAnalyzed ees
-     * @param includeSubSets      if true, include the subsets of the experiments analyzed
-     * @param threshold           threshold
-     * @param limit               limit
+     * @param experimentAnalyzedIds experiment analyzed IDs
+     * @param includeSubSets        if true, include the subsets of the experiments analyzed
+     * @param threshold             threshold
+     * @param limit                 limit
      * @return map to diff ex VOs
      */
     Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByExperimentAnalyzed( Collection<Long> experimentAnalyzedIds, boolean includeSubSets, double threshold, int limit );
@@ -130,11 +130,11 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * Retrieve differential expression results in bulk. This is an important method for the differential expression
      * interfaces.
      *
-     * @param geneIds    gene ids
+     * @param geneIds    gene IDs
      * @param resultSets result sets
      * @return map of resultset IDs to map of gene id to differential expression results.
      */
-    Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
     List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
@@ -143,8 +143,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     /**
      * Find contrast results by analysis result IDs.
      *
-     * @param ids ids
+     * @param ids analysis result IDs
      * @return map of result to contrasts value object.
      */
-    Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
+    Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids );
 }

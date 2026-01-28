@@ -439,7 +439,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         }
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> ffResultSets = differentialExpressionResultService
-                .findDiffExAnalysisResultIdsInResultSets( resultSets, Collections.singletonList( g.getId() ) );
+                .findGeneResultsByResultSetIdsAndGeneIds( resultSets, Collections.singletonList( g.getId() ) );
         assertNotNull( ffResultSets );
         assertFalse( ffResultSets.isEmpty() );
     }
