@@ -998,7 +998,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzedIds( gene, false, sliceIds( ids, offset, limit ), true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, true ).stream()
+                .findByGeneAndExperimentAnalyzedIds( gene, true, false, sliceIds( ids, offset, limit ), true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, true ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
@@ -1086,7 +1086,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzedIds( gene, false, ids, true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzedIds( gene, true, false, ids, true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )

@@ -78,9 +78,10 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
-     * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are
-     * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
-     * latter case, the return value will contain experiments that were not explicitly queried for.
+     * Given a set of ids, find experiments or subsets that have differential expression analyses.
+     * <p>
+     * Subsets are handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets.
+     * In the latter case, the return value will contain experiments that were not explicitly queried for.
      *
      * @param experimentIds  of {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
      * @param includeSubSets include analysis of subsets of the requested experiments

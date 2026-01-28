@@ -90,7 +90,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap,
             @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap,
             double threshold,
-            boolean keepNonSpecificProbes,
+            boolean useGene2Cs, boolean keepNonSpecificProbes,
             boolean initializeFactorValues ) {
         Assert.notNull( gene.getId(), "The gene must have a non-null ID." );
         Assert.isTrue( threshold >= 0.0 && threshold <= 1.0, "Threshold must be in the [0, 1] interval." );
@@ -99,7 +99,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         StopWatch timer = StopWatch.createStarted();
         StopWatch retrieveProbesTimer = StopWatch.createStarted();
-        Collection<Long> probeIds = getProbeIdsForGene( gene, keepNonSpecificProbes );
+        Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         retrieveProbesTimer.stop();
         if ( probeIds.isEmpty() ) {
             log.warn( String.format( "%s has no associated probes in the GENE2CS table, no differential expression results will be returned.", gene ) );
@@ -234,8 +234,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, double threshold, int limit ) {
-        Collection<Long> probeIds = getProbeIdsForGene( gene, keepNonSpecificProbes );
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubsets, double threshold, int limit ) {
+        Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -315,10 +315,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean keepNonSpecificProbes ) {
+    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
         Assert.notNull( gene );
         StopWatch timer = StopWatch.createStarted();
-        Collection<Long> probeIds = getProbeIdsForGene( gene, keepNonSpecificProbes );
+        Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -343,10 +343,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene,
-            boolean keepNonSpecificProbes, double threshold, int limit ) {
+            boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit ) {
         Assert.notNull( gene );
         StopWatch timer = StopWatch.createStarted();
-        Collection<Long> probeIds = getProbeIdsForGene( gene, keepNonSpecificProbes );
+        Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -374,9 +374,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
         Assert.notNull( gene );
-        Collection<Long> probeIds = getProbeIdsForGene( gene, keepNonSpecificProbes );
+        Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -412,15 +412,25 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
      * @param gene                  a gene to lookup the probes for
      * @param keepNonSpecificProbes keep non-specific probes (those that map to multiple genes in the platform).
      */
-    private Collection<Long> getProbeIdsForGene( Gene gene, boolean keepNonSpecificProbes ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select CS from GENE2CS where GENE = :geneId"
-                        // only retain probes that map to a single gene in the platform
-                        + ( keepNonSpecificProbes ? "" : " and (select count(distinct gene2cs2.GENE) from GENE2CS gene2cs2 where gene2cs2.AD = GENE2CS.AD and gene2cs2.CS = GENE2CS.CS) = 1" ) )
-                .addScalar( "CS", StandardBasicTypes.LONG )
-                .setParameter( "geneId", gene.getId() )
-                .list();
+    private Collection<Long> getProbeIdsForGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
+        if ( useGene2Cs ) {
+            //noinspection unchecked
+            return getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "select CS from GENE2CS where GENE = :geneId"
+                            // only retain probes that map to a single gene in the platform
+                            + ( keepNonSpecificProbes ? "" : " and (select count(distinct gene2cs2.GENE) from GENE2CS gene2cs2 where gene2cs2.AD = GENE2CS.AD and gene2cs2.CS = GENE2CS.CS) = 1" ) )
+                    .addScalar( "CS", StandardBasicTypes.LONG )
+                    .setParameter( "geneId", gene.getId() )
+                    .list();
+        } else {
+            //noinspection unchecked
+            return getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs.id from CompositeSequence cs join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp where gp.gene = :gene"
+                            // only retain probes that map to a single gene in the platform
+                            + ( keepNonSpecificProbes ? "" : " and (select count(distinct gp2.gene) from CompositeSequence cs2 join cs2.biologicalCharacteristic bs2 join bs2.bioSequence2GeneProduct bs2gp2 join bs2gp2.geneProduct gp2 where cs2 = cs) = 1" ) )
+                    .setParameter( "gene", gene )
+                    .list();
+        }
     }
 
 

@@ -30,6 +30,14 @@ import java.util.Collection;
  */
 public abstract class AnalysisResultSetValueObject<K extends AnalysisResult, R extends AnalysisResultSet<K>> extends IdentifiableValueObject<R> {
 
+    protected AnalysisResultSetValueObject() {
+
+    }
+
+    protected AnalysisResultSetValueObject( Long id ) {
+        super( id );
+    }
+
     protected AnalysisResultSetValueObject( R analysisResultSet ) {
         super( analysisResultSet );
     }

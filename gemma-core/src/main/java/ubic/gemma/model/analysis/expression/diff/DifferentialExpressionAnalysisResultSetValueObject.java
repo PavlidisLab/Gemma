@@ -43,6 +43,14 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<DifferentialExpressionAnalysisResultValueObject> results;
 
+    public DifferentialExpressionAnalysisResultSetValueObject() {
+
+    }
+
+    public DifferentialExpressionAnalysisResultSetValueObject( Long id ) {
+        super( id );
+    }
+
     /**
      * Create a simple analysis results set VO with limited data.
      */

@@ -130,4 +130,17 @@
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 
+    <bean id="afterAclDifferentialExpressionAnalysisResultCollectionRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationDifferentialExpressionAnalysisResultByResultSetFilteringProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+    </bean>
+
 </beans>

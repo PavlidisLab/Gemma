@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -48,9 +49,17 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues ) {
+    public List<DifferentialExpressionAnalysisResult> findByGene2( Gene gene, boolean useGene2Cs, boolean keepNonSpecific ) {
+        return DERDao.findByGene( gene, useGene2Cs, keepNonSpecific ).values().stream()
+                .flatMap( List::stream )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean useGene2Cs, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues ) {
         return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, includeSubSets,
-                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, keepNonSpecific, initializeFactorValues );
+                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, useGene2Cs, keepNonSpecific, initializeFactorValues );
     }
 
     @Override
@@ -64,30 +73,30 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean keepNonSpecificProbes ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, keepNonSpecificProbes ) );
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
+        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene,
-            boolean keepNonSpecificProbes, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, keepNonSpecificProbes, threshold, limit ) );
+            boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit ) {
+        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes, threshold, limit ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets ) {
+        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
                 experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
+        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
                 experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets,
                 threshold, limit ) );
     }
@@ -101,8 +110,8 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, int maxResultsToReturn, int minNumberOfResults ) {
+    public List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet,
+            double threshold, int maxResultsToReturn, int minNumberOfResults ) {
         return this.DERDao.findByResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
     }
 

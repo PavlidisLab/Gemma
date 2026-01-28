@@ -414,19 +414,19 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertFalse( geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
 
-        assertNotNull( differentialExpressionResultService.findByGene( g, true ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true, true ) );
         assertNotNull(
-                differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false ) );
+                differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, true, Arrays.asList( ds1, ds2, ds3 ), false ) );
         assertNotNull( differentialExpressionResultService
                 .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ) );
-        assertNotNull( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true, true, 0.05, 10 ) );
 
-        assertFalse( differentialExpressionResultService.findByGene( g, true ).isEmpty() );
-        assertFalse( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false )
+        assertFalse( differentialExpressionResultService.findByGene( g, true, true ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, true, Arrays.asList( ds1, ds2, ds3 ), false )
                 .isEmpty() );
         assertFalse( differentialExpressionResultService
                 .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ).isEmpty() );
-        assertFalse( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGene( g, true, true, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
                 .findByExperimentIds( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), true, false );
