@@ -81,8 +81,17 @@
     <!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
     <aop:config>
         <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
-            <aop:after-returning method="doAclAdvice"
-                                 pointcut="ubic.gemma.persistence.util.Pointcuts.modifier()"
+            <aop:after-returning method="doAclCreateAdvice"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.creator()"
+                                 returning="retValue"/>
+            <aop:after-returning method="doAclUpdateAdvice"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.updater()"
+                                 returning="retValue"/>
+            <aop:after-returning method="doAclSaveAdvice"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.saver()"
+                                 returning="retValue"/>
+            <aop:after-returning method="doAclDeleteAdvice"
+                                 pointcut="ubic.gemma.persistence.util.Pointcuts.deleter()"
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>

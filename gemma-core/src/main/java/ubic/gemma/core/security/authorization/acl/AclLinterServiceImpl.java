@@ -1,10 +1,10 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import gemma.gsec.acl.ParentIdentityRetrievalStrategy;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.SQLFunction;
@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Modifier;
@@ -66,8 +65,13 @@ public class AclLinterServiceImpl implements AclLinterService {
     static {
         // FIXME: handle sub-assays and sub-biomaterials in the child to parent query, or recursively resolve parents as
         //        a special case
-        addSecuredChildToParent( BioAssay.class, ExpressionExperiment.class, null );
-        addSecuredChildToParent( BioMaterial.class, ExpressionExperiment.class, null );
+        // this cover cases where the BioAssay is attached to a EE or a subset of an EE
+        addSecuredChildToParent( BioAssay.class, ExpressionExperiment.class,
+                //language=HQL
+                "select coalesce(ee.id, eess.sourceExperiment.id) from ExpressionExperiment ee join ee.bioAssays ba, ExpressionExperimentSubSet eess join eess.bioAssays eessba where ba.id = aoi.identifier or eessba.id = aoi.identifier" );
+        addSecuredChildToParent( BioMaterial.class, ExpressionExperiment.class,
+                //language=HQL
+                "select coalesce(ee.id, eess.sourceExperiment.id) from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm, ExpressionExperimentSubSet eess join eess.bioAssays eessba join eessba.sampleUsed eessbm where bm.id = aoi.identifier or eessbm.id = aoi.identifier" );
         addSecuredChildToParent( ExpressionExperimentSubSet.class, ExpressionExperiment.class,
                 //language=HQL
                 "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = aoi.identifier" );
@@ -108,7 +112,7 @@ public class AclLinterServiceImpl implements AclLinterService {
     @Autowired
     private SessionFactory sessionFactory;
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy;
 
     @Override
     @Transactional
@@ -205,7 +209,6 @@ public class AclLinterServiceImpl implements AclLinterService {
         }
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
-                // not removing child, but we will visit it later if it's also dangling
                 aclService.deleteAcl( aoi, true );
                 log.info( "Deleted dangling " + aoi + "." );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), String.format( "%s has no corresponding %s entity with ID %d.", aoi, clazz.getName(), aoi.getIdentifier() ), true ) );
@@ -225,7 +228,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         //noinspection unchecked
         List<? extends Securable> list = sessionFactory.getCurrentSession()
                 .createQuery( "select e from " + clazz.getName() + " e "
-                        + "where e.id not in ( " + "select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type" + ")" )
+                        + "where e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type)" )
                 .setParameter( "type", clazz.getName() )
                 .setReadOnly( !config.isApplyFixes() )
                 .list();
@@ -248,7 +251,7 @@ public class AclLinterServiceImpl implements AclLinterService {
     private void lintSecurableLackingObjectIdentity( Class<? extends Securable> clazz, Long identifier, AclLinterConfig config, Collection<LintResult> results ) {
         Securable s = ( Securable ) sessionFactory.getCurrentSession()
                 .createQuery( "select e from " + clazz.getName() + " e "
-                        + "where e.id = :identifier and e.id not in ( " + "select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type" + ")" )
+                        + "where e.id = :identifier and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier)" )
                 .setParameter( "identifier", identifier )
                 .setParameter( "type", clazz.getName() )
                 .setReadOnly( !config.isApplyFixes() )
@@ -286,7 +289,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         }
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
-                AclObjectIdentity parentAoi = getParentAclObjectIdentity( clazz, aoi );
+                AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.locateParentIdentity( aoi );
                 String p = aoi.getType() + " Id=" + aoi.getIdentifier() + " has no parent ACL identity, it should be " + parentAoi + ".";
                 if ( parentAoi != null ) {
                     aoi.setParentObject( parentAoi );
@@ -311,12 +314,12 @@ public class AclLinterServiceImpl implements AclLinterService {
                 .uniqueResult();
         String s = clazz.getSimpleName() + " Id=" + identifier;
         if ( aoi == null ) {
-            log.info( s + " has a parent ACL identity." );
+            log.warn( s + " does not have an ACL identity." );
             return;
         }
         String p = s + " has no parent ACL identity.";
         if ( config.isApplyFixes() ) {
-            AclObjectIdentity parentAoi = getParentAclObjectIdentity( clazz, aoi );
+            AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.locateParentIdentity( aoi );
             if ( parentAoi != null ) {
                 aoi.setParentObject( parentAoi );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), p, true ) );
@@ -351,7 +354,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             String p = String.format( "%s Id=%d does not have a parent ACL identity of type %s: %s.", aoi.getType(),
                     aoi.getIdentifier(), expectedParentClass.getSimpleName(), currentParentAoi );
             if ( config.isApplyFixes() ) {
-                AclObjectIdentity parentAoi = getParentAclObjectIdentity( clazz, aoi );
+                AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.locateParentIdentity( aoi );
                 if ( parentAoi != null ) {
                     aoi.setParentObject( parentAoi );
                     results.add( new LintResult( clazz, aoi.getIdentifier(), p, true ) );
@@ -380,7 +383,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                 .uniqueResult();
         String s = clazz.getSimpleName() + " Id=" + identifier;
         if ( row == null ) {
-            log.info( s + " has no parent ACL identity identity." );
+            log.info( s + " has no parent ACL identity." );
             return;
         }
         AclObjectIdentity aoi = ( AclObjectIdentity ) row[0];
@@ -388,7 +391,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         String problem = String.format( "%s does not have a parent ACL identity of type %s: %s.", s,
                 expectedParentClass.getSimpleName(), currentParentAoi );
         if ( config.isApplyFixes() ) {
-            AclObjectIdentity parentAoi = getParentAclObjectIdentity( clazz, aoi );
+            AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.locateParentIdentity( aoi );
             if ( parentAoi != null ) {
                 aoi.setParentObject( parentAoi );
                 results.add( new LintResult( clazz, aoi.getId(), problem, true ) );
@@ -397,82 +400,6 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
         } else {
             results.add( new LintResult( clazz, aoi.getIdentifier(), problem, false ) );
-        }
-    }
-
-    @Nullable
-    private AclObjectIdentity getParentAclObjectIdentity( Class<? extends SecuredChild<?>> clazz, AclObjectIdentity aoi ) {
-        Class<? extends Securable> parentType;
-        Long parentIdentifier;
-        if ( ExperimentalFactor.class.isAssignableFrom( clazz ) ) {
-            parentType = ExpressionExperiment.class;
-            ExperimentalFactor factor = ( ExperimentalFactor ) sessionFactory.getCurrentSession()
-                    .get( ExperimentalFactor.class, aoi.getIdentifier() );
-            ExpressionExperiment ee = expressionExperimentService.findByFactor( factor );
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( FactorValue.class.isAssignableFrom( clazz ) ) {
-            parentType = ExpressionExperiment.class;
-            FactorValue factor = ( FactorValue ) sessionFactory.getCurrentSession()
-                    .get( FactorValue.class, aoi.getIdentifier() );
-            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factor );
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( BioAssay.class.isAssignableFrom( clazz ) ) {
-            parentType = ExpressionExperiment.class;
-            BioAssay ba = ( BioAssay ) sessionFactory.getCurrentSession()
-                    .get( BioAssay.class, aoi.getIdentifier() );
-            ExpressionExperiment ee = expressionExperimentService.findByBioAssay( ba );
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( BioMaterial.class.isAssignableFrom( clazz ) ) {
-            parentType = ExpressionExperiment.class;
-            BioMaterial bm = ( BioMaterial ) sessionFactory.getCurrentSession()
-                    .get( BioMaterial.class, aoi.getIdentifier() );
-            Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterial( bm );
-            if ( ees.size() == 1 ) {
-                parentIdentifier = ees.iterator().next().getId();
-            } else if ( ees.size() > 1 ) {
-                log.warn( "More than one ExpressionExperiment refer to " + bm + ", cannot pick its parent ACL identity." );
-                parentIdentifier = null;
-            } else {
-                parentIdentifier = null;
-            }
-        } else if ( MeanVarianceRelation.class.isAssignableFrom( clazz ) ) {
-            MeanVarianceRelation mvr = ( MeanVarianceRelation ) sessionFactory.getCurrentSession()
-                    .get( MeanVarianceRelation.class, aoi.getIdentifier() );
-            ExpressionExperiment ee = expressionExperimentService.findByMeanVarianceRelation( mvr );
-            parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else {
-            // try automated!
-            SecuredChild<?> sc = ( SecuredChild<?> ) sessionFactory.getCurrentSession()
-                    .get( clazz, aoi.getIdentifier() );
-            if ( sc != null && sc.getSecurityOwner() != null ) {
-                //noinspection unchecked
-                parentType = Hibernate.getClass( sc.getSecurityOwner() );
-                parentIdentifier = sc.getSecurityOwner().getId();
-            } else if ( sc == null ) {
-                log.warn( "Cannot resolve ACL identity for " + clazz.getSimpleName() + " Id=" + aoi.getIdentifier() + "." );
-                parentType = null;
-                parentIdentifier = null;
-            } else {
-                log.warn( "Cannot resolve parent ACL identity for " + aoi.getType() + "." );
-                parentType = null;
-                parentIdentifier = null;
-            }
-        }
-        if ( parentIdentifier != null ) {
-            AclObjectIdentity parentAoi = ( AclObjectIdentity ) sessionFactory.getCurrentSession()
-                    .createQuery( "select aoi from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier" )
-                    .setParameter( "type", parentType.getName() )
-                    .setParameter( "identifier", parentIdentifier )
-                    .uniqueResult();
-            if ( parentAoi != null ) {
-                return parentAoi;
-            } else {
-                log.warn( "Could not resolve ACL identity for " + parentType.getSimpleName() + " Id=" + parentIdentifier + "." );
-                return null;
-            }
-        } else {
-            return null;
         }
     }
 
