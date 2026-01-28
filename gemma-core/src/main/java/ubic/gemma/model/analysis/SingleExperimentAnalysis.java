@@ -65,8 +65,10 @@ public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends Ex
     public ExpressionExperiment getSecurityOwner() {
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) experimentAnalyzed;
-        } else {
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
             return ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment();
+        } else {
+            return null;
         }
     }
 }
