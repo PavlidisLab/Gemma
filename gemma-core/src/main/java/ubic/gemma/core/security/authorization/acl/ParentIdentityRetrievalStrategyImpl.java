@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -38,98 +39,53 @@ public class ParentIdentityRetrievalStrategyImpl implements ParentIdentityRetrie
 
     @Override
     @Transactional(readOnly = true)
-    public ObjectIdentity getParentIdentity( ObjectIdentity aoi ) {
-        //noinspection unchecked
-        Class<? extends SecuredChild<?>> clazz = sessionFactory.getClassMetadata( aoi.getType() ).getMappedClass();
+    public ObjectIdentity getParentIdentity( Object domainObject ) {
+        Assert.isInstanceOf( SecuredChild.class, domainObject, "Domain object must be of type SecuredChild." );
+        Assert.notNull( ( ( SecuredChild<?> ) domainObject ).getId(), "Domain object must have a non-null identifier." );
+
         Class<? extends Securable> parentType;
         Long parentIdentifier;
-        if ( ExperimentalDesign.class.isAssignableFrom( clazz ) ) {
-            ExperimentalDesign design = ( ExperimentalDesign ) sessionFactory.getCurrentSession()
-                    .get( ExperimentalDesign.class, aoi.getIdentifier() );
-            if ( design == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            ExpressionExperiment ee = expressionExperimentService.findByDesign( design );
+        if ( ( ( SecuredChild<?> ) domainObject ).getSecurityOwner() != null ) {
+            SecuredChild<?> sc = ( SecuredChild<?> ) domainObject;
+            // this is necessary because we rely on the class name for querying
+            //noinspection unchecked
+            parentType = Hibernate.getClass( sc.getSecurityOwner() );
+            parentIdentifier = sc.getSecurityOwner().getId();
+        } else if ( domainObject instanceof ExperimentalDesign ) {
+            ExperimentalDesign design = ( ExperimentalDesign ) domainObject;
             parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( ExperimentalFactor.class.isAssignableFrom( clazz ) ) {
-            ExperimentalFactor factor = ( ExperimentalFactor ) sessionFactory.getCurrentSession()
-                    .get( ExperimentalFactor.class, aoi.getIdentifier() );
-            if ( factor == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            ExpressionExperiment ee = expressionExperimentService.findByFactor( factor );
+            parentIdentifier = expressionExperimentService.findIdByDesign( design );
+        } else if ( domainObject instanceof ExperimentalFactor ) {
+            ExperimentalFactor factor = ( ExperimentalFactor ) domainObject;
             parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( FactorValue.class.isAssignableFrom( clazz ) ) {
-            FactorValue factor = ( FactorValue ) sessionFactory.getCurrentSession()
-                    .get( FactorValue.class, aoi.getIdentifier() );
-            if ( factor == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factor );
+            parentIdentifier = expressionExperimentService.findIdByFactor( factor );
+        } else if ( domainObject instanceof FactorValue ) {
+            FactorValue factor = ( FactorValue ) domainObject;
             parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( BioAssay.class.isAssignableFrom( clazz ) ) {
-            BioAssay ba = ( BioAssay ) sessionFactory.getCurrentSession()
-                    .get( BioAssay.class, aoi.getIdentifier() );
-            if ( ba == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            ExpressionExperiment ee = expressionExperimentService.findByBioAssay( ba, true );
+            parentIdentifier = expressionExperimentService.findIdByFactorValue( factor );
+        } else if ( domainObject instanceof BioAssay ) {
+            BioAssay ba = ( BioAssay ) domainObject;
             parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
-        } else if ( BioMaterial.class.isAssignableFrom( clazz ) ) {
-            BioMaterial bm = ( BioMaterial ) sessionFactory.getCurrentSession()
-                    .get( BioMaterial.class, aoi.getIdentifier() );
-            if ( bm == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterial( bm, true );
+            parentIdentifier = expressionExperimentService.findIdByBioAssay( ba, true );
+        } else if ( domainObject instanceof BioMaterial ) {
+            BioMaterial bm = ( BioMaterial ) domainObject;
+            Collection<Long> eeIds = expressionExperimentService.findIdsByBioMaterial( bm, true );
             parentType = ExpressionExperiment.class;
-            if ( ees.size() == 1 ) {
-                parentIdentifier = ees.iterator().next().getId();
-            } else if ( ees.size() > 1 ) {
+            if ( eeIds.size() == 1 ) {
+                parentIdentifier = eeIds.iterator().next();
+            } else if ( eeIds.size() > 1 ) {
                 log.warn( "More than one ExpressionExperiment refer to " + bm + ", cannot pick its parent ACL identity." );
                 parentIdentifier = null;
             } else {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
+                log.warn( "Could not find an ExpressionExperiment associated to " + bm + "." );
                 parentIdentifier = null;
             }
-        } else if ( MeanVarianceRelation.class.isAssignableFrom( clazz ) ) {
-            MeanVarianceRelation mvr = ( MeanVarianceRelation ) sessionFactory.getCurrentSession()
-                    .get( MeanVarianceRelation.class, aoi.getIdentifier() );
-            if ( mvr == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            ExpressionExperiment ee = expressionExperimentService.findByMeanVarianceRelation( mvr );
+        } else if ( domainObject instanceof MeanVarianceRelation ) {
+            MeanVarianceRelation mvr = ( MeanVarianceRelation ) domainObject;
             parentType = ExpressionExperiment.class;
-            parentIdentifier = ee != null ? ee.getId() : null;
+            parentIdentifier = expressionExperimentService.findIdByMeanVarianceRelation( mvr );
         } else {
-            // try automated!
-            SecuredChild<?> sc = ( SecuredChild<?> ) sessionFactory.getCurrentSession()
-                    .get( clazz, aoi.getIdentifier() );
-            if ( sc == null ) {
-                log.warn( "Could not find " + clazz.getSimpleName() + " with ID " + aoi.getIdentifier() + "." );
-                return null;
-            }
-            if ( sc.getSecurityOwner() != null ) {
-                // this is necessary because we rely on the class name for querying
-                //noinspection unchecked
-                parentType = Hibernate.getClass( sc.getSecurityOwner() );
-                parentIdentifier = sc.getSecurityOwner().getId();
-            } else {
-                log.warn( String.format( "Cannot resolve parent ACL identity for %s Id=%s: its security owner is not populated.",
-                        clazz.getSimpleName(), aoi.getIdentifier() ) );
-                parentType = null;
-                parentIdentifier = null;
-            }
+            throw new UnsupportedOperationException( "Resolving parent identity for " + domainObject + " is not supported." );
         }
 
         if ( parentIdentifier != null ) {
@@ -139,7 +95,7 @@ public class ParentIdentityRetrievalStrategyImpl implements ParentIdentityRetrie
                     .setParameter( "identifier", parentIdentifier )
                     .uniqueResult();
         } else {
-            log.warn( String.format( "Could not locate parent identifier for %s Id=%s.", clazz.getSimpleName(), aoi.getIdentifier() ) );
+            log.warn( String.format( "Could not locate parent identifier for %s.", domainObject ) );
             return null;
         }
     }

@@ -3,6 +3,7 @@ package ubic.gemma.core.security.authorization.acl;
 import org.springframework.security.acls.model.ObjectIdentity;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 
 /**
  * Strategy for locating parent ACL identities.
@@ -17,5 +18,5 @@ public interface ParentIdentityRetrievalStrategy {
      * @return the parent ACL identity if it can be determined, null otherwise
      */
     @Nullable
-    ObjectIdentity getParentIdentity( ObjectIdentity aoi );
+    ObjectIdentity getParentIdentity( Object domainObject );
 }

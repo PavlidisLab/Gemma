@@ -308,6 +308,27 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Long findIdByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        Long eeId = ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ba = :ba "
+                        + "group by ee" )
+                .setParameter( "ba", ba )
+                .uniqueResult();
+        if ( eeId == null && includeSubSets ) {
+            eeId = ( Long ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba "
+                            + "where ba = :ba "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "ba", ba )
+                    .uniqueResult();
+        }
+        return eeId;
+    }
+
+    @Override
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm ) {
         return findByBioMaterial( bm, false );
     }
@@ -325,6 +346,27 @@ public class ExpressionExperimentDaoImpl
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "bm", bm )
+                    .list();
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
+        //noinspection unchecked
+        List<Long> results = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                        + "group by ee" )
+                .setParameter( "bm", bm )
+                .list();
+        if ( results == null && includeSubSets ) {
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "
                             + "join eess.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
                             + "group by eess.sourceExperiment" )
                     .setParameter( "bm", bm )
@@ -377,6 +419,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Long findIdByDesign( ExperimentalDesign ed ) {
+        return findIdByProperty( "experimentalDesign", ed );
+    }
+
+    @Override
     public ExpressionExperiment findByDesignId( Long designId ) {
         return findOneByProperty( "experimentalDesign.id", designId );
     }
@@ -385,6 +432,18 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef = :ef "
+                        + "group by ee" )
+                .setParameter( "ef", ef )
+                .uniqueResult();
+    }
+
+    @Override
+    public Long findIdByFactor( ExperimentalFactor ef ) {
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
                         + "join ee.experimentalDesign ed "
                         + "join ed.experimentalFactors ef "
                         + "where ef = :ef "
@@ -408,11 +467,32 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByFactorValue( FactorValue fv ) {
-        return this.findByFactorValue( fv.getId() );
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by ee" )
+                .setParameter( "fv", fv )
+                .uniqueResult();
     }
 
     @Override
-    public ExpressionExperiment findByFactorValue( Long factorValueId ) {
+    public Long findIdByFactorValue( FactorValue fv ) {
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by ee" )
+                .setParameter( "fv", fv )
+                .uniqueResult();
+    }
+
+    @Override
+    public ExpressionExperiment findByFactorValueId( Long factorValueId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.experimentalDesign ed "
@@ -530,6 +610,11 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
         return findOneByProperty( "meanVarianceRelation", mvr );
+    }
+
+    @Override
+    public Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return findIdByProperty( "meanVarianceRelation", mvr );
     }
 
     @Override

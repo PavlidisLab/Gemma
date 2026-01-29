@@ -360,6 +360,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets );
 
+    @Nullable
+    Long findIdByBioAssay( BioAssay ba, boolean b );
+
     /**
      * @param bm bio material
      * @return experiment the given biomaterial is associated with
@@ -373,6 +376,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
+
+    Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials );
@@ -391,12 +396,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
     @Nullable
+    Long findIdByDesign( ExperimentalDesign design );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByDesignId( Long designId );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactor( ExperimentalFactor factor );
+
+    @Nullable
+    Long findIdByFactor( ExperimentalFactor factor );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
@@ -406,8 +417,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
     @Nullable
+    Long findIdByFactorValue( FactorValue factor );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByFactorValue( Long factorValueId );
+    ExpressionExperiment findByFactorValueId( Long factorValueId );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
@@ -458,6 +472,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr );
+
+    @Nullable
+    Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr );
 
     /**
      * @param ids ids

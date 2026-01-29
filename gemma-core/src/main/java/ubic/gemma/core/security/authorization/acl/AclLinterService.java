@@ -28,7 +28,7 @@ public interface AclLinterService {
         Class<? extends Securable> type;
         @Nullable
         Long identifier;
-        String problem;
+        String message;
         /**
          * Indicate if the issue was fixed or not.
          */

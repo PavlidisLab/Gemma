@@ -464,8 +464,8 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
      * raised.
      *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
      * @return an entity whose property matched the given value
      */
     @Nullable
@@ -477,11 +477,20 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
                 .uniqueResult();
     }
 
+    @Nullable
+    protected Long findIdByProperty( String propertyName, Object propertyValue ) {
+        return ( Long ) sessionFactory.getCurrentSession()
+                .createCriteria( this.elementClass )
+                .add( Restrictions.eq( propertyName, propertyValue ) )
+                .setProjection( Projections.id() )
+                .uniqueResult();
+    }
+
     /**
      * Does a search on given property and its value.
      *
-     * @param  propertyName  the name of property to be matched.
-     * @param  propertyValue the value to look for.
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
      * @return an entity whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {

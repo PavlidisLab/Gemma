@@ -120,9 +120,9 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
         for ( AclLinterService.LintResult result : results ) {
             String o = result.getType().getSimpleName() + " Id=" + result.getIdentifier();
             if ( result.isFixed() ) {
-                addSuccessObject( o, result.getProblem() );
+                addSuccessObject( o, result.getMessage() );
             } else {
-                addWarningObject( o, result.getProblem() );
+                addWarningObject( o, result.getMessage() );
             }
         }
     }
