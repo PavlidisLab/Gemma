@@ -1,5 +1,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import gemma.gsec.acl.ParentIdentityRetrievalStrategy;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
