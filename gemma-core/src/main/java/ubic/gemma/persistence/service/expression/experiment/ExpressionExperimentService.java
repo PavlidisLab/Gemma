@@ -355,11 +355,24 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
     /**
+     * @param includeSubSets include assays that belong to subsets of the experiment
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets );
+
+    /**
      * @param bm bio material
      * @return experiment the given biomaterial is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
+
+    /**
+     *
+     * @param includeSubSets include samples that are associated to assays that belong to subsets of the experiment
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials );
