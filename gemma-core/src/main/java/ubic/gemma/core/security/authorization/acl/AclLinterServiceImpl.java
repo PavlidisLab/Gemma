@@ -238,7 +238,6 @@ public class AclLinterServiceImpl implements AclLinterService {
                 .createQuery( "select e.id from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e "
                         + "where e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type)" )
                 .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
                 .list();
         if ( list.isEmpty() ) {
             log.info( "All " + clazz.getSimpleName() + " have ACL identities." );
@@ -262,7 +261,6 @@ public class AclLinterServiceImpl implements AclLinterService {
                         + "where e.id = :identifier and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier)" )
                 .setParameter( "identifier", identifier )
                 .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
                 .uniqueResult();
         if ( hasAoi ) {
             log.info( formatEntity( clazz, identifier ) + " has an ACL identity." );
@@ -295,6 +293,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         } else {
             log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
         }
+        int i = 0;
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
                 SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
@@ -311,6 +310,11 @@ public class AclLinterServiceImpl implements AclLinterService {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
                 } else {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the parent ACL identity could not be found.", false ) );
+                }
+                if ( ( ++i % 100 ) == 0 ) {
+                    // flush to prevent SecuredChild to pile up in memory
+                    sessionFactory.getCurrentSession().flush();
+                    sessionFactory.getCurrentSession().clear();
                 }
             } else {
                 results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity.", false ) );
@@ -370,6 +374,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         } else {
             log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " with incorrect parent ACL identities." );
         }
+        int i = 0;
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
                 SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
@@ -385,6 +390,11 @@ public class AclLinterServiceImpl implements AclLinterService {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
                 } else {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity does not have a correct parent ACL identity.", false ) );
+                }
+                if ( ( ++i % 100 ) == 0 ) {
+                    // flush to prevent SecuredChild to pile up in memory
+                    sessionFactory.getCurrentSession().flush();
+                    sessionFactory.getCurrentSession().clear();
                 }
             } else {
                 results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity does not have a correct parent ACL identity.", false ) );
@@ -529,9 +539,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             query.setParameter( "identifier", identifier );
         }
         //noinspection unchecked
-        List<Object[]> list = query
-                .setReadOnly( true )
-                .list();
+        List<Object[]> list = query.list();
         if ( list.isEmpty() ) {
             log.info( "All permissions are correct for " + formatEntity( clazz, identifier ) + "." );
         } else {
@@ -540,18 +548,17 @@ public class AclLinterServiceImpl implements AclLinterService {
         for ( Object[] row : list ) {
             String type = ( String ) row[0];
             Long identifier_ = ( ( BigInteger ) row[1] ).longValue();
-            Securable s = ( Securable ) sessionFactory.getCurrentSession().get( type, identifier_ );
-            String problem = String.format( "%s lacks an ACL entry with %s to %s%s.", s, permission, grantedAuthority,
-                    granting ? " with granting" : "" );
             if ( config.isApplyFixes() ) {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
                 acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );
                 aclService.updateAcl( acl );
-                String fixMessage = "Added missing permissions for " + grantedAuthority + " to " + s + ".";
+                String fixMessage = "Added missing permissions for " + grantedAuthority + ".";
                 log.info( formatEntity( clazz, identifier_ ) + ": " + fixMessage );
-                result.add( new LintResult( s.getClass(), identifier_, fixMessage, true ) );
+                result.add( new LintResult( clazz, identifier_, fixMessage, true ) );
             } else {
-                result.add( new LintResult( s.getClass(), identifier_, problem, false ) );
+                String problem = String.format( "Entity lacks an ACL entry with %s to %s%s.", permission,
+                        grantedAuthority, granting ? " with granting" : "" );
+                result.add( new LintResult( clazz, identifier_, problem, false ) );
             }
         }
     }
