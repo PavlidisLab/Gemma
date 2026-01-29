@@ -206,7 +206,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         //noinspection unchecked
         List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
                 .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type and aoi.identifier not in (select e.id from " + clazz.getName() + " e)" )
+                        + "where aoi.type = :type and aoi.identifier not in (select e.id from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e)" )
                 .setParameter( "type", clazz.getName() )
                 .setReadOnly( !config.isApplyFixes() )
                 .list();
@@ -257,7 +257,7 @@ public class AclLinterServiceImpl implements AclLinterService {
 
     private void lintSecurableLackingObjectIdentity( Class<? extends Securable> clazz, Long identifier, AclLinterConfig config, Collection<LintResult> results ) {
         Boolean hasAoi = ( Boolean ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(*) > 0 from " + clazz.getName() + " e "
+                .createQuery( "select count(*) > 0 from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e "
                         + "where e.id = :identifier and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier)" )
                 .setParameter( "identifier", identifier )
                 .setParameter( "type", clazz.getName() )
