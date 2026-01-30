@@ -32,7 +32,4 @@ public interface DatabaseEntryService extends BaseImmutableService<DatabaseEntry
      * Find the latest (as per its version or ID) database entry by accession.
      */
     DatabaseEntry findLatestByAccession( String accession );
-
-    @Override
-    DatabaseEntry findOrCreate( DatabaseEntry entity );
 }
