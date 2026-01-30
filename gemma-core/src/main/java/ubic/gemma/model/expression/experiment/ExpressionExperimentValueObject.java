@@ -111,8 +111,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     /**
      * Creates a new value object out of given Expression Experiment.
      *
-     * @param ee the experiment to convert into a value object.
-     * @param ignoreDesign exclude the experimental design from serialization
+     * @param ee              the experiment to convert into a value object.
+     * @param ignoreDesign    exclude the experimental design from serialization
      * @param ignoreAccession exclude accession from serialization
      */
     public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession ) {
@@ -196,6 +196,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else {
             this.setUserOwned( false );
         }
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperimentIdAndShortName ee ) {
+        this( ee.getId() );
+        this.shortName = ee.getShortName();
     }
 
     protected ExpressionExperimentValueObject( ExpressionExperimentValueObject vo ) {

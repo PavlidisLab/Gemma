@@ -30,6 +30,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -143,14 +144,20 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public long countExperimentLinkedReferences() {
-        return this.bibliographicReferenceDao.countExperimentLinkedReferences();
+    public long countDistinctWithRelatedExperiments() {
+        return this.bibliographicReferenceDao.countDistinctWithRelatedExperiments();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit ) {
-        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences( offset, limit );
+    public long countWithRelatedExperiments() {
+        return this.bibliographicReferenceDao.countWithRelatedExperiments();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit ) {
+        return this.bibliographicReferenceDao.getRelatedExperiments( offset, limit );
     }
 
     @Override
