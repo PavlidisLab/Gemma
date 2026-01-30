@@ -24,43 +24,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author paul
  */
 public interface ExpressionExperimentSetService
-        extends BaseService<ExpressionExperimentSet>, BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperimentSet expressionExperimentSet );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExpressionExperimentSet expressionExperimentSet );
+        extends SecurableBaseService<ExpressionExperimentSet>, SecurableBaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> find( ExpressionExperiment ee );
@@ -151,14 +126,6 @@ public interface ExpressionExperimentSetService
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentSetValueObject loadValueObjectById( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
