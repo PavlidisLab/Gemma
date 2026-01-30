@@ -18,29 +18,18 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseImmutableService;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface BlatAssociationService extends BaseImmutableService<BlatAssociation> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BlatAssociation create( BlatAssociation blatAssociation );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( BlatAssociation blatAssociation );
+public interface BlatAssociationService extends AdminEditableBaseImmutableService<BlatAssociation> {
 
     Collection<BlatAssociation> find( BioSequence bioSequence );
 

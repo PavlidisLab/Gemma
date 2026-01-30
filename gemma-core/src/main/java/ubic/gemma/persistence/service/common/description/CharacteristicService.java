@@ -42,8 +42,8 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param  start How far into the list to start
-     * @param  limit Maximum records to retrieve
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve
      * @return characteristics
      */
     List<Characteristic> browse( int start, int limit );
@@ -51,10 +51,10 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param  start      How far into the list to start
-     * @param  limit      Maximum records to retrieve
-     * @param  sortField  sort field
-     * @param  descending sor order
+     * @param start      How far into the list to start
+     * @param limit      Maximum records to retrieve
+     * @param sortField  sort field
+     * @param descending sor order
      * @return characteristics
      */
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
@@ -66,6 +66,7 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
 
     /**
      * Find characteristics that have a particular parent class or lack thereof.
+     *
      * @throws IllegalArgumentException if parentClasses is
      */
     Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
@@ -96,18 +97,19 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
 
     /**
      * Find characteristics that have a value (prefix) or value URI (exact match) matching the given string.
+     *
+     * @param parentClasses    if not null, restrict to characteristics that have parents of the given classes.
+     * @param includeNoParents if true, include characteristics that have no parents.
      * @see CharacteristicDao#findByValueLikeGroupedByNormalizedValue(String, Collection, boolean)
      * @see CharacteristicDao#findByValueUriGroupedByNormalizedValue(String, Collection, boolean)
-     * @param parentClasses if not null, restrict to characteristics that have parents of the given classes.
-     * @param includeNoParents if true, include characteristics that have no parents.
      */
     Map<String, Characteristic> findByValueUriOrValueStartingWith( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
-     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
      * @param thawParents if true, the parents will be initialized if they are proxies
+     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
      */
     @Secured({ "GROUP_ADMIN" })
     // FIXME: this is too slow when large number of results are returned
@@ -154,10 +156,34 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Characteristic create( Characteristic c );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    Collection<Characteristic> create( Collection<Characteristic> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<Characteristic> save( Collection<Characteristic> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Characteristic save( Characteristic entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Characteristic entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<Characteristic> entities );
+
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<Characteristic> entities );
 }

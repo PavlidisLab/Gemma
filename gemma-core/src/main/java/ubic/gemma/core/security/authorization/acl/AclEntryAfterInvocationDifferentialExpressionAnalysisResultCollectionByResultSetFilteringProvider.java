@@ -3,22 +3,20 @@ package ubic.gemma.core.security.authorization.acl;
 import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.model.analysis.expression.diff.*;
 
 import java.util.List;
 
 /**
- * Filter analysis results by the result set they belong to.
+ * Filter collections of {@link DifferentialExpressionAnalysisResult} by the {@link ExpressionAnalysisResultSet} they
+ * belong to.
  *
  * @author poirigui
  */
-public class AclEntryAfterInvocationDifferentialExpressionAnalysisResultByResultSetFilteringProvider extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
+public class AclEntryAfterInvocationDifferentialExpressionAnalysisResultCollectionByResultSetFilteringProvider extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
-    public AclEntryAfterInvocationDifferentialExpressionAnalysisResultByResultSetFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_COLLECTION_READ", requirePermission );
+    public AclEntryAfterInvocationDifferentialExpressionAnalysisResultCollectionByResultSetFilteringProvider( AclService aclService, String processConfigAttribute, List<Permission> requirePermission ) {
+        super( aclService, processConfigAttribute, requirePermission );
     }
 
     @Override

@@ -22,7 +22,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import java.util.Collection;
+import javax.annotation.Nullable;
 
 /**
  * @see ubic.gemma.model.genome.Taxon
@@ -31,6 +31,7 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
 
     String OBJECT_ALIAS = "taxon";
 
+    @Nullable
     Taxon findByCommonName( String commonName );
 
     /**
@@ -39,7 +40,9 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
      * @param scientificName the scientific name to be matched
      * @return a Taxon whose scientific name matches the given string.
      */
+    @Nullable
     Taxon findByScientificName( String scientificName );
 
+    @Nullable
     Taxon findByNcbiId( Integer ncbiId );
 }

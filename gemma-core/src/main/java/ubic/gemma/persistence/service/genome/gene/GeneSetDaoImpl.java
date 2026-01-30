@@ -35,7 +35,6 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,10 +45,9 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
  * <code>ubic.gemma.model.genome.gene.GeneSet</code>.
  *
  * @author kelsey
- * @see    GeneSet
+ * @see GeneSet
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Autowired

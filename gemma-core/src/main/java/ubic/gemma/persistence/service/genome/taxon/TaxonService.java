@@ -18,40 +18,27 @@
  */
 package ubic.gemma.persistence.service.genome.taxon;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseImmutableService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface TaxonService extends BaseImmutableService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
+public interface TaxonService extends AdminEditableBaseImmutableService<Taxon>, FilteringVoEnabledService<Taxon, TaxonValueObject> {
 
+    @Nullable
     Taxon findByCommonName( String commonName );
 
+    @Nullable
     Taxon findByScientificName( String scientificName );
 
+    @Nullable
     Taxon findByNcbiId( Integer ncbiId );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    Taxon findOrCreate( Taxon taxon );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( Collection<Taxon> entities );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( Taxon taxon );
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used

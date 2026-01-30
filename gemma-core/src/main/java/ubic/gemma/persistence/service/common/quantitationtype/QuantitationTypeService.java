@@ -75,8 +75,8 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     QuantitationType findByName( ExpressionExperiment ee, String name ) throws NonUniqueQuantitationTypeByNameException;
 
     /**
-     * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
      * @throws NonUniqueQuantitationTypeByNameException if more than one QT matches the given name and vector type
+     * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -95,6 +95,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * <p>
      * QTs are grouped by which vector type they are associated with. If no vector is found for a given QT, {@code null}
      * will be used as their type in the returned mapping.
+     *
      * @see QuantitationTypeDao#findByExpressionExperiment(ExpressionExperiment)
      */
     Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee );
@@ -137,6 +138,10 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
 
     @Override
     @Secured({ "GROUP_USER" })
+    Collection<QuantitationType> create( Collection<QuantitationType> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
     void remove( Collection<QuantitationType> entities );
 
     @Override
@@ -146,6 +151,14 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Override
     @Secured({ "GROUP_USER" })
     void remove( QuantitationType quantitationType );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    QuantitationType save( QuantitationType entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<QuantitationType> save( Collection<QuantitationType> entities );
 
     @Override
     @Secured({ "GROUP_USER" })

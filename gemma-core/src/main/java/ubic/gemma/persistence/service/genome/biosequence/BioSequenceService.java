@@ -24,17 +24,19 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * @author kelsey
  */
-public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
+public interface BioSequenceService extends AdminEditableBaseService<BioSequence>, BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
 
+    @Nullable
     BioSequence findByAccession( DatabaseEntry accession );
 
     /**
@@ -51,24 +53,8 @@ public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnab
      */
     Collection<BioSequence> findByName( String name );
 
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_ADMIN" })
     Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioSequence findOrCreate( BioSequence bioSequence );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioSequence create( BioSequence bioSequence );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( BioSequence bioSequence );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( BioSequence bioSequence );
 
     Collection<Gene> getGenesByAccession( String search );
 
@@ -78,5 +64,6 @@ public interface BioSequenceService extends BaseService<BioSequence>, BaseVoEnab
 
     BioSequence thaw( BioSequence bs );
 
+    @Nullable
     BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

@@ -25,7 +25,6 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,7 +33,6 @@ import java.util.List;
  *
  * @author kelsey
  */
-@ParametersAreNonnullByDefault
 public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGeneSetValueObject> {
 
     /**
@@ -48,6 +46,7 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
 
     /**
      * Returns the taxon of an arbitrary member of the set.
+     *
      * @return the taxon, or null if the gene set does not have any member
      */
     @Nullable

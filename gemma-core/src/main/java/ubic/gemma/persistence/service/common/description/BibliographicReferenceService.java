@@ -63,8 +63,36 @@ public interface BibliographicReferenceService
     BibliographicReference create( BibliographicReference bibliographicReference );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> create( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    BibliographicReference save( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> save( Collection<BibliographicReference> entities );
+
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( BibliographicReference BibliographicReference );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Long id );
 
     BibliographicReference findByExternalId( DatabaseEntry accession );
 

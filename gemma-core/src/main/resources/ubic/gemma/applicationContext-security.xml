@@ -62,7 +62,7 @@
         <s:after-invocation-provider ref="afterAclReadQuiet"/>
         <s:after-invocation-provider ref="afterAclRead"/>
         <s:after-invocation-provider ref="afterAclCollectionRead"/>
-        <s:after-invocation-provider ref="afterAclArrayDesignCollectionRead"/>
+        <s:after-invocation-provider ref="afterAclCompositeSequenceCollectionRead"/>
         <s:after-invocation-provider ref="afterAclDataVectorCollectionRead"/>
         <s:after-invocation-provider ref="afterAclMyDataRead"/>
         <s:after-invocation-provider ref="afterAclMyPrivateDataRead"/>
@@ -90,9 +90,10 @@
     <!-- filters (gemma-specific) -->
 
     <!-- After reading collection of composite sequences -->
-    <bean id="afterAclArrayDesignCollectionRead"
+    <bean id="afterAclCompositeSequenceCollectionRead"
           class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider">
         <constructor-arg ref="aclService"/>
+        <constructor-arg value="AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ"/>
         <constructor-arg>
             <list>
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
@@ -103,9 +104,11 @@
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 
-    <bean id="afterAclArrayDesignRead"
+    <!-- After reading single composite sequence -->
+    <bean id="afterAclCompositeSequenceRead"
           class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider">
         <constructor-arg ref="aclService"/>
+        <constructor-arg value="AFTER_ACL_COMPOSITE_SEQUENCE_READ"/>
         <constructor-arg>
             <list>
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
@@ -120,6 +123,7 @@
     <bean id="afterAclDataVectorCollectionRead"
           class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider">
         <constructor-arg ref="aclService"/>
+        <constructor-arg value="AFTER_ACL_DATA_VECTOR_COLLECTION_READ"/>
         <constructor-arg>
             <list>
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
@@ -131,8 +135,9 @@
     </bean>
 
     <bean id="afterAclDifferentialExpressionAnalysisResultCollectionRead"
-          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationDifferentialExpressionAnalysisResultByResultSetFilteringProvider">
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationDifferentialExpressionAnalysisResultCollectionByResultSetFilteringProvider">
         <constructor-arg ref="aclService"/>
+        <constructor-arg value="AFTER_ACL_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_COLLECTION_READ"/>
         <constructor-arg>
             <list>
                 <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>

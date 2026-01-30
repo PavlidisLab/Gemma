@@ -18,33 +18,22 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseService;
 
 import java.util.Collection;
 
 /**
  * @author paul
  */
-public interface BlatResultService extends BaseService<BlatResult>, BaseVoEnabledService<BlatResult, BlatResultValueObject> {
+public interface BlatResultService extends AdminEditableBaseService<BlatResult>, BaseVoEnabledService<BlatResult, BlatResultValueObject> {
 
     Collection<BlatResult> findByBioSequence( BioSequence bioSequence );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( BlatResult blatResult );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( BlatResult blatResult );
 
     BlatResult thaw( BlatResult blatResult );
 
     Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
-
 }
