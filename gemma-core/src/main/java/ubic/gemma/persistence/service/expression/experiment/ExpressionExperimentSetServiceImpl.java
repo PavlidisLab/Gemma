@@ -174,9 +174,6 @@ public class ExpressionExperimentSetServiceImpl
         return expressionExperimentSet;
     }
 
-    /**
-     * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
-     */
     @Override
     @Transactional
     public void update( final ExpressionExperimentSet expressionExperimentSet ) {
