@@ -307,6 +307,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 
+    /**
+     * Count the number of experiments that match the given filters.
+     *
+     * @param filters  a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds a set of extra IDs to be intersected with the IDs retrieved by the filters
+     */
     long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -634,7 +640,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
-     * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
+     * @param filters    a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds   a set of extra IDs to be intersected with the IDs retrieved by the filters
      * @param maxResults the maximum of results, or unlimited if less than 1
      */
     Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults );
@@ -644,6 +651,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * If no filters are supplied (either being null or empty), the {@link #getPerTaxonCount()} fast path is used.
      *
+     * @param filters  a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds a set of extra IDs to be intersected with the IDs retrieved by the filters
      * @see #getPerTaxonCount()
      */
     Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
