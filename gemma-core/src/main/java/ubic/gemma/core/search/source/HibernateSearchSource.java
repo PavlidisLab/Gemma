@@ -1,5 +1,7 @@
 package ubic.gemma.core.search.source;
 
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclService;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -16,6 +18,11 @@ import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.ObjectIdentity;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.acls.model.SidRetrievalStrategy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.FieldAwareSearchSource;
 import ubic.gemma.core.search.SearchContext;
@@ -23,6 +30,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.lucene.LuceneHighlighter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -153,6 +161,12 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     @Autowired
     private SessionFactory sessionFactory;
 
+    @Autowired
+    private AclService aclService;
+
+    @Autowired
+    private SidRetrievalStrategy sidRetrievalStrategy;
+
     private final Map<Class<?>, Analyzer> analyzers = new HashMap<>();
 
     @Override
@@ -247,10 +261,16 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             StopWatch timer = StopWatch.createStarted();
             try {
                 DoubleSummaryStatistics stats = results.stream().mapToDouble( r -> ( Float ) r[1] ).summaryStatistics();
-                return results.stream()
+                List<SearchResult<T>> r2 = results.stream()
                         .map( r -> searchResultFromRow( r, settings, luceneHighlighter, highlighter, analyzer, clazz, stats ) )
                         .filter( Objects::nonNull )
                         .collect( Collectors.toList() );
+                if ( Securable.class.isAssignableFrom( clazz ) ) {
+                    //noinspection unchecked
+                    return filterByAcls( r2, ( Class<? extends Securable> ) clazz );
+                } else {
+                    return r2;
+                }
             } finally {
                 if ( timer.getTime() > 100 ) {
                     log.warn( String.format( "Highlighting %d results took %d ms", results.size(), timer.getTime() ) );
@@ -283,7 +303,24 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Nullable
-    public static Map<String, String> highlightDocument( LuceneHighlighter highlighter, Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
+    private Map<String, String> highlightDocument( LuceneHighlighter highlighter, Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
         return highlighter.highlightDocument( document, luceneHighlighter, analyzer );
+    }
+
+    /**
+     * Filter search results by ACLs.
+     */
+    private <T extends Identifiable> Collection<SearchResult<T>> filterByAcls( Collection<SearchResult<T>> results, Class<? extends Securable> resultType ) {
+        List<Sid> sids = sidRetrievalStrategy.getSids( SecurityContextHolder.getContext().getAuthentication() );
+        List<ObjectIdentity> aclIdentities = results.stream()
+                .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
+                .collect( Collectors.toList() );
+        Set<Long> filteredIds = aclService.readAclsById( aclIdentities ).values().stream()
+                .filter( acl -> acl.isGranted( Collections.singletonList( BasePermission.READ ), sids, false ) )
+                .map( acl -> ( Long ) acl.getObjectIdentity().getIdentifier() )
+                .collect( Collectors.toSet() );
+        return results.stream()
+                .filter( s -> filteredIds.contains( s.getResultId() ) )
+                .collect( Collectors.toList() );
     }
 }
