@@ -672,7 +672,7 @@ public class DEDVController {
 
     private String format4File( ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
         BulkExpressionDataMatrix<?> mat = new ExpressionDataDoubleMatrix( ee, DoubleVectorValueObjectUtils.toBulkVectors( vectors ) );
-        Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( mat.getDesignElements() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( mat.getDesignElements(), true );
         MatrixWriter writer = new MatrixWriter( entityUrlBuilder, buildInfo );
         try ( StringWriter buf = new StringWriter() ) {
             writer.write( mat, ProcessedExpressionDataVector.class, cs2gene, buf );

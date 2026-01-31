@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider extends AclEntryAfterInvocationByAssociationFilteringProvider {
 
-    public AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_COMPOSITE_SEQUENCE_READ", requirePermission );
+    public AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider( AclService aclService, String processConfigAttribute, List<Permission> requirePermission ) {
+        super( aclService, processConfigAttribute, requirePermission );
     }
 
     @Override

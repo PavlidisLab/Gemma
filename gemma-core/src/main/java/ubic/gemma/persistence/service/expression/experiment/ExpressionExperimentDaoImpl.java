@@ -283,24 +283,96 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+        return findByBioAssay( ba, false );
+    }
+
+    @Override
+    public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        ExpressionExperiment ee = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.bioAssays as ba "
                         + "where ba = :ba "
                         + "group by ee" )
                 .setParameter( "ba", ba )
                 .uniqueResult();
+        if ( ee == null && includeSubSets ) {
+            ee = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba "
+                            + "where ba = :ba "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "ba", ba )
+                    .uniqueResult();
+        }
+        return ee;
+    }
+
+    @Override
+    public Long findIdByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        Long eeId = ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ba = :ba "
+                        + "group by ee" )
+                .setParameter( "ba", ba )
+                .uniqueResult();
+        if ( eeId == null && includeSubSets ) {
+            eeId = ( Long ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba "
+                            + "where ba = :ba "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "ba", ba )
+                    .uniqueResult();
+        }
+        return eeId;
     }
 
     @Override
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm ) {
+        return findByBioMaterial( bm, false );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
+        if ( results == null && includeSubSets ) {
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "bm", bm )
+                    .list();
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
+        //noinspection unchecked
+        List<Long> results = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                        + "group by ee" )
+                .setParameter( "bm", bm )
+                .list();
+        if ( results == null && includeSubSets ) {
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "
+                            + "join eess.bioAssays as ba join ba.sampleUsed as sample where sample = :bm "
+                            + "group by eess.sourceExperiment" )
+                    .setParameter( "bm", bm )
+                    .list();
+        }
+        return results;
     }
 
     @Override
@@ -347,6 +419,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Long findIdByDesign( ExperimentalDesign ed ) {
+        return findIdByProperty( "experimentalDesign", ed );
+    }
+
+    @Override
     public ExpressionExperiment findByDesignId( Long designId ) {
         return findOneByProperty( "experimentalDesign.id", designId );
     }
@@ -355,6 +432,18 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "where ef = :ef "
+                        + "group by ee" )
+                .setParameter( "ef", ef )
+                .uniqueResult();
+    }
+
+    @Override
+    public Long findIdByFactor( ExperimentalFactor ef ) {
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
                         + "join ee.experimentalDesign ed "
                         + "join ed.experimentalFactors ef "
                         + "where ef = :ef "
@@ -378,11 +467,32 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByFactorValue( FactorValue fv ) {
-        return this.findByFactorValue( fv.getId() );
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by ee" )
+                .setParameter( "fv", fv )
+                .uniqueResult();
     }
 
     @Override
-    public ExpressionExperiment findByFactorValue( Long factorValueId ) {
+    public Long findIdByFactorValue( FactorValue fv ) {
+        return ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id from ExpressionExperiment as ee "
+                        + "join ee.experimentalDesign ed "
+                        + "join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by ee" )
+                .setParameter( "fv", fv )
+                .uniqueResult();
+    }
+
+    @Override
+    public ExpressionExperiment findByFactorValueId( Long factorValueId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ee from ExpressionExperiment as ee "
                         + "join ee.experimentalDesign ed "
@@ -495,6 +605,16 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated >= :date" )
                 .setParameter( "date", date )
                 .list();
+    }
+
+    @Override
+    public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return findOneByProperty( "meanVarianceRelation", mvr );
+    }
+
+    @Override
+    public Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return findIdByProperty( "meanVarianceRelation", mvr );
     }
 
     @Override
@@ -1150,7 +1270,7 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        return streamByBatch( q, "ids", eeIds, getBatchSize(), Object[].class )
+        return QueryUtils.<Long, Object[]>streamByBatch( q, "ids", eeIds, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -1347,6 +1467,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee ) {
+        return null;
+    }
+
+    @Override
     public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
         return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )
@@ -1485,7 +1610,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in :eeIds "
                         + "group by ee.taxon" )
                 .setCacheable( true );
-        return streamByBatch( query, "eeIds", ids, getBatchSize(), Object[].class )
+        return QueryUtils.<Long, Object[]>streamByBatch( query, "eeIds", ids, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> ( Taxon ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
@@ -3735,7 +3860,7 @@ public class ExpressionExperimentDaoImpl
         configurer.registerProperties( "taxon", "bioAssayCount" );
 
         // irrelevant
-        configurer.unregisterProperty( "accession.Uri" );
+        configurer.unregisterProperty( "accession.uri" );
         configurer.unregisterProperty( "geeq.id" );
         configurer.unregisterProperty( "source" );
         configurer.unregisterProperty( "otherParts.size" );
@@ -3754,7 +3879,7 @@ public class ExpressionExperimentDaoImpl
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
         configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
-        configurer.unregisterProperty( "primaryPublication.pubAccession.Uri" );
+        configurer.unregisterProperty( "primaryPublication.pubAccession.uri" );
 
         // attached terms
         configurer.registerObjectAlias( "characteristics.", CHARACTERISTIC_ALIAS, Characteristic.class, null, 1, true );
@@ -3789,7 +3914,7 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterProperty( "allCharacteristics.migratedToStatement" );
 
         configurer.registerObjectAlias( "bioAssays.", BIO_ASSAY_ALIAS, BioAssay.class, null, 2, true );
-        configurer.unregisterProperty( "bioAssays.accession.Uri" );
+        configurer.unregisterProperty( "bioAssays.accession.uri" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.factorValues.size" );
         configurer.unregisterProperty( "bioAssays.sampleUsed.treatments.size" );
 
@@ -3897,7 +4022,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in (:ids) "
                         + "group by ee" )
                 .setCacheable( true );
-        Map<Long, Long> adCountById = streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048, Object[].class )
+        Map<Long, Long> adCountById = QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );

@@ -20,10 +20,11 @@
 package ubic.gemma.persistence.service.genome;
 
 import org.junit.Test;
-
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,12 +32,14 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author paul
  */
-public class TaxonServiceImplTest extends BaseSpringContextTest {
+public class TaxonServiceImplTest extends BaseIntegrationTest {
+
+    @Autowired
+    private TaxonService taxonService;
 
     /**
-     * Test method for {@link ubic.gemma.persistence.service.genome.taxon.TaxonService#findOrCreate(Taxon)} )}.
      * Situation where the secondary id is treated as the primary, we must not make a new taxon!
-     *
+     * <p>
      * This test uses a taxon Gemma isn't using right now but this could be relevant in general.
      */
     @Test
@@ -49,7 +52,7 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
 
         Taxon found = taxonService.findOrCreate( t );
 
-        assertEquals( new Integer( 4932 ), found.getNcbiId() );
+        assertEquals( Integer.valueOf( 4932 ), found.getNcbiId() );
     }
 
     @Test

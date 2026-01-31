@@ -135,7 +135,7 @@ public interface SingleCellExpressionExperimentService {
      * Add single-cell data vectors.
      *
      * @param recrateCellTypeFactorIfNecessary re-create the cell type factor if necessary (i.e. a new set of preferred single-cell vectors are added)
-     * @param ignoreCompatibleFactor
+     * @param ignoreCompatibleFactor           ignore an existing compatible cell type factor and re-create it anyway
      * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

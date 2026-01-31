@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationTyp
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
-import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -1416,7 +1417,7 @@ public class GeoConverterImpl implements GeoConverter {
         boolean isRefseq = false;
 
         // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
-        if ( StringUtils.isNotBlank( externalAccession ) && this.isGenbank( externalDb ) ) {
+        if ( StringUtils.isNotBlank( externalAccession ) && this.isGenBank( externalDb ) ) {
             Matcher refSeqAccessionMatcher = refSeqAccessionPattern.matcher( externalAccession );
             isRefseq = refSeqAccessionMatcher.matches();
             bs.setName( externalAccession );
@@ -1822,6 +1823,8 @@ public class GeoConverterImpl implements GeoConverter {
 
         this.convertSeriesTypes( series, expExp );
 
+        this.convertAdditionalTags( series, expExp );
+
         expExp.setDescription( String.join( "\n\n", series.getSummaries() ) );
         if ( series.getLastUpdateDate() != null ) {
             expExp.setDescription( expExp.getDescription() + "\n\n" + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() );
@@ -1878,8 +1881,10 @@ public class GeoConverterImpl implements GeoConverter {
         expExp.setBioAssays( new HashSet<>() );
         // numberOfSample is updated later when the BAs are populated
 
-        if ( series.getSampleCorrespondence().size() == 0 ) {
-            throw new IllegalArgumentException( "No sample correspondence!" );
+        if ( series.getSampleCorrespondence() == null ) {
+            throw new IllegalArgumentException( "No sample correspondence is populated, use DatasetCombiner.findGSECorrespondence() before using this." );
+        } else if ( series.getSampleCorrespondence().size() == 0 ) {
+            throw new IllegalArgumentException( "The sample correspondence is empty." );
         }
 
         // spits out a big summary of the correspondence.
@@ -2012,7 +2017,6 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Detect the most specific assay type that we can.
      */
-    @Nullable
     private Characteristic convertSeriesType( GeoSeries series, GeoSeriesType seriesType ) {
         switch ( seriesType ) {
             case EXPRESSION_PROFILING_BY_RT_PRC:
@@ -2034,22 +2038,18 @@ public class GeoConverterImpl implements GeoConverter {
             case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
                 return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
             case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
-                for ( GeoSample sample : series.getSamples() ) {
-                    if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
-                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY );
-                    } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                        // check for evidence of conding RNA
-                        if ( isCodingRNA( series ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS );
-                        } else if ( isNonCodingRNA( series ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
-                        } else {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY );
-                        }
+                if ( singleCellDetector.isSingleNuclei( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY );
+                } else if ( singleCellDetector.isSingleCell( series ) ) {
+                    // check for evidence of conding RNA
+                    if ( isCodingRNA( series ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.RNASEQ_OF_CODING_RNA_FROM_SINGLE_CELLS );
+                    } else if ( isNonCodingRNA( series ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
+                    } else {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, Values.SINGLE_CELL_RNA_SEQUENCING_ASSAY );
                     }
-                }
-                if ( isTotalRNA( series ) ) {
+                } else if ( isTotalRNA( series ) ) {
                     return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of total RNA", "http://www.ebi.ac.uk/efo/EFO_0009653" );
                 } else if ( isCodingRNA( series ) ) {
                     return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
@@ -2089,6 +2089,48 @@ public class GeoConverterImpl implements GeoConverter {
     private boolean isNonCodingRNA( GeoSeries series ) {
         // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
         return false;
+    }
+
+    /**
+     * Convert any additional tags that might be relevant.
+     */
+    private void convertAdditionalTags( GeoSeries series, ExpressionExperiment expressionExperiment ) {
+        if ( isFacSorted( series ) ) {
+            GeoConverterImpl.log.info( String.format( "%s will be tagged as FACS-sorted due to presence of keywords in its GEO series.", expressionExperiment ) );
+            expressionExperiment.getCharacteristics().add( Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) );
+        }
+    }
+
+    /**
+     * List of keywords to look for to detect FACS-sorted assays.
+     * <p>
+     */
+    private static final String[] FACS_SORTED_KEYWORDS = {
+            "FACS", "FAC sorted", "FAC-sorted",
+            "flow cytometry",
+            // descriptions often contain the word "sorted", but it's too generic to confidently make a call
+            "cells sorted", "sorted cells" };
+
+    /**
+     * Check if a series is FAC-sorted.
+     */
+    private boolean isFacSorted( GeoSeries series ) {
+        return series.getSummaries().stream().anyMatch( s -> Strings.CI.containsAny( s, FACS_SORTED_KEYWORDS ) )
+                || Strings.CI.containsAny( series.getOverallDesign(), FACS_SORTED_KEYWORDS )
+                || series.getSamples().stream().anyMatch( this::isFacSorted );
+    }
+
+    private boolean isFacSorted( GeoSample geoSample ) {
+        return geoSample.getChannels().stream()
+                .anyMatch( this::isFacSorted );
+    }
+
+    private boolean isFacSorted( GeoChannel geoChannel ) {
+        return Strings.CI.containsAny( geoChannel.getSourceName(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getGrowthProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getTreatmentProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getExtractProtocol(), FACS_SORTED_KEYWORDS )
+                || Strings.CI.containsAny( geoChannel.getLabelProtocol(), FACS_SORTED_KEYWORDS );
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism, boolean skipDataVectors ) {
@@ -2147,15 +2189,17 @@ public class GeoConverterImpl implements GeoConverter {
         /*
          * Strip out sample correspondence for samples not for this organism.
          */
-        GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
-
-        for ( String o : organismSampleMap.keySet() ) {
-            if ( o.equals( organism ) ) {
-                continue;
+        if ( series.getSampleCorrespondence() != null ) {
+            GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
+            for ( String o : organismSampleMap.keySet() ) {
+                if ( o.equals( organism ) ) {
+                    continue;
+                }
+                for ( GeoSample s : organismSampleMap.get( o ) ) {
+                    sampleCorrespondence.removeSample( s.getGeoAccession() );
+                }
             }
-            for ( GeoSample s : organismSampleMap.get( o ) ) {
-                sampleCorrespondence.removeSample( s.getGeoAccession() );
-            }
+            speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
         }
 
         /*
@@ -2168,7 +2212,6 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setOverallDesign( series.getOverallDesign() );
         speciesSpecific.setPubmedIds( series.getPubmedIds() );
         speciesSpecific.setReplicates( series.getReplicates() );
-        speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
         speciesSpecific.setSummaries( series.getSummaries() );
         speciesSpecific.setTitle( makeTitle( series.getTitle(), organism ) );
         speciesSpecific.setWebLinks( series.getWebLinks() );
@@ -2483,9 +2526,9 @@ public class GeoConverterImpl implements GeoConverter {
 
     private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
         DatabaseEntry dbe;
-        if ( this.isGenbank( externalDb ) ) {
+        if ( this.isGenBank( externalDb ) ) {
             // deal with accessions in the form XXXXX.N
-            dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
+            dbe = GenBankUtils.getGenBankAccession( externalRef );
             dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
             bs.setName( dbe.getAccession() ); // trimmed version.
         } else {
@@ -2571,9 +2614,9 @@ public class GeoConverterImpl implements GeoConverter {
         if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) || likelyExternalDatabaseIdentifier.equalsIgnoreCase( "genbank" ) ) {
             if ( genbank == null ) {
                 if ( externalDatabaseService != null ) {
-                    genbank = externalDatabaseService.findByName( "Genbank" );
+                    genbank = externalDatabaseService.findByName( ExternalDatabases.GENBANK );
                 } else {
-                    result.setName( "Genbank" );
+                    result.setName( ExternalDatabases.GENBANK );
                     result.setType( DatabaseType.SEQUENCE );
                     genbank = result;
                 }
@@ -2593,7 +2636,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
         if ( result == null || result.getName() == null ) {
-            throw new IllegalStateException( "No external database was identified" );
+            throw new IllegalStateException( "No external database was identified for " + likelyExternalDatabaseIdentifier + "." );
         }
         return result;
     }
@@ -2862,8 +2905,8 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private boolean isGenbank( ExternalDatabase externalDb ) {
-        return externalDb != null && externalDb.getName().equalsIgnoreCase( "Genbank" );
+    private boolean isGenBank( ExternalDatabase externalDb ) {
+        return externalDb != null && externalDb.getName().equalsIgnoreCase( ExternalDatabases.GENBANK );
     }
 
     /**

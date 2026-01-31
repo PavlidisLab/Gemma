@@ -29,8 +29,8 @@ import java.util.List;
  */
 class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
 
-    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names ) {
-        super( singleCellDimension, bioAssayMapper, names );
+    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names, @Nullable List<String> defaultValues, @Nullable List<String> defaultValueUris ) {
+        super( singleCellDimension, bioAssayMapper, names, defaultValues, defaultValueUris );
     }
 
     protected Category getCategory( CSVRecord record ) {

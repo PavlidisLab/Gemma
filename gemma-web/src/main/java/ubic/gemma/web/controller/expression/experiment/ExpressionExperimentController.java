@@ -38,7 +38,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -108,9 +107,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
-import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 /**
  * @author keshav
@@ -639,8 +635,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("unused")
     public void recalculateBatchConfound( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        ee.setBatchConfound( expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee ) );
-        expressionExperimentService.update( ee );
+        expressionExperimentReportService.recalculateExperimentBatchConfound( ee );
     }
 
     /**
@@ -649,10 +644,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("unused")
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = getExperimentById( id, false );
-        BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
-        ee.setBatchEffect( getBatchEffectType( details ) );
-        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
-        expressionExperimentService.update( ee );
+        expressionExperimentReportService.recalculateExperimentBatchEffect( ee );
     }
 
     /**
@@ -1025,7 +1017,7 @@ public class ExpressionExperimentController {
         for ( BioAssayDimension dimension : subsetsByDimension.keySet() ) {
             Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( ee, dimension, offset, limit );
             if ( !designElements.isEmpty() ) {
-                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements, true );
                 List<Gene> genes = designElements.stream()
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );
@@ -1112,7 +1104,7 @@ public class ExpressionExperimentController {
             int offset = 0, limit = 20;
             Slice<CompositeSequence> designElements = processedExpressionDataVectorService.getProcessedDataVectorsDesignElements( subset.getSourceExperiment(), dimension, offset, limit );
             if ( !designElements.isEmpty() ) {
-                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements );
+                Map<CompositeSequence, Collection<Gene>> cs2gene = compositeSequenceService.getGenes( designElements, true );
                 List<Gene> genes = designElements.stream()
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );

@@ -253,7 +253,7 @@ public class PlatformsWebService {
         // FIXME: deal with potential null return value of loadValueObject
         return paginate( compositeSequenceService
                 .getGenes( probeArgService.getEntityWithPlatform( probeArg, arrayDesignArgService.getEntity( platformArg ) ), offset.getValue(),
-                        limit.getValue() )
+                        limit.getValue(), true )
                 .map( geneService::loadValueObject ), probeArgService.getFilters( probeArg ), new String[] { "id" } );
     }
 

@@ -1151,7 +1151,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> countById = QueryUtils.<Long, Object[]>streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048 )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1179,7 +1179,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> switchedCountById = QueryUtils.<Long, Object[]>streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

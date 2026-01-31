@@ -22,6 +22,7 @@ import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -100,7 +101,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
     /**
-     * @see ExpressionExperimentDao#reload(Object)
+     * @see ExpressionExperimentDao#reload(Identifiable)
      */
     ExpressionExperiment reload( ExpressionExperiment ee );
 
@@ -306,6 +307,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
 
+    /**
+     * Count the number of experiments that match the given filters.
+     *
+     * @param filters  a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds a set of extra IDs to be intersected with the IDs retrieved by the filters
+     */
     long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -354,11 +361,29 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
     /**
+     * @param includeSubSets include assays that belong to subsets of the experiment
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets );
+
+    @Nullable
+    Long findIdByBioAssay( BioAssay ba, boolean b );
+
+    /**
      * @param bm bio material
      * @return experiment the given biomaterial is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
+
+    /**
+     *
+     * @param includeSubSets include samples that are associated to assays that belong to subsets of the experiment
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
+
+    Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials );
@@ -377,12 +402,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
     @Nullable
+    Long findIdByDesign( ExperimentalDesign design );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByDesignId( Long designId );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactor( ExperimentalFactor factor );
+
+    @Nullable
+    Long findIdByFactor( ExperimentalFactor factor );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
@@ -392,8 +423,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
     @Nullable
+    Long findIdByFactorValue( FactorValue factor );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByFactorValue( Long factorValueId );
+    ExpressionExperiment findByFactorValueId( Long factorValueId );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
@@ -440,6 +474,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr );
+
+    @Nullable
+    Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr );
 
     /**
      * @param ids ids
@@ -599,7 +640,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     /**
      * Calculate the usage frequency of platforms by the datasets matching the provided filters.
      *
-     * @param filters    a set of filters to be applied as per {@link #load(Filters, Sort, int, int)}
+     * @param filters    a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds   a set of extra IDs to be intersected with the IDs retrieved by the filters
      * @param maxResults the maximum of results, or unlimited if less than 1
      */
     Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults );
@@ -609,6 +651,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * <p>
      * If no filters are supplied (either being null or empty), the {@link #getPerTaxonCount()} fast path is used.
      *
+     * @param filters  a set of filters to be applied as per {@link #loadIds(Filters, Sort)}
+     * @param extraIds a set of extra IDs to be intersected with the IDs retrieved by the filters
      * @see #getPerTaxonCount()
      */
     Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
@@ -636,10 +680,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Obtain the dimension associated to the processed data for the given experiment.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee );
+
+    /**
+     * Obtain the dimension associated to the processed data for the given experiment.
      * <p>
      * Assays are initialized as per {@link Thaws#thawBioAssay(BioAssay)}.
      * <p>
-     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}.
+     * In some special edge cases, a {@link QuantitationType} may have more than one {@link BioAssayDimension}. If you
+     * cannot handle this, use {@link #getProcessedBioAssayDimension(ExpressionExperiment)} instead.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> getProcessedBioAssayDimensionsWithAssays( ExpressionExperiment ee );
@@ -882,9 +934,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<ExpressionExperiment, Taxon> getTaxa( Collection<ExpressionExperiment> ees );
 
     /**
-     * Returns the taxon of the given experiment or subset.
+     * Returns the taxon of the given experiment.
      *
-     * @param bioAssaySet bioAssaySet.
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples).
      */
     @Nullable

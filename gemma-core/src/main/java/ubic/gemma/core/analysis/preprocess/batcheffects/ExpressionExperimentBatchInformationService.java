@@ -4,6 +4,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,9 @@ public interface ExpressionExperimentBatchInformationService {
 
     /**
      * Summarize the batch confounds for a given dataset or its subsets in an HTML string.
+     * <p>
+     * The resulting string will be truncated with {@link ubic.gemma.core.util.StringUtils#truncateInBytes(String, int, Charset)}
+     * as to not exceed {@link ExpressionExperiment#MAX_BATCH_CONFOUND_LENGTH}.
      * @return a summary or null if there is no batch confound
      */
     @Nullable

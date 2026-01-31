@@ -20,103 +20,104 @@ package ubic.gemma.web.taglib;
 
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.springframework.web.servlet.tags.form.TagWriter;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.CitationValueObject;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
-import javax.servlet.jsp.tagext.TagSupport;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import static ubic.gemma.core.util.StringUtils.urlEncode;
+
 /**
  * @author joseph
  */
-public class ShortBibliographicReferenceTag extends TagSupport {
-
-    private static final Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
+public class ShortBibliographicReferenceTag extends AbstractHtmlElementTag {
 
     @Setter
+    @Nullable
     private BibliographicReference citation;
 
     @Override
-    public int doStartTag() throws JspException {
+    public int doStartTagInternal() throws JspException {
+        TagWriter tagWriter = new TagWriter( pageContext );
 
-        ShortBibliographicReferenceTag.log.debug( "start tag" );
+        if ( citation == null ) {
+            tagWriter.startTag( "i" );
+            tagWriter.appendValue( "No bibliographic reference" );
+            tagWriter.endTag(); // </i>
+            return Tag.SKIP_BODY;
+        }
 
-        String contextPath = pageContext.getServletContext().getContextPath();
+        tagWriter.startTag( "span" );
+        writeOptionalAttributes( tagWriter );
 
-        StringBuilder buf = new StringBuilder();
-        if ( this.citation == null ) {
-            buf.append( "No accession" );
+
+        String authorList = citation.getAuthorList();
+
+        if ( authorList != null ) {
+            String[] authors = StringUtils.split( authorList, ";" );
+            // if there are authors, only display the first author
+            tagWriter.appendValue( htmlEscape( authors[0] ) );
+            if ( authors.length > 1 ) {
+                tagWriter.appendValue( " et al." );
+            }
         } else {
+            tagWriter.startTag( "i" );
+            tagWriter.appendValue( "No authors" );
+            tagWriter.endTag(); // </i>
+        }
 
-            String authorList = citation.getAuthorList();
-
-            if ( authorList != null ) {
-                String[] authors = StringUtils.split( authorList, ";" );
-                // if there are authors, only display the first author
-                if ( authors.length == 0 ) {
-
-                } else if ( authors.length == 1 ) {
-                    buf.append( authors[0] ).append( " " );
-                } else {
-                    buf.append( authors[0] ).append( " et al. " );
-                }
-            } else {
-                buf.append( "Null author list" );
-            }
-
-            // display the publication year
+        // display the publication year
+        Date publicationDate = citation.getPublicationDate();
+        if ( publicationDate != null ) {
             Calendar pubDate = new GregorianCalendar();
-            Date publicationDate = citation.getPublicationDate();
-
-            if ( publicationDate != null ) {
-                pubDate.setTime( publicationDate );
-                buf.append( "(" ).append( pubDate.get( Calendar.YEAR ) ).append( ") " );
-            } else {
-                buf.append( "Null publication date" );
-            }
-
-            // add pubmed link
-            if ( citation.getPubAccession() != null ) {
-                String pubMedId = citation.getPubAccession().getAccession();
-                CitationValueObject citationVO = CitationValueObject.convert2CitationValueObject( citation );
-                if ( StringUtils.isNotBlank( pubMedId ) ) {
-                    String link = citationVO.getPubmedURL();
-
-                    buf.append( "<a target='_blank' href='" ).append( link ).append( "' ><img src='" )
-                            .append( contextPath ).append( "/images/pubmed.gif' /> </a>&nbsp;" );
-
-                    /*
-                     * Add link to edit page within Gemma
-                     */
-
-                    buf.append( "<a target='_blank' href='" ).append( contextPath )
-                            .append( "/bibRef/bibRefView.html?accession=" ).append( pubMedId ).append( "'><img src='" )
-                            .append( contextPath ).append( "/images/magnifier.png' /></a>" );
-
-                }
-            }
-
+            pubDate.setTime( publicationDate );
+            tagWriter.appendValue( " (" + pubDate.get( Calendar.YEAR ) + ")" );
         }
 
-        try {
-            pageContext.getOut().print( buf.toString() );
-        } catch ( Exception ex ) {
-            throw new JspException( this.getClass().getName() + ex.getMessage() );
+        // add pubmed link
+        if ( citation.getPubAccession() != null ) {
+            String pubMedId = citation.getPubAccession().getAccession();
+            if ( StringUtils.isNotBlank( pubMedId ) ) {
+                String contextPath = pageContext.getServletContext().getContextPath();
+
+                tagWriter.appendValue( " " );
+
+                String link = PubMedUtils.getUrl( pubMedId ).toString();
+
+                tagWriter.startTag( "a" );
+                tagWriter.writeAttribute( "href", link );
+                tagWriter.writeAttribute( "target", "_blank" );
+                tagWriter.writeAttribute( "rel", "noopener noreferrer" );
+                tagWriter.startTag( "img" );
+                tagWriter.writeAttribute( "src", contextPath + "/images/logo/pubmed-logo-blue.svg" );
+                tagWriter.writeAttribute( "height", "16" );
+                tagWriter.writeAttribute( "alt", "PubMed Link" );
+                tagWriter.endTag(); // </img>
+                tagWriter.endTag(); // </a>
+
+                tagWriter.appendValue( " " );
+
+                /*
+                 * Add link to edit page within Gemma
+                 */
+                tagWriter.startTag( "a" );
+                tagWriter.writeAttribute( "href", contextPath + "/bibRef/bibRefView.html?accession=" + urlEncode( pubMedId ) );
+                tagWriter.writeAttribute( "target", "_blank" );
+                tagWriter.startTag( "img" );
+                tagWriter.writeAttribute( "src", contextPath + "/images/magnifier.png" );
+                tagWriter.endTag(); // </img>
+                tagWriter.endTag(); // </a>
+            }
         }
+
+        tagWriter.endTag(); // </span>
+
         return Tag.SKIP_BODY;
-    }
-
-    @Override
-    public int doEndTag() {
-
-        ShortBibliographicReferenceTag.log.debug( "end tag" );
-
-        return Tag.EVAL_PAGE;
     }
 }

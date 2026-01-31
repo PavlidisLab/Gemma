@@ -48,9 +48,9 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues ) {
+    public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean useGene2Cs, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues ) {
         return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, includeSubSets,
-                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, keepNonSpecific, initializeFactorValues );
+                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, useGene2Cs, keepNonSpecific, initializeFactorValues );
     }
 
     @Override
@@ -64,52 +64,52 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean keepNonSpecificProbes ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, keepNonSpecificProbes ) );
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
+        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene,
-            boolean keepNonSpecificProbes, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, keepNonSpecificProbes, threshold, limit ) );
+            boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit ) {
+        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes, threshold, limit ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets ) {
+        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
                 experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
-            boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
+        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
                 experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets,
                 threshold, limit ) );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
-        return this.DERDao.findDiffExAnalysisResultIdsInResultSets( resultSets, geneIds );
+        return this.DERDao.findGeneResultsByResultSetIdsAndGeneIds( resultSets, geneIds );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, int maxResultsToReturn, int minNumberOfResults ) {
+    public List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet,
+            double threshold, int maxResultsToReturn, int minNumberOfResults ) {
         return this.DERDao.findByResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
-        return this.DERDao.loadContrastDetailsForResults( ids );
+    public Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids ) {
+        return this.DERDao.findContrastsByAnalysisResultIds( ids );
     }
 
     private Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> groupDiffExResultVos( Map<? extends BioAssaySet, List<DifferentialExpressionAnalysisResult>> qResult ) {

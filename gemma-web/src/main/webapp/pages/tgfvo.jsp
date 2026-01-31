@@ -3,7 +3,7 @@
 <title>The Gemma Factor Value Ontology</title>
 
 <div class="padded">
-    <h1>The Gemma Factor Value Ontology</h1>
+    <h2>The Gemma Factor Value Ontology</h2>
     <p><a href="${pageContext.request.contextPath}/ont/TGFVO.OWL?download=true">Download TGFVO</a></p>
     <p>The Gemma Factor Value Ontology provides a structured view of all the annotations used in Gemma.</p>
     <p style="margin-bottom: 0;">Retrieve TGFVO in RDF/XML:</p>

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Interface for CLI tools.
  * <p>
- * Implementing this interface will make the tool detectable by {@link GemmaCLI}.
+ * Implementing this interface will make the tool detectable by {@link ubic.gemma.cli.main.GemmaCLI}.
  *
  * @author poirigui
  */

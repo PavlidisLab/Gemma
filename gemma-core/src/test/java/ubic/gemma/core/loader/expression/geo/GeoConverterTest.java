@@ -364,7 +364,7 @@ public class GeoConverterTest extends BaseIntegrationTest {
         BioSequence seq = platform.getCompositeSequences().iterator().next().getBiologicalCharacteristic();
         assertNotNull( seq.getSequenceDatabaseEntry() );
         String acc = seq.getSequenceDatabaseEntry().getAccession();
-        assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
+        assertEquals( "GenBank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
         assertFalse( acc.startsWith( "IMAGE" ) );
     }
 

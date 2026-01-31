@@ -50,6 +50,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public static final int MAX_NAME_LENGTH = 255;
 
+    public static final int MAX_BATCH_CONFOUND_LENGTH = 65535;
+
     @Nullable
     private DatabaseEntry accession;
 

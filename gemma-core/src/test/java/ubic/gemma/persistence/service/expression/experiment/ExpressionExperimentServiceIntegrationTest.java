@@ -146,7 +146,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
         FactorValue fv = ef.getFactorValues().iterator().next();
         assertNotNull( fv.getId() );
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValueId( fv.getId() );
         assertNotNull( eeFound );
         assertEquals( eeFound.getId(), ee.getId() );
 

@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.isWildcard;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareDatabaseQuery;
 
@@ -61,6 +62,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     public static final double MATCH_BY_SHORT_NAME_SCORE = 1.0;
 
     public static final double MATCH_BY_ACCESSION_SCORE = 1.0;
+    public static final double MATCH_BY_NCBI_ID_SCORE = 1.0;
     public static final double MATCH_BY_NAME_SCORE = 0.95;
 
     /**
@@ -142,35 +144,35 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             ArrayDesign shortNameResult = arrayDesignService.findByShortName( query );
             if ( shortNameResult != null ) {
                 results.add( SearchResult.from( ArrayDesign.class, shortNameResult, DatabaseSearchSource.MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             Collection<ArrayDesign> nameResult = arrayDesignService.findByName( query );
             for ( ArrayDesign ad : nameResult ) {
                 results.add( SearchResult.from( ArrayDesign.class, ad, DatabaseSearchSource.MATCH_BY_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( query );
             for ( ArrayDesign arrayDesign : altNameResults ) {
                 results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, null, "ArrayDesignService.findByAlternateName" ) );
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( settings.getMode().isAtLeast( SearchSettings.SearchMode.BALANCED ) ) {
             Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( query );
             for ( ArrayDesign arrayDesign : manufacturerResults ) {
                 results.add( SearchResult.from( ArrayDesign.class, arrayDesign, 0.9, null, "ArrayDesignService.findByManufacturer" ) );
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.BALANCED ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.BALANCED ) ) {
             // search by exact composite sequence name
             Collection<ArrayDesign> r = arrayDesignService.findByCompositeSequenceName( query );
             for ( ArrayDesign ad : r ) {
@@ -200,14 +202,34 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         if ( query == null ) {
             return Collections.emptySet();
         }
-        Collection<ExpressionExperimentSet> results = this.experimentSetService.findByName( query );
+
+        SearchResultSet<ExpressionExperimentSet> results = new SearchResultSet<>( settings );
+
+        if ( canSearchById( settings, ExpressionExperimentSet.class ) ) {
+            try {
+                ExpressionExperimentSet eeSet = this.experimentSetService.load( Long.parseLong( query ) );
+                if ( eeSet != null ) {
+                    results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, Collections.singleton( eeSet ), MATCH_BY_ID_SCORE, "ExpressionExperimentSetService.load" ) );
+                }
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
+        }
+
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByName( query ), MATCH_BY_NAME_SCORE, "ExpressionExperimentSetService.findByName" ) );
+        }
+
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByAccession( query ), MATCH_BY_ACCESSION_SCORE, "ExpressionExperimentSetService.findByAccession" ) );
+        }
 
         if ( settings.getTaxonConstraint() != null ) {
             // the taxon is lazy-loaded in the EE set, so we can only filter by ID
-            results.removeIf( eeSet -> !Objects.equals( eeSet.getTaxon().getId(), settings.getTaxonConstraint().getId() ) );
+            results.removeIf( eeSet -> !Objects.equals( requireNonNull( eeSet.getResultObject() ).getTaxon(), settings.getTaxonConstraint() ) );
         }
 
-        return toSearchResults( settings, ExpressionExperimentSet.class, results, MATCH_BY_NAME_SCORE, "ExperimentSetService.findByName" );
+        return results;
     }
 
     /**
@@ -222,22 +244,35 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         StopWatch watch = StopWatch.createStarted();
 
-        Collection<BioSequence> bs = bioSequenceService.findByName( searchString );
+        SearchResultSet<BioSequence> results = new SearchResultSet<>( settings );
 
-        if ( settings.getTaxonConstraint() != null ) {
-            bs.removeIf( b -> !Objects.equals( b.getTaxon().getId(), settings.getTaxonConstraint().getId() ) );
+        if ( canSearchById( settings, BioSequence.class ) ) {
+            try {
+                BioSequence bs = bioSequenceService.load( Long.parseLong( searchString ) );
+                if ( bs != null ) {
+                    results.addAll( toSearchResults( settings, BioSequence.class, Collections.singleton( bs ), MATCH_BY_ID_SCORE, "BioSequenceService.load" ) );
+                }
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
         }
 
-        // bioSequenceService.thawRawAndProcessed( bs );
-        Collection<SearchResult<BioSequence>> bioSequenceList = toSearchResults( settings, BioSequence.class, bs, MATCH_BY_NAME_SCORE, "BioSequenceService.findByName" );
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            results.addAll( toSearchResults( settings, BioSequence.class, bioSequenceService.findByName( searchString ),
+                    MATCH_BY_NAME_SCORE, "BioSequenceService.findByName" ) );
+        }
+
+        if ( settings.getTaxonConstraint() != null ) {
+            results.removeIf( b -> !Objects.equals( requireNonNull( b.getResultObject() ).getTaxon(), settings.getTaxonConstraint() ) );
+        }
 
         watch.stop();
         if ( watch.getTime() > 1000 ) {
             DatabaseSearchSource.log.warn( String.format( "BioSequence DB search for %s with '%s' took %d ms and found %d BioSequences",
-                    settings, searchString, watch.getTime(), bioSequenceList.size() ) );
+                    settings, searchString, watch.getTime(), results.size() ) );
         }
 
-        return bioSequenceList;
+        return results;
     }
 
     @Override
@@ -272,20 +307,34 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         ArrayDesign ad = settings.getPlatformConstraint();
 
+        SearchResultSet<CompositeSequence> results = new SearchResultSet<>( settings );
+
+        if ( canSearchById( settings, CompositeSequence.class ) ) {
+            try {
+                CompositeSequence cs = compositeSequenceService.load( Long.parseLong( searchString ) );
+                if ( cs != null ) {
+                    results.addAll( toSearchResults( settings, CompositeSequence.class, Collections.singleton( cs ), MATCH_BY_ID_SCORE, "CompositeSequenceService.load" ) );
+                }
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
+        }
+
         // search by exact composite sequence name
-        Collection<SearchResult<CompositeSequence>> results = new SearchResultSet<>( settings );
-        if ( ad != null ) {
-            CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
-            if ( cs != null )
-                results.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
-        } else {
-            results.addAll( toSearchResults( settings, CompositeSequence.class, compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" ) );
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            if ( ad != null ) {
+                CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
+                if ( cs != null )
+                    results.add( SearchResult.from( CompositeSequence.class, cs, MATCH_BY_NAME_SCORE, null, "CompositeSequenceService.findByName" ) );
+            } else {
+                results.addAll( toSearchResults( settings, CompositeSequence.class, compositeSequenceService.findByName( searchString ), MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByName" ) );
+            }
         }
 
         /*
          * Search by biosequence
          */
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.FAST ) ) {
             Collection<CompositeSequence> csViaBioSeq = compositeSequenceService.findByBioSequenceName( searchString );
             if ( ad != null ) {
                 csViaBioSeq.removeIf( c -> !c.getArrayDesign().equals( ad ) );
@@ -293,19 +342,40 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             results.addAll( toSearchResults( settings, CompositeSequence.class, csViaBioSeq, INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "CompositeSequenceService.findByBioSequenceName" ) );
         }
 
-        /*
-         * In case the query _is_ a gene
-         */
-        if ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) ) {
+        // filter by the taxon of the platform
+        if ( settings.getTaxonConstraint() != null ) {
+            results.removeIf( sr -> {
+                assert sr.getResultObject() != null;
+                return !sr.getResultObject().getArrayDesign().getPrimaryTaxon().equals( settings.getTaxonConstraint() );
+            } );
+        }
+
+        // In case the query _is_ a gene
+        // This is expensive because it involves navigating associations between genes and composite sequences.
+        // It is done only if there are no results yet (in balanced mode) or if the search mode is accurate. It is never
+        // done in fast/exact modes
+        if ( canContinue( results, settings, SearchSettings.SearchMode.FAST ) ) {
             Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings, context );
-            for ( SearchResult<Gene> g : rawGeneResults ) {
-                // results from the database are always pre-filled
-                assert g.getResultObject() != null;
-                if ( settings.getPlatformConstraint() != null ) {
-                    results.addAll( toSearchResults( settings, CompositeSequence.class, compositeSequenceService.findByGene( g.getResultObject(), settings.getPlatformConstraint() ), INDIRECT_HIT_PENALTY * g.getScore(), "CompositeSequenceService.findByGene with platform constraint" ) );
-                } else {
-                    results.addAll( toSearchResults( settings, CompositeSequence.class, compositeSequenceService.findByGene( g.getResultObject() ), INDIRECT_HIT_PENALTY * g.getScore(), "CompositeSequenceService.findByGene" ) );
-                }
+            // results from the database are always pre-filled
+            Collection<Gene> genes = rawGeneResults.stream()
+                    .map( SearchResult::getResultObject )
+                    .map( Objects::requireNonNull )
+                    .collect( Collectors.toSet() );
+            Map<Gene, Double> geneToScore = rawGeneResults.stream()
+                    .collect( Collectors.toMap( SearchResult::getResultObject, SearchResult::getScore ) );
+            Map<Gene, Collection<CompositeSequence>> gr;
+            if ( settings.getPlatformConstraint() != null ) {
+                gr = compositeSequenceService.findByGenes( genes, settings.getPlatformConstraint(),
+                        // use the GENE2CS table in FAST or BALANCED mode
+                        settings.getMode().isAtMost( SearchSettings.SearchMode.BALANCED ) );
+            } else {
+                gr = compositeSequenceService.findByGenes( genes,
+                        // use the GENE2CS table in FAST or BALANCED mode
+                        settings.getMode().isAtMost( SearchSettings.SearchMode.BALANCED ) );
+            }
+
+            for ( Gene gene : gr.keySet() ) {
+                results.addAll( toSearchResults( settings, CompositeSequence.class, gr.get( gene ), INDIRECT_HIT_PENALTY * geneToScore.get( gene ), "CompositeSequenceService.findByGenes" ) );
             }
 
             if ( geneResults != null ) {
@@ -318,24 +388,19 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         // search by associated genes.
-        if ( geneResults != null ) {
+        // this is only about populating gene results, not finding more CS hits
+        if ( geneResults != null && settings.getMode().isAtLeast( SearchSettings.SearchMode.FAST ) ) {
             Collection<CompositeSequence> compositeSequences = results.stream()
                     .map( SearchResult::getResultObject )
                     .filter( Objects::nonNull )
                     .collect( Collectors.toSet() );
-            for ( Collection<Gene> genes : compositeSequenceService.getGenes( compositeSequences ).values() ) {
+            for ( Collection<Gene> genes : compositeSequenceService.getGenes( compositeSequences,
+                    // use the GENE2CS table in FAST or BALANCED mode
+                    settings.getMode().isAtMost( SearchSettings.SearchMode.BALANCED ) ).values() ) {
                 // TODO: each individual CS have a potentially different score that should be reflected in the gene score,
                 //       but that would require knowing which CS matched which gene
                 geneResults.addAll( toSearchResults( settings, Gene.class, genes, INDIRECT_HIT_PENALTY, "CompositeSequenceService.getGenes" ) );
             }
-        }
-
-        // filter by the taxon of the platform
-        if ( settings.getTaxonConstraint() != null ) {
-            results.removeIf( sr -> {
-                assert sr.getResultObject() != null;
-                return !sr.getResultObject().getArrayDesign().getPrimaryTaxon().equals( settings.getTaxonConstraint() );
-            } );
         }
 
         watch.stop();
@@ -361,7 +426,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             return Collections.emptySet();
         }
 
-        Collection<SearchResult<ExpressionExperiment>> results = new SearchResultSet<>( settings );
+        SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
         if ( canSearchById( settings, ExpressionExperiment.class ) ) {
             try {
@@ -375,7 +440,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE )
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT )
                 // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
                 || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
@@ -385,7 +450,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         Collection<ExpressionExperiment> ees;
-        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) || SecurityUtil.isUserAdmin() ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT )
+                // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
+                || SecurityUtil.isUserAdmin() ) {
             ees = expressionExperimentService.findByAccession( query ); // this will find split parts
             for ( ExpressionExperiment e : ees ) {
                 assert e.getAccession() != null;
@@ -393,7 +460,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             ees = expressionExperimentService.findByName( query );
             for ( ExpressionExperiment ee : ees ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, Collections.singletonMap( "name", ee.getName() ), "ExpressionExperimentService.findByName" ) );
@@ -420,10 +487,11 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
      * tables
      */
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws
+            SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        Set<SearchResult<Gene>> results = new SearchResultSet<>( settings );
+        SearchResultSet<Gene> results = new SearchResultSet<>( settings );
 
         String searchString = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( searchString != null ) {
@@ -442,7 +510,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                 //
             }
             if ( result != null ) {
-                results.add( SearchResult.from( Gene.class, result, MATCH_BY_ID_SCORE, null, "GeneService.findByNCBIId" ) );
+                results.add( SearchResult.from( Gene.class, result, MATCH_BY_NCBI_ID_SCORE, null, "GeneService.findByNCBIId" ) );
             } else {
                 result = geneService.findByAccession( searchString, null );
                 if ( result != null ) {
@@ -452,14 +520,13 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         // attempt to do an inexact search if no results were yielded
-        if ( ( results.isEmpty() && settings.getMode().isAtLeast( SearchSettings.SearchMode.BALANCED ) )
-                || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.FAST ) ) {
             searchGeneExpanded( settings, context.getIssueReporter(), results );
         }
 
         // filter by taxon
         if ( settings.getTaxonConstraint() != null ) {
-            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxonConstraint() ) );
+            results.removeIf( result1 -> !requireNonNull( result1.getResultObject() ).getTaxon().equals( settings.getTaxonConstraint() ) );
         }
 
         watch.stop();
@@ -473,7 +540,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     /**
      * Expanded gene search used when a simple search does not yield results.
      */
-    private void searchGeneExpanded( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter, Set<SearchResult<Gene>> results ) throws SearchException {
+    private void searchGeneExpanded( SearchSettings
+            settings, @Nullable Consumer<Throwable> issueReporter, SearchResultSet<Gene> results ) throws
+            SearchException {
         String inexactString = prepareDatabaseQuery( settings, true, issueReporter );
         if ( inexactString == null ) {
             return;
@@ -505,7 +574,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             // sometimes, the full gene name is uttered, unquoted
             Collection<Gene> r = geneService.findByOfficialName( StringUtils.strip( settings.getQuery() ) );
             if ( !r.isEmpty() ) {
@@ -523,7 +592,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         /*
          * If we found a match using official symbol or name, don't bother with this
          */
-        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
+        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
@@ -537,7 +606,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws
+            SearchException {
         String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( query == null ) {
             return Collections.emptySet();
@@ -550,7 +620,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     }
 
     @Override
-    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings
+            settings, SearchContext context ) throws SearchException {
         Collection<SearchResult<BlacklistedEntity>> blacklistedResults = new SearchResultSet<>( settings );
         String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
 
@@ -574,15 +645,27 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     /**
      * Determine if searching by ID is reasonable given the search settings.
      * <p>
-     * We can search by ID only if a single result type is requested or if we are in the accurate search mode. The main
-     * reason is that IDs can conflict between entity types.
+     * We can search by ID only if a single result type is requested. The main reason is that IDs can conflict between
+     * entity types.
      */
     private boolean canSearchById( SearchSettings settings, Class<?> resultType ) {
-        return settings.getResultTypes().equals( Collections.singleton( resultType ) )
-                || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
+        return settings.getResultTypes().equals( Collections.singleton( resultType ) );
     }
 
-    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities, double score, String source ) {
+    /**
+     * Determine if we can continue searching based on the current results, settings and minimum search mode.
+     * <p>
+     * This is applying a search policy where we would keep searching only if we have no results yet or if the search
+     * mode is at least {@link SearchSettings.SearchMode#ACCURATE}. In either case, the current search mode must be at
+     * least the specified minimum.
+     */
+    private boolean canContinue( SearchResultSet<?> results, SearchSettings settings, SearchSettings.SearchMode minimumMode ) {
+        return settings.getMode().isAtLeast( minimumMode ) && ( results.isEmpty() || settings.getMode().isAtLeast( SearchSettings.SearchMode.ACCURATE ) );
+    }
+
+    private static <T extends
+            Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
+            double score, String source ) {
         return entities.stream()
                 .filter( Objects::nonNull )
                 .map( e -> SearchResult.from( resultType, e, score, null, source ) )

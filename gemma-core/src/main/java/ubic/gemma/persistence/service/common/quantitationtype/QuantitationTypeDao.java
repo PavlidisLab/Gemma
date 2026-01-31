@@ -71,11 +71,6 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
 
     /**
      * Retrieve all the QTs associated with the given experiment and dimension.
-     * @param expressionExperiment
-     * @param dimension
-     * @param vectorTypes
-     * @return
-     * @param <T>
      */
     Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes );
 

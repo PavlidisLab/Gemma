@@ -310,7 +310,7 @@ public class ExpressionExperimentDataFetchController {
                 /* the design file */
                 if ( eedId != null ) {
                     ExpressionExperiment finalEe = ee;
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDesignFile( ee, false, false )
                             .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) ) ) {
                         f = lockedPath.getPath();
                     } catch ( IOException e ) {

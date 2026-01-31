@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -10,7 +11,6 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,13 +26,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * This builder allows for generating URLs for entities in Gemma Web and REST.
@@ -240,6 +240,11 @@ public class EntityUrlBuilder {
             }
         }
 
+        private WebEntityUrl( String baseUrl, U entity, String entityPath ) {
+            super( baseUrl, entity );
+            this.entityPath = entityPath;
+        }
+
         public URI toUri() {
             return URI.create( baseUrl + entityPath + entity.getId() );
         }
@@ -247,19 +252,22 @@ public class EntityUrlBuilder {
 
     public class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
 
-        private boolean byShortName = false;
-
-        private String entityPath = "/expressionExperiment/showExpressionExperiment.html";
-        private String additionalQuery = "";
+        private final boolean byShortName;
+        private final String additionalQuery;
 
         private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity ) {
-            super( baseUrl, entity );
+            this( baseUrl, entity, "/expressionExperiment/showExpressionExperiment.html", false, "" );
+        }
+
+        private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity, String entityPath, boolean byShortName, String additionalQuery ) {
+            super( baseUrl, entity, entityPath );
+            this.byShortName = byShortName;
+            this.additionalQuery = additionalQuery;
         }
 
         public ExpressionExperimentWebUrl byShortName() {
             Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
-            byShortName = true;
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, true, additionalQuery );
         }
 
         public ExperimentalDesignWebUrl design() {
@@ -268,27 +276,21 @@ public class EntityUrlBuilder {
         }
 
         public ExpressionExperimentWebUrl edit() {
-            entityPath = "/expressionExperiment/editExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/editExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl bioAssays() {
-            entityPath = "/expressionExperiment/showBioAssaysFromExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/showBioAssaysFromExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl bioMaterials() {
-            entityPath = "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html";
-            additionalQuery = "";
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html", byShortName, additionalQuery );
         }
 
         public ExpressionExperimentWebUrl showSingleCellExpressionData( QuantitationType quantitationType, CompositeSequence designElement, @Nullable List<BioAssay> assays, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic ) {
             Assert.state( !byShortName, "Single-cell box plots cannot be visualized by short name." );
-            entityPath = "/expressionExperiment/showSingleCellExpressionData.html";
-            additionalQuery = "&quantitationType=" + quantitationType.getId();
+            String entityPath = "/expressionExperiment/showSingleCellExpressionData.html";
+            String additionalQuery = "&quantitationType=" + quantitationType.getId();
             additionalQuery += "&designElement=" + designElement.getId();
             if ( assays != null ) {
                 for ( BioAssay assay : assays ) {
@@ -303,7 +305,7 @@ public class EntityUrlBuilder {
             if ( focusedCharacteristic != null ) {
                 additionalQuery += "&focusedCharacteristic=" + focusedCharacteristic.getId();
             }
-            return this;
+            return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, false, additionalQuery );
         }
 
         @Override
@@ -574,7 +576,7 @@ public class EntityUrlBuilder {
 
     public class ExternalEntityUrl<T extends Identifiable> extends EntityUrl<T> {
 
-        private final String url;
+        private String url;
 
         private ExternalEntityUrl( String baseUrl, T entity ) {
             super( baseUrl, entity );
@@ -605,21 +607,11 @@ public class EntityUrlBuilder {
          * TODO: move this in some kind of re-usable utility class
          */
         private String getDatabaseEntryUrl( DatabaseEntry entity ) {
-            if ( entity.getExternalDatabase() != null ) {
-                switch ( entity.getExternalDatabase().getName() ) {
-                    case ExternalDatabases.GEO:
-                        return "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + urlEncode( entity.getAccession() );
-                    case ExternalDatabases.PUBMED:
-                        return "https://pubmed.ncbi.nlm.nih.gov/" + urlEncode( entity.getAccession() ) + "/";
-                    case ExternalDatabases.GO:
-                        return "https://amigo.geneontology.org/amigo/term/" + urlEncode( entity.getAccession() );
-                    default:
-                        throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
-                }
-            } else if ( entity.getUri() != null ) {
-                return entity.getUri();
+            URL externalUrl = ExternalDatabaseUtils.getUrl( entity );
+            if ( externalUrl != null ) {
+                return externalUrl.toString();
             } else {
-                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for " + entity + ".", entity.getClass() );
+                throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
             }
         }
 
@@ -636,13 +628,5 @@ public class EntityUrlBuilder {
         // FIXME: do better...
         //noinspection unchecked
         return ( Class<T> ) elements.iterator().next().getClass();
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

@@ -38,10 +38,9 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
     }
 
     /**
-     * Retrieves the Elements of the Platform that this argument represents.
+     * Retrieves the design elements of the platform that this argument represents.
      *
-     * @param service service that will be used to retrieve the persistent AD object.
-     * @return a collection of Composite Sequence VOs that the platform represented by this argument contains.
+     * @return a collection of design element VOs that the platform represented by this argument contains.
      */
     public Slice<CompositeSequenceValueObject> getElements( PlatformArg<?> arg, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( arg );

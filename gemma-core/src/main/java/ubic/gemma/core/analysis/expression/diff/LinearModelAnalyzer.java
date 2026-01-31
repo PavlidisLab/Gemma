@@ -61,7 +61,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -72,7 +71,6 @@ import java.util.stream.Collectors;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.createBADMap;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.makeDataMatrix;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
-import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -369,11 +367,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             /*
              * make a EESubSet
              */
-            String subsetName = "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue );
-            if ( subsetName.getBytes( StandardCharsets.UTF_8 ).length > ExpressionExperimentSubSet.MAX_NAME_LENGTH ) {
-                log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + ExpressionExperimentSubSet.MAX_NAME_LENGTH + " characters, it will be abbreviated." );
-                subsetName = abbreviateInBytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 );
-            }
+            String subsetName = FactorValueUtils.getSummaryString( subsetFactorValue );
             ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance( subsetName, expressionExperiment );
             Collection<BioAssay> bioAssays = new HashSet<>();
             for ( BioMaterial bm : bioMaterials ) {
@@ -1012,7 +1006,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             return new HashMap<>();
         }
 
-        return compositeSequenceService.getGenes( result.keySet() );
+        return compositeSequenceService.getGenes( result.keySet(), true );
 
     }
 

@@ -95,7 +95,7 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * Obtain a {@link Filter} with an already parsed value.
      * @see #getFilter(String, Filter.Operator, String)
      */
-    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) throws IllegalArgumentException;
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value ) throws IllegalArgumentException;
 
     /**
      * Obtain a {@link Filter} with an already parsed collection of values.

@@ -23,6 +23,8 @@ import ubic.gemma.model.common.Identifiable;
 
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
+ *
+ * @author Paul
  */
 public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable {
 
@@ -30,8 +32,6 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public AnalysisResultSet() {
     }

@@ -1,6 +1,7 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
 import static ubic.gemma.cli.util.OptionsUtils.*;
@@ -64,8 +66,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
             REPLACE_CELL_TYPE_ASSIGNMENT_OPTION = "replaceCta",
             PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION = "preferredCta",
-            OTHER_CELL_LEVEL_CHARACTERISTICS_NAME = "clcName",
-            OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile",
+            OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION = "clcName",
+            OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_OPTION = "clcDefaultValue",
+            OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_URI_OPTION = "clcDefaultValueUri",
+            OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION = "clcFile",
             REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION = "replaceClc",
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
             IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
@@ -154,6 +158,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Path otherCellLevelCharacteristicsFile;
     @Nullable
     private List<String> otherCellLevelCharacteristicsNames;
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValues;
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValueUris;
     private boolean replaceExistingOtherCellLevelCharacteristics;
     private boolean inferSamplesFromCellIdsOverlap;
     private boolean ignoreUnmatchedCellIds;
@@ -261,18 +269,31 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .get() );
         options.addOption( REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, "replace-cell-type-assignment", false, String.format( "Replace an existing cell type assignment with the same name. The %s and %s options must be set.", formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ), formatOption( options, CELL_TYPE_ASSIGNMENT_NAME_OPTION ) ) );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT_OPTION, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one. The " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + " option must be set." );
-        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
+        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION )
                 .longOpt( "cell-level-characteristics-file" )
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing additional cell-level characteristics to import." )
                 .get() );
-        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ).longOpt( "cell-level-characteristics-name" )
+        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION )
+                .longOpt( "cell-level-characteristics-name" )
                 .hasArgs()
                 .valueSeparator( ',' )
-                .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter." )
+                .desc( "Name to use for the CLC. If the file contains more than one CLC, multiple names can be provided using ',' as a delimiter. Defaults to unnamed CLCs." )
+                .get() );
+        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_OPTION )
+                .longOpt( "cell-level-characteristics-default-value" )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .desc( "Default value to use for the CLC. If the file contains more than one CLC, multiple default values can be provided using ',' as a delimiter. Defaults to missing values." )
+                .get() );
+        options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_URI_OPTION )
+                .longOpt( "cell-level-characteristics-default-value-uri" )
+                .hasArgs()
+                .valueSeparator( ',' )
+                .desc( "Default value URI to use for the CLC. If the file contains more than one CLC, multiple default values can be provided using ',' as a delimiter. Defaults to missing values." )
                 .get() );
         options.addOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics", false,
-                String.format( "Replace existing cell-level characteristics with the same names. The %s and %s options must be set.", formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) );
+                String.format( "Replace existing cell-level characteristics with the same names. The %s and %s options must be set.", formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ), formatOption( options, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION ) ) );
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
         options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
 
@@ -396,20 +417,36 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         replaceExistingCellTypeAssignments = hasOption( commandLine, REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, requires( allOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( CELL_TYPE_ASSIGNMENT_NAME_OPTION ) ) ) );
 
         // CLCs
-        if ( commandLine.hasOption( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) {
-            otherCellLevelCharacteristicsNames = Arrays.asList( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) );
+        otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION );
+        if ( hasOption( commandLine, OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION, requires( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ) ) ) ) {
+            otherCellLevelCharacteristicsNames = Arrays.stream( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION ) )
+                    .map( StringUtils::stripToNull )
+                    .collect( Collectors.toList() );
         } else {
             otherCellLevelCharacteristicsNames = null;
         }
-        otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
+        if ( hasOption( commandLine, OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_OPTION, requires( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ) ) ) ) {
+            otherCellLevelCharacteristicsDefaultValues = Arrays.stream( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_OPTION ) )
+                    .map( StringUtils::stripToNull )
+                    .collect( Collectors.toList() );
+        } else {
+            otherCellLevelCharacteristicsDefaultValues = null;
+        }
+        if ( hasOption( commandLine, OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_URI_OPTION, requires( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ) ) ) ) {
+            otherCellLevelCharacteristicsDefaultValueUris = Arrays.stream( commandLine.getOptionValues( OTHER_CELL_LEVEL_CHARACTERISTICS_DEFAULT_VALUE_URI_OPTION ) )
+                    .map( StringUtils::stripToNull )
+                    .collect( Collectors.toList() );
+        } else {
+            otherCellLevelCharacteristicsDefaultValueUris = null;
+        }
         replaceExistingOtherCellLevelCharacteristics = hasOption( commandLine, REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION,
-                requires( allOf( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME ) ) ) );
+                requires( allOf( toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_NAME_OPTION ) ) ) );
 
         // applies to both cell type assignments and other cell-level characteristics
         inferSamplesFromCellIdsOverlap = hasOption( commandLine, INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION,
-                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
+                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ) ) ) );
         ignoreUnmatchedCellIds = hasOption( commandLine, IGNORE_UNMATCHED_CELL_IDS_OPTION,
-                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
+                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE_OPTION ) ) ) );
 
         // cell type factor
         replaceCellTypeFactor = getAutoOptionValue( commandLine, REPLACE_CELL_TYPE_FACTOR_OPTION, KEEP_CELL_TYPE_FACTOR_OPTION );
@@ -481,19 +518,27 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         switch ( mode ) {
             case LOAD_CELL_TYPE_ASSIGNMENTS:
                 Collection<CellTypeAssignment> cta;
-                if ( dataType != null ) {
-                    cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, dataType, config );
-                } else {
-                    cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, config );
+                try {
+                    if ( dataType != null ) {
+                        cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, dataType, config );
+                    } else {
+                        cta = singleCellDataLoaderService.loadCellTypeAssignments( ee, config );
+                    }
+                } catch ( NonUniqueCellTypeAssignmentByNameException e ) {
+                    throw new IllegalArgumentException( "There is already a cell type assignment with the same name, use " + formatOption( REPLACE_CELL_TYPE_ASSIGNMENT_OPTION, "replace-cell-type-assignment" ) + " to replace it.", e );
                 }
                 addSuccessObject( ee, "Loaded cell type assignments " + cta );
                 break;
             case LOAD_CELL_LEVEL_CHARACTERISTICS:
                 Collection<CellLevelCharacteristics> clc;
-                if ( dataType != null ) {
-                    clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, dataType, config );
-                } else {
-                    clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, config );
+                try {
+                    if ( dataType != null ) {
+                        clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, dataType, config );
+                    } else {
+                        clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, config );
+                    }
+                } catch ( NonUniqueCellLevelCharacteristicsByNameException e ) {
+                    throw new IllegalArgumentException( "There is already a CLC with the same name, use " + formatOption( REPLACE_OTHER_CELL_LEVEL_CHARACTERISTICS_OPTION, "replace-cell-level-characteristics" ) + " to replace it." );
                 }
                 addSuccessObject( ee, "Loaded cell-level characteristics " + clc );
                 break;
@@ -612,6 +657,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder
                     .otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile )
                     .otherCellLevelCharacteristicsNames( otherCellLevelCharacteristicsNames )
+                    .otherCellLevelCharacteristicsDefaultValues( otherCellLevelCharacteristicsDefaultValues )
+                    .otherCellLevelCharacteristicsDefaultValueUris( otherCellLevelCharacteristicsDefaultValueUris )
                     .replaceExistingOtherCellLevelCharacteristics( replaceExistingOtherCellLevelCharacteristics )
                     .ignoreExistingOtherCellLevelCharacteristics( mode == Mode.LOAD_EVERYTHING );
         }

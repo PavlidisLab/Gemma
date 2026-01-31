@@ -1,10 +1,9 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 public class GeoUtils {
 
@@ -15,20 +14,74 @@ public class GeoUtils {
     private static final String GEO_FTP_BASE_URL = "ftp://ftp.ncbi.nlm.nih.gov/geo";
 
     /**
-     * Obtain a URL for a series family file.
+     * Obtain a URL for GEO entry.
      */
-    public static URL getUrlForSeriesFamily( String geoAccession, GeoSource source, GeoFormat format ) {
+    public static URL getUrl( String geoAccession, GeoSource source, GeoFormat format, GeoScope scope, GeoAmount amount ) {
         if ( source == GeoSource.DIRECT ) {
             String form;
             if ( format == GeoFormat.SOFT ) {
                 form = "text";
             } else if ( format == GeoFormat.MINIML ) {
                 form = "xml";
+            } else if ( format == GeoFormat.HTML ) {
+                form = null;
             } else {
-                throw new UnsupportedOperationException( "Unsupported GEO source: " + source + "." );
+                throw new UnsupportedOperationException( "Unsupported GEO source: " + source + " for the direct GEO source." );
+            }
+            String targ;
+            switch ( scope ) {
+                case SELF:
+                    // in the HTML view, the default is self
+                    targ = format == GeoFormat.HTML ? null : "self";
+                    break;
+                case SAMPLES:
+                    targ = "samples";
+                    break;
+                case PLATFORM:
+                    targ = "platform";
+                    break;
+                case SERIES:
+                    targ = "series";
+                    break;
+                case FAMILY:
+                    targ = "all";
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported GEO scope: " + scope + " for the direct GEO source." );
+            }
+            String view;
+            if ( format == GeoFormat.HTML ) {
+                if ( amount == GeoAmount.BRIEF ) {
+                    // in the HTML view, the default is brief
+                    view = null;
+                } else if ( amount == GeoAmount.QUICK ) {
+                    view = "quick";
+                } else {
+                    throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source with HTML format." );
+                }
+            } else {
+                switch ( amount ) {
+                    case BRIEF:
+                        view = "brief";
+                        break;
+                    case QUICK:
+                        view = "quick";
+                        break;
+                    case FULL:
+                        view = "full";
+                        break;
+                    case DATA:
+                        view = "data";
+                        break;
+                    default:
+                        throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source." );
+                }
             }
             try {
-                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession + "&targ=all&form=" + form + "&view=brief" );
+                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession
+                        + ( targ != null ? "&targ=" + targ : "" )
+                        + ( form != null ? "&form=" + form : "" )
+                        + ( view != null ? "&view=" + view : "" ) );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
@@ -47,8 +100,12 @@ public class GeoUtils {
                 formatDir = "miniml";
                 ext = ".xml.tgz";
             } else {
-                throw new UnsupportedOperationException( "Unsupported GEO format: " + format + "." );
+                throw new UnsupportedOperationException( "Unsupported GEO format: " + format + " for the FTP GEO source." );
             }
+            if ( scope != GeoScope.FAMILY ) {
+                throw new UnsupportedOperationException( "Only family scope is supported for the FTP GEO source." );
+            }
+            // we support all amount because the FTP files are complete
             try {
                 return new URL( baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext );
             } catch ( MalformedURLException e ) {
@@ -140,13 +197,5 @@ public class GeoUtils {
      */
     public static String formShortenedFtpDirName( String geoAccession ) {
         return geoAccession.substring( 0, Math.max( geoAccession.length() - 3, 3 ) ) + "nnn";
-    }
-
-    private static String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

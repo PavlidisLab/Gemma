@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.32.5</version>
+		<version>1.32.6-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -76,6 +76,7 @@
 						fonts/**,
 						<!-- TODO: exclude images too, but many of them are not resolved with Webpack -->
 						<!-- images/**, -->
+						images/**/*.xcf,
 						node_modules/**,
 						package-lock.json,
 						package.json,
@@ -84,7 +85,9 @@
 						<!-- scripts/app/**, -->
 						scripts/lib/**,
 						styles/**,
-						webpack.config.js
+						webpack.config.js,
+						**/README.md,
+						**/README.txt
 					</warSourceExcludes>
 				</configuration>
 			</plugin>

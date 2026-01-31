@@ -160,7 +160,7 @@ public class TaxaWebService {
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     * @see GeneWebService#getGenes(GeneArrayArg)
+     * @see GeneWebService#getGenesByIds(GeneArrayArg)
      */
     @GET
     @Path("/{taxon}/genes/{gene}")

@@ -362,28 +362,50 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     @Transactional
+    public void recalculateExperimentBatchInfoAsAdmin( ExpressionExperiment ee ) {
+        recalculateExperimentBatchInfo( ee );
+    }
+
+    @Override
+    @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
+        recalculateExperimentBatchConfound( ee );
+        recalculateExperimentBatchEffect( ee );
+    }
+
+    @Override
+    @Transactional
+    public void recalculateExperimentBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
         BatchEffectType effect = getBatchEffectType( details );
         String effectStatistics = getBatchEffectStatistics( details );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
-        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
-        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
-
-        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
-            ee.setBatchConfound( confound );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
-            log.info( "New batch confound for " + ee + ": " + confoundSummary );
-        }
-
+        ee.setBatchEffect( getBatchEffectType( details ) );
+        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
         if ( !Objects.equals( effect, ee.getBatchEffect() ) || !Objects.equals( effectStatistics, ee.getBatchEffectStatistics() ) ) {
             ee.setBatchEffect( effect );
             ee.setBatchEffectStatistics( effectStatistics );
             auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
                     ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
             log.info( "New batch effect for " + ee + ": " + effectSummary );
+        } else {
+            log.debug( "Batch effect for " + ee + " remains unchanged: " + effectSummary );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void recalculateExperimentBatchConfound( ExpressionExperiment ee ) {
+        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
+        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
+        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
+            ee.setBatchConfound( confound );
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
+            log.info( "New batch confound for " + ee + ": " + confoundSummary );
+        } else {
+            log.debug( "Batch confound for " + ee + " remains unchanged: " + confoundSummary );
         }
     }
 

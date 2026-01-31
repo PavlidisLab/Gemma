@@ -3,6 +3,10 @@
 #
 # Deploy Gemma Web
 #
+# Usage: ./deploy.sh <ref>
+#
+# The <ref> argument is a Tomcat application name into which Gemma is deployed.
+#
 # Environment variables:
 # GEMMA_WEB_DEPLOY_SERVER: The server to deploy Gemma Web to.
 # GEMMA_WEB_PREFIX:        The prefix for the Gemma Web deployment directory (defaults to /var/local/tomcat). Note that

@@ -24,7 +24,9 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
@@ -92,22 +94,29 @@ public class ExperimentalDesignWriter {
 
     /**
      * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer}.
-     * @see #write(ExpressionExperiment, Collection, boolean, Writer)
+     *
+     * @see #write(ExpressionExperiment, QuantitationType, Class, Collection, boolean, Writer)
      */
     public void write( ExpressionExperiment ee, Writer writer ) throws IOException {
-        write( ee, ee.getBioAssays(), true, writer );
+        write( ee, null, null, ee.getBioAssays(), true, writer );
     }
 
     /**
      * Write the experimental design of the given {@link ExpressionExperiment} to the given {@link Writer} for a given
      * collection of assays.
-     * @param bioAssays       assays to write, the order is defined by the order of their corresponding biomaterials
-     *                        as per {@link BioMaterial#COMPARATOR}.
-     * @param writeBaseHeader whether to write the base header (experiment URL, build info, etc.), see
-     *                        {@link ExpressionDataWriterUtils#appendBaseHeader(ExpressionExperiment, String, String, BuildInfo, Date, Writer)}
-     *                        for details
+     *
+     * @param ee               experiment for which the design is being written
+     * @param quantitationType the quantitation type for which the experimental design is being written, or null if not
+     *                         applicable. You want to use this when writing the design for a specific QT that might be
+     *                         applicable to a subset or sub-assays.
+     * @param vectorType       if a quantitation type is supplied, this indicate the type of data vectors
+     * @param bioAssays        assays to write, the order is defined by the order of their corresponding biomaterials
+     *                         as per {@link BioMaterial#COMPARATOR}.
+     * @param writeBaseHeader  whether to write the base header (experiment URL, build info, etc.), see
+     *                         {@link ExpressionDataWriterUtils#appendBaseHeader(ExpressionExperiment, String, String, BuildInfo, Date, Writer)}
+     *                         for details
      */
-    public void write( ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, Writer writer ) throws IOException {
+    public void write( ExpressionExperiment ee, @Nullable QuantitationType quantitationType, @Nullable Class<? extends DataVector> vectorType, Collection<BioAssay> bioAssays, boolean writeBaseHeader, Writer writer ) throws IOException {
         Assert.isTrue( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
                 ee + " does not have an experimental design." );
 
@@ -128,7 +137,7 @@ public class ExperimentalDesignWriter {
                 .sorted( ExperimentalFactor.COMPARATOR )
                 .collect( Collectors.toList() );
 
-        this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
+        this.writeHeader( ee, quantitationType, vectorType, orderedFactors, writeBaseHeader, writer );
 
         Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( ed, bioMaterials.keySet() );
 
@@ -146,12 +155,17 @@ public class ExperimentalDesignWriter {
     /**
      * Write an (R-friendly) header
      */
-    private void writeHeader( ExpressionExperiment expressionExperiment, List<ExperimentalFactor> factors,
+    private void writeHeader( ExpressionExperiment expressionExperiment, @Nullable QuantitationType quantitationType, @Nullable Class<? extends DataVector> vectorType, List<ExperimentalFactor> factors,
             boolean writeBaseHeader, Writer buf ) throws IOException {
 
         if ( writeBaseHeader ) {
             String experimentUrl = entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString();
-            appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, new Date(), buf );
+            if ( quantitationType != null ) {
+                assert vectorType != null;
+                appendBaseHeader( expressionExperiment, quantitationType, vectorType, "Experimental design", experimentUrl, buildInfo, new Date(), buf );
+            } else {
+                appendBaseHeader( expressionExperiment, "Experimental design", experimentUrl, buildInfo, new Date(), buf );
+            }
             if ( autoFlush ) {
                 buf.flush();
             }

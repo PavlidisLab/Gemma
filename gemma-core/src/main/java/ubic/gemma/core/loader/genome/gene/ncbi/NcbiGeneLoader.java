@@ -224,7 +224,8 @@ public class NcbiGeneLoader {
             try {
                 Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
-                e.printStackTrace();
+                log.warn( "Thread was interrupted while waiting for generator/converter/loader.", e );
+                // TODO: break this loop
             }
         }
     }

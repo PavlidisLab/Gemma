@@ -18,48 +18,19 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseService;
 
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface GeneProductService extends BaseService<GeneProduct>, BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    GeneProduct findOrCreate( GeneProduct geneProduct );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    GeneProduct create( GeneProduct entity );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Collection<GeneProduct> toRemove );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( GeneProduct entity );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<GeneProduct> entities );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( GeneProduct entity );
+public interface GeneProductService extends AdminEditableBaseService<GeneProduct>, BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
 
     /**
      * @param search name
@@ -76,5 +47,4 @@ public interface GeneProductService extends BaseService<GeneProduct>, BaseVoEnab
     Collection<GeneProduct> findByName( String name, Taxon taxon );
 
     GeneProduct thaw( GeneProduct geneProduct );
-
 }

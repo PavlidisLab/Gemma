@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,12 +26,15 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
  * features.
- * 
+ *
  * @author pavlidis
  *
  */
@@ -73,4 +76,13 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
         assertNotNull( testBibRef );
     }
 
+    @Test
+    public void testGetRelatedExperiments() {
+        assertThat( bibliographicReferenceService.getRelatedExperiments( Collections.singleton( testBibRef ) ) )
+                .isEmpty();
+        assertThat( bibliographicReferenceService.getRelatedExperiments( 0, 10 ) )
+                .isEmpty();
+        assertThat( bibliographicReferenceService.countWithRelatedExperiments() )
+                .isZero();
+    }
 }

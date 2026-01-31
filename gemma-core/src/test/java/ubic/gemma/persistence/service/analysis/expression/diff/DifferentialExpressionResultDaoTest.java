@@ -72,13 +72,13 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                 .setParameter( 1, cs.getId() )
                 .setParameter( 2, ad.getId() )
                 .executeUpdate();
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, false, true );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, false, true );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, false, true );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, false, true );
-        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.2, false, true ) )
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, true, false, true );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, true, false, true );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, true, false, true );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), false, null, null, null, 1.0, true, false, true );
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.2, true, false, true ) )
                 .isInstanceOf( IllegalArgumentException.class );
-        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, -1, false, true ) )
+        assertThatThrownBy( () -> differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, -1, true, false, true ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
 
@@ -116,7 +116,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                 } );
         createProbeLink( gene, cs );
         sessionFactory.getCurrentSession().flush();
-        assertThat( differentialExpressionResultDao.findByGene( gene, true ) )
+        assertThat( differentialExpressionResultDao.findByGene( gene, true, true ) )
                 .hasSize( 1 )
                 .containsKey( ee );
     }
@@ -154,7 +154,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
                             } );
                 } );
         createProbeLink( gene, cs );
-        assertThat( differentialExpressionResultDao.findByGene( gene, true, 1.0, 1000 ) )
+        assertThat( differentialExpressionResultDao.findByGene( gene, true, true, 1.0, 1000 ) )
                 .hasSize( 1 )
                 .containsKey( ee );
     }
@@ -178,7 +178,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
         DifferentialExpressionAnalysis dea = randomAnalysis( ee, ed, ad );
         dea = differentialExpressionAnalysisDao.create( dea );
         DifferentialExpressionAnalysisResult dear = dea.getResultSets().iterator().next().getResults().iterator().next();
-        assertThat( differentialExpressionResultDao.loadContrastDetailsForResults( Collections.singletonList( dear.getId() ) ) )
+        assertThat( differentialExpressionResultDao.findContrastsByAnalysisResultIds( Collections.singletonList( dear.getId() ) ) )
                 .hasSize( 1 );
     }
 
@@ -186,7 +186,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
     public void testFindByGeneAndExperimentAnalyzed() {
         Gene gene = new Gene();
         sessionFactory.getCurrentSession().persist( gene );
-        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, true, Collections.singleton( 1L ), false );
+        differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, true, true, Collections.singleton( 1L ), false );
     }
 
     @Test

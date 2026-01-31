@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.5</version>
+        <version>1.32.6-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -12,27 +12,20 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.2.0</version>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>9.0.2</version>
                 <executions>
                     <execution>
-                        <id>version-file</id>
-                        <phase>generate-resources</phase>
+                        <id>generate-build-info</id>
+                        <phase>initialize</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>revision</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipVersionFile}</skip>
-                            <target>
-                                <exec executable="git" outputproperty="gemma.hash" logError="true">
-                                    <arg value="rev-parse"/>
-                                    <arg value="HEAD"/>
-                                </exec>
-                                <echo append="false" file="${project.build.directory}/classes/ubic/gemma/version.properties">
-                                    gemma.version=${project.version}${line.separator}gemma.build.timestamp=${maven.build.timestamp}${line.separator}gemma.build.gitHash=${gemma.hash}
-                                </echo>
-                            </target>
+                            <offline>true</offline>
+                            <useNativeGit>true</useNativeGit>
+                            <includeOnlyProperties>git.commit.id</includeOnlyProperties>
                         </configuration>
                     </execution>
                 </executions>
@@ -42,6 +35,23 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>default-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Gemma-Version>${project.version}</Gemma-Version>
+                                    <Gemma-Build-Timestamp>${maven.build.timestamp}</Gemma-Build-Timestamp>
+                                    <!--suppress MavenModelInspection -->
+                                    <Gemma-Build-GitHash>${git.commit.id}</Gemma-Build-GitHash>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-test-jar</id>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>

@@ -578,6 +578,18 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByBioAssay( ba );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findByBioAssay( ba, includeSubSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long findIdByBioAssay( BioAssay ba, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findIdByBioAssay( ba, includeSubSets );
+    }
+
     /**
      * @see ExpressionExperimentService#findByBioMaterial(BioMaterial)
      */
@@ -585,6 +597,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findByBioMaterial( bm, includeSubSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
+        return this.expressionExperimentDao.findIdsByBioMaterial( bm, includeSubSets );
     }
 
     @Override
@@ -609,6 +633,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Long findIdByDesign( ExperimentalDesign design ) {
+        return this.expressionExperimentDao.findIdByDesign( design );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment findByDesignId( Long designId ) {
         return this.expressionExperimentDao.findByDesignId( designId );
     }
@@ -620,6 +650,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
         return this.expressionExperimentDao.findByFactor( factor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long findIdByFactor( ExperimentalFactor factor ) {
+        return this.expressionExperimentDao.findIdByFactor( factor );
     }
 
     @Override
@@ -637,13 +673,19 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByFactorValue( factorValue );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Long findIdByFactorValue( FactorValue factorValue ) {
+        return this.expressionExperimentDao.findIdByFactorValue( factorValue );
+    }
+
     /**
      * @see ExpressionExperimentService#findByFactorValue(FactorValue)
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByFactorValue( final Long factorValueId ) {
-        return this.expressionExperimentDao.findByFactorValue( factorValueId );
+    public ExpressionExperiment findByFactorValueId( final Long factorValueId ) {
+        return this.expressionExperimentDao.findByFactorValueId( factorValueId );
     }
 
     /**
@@ -739,6 +781,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
         return this.expressionExperimentDao.findUpdatedAfter( date );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return this.expressionExperimentDao.findByMeanVarianceRelation( mvr );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr ) {
+        return this.expressionExperimentDao.findIdByMeanVarianceRelation( mvr );
     }
 
     @Override
@@ -1295,6 +1349,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee ) {
+        return getProcessedQuantitationType( ee )
+                .map( qt -> expressionExperimentDao.getBioAssayDimension( ee, qt ) )
+                .orElse( null );
     }
 
     @Override

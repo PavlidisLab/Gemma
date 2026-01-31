@@ -467,7 +467,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             this.checkAndAddResultSet( res2set, probes, rs );
         }
         DiffExMetaAnalyzerServiceImpl.log.info( "Matching up by genes ..." );
-        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( probes );
+        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( probes, true );
         Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<>();
 
         int numWithGenes = 0;

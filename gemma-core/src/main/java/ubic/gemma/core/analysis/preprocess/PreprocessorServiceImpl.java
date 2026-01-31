@@ -163,7 +163,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Refresh the batch status of the data set.
      */
     private void processBatchInfo( ExpressionExperiment ee ) {
-        expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+        expressionExperimentReportService.recalculateExperimentBatchInfoAsAdmin( ee );
     }
 
     /**

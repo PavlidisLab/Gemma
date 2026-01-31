@@ -137,10 +137,12 @@ public class QuantitationTypeUtils {
                 float f;
                 if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
                     f = getDefaultCountValueAsFloat( quantitationType );
+                } else {
+                    f = Float.NaN;
                 }
-                f = Float.NaN;
-                ByteArrayUtils.floatArrayToBytes( new float[] { f } );
+                return ByteArrayUtils.floatArrayToBytes( new float[] { f } );
             case STRING:
+            case BOOLEAN:
                 return new byte[] { 0 };
             case CHAR:
                 return new byte[] { 0, 0 };
@@ -148,8 +150,6 @@ public class QuantitationTypeUtils {
                 return new byte[] { 0, 0, 0, 0 };
             case LONG:
                 return new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
-            case BOOLEAN:
-                return new byte[] { 0 };
             default:
                 throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
         }

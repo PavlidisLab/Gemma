@@ -254,7 +254,7 @@ public class DifferentialExpressionSearchTaskImpl
 
         // Main query for results; the main time sink.
         Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults = differentialExpressionResultService
-                .findDiffExAnalysisResultIdsInResultSets( resultSets, geneIds );
+                .findGeneResultsByResultSetIdsAndGeneIds( resultSets, geneIds );
         watch.stop();
 
         Collection<DiffExprGeneSearchResult> aggregatedResults = this
@@ -472,7 +472,7 @@ public class DifferentialExpressionSearchTaskImpl
         Map<Long, ContrastsValueObject> detailedResults = new HashMap<>();
         if ( !resultsWithContrasts.isEmpty() ) {
             // uses a left join so it will have all the results.
-            detailedResults = differentialExpressionResultService.loadContrastDetailsForResults( resultsWithContrasts );
+            detailedResults = differentialExpressionResultService.findContrastsByAnalysisResultIds( resultsWithContrasts );
         }
 
         timer.stop();

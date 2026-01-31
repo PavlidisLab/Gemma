@@ -89,6 +89,22 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private List<String> otherCellLevelCharacteristicsNames;
 
     /**
+     * Default values to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValues;
+
+    /**
+     * Default value URIs to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValueUris;
+
+    /**
      * If there are already other CLCs with the same names, replace them with the new ones.
      * <p>
      * Note that other CLCs with a {@code null} name cannot be replaced.

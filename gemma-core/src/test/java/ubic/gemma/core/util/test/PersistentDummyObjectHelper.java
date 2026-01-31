@@ -27,6 +27,7 @@ import org.apache.commons.math3.distribution.TDistribution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
@@ -144,8 +145,7 @@ public class PersistentDummyObjectHelper {
             bs.setTaxon( taxon );
 
         if ( genbank == null ) {
-            genbank = ExternalDatabase.Factory.newInstance();
-            genbank.setName( "Genbank" );
+            genbank = GenBankUtils.getGenBank();
         }
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();

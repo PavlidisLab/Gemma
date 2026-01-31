@@ -24,9 +24,11 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
@@ -63,9 +65,38 @@ public interface BibliographicReferenceService
     BibliographicReference create( BibliographicReference bibliographicReference );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> create( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    BibliographicReference save( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> save( Collection<BibliographicReference> entities );
+
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( BibliographicReference BibliographicReference );
 
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Long id );
+
+    @Nullable
     BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
@@ -74,6 +105,7 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference
      */
+    @Nullable
     BibliographicReference findByExternalId( java.lang.String id );
 
     /**
@@ -83,6 +115,7 @@ public interface BibliographicReferenceService
      * @param databaseName db name
      * @return reference
      */
+    @Nullable
     BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
     /**
@@ -93,10 +126,14 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference VO
      */
+    @Nullable
     BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
-    long countExperimentLinkedReferences();
+    long countDistinctWithRelatedExperiments();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
+    long countWithRelatedExperiments();
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
@@ -104,8 +141,9 @@ public interface BibliographicReferenceService
      * @return all references with EEs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
-    Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
+    Map<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
     Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments( Collection<BibliographicReference> records );
 
     /**
@@ -113,6 +151,7 @@ public interface BibliographicReferenceService
      */
     Collection<Long> listAll();
 
+    @Nullable
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 

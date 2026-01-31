@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -33,6 +34,7 @@ import java.util.Map;
  */
 public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenceValueObject> {
 
+    @Nullable
     BioSequence findByAccession( DatabaseEntry accession );
 
     /**
@@ -62,5 +64,6 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
 
     BioSequence thaw( BioSequence bioSequence );
 
+    @Nullable
     BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

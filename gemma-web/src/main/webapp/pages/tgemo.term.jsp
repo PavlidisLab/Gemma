@@ -3,9 +3,9 @@
 <title>${fn:escapeXml(term.label)}</title>
 
 <div class="padded" style="padding-bottom: 0.5em;">
-    <h1>Temporary Gemma Ontology</h1>
+    <h2>Temporary Gemma Ontology</h2>
     <p><a href="${pageContext.request.contextPath}/ont/TGEMO">All Terms</a></p>
-    <h2 style="padding-bottom: 0.5em">${fn:escapeXml(term.label)}</h2>
+    <h3 style="padding-bottom: 0.5em">${fn:escapeXml(term.label)}</h3>
     <c:forEach var="annotation" items="${term.annotations}">
         <c:if test="${annotation.property == 'hasDefinition' || annotation.property == 'definition'}">
             <p>${fn:escapeXml(annotation.contents)}</p>

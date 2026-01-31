@@ -9,6 +9,12 @@ import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.util.concurrent.ExecutorService;
 
+/**
+ * Base class for fetchers that provide data downloading, file locking, progress reporting, logging and parallel task
+ * execution capabilities.
+ *
+ * @author poirigui
+ */
 public abstract class AbstractFetcher {
 
     protected final Log log = LogFactory.getLog( this.getClass() );

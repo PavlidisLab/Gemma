@@ -20,9 +20,10 @@
 package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import javax.persistence.Transient;
 
@@ -31,7 +32,7 @@ import javax.persistence.Transient;
  * @param <T> the type of experiment analyzed, usually {@link ubic.gemma.model.expression.experiment.ExpressionExperiment},
  *            but you can use {@link BioAssaySet} to also allow {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
  */
-public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild {
+public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild<ExpressionExperiment> {
 
     private T experimentAnalyzed;
     private Integer numberOfElementsAnalyzed;
@@ -56,12 +57,18 @@ public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends Ex
         this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
 
+    /**
+     * Experiment analysis are always owned by the experiment (or source experiment, if a subset).
+     */
     @Transient
     @Override
-    public Securable getSecurityOwner() {
-        /*
-         * Note: this could be a subset. But that's a secured child as well. AclAdvice fixes that.
-         */
-        return this.getExperimentAnalyzed();
+    public ExpressionExperiment getSecurityOwner() {
+        if ( experimentAnalyzed instanceof ExpressionExperiment ) {
+            return ( ExpressionExperiment ) experimentAnalyzed;
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+            return ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment();
+        } else {
+            return null;
+        }
     }
 }

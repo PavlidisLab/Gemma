@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.32.5</version>
+	<version>1.32.6-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -145,7 +145,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.33</version>
+			<version>1.1.34-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -544,6 +544,18 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.9.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
 				<configuration>
@@ -628,7 +640,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -784,7 +796,6 @@
 		<profile>
 			<id>fast</id>
 			<properties>
-				<skipVersionFile>true</skipVersionFile>
 				<skipJavadoc>true</skipJavadoc>
 				<skipTests>true</skipTests>
 				<skipWebpack>true</skipWebpack>
@@ -810,7 +821,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -888,7 +899,6 @@
 		<assertj.version>3.27.6</assertj.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
-		<skipVersionFile>false</skipVersionFile>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
@@ -910,6 +920,7 @@
 			${jvmOptions}
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
+			-javaagent:${org.mockito:mockito-core:jar}
 		</testJvmOptions>
 		<delombok.output>${project.build.directory}/delombok</delombok.output>
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>

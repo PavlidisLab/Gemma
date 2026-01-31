@@ -4,7 +4,7 @@
 </head>
 
 <div class="padded">
-    <h2>Taxa</h2>
+    <h1>Taxa</h1>
     <ul>
         <c:forEach var="taxon" items="${taxa}">
             <li>

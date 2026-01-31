@@ -101,6 +101,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -997,7 +998,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         List<DifferentialExpressionAnalysisResultByGeneValueObject> payload = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzedIds( gene, false, sliceIds( ids, offset, limit ), true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, true ).stream()
+                .findByGeneAndExperimentAnalyzedIds( gene, true, false, sliceIds( ids, offset, limit ), true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, true ).stream()
                 .map( r -> new DifferentialExpressionAnalysisResultByGeneValueObject( r, sourceExperimentIdMap.get( r ), experimentAnalyzedIdMap.get( r ), baselineMap.get( r ) ) )
                 .sorted( Comparator.comparing( DifferentialExpressionAnalysisResultByGeneValueObject::getSourceExperimentId )
                         .thenComparing( DifferentialExpressionAnalysisResultByGeneValueObject::getExperimentAnalyzedId )
@@ -1085,7 +1086,7 @@ public class DatasetsWebService {
         Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap = new HashMap<>();
         Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap = new HashMap<>();
         //noinspection Convert2MethodRef
-        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzedIds( gene, false, ids, true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
+        List<DifferentialExpressionAnalysisResult> payload = differentialExpressionResultService.findByGeneAndExperimentAnalyzedIds( gene, true, false, ids, true, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, false ).stream()
                 .sorted( Comparator.comparing( ( DifferentialExpressionAnalysisResult r ) -> sourceExperimentIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> experimentAnalyzedIdMap.get( r ) )
                         .thenComparing( ( DifferentialExpressionAnalysisResult r ) -> r.getResultSet().getId() ) )
@@ -1103,7 +1104,11 @@ public class DatasetsWebService {
             }
             baselineMap.put( r, b2 );
         }
-        return output -> differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, new OutputStreamWriter( output ) );
+        return output -> {
+            try ( Writer writer = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {
+                differentialExpressionAnalysisResultListFileService.writeTsv( payload, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, writer );
+            }
+        };
     }
 
     /**
@@ -1177,7 +1182,9 @@ public class DatasetsWebService {
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
                 writer.setUseBioAssayIds( useBioAssayIds );
-                writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                try ( Writer w = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {
+                    writer.write( dimension, w );
+                }
             };
         } else {
             SingleCellDimension dimension;
@@ -1266,9 +1273,11 @@ public class DatasetsWebService {
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.setUseBioAssayIds( useBioAssayId );
-                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                try ( Writer w = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {
+                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                    writer.setUseBioAssayIds( useBioAssayId );
+                    writer.write( cta, dimension, w );
+                }
             };
         } else {
             return respond( new CellTypeAssignmentValueObject( cta, false ) );
@@ -1305,8 +1314,10 @@ public class DatasetsWebService {
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             return ( StreamingOutput ) output -> {
-                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
-                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                try ( Writer w = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {
+                    CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                    writer.write( dimension.getCellLevelCharacteristics(), dimension, w );
+                }
             };
         } else {
             return respond( dimension.getCellLevelCharacteristics().stream()
@@ -1408,9 +1419,9 @@ public class DatasetsWebService {
             log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
             String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
             return Response.ok( ( StreamingOutput ) output -> {
-                        try {
+                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
                             expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
-                                    false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true );
+                                    false, writer, true );
                         } catch ( FilteringException ex ) {
                             // this is a bit unfortunate, because it's too late for producing a 204 error
                             throw new RuntimeException( ex );
@@ -1476,7 +1487,11 @@ public class DatasetsWebService {
         } catch ( IOException e ) {
             log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
             String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
-            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ), true ) )
+            return Response.ok( ( StreamingOutput ) output -> {
+                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
+                            expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, writer, true );
+                        }
+                    } )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
@@ -1575,7 +1590,11 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), true, null ) )
+        return Response.ok( ( StreamingOutput ) stream -> {
+                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                        expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, writer, true, null );
+                    }
+                } )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
@@ -1598,14 +1617,31 @@ public class DatasetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Quantitation type to produce the experimental design for. This only works for raw data vectors. The default is to produce the design for the experiment.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Produce an experimental design compatible with the preferred data vectors. The default is to produce the design for the experiment.") @QueryParam("useProcessedQuantitationType") @DefaultValue("false") Boolean useProcessedQuantitationType, // Optional, default false
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( quantitationTypeArg != null && useProcessedQuantitationType ) {
+            throw new BadRequestException( "Cannot use both 'quantitationType' and 'useProcessedQuantitationType' parameters together." );
+        }
         if ( force ) {
             checkIsAdmin();
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
+        if ( quantitationTypeArg != null ) {
+            QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
+            String filename = getDesignFileName( ee, qt );
+            return Response.ok( ( StreamingOutput ) stream -> {
+                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                            expressionDataFileService.writeDesignMatrix( ee, qt, RawExpressionDataVector.class, writer, false );
+                        }
+                    } )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        }
+        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedQuantitationType, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
             String filename = file.getPath().getFileName().toString();
             return sendfile( file.getPath() )
@@ -1616,8 +1652,12 @@ public class DatasetsWebService {
             throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
-            String filename = getDesignFileName( ee );
-            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ), false ) )
+            String filename = getDesignFileName( ee, useProcessedQuantitationType );
+            return Response.ok( ( StreamingOutput ) stream -> {
+                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                            expressionDataFileService.writeDesignMatrix( ee, useProcessedQuantitationType, writer, false );
+                        }
+                    } )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();

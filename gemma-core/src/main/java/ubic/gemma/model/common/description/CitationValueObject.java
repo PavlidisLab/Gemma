@@ -19,8 +19,10 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -34,14 +36,11 @@ import java.util.*;
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 public class CitationValueObject implements Comparable<CitationValueObject>, Serializable {
 
-    // for constructing pubmedURLs
-    @SuppressWarnings("WeakerAccess") // Might be accessed in the front end
-    final static String PUBMED_URL_ROOT = "https://www.ncbi.nlm.nih.gov/pubmed/";
-    private String citation;
     /**
-     * the DB id of the BibliographicReference being represented
+     * The ID of the {@link BibliographicReference} being represented.
      */
     private Long id;
+    private String citation;
     private String pubmedAccession;
     private String pubmedURL;
     private boolean retracted = false;
@@ -92,7 +91,7 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         this.setCitation( buf.toString() );
         if ( ref.getPubAccession() != null ) {
             this.setPubmedAccession( ref.getPubAccession().getAccession() );
-            this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
+            this.setPubmedURL( PubMedUtils.getUrl( ref.getPubAccession().getAccession() ).toString() );
         }
         this.setId( ref.getId() );
         this.retracted = ref.getRetracted();

@@ -144,7 +144,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public boolean deleteDesignFile( ExpressionExperiment ee ) {
-        return this.deleteAndLog( dataDir.resolve( getDesignFileName( ee ) ) );
+        return this.deleteAndLog( dataDir.resolve( getDesignFileName( ee, false ) ) );
+    }
+
+    @Override
+    public boolean deleteProcessedDataDesignFile( ExpressionExperiment ee ) {
+        return this.deleteAndLog( dataDir.resolve( getDesignFileName( ee, true ) ) );
     }
 
     @Override
@@ -207,6 +212,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             } catch ( IOException e ) {
                 log.error( "Failed to delete: " + getDataFileInternal( ee, false, type ), e );
             }
+            deleteProcessedDataDesignFile( ee );
         }
         return deleted;
     }
@@ -706,12 +712,48 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException {
+    public void writeDesignMatrix( ExpressionExperiment ee, boolean useProcessedData, Writer writer, boolean autoFlush ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( "No experimental design for " + ee );
         }
-        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush ).write( ee, writer );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush );
+        if ( useProcessedData ) {
+            ExpressionExperiment finalEe = ee;
+            QuantitationType processedQuantitationType = expressionExperimentService.getProcessedQuantitationType( ee )
+                    .orElseThrow( () -> new IllegalStateException( "No processed data for " + finalEe + "." ) );
+            Collection<BioAssayDimension> processedDimension = expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee );
+            if ( processedDimension.isEmpty() ) {
+                throw new IllegalStateException( processedQuantitationType + " does not have a dimension." );
+            }
+            if ( processedDimension.size() > 1 ) {
+                log.warn( "Multiple dimensions found for " + processedQuantitationType + ", this is not supposed to happen for processed data." );
+            }
+            Set<BioAssay> assays = processedDimension.stream()
+                    .map( BioAssayDimension::getBioAssays )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toSet() );
+            edWriter.write( ee, processedQuantitationType, ProcessedExpressionDataVector.class, assays, true, writer );
+        } else {
+            edWriter.write( ee, writer );
+        }
+    }
+
+    @Override
+    public void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException {
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "No experimental design for " + ee );
+        }
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush );
+        Collection<BioAssayDimension> processedDimension = expressionExperimentService.getBioAssayDimensionsWithAssays( ee, qt );
+        if ( processedDimension.isEmpty() ) {
+            throw new IllegalStateException( "No dimension for " + ee + " and " + qt + "." );
+        } else if ( processedDimension.size() > 1 ) {
+            throw new IllegalStateException( "Multiple dimensions found for " + ee + " and " + qt + "." );
+        } else {
+            edWriter.write( ee, qt, vectorType, processedDimension.iterator().next().getBioAssays(), true, writer );
+        }
     }
 
     @Override
@@ -863,19 +905,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedData, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), false ) ) {
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee, useProcessedData ), false ) ) {
             Date check = ee.getCurationDetails().getLastUpdated();
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
             }
             try ( LockedPath lockedPath = f.toExclusive();
                     Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, writer, false );
+                writeDesignMatrix( ee, useProcessedData, writer, false );
                 return Optional.of( lockedPath.toShared() );
             } catch ( Exception e ) {
                 Files.deleteIfExists( f.getPath() );
@@ -885,19 +927,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedData, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), false, timeout, timeUnit ) ) {
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee, useProcessedData ), false, timeout, timeUnit ) ) {
             Date check = ee.getCurationDetails().getLastUpdated();
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
             }
             try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
                     Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, writer, false );
+                writeDesignMatrix( ee, useProcessedData, writer, false );
                 return Optional.of( lockedPath.toShared() );
             } catch ( Exception e ) {
                 Files.deleteIfExists( f.getPath() );
