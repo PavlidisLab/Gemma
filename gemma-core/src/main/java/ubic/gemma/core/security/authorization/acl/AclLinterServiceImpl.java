@@ -24,6 +24,8 @@ import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -52,6 +54,11 @@ public class AclLinterServiceImpl implements AclLinterService {
      * {@code :parentType}.
      */
     private static final Map<Class<? extends SecuredChild<?>>, List<String>> securedChildToParentIdQueryMap = new HashMap<>();
+
+    /**
+     * A set of securable classes that should always be publicly accessible.
+     */
+    private static final Set<Class<? extends Securable>> shouldBePublic = new HashSet<>();
 
     /**
      *
@@ -113,6 +120,8 @@ public class AclLinterServiceImpl implements AclLinterService {
         addSecuredChildToParent( PrincipalComponentAnalysis.class, ExpressionExperiment.class,
                 //language=HQL
                 "select coalesce(ea.sourceExperiment.id, ea.id) from PrincipalComponentAnalysis pca join pca.experimentAnalyzed ea where pca.id = aoi.identifier" );
+        shouldBePublic.add( ExternalDatabase.class );
+        shouldBePublic.add( Protocol.class );
     }
 
     @Autowired
@@ -506,8 +515,16 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintPermissions( Class<? extends Securable> clazz, @Nullable Long identifier, AclLinterConfig config, Collection<LintResult> result ) {
         log.info( "Linting permissions for " + clazz.getSimpleName() + "..." );
+        if ( SecuredChild.class.isAssignableFrom( clazz ) ) {
+            // permissions are inherited from parent
+            log.info( "No need to lint permissions for " + clazz.getSimpleName() + " as it is a SecuredChild and permissions are inherited from the parent." );
+            return;
+        }
         lintPermissions( clazz, identifier, "GROUP_ADMIN", BasePermission.ADMINISTRATION, true, config, result );
         lintPermissions( clazz, identifier, "GROUP_AGENT", BasePermission.READ, true, config, result );
+        if ( shouldBePublic.contains( clazz ) ) {
+            lintPermissions( clazz, identifier, "IS_AUTHENTICATED_ANONYMOUSLY", BasePermission.READ, true, config, result );
+        }
     }
 
     private void lintPermissions( Class<? extends Securable> clazz, @Nullable Long identifier, String grantedAuthority, Permission permission, @SuppressWarnings("SameParameterValue") boolean granting, AclLinterConfig config, Collection<LintResult> result ) {
@@ -541,7 +558,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         //noinspection unchecked
         List<Object[]> list = query.list();
         if ( list.isEmpty() ) {
-            log.info( "All permissions are correct for " + formatEntity( clazz, identifier ) + "." );
+            log.info( "All permissions for " + grantedAuthority + " are correct for " + formatEntity( clazz, identifier ) + "." );
         } else {
             log.warn( "There are " + list.size() + " permission issues for " + formatEntity( clazz, identifier ) + "." );
         }

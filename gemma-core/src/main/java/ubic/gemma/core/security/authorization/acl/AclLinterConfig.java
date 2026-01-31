@@ -38,6 +38,10 @@ public class AclLinterConfig {
      */
     boolean lintPermissions;
     /**
+     * If true, securables should be public.
+     */
+    boolean shouldBePublic;
+    /**
      * If true, attempt to fix any issues are found.
      */
     boolean applyFixes;
