@@ -1,6 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
+import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +48,11 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
             return mock();
+        }
+
+        @Bean
+        public AclClassMetadata aclClassMetadata( SessionFactory sessionFactory ) {
+            return new AclClassMetadata( sessionFactory );
         }
     }
 
