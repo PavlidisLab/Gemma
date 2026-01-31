@@ -555,12 +555,18 @@ public class AclLinterServiceImpl implements AclLinterService {
         if ( identifier != null ) {
             query.setParameter( "identifier", identifier );
         }
+        String aclEntryDescription = String.format( "ACL entry with %s for %s%s", permission, grantedAuthority,
+                granting ? " with granting" : "" );
         //noinspection unchecked
         List<Object[]> list = query.list();
         if ( list.isEmpty() ) {
-            log.info( "All permissions for " + grantedAuthority + " are correct for " + formatEntity( clazz, identifier ) + "." );
+            log.info( String.format( "%s have an %s.",
+                    identifier != null ? formatEntity( clazz, identifier ) : "All " + clazz.getSimpleName(),
+                    aclEntryDescription ) );
         } else {
-            log.warn( "There are " + list.size() + " permission issues for " + formatEntity( clazz, identifier ) + "." );
+            log.warn( String.format( "%s lack an %s.",
+                    identifier != null ? formatEntity( clazz, identifier ) : list.size() + " " + clazz.getSimpleName(),
+                    aclEntryDescription ) );
         }
         for ( Object[] row : list ) {
             String type = ( String ) row[0];
@@ -569,12 +575,11 @@ public class AclLinterServiceImpl implements AclLinterService {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
                 acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );
                 aclService.updateAcl( acl );
-                String fixMessage = "Added missing permissions for " + grantedAuthority + ".";
+                String fixMessage = "Added missing " + aclEntryDescription + ".";
                 log.info( formatEntity( clazz, identifier_ ) + ": " + fixMessage );
                 result.add( new LintResult( clazz, identifier_, fixMessage, true ) );
             } else {
-                String problem = String.format( "Entity lacks an ACL entry with %s to %s%s.", permission,
-                        grantedAuthority, granting ? " with granting" : "" );
+                String problem = String.format( "Entity lacks an " + aclEntryDescription + "." );
                 result.add( new LintResult( clazz, identifier_, problem, false ) );
             }
         }
