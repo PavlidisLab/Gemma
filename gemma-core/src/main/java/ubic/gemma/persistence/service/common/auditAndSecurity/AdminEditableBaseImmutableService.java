@@ -31,9 +31,5 @@ public interface AdminEditableBaseImmutableService<O extends Identifiable> exten
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
     void remove( Collection<O> entities );
 }

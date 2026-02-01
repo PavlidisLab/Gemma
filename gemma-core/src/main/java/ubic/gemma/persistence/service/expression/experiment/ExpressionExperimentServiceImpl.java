@@ -1862,17 +1862,6 @@ public class ExpressionExperimentServiceImpl
         return result;
     }
 
-    @Override
-    @Transactional
-    public void remove( Long id ) {
-        ExpressionExperiment ee = this.load( id );
-        if ( ee == null ) {
-            log.warn( "ExpressionExperiment was null after reloading, skipping removal altogether." );
-            return;
-        }
-        remove( ee );
-    }
-
     /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these

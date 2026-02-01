@@ -92,10 +92,6 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_ADMIN" })
     void remove( Collection<BibliographicReference> entities );
 
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
     @Nullable
     BibliographicReference findByExternalId( DatabaseEntry accession );
 

@@ -141,10 +141,10 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
     @After
     public void tearDown() {
         if ( ee != null && ee.getId() != null ) {
-            expressionExperimentService.remove( ee.getId() );
+            expressionExperimentService.remove( ee );
         }
         if ( newee != null && newee.getId() != null ) {
-            expressionExperimentService.remove( newee.getId() );
+            expressionExperimentService.remove( newee );
         }
     }
 

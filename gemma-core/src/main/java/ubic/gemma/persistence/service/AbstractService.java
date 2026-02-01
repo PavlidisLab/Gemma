@@ -191,12 +191,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public void remove( Long id ) {
-        mainDao.remove( id );
-    }
-
-    @Override
-    @Transactional
     @OverridingMethodsMustInvokeSuper
     public void remove( O entity ) {
         mainDao.remove( entity );

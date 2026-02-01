@@ -379,16 +379,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     @Override
-    public void remove( Long id ) {
-        T entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        } else if ( log.isDebugEnabled() ) {
-            log.debug( String.format( "No %s entity with ID %d, no need to remove anything.", elementClass.getSimpleName(), id ) );
-        }
-    }
-
-    @Override
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
         Assert.notNull( entity.getId(), "Cannot delete a transient entity." );

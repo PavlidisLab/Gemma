@@ -26,17 +26,11 @@ public interface BaseService<O extends Identifiable> extends BaseImmutableServic
     O save( O entity );
 
     /**
-     * Updates all entities in the given collection in the persistent storage.
-     *
-     * @param entities the entities to be updated.
      * @see BaseDao#update(Collection)
      */
     void update( Collection<O> entities );
 
     /**
-     * Updates the given entity in the persistent storage.
-     *
-     * @param entity the entity to be updated.
      * @see BaseDao#update(Identifiable)
      */
     void update( O entity );

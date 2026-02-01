@@ -103,8 +103,4 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
         entities.forEach( this::remove );
     }
 
-    @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing an experiment subset by ID is not supported." );
-    }
 }

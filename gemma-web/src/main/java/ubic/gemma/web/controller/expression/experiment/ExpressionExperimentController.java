@@ -1584,7 +1584,11 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult call() {
-            expressionExperimentService.remove( getTaskCommand().getEntityId() );
+            ExpressionExperiment ee = expressionExperimentService.load( getTaskCommand().getEntityId() );
+            if ( ee == null ) {
+                throw new IllegalArgumentException( "No experiment with ID " + getTaskCommand().getEntityId() + " found." );
+            }
+            expressionExperimentService.remove( ee );
             String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
             return newTaskResult( url );
         }

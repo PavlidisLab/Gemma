@@ -42,26 +42,26 @@ public interface BaseDao<T extends Identifiable> {
     Class<? extends T> getElementClass();
 
     /**
-     * Crates all the given entities in the persistent storage.
+     * Create all the given entities in the persistent storage.
      *
      * @param entities the entities to be crated.
-     * @return collection of entities representing the instances in the persistent storage that were created.
+     * @return collection of entities representing the entities in the persistent storage that were created.
      */
     @CheckReturnValue
     Collection<T> create( Collection<T> entities );
 
     /**
-     * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
-     * appropriate 'find' method.
+     * Create an entity in the persistent storage.
      *
      * @param entity the entity to create
      * @return the persistent version of the entity
+     * @see org.hibernate.Session#persist(Object)
      */
     @CheckReturnValue
     T create( T entity );
 
     /**
-     * Save all the given entities in the persistent storage.
+     * Create (if transient) or update all the given entities in the persistent storage.
      * <p>
      * Unlike {@link #update(Collection)}, this method does not attach the given entities to the persistence context;
      * the returned values must be used instead.
@@ -73,10 +73,10 @@ public interface BaseDao<T extends Identifiable> {
     Collection<T> save( Collection<T> entities );
 
     /**
-     * Create or update an entity whether it is transient.
+     * Create (if transient) or update an entity.
      * <p>
-     * Unlike {@link #update(Identifiable)}, this method does not attach the given entity to the persistence context and the
-     * returned value must be used instead.
+     * Unlike {@link #update(Identifiable)}, this method does not attach the given entity to the persistence context and
+     * the returned value must be used instead.
      *
      * @see org.hibernate.Session#persist(Object)
      * @see org.hibernate.Session#merge(Object)
@@ -89,6 +89,7 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @param ids the IDs of entities to be loaded. If some IDs are not found or null, they are skipped.
      * @return collection of entities with given ids.
+     * @see org.hibernate.Session#get(Class, Serializable)
      */
     Collection<T> load( Collection<Long> ids );
 
@@ -97,23 +98,22 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @param id the id of entity to load.
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
-     *
      * @see org.hibernate.Session#get(Class, Serializable)
      */
     @Nullable
     T load( Long id );
 
     /**
-     * Loads all instanced of specific class from the persistent storage.
+     * Loads all entities of type {@link T} from the persistent storage.
      *
-     * @return a collection containing all instances that are currently accessible.
+     * @return a collection containing all entities that are currently accessible.
      */
     Collection<T> loadAll();
 
     /**
-     * Load references for all the given IDs.
+     * Load references of entities of type {@link T} for all the given IDs.
      * <p>
-     * Entities already in the session will be returned directly.
+     * Entities already in the current session will be returned directly.
      */
     Collection<T> loadReference( Collection<Long> ids );
 
@@ -134,6 +134,7 @@ public interface BaseDao<T extends Identifiable> {
      * Reload an entity from the persistent storage.
      * <p>
      * This does nothing if the entity is already in the session.
+     *
      * @throws org.hibernate.ObjectNotFoundException if the entity does not exist.
      */
     @Nonnull
@@ -148,58 +149,60 @@ public interface BaseDao<T extends Identifiable> {
     Collection<T> reload( Collection<T> entities ) throws ObjectNotFoundException;
 
     /**
-     * Counts all instances of specific class in the persistent storage.
+     * Counts all entities of {@link T} in the persistent storage.
      *
-     * @return number that is the amount of instances currently accessible.
+     * @return number that is the amount of entities currently accessible.
      */
     long countAll();
 
     /**
-     * Stream all instance of {@link T} from the persistent storage.
+     * Stream all entities of {@link T} from the persistent storage.
+     * <p>
+     * Note that the stream will only be valid while the current database session is active. To create a stream that can
+     * outlive the current session, use {@link #streamAll(boolean)} passing {@code true}.
      */
     Stream<T> streamAll();
 
     /**
-     * Stream all instances of {@link T} from the persistent storage.
+     * Stream all entities of type {@link T} from the persistent storage.
+     * <p>
+     * If creating a new session, the caller is responsible for closing the stream to avoid resource leaks. It is
+     * recommended to use try-with-resource statement.
+     *
      * @param createNewSession whether to create a new session for the stream, it will be closed when the stream is
      *                         closed
      */
     Stream<T> streamAll( boolean createNewSession );
 
+    /**
+     * Remove all given persistent entities.
+     */
     void remove( Collection<T> entities );
 
     /**
-     * Remove a persistent instance based on its ID.
-     * <p>
-     * The implementer is trusted to know what type of object to remove.
-     * <p>
-     * Note that this method is to be avoided for {@link gemma.gsec.model.Securable}, because it will leave cruft in the
-     * ACL tables. We may fix this by having this method return the removed object.
-     *
-     * @param id the ID of the entity to be removed
-     */
-    void remove( Long id );
-
-    /**
-     * Remove a persistent instance
+     * Remove a persistent entity.
      *
      * @param entity the entity to be removed
      */
     void remove( T entity );
 
     /**
-     * @param entities Update the entities. Not supported if the entities are immutable.
+     * Update the given entities.
+     * <p>
+     * Not supported if the entity is immutable or loaded in read-only mode.
      */
     void update( Collection<T> entities );
 
     /**
-     * @param entity Update the entity. Not supported if the entity is immutable.
+     * Update the given entity.
+     * <p>
+     * Not supported if the entity is immutable or loaded in read-only mode.
      */
     void update( T entity );
 
     /**
-     * Does a look up for the given entity in the persistent storage, usually looking for a specific identifier ( either
-     * id or a string property).
+     * Does a look-up for the given entity in the persistent storage, usually looking for a specific identifier if
+     * {@link Identifiable#getId()} is set or a business key.
      *
      * @param entity the entity to look for.
      * @return an entity that was found in the persistent storage, or null if no such entity was found.
@@ -209,7 +212,8 @@ public interface BaseDao<T extends Identifiable> {
     T find( T entity );
 
     /**
-     * Calls the find method, and if this method returns null, creates a new instance in the persistent storage.
+     * Calls the {@link #find(Identifiable)} method, and if this method returns null, creates a new entity in the
+     * persistent storage pas per {@link #create(Identifiable)}.
      *
      * @param entity the entity to look for and persist if not found.
      * @return the given entity, guaranteed to be representing an entity present in the persistent storage.

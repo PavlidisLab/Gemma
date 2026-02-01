@@ -176,10 +176,6 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     void update( Collection<Characteristic> entities );
 
     @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
 
