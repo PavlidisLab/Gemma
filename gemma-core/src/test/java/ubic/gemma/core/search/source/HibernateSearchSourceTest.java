@@ -1,11 +1,14 @@
 package ubic.gemma.core.search.source;
 
+import gemma.gsec.acl.domain.AclService;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.acls.domain.SidRetrievalStrategyImpl;
+import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.DefaultHighlighter;
@@ -18,6 +21,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 public class HibernateSearchSourceTest extends BaseDatabaseTest {
@@ -29,6 +33,16 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         @Bean
         public HibernateSearchSource hibernateSearchSource() {
             return new HibernateSearchSource();
+        }
+
+        @Bean
+        public AclService aclService() {
+            return mock();
+        }
+
+        @Bean
+        public SidRetrievalStrategy sidRetrievalStrategy() {
+            return new SidRetrievalStrategyImpl();
         }
     }
 
