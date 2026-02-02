@@ -3584,6 +3584,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, SingleCellDimension scd ) {
+        return ( Long ) getSessionFactory().getCurrentSession().createQuery( "select count(scedv) from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.singleCellDimension = :scd" )
+                .setParameter( "ee", ee )
+                .setParameter( "scd", scd )
+                .uniqueResult();
+    }
+
+    @Override
     public long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt ) {
         return ( Long ) getSessionFactory().getCurrentSession()
                 .createQuery( "select sum(length(scedv.dataIndices)) from SingleCellExpressionDataVector scedv "
@@ -3643,8 +3652,10 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) || ee.getSingleCellExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
                 "The quantitation must belong to at least one single-cell vector from experiment." );
-        ee.getSingleCellExpressionDataVectors()
-                .removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            ee.getSingleCellExpressionDataVectors()
+                    .removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        }
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
@@ -3670,7 +3681,9 @@ public class ExpressionExperimentDaoImpl
         Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
                 .map( SingleCellExpressionDataVector::getQuantitationType )
                 .collect( Collectors.toSet() );
-        ee.getSingleCellExpressionDataVectors().clear();
+        if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            ee.getSingleCellExpressionDataVectors().clear();
+        }
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )

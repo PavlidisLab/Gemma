@@ -884,6 +884,13 @@ public interface ExpressionExperimentDao
     long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
+     * Obtain the number of single-cell vectors for a given single-cell dimension.
+     * <p>
+     * A dimension may be shared by multiple QTs, so this number may be larger than {@link #getNumberOfSingleCellDataVectors(ExpressionExperiment, QuantitationType)}.
+     */
+    long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, SingleCellDimension scd );
+
+    /**
      * Obtain the number of non-zeroes.
      */
     long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );

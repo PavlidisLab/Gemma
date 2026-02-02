@@ -412,8 +412,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         int numVectorsRemoved;
         if ( !vectorsToBeReplaced.isEmpty() ) {
+            SingleCellDimension prevDim = vectorsToBeReplaced.iterator().next().getSingleCellDimension();
+            // delete the previous dimension only if it is not used by the new vectors, it may still be kept if it is
+            // used by another set of single-cell vectors
             // if the SCD was created, we do not need to check additional vectors for removing the existing one
-            numVectorsRemoved = removeSingleCellVectorsAndDimensionIfNecessary( ee, quantitationType, scdCreated ? null : vectors, false );
+            boolean deleteScd = scdCreated || vectors.stream()
+                    .noneMatch( v -> v.getSingleCellDimension().equals( scd ) );
+            numVectorsRemoved = removeSingleCellVectorsAndDimensionIfNecessary( ee, quantitationType, prevDim,
+                    deleteScd, false );
         } else {
             log.warn( "No vectors with the quantitation type: " + quantitationType );
             numVectorsRemoved = 0;
@@ -652,17 +658,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         quantitationType = quantitationTypeService.reload( quantitationType );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s does not have the quantitation type %s.", ee, quantitationType ) );
-        QuantitationType finalQuantitationType = quantitationType;
-        Set<SingleCellExpressionDataVector> vectors = ee.getSingleCellExpressionDataVectors().stream()
-                .filter( v -> v.getQuantitationType().equals( finalQuantitationType ) )
-                .collect( Collectors.toSet() );
-        SingleCellDimension scd;
+        SingleCellDimension scd = getSingleCellDimension( ee, quantitationType );
         int removedVectors;
-        if ( !vectors.isEmpty() ) {
-            scd = vectors.iterator().next().getSingleCellDimension();
-            removedVectors = removeSingleCellVectorsAndDimensionIfNecessary( ee, quantitationType, null, true );
+        if ( scd != null ) {
+            removedVectors = removeSingleCellVectorsAndDimensionIfNecessary( ee, quantitationType, scd, true, true );
         } else {
-            scd = null;
             log.warn( "No vectors with the quantitation type: " + quantitationType );
             removedVectors = 0;
         }
@@ -681,39 +681,23 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     /**
      * Remove the given single-cell vectors and their corresponding single-cell dimension if necessary.
      *
-     * @param ee                the experiment to remove the vectors from.
-     * @param additionalVectors additional vectors to check if the single-cell dimension is still in use (i.e. vectors that are in the process of being added).
-     * @param deleteQt          if true, also detach and delete the QT
+     * @param ee        the experiment to remove the vectors from
+     * @param deleteScd if true, delete the single-cell dimension. If the dimension is still in use after removing the
+     *                  requested vectors, it will not be deleted.
+     * @param deleteQt  if true, also detach and delete the QT
      */
     private int removeSingleCellVectorsAndDimensionIfNecessary( ExpressionExperiment ee,
-            QuantitationType quantitationType,
-            @Nullable Collection<SingleCellExpressionDataVector> additionalVectors,
-            boolean deleteQt ) {
-        Set<SingleCellExpressionDataVector> vectors = ee.getSingleCellExpressionDataVectors().stream()
-                .filter( v -> v.getQuantitationType().equals( quantitationType ) ).collect( Collectors.toSet() );
-        log.info( String.format( "Removing %d single-cell vectors for %s...", vectors.size(), ee ) );
+            QuantitationType quantitationType, SingleCellDimension scd, boolean deleteScd, boolean deleteQt ) {
+        log.info( String.format( "Removing single-cell vectors from %s for %s...", quantitationType, ee ) );
         int removedVectors = expressionExperimentDao.removeSingleCellDataVectors( ee, quantitationType, deleteQt );
-        // check if SCD is still in use else remove it
-        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
-        boolean scdStillUsed = false;
-        for ( SingleCellExpressionDataVector v : ee.getSingleCellExpressionDataVectors() ) {
-            if ( v.getSingleCellDimension().equals( scd ) ) {
-                scdStillUsed = true;
-                break;
+        if ( deleteScd ) {
+            boolean scdStillUsed = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, scd ) > 0;
+            if ( scdStillUsed ) {
+                log.info( scd + " is still being used, not removing it." );
+            } else {
+                log.info( "Removing unused " + scd + " for " + ee + "..." );
+                expressionExperimentDao.deleteSingleCellDimension( ee, scd );
             }
-        }
-        if ( !scdStillUsed && additionalVectors != null ) {
-            for ( SingleCellExpressionDataVector v : additionalVectors ) {
-                if ( v.getSingleCellDimension().equals( scd ) ) {
-                    scdStillUsed = true;
-                    break;
-                }
-            }
-        }
-        if ( !scdStillUsed ) {
-            log.info( "Removing unused single-cell dimension " + scd + " for " + ee );
-            expressionExperimentDao.deleteSingleCellDimension( ee, scd );
-
         }
         return removedVectors;
     }
