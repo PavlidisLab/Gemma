@@ -347,7 +347,7 @@ public class ArrayDesignController {
         this.setAlternateNames( result, arrayDesign );
         this.setExtRefsAndCounts( result, arrayDesign );
         this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExpressionExperimentCount( arrayDesign ) );
+        result.setSwitchedExpressionExperimentCount( arrayDesignService.countSwitchedExpressionExperiments( arrayDesign ) );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
@@ -383,9 +383,9 @@ public class ArrayDesignController {
      * Sets external references, design element count and express. experiment count on the given value object.
      */
     private void setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
+        Integer numCompositeSequences = arrayDesignService.countCompositeSequences( arrayDesign ).intValue();
 
-        long numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
+        long numExpressionExperiments = arrayDesignService.countExpressionExperiments( arrayDesign );
 
         Set<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {

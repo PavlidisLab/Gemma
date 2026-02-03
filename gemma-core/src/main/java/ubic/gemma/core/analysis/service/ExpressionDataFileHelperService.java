@@ -174,7 +174,7 @@ class ExpressionDataFileHelperService {
     private Map<CompositeSequence, Set<Gene>> getCs2Gene( ExpressionExperiment ee, QuantitationType qt ) {
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee, qt, SingleCellExpressionDataVector.class );
         ads = arrayDesignService.thawCompositeSequences( ads );
-        return arrayDesignService.getGenesByCompositeSequence( ads );
+        return arrayDesignService.getGenesByCompositeSequence( ads, true );
     }
 
     /**

@@ -508,7 +508,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             return null;
         }
 
-        Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign );
+        Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
         // not taxon found
         if ( taxaOnArray.isEmpty() ) {
             throw new IllegalArgumentException( "No taxon found for " + arrayDesign + ", please specify which taxon to run." );
@@ -574,7 +574,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             if ( arrayDesign.getPrimaryTaxon() != null ) {
                 return arrayDesign.getPrimaryTaxon();
             }
-            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign );
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
 
             if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();

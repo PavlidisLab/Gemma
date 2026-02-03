@@ -863,7 +863,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( targetPlatform != null ) {
 
-            if ( arrayDesignService.getCompositeSequenceCount( targetPlatform ) == 0 ) {
+            if ( arrayDesignService.countCompositeSequences( targetPlatform ) == 0 ) {
                 DataUpdaterImpl.log.warn( "The target platform " + targetPlatformAcc
                         + " is incomplete in the system, getting from GEO ... " );
                 /*

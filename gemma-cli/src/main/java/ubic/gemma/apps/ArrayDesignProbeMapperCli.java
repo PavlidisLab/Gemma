@@ -6,7 +6,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
@@ -509,7 +508,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         boolean isRat;
         if ( this.taxon == null ) {
             assert arrayDesign != null;
-            Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
+            Taxon t = arrayDesign.getPrimaryTaxon();
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
@@ -575,7 +574,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( taxon != null && !arrayDesignService.getTaxa( design ).contains( taxon ) ) {
+        if ( taxon != null && !arrayDesignService.getTaxaFromBioSequences( design ).contains( taxon ) ) {
             return;
         }
 

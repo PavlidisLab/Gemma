@@ -86,13 +86,13 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
 
-                if ( ads.getExpressionExperimentsCount( a ) > 0 ) {
+                if ( ads.countExpressionExperiments( a ) > 0 ) {
                     log.info( "Platform still has experiments that must be deleted first: " + p );
                     addErrorObject( p, "Experiments still exist for platform" );
                     continue;
                 }
 
-                if ( ads.getSwitchedExpressionExperimentCount( a ) > 0 ) {
+                if ( ads.countSwitchedExpressionExperiments( a ) > 0 ) {
                     log.info( "Platform still has experiments (switched to anther platform) that must be deleted first: " + p );
                     addErrorObject( p, "Experiments  (switched to anther platform) still exist for platform" );
                     continue;

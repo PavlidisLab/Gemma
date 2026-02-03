@@ -511,7 +511,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      */
     private DesignElementMapper createElementsMapping( ArrayDesign platform, Collection<String> geneIdentifiers ) {
         // create mapping by precedence of ID type
-        Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
+        Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform, true );
         List<DesignElementMapper> mappers = new ArrayList<>();
         // highest precedence is the probe name
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();

@@ -234,7 +234,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     public Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon ) {
 
         if ( taxon == null ) {
-            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign );
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
             if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
@@ -411,7 +411,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         if ( sensitive )
             ArrayDesignSequenceAlignmentServiceImpl.log.info( "Running in 'sensitive' mode if possible" );
 
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad );
+        Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
         boolean first = true;
         for ( Taxon taxon : taxa ) {
 
