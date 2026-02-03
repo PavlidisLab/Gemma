@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import ubic.gemma.core.loader.util.mapper.AbstractBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.HintingEntityMapper;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -16,6 +16,7 @@ import java.util.*;
  * <p>
  * Ideally, the provided sample name is a GSM accession, but in some cases it might originate from a supplementary file,
  * so this has some fallback on other metadata.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -32,55 +33,55 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
 
         // BioAssay GEO accession (canonical)
         if ( matchWithFunction( bas, BioAssay::getAccession, this::matchGeoAccession, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay GEO accession" );
+            log.debug( "Matched '" + sampleName + "' by assay GEO accession" );
             return results;
         }
 
         // BioAssay ID
         if ( matchWithFunction( bas, BioAssay::getId, this::matchId, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay ID" );
+            log.debug( "Matched '" + sampleName + "' by assay ID" );
             return results;
         }
 
         // BioAssay short name
-        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equals, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay short name" );
+        if ( matchWithFunction( bas, BioAssay::getShortName, Strings.CS::equals, sampleName, results ) ) {
+            log.debug( "Matched '" + sampleName + "' by assay short name" );
             return results;
         }
 
         // BioAssay short name (case-insensitive)
-        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equalsIgnoreCase, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay short name (case-insensitive)" );
+        if ( matchWithFunction( bas, BioAssay::getShortName, Strings.CS::equals, sampleName, results ) ) {
+            log.debug( "Matched '" + sampleName + "' by assay short name (case-insensitive)" );
             return results;
         }
 
         // BioAssay name
         if ( matchWithFunction( bas, BioAssay::getName, this::matchName, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay name" );
+            log.debug( "Matched '" + sampleName + "' by assay name" );
             return results;
         }
 
         // BioAssay name (case-insensitive)
         if ( matchWithFunction( bas, BioAssay::getName, this::matchNameIgnoreCase, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by assay name (case-insensitive)" );
+            log.debug( "Matched '" + sampleName + "' by assay name (case-insensitive)" );
             return results;
         }
 
         // BioMaterial GEO accession
         if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getExternalAccession(), this::matchGeoAccession, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by sample GEO accession" );
+            log.debug( "Matched '" + sampleName + "' by sample GEO accession" );
             return results;
         }
 
         // BioMaterial name
         if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchName, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by sample name" );
+            log.debug( "Matched '" + sampleName + "' by sample name" );
             return results;
         }
 
         // BioMaterial name (case-insensitive)
         if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchNameIgnoreCase, sampleName, results ) ) {
-            log.info( "Matched '" + sampleName + "' by sample name (case-insensitive)" );
+            log.debug( "Matched '" + sampleName + "' by sample name (case-insensitive)" );
             return results;
         }
 
@@ -98,7 +99,7 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
             return results;
         }
 
-        log.debug( "No match found for '" + sampleName + "'" );
+        log.warn( "No match found for '" + sampleName + "'" );
 
         return results;
     }

@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.util.mapper;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.annotation.Nullable;
@@ -84,7 +85,7 @@ public abstract class AbstractBioAssayMapper implements BioAssayMapper {
     }
 
     protected boolean matchDescriptionIgnoreCase( String a, String b ) {
-        return StringUtils.containsIgnoreCase( a, b );
+        return Strings.CI.contains( a, b );
     }
 
     private class StatefulBioAssayMapper implements StatefulEntityMapper<BioAssay> {
