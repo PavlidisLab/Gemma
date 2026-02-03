@@ -8,11 +8,8 @@ import ubic.gemma.core.util.SimpleRetryCallable;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 import static ubic.gemma.core.util.StringUtils.urlEncode;
@@ -84,11 +81,33 @@ public class EntrezUtils {
     }
 
     /**
+     * Quote a term if needed in a search query.
+     * <p>
+     * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK3837/">Entrez Help</a> for more details about the search
+     * query syntax.
+     */
+    public static String quoteTerm( String c ) {
+        // strip quotes, I don't think it's possible to escape them
+        c = c.replaceAll( "\"", "" );
+        // : is used for range queries (i.e. 1:10[Sequence Length])
+        // [] are used for fielded search
+        // () are used for grouping boolean expressions
+        // * is used for wildcard
+        // spaces must be quoted, or else they will be treated as separate terms
+        // '/' are used in date formatting
+        if ( c.matches( "[:\\[\\]()*/\\s]" ) ) {
+            return "\"" + c + "\"";
+        }
+        return c;
+    }
+
+    /**
      * Perform a search on an Entrez database.
      * <p>
      * Results must be subsequently retrieved with {@link #fetch(String, EntrezQuery, EntrezRetmode, String, int, int, String)} or
      * {@link #summary(String, EntrezQuery, EntrezRetmode, int, int, String)}. The query key and WebEnv values must be
      * extracted from the payload.
+     * @param term the search term(s); special characters can be quoted with {@link #quoteTerm(String)}
      */
     public static URL search( String db, String term, EntrezRetmode retmode, @Nullable String apiKey ) {
         return createUrl( ESEARCH

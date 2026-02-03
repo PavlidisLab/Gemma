@@ -51,6 +51,9 @@ public class ExternalDatabaseUtils {
      */
     @Nullable
     public static String getUri( DatabaseEntryValueObject accession ) {
+        if ( StringUtils.isNotBlank( accession.getUri() ) ) {
+            return accession.getUri();
+        }
         return getUri( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
@@ -60,7 +63,7 @@ public class ExternalDatabaseUtils {
      * The returned value is not necessarily an HTTP/HTTPS URL.
      */
     @Nullable
-    public static String getUri( String accession, String databaseName ) {
+    private static String getUri( String accession, String databaseName ) {
         if ( ExternalDatabases.GEO.equalsIgnoreCase( databaseName ) ) {
             return GeoUtils.getUri( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF );
         } else if ( ExternalDatabases.SRA.equalsIgnoreCase( databaseName ) ) {

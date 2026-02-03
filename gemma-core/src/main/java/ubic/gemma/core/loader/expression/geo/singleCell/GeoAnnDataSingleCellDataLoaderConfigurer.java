@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.AbstractAnnDataSingleCellDataLoaderConfigurer;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.anndata.Dataframe;
 
 import javax.annotation.Nullable;
@@ -15,8 +16,8 @@ class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCell
 
     private final GeoSeries series;
 
-    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries ) {
-        super( annDataFile );
+    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries, @Nullable SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
+        super( annDataFile, singleCellDataTransformationFactory );
         this.series = geoSeries;
     }
 

@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.util.XMLUtils.*;
 
@@ -370,27 +371,6 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
 
         return records;
-    }
-
-    /**
-     * Quote a term if needed.
-     * <p>
-     * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK3837/">Entrez Help</a> for more details about the search
-     * query syntax.
-     */
-    private String quoteTerm( String c ) {
-        // strip quotes, I don't think it's possible to escape them
-        c = c.replaceAll( "\"", "" );
-        // : is used for range queries (i.e. 1:10[Sequence Length])
-        // [] are used for fielded search
-        // () are used for grouping boolean expressions
-        // * is used for wildcard
-        // spaces must be quoted, or else they will be treated as separate terms
-        // '/' are used in date formatting
-        if ( c.matches( "[:\\[\\]()*/\\s]" ) ) {
-            return "\"" + c + "\"";
-        }
-        return c;
     }
 
     private GeoRecord fillRecord( GeoRecordType recordType, Node node, GeoRetrieveConfig config ) {

@@ -9,6 +9,7 @@ import java.util.List;
 public class CollectionMetadata {
     String id;
     String name;
+    String description;
     @Nullable
     private List<DatasetMetadata> datasets;
     @Nullable

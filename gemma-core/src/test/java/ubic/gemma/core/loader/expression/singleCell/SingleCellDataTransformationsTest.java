@@ -30,6 +30,9 @@ import static org.junit.Assume.assumeTrue;
 @ContextConfiguration
 public class SingleCellDataTransformationsTest extends BaseTest {
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Configuration
     @TestComponent
     @Import({ SettingsConfig.class, SingleCellTransformationConfig.class })
@@ -114,10 +117,10 @@ public class SingleCellDataTransformationsTest extends BaseTest {
     public void testPipeline() throws IOException {
         checkIfPackageIsInstalled( "scipy" );
         checkIfPackageIsInstalled( "anndata" );
-        SingleCellDataTransformationPipeline pipeline = new SingleCellDataTransformationPipeline( Arrays.asList(
-                ctx.getBean( SingleCellDataRewrite.class ),
-                ctx.getBean( SingleCellDataTranspose.class ),
-                ctx.getBean( SingleCellDataPack.class )
+        SingleCellDataTransformationPipeline pipeline = singleCellDataTransformationFactory.createPipeline( Arrays.asList(
+                SingleCellDataRewrite.class,
+                SingleCellDataTranspose.class,
+                SingleCellDataPack.class
         ) );
         pipeline.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pipeline.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );

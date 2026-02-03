@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.AnnDataDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
@@ -36,11 +37,11 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
     @Autowired
     private FTPClientFactory ftpClientFactory;
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}")
     private String downloadPath;
-
-    @Value("${python.exe}")
-    private Path pythonExecutable;
 
     /**
      * This test requires a fairly large input file which must be located in the download directory.
@@ -116,8 +117,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
         }
         // transpose...
         // this step requires a *lot* of memory
-        SingleCellDataTranspose transpose = new SingleCellDataTranspose();
-        transpose.setPythonExecutable( pythonExecutable );
+        SingleCellDataTranspose transpose = singleCellDataTransformationFactory.getTransformation( SingleCellDataTranspose.class );
         transpose.setInputFile( d, SingleCellDataType.ANNDATA );
         transpose.setOutputFile( p, SingleCellDataType.ANNDATA );
         transpose.perform();

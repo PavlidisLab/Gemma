@@ -47,7 +47,7 @@ public class SraFetcher {
         if ( accession.startsWith( "SRX" ) ) {
             return fetch( Collections.singletonList( accession ) );
         } else {
-            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            URL searchUrl = EntrezUtils.search( "sra", EntrezUtils.quoteTerm( accession ) + "[accn]", EntrezRetmode.XML, ncbiApiKey );
             log.debug( "There are non-SRX accessions, performing a search with " + searchUrl + " to resolve their IDs..." );
             EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream in = searchUrl.openStream() ) {
@@ -87,7 +87,7 @@ public class SraFetcher {
         } else {
             throw new IllegalArgumentException( "Unrecognized GEO accession: " + geoAccession );
         }
-        URL uidUrl = EntrezUtils.search( "gds", geoAccession + "[accn]" + " " + filter + "[filter]", EntrezRetmode.XML, ncbiApiKey );
+        URL uidUrl = EntrezUtils.search( "gds", EntrezUtils.quoteTerm( geoAccession ) + "[accn]" + " " + filter + "[filter]", EntrezRetmode.XML, ncbiApiKey );
         log.debug( "Fetching UID for " + geoAccession + " from " + uidUrl + "..." );
         String uid = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
             try ( InputStream is = uidUrl.openStream() ) {
@@ -152,7 +152,7 @@ public class SraFetcher {
                 return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
             }, ncbiApiKey ), "fetching " + fetchUrl );
         } else {
-            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            URL searchUrl = EntrezUtils.search( "sra", EntrezUtils.quoteTerm( accession ) + "[accn]", EntrezRetmode.XML, ncbiApiKey );
             log.debug( "Requesting a non-SRX accession, performing a search with " + searchUrl + " to resolve its ID..." );
             EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream in = searchUrl.openStream() ) {

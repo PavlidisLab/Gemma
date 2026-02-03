@@ -39,9 +39,9 @@ public class CellXGeneFetcherTest extends BaseTest {
     static class CC {
 
         @Bean
-        public CellXGeneFetcher cellXGeneFetcher( @Value("${gemma.download.path}") Path downloadDir ) {
+        public CellXGeneFetcher cellXGeneFetcher( @Value("${cellxgene.local.singleCellData.basepath}") Path downloadDir ) {
             return new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ),
-                    downloadDir.resolve( "singleCellData/CELLxGENE" ) );
+                    downloadDir );
         }
     }
 

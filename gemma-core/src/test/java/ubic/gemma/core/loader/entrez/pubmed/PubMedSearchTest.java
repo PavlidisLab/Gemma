@@ -19,18 +19,19 @@
 package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -96,5 +97,17 @@ public class PubMedSearchTest {
         searchTerms.add( "glucose" );
         Collection<String> actualResult = pms.search( searchTerms, 100 );
         assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+    }
+
+    @Test
+    public void testSearchAndSearchAndRetrieveByDoi() throws IOException {
+        Assertions.assertThat( pms.searchAndRetrieveByDoi( "10.1038/s41588-025-02083-8" ) )
+                .singleElement().satisfies( b -> assertEquals( "39962241", b.getPubAccession().getAccession() ) );
+        Assertions.assertThat( pms.searchAndRetrieveByDoi( "doi:10.1038/s41588-025-02083-8" ) )
+                .singleElement().satisfies( b -> assertEquals( "39962241", b.getPubAccession().getAccession() ) );
+        Assertions.assertThat( pms.searchAndRetrieveByDoi( "https://doi.org/10.1038/s41588-025-02083-8" ) )
+                .singleElement().satisfies( b -> assertEquals( "39962241", b.getPubAccession().getAccession() ) );
+        Assertions.assertThat( pms.searchAndRetrieveByDoi( "http://doi.org/10.1038/s41588-025-02083-8" ) )
+                .singleElement().satisfies( b -> assertEquals( "39962241", b.getPubAccession().getAccession() ) );
     }
 }
