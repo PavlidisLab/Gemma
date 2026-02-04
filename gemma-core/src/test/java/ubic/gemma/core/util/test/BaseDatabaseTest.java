@@ -2,6 +2,7 @@ package ubic.gemma.core.util.test;
 
 import gemma.gsec.acl.AclAuthorizationStrategyImpl;
 import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
+import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
 import gemma.gsec.acl.domain.AclDao;
 import gemma.gsec.acl.domain.AclDaoImpl;
 import gemma.gsec.acl.domain.AclService;
@@ -23,6 +24,8 @@ import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
 import org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy;
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
@@ -97,10 +100,10 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         }
 
         @Bean
-        public AclDao aclDao( SessionFactory sessionFactory ) {
+        public AclDao aclDao( SessionFactory sessionFactory, SidRetrievalStrategy sidRetrievalStrategy ) {
             AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
                     new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
-                    new AclSidRetrievalStrategyImpl( new NullRoleHierarchy() ) );
+                    sidRetrievalStrategy );
             return new AclDaoImpl( sessionFactory,
                     aclAuthorizationStrategy,
                     new SpringCacheBasedAclCache( new ConcurrentMapCache( "acl" ),
@@ -112,13 +115,20 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         public AclService aclService( AclDao aclDao ) {
             return new AclServiceImpl( aclDao );
         }
+
+        @Bean
+        public ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy() {
+            return new ObjectIdentityRetrievalStrategyImpl();
+        }
+
+        @Bean
+        public SidRetrievalStrategy sidRetrievalStrategy() {
+            return new AclSidRetrievalStrategyImpl( new NullRoleHierarchy() );
+        }
     }
 
     @Autowired
     protected SessionFactory sessionFactory;
-
-    @Autowired
-    protected AclService aclService;
 
     /**
      * Flush and clear the session after each test.
@@ -130,5 +140,4 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
     }
-
 }

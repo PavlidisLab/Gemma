@@ -1,5 +1,6 @@
 package ubic.gemma.core.search.source;
 
+import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclService;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
@@ -7,23 +8,30 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.acls.domain.SidRetrievalStrategyImpl;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.acls.model.SidRetrievalStrategy;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
+@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
 public class HibernateSearchSourceTest extends BaseDatabaseTest {
 
     @Configuration
@@ -33,16 +41,6 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         @Bean
         public HibernateSearchSource hibernateSearchSource() {
             return new HibernateSearchSource();
-        }
-
-        @Bean
-        public AclService aclService() {
-            return mock();
-        }
-
-        @Bean
-        public SidRetrievalStrategy sidRetrievalStrategy() {
-            return new SidRetrievalStrategyImpl();
         }
     }
 
@@ -70,6 +68,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testSearchExpressionExperiment() throws SearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
 
@@ -88,6 +87,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         ee.setPrimaryPublication( bibref );
         fts.persist( ee );
         fts.flushToIndexes();
+        createAcl( ee );
 
         assertThat( hibernateSearchSource.searchExpressionExperiment(
                 SearchSettings.expressionExperimentSearch( "hello" ),
@@ -101,6 +101,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser
     public void testSearchExpressionExperimentByStatementObject() throws SearchException {
         FullTextSession fts = Search.getFullTextSession( sessionFactory.getCurrentSession() );
         Taxon taxon = new Taxon();
@@ -121,6 +122,7 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
         ee.setExperimentalDesign( ed );
         fts.persist( ee );
         fts.flushToIndexes();
+        createAcl( ee );
         assertThat( hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder()
                 .query( "BRCA1" )
                 .build(), new SearchContext( null, null ) ) )
@@ -144,5 +146,20 @@ public class HibernateSearchSourceTest extends BaseDatabaseTest {
     @Test
     public void testSearchWithInvalidQuerySyntax() throws SearchException {
         hibernateSearchSource.searchExpressionExperiment( SearchSettings.builder().query( "\"" ).build(), new SearchContext( null, null ) );
+    }
+
+    @Autowired
+    private AclService aclService;
+
+    @Autowired
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
+
+    @Autowired
+    private SidRetrievalStrategy sidRetrievalStrategy;
+
+    private void createAcl( Securable securable ) {
+        MutableAcl acl = aclService.createAcl( objectIdentityRetrievalStrategy.getObjectIdentity( securable ) );
+        acl.insertAce( 0, BasePermission.READ, new AclPrincipalSid( SecurityContextHolder.getContext().getAuthentication() ), true );
+        aclService.updateAcl( acl );
     }
 }

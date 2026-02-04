@@ -311,6 +311,9 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
      * Filter search results by ACLs.
      */
     private <T extends Identifiable> Collection<SearchResult<T>> filterByAcls( Collection<SearchResult<T>> results, Class<? extends Securable> resultType ) {
+        if ( results.isEmpty() ) {
+            return results;
+        }
         List<Sid> sids = sidRetrievalStrategy.getSids( SecurityContextHolder.getContext().getAuthentication() );
         List<ObjectIdentity> aclIdentities = results.stream()
                 .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
