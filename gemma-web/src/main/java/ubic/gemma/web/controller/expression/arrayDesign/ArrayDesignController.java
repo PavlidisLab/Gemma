@@ -383,7 +383,7 @@ public class ArrayDesignController {
      * Sets external references, design element count and express. experiment count on the given value object.
      */
     private void setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Integer numCompositeSequences = arrayDesignService.countCompositeSequences( arrayDesign ).intValue();
+        long numCompositeSequences = arrayDesignService.countCompositeSequences( arrayDesign );
 
         long numExpressionExperiments = arrayDesignService.countExpressionExperiments( arrayDesign );
 
@@ -392,7 +392,7 @@ public class ArrayDesignController {
             externalReferences.add( new DatabaseEntryValueObject( en ) );
         }
         result.setExternalReferences( externalReferences );
-        result.setDesignElementCount( numCompositeSequences );
+        result.setDesignElementCount( ( int ) numCompositeSequences );
         result.setExpressionExperimentCount( numExpressionExperiments );
     }
 
