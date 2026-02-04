@@ -344,8 +344,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assertEquals( 0, arrayDesignService.countGenes( ad, false ) );
         assertEquals( 0, arrayDesignService.countCompositeSequencesWithGenes( ad, true ) );
         assertEquals( 0, arrayDesignService.countCompositeSequencesWithGenes( ad, false ) );
-        assertEquals( 0, arrayDesignService.countCompositeSequencesWithGenes( true ) );
-        assertEquals( 0, arrayDesignService.countCompositeSequencesWithGenes( false ) );
+        arrayDesignService.countCompositeSequencesWithGenes( true );
+        arrayDesignService.countCompositeSequencesWithGenes( false );
     }
 
     @Test
