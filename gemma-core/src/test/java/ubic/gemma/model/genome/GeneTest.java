@@ -18,20 +18,24 @@
  */
 package ubic.gemma.model.genome;
 
-import org.junit.Assert;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Tests of 'equals' implementation
  *
  * @author pavlidis
  */
-public class GeneTest extends TestCase {
+public class GeneTest {
 
     private Taxon aTax;
     private Taxon bTax;
     private PhysicalLocation aLoc;
 
+    @Test
     public void testEqualsA() {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
@@ -39,10 +43,11 @@ public class GeneTest extends TestCase {
         a.setOfficialSymbol( "foo" );
         b.setOfficialSymbol( "foo" );
 
-        Assert.assertFalse( a.equals( b ) );
+        assertNotEquals( a, b );
 
     }
 
+    @Test
     public void testEqualsB() {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
@@ -50,10 +55,11 @@ public class GeneTest extends TestCase {
         a.setNcbiGeneId( 1234 );
         b.setNcbiGeneId( 1234 );
 
-        Assert.assertEquals( a, b );
+        assertEquals( a, b );
 
     }
 
+    @Test
     public void testEqualsC() {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
@@ -65,10 +71,11 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( bTax );
 
-        Assert.assertFalse( a.equals( b ) );
+        assertNotEquals( a, b );
 
     }
 
+    @Test
     public void testEqualsD() {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
@@ -80,10 +87,11 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( aTax );
 
-        Assert.assertEquals( a, b );
+        assertEquals( a, b );
 
     }
 
+    @Test
     public void testEqualsE() {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
@@ -97,20 +105,19 @@ public class GeneTest extends TestCase {
         a.setPhysicalLocation( aLoc );
         b.setPhysicalLocation( aLoc );
 
-        Assert.assertEquals( a, b );
+        assertEquals( a, b );
 
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         aTax = Taxon.Factory.newInstance();
         aTax.setScientificName( "Foobius Barius" );
         aTax.setIsGenesUsable( true );
         bTax = Taxon.Factory.newInstance();
         bTax.setScientificName( "Barioobius foobarius" );
         bTax.setIsGenesUsable( true );
-        Chromosome c = new Chromosome( "X", aTax );
+        Chromosome c = Chromosome.Factory.newInstance( "X", aTax );
 
         aLoc = PhysicalLocation.Factory.newInstance();
         aLoc.setChromosome( c );

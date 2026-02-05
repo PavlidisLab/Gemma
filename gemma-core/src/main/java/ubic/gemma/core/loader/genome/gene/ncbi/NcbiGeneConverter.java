@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
@@ -144,7 +143,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
          * We are going to stop maintaining this information
          */
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = new Chromosome( info.getChromosome(), t );
+        Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
         gene.setPhysicalLocation( pl );
@@ -313,12 +312,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         dbe.setAccession( acc.getGenomicNucleotideAccession() );
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
-        try {
-            FieldUtils.writeField( chrom, "sequence", chromSeq, true );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        }
-
+        chrom.setSequence( chromSeq );
     }
-
 }

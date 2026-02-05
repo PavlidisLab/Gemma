@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,11 +200,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
 
             result.setSearchedDatabase( searchedDatabase );
-            try {
-                FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            }
+            result.getTargetChromosome().setTaxon( taxon );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
 
         }
@@ -372,11 +367,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             Taxon taxon = br.getQuerySequence().getTaxon();
             assert taxon != null;
 
-            try {
-                FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            }
+            br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
 
             PhysicalLocation pl = br.getTargetAlignedRegion();

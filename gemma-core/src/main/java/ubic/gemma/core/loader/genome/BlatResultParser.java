@@ -198,7 +198,7 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
                 numSkipped++;
                 return null;
             }
-            result.setTargetChromosome( new Chromosome( chrom, null, BioSequence.Factory.newInstance(), taxon ) );
+            result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(), taxon ) );
             result.getTargetChromosome().getSequence().setName( chrom );
             result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[BlatResultParser.TSIZE_FIELD] ) );
             result.getTargetChromosome().getSequence().setTaxon( taxon );

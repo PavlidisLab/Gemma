@@ -36,13 +36,25 @@ public class Gene2GOAssociation extends AbstractIdentifiable {
         return this.gene;
     }
 
+    public void setGene( Gene gene ) {
+        this.gene = gene;
+    }
+
     public Characteristic getOntologyEntry() {
         return this.ontologyEntry;
+    }
+
+    public void setOntologyEntry( Characteristic ontologyEntry ) {
+        this.ontologyEntry = ontologyEntry;
     }
 
     @Nullable
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
+    }
+
+    public void setEvidenceCode( @Nullable GOEvidenceCode evidenceCode ) {
+        this.evidenceCode = evidenceCode;
     }
 
     @Override

@@ -6,12 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
-
-import java.lang.reflect.Field;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,11 +36,7 @@ public class UserDaoTest extends BaseDatabaseTest {
         User user = User.Factory.newInstance( "foobar" );
         user = userDao.create( user );
 
-        // as mentioned, this is very illegal
-        Field usernameField = ReflectionUtils.findField( User.class, "userName" );
-        ReflectionUtils.makeAccessible( usernameField );
-        ReflectionUtils.setField( usernameField, user, "barfoo" );
-        assertEquals( "barfoo", user.getUserName() );
+        user.setUserName( "barfoo" );
 
         userDao.update( user );
         sessionFactory.getCurrentSession().flush();

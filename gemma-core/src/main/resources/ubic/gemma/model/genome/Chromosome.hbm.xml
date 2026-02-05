@@ -4,24 +4,24 @@
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
     <class name="ubic.gemma.model.genome.Chromosome" table="CHROMOSOME" mutable="false">
         <cache usage="read-only"/>
-        <id access="field" name="id" type="java.lang.Long" unsaved-value="null">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
             </generator>
         </id>
-        <property access="field" name="name" type="java.lang.String">
+        <property name="name" type="java.lang.String">
             <column name="NAME" not-null="true" unique="false"
                     sql-type="VARCHAR(255)"/>
         </property>
-        <many-to-one access="field" name="assemblyDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"
+        <many-to-one name="assemblyDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"
                      lazy="proxy" fetch="select">
             <column name="ASSEMBLY_DATABASE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one access="field" name="sequence" class="ubic.gemma.model.genome.biosequence.BioSequence"
+        <many-to-one name="sequence" class="ubic.gemma.model.genome.biosequence.BioSequence"
                      lazy="proxy" fetch="select">
             <column name="SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one access="field" name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
+        <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
             <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>
