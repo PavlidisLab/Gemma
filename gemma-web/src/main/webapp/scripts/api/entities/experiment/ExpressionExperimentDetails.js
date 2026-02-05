@@ -11,6 +11,10 @@ function formatNumber( n ) {
    return NUMBER_FORMATTER.format( n );
 }
 
+function isHttpUrl( uri ) {
+   return uri.startsWith( 'http://' ) || uri.startsWith( 'https://' );
+}
+
 /**
  *
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
@@ -107,10 +111,10 @@ Gemma.ExpressionExperimentDetails = Ext
                     let edMeta = ExternalDatabaseUtils.externalDatabases
                        .find(ed => ed.name === ee.externalDatabase);
                     if (edMeta) {
-                        let externalDatabaseLogo = '<img src="' + Gemma.CONTEXT_PATH + edMeta.logo + '" height="16" alt="' + htmlEncode(edMeta.name) + ' logo"/>';
-                        if (ee.externalUri !== null) {
+                       let externalDatabaseLogo = '<img src="' + edMeta.logo + '" height="16" alt="' + htmlEncode( edMeta.name ) + ' logo"/>';
+                       if ( ee.externalUri !== null && isHttpUrl( ee.externalUri ) ) {
                             return htmlEncode(ee.accession) + ' ' + '<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLogo + '</a>';
-                        } else if (ee.externalDatabaseUri !== null) {
+                       } else if ( ee.externalDatabaseUri !== null && isHttpUrl( ee.externalDatabaseUri ) ) {
                             return htmlEncode(ee.accession) + ' <a target="_blank" rel="noopener noreferrer" href="' + ee.externalDatabaseUri + '">' + externalDatabaseLogo + '</a>';
                         } else {
                             // no link available

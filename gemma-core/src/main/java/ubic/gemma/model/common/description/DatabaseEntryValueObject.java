@@ -16,6 +16,7 @@ package ubic.gemma.model.common.description;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 /**
@@ -28,6 +29,7 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
+    private String uri;
     private ExternalDatabaseValueObject externalDatabase;
 
     public DatabaseEntryValueObject() {
@@ -37,6 +39,7 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
     public DatabaseEntryValueObject( DatabaseEntry de ) {
         super( de );
         this.accession = de.getAccession();
+        this.uri = ExternalDatabaseUtils.getUri( de );
         this.externalDatabase =
                 de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;
     }

@@ -1,7 +1,20 @@
+import arrayExpressLogo from '../../../../images/logo/arrayexpress-logo-large-text.png';
+import geoLogo from '../../../../images/logo/geo-logo.png';
+import sraLogo from '../../../../images/logo/sra-logo.png';
+import biorxivLogo from '../../../../images/logo/biorxiv-logo.png';
+import arxivLogo from '../../../../images/logo/arxiv-logo.svg';
+import zenodoLogo from '../../../../images/logo/zenodo-logo.svg';
+import synapseLogo from '../../../../images/logo/synapse-logo-text.svg';
+import cellxgeneLogo from '../../../../images/logo/cellxgene-logo-inverted.png';
+import ucscCellBrowserLogo from '../../../../images/logo/ucsc-cellbrowser-logo.png';
+import bioStudiesLogo from '../../../../images/logo/biostudies-logo.png';
+import pubMedLogo from '../../../../images/logo/pubmed-logo-blue.svg';
+import ncbiGeneLogo from '../../../../images/logo/ncbi-symbol.svg';
+
 /**
  * Utilities for working with external databases.
  *
- * This should be kept in sync with ExternalDatabaseUtils.java.
+ * This should be kept in sync with ExternalDatabaseUtils.java and ExternalDatabaseWebUtils.java.
  * @author poirigui
  */
 export default {
@@ -11,47 +24,51 @@ export default {
    externalDatabases : [
       {
          name : 'ArrayExpress',
-         logo : '/images/logo/arrayexpress-logo-large-text.png',
+         logo : arrayExpressLogo
       },
       {
          name : 'GEO',
-         logo : '/images/logo/geo-logo.png'
+         logo : geoLogo
       },
       {
          name : 'SRA',
-         logo : '/images/logo/sra-logo.png'
+         logo : sraLogo
       },
       {
          name : 'CELLxGENE',
-         logo : '/images/logo/cellxgene-logo-inverted.png'
+         logo : cellxgeneLogo
       },
       {
          name : 'BioStudies',
-         logo : '/images/logo/biostudies-logo.png'
+         logo : bioStudiesLogo
       },
       {
          name : 'UCSC Cell Browser',
-         logo : '/images/logo/ucsc-cellbrowser-logo.png'
+         logo : ucscCellBrowserLogo
       },
       {
          name : 'PubMed',
-         logo : '/images/logo/pubmed-logo-blue.svg'
+         logo : pubMedLogo
       },
       {
          name : 'bioRxiv',
-         logo : '/images/logo/biorxiv-logo.png'
+         logo : biorxivLogo
       },
       {
          name : 'arXiv',
-         logo : '/images/logo/arxiv-logo.png'
+         logo : arxivLogo
       },
       {
          name : 'Zenodo',
-         logo : "/images/logo/zenodo-logo.svg"
+         logo : zenodoLogo
       },
       {
          name : 'Synapse',
-         logo : "/images/logo/synapse-logo-text.svg"
+         logo : synapseLogo
+      },
+      {
+         name : 'gene',
+         logo : ncbiGeneLogo
       }
    ]
 };

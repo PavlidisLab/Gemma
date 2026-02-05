@@ -227,40 +227,40 @@ Gemma.PlatformDetails = Ext
             },
 
             renderExternalAccesions: function (platformDetails) {
+               let htmlEncode = Ext.util.Format.htmlEncode;
 
-                var text = "";
+               function isHttpUrl( uri ) {
+                  return uri.startsWith( 'http://' ) || uri.startsWith( 'https://' );
+               }
 
-                var er = platformDetails.externalReferences;
-                if (er == null || er.length == 0) {
-                    text = "None";
-                } else {
-
-                    for (var i = 0; i < er.length; i++) {
-
-                        var dbr = er[i];
-                        var ac = dbr.accession;
-
-                        var db = dbr.externalDatabase.name;
-
-                       if ( db === "GEO" ) {
-                            text = text + ac + "&nbsp;<a "
-                               + " target='_blank' href='https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ac
-                                + "'><img  ext:qtip='NCBI page for this entry' src='" + Gemma.CONTEXT_PATH
-                               + "/images/logo/geo-logo.png' alt='GEO logo' /></a>";
-                       } else if ( db === "ArrayExpress" ) {
-                            text = text
-                                + ac
-                                + "&nbsp;<a title='ArrayExpress page for this entry'"
-                               + " target='_blank' href='https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/"
-                               + ac + "'><img ext:qtip='BioStudies page for this entry' src='" + Gemma.CONTEXT_PATH
-                               + "/images/logo/arrayexpress-logo.png' alt='ArrayExpress logo' /></a>";
-
+               let text = "";
+               let er = platformDetails.externalReferences;
+               if ( er == null || er.length === 0 ) {
+                  text = "None";
+               } else {
+                  for ( let i = 0; i < er.length; i++ ) {
+                     if ( i > 0 ) {
+                        text += "&nbsp;";
+                     }
+                     let dbr = er[i];
+                     let ExternalDatabaseUtils = require( '../common/ExternalDatabaseUtils' ).default;
+                     let externalDatabaseMeta = ExternalDatabaseUtils.externalDatabases
+                        .find( ed => ed.name === dbr.externalDatabase.name );
+                     if ( externalDatabaseMeta ) {
+                        text += htmlEncode( dbr.accession );
+                        text += '&nbsp;';
+                        if ( dbr.uri && isHttpUrl( dbr.uri ) ) {
+                           text += '<a target="_blank" rel="noopener noreferrer" href="' + dbr.uri + '">'
+                              + '<img ext:qtip="' + htmlEncode( externalDatabaseMeta.name ) + ' page for this entry" src="' + externalDatabaseMeta.logo + '" alt="' + htmlEncode( externalDatabaseMeta.name ) + ' logo" height="16" />'
+                              + "</a>";
                         } else {
-                            text = text + "&nbsp;" + ac + " (" + databaseEntry.getExternalDatabase().getName() + ")";
+                           text += '<img ext:qtip="' + htmlEncode( externalDatabaseMeta.name ) + ' page for this entry" src="' + externalDatabaseMeta.logo + '" alt="' + htmlEncode( externalDatabaseMeta.name ) + 'logo" height="16" />'
                         }
-
-                    }
-                }
+                     } else {
+                        text += htmlEncode( dbr.accession ) + " (" + htmlEncode( dbr.externalDatabase.name ) + ")";
+                     }
+                  }
+               }
 
                 return new Ext.Panel({
                     border: false,

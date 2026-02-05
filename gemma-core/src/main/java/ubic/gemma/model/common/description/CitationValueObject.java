@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 
 import java.io.Serializable;
-import java.net.URL;
 import java.util.*;
 
 /**
@@ -91,7 +90,7 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         this.setCitation( buf.toString() );
         if ( ref.getPubAccession() != null ) {
             this.setPubmedAccession( ref.getPubAccession().getAccession() );
-            this.setPubmedURL( PubMedUtils.getUrl( ref.getPubAccession().getAccession() ).toString() );
+            this.setPubmedURL( PubMedUtils.getUri( ref.getPubAccession().getAccession() ) );
         }
         this.setId( ref.getId() );
         this.retracted = ref.getRetracted();
@@ -101,8 +100,8 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
     /**
      * @param ref ref
      * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference
-     *         param
-     *         was null
+     * param
+     * was null
      */
     public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
 
@@ -116,7 +115,7 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
     /**
      * @param refs refs
      * @return a collection of citation value objects constructed from a collection of BibliographicReference objects
-     *         or an empty list if all the BibliographicReference list param was null or empty
+     * or an empty list if all the BibliographicReference list param was null or empty
      */
     public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
 

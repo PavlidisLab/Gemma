@@ -27,7 +27,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -576,7 +575,7 @@ public class EntityUrlBuilder {
 
     public class ExternalEntityUrl<T extends Identifiable> extends EntityUrl<T> {
 
-        private String url;
+        private final String url;
 
         private ExternalEntityUrl( String baseUrl, T entity ) {
             super( baseUrl, entity );
@@ -596,23 +595,25 @@ public class EntityUrlBuilder {
         }
 
         private String getExternalDatabaseUrl( ExternalDatabase entity ) {
-            if ( entity.getWebUri() != null ) {
-                return entity.getWebUri();
+            String externalUri = ExternalDatabaseUtils.getUri( entity );
+            if ( externalUri != null && isHttpUrl( externalUri ) ) {
+                return externalUri;
             } else {
                 throw new UnsupportedEntityUrlException( "Cannot generate an external URL for " + entity + ".", entity.getClass() );
             }
         }
 
-        /**
-         * TODO: move this in some kind of re-usable utility class
-         */
         private String getDatabaseEntryUrl( DatabaseEntry entity ) {
-            URL externalUrl = ExternalDatabaseUtils.getUrl( entity );
-            if ( externalUrl != null ) {
-                return externalUrl.toString();
+            String externalUri = ExternalDatabaseUtils.getUri( entity );
+            if ( externalUri != null && isHttpUrl( externalUri ) ) {
+                return externalUri;
             } else {
                 throw new UnsupportedEntityUrlException( "Cannot generate an external URL for entries of " + entity.getExternalDatabase() + ".", ExternalDatabase.class );
             }
+        }
+
+        private boolean isHttpUrl( String uri ) {
+            return uri.startsWith( "http://" ) || uri.startsWith( "https://" );
         }
 
         public URI toUri() {

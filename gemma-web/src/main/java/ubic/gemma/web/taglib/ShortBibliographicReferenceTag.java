@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.web.assets.StaticAssetResolver;
 
 import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
@@ -38,12 +39,18 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  */
 public class ShortBibliographicReferenceTag extends AbstractHtmlElementTag {
 
+    private transient StaticAssetResolver staticAssetResolver;
+
     @Setter
     @Nullable
     private BibliographicReference citation;
 
     @Override
     public int doStartTagInternal() throws JspException {
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
+        }
+
         TagWriter tagWriter = new TagWriter( pageContext );
 
         if ( citation == null ) {
@@ -88,14 +95,14 @@ public class ShortBibliographicReferenceTag extends AbstractHtmlElementTag {
 
                 tagWriter.appendValue( " " );
 
-                String link = PubMedUtils.getUrl( pubMedId ).toString();
+                String link = PubMedUtils.getUri( pubMedId );
 
                 tagWriter.startTag( "a" );
                 tagWriter.writeAttribute( "href", link );
                 tagWriter.writeAttribute( "target", "_blank" );
                 tagWriter.writeAttribute( "rel", "noopener noreferrer" );
                 tagWriter.startTag( "img" );
-                tagWriter.writeAttribute( "src", contextPath + "/images/logo/pubmed-logo-blue.svg" );
+                tagWriter.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/logo/pubmed-logo-blue.svg" ) );
                 tagWriter.writeAttribute( "height", "16" );
                 tagWriter.writeAttribute( "alt", "PubMed Link" );
                 tagWriter.endTag(); // </img>
@@ -110,7 +117,7 @@ public class ShortBibliographicReferenceTag extends AbstractHtmlElementTag {
                 tagWriter.writeAttribute( "href", contextPath + "/bibRef/bibRefView.html?accession=" + urlEncode( pubMedId ) );
                 tagWriter.writeAttribute( "target", "_blank" );
                 tagWriter.startTag( "img" );
-                tagWriter.writeAttribute( "src", contextPath + "/images/magnifier.png" );
+                tagWriter.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/magnifier.png" ) );
                 tagWriter.endTag(); // </img>
                 tagWriter.endTag(); // </a>
             }

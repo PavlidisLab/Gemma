@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.util;
 
+import io.micrometer.common.util.StringUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 import ubic.gemma.core.loader.expression.arrayExpress.ArrayExpressUtils;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
@@ -8,15 +9,14 @@ import ubic.gemma.core.loader.expression.sra.SraUtils;
 import ubic.gemma.core.loader.expression.synapse.SynapseUtils;
 import ubic.gemma.core.loader.expression.ucsc.cellbrowser.UcscCellBrowserUtils;
 import ubic.gemma.core.loader.expression.zenodo.ZenodoUtils;
+import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneUtils;
+import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
 import javax.annotation.Nullable;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * Utilities for working with various external databases.
@@ -32,55 +32,67 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
 public class ExternalDatabaseUtils {
 
     /**
-     * Obtain a URL for a given database entry.
+     * Obtain a URI for a given database entry.
+     * <p>
+     * The returned value is not necessarily an HTTP/HTTPS URL.
      */
     @Nullable
-    public static URL getUrl( DatabaseEntry accession ) {
-        if ( accession.getUri() != null ) {
-            try {
-                return new URL( accession.getAccession() );
-            } catch ( MalformedURLException e ) {
-                // ignore?
-            }
+    public static String getUri( DatabaseEntry accession ) {
+        if ( StringUtils.isNotBlank( accession.getUri() ) ) {
+            return accession.getUri();
         }
-        return getUrl( accession.getAccession(), accession.getExternalDatabase().getName() );
+        return getUri( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
+    /**
+     * Obtain a URI for a given database entry.
+     * <p>
+     * The returned value is not necessarily an HTTP/HTTPS URL.
+     */
     @Nullable
-    public static URL getUrl( DatabaseEntryValueObject accession ) {
-        return getUrl( accession.getAccession(), accession.getExternalDatabase().getName() );
+    public static String getUri( DatabaseEntryValueObject accession ) {
+        return getUri( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
+    /**
+     * Obtain a URI for a given database entry.
+     * <p>
+     * The returned value is not necessarily an HTTP/HTTPS URL.
+     */
     @Nullable
-    private static URL getUrl( String accession, String databaseName ) {
+    public static String getUri( String accession, String databaseName ) {
         if ( ExternalDatabases.GEO.equalsIgnoreCase( databaseName ) ) {
-            return GeoUtils.getUrl( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF );
+            return GeoUtils.getUri( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF );
         } else if ( ExternalDatabases.SRA.equalsIgnoreCase( databaseName ) ) {
-            return SraUtils.getUrl( accession );
+            return SraUtils.getUri( accession );
         } else if ( ExternalDatabases.ARRAY_EXPRESS.equalsIgnoreCase( databaseName ) ) {
-            return ArrayExpressUtils.getUrl( accession );
+            return ArrayExpressUtils.getUri( accession );
         } else if ( ExternalDatabases.CELLXGENE.equalsIgnoreCase( databaseName ) ) {
-            return CellXGeneUtils.getDatasetUrl( accession );
+            return CellXGeneUtils.getDatasetUri( accession );
         } else if ( ExternalDatabases.PUBMED.equalsIgnoreCase( databaseName ) ) {
-            return PubMedUtils.getUrl( accession );
+            return PubMedUtils.getUri( accession );
         } else if ( ExternalDatabases.GO.equalsIgnoreCase( databaseName ) ) {
-            try {
-                return new URL( "https://amigo.geneontology.org/amigo/term/" + urlEncode( accession.replace( "_", ":" ) ) );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+            return GeneOntologyUtils.getUri( accession );
         } else if ( ExternalDatabases.UCSC_CELL_BROWSER.equalsIgnoreCase( databaseName ) ) {
-            try {
-                return new URL( UcscCellBrowserUtils.getDatasetUrl( accession ) );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+            return UcscCellBrowserUtils.getDatasetUri( accession );
         } else if ( ExternalDatabases.SYNAPSE.equalsIgnoreCase( databaseName ) ) {
-            return SynapseUtils.getUrl( accession );
+            return SynapseUtils.getUri( accession );
         } else if ( ExternalDatabases.ZENODO.equalsIgnoreCase( databaseName ) ) {
-            return ZenodoUtils.getUrl( accession );
+            return ZenodoUtils.getUri( accession );
+        } else if ( ExternalDatabases.GENE.equalsIgnoreCase( databaseName ) ) {
+            return NcbiGeneUtils.getUri( accession );
         } else {
             return null;
         }
+    }
+
+    /**
+     * Obtain a URI for a given external database.
+     * <p>
+     * The returned value is not necessarily an HTTP/HTTPS URL.
+     */
+    @Nullable
+    public static String getUri( ExternalDatabase externalDatabase ) {
+        return externalDatabase.getWebUri();
     }
 }

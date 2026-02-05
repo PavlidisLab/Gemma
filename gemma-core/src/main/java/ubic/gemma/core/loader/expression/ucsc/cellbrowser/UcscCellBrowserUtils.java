@@ -19,7 +19,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +71,7 @@ public class UcscCellBrowserUtils {
     /**
      * Construct a URL to access an UCSC Cell Browser dataset.
      */
-    public static String getDatasetUrl( String datasetId ) {
+    public static String getDatasetUri( String datasetId ) {
         return UCSC_CELL_BROWSER_URL + "?ds=" + urlEncode( datasetId );
     }
 

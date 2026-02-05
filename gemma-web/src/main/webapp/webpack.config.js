@@ -42,8 +42,12 @@ module.exports = {
             test : /\.css$/i,
             exclude : /node_modules/,
             use : [ MiniCssExtractPlugin.loader, "css-loader" ],
+         },
+         {
+            test : /\.(png|svg|jpg|gif)$/i,
+            type : 'asset/resource'
          }
-      ]
+      ],
    },
    devServer : {
       static : {
@@ -55,7 +59,7 @@ module.exports = {
          'Access-Control-Allow-Methods' : 'GET'
       }
    },
-   cache: {
-      type: 'filesystem'
+   cache : {
+      type : 'filesystem'
    }
 }

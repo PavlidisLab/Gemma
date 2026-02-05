@@ -2,8 +2,8 @@ Ext.namespace( 'Gemma' );
 
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
-Gemma.UCSC_ICON = Gemma.CONTEXT_PATH + "/images/logo/ucsc-logo.png";
-Gemma.NCBI_ICON = Gemma.CONTEXT_PATH + "/images/logo/ncbi-symbol.svg";
+Gemma.UCSC_ICON = require( "../../../../images/logo/ucsc-logo.png" );
+Gemma.NCBI_ICON = require( "../../../../images/logo/ncbi-symbol.svg" );
 const UCSC_TRACKS = 'https://genome.ucsc.edu/cgi-bin/hgTracks';
 /**
  * 

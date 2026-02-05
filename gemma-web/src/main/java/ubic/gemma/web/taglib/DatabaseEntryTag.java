@@ -22,23 +22,29 @@ import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.web.assets.StaticAssetResolver;
+import ubic.gemma.web.util.ExternalDatabaseWebUtils;
 
 import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
-import java.net.URL;
 
 /**
  * @author keshav
  */
 public class DatabaseEntryTag extends AbstractHtmlElementTag {
 
+    private transient StaticAssetResolver staticAssetResolver;
+
     @Nullable
     private DatabaseEntryValueObject databaseEntry;
 
     @Override
     public int doStartTagInternal() throws JspException {
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
+        }
+
         TagWriter tagWriter = new TagWriter( pageContext );
 
         if ( this.databaseEntry == null ) {
@@ -48,48 +54,27 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
             return SKIP_BODY;
         }
 
-        String contextPath = pageContext.getServletContext().getContextPath();
-
         tagWriter.startTag( "span" );
         writeOptionalAttributes( tagWriter );
 
         tagWriter.appendValue( htmlEscape( databaseEntry.getAccession() ) );
 
         if ( databaseEntry.getExternalDatabase() != null ) {
-            URL externalUrl = ExternalDatabaseUtils.getUrl( databaseEntry );
-            String databaseLogo;
-            if ( ExternalDatabases.GEO.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = contextPath + "/images/logo/geo-logo.png";
-            } else if ( ExternalDatabases.ARRAY_EXPRESS.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/arrayexpress-logo.png";
-            } else if ( ExternalDatabases.BIO_STUDIES.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/biostudies-logo.png";
-            } else if ( ExternalDatabases.SRA.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/sra-logo.png";
-            } else if ( ExternalDatabases.CELLXGENE.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/cellxgene-logo.png";
-            } else if ( ExternalDatabases.PUBMED.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/pubmed-logo-blue.png";
-            } else if ( ExternalDatabases.ARXIV.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/arxiv-logo.png";
-            } else if ( ExternalDatabases.BIORXIV.equalsIgnoreCase( databaseEntry.getExternalDatabase().getName() ) ) {
-                databaseLogo = "/images/logo/biorxiv-logo.png";
-            } else {
-                databaseLogo = null;
-            }
+            String externalUri = ExternalDatabaseUtils.getUri( databaseEntry );
+            String databaseLogo = ExternalDatabaseWebUtils.getLogo( databaseEntry.getExternalDatabase() );
             tagWriter.appendValue( " " );
-            if ( externalUrl != null ) {
+            if ( externalUri != null && isHttpUrl( externalUri ) ) {
                 if ( databaseLogo != null ) {
                     tagWriter.startTag( "a" );
-                    tagWriter.writeAttribute( "href", externalUrl.toString() );
+                    tagWriter.writeAttribute( "href", externalUri );
                     tagWriter.writeAttribute( "target", "_blank" );
                     tagWriter.writeAttribute( "rel", "noopener noreferrer" );
-                    writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), databaseLogo, tagWriter );
+                    writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
                     tagWriter.endTag(); // </a>
                 } else {
                     tagWriter.appendValue( "(" );
                     tagWriter.startTag( "a" );
-                    tagWriter.writeAttribute( "href", externalUrl.toString() );
+                    tagWriter.writeAttribute( "href", externalUri );
                     tagWriter.writeAttribute( "target", "_blank" );
                     tagWriter.writeAttribute( "rel", "noopener noreferrer" );
                     tagWriter.appendValue( htmlEscape( databaseEntry.getExternalDatabase().getName() ) );
@@ -101,7 +86,7 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
                     tagWriter.appendValue( ")" );
                 }
             } else if ( databaseLogo != null ) {
-                writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), databaseLogo, tagWriter );
+                writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
             } else {
                 tagWriter.appendValue( "(" + htmlEscape( databaseEntry.getExternalDatabase().getName() ) + ")" );
             }
@@ -112,9 +97,13 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
         return Tag.SKIP_BODY;
     }
 
+    private boolean isHttpUrl( String uri ) {
+        return uri.startsWith( "http://" ) || uri.startsWith( "https://" );
+    }
+
     private void writeDatabaseLogo( String databaseName, String databaseLogo, TagWriter tagWriter ) throws JspException {
         tagWriter.startTag( "img" );
-        tagWriter.writeAttribute( "src", databaseLogo );
+        tagWriter.writeAttribute( "src", staticAssetResolver.resolveUrl( databaseLogo ) );
         tagWriter.writeAttribute( "height", "16" );
         tagWriter.writeAttribute( "alt", htmlEscape( databaseName ) + " logo" );
         tagWriter.endTag(); // </img>

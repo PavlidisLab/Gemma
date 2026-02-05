@@ -17,6 +17,18 @@ public class GeoUtils {
      * Obtain a URL for GEO entry.
      */
     public static URL getUrl( String geoAccession, GeoSource source, GeoFormat format, GeoScope scope, GeoAmount amount ) {
+        // we support all amount because the FTP files are complete
+        try {
+            return new URL( getUri( geoAccession, source, format, scope, amount ) );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Obtain a URI for GEO entry.
+     */
+    public static String getUri( String geoAccession, GeoSource source, GeoFormat format, GeoScope scope, GeoAmount amount ) {
         if ( source == GeoSource.DIRECT ) {
             String form;
             if ( format == GeoFormat.SOFT ) {
@@ -77,14 +89,10 @@ public class GeoUtils {
                         throw new UnsupportedOperationException( "Unsupported GEO amount: " + amount + " for the direct GEO source." );
                 }
             }
-            try {
-                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession
-                        + ( targ != null ? "&targ=" + targ : "" )
-                        + ( form != null ? "&form=" + form : "" )
-                        + ( view != null ? "&view=" + view : "" ) );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+            return GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession
+                    + ( targ != null ? "&targ=" + targ : "" )
+                    + ( form != null ? "&form=" + form : "" )
+                    + ( view != null ? "&view=" + view : "" );
         } else if ( source == GeoSource.FTP || source == GeoSource.FTP_VIA_HTTPS ) {
             String baseUrl;
             if ( source == GeoSource.FTP ) {
@@ -105,12 +113,7 @@ public class GeoUtils {
             if ( scope != GeoScope.FAMILY ) {
                 throw new UnsupportedOperationException( "Only family scope is supported for the FTP GEO source." );
             }
-            // we support all amount because the FTP files are complete
-            try {
-                return new URL( baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+            return baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext;
         } else {
             throw new UnsupportedOperationException( "Unsupported source for GEO data: " + source + "." );
         }

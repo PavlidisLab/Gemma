@@ -1,8 +1,5 @@
 package ubic.gemma.core.loader.expression.synapse;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
@@ -10,11 +7,7 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  */
 public class SynapseUtils {
 
-    public static URL getUrl( String accession ) {
-        try {
-            return new URL( "https://www.synapse.org/Synapse:" + urlEncode( accession ) );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        }
+    public static String getUri( String accession ) {
+        return "https://www.synapse.org/Synapse:" + urlEncode( accession );
     }
 }

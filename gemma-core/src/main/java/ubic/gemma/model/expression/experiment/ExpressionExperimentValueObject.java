@@ -20,7 +20,6 @@ import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
-import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -125,10 +124,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // accession
         if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
-            URL url = ExternalDatabaseUtils.getUrl( ee.getAccession() );
-            this.externalUri = url != null ? url.toString() : null;
+            this.externalUri = ExternalDatabaseUtils.getUri( ee.getAccession() );
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
-            this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
+            this.externalDatabaseUri = ExternalDatabaseUtils.getUri( ee.getAccession().getExternalDatabase() );
         }
 
         // EE
