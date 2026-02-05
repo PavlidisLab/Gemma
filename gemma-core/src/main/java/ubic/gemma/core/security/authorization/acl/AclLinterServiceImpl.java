@@ -227,7 +227,6 @@ public class AclLinterServiceImpl implements AclLinterService {
         } else {
             log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
         }
-        int i = 0;
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
                 SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
@@ -245,11 +244,8 @@ public class AclLinterServiceImpl implements AclLinterService {
                 } else {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the parent ACL identity could not be found.", false ) );
                 }
-                if ( ( ++i % 100 ) == 0 ) {
-                    // flush to prevent SecuredChild to pile up in memory
-                    sessionFactory.getCurrentSession().flush();
-                    sessionFactory.getCurrentSession().clear();
-                }
+                // remove to prevent SecuredChild to pile up in memory
+                sessionFactory.getCurrentSession().evict( sc );
             } else {
                 results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity.", false ) );
             }
@@ -315,7 +311,6 @@ public class AclLinterServiceImpl implements AclLinterService {
         } else {
             log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " with incorrect parent ACL identities." );
         }
-        int i = 0;
         for ( AclObjectIdentity aoi : list ) {
             if ( config.isApplyFixes() ) {
                 SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
@@ -332,11 +327,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                 } else {
                     results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity does not have a correct parent ACL identity.", false ) );
                 }
-                if ( ( ++i % 100 ) == 0 ) {
-                    // flush to prevent SecuredChild to pile up in memory
-                    sessionFactory.getCurrentSession().flush();
-                    sessionFactory.getCurrentSession().clear();
-                }
+                sessionFactory.getCurrentSession().evict( sc );
             } else {
                 results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity does not have a correct parent ACL identity.", false ) );
             }
