@@ -949,10 +949,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         if ( overlap != subsumeeSeqs.size() ) {
             int n = 5;
-            System.err.println( "Up to " + n + " missing sequences will be listed." );
+            StringBuilder m = new StringBuilder( "Up to " + n + " missing sequences will be listed:" );
             for ( int i = 0; i < Math.min( n, missing.size() ); i++ ) {
-                System.err.println( missing.get( i ) );
+                m.append( "\n\t" ).append( missing.get( i ) );
             }
+            log.warn( m.toString() );
             return false;
         }
 
