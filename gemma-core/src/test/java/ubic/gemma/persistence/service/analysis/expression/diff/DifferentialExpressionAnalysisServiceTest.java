@@ -19,13 +19,18 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import gemma.gsec.acl.domain.AclService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -33,13 +38,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author klc
  */
-public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
+public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private DifferentialExpressionAnalysisService analysisService;
@@ -47,20 +51,28 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private AclService aclService;
+
+    @Autowired
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
+
     private ExpressionExperiment e1;
     private ExpressionExperiment e2;
     private ExpressionExperiment e3;
 
     private String dea1_name;
     private String dea2_name;
-
     private String testEESetName;
-
     private String testAnalysisName;
+    private DifferentialExpressionAnalysis eAnalysis1;
+    private DifferentialExpressionAnalysis eAnalysis2;
+    private DifferentialExpressionAnalysis eAnalysis3;
+    private DifferentialExpressionAnalysis eAnalysis4;
+    private ExpressionAnalysisResultSet resultSet1;
 
     @Before
     public void setUp() throws Exception {
-
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         e1 = expressionExperimentService.create( e1 );
@@ -75,42 +87,45 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         ExpressionExperiment e4 = ExpressionExperiment.Factory.newInstance();
         e4.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
-        expressionExperimentService.create( e4 );
+        e4 = expressionExperimentService.create( e4 );
 
         // //////////////////
-        DifferentialExpressionAnalysis eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis1.setExperimentAnalyzed( e1 );
         dea1_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis1.setName( dea1_name );
         eAnalysis1.setDescription( "An analysis Test 1" );
-        analysisService.create( eAnalysis1 );
+        resultSet1 = ExpressionAnalysisResultSet.Factory.newInstance();
+        resultSet1.setAnalysis( eAnalysis1 );
+        resultSet1.setPvalueDistribution( PvalueDistribution.Factory.newInstance( new double[0] ) );
+        eAnalysis1.getResultSets().add( resultSet1 );
+        eAnalysis1 = analysisService.create( eAnalysis1 );
 
         // ///////////////
-        DifferentialExpressionAnalysis eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis2.setExperimentAnalyzed( e2 );
         dea2_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis2.setName( dea2_name );
         eAnalysis2.setDescription( "An analysis Test 2" );
-        analysisService.create( eAnalysis2 );
+        eAnalysis2 = analysisService.create( eAnalysis2 );
 
         // /////////////
-        DifferentialExpressionAnalysis eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis3.setExperimentAnalyzed( e3 );
         this.testAnalysisName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
-        analysisService.create( eAnalysis3 );
+        eAnalysis3 = analysisService.create( eAnalysis3 );
 
         // ////
-        DifferentialExpressionAnalysis eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis4.setExperimentAnalyzed( e3 );
         testEESetName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis4.setName( testEESetName );
         eAnalysis4.setDescription( "An analysis Test 4" );
-        analysisService.create( eAnalysis4 );
-
+        eAnalysis4 = analysisService.create( eAnalysis4 );
     }
 
     @After
@@ -118,6 +133,19 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         expressionExperimentService.remove( e1 );
         expressionExperimentService.remove( e2 );
         expressionExperimentService.remove( e3 );
+    }
+
+    @Test
+    public void testCreate() {
+        // check created ACLs
+        Acl eeAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( e1 ) );
+        Acl analysisAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( eAnalysis1 ) );
+        Acl resultSetAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( resultSet1 ) );
+        assertFalse( eeAcl.isEntriesInheriting() );
+        assertEquals( eeAcl.getObjectIdentity(), analysisAcl.getParentAcl().getObjectIdentity() );
+        assertTrue( analysisAcl.isEntriesInheriting() );
+        assertEquals( analysisAcl.getObjectIdentity(), resultSetAcl.getParentAcl().getObjectIdentity() );
+        assertTrue( analysisAcl.isEntriesInheriting() );
     }
 
     @Test

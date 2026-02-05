@@ -33,12 +33,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Pointcuts;
 
@@ -98,26 +98,25 @@ public class AclAdvice extends BaseAclAdvice {
 
     @Override
     protected void createOrUpdateAclSpecialCases( MutableAcl acl, @Nullable Acl parentAcl, Sid sid, Securable object ) {
-
-        // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
-        // If aclParent is passed to this method we overwrite it.
-        if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-            SingleExperimentAnalysis<?> experimentAnalysis = ( SingleExperimentAnalysis<?> ) object;
-
-            BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
-            ObjectIdentity oi_temp = this.makeObjectIdentity( bioAssaySet );
-
-            parentAcl = this.getAclService().readAclById( oi_temp );
-            if ( parentAcl == null ) {
-                // This is possible if making an EESubSet is part of the transaction.
-                parentAcl = this.getAclService().createAcl( oi_temp );
+        // make sure that result sets have the ACLs created and setup to inherit those from the DEA
+        if ( object instanceof DifferentialExpressionAnalysis ) {
+            for ( ExpressionAnalysisResultSet resultSet : ( ( DifferentialExpressionAnalysis ) object ).getResultSets() ) {
+                ObjectIdentity rsOi = makeObjectIdentity( resultSet );
+                MutableAcl rsAcl;
+                try {
+                    rsAcl = ( MutableAcl ) getAclService().readAclById( rsOi );
+                } catch ( NotFoundException e ) {
+                    log.warn( "No ACL identity found for " + resultSet + ", creating a new one." );
+                    rsAcl = getAclService().createAcl( rsOi );
+                }
+                if ( rsAcl.getParentAcl() == null ) {
+                    log.warn( "ACL for " + resultSet + " does not have a parent populated, setting it to " + acl + "." );
+                    rsAcl.setParent( acl );
+                    rsAcl.setEntriesInheriting( true );
+                    getAclService().updateAcl( rsAcl );
+                }
             }
-            acl.setEntriesInheriting( true );
-            acl.setParent( parentAcl );
-            //noinspection UnusedAssignment //Owner of the experiment owns analyses even if administrator ran them.
-            sid = parentAcl.getOwner();
         }
-
     }
 
     @Override
