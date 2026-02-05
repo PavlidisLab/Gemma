@@ -44,6 +44,14 @@ export default {
       {
          name : 'arXiv',
          logo : '/images/logo/arxiv-logo.png'
+      },
+      {
+         name : 'Zenodo',
+         logo : "/images/logo/zenodo-logo.svg"
+      },
+      {
+         name : 'Synapse',
+         logo : "/images/logo/synapse-logo-text.svg"
       }
    ]
 };

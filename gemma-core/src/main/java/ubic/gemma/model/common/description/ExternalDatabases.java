@@ -21,5 +21,7 @@ public final class ExternalDatabases {
             BIORXIV = "bioRxiv",
             CELLXGENE = "CELLxGENE",
             GENBANK = "GenBank",
-            UCSC_CELL_BROWSER = "UCSC Cell Browser";
+            UCSC_CELL_BROWSER = "UCSC Cell Browser",
+            SYNAPSE = "Synapse",
+            ZENODO = "Zenodo";
 }

@@ -5,7 +5,9 @@ import ubic.gemma.core.loader.expression.arrayExpress.ArrayExpressUtils;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.expression.sra.SraUtils;
+import ubic.gemma.core.loader.expression.synapse.SynapseUtils;
 import ubic.gemma.core.loader.expression.ucsc.cellbrowser.UcscCellBrowserUtils;
+import ubic.gemma.core.loader.expression.zenodo.ZenodoUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -73,6 +75,10 @@ public class ExternalDatabaseUtils {
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
+        } else if ( ExternalDatabases.SYNAPSE.equalsIgnoreCase( databaseName ) ) {
+            return SynapseUtils.getUrl( accession );
+        } else if ( ExternalDatabases.ZENODO.equalsIgnoreCase( databaseName ) ) {
+            return ZenodoUtils.getUrl( accession );
         } else {
             return null;
         }
