@@ -4,11 +4,11 @@ AnnotationController._path = '/dwr';
 AnnotationController.reinitializeOntologyIndices = function(callback) {
   dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'reinitializeOntologyIndices', callback);
 }
-AnnotationController.getCategoryTerms = function(callback) {
-  dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getCategoryTerms', callback);
-}
 AnnotationController.getRelationTerms = function(callback) {
   dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getRelationTerms', callback);
+}
+AnnotationController.getCategoryTerms = function(callback) {
+  dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getCategoryTerms', callback);
 }
 AnnotationController.findTerm = function(p0, p1, callback) {
   dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, callback);

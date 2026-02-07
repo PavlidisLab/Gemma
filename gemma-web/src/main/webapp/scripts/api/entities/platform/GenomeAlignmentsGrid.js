@@ -1,9 +1,9 @@
+import ucscLogo from "../../../../images/logo/ucsc-logo.png";
+
 Ext.namespace( 'Gemma' );
 
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
-Gemma.UCSC_ICON = require( "../../../../images/logo/ucsc-logo.png" );
-Gemma.NCBI_ICON = require( "../../../../images/logo/ncbi-symbol.svg" );
 const UCSC_TRACKS = 'https://genome.ucsc.edu/cgi-bin/hgTracks';
 /**
  * 
@@ -82,7 +82,7 @@ Gemma.GenomeAlignmentsGrid = Ext.extend( Ext.grid.GridPanel, {
             // is not suitable since it may refer to a local/development instance.
             + "&hgt.customText=" + encodeURIComponent( "https://gemma.msl.ubc.ca/blatTrack.html?id=" + d.id );
          res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
-            + "'><img src='" + Gemma.UCSC_ICON + "' height='10' alt='UCSC Genome Browser logo' /></a>";
+            + "'><img src='" + ucscLogo + "' height='10' alt='UCSC Genome Browser logo' /></a>";
       }
       return res;
    },

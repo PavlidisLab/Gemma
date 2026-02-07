@@ -19,6 +19,8 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
+import javax.annotation.Nullable;
+
 /**
  * ValueObject for database entry
  */
@@ -29,7 +31,17 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
+    @Nullable
     private String uri;
+    /**
+     * A label for display purposes.
+     * <p>
+     * This is usually the {@link #accession}, but for some databases, it may be a bit cryptic for the end-user, so
+     * another string is used.
+     * <p>
+     * Never null!
+     */
+    private String label;
     private ExternalDatabaseValueObject externalDatabase;
 
     public DatabaseEntryValueObject() {
@@ -40,6 +52,7 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
         super( de );
         this.accession = de.getAccession();
         this.uri = ExternalDatabaseUtils.getUri( de );
+        this.label = ExternalDatabaseUtils.getLabel( de );
         this.externalDatabase =
                 de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;
     }

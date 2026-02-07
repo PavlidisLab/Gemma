@@ -1,4 +1,6 @@
-import ExternalDatabaseUtils from '../common/ExternalDatabaseUtils';
+import DatabaseEntryTag from "../common/DatabaseEntryTag";
+import ExternalDatabaseValueObject from "../common/ExternalDatabaseValueObject";
+import DatabaseEntryValueObject from "../common/DatabaseEntryValueObject";
 
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
@@ -9,10 +11,6 @@ let htmlEncode = Ext.util.Format.htmlEncode;
 
 function formatNumber( n ) {
    return NUMBER_FORMATTER.format( n );
-}
-
-function isHttpUrl( uri ) {
-   return uri.startsWith( 'http://' ) || uri.startsWith( 'https://' );
 }
 
 /**
@@ -108,27 +106,16 @@ Gemma.ExpressionExperimentDetails = Ext
 
             renderSourceDatabaseEntry: function (ee) {
                 if (ee.accession !== null) {
-                    let edMeta = ExternalDatabaseUtils.externalDatabases
-                       .find(ed => ed.name === ee.externalDatabase);
-                    if (edMeta) {
-                       let externalDatabaseLogo = '<img src="' + edMeta.logo + '" height="16" alt="' + htmlEncode( edMeta.name ) + ' logo"/>';
-                       if ( ee.externalUri !== null && isHttpUrl( ee.externalUri ) ) {
-                            return htmlEncode(ee.accession) + ' ' + '<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLogo + '</a>';
-                       } else if ( ee.externalDatabaseUri !== null && isHttpUrl( ee.externalDatabaseUri ) ) {
-                            return htmlEncode(ee.accession) + ' <a target="_blank" rel="noopener noreferrer" href="' + ee.externalDatabaseUri + '">' + externalDatabaseLogo + '</a>';
-                        } else {
-                            // no link available
-                            return htmlEncode(ee.accession) + ' ' + externalDatabaseLogo;
-                        }
-                    } else {
-                        let externalDatabaseLinkText = htmlEncode(ee.externalDatabase) + ' <i class="fa fa-external-link"></i>';
-                        if (ee.externalUri !== null) {
-                            return htmlEncode(ee.accession) + ' (<a target="_blank" rel="noopener noreferrer" href="' + ee.externalUri + '">' + externalDatabaseLinkText + '</a>)';
-                        } else {
-                            // no link available
-                            return htmlEncode(ee.accession) + ' (' + externalDatabaseLinkText + "')";
-                        }
-                    }
+                   return new DatabaseEntryTag( new DatabaseEntryValueObject( {
+                         accession : ee.accession,
+                         uri : ee.externalUri,
+                         label : ee.externalLabel,
+                         externalDatabase : new ExternalDatabaseValueObject( {
+                            name : ee.externalDatabase,
+                            uri : ee.externalDatabaseUri
+                         } )
+                      }
+                   ) ).render();
                 } else {
                     return "Direct Upload";
                 }

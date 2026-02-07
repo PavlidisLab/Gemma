@@ -95,4 +95,12 @@ public class ExternalDatabaseUtils {
     public static String getUri( ExternalDatabase externalDatabase ) {
         return externalDatabase.getWebUri();
     }
+
+    public static String getLabel( DatabaseEntry de ) {
+        if ( de.getExternalDatabase().getName().equalsIgnoreCase( ExternalDatabases.CELLXGENE ) ) {
+            return "";
+        } else {
+            return de.getAccession();
+        }
+    }
 }
