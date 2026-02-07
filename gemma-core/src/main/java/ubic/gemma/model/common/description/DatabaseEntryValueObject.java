@@ -38,9 +38,8 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
      * <p>
      * This is usually the {@link #accession}, but for some databases, it may be a bit cryptic for the end-user, so
      * another string is used.
-     * <p>
-     * Never null!
      */
+    @Nullable
     private String label;
     private ExternalDatabaseValueObject externalDatabase;
 

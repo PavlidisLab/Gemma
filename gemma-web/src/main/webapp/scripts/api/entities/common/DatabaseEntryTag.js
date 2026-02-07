@@ -22,14 +22,19 @@ export default class DatabaseEntryTag {
    }
 
    render() {
+      if ( !this.databaseEntry ) {
+         return "<i>No accession available</i>";
+      }
       let edMeta = ExternalDatabaseUtils.externalDatabases
          .find( ed => ed.name === this.databaseEntry.externalDatabase.name );
+      let s;
       if ( edMeta ) {
-         let externalDatabaseLogo = '<img src="' + edMeta.logo + '" height="16" alt="' + htmlEncode( edMeta.name ) + ' logo"/>';
-         let s = '';
          if ( this.databaseEntry.label ) {
-            s += htmlEncode( this.databaseEntry.label ) + ' ';
+            s = htmlEncode( this.databaseEntry.label ) + ' ';
+         } else {
+            s = '';
          }
+         let externalDatabaseLogo = '<img src="' + edMeta.logo + '" height="16" alt="' + htmlEncode( edMeta.name ) + ' logo"/>';
          if ( this.databaseEntry.uri !== null && isHttpUrl( this.databaseEntry.uri ) ) {
             s += '<a target="_blank" rel="noopener noreferrer" href="' + this.databaseEntry.uri + '">' + externalDatabaseLogo + '</a>';
          } else if ( this.databaseEntry.externalDatabase.uri !== null && isHttpUrl( this.databaseEntry.externalDatabase.uri ) ) {
@@ -38,23 +43,23 @@ export default class DatabaseEntryTag {
             // no link available
             s += externalDatabaseLogo;
          }
-         return s;
       } else {
          let externalDatabaseLinkHtml = htmlEncode( this.databaseEntry.externalDatabase.name ) + ' <i class="fa fa-external-link"></i>';
          if ( this.databaseEntry.uri !== null ) {
             if ( this.databaseEntry.label ) {
-               return htmlEncode( this.databaseEntry.label ) + ' (<a target="_blank" rel="noopener noreferrer" href="' + this.databaseEntry.uri + '">' + externalDatabaseLinkHtml + '</a>)';
+               s = htmlEncode( this.databaseEntry.label ) + ' (<a target="_blank" rel="noopener noreferrer" href="' + this.databaseEntry.uri + '">' + externalDatabaseLinkHtml + '</a>)';
             } else {
-               return '<a target="_blank" rel="noopener noreferrer" href="' + this.databaseEntry.uri + '">' + externalDatabaseLinkHtml + '</a>';
+               s = '<a target="_blank" rel="noopener noreferrer" href="' + this.databaseEntry.uri + '">' + externalDatabaseLinkHtml + '</a>';
             }
          } else {
             // no link available
             if ( this.databaseEntry.label ) {
-               return htmlEncode( this.databaseEntry.label ) + ' (' + externalDatabaseLinkHtml + "')";
+               s = htmlEncode( this.databaseEntry.label ) + ' (' + externalDatabaseLinkHtml + "')";
             } else {
-               return externalDatabaseLinkHtml;
+               s = externalDatabaseLinkHtml;
             }
          }
       }
+      return "<span>" + s + "</span>";
    }
 }

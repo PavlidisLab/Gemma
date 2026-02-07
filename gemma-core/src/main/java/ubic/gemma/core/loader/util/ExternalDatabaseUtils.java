@@ -96,9 +96,16 @@ public class ExternalDatabaseUtils {
         return externalDatabase.getWebUri();
     }
 
+    /**
+     * Obtain a label for a given database entry.
+     * <p>
+     * This is usually the accession, but it may be {@code null} if the database accession is not meaningful to users
+     * (e.g. CELLxGENE dataset IDs are UUIDs).
+     */
+    @Nullable
     public static String getLabel( DatabaseEntry de ) {
-        if ( de.getExternalDatabase().getName().equalsIgnoreCase( ExternalDatabases.CELLXGENE ) ) {
-            return "";
+        if ( ExternalDatabases.CELLXGENE.equalsIgnoreCase( de.getExternalDatabase().getName() ) ) {
+            return null;
         } else {
             return de.getAccession();
         }
