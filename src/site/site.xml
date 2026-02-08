@@ -7,10 +7,10 @@
         <version>2.1.0</version>
     </skin>
     <bannerLeft href="https://gemma.msl.ubc.ca">
-        <image src="/images/gemma-logo-text.png"/>
+        <image src="/images/gemma-logo-text.png" height="63"/>
     </bannerLeft>
     <bannerRight href="https://www.ubc.ca/">
-        <image src="/images/ubc-logo.png"/>
+        <image src="/images/ubc-logo.png" height="63"/>
     </bannerRight>
     <body>
         <menu name="Overview" inherit="top">
