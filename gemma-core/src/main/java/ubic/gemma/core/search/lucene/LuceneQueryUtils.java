@@ -1,8 +1,6 @@
 package ubic.gemma.core.search.lucene;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
@@ -10,24 +8,19 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 import org.hibernate.search.util.impl.PassThroughAnalyzer;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Utilities for parsing search queries using Lucene.
@@ -38,28 +31,6 @@ import static java.util.Objects.requireNonNull;
 public class LuceneQueryUtils {
 
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
-
-    /**
-     * Enumeration of a few known ontology prefixes that shouldn't be parsed as fielded terms.
-     * TODO: make this configurable
-     */
-    private static final Set<String> KNOWN_ONTOLOGY_PREFIXES = new HashSet<>();
-
-    static {
-        try ( InputStream is = LuceneQueryUtils.class.getResourceAsStream( "/ubic/gemma/core/ontology/ontology.prefixes.txt" ) ) {
-            for ( String line : IOUtils.readLines( requireNonNull( is ), StandardCharsets.UTF_8 ) ) {
-                line = StringUtils.strip( line );
-                // ignore comments
-                if ( line.startsWith( "#" ) ) {
-                    continue;
-                }
-                KNOWN_ONTOLOGY_PREFIXES.add( line );
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        log.debug( "Known ontology prefixes: " + KNOWN_ONTOLOGY_PREFIXES );
-    }
 
     private static QueryParser createQueryParser() {
         return new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
@@ -331,9 +302,11 @@ public class LuceneQueryUtils {
 
     /**
      * Detect certain ontology terms that use ':' as a delimiter (i.e. GO:0001234).
+     * <p>
+     * We want to check for known prefixes, because otherwise we could mistake a fielded term for an ontology term.
      */
     private static boolean isOntologyTerm( Term term ) {
-        return KNOWN_ONTOLOGY_PREFIXES.contains( term.field() );
+        return OntologyUtils.isTermId( term.field() + ":" + term.text(), true );
     }
 
     @Nullable

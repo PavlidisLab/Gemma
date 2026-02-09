@@ -119,20 +119,16 @@ public class CellXGeneUtils {
     }
 
     /**
-     * Convert a CELLxGENE ontology term into an URI.
+     * Convert a CELLxGENE ontology term into a URI.
      */
     public static String getTermUri( OntologyTerm term ) {
         return getTermUri( term.getOntologyTermId() );
     }
 
+    /**
+     * Convert a CELLxGENE ontology term ID into a URI.
+     */
     public static String getTermUri( String termId ) {
-        String prefix;
-        if ( termId.startsWith( "EFO:" ) ) {
-            prefix = "http://www.ebi.ac.uk/efo/";
-        } else {
-            prefix = OntologyUtils.BASE_PURL_URI;
-        }
-        // FIXME: not all ontologies are PURL-based
-        return prefix + termId.replace( ':', '_' );
+        return OntologyUtils.termIdToUri( termId );
     }
 }
