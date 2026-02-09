@@ -168,6 +168,8 @@ public interface ExpressionExperimentDao
      */
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
+    boolean existsByShortName( String shortName );
+
     Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment bas );

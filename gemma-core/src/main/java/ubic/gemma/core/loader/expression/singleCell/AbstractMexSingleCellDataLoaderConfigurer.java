@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -27,15 +28,10 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     protected final Log log = LogFactory.getLog( getClass() );
 
     @Nullable
-    private final Path cellRangerPrefix;
+    private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
-    /**
-     *
-     * @param cellRangerPrefix path to an installation of Cell Ranger, required if 10x filtering is deemed necessary,
-     *                         {@link MexSingleCellDataLoaderConfig#getApply10xFilter()}.
-     */
-    protected AbstractMexSingleCellDataLoaderConfigurer( @Nullable Path cellRangerPrefix ) {
-        this.cellRangerPrefix = cellRangerPrefix;
+    protected AbstractMexSingleCellDataLoaderConfigurer( @Nullable SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
+        this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
     }
 
     @Override
@@ -189,7 +185,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
      * Create a MEX loader with filtered data.
      */
     private MexSingleCellDataLoader createFiltered10xMexLoader( List<String> usedSampleNames, List<Path> sampleDirs, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( cellRangerPrefix, "A Cell Ranger prefix must be configured to appy the 10x filter." );
+        Assert.notNull( singleCellDataTransformationFactory, "A single-cell data transformation factory must be set to apply the 10x filter." );
         List<Path> filteredBarcodeFiles = new ArrayList<>( usedSampleNames.size() );
         List<Path> filteredGenesFiles = new ArrayList<>( usedSampleNames.size() );
         List<Path> filteredMatrixFiles = new ArrayList<>( usedSampleNames.size() );
@@ -201,7 +197,8 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                     String sampleName = usedSampleNames.get( i );
                     Path sampleDir = sampleDirs.get( i );
                     try {
-                        return filter10xSample( sampleName, sampleDir, sampleDirsToCleanup, config );
+                        return filter10xSample( singleCellDataTransformationFactory, sampleName, sampleDir,
+                                sampleDirsToCleanup, config );
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
@@ -216,7 +213,8 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 for ( int i = 0; i < sampleDirs.size(); i++ ) {
                     String sampleName = usedSampleNames.get( i );
                     Path sampleDir = sampleDirs.get( i );
-                    Path filteredSampleDir = filter10xSample( sampleName, sampleDir, sampleDirsToCleanup, config );
+                    Path filteredSampleDir = filter10xSample( singleCellDataTransformationFactory, sampleName, sampleDir,
+                            sampleDirsToCleanup, config );
                     filteredBarcodeFiles.add( filteredSampleDir.resolve( "barcodes.tsv.gz" ) );
                     filteredGenesFiles.add( filteredSampleDir.resolve( "features.tsv.gz" ) );
                     filteredMatrixFiles.add( filteredSampleDir.resolve( "matrix.mtx.gz" ) );
@@ -243,17 +241,18 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
         };
     }
 
-    private Path filter10xSample( String sampleName, Path sampleDir, List<Path> sampleDirsToCleanup, SingleCellDataLoaderConfig config ) throws IOException {
-        Assert.notNull( cellRangerPrefix );
+    private Path filter10xSample( SingleCellDataTransformationFactory singleCellDataTransformationFactory, String sampleName, Path sampleDir, List<Path> sampleDirsToCleanup, SingleCellDataLoaderConfig config ) throws IOException {
         Path filteredSampleDir;
         if ( ( config instanceof MexSingleCellDataLoaderConfig && Boolean.TRUE.equals( ( ( MexSingleCellDataLoaderConfig ) config ).getApply10xFilter() ) )
                 || detectUnfiltered10xData( sampleName, sampleDir ) ) {
-            filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
-            sampleDirsToCleanup.add( filteredSampleDir );
-            SingleCell10xMexFilter filter = new SingleCell10xMexFilter();
-            filter.setCellRangerPrefix( cellRangerPrefix );
+            SingleCell10xMexFilter filter = singleCellDataTransformationFactory.getTransformation( SingleCell10xMexFilter.class );
             filter.setInputFile( sampleDir, SingleCellDataType.MEX );
-            filter.setOutputFile( filteredSampleDir, SingleCellDataType.MEX );
+            filteredSampleDir = Files.createTempDirectory( sampleDir.getFileName().toString() );
+            try {
+                filter.setOutputFile( filteredSampleDir, SingleCellDataType.MEX );
+            } finally {
+                sampleDirsToCleanup.add( filteredSampleDir );
+            }
             filter.setGenome( detect10xGenome( sampleName, sampleDir ) );
             String chemistry;
             if ( config instanceof MexSingleCellDataLoaderConfig ) {

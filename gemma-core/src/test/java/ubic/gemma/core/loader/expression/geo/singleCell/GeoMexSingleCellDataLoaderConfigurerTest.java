@@ -20,6 +20,7 @@ import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoaderConfi
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactoryImpl;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
@@ -60,8 +61,8 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     @Autowired
     private ApplicationContext ctx;
 
-    @Value("${cellranger.dir}")
-    private Path cellRangerPrefix;
+    @Autowired
+    private SingleCellDataTransformationFactoryImpl singleCellDataTransformationFactory;
 
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
@@ -159,7 +160,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
                 .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM8070652" ) )
                 .findFirst()
                 .get();
-        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( mexDir, series, cellRangerPrefix );
+        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( mexDir, series, singleCellDataTransformationFactory );
         assertTrue( configurer.detect10x( "GSM8070652", sampleDir ) );
         assertTrue( configurer.detectUnfiltered( "GSM8070652", sampleDir ) );
         assertEquals( "Mus musculus", configurer.detect10xGenome( "GSM8070652", sampleDir ) );
@@ -178,7 +179,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
             detector.setDownloadDirectory( downloadDir );
             dataDir = detector.downloadSingleCellData( sample );
         }
-        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( dataDir, series, cellRangerPrefix );
+        GeoMexSingleCellDataLoaderConfigurer configurer = new GeoMexSingleCellDataLoaderConfigurer( dataDir, series, singleCellDataTransformationFactory );
         assertTrue( configurer.detect10x( sampleName, dataDir ) );
         assertTrue( configurer.detectUnfiltered( sampleName, dataDir ) );
         assertEquals( expectedTaxa, configurer.detect10xGenome( sampleName, dataDir ) );
@@ -195,7 +196,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
         Path dataDir;
         ExecutorService executor = Executors.newFixedThreadPool( 4 );
         try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
-            detector.setCellRangerPrefix( cellRangerPrefix );
+            detector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( downloadDir );
             dataDir = detector.downloadSingleCellData( series );

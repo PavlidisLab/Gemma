@@ -416,7 +416,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
+            Map<Long, CompositeSequence> idMap;
+            if ( Hibernate.isInitialized( arrayDesign.getCompositeSequences() ) ) {
+                idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
+            } else {
+                // we don't want to initialize design elements as a side effect
+                log.warn( "Design elements are not initialized in " + arrayDesign + ", will query them manually..." );
+                //noinspection unchecked
+                idMap = IdentifiableUtils.getIdMap( getSessionFactory().getCurrentSession()
+                        .createQuery( "select cs from CompositeSequence cs where cs.arrayDesign = :arrayDesign" )
+                        .setParameter( "arrayDesign", arrayDesign ).list() );
+            }
             //noinspection unchecked
             List<Object[]> results = getSessionFactory().getCurrentSession()
                     .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )

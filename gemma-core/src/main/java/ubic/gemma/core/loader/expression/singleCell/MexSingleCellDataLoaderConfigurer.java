@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -30,8 +31,9 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
     /**
      * @param geoSeries GEO series metadata, optional, but can be used to infer the 10x chemistry
      */
-    public MexSingleCellDataLoaderConfigurer( Path mexDir, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper, @Nullable Path cellRangerPrefix, @Nullable GeoSeries geoSeries ) {
-        super( cellRangerPrefix );
+    public MexSingleCellDataLoaderConfigurer( Path mexDir, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper,
+            SingleCellDataTransformationFactory singleCellDataTransformationFactory, @Nullable GeoSeries geoSeries ) {
+        super( singleCellDataTransformationFactory );
         this.bioAssayMapper = bioAssayMapper;
         this.geoSeries = geoSeries;
         this.sampleNames = new ArrayList<>();

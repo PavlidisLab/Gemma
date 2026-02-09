@@ -71,7 +71,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
         if ( allowedTaxa == null ) {
             allowedTaxa = getTaxaInGemma();
         }
-        CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1, 1.5 ), cellXGeneDownloadPath );
+        CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
         getCliContext().getOutputStream().println( "collection_id\tdataset_id\tdataset_name\tgeo_accessions\ttaxa\ttissues\tcell_types\tdevelopment_stages\tdiseases\tassays\tnumber_of_samples\tnumber_of_cells" );
         for ( CollectionMetadata cm : fetcher.fetchAllCollectionMetadata() ) {
             cm = fetcher.fetchCollectionMetadata( cm.getId() );

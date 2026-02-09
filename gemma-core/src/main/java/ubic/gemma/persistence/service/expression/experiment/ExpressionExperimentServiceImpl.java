@@ -797,6 +797,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public boolean existsByShortName( String shortName ) {
+        return this.expressionExperimentDao.existsByShortName( shortName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }

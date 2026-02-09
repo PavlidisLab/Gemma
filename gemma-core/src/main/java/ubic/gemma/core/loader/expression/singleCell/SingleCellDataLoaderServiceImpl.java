@@ -6,9 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneAnnDataSingleCellDataConfigurer;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneAnnDataSingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.NonUniqueDescribableByNameException;
@@ -63,21 +66,16 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}/singleCellData")
     private Path singleCellDataBasePath;
-
-    @Value("${cellranger.dir}")
-    private Path cellRangerPrefix;
-
-    @Value("${python.exe}")
-    private Path pythonExecutable;
-
-    @Value("${gemma.scratch.dir}")
-    private Path scratchDir;
 
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
@@ -90,6 +88,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
@@ -110,6 +109,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -121,6 +121,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -148,6 +149,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -159,6 +161,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -609,10 +612,16 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
         Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
-        AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper );
-        annDataConfigurer.setPythonExecutable( pythonExecutable );
-        annDataConfigurer.setScratchDir( scratchDir );
-        return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        if ( config instanceof CellXGeneAnnDataSingleCellDataLoaderConfig ) {
+            log.info( "Loading single-cell data from " + p + " using the CELLxGENE preset." );
+            CellXGeneAnnDataSingleCellDataConfigurer annDataConfigurer = new CellXGeneAnnDataSingleCellDataConfigurer( p, singleCellDataTransformationFactory );
+            return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        } else {
+            log.info( "Loading single-cell data from " + p + " using a generic preset." );
+            AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p,
+                    ee.getBioAssays(), bioAssayMapper, singleCellDataTransformationFactory );
+            return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        }
     }
 
     private SingleCellDataLoader getSeuratDiskLoader() {
@@ -635,7 +644,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             geoSeries = null;
         }
 
-        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper, cellRangerPrefix, geoSeries ), bioAssayMapper, config );
+        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper, singleCellDataTransformationFactory, geoSeries ), bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getLoomLoader() {

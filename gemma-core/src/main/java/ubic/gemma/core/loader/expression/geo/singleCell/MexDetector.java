@@ -16,6 +16,7 @@ import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.util.ProgressInputStream;
 
 import javax.annotation.Nullable;
@@ -72,7 +73,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     // for the 10x filter (if needed)
     @Nullable
-    private Path cellRangerPrefix;
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     private long maxEntrySizeInArchiveToSkip = DEFAULT_MAX_ENTRY_SIZE_IN_ARCHIVE_TO_SKIP;
     private long maxNumberOfEntriesToSkip = DEFAULT_MAX_NUMBER_OF_ENTRIES_TO_SKIP;
@@ -613,7 +614,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, cellRangerPrefix )
+        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, singleCellDataTransformationFactory )
                 .configureLoader( config );
         if ( loader.getSampleNames().isEmpty() ) {
             NoSingleCellDataFoundException ex = new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );

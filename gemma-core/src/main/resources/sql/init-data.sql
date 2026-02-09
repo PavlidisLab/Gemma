@@ -89,6 +89,7 @@ call add_external_database('gene', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DA
 call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz', 'ONTOLOGY');
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
+call add_external_database('CELLxGENE', NULL, NULL, NULL, 'EXPRESSION');
 
 drop procedure add_external_database;
 

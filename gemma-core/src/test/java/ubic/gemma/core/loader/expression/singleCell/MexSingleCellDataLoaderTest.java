@@ -18,6 +18,8 @@ import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactoryImpl;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
@@ -58,7 +60,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
 
     @Configuration
     @TestComponent
-    @Import({ SettingsConfig.class, FTPConfig.class })
+    @Import({ SettingsConfig.class, FTPConfig.class, SingleCellTransformationConfig.class })
     static class Config {
 
     }
@@ -66,11 +68,11 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     @Autowired
     private FTPClientFactory ftpClientFactory;
 
+    @Autowired
+    private SingleCellDataTransformationFactoryImpl singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
-
-    @Value("${cellranger.dir}")
-    private Path cellRangerPrefix;
 
     private GeoSingleCellDetector detector;
 
@@ -79,7 +81,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
-        detector.setCellRangerPrefix( cellRangerPrefix );
+        detector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
     }
 
     @Test

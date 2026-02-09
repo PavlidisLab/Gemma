@@ -21,6 +21,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactoryImpl;
 import ubic.gemma.core.loader.expression.sra.SraFetcher;
 import ubic.gemma.core.loader.expression.sra.model.SraExperiment;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
@@ -236,8 +237,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         this.cellXGeneAssays = cellXGeneAssays;
     }
 
-    public void setCellRangerPrefix( Path cellRangerPrefix ) {
-        mexDetector.setCellRangerPrefix( cellRangerPrefix );
+    public void setSingleCellDataTransformationFactory( @Nullable SingleCellDataTransformationFactoryImpl singleCellDataTransformationFactory ) {
+        mexDetector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
+        annDataDetector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
     }
 
     /**
