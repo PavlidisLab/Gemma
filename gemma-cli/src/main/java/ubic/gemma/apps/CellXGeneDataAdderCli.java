@@ -47,6 +47,11 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public String getShortDesc() {
+        return "Load a single-cell dataset from CELLxGENE.";
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         options.addRequiredOption( "collectionId", "collection-id", true, "CELLxGENE collection identifier." );
         options.addOption( "datasetId", "dataset-id", true, "CELLxGENE dataset identifier." );
@@ -54,8 +59,8 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
         addGenericPlatformOption( options, "a", "array", "Target platform to use for the dataset. Note that Ensembl IDs will be used to match design elements, so the platform must have genes with Ensembl IDs." );
         options.addRequiredOption( "shortName", "short-name", true, "Short name to use for the resulting dataset." );
         options.addOption( "skipData", "skip-data", false, "Only load experiment metadata." );
-        options.addOption( "keepPooledSample", "keep-pooled-sample", false, "Only load experiment metadata." );
-        options.addOption( "keepUnknownSample", "keep-unknown-sample", false, "Only load experiment metadata." );
+        options.addOption( "keepPooledSample", "keep-pooled-sample", false, "Keep the pooled sample." );
+        options.addOption( "keepUnknownSample", "keep-unknown-sample", false, "Keep the unknown sample." );
     }
 
     @Override
