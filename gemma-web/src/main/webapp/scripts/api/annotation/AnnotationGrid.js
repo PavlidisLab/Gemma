@@ -526,9 +526,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 Gemma.AnnotationCommon = {
     objectClassMapping: function(objectClass){
         const map = {
-            BioMaterial: "Biomaterials",
+            BioMaterial: "Samples",
             FactorValue: "Experimental Factors",
-            ExperimentTag: "Experiment Annotations"
+            ExperimentTag: "Dataset Annotations"
         }
 
         return (objectClass in map) ? map[objectClass] : objectClass;

@@ -51,7 +51,6 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
    checkData: function( eeId, geneList, callback ){
       var store = new Gemma.VisualizationStore()
       store.on( 'exception', function( e,type, action, options, response, arg  ){
-         console.log('fuck')
          Ext.callback(callback,this,[false])
       })
 
