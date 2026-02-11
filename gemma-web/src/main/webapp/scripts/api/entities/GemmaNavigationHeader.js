@@ -38,9 +38,11 @@ Gemma.GemmaNavigationHeader = Ext
           * @memberOf Gemma.GemmaNavigationHeader
           */
          showAbout : function() {
+
+            const width = Math.min( 800, window.innerWidth*0.8)
             var w = new Ext.Window(
                {
-                  width : 800,
+                  width : width,
                   height : 600,
                   title : "About Gemma",
                   items : [ {
