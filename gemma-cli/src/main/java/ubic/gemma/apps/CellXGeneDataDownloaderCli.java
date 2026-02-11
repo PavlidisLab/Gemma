@@ -5,6 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
@@ -60,6 +61,9 @@ public class CellXGeneDataDownloaderCli extends AbstractCLI {
     @Override
     protected void doWork() throws Exception {
         CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellByGeneDownloadDir );
+        if ( getCliContext().getConsole() != null ) {
+            fetcher.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+        }
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( collectionId );
         assert cm.getDatasets() != null;
         DatasetMetadata dm;

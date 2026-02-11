@@ -39,10 +39,10 @@ public class CellXGeneConverter {
     private final TaxonService taxonService;
     private final PubMedSearch pubMedSearch;
 
-    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonService taxonService, String ncbiApiKey ) {
+    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonService taxonService, PubMedSearch pubMedSearch ) {
         this.externalDatabaseService = externalDatabaseService;
         this.taxonService = taxonService;
-        this.pubMedSearch = new PubMedSearch( ncbiApiKey );
+        this.pubMedSearch = pubMedSearch;
     }
 
     /**

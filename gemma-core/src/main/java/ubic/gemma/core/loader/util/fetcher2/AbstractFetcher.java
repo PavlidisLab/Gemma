@@ -25,20 +25,39 @@ public abstract class AbstractFetcher {
         this.simpleDownloader = simpleDownloader;
     }
 
+    /**
+     * Set the FTP client factory to use for downloading files over FTP.
+     *
+     * @see SimpleDownloader#setFtpClientFactory(FTPClientFactory)
+     */
     public void setFtpClientFactory( FTPClientFactory ftpClientFactory ) {
         simpleDownloader.setFtpClientFactory( ftpClientFactory );
     }
 
+    /**
+     * Set the file lock manager to use for managing locks on downloaded files.
+     *
+     * @see SimpleDownloader#setFileLockManager(FileLockManager)
+     */
     public void setFileLockManager( FileLockManager fileLockManager ) {
         simpleDownloader.setFileLockManager( fileLockManager );
     }
 
+    /**
+     * Set the progress reporter factory to use for reporting download progress.
+     *
+     * @see SimpleDownloader#setProgressReporterFactory(ProgressReporterFactory)
+     */
     public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
-        this.simpleDownloader.setProgressReporterFactory( progressReporterFactory );
+        simpleDownloader.setProgressReporterFactory( progressReporterFactory );
     }
 
+    /**
+     * Set the task executor for parallel downloads.
+     *
+     * @see SimpleDownloader#setTaskExecutor(ExecutorService)
+     */
     public void setTaskExecutor( ExecutorService taskExecutor ) {
-        this.simpleDownloader.setTaskExecutor( taskExecutor );
+        simpleDownloader.setTaskExecutor( taskExecutor );
     }
-
 }

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
@@ -75,7 +76,7 @@ public class CellXGeneConverterTest extends BaseTest {
         TaxonService taxonService = mock();
         human = new Taxon();
         when( taxonService.findByScientificName( "Homo sapiens" ) ).thenReturn( human );
-        cellxgeneConverter = new CellXGeneConverter( eds, taxonService, ncbiApiKey );
+        cellxgeneConverter = new CellXGeneConverter( eds, taxonService, new PubMedSearch( ncbiApiKey ) );
         fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 500, 1.5 ),
                 downloadDir );
     }

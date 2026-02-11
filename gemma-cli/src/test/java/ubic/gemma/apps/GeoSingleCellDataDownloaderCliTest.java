@@ -24,7 +24,7 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
 @Category({ GeoTest.class, SlowTest.class })
-public class SingleCellDataDownloaderCliTest extends BaseCliTest {
+public class GeoSingleCellDataDownloaderCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -32,8 +32,8 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
     static class CC {
 
         @Bean
-        public SingleCellDataDownloaderCli singleCellDataDownloaderCli() {
-            return new SingleCellDataDownloaderCli();
+        public GeoSingleCellDataDownloaderCli singleCellDataDownloaderCli() {
+            return new GeoSingleCellDataDownloaderCli();
         }
 
         @Bean
@@ -43,7 +43,7 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
     }
 
     @Autowired
-    private SingleCellDataDownloaderCli singleCellDataDownloaderCli;
+    private GeoSingleCellDataDownloaderCli geoSingleCellDataDownloaderCli;
 
     @Value("${geo.local.datafile.basepath}")
     private File geoSeriesDownloadPath;
@@ -54,7 +54,7 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
     @Test
     @Category(SlowTest.class)
     public void testDownloadSingleSampleAccession() {
-        assertThat( singleCellDataDownloaderCli )
+        assertThat( geoSingleCellDataDownloaderCli )
                 .withArguments( "-e", "GSE224438", "--sample-accessions", "GSM7022367" )
                 .succeeds();
         assertThat( geoSeriesDownloadPath )

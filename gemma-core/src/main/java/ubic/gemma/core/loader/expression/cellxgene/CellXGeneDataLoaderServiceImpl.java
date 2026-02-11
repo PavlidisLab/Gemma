@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.mapper.EnsemblIdDesignElementMapper;
+import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -54,7 +56,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     ) {
         this.cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 3 ), cellXGeneDownloadPath );
         this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
-        this.cellXGeneConverter = new CellXGeneConverter( externalDatabaseService, taxonService, ncbiApiKey );
+        this.cellXGeneConverter = new CellXGeneConverter( externalDatabaseService, taxonService, new PubMedSearch( ncbiApiKey ) );
         this.persister = persister;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
@@ -93,12 +95,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                     .findFirst()
                     .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + datasetId + " does not have any H6AD asset." ) );
         }
-        return fetchAndLoadInternal( cm, metadata, asset, platform, datasetShortName, loadSingleCellData, keepPooledSample, keepUnknownSample );
-    }
 
-    private ExpressionExperiment fetchAndLoadInternal( CollectionMetadata collectionMetadata, DatasetMetadata metadata,
-            DatasetAsset asset, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData,
-            boolean keepPooledSample, boolean keepUnknownSample ) throws IOException {
         Assert.isTrue( CellXGeneUtils.isAnnData( asset ), "Only H5AD assets can be loaded." );
 
         Map<CompositeSequence, Set<Gene>> designElementMapping = arrayDesignService.getGenesByCompositeSequence( platform, true );
@@ -116,9 +113,15 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                         .keepUnknownSample( keepUnknownSample )
                         .build() ) ) {
             dataLoader.setDesignElementToGeneMapper( new EnsemblIdDesignElementMapper( designElementMapping ) );
-            ee = cellXGeneConverter.convert( collectionMetadata, metadata, platform, datasetShortName, dataLoader, loadSingleCellData );
+            ee = cellXGeneConverter.convert( cm, metadata, platform, datasetShortName, dataLoader, loadSingleCellData );
         }
 
         return persister.persist( ee );
     }
+
+    @Override
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        cellXGeneFetcher.setProgressReporterFactory( progressReporterFactory );
+    }
+
 }

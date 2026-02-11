@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -30,4 +31,9 @@ public interface CellXGeneDataLoaderService {
      * platform taxon does not match that of the CELLxGENE dataset
      */
     ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample ) throws IOException;
+
+    /**
+     * Set the progress reporter factory to use for reporting progress during data downloading.
+     */
+    void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory );
 }

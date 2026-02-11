@@ -5,6 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneDataLoaderService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -77,6 +78,9 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
+        if ( getCliContext().getConsole() != null ) {
+            cellXGeneDataLoaderService.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+        }
         ArrayDesign platform = entityLocator.locateArrayDesign( platformIdentifier );
         ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( collectionId, datasetId, assetId, platform,
                 datasetShortName, !skipData, keepPooledSample, keepUnknownSample );

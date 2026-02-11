@@ -54,7 +54,14 @@ import java.util.stream.Stream;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.cli.util.OptionsUtils.*;
 
-public class SingleCellDataDownloaderCli extends AbstractCLI {
+/**
+ * Download single-cell data from GEO supplementary material.
+ * <p>
+ * Also support downloading data from CELLxGENE that are linked to GEO series.
+ *
+ * @author poirigui
+ */
+public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
 
     private static final String
             ACCESSIONS_FILE_OPTION = "f",
@@ -161,13 +168,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     @Override
     public String getCommandName() {
-        return "downloadSingleCellData";
+        return "downloadGEOSingleCellData";
     }
 
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Download single-cell data.\nFor the moment, only GEO series accessions are supported.";
+        return "Download single-cell data from GEO.";
     }
 
     @Override
