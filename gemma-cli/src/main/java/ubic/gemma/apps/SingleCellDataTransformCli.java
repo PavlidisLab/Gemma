@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
@@ -58,7 +57,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     @Autowired
-    private ApplicationContext ctx;
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     @Value("${python.exe}")
     private Path pythonExecutable;
@@ -134,7 +133,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
                     String.join( ", ", transformationsByName.keySet() ) ) );
         }
         // TODO: use parameterized getBean() to deal with positional arguments
-        transformation = ctx.getBean( transformationClass );
+        transformation = singleCellDataTransformationFactory.getTransformation( transformationClass );
         if ( transformation instanceof SingleCellInputOutputFileTransformation ) {
             if ( positionalArguments.size() < 2 ) {
                 throw new ParseException( "Two arguments are expected for input and output files." );

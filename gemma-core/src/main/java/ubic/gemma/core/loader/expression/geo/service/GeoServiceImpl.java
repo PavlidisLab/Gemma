@@ -126,7 +126,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
@@ -180,7 +180,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( geoAccession.startsWith( "GPL" ) || loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );

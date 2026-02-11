@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
@@ -90,7 +89,7 @@ import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
  */
 @SuppressWarnings("HttpUrlsUsage")
 @Component
-@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+@Scope("prototype")
 public class GeoConverterImpl implements GeoConverter {
 
     /**

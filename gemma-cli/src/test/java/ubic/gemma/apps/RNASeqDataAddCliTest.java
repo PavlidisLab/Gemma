@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -15,15 +14,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -53,7 +52,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     static class RNASeqDataAddCliTestContextConfiguration {
 
         @Bean
-        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+        @Scope("prototype")
         public RNASeqDataAddCli rnaSeqDataAddCli() {
             return new RNASeqDataAddCli();
         }
