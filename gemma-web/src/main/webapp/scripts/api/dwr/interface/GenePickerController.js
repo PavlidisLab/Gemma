@@ -19,23 +19,23 @@ GenePickerController.getGenesByGOId = function(p0, p1, callback) {
 GenePickerController.searchGenesAndGeneGroups = function(p0, p1, callback) {
   dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroups', p0, p1, callback);
 }
-GenePickerController.searchGenes = function(p0, p1, callback) {
-  dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenes', p0, p1, callback);
-}
 GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
   dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback);
 }
 GenePickerController.searchMultipleGenesGetMap = function(p0, p1, callback) {
   dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenesGetMap', p0, p1, callback);
 }
-GenePickerController.getTaxaWithArrays = function(callback) {
-  dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithArrays', callback);
+GenePickerController.searchGenes = function(p0, p1, callback) {
+  dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenes', p0, p1, callback);
 }
 GenePickerController.getTaxaWithGenes = function(callback) {
   dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithGenes', callback);
 }
 GenePickerController.getTaxaWithDatasets = function(callback) {
   dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithDatasets', callback);
+}
+GenePickerController.getTaxaWithArrays = function(callback) {
+  dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithArrays', callback);
 }
 window.GenePickerController = GenePickerController;
 export default GenePickerController;

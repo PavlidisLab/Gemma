@@ -1,6 +1,15 @@
 /* this code is generated, see generate-dwr-client.py for details */
 var ExpressionExperimentController = {};
 ExpressionExperimentController._path = '/dwr';
+ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1, callback);
+}
+ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1, callback);
+}
+ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment', p0, callback);
+}
 ExpressionExperimentController.clearFromCaches = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'clearFromCaches', p0, callback);
 }
@@ -9,6 +18,21 @@ ExpressionExperimentController.deleteById = function(p0, callback) {
 }
 ExpressionExperimentController.getDesignMatrixRows = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDesignMatrixRows', p0, callback);
+}
+ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays', p0, callback);
+}
+ExpressionExperimentController.updateBasics = function(p0, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0, callback);
+}
+ExpressionExperimentController.updatePubMed = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updatePubMed', p0, p1, callback);
+}
+ExpressionExperimentController.createExperimentTag = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'createExperimentTag', p0, p1, callback);
+}
+ExpressionExperimentController.removeExperimentTag = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'removeExperimentTag', p0, p1, callback);
 }
 ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadCountsForDataSummaryTable', callback);
@@ -46,47 +70,23 @@ ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'removePrimaryPublication', p0, callback);
 }
-ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays', p0, callback);
-}
-ExpressionExperimentController.updateBasics = function(p0, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0, callback);
-}
-ExpressionExperimentController.updatePubMed = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updatePubMed', p0, p1, callback);
-}
-ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1, callback);
-}
-ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1, callback);
-}
-ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment', p0, callback);
-}
-ExpressionExperimentController.createExperimentTag = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'createExperimentTag', p0, p1, callback);
-}
-ExpressionExperimentController.removeExperimentTag = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'removeExperimentTag', p0, p1, callback);
-}
-ExpressionExperimentController.getExperimentalFactors = function(p0, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getExperimentalFactors', p0, callback);
-}
 ExpressionExperimentController.getFactorValues = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getFactorValues', p0, callback);
 }
 ExpressionExperimentController.browse = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browse', p0, callback);
 }
+ExpressionExperimentController.getExperimentalFactors = function(p0, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getExperimentalFactors', p0, callback);
+}
 ExpressionExperimentController.searchExpressionExperiments = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExpressionExperiments', p0, callback);
 }
-ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, p1, callback);
-}
 ExpressionExperimentController.getAllTaxonExperimentGroup = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getAllTaxonExperimentGroup', p0, callback);
+}
+ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, p1, callback);
 }
 ExpressionExperimentController.getDescription = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDescription', p0, callback);

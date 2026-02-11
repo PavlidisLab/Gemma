@@ -1,7 +1,8 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.anndata.AnnData;
 import ubic.gemma.core.loader.util.anndata.Dataframe;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Base class for {@link AnnDataSingleCellDataLoader} configurers.
  * <p>
  * This base class provides capabilities for detecting data stored in various columns.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -30,6 +32,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     /**
      * TODO
      */
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private static final String[] SAMPLE_NAME_COLUMN_NAME_KEYWORDS = {};
 
     /**
@@ -50,33 +53,17 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     /**
      * TODO
      */
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private static final String[] GENE_COLUMN_NAME_KEYWORDS = {};
 
     private final Path annDataFile;
 
-    // both are necessary to perform on-disk transformations
     @Nullable
-    private Path pythonExecutable;
-    @Nullable
-    private Path scratchDir;
+    private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
-    protected AbstractAnnDataSingleCellDataLoaderConfigurer( Path annDataFile ) {
+    protected AbstractAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, @Nullable SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
         this.annDataFile = annDataFile;
-    }
-
-    /**
-     * Set the path to a Python executable. If null, no transformation will be performed on the AnnData file.
-     */
-    public void setPythonExecutable( Path pythonExecutable ) {
-        this.pythonExecutable = pythonExecutable;
-    }
-
-    /**
-     * Set the path to a scratch directory to use for on-disk transformations. If null, no transformation will be
-     * performed on the AnnData file.
-     */
-    public void setScratchDir( Path scratchDir ) {
-        this.scratchDir = scratchDir;
+        this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
     }
 
     /**
@@ -84,30 +71,31 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      */
     @Override
     public AnnDataSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
-        ArrayList<Path> tempFilesToRemove = new ArrayList<Path>();
+        ArrayList<Path> tempFilesToRemove = new ArrayList<>();
         AtomicBoolean wasTransposedOnDisk = new AtomicBoolean( false );
         Path dataFileToUse;
-        if ( pythonExecutable != null && scratchDir != null ) {
+        AnnDataSingleCellDataLoader loader;
+        if ( config.isSkipTransformations() ) {
+            dataFileToUse = annDataFile;
+            loader = new AnnDataSingleCellDataLoader( annDataFile );
+        } else {
             try {
-                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, scratchDir, config, wasTransposedOnDisk );
+                dataFileToUse = transformIfNecessary( annDataFile, tempFilesToRemove, config, wasTransposedOnDisk );
             } catch ( Exception e ) {
                 deleteTemporaryFilesQuietly( tempFilesToRemove );
                 throw new RuntimeException( "Error wile attempting to automatically transform " + annDataFile + ".", e );
             }
-        } else {
-            log.warn( "No Python executable or scratch directory is set, will not perform any transformation on " + annDataFile + "." );
-            dataFileToUse = annDataFile;
-        }
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataFileToUse ) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    deleteTemporaryFilesQuietly( tempFilesToRemove );
+            loader = new AnnDataSingleCellDataLoader( dataFileToUse ) {
+                @Override
+                public void close() throws IOException {
+                    try {
+                        super.close();
+                    } finally {
+                        deleteTemporaryFilesQuietly( tempFilesToRemove );
+                    }
                 }
-            }
-        };
+            };
+        }
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
             boolean transpose = configureTranspose( loader, ad, config, wasTransposedOnDisk.get() );
             if ( transpose ) {
@@ -154,12 +142,14 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     private void configureSampleAndCellTypeColumns( Dataframe<?> var, AnnDataSingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
         String sampleColumn = null;
         String cellTypeColumn = null;
+        String cellTypeUriColumn = null;
         String unknownCellTypeIndicator = null;
         boolean ignoreCellTypeColumn = false;
         if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
             AnnDataSingleCellDataLoaderConfig annDataConfig = ( AnnDataSingleCellDataLoaderConfig ) config;
             sampleColumn = annDataConfig.getSampleFactorName();
             cellTypeColumn = annDataConfig.getCellTypeFactorName();
+            cellTypeUriColumn = annDataConfig.getCellTypeUriFactorName();
             unknownCellTypeIndicator = annDataConfig.getUnknownCellTypeIndicator();
             ignoreCellTypeColumn = annDataConfig.isIgnoreCellTypeFactor();
         }
@@ -169,15 +159,17 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
                 if ( !col.getType().equals( String.class ) ) {
                     continue;
                 }
-                if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                //noinspection unchecked
+                Dataframe.Column<?, String> strCol = ( Dataframe.Column<?, String> ) col;
+                if ( sampleColumn == null && isSampleNameColumn( strCol ) ) {
                     log.info( "Detected that '" + col.getName() + "' is the sample name column." );
                     sampleColumn = col.getName();
                 }
-                if ( cellTypeColumn == null && !ignoreCellTypeColumn && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                if ( cellTypeColumn == null && !ignoreCellTypeColumn && isCellTypeColumn( strCol ) ) {
                     log.info( "Detected that '" + col.getName() + "' is the cell type column." );
                     cellTypeColumn = col.getName();
                     if ( unknownCellTypeIndicator == null ) {
-                        unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
+                        unknownCellTypeIndicator = getUnknownCellTypeIndicator( strCol );
                         if ( unknownCellTypeIndicator != null ) {
                             log.info( "Detected that '" + col.getName() + "' uses '" + unknownCellTypeIndicator + "' as an unknown cell type indicator." );
                         }
@@ -196,6 +188,9 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
         if ( cellTypeColumn != null ) {
             loader.setCellTypeFactorName( cellTypeColumn );
+        }
+        if ( cellTypeUriColumn != null ) {
+            loader.setCellTypeUriFactorName( cellTypeUriColumn );
         }
         loader.setIgnoreCellTypeFactor( ignoreCellTypeColumn );
     }
@@ -220,22 +215,21 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir, SingleCellDataLoaderConfig config, AtomicBoolean wasTransposedOnDisk ) throws IOException {
-        Path dataFileToUse = annDataFile;
-
+    private Path transformIfNecessary( Path dataFileToUse, Collection<Path> tempFilesToRemove, SingleCellDataLoaderConfig config, AtomicBoolean wasTransposedOnDisk ) throws IOException {
         // check if rewriting is necessary
-        try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
+        //noinspection EmptyTryBlock
+        try ( AnnData ignored = AnnData.open( dataFileToUse ) ) {
             // ignored
         } catch ( MissingEncodingAttributeException e ) {
             log.warn( "AnnData file " + annDataFile + " is lacking encoding attributes, will rewrite it.", e );
-            dataFileToUse = performTransformation( new SingleCellDataRewrite(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
+            dataFileToUse = performTransformation( SingleCellDataRewrite.class, dataFileToUse, tempFilesToRemove );
         }
 
         // check for unraw
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
             if ( isUnrawXNecessary( ad, config ) ) {
                 log.info( "AnnData file" + annDataFile + " has raw.X and raw.var and needs to be transposed later on, extracting it as the main layer..." );
-                dataFileToUse = performTransformation( new SingleCellDataUnraw(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
+                dataFileToUse = performTransformation( SingleCellDataUnraw.class, dataFileToUse, tempFilesToRemove );
             }
         }
 
@@ -244,7 +238,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             // if raw.X is present, we have to rewrite first
             if ( ad.getX() != null && isTransposeOnDiskNecessary( ad.getX(), ad.getObs(), ad.getVar(), config ) ) {
                 log.info( "AnnData file" + annDataFile + " needs to be transposed on-disk, performing..." );
-                dataFileToUse = performTransformation( new SingleCellDataTranspose(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
+                dataFileToUse = performTransformation( SingleCellDataTranspose.class, dataFileToUse, tempFilesToRemove );
                 wasTransposedOnDisk.set( true );
             }
         }
@@ -276,6 +270,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             // two scenarios:
             // the matrix is in CSR and obs contain sample names or cell types (or var contain genes)
             // the matrix is in CSC and var contain sample names or cell types (or obs contain genes)
+            //noinspection RedundantIfStatement
             if ( ( X.getSparseMatrix().isCsr() && isTransposed( obs, var, config ) )
                     || ( X.getSparseMatrix().isCsc() && isTransposed( var, obs, config ) ) ) {
                 return true;
@@ -289,15 +284,16 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path performTransformation( SingleCellInputOutputFileTransformation transformation, Path dataFileToUse, Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir ) throws IOException {
-        Path tempFile = Files.createTempFile( scratchDir, null, ".h5ad" );
-        tempFilesToRemove.add( tempFile );
-        if ( transformation instanceof PythonBasedSingleCellDataTransformation ) {
-            ( ( PythonBasedSingleCellDataTransformation ) transformation )
-                    .setPythonExecutable( pythonExecutable );
-        }
+    private Path performTransformation( Class<? extends SingleCellInputOutputFileTransformation> transformationClass, Path dataFileToUse, Collection<Path> tempFilesToRemove ) throws IOException {
+        Assert.notNull( singleCellDataTransformationFactory, "A single-cell data transformation factory must be set to apply transformation to AnnData files." );
+        SingleCellInputOutputFileTransformation transformation = singleCellDataTransformationFactory.getTransformation( transformationClass );
         transformation.setInputFile( dataFileToUse, SingleCellDataType.ANNDATA );
-        transformation.setOutputFile( tempFile, SingleCellDataType.ANNDATA );
+        Path tempFile = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
+        try {
+            transformation.setOutputFile( tempFile, SingleCellDataType.ANNDATA );
+        } finally {
+            tempFilesToRemove.add( tempFile );
+        }
         transformation.perform();
         return tempFile;
     }
@@ -315,6 +311,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
 
     private boolean hasGenes( Dataframe<?> df ) {
         for ( Dataframe.Column<?, ?> column : df ) {
+            //noinspection unchecked
             if ( column.getType().equals( String.class ) && isGeneColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
             }
@@ -330,6 +327,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             }
         }
         for ( Dataframe.Column<?, ?> column : df ) {
+            //noinspection unchecked
             if ( column.getType().equals( String.class ) && isSampleNameColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
             }
@@ -339,6 +337,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
 
     private boolean hasCellIdColumn( Dataframe<?> df ) {
         for ( Dataframe.Column<?, ?> column : df ) {
+            //noinspection unchecked
             if ( column.getType().equals( String.class ) && isCellIdColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
             }
@@ -354,6 +353,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             }
         }
         for ( Dataframe.Column<?, ?> column : df ) {
+            //noinspection unchecked
             if ( column.getType().equals( String.class ) && isCellTypeColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
             }
@@ -365,16 +365,18 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      * Check if the given dataframe column contains cell identifiers.
      */
     protected boolean isCellIdColumn( Dataframe.Column<?, String> column ) {
+        //noinspection ConstantValue
         return Arrays.stream( CELL_ID_COLUMN_NAME_KEYWORDS )
-                .anyMatch( kwd -> StringUtils.containsIgnoreCase( column.getName(), kwd ) );
+                .anyMatch( kwd -> Strings.CI.contains( column.getName(), kwd ) );
     }
 
     /**
      * Check if a given dataframe column contains sample names.
      */
     protected boolean isSampleNameColumn( Dataframe.Column<?, String> column ) {
+        //noinspection ConstantValue
         return Arrays.stream( SAMPLE_NAME_COLUMN_NAME_KEYWORDS )
-                .anyMatch( kwd -> StringUtils.containsIgnoreCase( column.getName(), kwd ) );
+                .anyMatch( kwd -> Strings.CI.contains( column.getName(), kwd ) );
     }
 
     /**
@@ -382,7 +384,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      */
     protected boolean isCellTypeColumn( Dataframe.Column<?, String> column ) {
         return Arrays.stream( CELL_TYPE_COLUMN_NAME_KEYWORDS )
-                .anyMatch( kwd -> StringUtils.containsIgnoreCase( column.getName(), kwd ) );
+                .anyMatch( kwd -> Strings.CI.contains( column.getName(), kwd ) );
     }
 
     /**
@@ -403,7 +405,8 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      * Check if a given column contains gene identifiers.
      */
     protected boolean isGeneColumn( Dataframe.Column<?, String> column ) {
+        //noinspection ConstantValue
         return Arrays.stream( GENE_COLUMN_NAME_KEYWORDS )
-                .anyMatch( kwd -> StringUtils.containsIgnoreCase( column.getName(), kwd ) );
+                .anyMatch( kwd -> Strings.CI.contains( column.getName(), kwd ) );
     }
 }

@@ -13,15 +13,17 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
 
     private final List<SingleCellInputOutputFileTransformation> transformations;
 
+    @Nullable
+    private final Path scratchDir;
+
     private Path inputFile;
     private SingleCellDataType inputDataType;
     private Path outputFile;
     private SingleCellDataType outputDataType;
-    @Nullable
-    private Path scratchDir;
 
-    public SingleCellDataTransformationPipeline( List<SingleCellInputOutputFileTransformation> transformations ) {
+    public SingleCellDataTransformationPipeline( List<SingleCellInputOutputFileTransformation> transformations, @Nullable Path scratchDir ) {
         this.transformations = transformations;
+        this.scratchDir = scratchDir;
     }
 
     @Override
@@ -31,13 +33,6 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
                 ( ( PythonBasedSingleCellDataTransformation ) t ).setPythonExecutable( pythonExecutable );
             }
         } );
-    }
-
-    /**
-     * Set the scratch directory where temporary files will be created.
-     */
-    public void setScratchDir( Path scratchDir ) {
-        this.scratchDir = scratchDir;
     }
 
     @Override
@@ -73,12 +68,7 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
         } else {
             tempInputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
         }
-        Path tempOutputFile;
-        if ( scratchDir != null ) {
-            tempOutputFile = Files.createTempFile( scratchDir, "gemma-single-cell-data-transform-", "h5ad" );
-        } else {
-            tempOutputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
-        }
+        Path tempOutputFile = SingleCellDataTransformationUtils.createTemporaryFile( scratchDir, outputDataType );
         SingleCellDataType tempDataType = SingleCellDataType.ANNDATA;
         try {
             for ( int i = 0; i < transformations.size(); i++ ) {

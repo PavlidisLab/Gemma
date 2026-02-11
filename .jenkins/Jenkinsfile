@@ -269,6 +269,10 @@ pipeline {
                     steps {
                         sh 'mvn -B site-deploy -DskipWebpack'
                         script {
+                            // maven site-deploy changes permission on the parent site directory (pavlab-starter-parent),
+                            // but the Gemma site directory is not a subdirectory of it.
+                            // This is replicating what the plugin is doing https://maven.apache.org/plugins/maven-site-plugin/deploy-mojo.html 
+                            sh "chmod -Rf g+w,a+rX ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} || true"
                             if (dataDir != null) {
                                 sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
                                 sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"

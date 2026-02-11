@@ -608,6 +608,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public boolean existsByShortName( String shortName ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(ee) > 0 from ExpressionExperiment ee where ee.shortName = :shortName" )
+                .setParameter( "shortName", shortName )
+                .uniqueResult();
+    }
+
+    @Override
     public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
         return findOneByProperty( "meanVarianceRelation", mvr );
     }

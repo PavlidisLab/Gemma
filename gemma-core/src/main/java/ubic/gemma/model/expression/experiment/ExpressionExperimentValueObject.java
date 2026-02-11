@@ -15,6 +15,8 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
@@ -34,12 +36,31 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     protected String description;
     protected String name;
 
+    // TODO: migrate this to a DatabaseEntryValueObject and remove the individual external fields below. See
+    //       <a href="https://github.com/PavlidisLab/Gemma/issues/450">#450</a> for details.
+    /**
+     * @see DatabaseEntryValueObject#getAccession()
+     */
     @Nullable
     private String accession;
+    /**
+     * @see DatabaseEntryValueObject#getUri()
+     */
     @Nullable
     private String externalUri;
+    /**
+     * @see DatabaseEntryValueObject#getLabel()
+     */
+    @Nullable
+    private String externalLabel;
+    /**
+     * @see ExternalDatabaseValueObject#getName()
+     */
     @Nullable
     private String externalDatabase;
+    /**
+     * @see ExternalDatabaseValueObject#getUri()
+     */
     @Nullable
     private String externalDatabaseUri;
 
@@ -125,6 +146,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalUri = ExternalDatabaseUtils.getUri( ee.getAccession() );
+            this.externalLabel = ExternalDatabaseUtils.getLabel( ee.getAccession() );
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalDatabaseUri = ExternalDatabaseUtils.getUri( ee.getAccession().getExternalDatabase() );
         }
@@ -213,6 +235,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.externalDatabase = vo.getExternalDatabase();
         this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
+        this.externalLabel = vo.getExternalLabel();
         this.metadata = vo.getMetadata();
         this.shortName = vo.getShortName();
         this.source = vo.getSource();

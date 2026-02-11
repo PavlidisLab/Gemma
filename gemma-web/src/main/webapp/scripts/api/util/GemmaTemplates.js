@@ -1,3 +1,5 @@
+import pubMedLogo from '../../../images/logo/pubmed-logo-blue.svg';
+
 Ext.namespace('Gemma.Widget', 'Gemma.Common');
 
 Gemma.Widget.tpl = {
@@ -13,8 +15,8 @@ Gemma.Widget.tpl = {
 
 Gemma.Common.tpl = {
    pubmedLink : {
-      simple : '<a target="_blank" href="{pubmedURL}"><img ext:qtip="Go to PubMed (in new window)" ' + 'src="' + require( '../../../images/logo/pubmed-logo-blue.svg' ) + '" height="16" alt="PubMed logo" /></a>',
+      simple : '<a target="_blank" href="{pubmedURL}"><img ext:qtip="Go to PubMed (in new window)" ' + 'src="' + pubMedLogo + '" height="16" alt="PubMed logo" /></a>',
       complex : '<tpl if="pubAvailable==\'true\'">' + '{primaryCitationStr}' + ' PMID: {PMID}' + '&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"'
-         + ' href="{pubmedURL}"><img src="' + require( '../../../images/logo/pubmed-logo-blue.svg' ) + '" height="16" alt="PubMed logo" /></a>&nbsp;&nbsp' + '</tpl>' + '<tpl if="pubAvailable==\'false\'">' + 'Not Available' + '</tpl>'
+         + ' href="{pubmedURL}"><img src="' + pubMedLogo + '" height="16" alt="PubMed logo" /></a>&nbsp;&nbsp' + '</tpl>' + '<tpl if="pubAvailable==\'false\'">' + 'Not Available' + '</tpl>'
    }
 };

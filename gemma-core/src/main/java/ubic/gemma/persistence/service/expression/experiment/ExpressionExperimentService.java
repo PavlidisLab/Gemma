@@ -483,6 +483,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr );
 
     /**
+     * Check if a dataset with a given short name.
+     * <p>
+     * No ACL checks are performed.
+     */
+    boolean existsByShortName( String datasetShortName );
+
+    /**
      * @param ids ids
      * @return the map of ids to number of terms associated with each expression experiment.
      */

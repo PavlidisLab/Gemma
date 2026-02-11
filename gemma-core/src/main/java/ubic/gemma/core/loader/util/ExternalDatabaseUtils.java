@@ -51,6 +51,9 @@ public class ExternalDatabaseUtils {
      */
     @Nullable
     public static String getUri( DatabaseEntryValueObject accession ) {
+        if ( StringUtils.isNotBlank( accession.getUri() ) ) {
+            return accession.getUri();
+        }
         return getUri( accession.getAccession(), accession.getExternalDatabase().getName() );
     }
 
@@ -60,7 +63,7 @@ public class ExternalDatabaseUtils {
      * The returned value is not necessarily an HTTP/HTTPS URL.
      */
     @Nullable
-    public static String getUri( String accession, String databaseName ) {
+    private static String getUri( String accession, String databaseName ) {
         if ( ExternalDatabases.GEO.equalsIgnoreCase( databaseName ) ) {
             return GeoUtils.getUri( accession, GeoSource.DIRECT, GeoFormat.HTML, GeoScope.SELF, GeoAmount.BRIEF );
         } else if ( ExternalDatabases.SRA.equalsIgnoreCase( databaseName ) ) {
@@ -94,5 +97,20 @@ public class ExternalDatabaseUtils {
     @Nullable
     public static String getUri( ExternalDatabase externalDatabase ) {
         return externalDatabase.getWebUri();
+    }
+
+    /**
+     * Obtain a label for a given database entry.
+     * <p>
+     * This is usually the accession, but it may be {@code null} if the database accession is not meaningful to users
+     * (e.g. CELLxGENE dataset IDs are UUIDs).
+     */
+    @Nullable
+    public static String getLabel( DatabaseEntry de ) {
+        if ( ExternalDatabases.CELLXGENE.equalsIgnoreCase( de.getExternalDatabase().getName() ) ) {
+            return null;
+        } else {
+            return de.getAccession();
+        }
     }
 }

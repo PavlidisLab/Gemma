@@ -9,6 +9,7 @@ import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneAnnDataSingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.concurrent.Executors;
@@ -88,12 +89,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             ANNDATA_SAMPLE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "SampleFactorName",
             ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "CellTypeFactorName",
+            ANNDATA_CELL_TYPE_URI_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "CellTypeUriFactorName",
             ANNDATA_IGNORE_CELL_TYPE_FACTOR_OPTION = ANNDATA_OPTION_PREFIX + "IgnoreCellTypeFactor",
             ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION = ANNDATA_OPTION_PREFIX + "UnknownCellTypeIndicator",
             ANNDATA_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "Transpose",
             ANNDATA_NO_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "NoTranspose",
             ANNDATA_USE_X_OPTION = ANNDATA_OPTION_PREFIX + "UseX",
-            ANNDATA_USE_RAW_X_OPTION = ANNDATA_OPTION_PREFIX + "UseRawX";
+            ANNDATA_USE_RAW_X_OPTION = ANNDATA_OPTION_PREFIX + "UseRawX",
+            ANNDATA_CELLXGENE_PRESET = "CellXGenePreset";
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
@@ -187,12 +190,15 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Nullable
     private String annDataCellTypeFactorName;
     @Nullable
+    private String annDataCellTypeUriFactorName;
+    @Nullable
     private String annDataUnknownCellTypeIndicator;
     private boolean annDataIgnoreCellTypeFactor;
     @Nullable
     private Boolean annDataTranspose;
     @Nullable
     private Boolean annDataUseRawX;
+    private boolean annDataUseCellXGenePreset;
 
     // MEX
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
@@ -322,6 +328,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + "." );
+        options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-uri-factor-name", true, "Name of the factor used for the cell type URI, incompatible with " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + "." );
         options.addOption( ANNDATA_IGNORE_CELL_TYPE_FACTOR_OPTION, "anndata-ignore-cell-type-factor", false, "Do not attempt to load a cell type factor. Incompatible with " + formatOption( options, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) + "." );
         options.addOption( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION, "anndata-unknown-cell-type-indicator", true, "Indicator used for missing cell type. Defaults to using the standard -1 categorical code." );
         OptionsUtils.addAutoOption( options,
@@ -330,6 +337,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         OptionsUtils.addAutoOption( options,
                 ANNDATA_TRANSPOSE_OPTION, "anndata-transpose", "Transpose the data matrix.",
                 ANNDATA_NO_TRANSPOSE_OPTION, "anndata-no-transpose", "Do not transpose the data matrix." );
+        options.addOption( ANNDATA_CELLXGENE_PRESET, "anndata-cellxgene-preset", false, "Use the CELLxGENE preset." );
 
         // for MEX
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
@@ -461,6 +469,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( dataType == SingleCellDataType.ANNDATA ) {
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
+            annDataCellTypeUriFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_URI_FACTOR_NAME_OPTION );
             annDataUnknownCellTypeIndicator = commandLine.getOptionValue( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION );
             annDataIgnoreCellTypeFactor = commandLine.hasOption( ANNDATA_IGNORE_CELL_TYPE_FACTOR_OPTION );
             annDataTranspose = getAutoOptionValue( commandLine, ANNDATA_TRANSPOSE_OPTION, ANNDATA_NO_TRANSPOSE_OPTION );
@@ -469,6 +478,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 throw new ParseException( String.format( "The -%s option would override the value of -%s.",
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
+            annDataUseCellXGenePreset = commandLine.hasOption( ANNDATA_CELLXGENE_PRESET );
         } else if ( dataType == SingleCellDataType.MEX ) {
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
             mexUseDoublePrecision = commandLine.hasOption( MEX_USE_DOUBLE_PRECISION_OPTION );
@@ -605,9 +615,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private SingleCellDataLoaderConfig getConfigForDataType( @Nullable SingleCellDataType dataType ) {
         SingleCellDataLoaderConfig.SingleCellDataLoaderConfigBuilder<?, ?> configBuilder;
         if ( dataType == SingleCellDataType.ANNDATA ) {
-            configBuilder = AnnDataSingleCellDataLoaderConfig.builder()
+            configBuilder = ( annDataUseCellXGenePreset ? CellXGeneAnnDataSingleCellDataLoaderConfig.builder() : AnnDataSingleCellDataLoaderConfig.builder() )
                     .sampleFactorName( annDataSampleFactorName )
                     .cellTypeFactorName( annDataCellTypeFactorName )
+                    .cellTypeUriFactorName( annDataCellTypeUriFactorName )
                     .ignoreCellTypeFactor( annDataIgnoreCellTypeFactor )
                     .unknownCellTypeIndicator( annDataUnknownCellTypeIndicator )
                     .transpose( annDataTranspose )

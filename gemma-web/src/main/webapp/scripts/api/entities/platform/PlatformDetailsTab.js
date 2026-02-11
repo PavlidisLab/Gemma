@@ -1,3 +1,5 @@
+import DatabaseEntryTag from '../common/DatabaseEntryTag';
+
 Ext.namespace('Gemma', 'Gemma.PlatformDetails');
 /**
  * Need to set platformId as config.
@@ -226,13 +228,7 @@ Gemma.PlatformDetails = Ext
                     });
             },
 
-            renderExternalAccesions: function (platformDetails) {
-               let htmlEncode = Ext.util.Format.htmlEncode;
-
-               function isHttpUrl( uri ) {
-                  return uri.startsWith( 'http://' ) || uri.startsWith( 'https://' );
-               }
-
+           renderExternalAccessions : function( platformDetails ) {
                let text = "";
                let er = platformDetails.externalReferences;
                if ( er == null || er.length === 0 ) {
@@ -242,23 +238,7 @@ Gemma.PlatformDetails = Ext
                      if ( i > 0 ) {
                         text += "&nbsp;";
                      }
-                     let dbr = er[i];
-                     let ExternalDatabaseUtils = require( '../common/ExternalDatabaseUtils' ).default;
-                     let externalDatabaseMeta = ExternalDatabaseUtils.externalDatabases
-                        .find( ed => ed.name === dbr.externalDatabase.name );
-                     if ( externalDatabaseMeta ) {
-                        text += htmlEncode( dbr.accession );
-                        text += '&nbsp;';
-                        if ( dbr.uri && isHttpUrl( dbr.uri ) ) {
-                           text += '<a target="_blank" rel="noopener noreferrer" href="' + dbr.uri + '">'
-                              + '<img ext:qtip="' + htmlEncode( externalDatabaseMeta.name ) + ' page for this entry" src="' + externalDatabaseMeta.logo + '" alt="' + htmlEncode( externalDatabaseMeta.name ) + ' logo" height="16" />'
-                              + "</a>";
-                        } else {
-                           text += '<img ext:qtip="' + htmlEncode( externalDatabaseMeta.name ) + ' page for this entry" src="' + externalDatabaseMeta.logo + '" alt="' + htmlEncode( externalDatabaseMeta.name ) + 'logo" height="16" />'
-                        }
-                     } else {
-                        text += htmlEncode( dbr.accession ) + " (" + htmlEncode( dbr.externalDatabase.name ) + ")";
-                     }
+                     text += new DatabaseEntryTag( er[i] ).render();
                   }
                }
 
@@ -525,7 +505,7 @@ Gemma.PlatformDetails = Ext
                                                             {
                                                                 fieldLabel: 'Sources'
                                                                 + '&nbsp<i id="sourcesHelp" class="qtp fa fa-question-circle fa-fw"></i>',
-                                                                items: this.renderExternalAccesions(platformDetails)
+                                                               items : this.renderExternalAccessions( platformDetails )
                                                             },
                                                             {
                                                                 fieldLabel: 'Relationships'

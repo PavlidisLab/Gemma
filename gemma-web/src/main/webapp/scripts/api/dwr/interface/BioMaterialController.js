@@ -1,14 +1,14 @@
 /* this code is generated, see generate-dwr-client.py for details */
 var BioMaterialController = {};
 BioMaterialController._path = '/dwr';
-BioMaterialController.addFactorValueTo = function(p0, p1, callback) {
-  dwr.engine._execute(BioMaterialController._path, 'BioMaterialController', 'addFactorValueTo', p0, p1, callback);
-}
 BioMaterialController.createBioMaterialTag = function(p0, p1, callback) {
   dwr.engine._execute(BioMaterialController._path, 'BioMaterialController', 'createBioMaterialTag', p0, p1, callback);
 }
 BioMaterialController.removeBioMaterialTag = function(p0, p1, callback) {
   dwr.engine._execute(BioMaterialController._path, 'BioMaterialController', 'removeBioMaterialTag', p0, p1, callback);
+}
+BioMaterialController.addFactorValueTo = function(p0, p1, callback) {
+  dwr.engine._execute(BioMaterialController._path, 'BioMaterialController', 'addFactorValueTo', p0, p1, callback);
 }
 BioMaterialController.getFactorValues = function(p0, callback) {
   dwr.engine._execute(BioMaterialController._path, 'BioMaterialController', 'getFactorValues', p0, callback);

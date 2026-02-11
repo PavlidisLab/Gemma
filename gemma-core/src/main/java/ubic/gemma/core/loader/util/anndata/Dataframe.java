@@ -237,6 +237,16 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
     }
 
     /**
+     * Obtain an enum array column.
+     * <p>
+     * This is very similar to {@link #getCategoricalColumn(String)}, but the main difference is that the enumerated
+     * value is backed internally by H5 enum data type.
+     */
+    public EnumArray getEnumArrayColumn( String columnName ) {
+        return new EnumArray( getArrayColumn( columnName ) );
+    }
+
+    /**
      * Obtain a categorical column.
      */
     public <T> CategoricalArray<T> getCategoricalColumn( String columnName, Class<T> categoryType ) {
@@ -496,7 +506,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
 
         @Override
         public Set<T> uniqueValues() {
-            return new HashSet<>( Arrays.asList( c.getCategories() ) );
+            return new LinkedHashSet<>( Arrays.asList( c.getCategories() ) );
         }
 
         @Override

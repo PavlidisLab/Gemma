@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -57,12 +58,16 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
         tagWriter.startTag( "span" );
         writeOptionalAttributes( tagWriter );
 
-        tagWriter.appendValue( htmlEscape( databaseEntry.getAccession() ) );
+        boolean hasLabel = StringUtils.isNotBlank( databaseEntry.getLabel() );
+
+        if ( hasLabel ) {
+            tagWriter.appendValue( htmlEscape( databaseEntry.getLabel() ) );
+            tagWriter.appendValue( " " );
+        }
 
         if ( databaseEntry.getExternalDatabase() != null ) {
             String externalUri = ExternalDatabaseUtils.getUri( databaseEntry );
             String databaseLogo = ExternalDatabaseWebUtils.getLogo( databaseEntry.getExternalDatabase() );
-            tagWriter.appendValue( " " );
             if ( externalUri != null && isHttpUrl( externalUri ) ) {
                 if ( databaseLogo != null ) {
                     tagWriter.startTag( "a" );
@@ -72,7 +77,9 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
                     writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
                     tagWriter.endTag(); // </a>
                 } else {
-                    tagWriter.appendValue( "(" );
+                    if ( hasLabel ) {
+                        tagWriter.appendValue( "(" );
+                    }
                     tagWriter.startTag( "a" );
                     tagWriter.writeAttribute( "href", externalUri );
                     tagWriter.writeAttribute( "target", "_blank" );
@@ -83,12 +90,20 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
                     tagWriter.writeAttribute( "class", "fa fa-external-link" );
                     tagWriter.endTag( true );
                     tagWriter.endTag(); // </a>
-                    tagWriter.appendValue( ")" );
+                    if ( hasLabel ) {
+                        tagWriter.appendValue( ")" );
+                    }
                 }
             } else if ( databaseLogo != null ) {
                 writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
             } else {
+                if ( hasLabel ) {
+                    tagWriter.appendValue( "(" );
+                }
                 tagWriter.appendValue( "(" + htmlEscape( databaseEntry.getExternalDatabase().getName() ) + ")" );
+                if ( hasLabel ) {
+                    tagWriter.appendValue( ")" );
+                }
             }
         }
 
