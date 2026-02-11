@@ -216,6 +216,9 @@ public class OntologyUtils {
         if ( idSpace.equalsIgnoreCase( "ncbitaxon" ) ) {
             return "NCBITaxon";
         }
+        if ( idSpace.equalsIgnoreCase( "HsapDv" ) ) {
+            return "HsapDv";
+        }
         return idSpace.toUpperCase();
     }
 

@@ -141,14 +141,13 @@ public class CellXGeneConverterTest extends BaseTest {
         assertThat( ee.getBioAssays() )
                 .allSatisfy( ba -> {
                     assertThat( ba.getSampleUsed().getCharacteristics() )
-                            .hasSize( 8 )
+                            .hasSize( 7 )
                             .extracting( Characteristic::getCategory )
                             .containsExactlyInAnyOrder(
                                     "sex",
                                     "assay",
                                     "suspension_type",
                                     "development_stage",
-                                    "self_reported_ethnicity",
                                     "tissue_type",
                                     "disease",
                                     "is_primary_data" );

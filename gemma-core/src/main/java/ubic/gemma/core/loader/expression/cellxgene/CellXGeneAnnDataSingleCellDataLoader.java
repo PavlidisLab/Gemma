@@ -72,9 +72,32 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                         continue;
                     }
                     Characteristic ontologyLabel = characteristicsByCategory.get( labelColumn ).iterator().next();
-                    // move the URI to the label characteristic and drop the term one
-                    ontologyLabel.setValueUri( CellXGeneUtils.getTermUri( ontologyTerm.getValue() ) );
-                    cs.remove( ontologyTerm );
+                    if ( ( "na".equals( ontologyLabel.getValue() ) && "na".equals( ontologyTerm.getValue() ) )
+                            || ( "unknown".equals( ontologyLabel.getValue() ) && "unknown".equals( ontologyTerm.getValue() ) ) ) {
+                        // missing value, drop the characteristic
+                        cs.remove( ontologyLabel );
+                        cs.remove( ontologyTerm );
+                    } else if ( "na".equals( ontologyTerm.getValue() ) || "unknown".equals( ontologyTerm.getValue() ) ) {
+                        // treat it as a free-text term
+                        ontologyLabel.setValueUri( null );
+                        cs.remove( ontologyTerm );
+                    } else if ( "||".contains( ontologyTerm.getValue() ) ) {
+                        // multi-value, we drop the original label & term, but we create a new characteristic for each
+                        // term
+                        cs.remove( ontologyLabel );
+                        cs.remove( ontologyTerm );
+                        for ( String termId : ontologyTerm.getValue().split( "\\|\\|" ) ) {
+                            if ( termId.equals( "na" ) || termId.equals( "unknown" ) ) {
+                                continue;
+                            }
+                            cs.add( Characteristic.Factory.newInstance( category, null,
+                                    ontologyLabel.getValue(), CellXGeneUtils.getTermUri( termId ) ) );
+                        }
+                    } else {
+                        // move the URI to the label characteristic and drop the term one
+                        ontologyLabel.setValueUri( CellXGeneUtils.getTermUri( ontologyTerm.getValue() ) );
+                        cs.remove( ontologyTerm );
+                    }
                 }
             }
         }
