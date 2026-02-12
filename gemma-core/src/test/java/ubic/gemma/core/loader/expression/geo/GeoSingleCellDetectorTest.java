@@ -21,6 +21,8 @@ import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.expression.sra.SraFetcher;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
@@ -68,13 +70,16 @@ public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Configuration
     @TestComponent
-    @Import({ SettingsConfig.class, FTPConfig.class })
+    @Import({ SettingsConfig.class, FTPConfig.class, SingleCellTransformationConfig.class })
     static class Config {
 
     }
 
     @Autowired
     private FTPClientFactory ftpClientFactory;
+
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
@@ -96,6 +101,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 "EFO:0009922",
                 // Smart-seq
                 "EFO:0008930" ) ) );
+        detector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
     }
 
     /**
@@ -193,7 +199,12 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testGSE221522() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221522" );
         detector.downloadSingleCellData( series );
-        assertThat( detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
+        AnnDataSingleCellDataLoaderConfig config = AnnDataSingleCellDataLoaderConfig.builder()
+                // this dataset has to be transposed and also has a raw.X and raw.var, so to read the data, it must be
+                // transposed on-disk. However, if we do that, we will lose the "counts" layer.
+                .skipTransformations( true )
+                .build();
+        assertThat( detector.getSingleCellDataLoader( series, config ) )
                 .asInstanceOf( type( AnnDataSingleCellDataLoader.class ) )
                 .satisfies( loader -> {
                     // the AnnData use abbreviated column name that simply cannot be matched against the GEO record
