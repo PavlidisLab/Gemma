@@ -314,9 +314,9 @@ public class BlatAssociationScorer {
      * to be the same as regular matches.
      *
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
-     * @param blatResult
+     * @param blatResult a BLAT result to score
      */
-    public static Double score( BlatResult blatResult ) {
+    public static double score( BlatResult blatResult ) {
 
         long length;
         if ( blatResult.getQuerySequence() == null ) {
@@ -378,9 +378,9 @@ public class BlatAssociationScorer {
      * See <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
      *
      * @return Value between 0 and 1.
-     * @param blatResult
+     * @param blatResult a blat result to compute identity for
      */
-    public static Double identity( BlatResult blatResult ) {
+    public static double identity( BlatResult blatResult ) {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
         long qAliSize = sizeMul * ( blatResult.getQueryEnd() - blatResult.getQueryStart() );
         long tAliSize = blatResult.getTargetEnd() - blatResult.getTargetStart();

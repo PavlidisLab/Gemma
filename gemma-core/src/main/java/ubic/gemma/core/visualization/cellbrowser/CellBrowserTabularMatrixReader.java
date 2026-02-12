@@ -35,19 +35,25 @@ public class CellBrowserTabularMatrixReader {
             .setSkipHeaderRecord( true )
             .get();
 
+    /**
+     * Ignore cell identifiers in the header for which no assay can be found instead of throwing an exception.
+     */
     @Setter
     private boolean ignoreUnmatchedCellIds = true;
 
+    /**
+     * Ignore gene identifiers in the "gene" column for which no design element can be found instead of throwing an
+     * exception.
+     */
     @Setter
-    private boolean ignoreUnmatchedDesignElements = true;
+    private boolean ignoreUnmatchedGenes = true;
 
     /**
+     * Read a single-cell data matrix from a Cell Browser-compatible format.
      *
-     * @param reader
-     * @param quantitationType
-     * @param designElementsMap
-     * @return
-     * @throws IOException
+     * @param reader            reader to read the matrix from
+     * @param quantitationType  quantitation type to use for the resulting matrix. It affects how the values are parsed.
+     * @param designElementsMap a mapping of identifiers in the "gene" column to design elements.
      */
     public SingleCellExpressionDataDoubleMatrix readMatrix( Reader reader, QuantitationType quantitationType,
             Map<String, CompositeSequence> designElementsMap, Map<String, BioAssay> cellIdToBioAssayMap ) throws IOException {
@@ -106,7 +112,7 @@ public class CellBrowserTabularMatrixReader {
                 String gene = record.get( "gene" );
                 CompositeSequence designElement = designElementsMap.get( gene );
                 if ( designElement == null ) {
-                    if ( ignoreUnmatchedDesignElements ) {
+                    if ( ignoreUnmatchedGenes ) {
                         unmatchedGenes.add( gene );
                         continue;
                     } else {
@@ -128,7 +134,7 @@ public class CellBrowserTabularMatrixReader {
             if ( !unmatchedGenes.isEmpty() ) {
                 String m = String.format( "No design elements for %d gene identifiers. Here's a few examples: %s.", unmatchedGenes.size(),
                         unmatchedGenes.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) );
-                if ( ignoreUnmatchedDesignElements ) {
+                if ( ignoreUnmatchedGenes ) {
                     log.warn( m );
                 } else {
                     throw new IllegalArgumentException( m );

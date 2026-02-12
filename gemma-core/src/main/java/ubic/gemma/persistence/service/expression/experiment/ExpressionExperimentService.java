@@ -603,8 +603,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param minFrequency         minimum occurrences of a term to be included in the results
      * @param retainedTermUris     ensure that the given terms are retained (overrides any exclusion from minFrequency and excludedTermUris)
      * @param maxResults           maximum number of results to return
-     * @param includePredicates
-     * @param includeObjects
+     * @param includePredicates    include usage frequencies of predicates in the results
+     * @param includeObjects       include usage frequencies of objects in the results
      * @return mapping annotations grouped by category and term (URI or value if null) to their number of occurrences in
      * the matched datasets and ordered in descending number of associated experiments
      * @see ExpressionExperimentDao#getAnnotationsUsageFrequency(Collection, Class, int, int, String, Collection, Collection, Collection, boolean, boolean)

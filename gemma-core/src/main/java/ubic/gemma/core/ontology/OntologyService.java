@@ -138,10 +138,11 @@ public interface OntologyService {
 
     /**
      * Check all system uses of ontology terms for the correct label and fix any mismatches based on the ontology OWL files.
+     * <p>
      * This should be run periodically along with findObsoleteTerms.
      *
      * @param dryRun if true, no changes will be made in the database and just print them out instead.
-     * @return
+     * @return a mapping of the invalid or outdated term label to the corrected term
      */
     Map<String, OntologyTerm> fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 }

@@ -46,7 +46,7 @@ public class EutilFetch {
      * @param db     e.g., gds.
      * @param term   search string
      * @param limit  maximum number of records to return.
-     * @param apiKey
+     * @param apiKey NCBI API key to use for querying
      * @throws IOException if there is a problem while manipulating the file
      * @see EntrezUtils#summary(String, EntrezQuery, EntrezRetmode, int, int, String)
      */

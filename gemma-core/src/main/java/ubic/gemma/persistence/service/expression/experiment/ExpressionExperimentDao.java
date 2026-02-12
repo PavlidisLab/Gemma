@@ -552,6 +552,7 @@ public interface ExpressionExperimentDao
      * Remove all raw data vectors.
      * <p>
      * All affected QTs are removed.
+     * @return the number of removed raw vectors
      */
     int removeAllRawDataVectors( ExpressionExperiment ee );
 

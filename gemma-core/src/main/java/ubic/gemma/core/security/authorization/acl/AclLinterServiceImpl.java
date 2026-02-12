@@ -287,11 +287,8 @@ public class AclLinterServiceImpl implements AclLinterService {
     }
 
     /**
-     * @param clazz
      * @param expectedParentClass     expected parent type
      * @param expectedParentIdQueries expected
-     * @param config
-     * @param results
      */
     private void lintSecuredChildWithIncorrectParent( Class<? extends SecuredChild<?>> clazz, Class<? extends Securable> expectedParentClass, @Nullable List<String> expectedParentIdQueries, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting " + clazz.getSimpleName() + " with incorrect parent ACL identities..." );
