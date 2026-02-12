@@ -71,6 +71,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
+     * Explicitly ignore data vectors.
+     */
+    private boolean ignoreDataVectors = false;
+
+    /**
      * The name of the sample factor under {@code /var}.
      */
     private String sampleFactorName;
@@ -834,6 +839,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             SingleCellDimension dimension,
             QuantitationType quantitationType,
             @Nullable String layerName ) throws IOException {
+        if ( ignoreDataVectors ) {
+            throw new UnsupportedOperationException( "Data vectors are ignored." );
+        }
         Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
         checkSampleFactorName();
         // we don't want to close it since it will be closed by the stream

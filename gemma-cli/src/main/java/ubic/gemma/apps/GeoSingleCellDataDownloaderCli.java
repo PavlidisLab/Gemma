@@ -542,7 +542,8 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
                                         .collect( Collectors.toList() );
                                 SingleCellDataLoaderConfig config = SingleCellDataLoaderConfig.builder()
                                         .ignoreSamplesLackingData( true )
-                                        .fast( true ) // transforming is simply too expensive
+                                        .ignoreDataVectors( true ) // making data suitable for loading is too expensive
+                                        .discardEmptyCells( true ) // this is quite expensive, and we don't mind overcounting cells here
                                         .build();
                                 try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config ) ) {
                                     numberOfSamples = loader.getSampleNames().size();

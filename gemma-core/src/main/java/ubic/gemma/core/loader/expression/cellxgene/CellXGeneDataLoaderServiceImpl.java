@@ -108,7 +108,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         ExpressionExperiment ee;
         try ( SingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( CellXGeneAnnDataSingleCellDataLoaderConfig.builder()
-                        .skipTransformations( !loadSingleCellData )
+                        .ignoreDataVectors( !loadSingleCellData )
                         .keepPooledSample( keepPooledSample )
                         .keepUnknownSample( keepUnknownSample )
                         .build() ) ) {

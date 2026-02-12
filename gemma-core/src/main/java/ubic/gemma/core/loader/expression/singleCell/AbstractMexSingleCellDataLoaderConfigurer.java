@@ -79,8 +79,8 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
 
         MexSingleCellDataLoader loader;
         boolean apply10xFilter;
-        if ( config.isSkipTransformations() ) {
-            log.warn( "The skipTransformations flag is set in the configuration, will not check if filtering 10x MEX data is necessary." );
+        if ( config.isIgnoreDataVectors() ) {
+            log.warn( "The ignoreDataVectors flag is set in the configuration, will not check if filtering 10x MEX data is necessary." );
             apply10xFilter = false;
         } else {
             if ( config instanceof MexSingleCellDataLoaderConfig ) {
@@ -100,9 +100,12 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
         }
 
-        if ( config.isSkipTransformations() ) {
-            log.warn( "The skipTransformations flag is set in the configuration, will not discard empty cells in MEX data." );
-            loader.setDiscardEmptyCells( false );
+        if ( config.isIgnoreDataVectors() ) {
+            loader.setIgnoreDataVectors( true );
+        }
+
+        if ( config.getDiscardEmptyCells() != null ) {
+            loader.setDiscardEmptyCells( config.getDiscardEmptyCells() );
         }
 
         if ( config instanceof MexSingleCellDataLoaderConfig ) {

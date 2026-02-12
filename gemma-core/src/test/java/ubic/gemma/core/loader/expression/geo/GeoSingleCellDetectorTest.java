@@ -202,7 +202,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         AnnDataSingleCellDataLoaderConfig config = AnnDataSingleCellDataLoaderConfig.builder()
                 // this dataset has to be transposed and also has a raw.X and raw.var, so to read the data, it must be
                 // transposed on-disk. However, if we do that, we will lose the "counts" layer.
-                .skipTransformations( true )
+                .ignoreDataVectors( true )
                 .build();
         assertThat( detector.getSingleCellDataLoader( series, config ) )
                 .asInstanceOf( type( AnnDataSingleCellDataLoader.class ) )

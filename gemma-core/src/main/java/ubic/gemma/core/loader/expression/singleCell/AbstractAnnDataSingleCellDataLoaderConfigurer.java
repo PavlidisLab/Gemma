@@ -75,9 +75,10 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         AtomicBoolean wasTransposedOnDisk = new AtomicBoolean( false );
         Path dataFileToUse;
         AnnDataSingleCellDataLoader loader;
-        if ( config.isSkipTransformations() ) {
+        if ( config.isIgnoreDataVectors() ) {
             dataFileToUse = annDataFile;
             loader = new AnnDataSingleCellDataLoader( annDataFile );
+            loader.setIgnoreDataVectors( true );
         } else {
             try {
                 dataFileToUse = transformIfNecessary( annDataFile, tempFilesToRemove, config, wasTransposedOnDisk );

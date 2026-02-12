@@ -91,7 +91,7 @@ public class CellXGeneConverterTest extends BaseTest {
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder()
                         // this will skip the transpose and sort by sample steps
-                        .skipTransformations( true )
+                        .ignoreDataVectors( true )
                         .build() );
         ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {

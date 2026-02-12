@@ -37,9 +37,11 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
                 && ( ( CellXGeneAnnDataSingleCellDataLoaderConfig ) config ).isKeepPooledSample();
         boolean keepUnknownSample = config instanceof CellXGeneAnnDataSingleCellDataLoaderConfig
                 && ( ( CellXGeneAnnDataSingleCellDataLoaderConfig ) config ).isKeepUnknownSample();
-        if ( config.isSkipTransformations() ) {
-            log.warn( "The skipTransformations flag is set in the configuration, will not transpose and sort by sample. Reading metadata will work as usual, but loading data will not be supported." );
-            return applyConfig( new CellXGeneAnnDataSingleCellDataLoader( annDataFile, keepPooledSample, keepUnknownSample ), config, false );
+        if ( config.isIgnoreDataVectors() ) {
+            log.warn( "The skipDataVectors flag is set in the configuration, will not transpose and sort by sample. Reading metadata will work as usual, but loading data will not be supported." );
+            CellXGeneAnnDataSingleCellDataLoader loader = new CellXGeneAnnDataSingleCellDataLoader( annDataFile, keepPooledSample, keepUnknownSample );
+            loader.setIgnoreDataVectors( true );
+            return applyConfig( loader, config, false );
         }
 
         Path finalSortedFile;
