@@ -8,8 +8,6 @@ import java.util.Collection;
 
 /**
  * Interface for services of entities that can only be edited by admins.
- *
- * @param <O>
  */
 public interface AdminEditableBaseService<O extends Identifiable> extends BaseService<O> {
 
