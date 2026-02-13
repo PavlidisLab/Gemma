@@ -22,7 +22,7 @@ public class EntityOptionsUtils {
      * Add an option for supplying an EE set.
      */
     public static void addDatasetGroupOption( Options options, String optionName, String longOpt, String description ) {
-        addOption( options, optionName, longOpt, "ID, name", description, CompletionType.EESET );
+        addOption( options, optionName, longOpt, "ID, name", description, CompletionType.DATASET_GROUP );
     }
 
     /**

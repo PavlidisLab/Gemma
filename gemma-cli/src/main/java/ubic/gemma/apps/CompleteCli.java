@@ -140,7 +140,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                     printCompletion( protocol.getName(), protocol.getName() );
                 }
                 break;
-            case EESET:
+            case DATASET_GROUP:
                 for ( ExpressionExperimentSet eeSet : expressionExperimentSetService.loadAll() ) {
                     printCompletion( String.valueOf( eeSet.getId() ), eeSet.getName() );
                     printCompletion( eeSet.getName(), eeSet.getName() );

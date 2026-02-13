@@ -4,7 +4,7 @@ public enum CompletionType {
     TAXON,
     PLATFORM,
     PROTOCOL,
-    EESET,
+    DATASET_GROUP,
     EXTERNAL_DATABASE,
     DATASET,
     EXPERIMENTAL_FACTOR,
