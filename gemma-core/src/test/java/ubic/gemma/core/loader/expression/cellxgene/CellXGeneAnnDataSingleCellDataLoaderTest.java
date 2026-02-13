@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -24,6 +26,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
 public class CellXGeneAnnDataSingleCellDataLoaderTest extends BaseTest {
+
+    @Rule
+    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Configuration
     @TestComponent
