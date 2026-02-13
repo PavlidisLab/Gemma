@@ -10,7 +10,10 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.providers.UberonOntologyService;
+import ubic.gemma.cli.completion.CompletionType;
+import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.cli.util.EnumeratedStringConverter;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
@@ -91,6 +94,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                 .valueSeparator( ',' )
                 .argName( "URI, term ID or label" )
                 .desc( "Limit results to selected tissues. URIs and term IDs from Uberon can be used. Defaults to any tissue." )
+                .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.ONTOLOGY_TERM ) ) )
                 .get() );
         options.addOption( "noInference", "no-inference", false, "Do not perform ontology inference on the provided terms." );
     }

@@ -440,6 +440,14 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
                 .containsEntry( c, ed );
     }
 
+    @Test
+    public void testFindValueGroupedByValueUri() {
+        Characteristic c = createCharacteristic( "test", "test" );
+        sessionFactory.getCurrentSession().persist( c );
+        assertThat( characteristicDao.findValueGroupedByValueUri( null, true, true, true, -1 ) )
+                .containsEntry( "test", "test" );
+    }
+
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {
         return createCharacteristic( Categories.UNCATEGORIZED, valueUri, value );
     }

@@ -43,8 +43,10 @@ public class OntologyUtils {
      */
     public static final String BASE_EFO_URI = "http://www.ebi.ac.uk/efo/";
 
-    private static final Pattern termIdPattern = Pattern.compile( "([A-Za-z]+):(\\d+)" );
-    private static final Pattern localNamePattern = Pattern.compile( "([A-Za-z]+)_(\\d+)" );
+    // FIXME: digits are not allowed in the LOCALID part, but there are ontologies that violate this such as the protein
+    //        ontology (e.g. PR:Q6PL45)
+    private static final Pattern termIdPattern = Pattern.compile( "([A-Za-z]+):([A-Za-z0-9]+)" );
+    private static final Pattern localNamePattern = Pattern.compile( "([A-Za-z]+)_([A-Za-z0-9]+)" );
 
     /**
      * Mapping of known ontology ID spaces to their URI prefix.

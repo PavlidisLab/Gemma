@@ -140,6 +140,23 @@ public interface CharacteristicDao
      */
     Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
+    /**
+     * Find characteristics {@link Characteristic#getValue()} grouped by {@link Characteristic#getValueUri()}.
+     * <p>
+     * The results are grouped by value URIs, so free-text terms will not be returned. If you need a way to get both
+     * free-text and URI annotations, use {@link #findByValueUriGroupedByNormalizedValue(String, Collection, boolean)}
+     * instead.
+     *
+     * @param parentClasses     restrict the parents to these classes, all parents are returned if null. If supplied, at
+     *                          least one parent must be provided unless includeNoParents is true.
+     * @param includeNoParents  include characteristics that have no parents, those will be mapped explicitly to
+     *                          {@code null}.
+     * @param includePredicates if true, include {@link Statement#getPredicateUri()} and {@link Statement#getPredicate()} pairs
+     * @param includeObjects    if true, include {@link Statement#getObjectUri()} and {@link Statement#getObject()} pairs
+     * @param maxResults        maximum number of results to return, or -1 for no limit
+     */
+    Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );
+
     Collection<Characteristic> findByValue( String search );
 
     /**

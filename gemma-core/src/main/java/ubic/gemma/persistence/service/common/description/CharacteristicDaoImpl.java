@@ -437,6 +437,59 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
+        Map<String, String> result = new HashMap<>();
+        //noinspection unchecked
+        List<Object[]> result1 = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select VALUE_URI, `VALUE` from CHARACTERISTIC C "
+                        + "where VALUE_URI is not null "
+                        + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
+                        + "group by VALUE_URI" )
+                .setMaxResults( maxResults )
+                .list();
+        for ( Object[] row : result1 ) {
+            result.put( ( String ) row[0], ( String ) row[1] );
+        }
+        if ( includePredicates ) {
+            //noinspection unchecked
+            List<Object[]> result2 = this.getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "select PREDICATE_URI, PREDICATE, SECOND_PREDICATE_URI, SECOND_PREDICATE from CHARACTERISTIC C "
+                            + "where PREDICATE_URI is not null or SECOND_PREDICATE_URI is not null "
+                            + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
+                            + "group by PREDICATE_URI, SECOND_PREDICATE_URI" )
+                    .setMaxResults( maxResults )
+                    .list();
+            for ( Object[] row : result2 ) {
+                if ( row[0] != null ) {
+                    result.put( ( String ) row[0], ( String ) row[1] );
+                }
+                if ( row[2] != null ) {
+                    result.put( ( String ) row[2], ( String ) row[3] );
+                }
+            }
+        }
+        if ( includeObjects ) {
+            //noinspection unchecked
+            List<Object[]> result3 = this.getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "select OBJECT_URI, OBJECT, SECOND_OBJECT_URI, SECOND_OBJECT from CHARACTERISTIC C "
+                            + "where OBJECT_URI is not null or SECOND_OBJECT_URI is not null "
+                            + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
+                            + "group by OBJECT_URI, SECOND_OBJECT_URI" )
+                    .setMaxResults( maxResults )
+                    .list();
+            for ( Object[] row : result3 ) {
+                if ( row[0] != null ) {
+                    result.put( ( String ) row[0], ( String ) row[1] );
+                }
+                if ( row[2] != null ) {
+                    result.put( ( String ) row[2], ( String ) row[3] );
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public Collection<Characteristic> findByValue( String value ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()

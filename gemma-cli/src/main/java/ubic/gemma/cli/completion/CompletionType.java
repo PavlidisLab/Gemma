@@ -15,4 +15,5 @@ public enum CompletionType {
      * {@code :} with {@code _} in factor names and categories.
      */
     EXPERIMENTAL_FACTOR_OR_INTERACTION_FOR_DEA,
+    ONTOLOGY_TERM
 }

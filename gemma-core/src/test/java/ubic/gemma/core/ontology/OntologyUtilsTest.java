@@ -17,7 +17,8 @@ public class OntologyUtilsTest {
         assertTrue( OntologyUtils.isTermId( "TGEMO:123", false ) );
         assertTrue( OntologyUtils.isTermId( "TGEMO:123", true ) );
         assertFalse( OntologyUtils.isTermId( "FOO:123 " ) );
-        assertFalse( OntologyUtils.isTermId( "FOO:123b" ) );
+        // FIXME: this is not valid, but some ontologies use alphabetic character in the LOCALID part
+        assertTrue( OntologyUtils.isTermId( "FOO:123b" ) );
         assertFalse( OntologyUtils.isTermId( "FOO1:123" ) );
     }
 
