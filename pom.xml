@@ -340,10 +340,6 @@
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-lang3</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
 					<artifactId>commons-text</artifactId>
 				</exclusion>
 			</exclusions>
