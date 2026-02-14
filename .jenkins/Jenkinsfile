@@ -267,17 +267,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B site-deploy -DskipWebpack'
-                        script {
-                            // maven site-deploy changes permission on the parent site directory (pavlab-starter-parent),
-                            // but the Gemma site directory is not a subdirectory of it.
-                            // This is replicating what the plugin is doing https://maven.apache.org/plugins/maven-site-plugin/deploy-mojo.html 
-                            sh "chmod -Rf g+w,a+rX ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} || true"
-                            if (dataDir != null) {
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
-                            }
-                        }
+                        sh "./scripts/deploy-maven-site.sh"
                     }
                 }
                 stage('Deploy Gemma Web') {
@@ -291,7 +281,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-web/deploy.sh ${deployRef}"
+                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./scripts/deploy-web.sh ${deployRef}"
                     }
                 }
                 stage('Deploy Gemma CLI') {
@@ -305,8 +295,8 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
-                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
+                        sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./scripts/deploy-cli.sh ${cliRef}"
+                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./scripts/deploy-cli-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
                     }
                 }
             }

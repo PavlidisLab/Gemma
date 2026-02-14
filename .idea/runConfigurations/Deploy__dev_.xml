@@ -2,7 +2,7 @@
   <configuration default="false" name="Deploy (dev)" type="ShConfigurationType">
     <option name="SCRIPT_TEXT" value="rsync $PROJECT_DIR$/gemma-web/target/Gemma.war chalmers.msl.ubc.ca:/var/local/tomcat/gemma/Gemma.war" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
-    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/gemma-web/deploy.sh" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/scripts/deploy-web.sh" />
     <option name="SCRIPT_OPTIONS" value="gemma" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
     <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />

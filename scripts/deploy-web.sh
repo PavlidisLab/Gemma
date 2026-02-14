@@ -12,6 +12,8 @@
 # GEMMA_WEB_PREFIX:        The prefix for the Gemma Web deployment directory (defaults to /var/local/tomcat). Note that
 #                          the actual installation is done under /var/local/tomcat/$ref.
 #
+# Note: you need a recent version of rsync with the --mkpath option.
+#
 
 set -e
 

@@ -13,6 +13,8 @@
 # GEMMA_CLI_DEPLOY_SERVER: The server to deploy the Gemma CLI to.
 # GEMMA_CLI_PREFIX:        The prefix for the Gemma CLI deployment directory (defaults to /space/opt/gemma-cli).
 #
+# Note: you need a recent version of rsync with the --mkpath option.
+#
 
 set -e
 
@@ -78,8 +80,10 @@ if [ -z "$deploy_server" ]; then
 	mkdir -p "$gemma_cli_prefix/refs"
 	ln -sTf "$build_dir" "$build_ref_dir"
 else
-	ssh "$deploy_server" mkdir -p "$gemma_cli_prefix/refs"
-	ssh "$deploy_server" ln -sTf "$build_dir" "$build_ref_dir"
+  ssh "$deploy_server" <EOF
+  mkdir -p "$gemma_cli_prefix/refs"
+  ln -sTf "$build_dir" "$build_ref_dir"
+  EOF
 fi
 
 echo "Deployment completed!"
