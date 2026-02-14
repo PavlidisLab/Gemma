@@ -1,8 +1,6 @@
 package ubic.gemma.persistence.util;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
@@ -15,7 +13,10 @@ import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 
 import java.util.Arrays;
 
@@ -27,17 +28,17 @@ public class AclCriteriaUtils {
 
     /**
      * Form a restriction clause for ACL using the read permission.
-     * @see #formAclRestrictionClause(String, Class, int)
+     * @see #formAclRestrictionClause(String, Class, Permission)
      */
     public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType ) {
-        return formAclRestrictionClause( aoiIdColumn, aoiType, BasePermission.READ.getMask() );
+        return formAclRestrictionClause( aoiIdColumn, aoiType, BasePermission.READ );
     }
 
     /**
      * Form a restriction clause for ACL.
-     * @see AclQueryUtils#formAclRestrictionClause(String, int)
+     * @see AclQueryUtils#formAclRestrictionClause(String, Permission)
      */
-    public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType, int mask ) {
+    public static Criterion formAclRestrictionClause( String aoiIdColumn, Class<? extends Securable> aoiType, Permission permission ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
@@ -64,7 +65,7 @@ public class AclCriteriaUtils {
             dc.add( Restrictions.conjunction()
                     // FIXME: ace2_ is generated, but sqlRestriction can only replace the root alias
                     .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                    .add( new BitwiseAnd( "ace.mask", mask ) ) );
+                    .add( new BitwiseAnd( "ace.mask", permission.getMask() ) ) );
         } else if ( !SecurityUtil.isUserAdmin() ) {
             String userName = SecurityUtil.getCurrentUsername();
             dc.add( Restrictions.disjunction()
@@ -73,11 +74,11 @@ public class AclCriteriaUtils {
                     // user has specific rights to the object
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL.replace( ":" + AclQueryUtils.USER_NAME_PARAM, "?" ) + ")", new Object[] { userName }, new Type[] { StringType.INSTANCE } ) )
-                            .add( new BitwiseAnd( "ace.mask", mask ) ) )
+                            .add( new BitwiseAnd( "ace.mask", permission.getMask() ) ) )
                     // the object is public
                     .add( Restrictions.conjunction()
                             .add( new SQLCriterionWithAceSidAliasSubstitution( "{aceSid}.SID_FK in (" + AclQueryUtils.ANONYMOUS_SID_SQL + ")", new Object[0], new Type[0] ) )
-                            .add( new BitwiseAnd( "ace.mask", mask ) ) ) );
+                            .add( new BitwiseAnd( "ace.mask", permission.getMask() ) ) ) );
         }
 
         return Subqueries.propertyIn( aoiIdColumn, dc );
