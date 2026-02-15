@@ -33,7 +33,7 @@ public class EE2CAclQueryUtils {
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, Permission permission ) {
         if ( SecurityUtil.isUserAnonymous() ) {
             SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, permission ), sessionFactoryImplementor );
+            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, permission.getMask() ), sessionFactoryImplementor );
             return " and " + renderedMask + " <> 0";
         } else if ( SecurityUtil.isUserAdmin() ) {
             return "";
