@@ -35,6 +35,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
@@ -174,7 +175,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession from ExpressionExperiment ee "
                         + "left join ee.accession accession "
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         return query.setResultTransformer( aliasToBean( Identifiers.class ) ).list();
     }
@@ -828,7 +829,7 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
         if ( doAclFiltering ) {
-            query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
+            query += AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " ";
         }
         if ( eeIds != null ) {
             query += "where T.EXPRESSION_EXPERIMENT_FK in :eeIds";
@@ -846,7 +847,9 @@ public class ExpressionExperimentDaoImpl
             query += ")";
         }
         if ( doAclFiltering ) {
-            query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+            query += AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
+                    "IS_AUTHENTICATED_ANONYMOUSLY", "T." + EE2C_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN,
+                    BasePermission.READ );
             // troubled filtering
             query += formNativeNonTroubledClause( "T.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class );
         }
@@ -871,7 +874,7 @@ public class ExpressionExperimentDaoImpl
             q.setParameterList( "retainedTermUris", optimizeParameterList( retainedTermUris ) );
         }
         if ( doAclFiltering ) {
-            EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+            AclDenormalizedTableQueryUtils.setAclParameters( q, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
         }
         q.setCacheable( true );
         List<Object[]> result;
@@ -990,7 +993,7 @@ public class ExpressionExperimentDaoImpl
         }
         String query = "select T." + valueColumn + " as `VALUE`, T." + valueUriColumn + " as VALUE_URI, " + ( isCategorized ? "T.CATEGORY" : "NULL" ) + " as CATEGORY, " + ( isCategorized ? "T.CATEGORY_URI" : "NULL" ) + " as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, count(distinct T.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2CHARACTERISTIC T ";
         if ( doAclFiltering ) {
-            query += EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " ";
+            query += AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " ";
         }
         if ( eeIds != null ) {
             query += "where T.EXPRESSION_EXPERIMENT_FK in :eeIds";
@@ -1029,7 +1032,8 @@ public class ExpressionExperimentDaoImpl
             query += ")";
         }
         if ( doAclFiltering ) {
-            query += EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+            query += AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
+                    "IS_AUTHENTICATED_ANONYMOUSLY", "T." + EE2C_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN, BasePermission.READ );
             query += formNativeNonTroubledClause( "T.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class );
         }
         //language=HQL
@@ -1079,7 +1083,7 @@ public class ExpressionExperimentDaoImpl
             q.setParameter( "minFrequency", minFrequency );
         }
         if ( doAclFiltering ) {
-            EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+            AclDenormalizedTableQueryUtils.setAclParameters( q, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
         }
         q.setCacheable( true );
         List<Object[]> result;
@@ -1244,9 +1248,10 @@ public class ExpressionExperimentDaoImpl
         Query q = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select AD.TECHNOLOGY_TYPE as TT, count(distinct EE2AD.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN EE2AD "
                         + "join ARRAY_DESIGN AD on EE2AD.ARRAY_DESIGN_FK = AD.ID "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "EE2AD.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " "
                         + "where EE2AD.EXPRESSION_EXPERIMENT_FK is not NULL"
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "EE2AD.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
+                        "IS_AUTHENTICATED_ANONYMOUSLY", "EE2AD." + EE2AD_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN, BasePermission.READ )
                         + formNativeNonTroubledClause( "EE2AD.ARRAY_DESIGN_FK", ArrayDesign.class )
                         + formNativeNonTroubledClause( "EE2AD.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by AD.TECHNOLOGY_TYPE" )
@@ -1256,7 +1261,7 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        AclDenormalizedTableQueryUtils.setAclParameters( q, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> results = q.list();
         return results.stream().collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
@@ -1306,11 +1311,12 @@ public class ExpressionExperimentDaoImpl
         Query query = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select ad.*, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + "join ARRAY_DESIGN ad on ee2ad.ARRAY_DESIGN_FK = ad.ID "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                        + AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " "
                         + "where ee2ad.IS_ORIGINAL_PLATFORM = :original"
                         // exclude noop switch
                         + ( original ? " and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)" : "" )
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" ) + " "
+                        + AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
+                        "IS_AUTHENTICATED_ANONYMOUSLY", "ee2ad." + EE2AD_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN, BasePermission.READ ) + " "
                         // exclude troubled platforms or experiments for non-admins
                         + formNativeNonTroubledClause( "ee2ad.ARRAY_DESIGN_FK", ArrayDesign.class )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
@@ -1325,8 +1331,8 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class );
         query.setParameter( "original", original );
-        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        AclDenormalizedTableQueryUtils.setAclParameters( query, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
+        AclDenormalizedTableQueryUtils.setAclParameters( query, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
         query.setCacheable( true );
         List<Object[]> result;
         //noinspection unchecked
@@ -1596,7 +1602,7 @@ public class ExpressionExperimentDaoImpl
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
 
         // it is important to cache this, as it gets called on the home page. Though it's actually fast.
         //noinspection unchecked
@@ -3868,7 +3874,7 @@ public class ExpressionExperimentDaoImpl
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;

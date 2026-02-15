@@ -99,7 +99,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
                         + FilterQueryUtils.formRestrictionClause( filters )
                         + FilterQueryUtils.formOrderByClause( sort ) );
-        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
         return query;
     }
@@ -119,7 +119,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
                         + FilterQueryUtils.formRestrictionClause( filters )
                         + FilterQueryUtils.formOrderByClause( sort ) );
-        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
         return query;
     }
@@ -132,7 +132,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 + AclQueryUtils.formAclRestrictionClause( "ad.id" )
                 + ( !SecurityUtil.isUserAdmin() ? " and ad.curationDetails.troubled = false" : "" )
                 + FilterQueryUtils.formRestrictionClause( filters ) );
-        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
         return query;
     }
