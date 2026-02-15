@@ -75,7 +75,7 @@ public class BibliographicReferenceDaoImpl
                 .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " b)" + " "
                         + "from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
-        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( q, ExpressionExperiment.class );
         return ( Long ) q.uniqueResult();
     }
 
@@ -87,7 +87,7 @@ public class BibliographicReferenceDaoImpl
                 .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " e)" + " "
                         + "from ExpressionExperiment e join e.primaryPublication b"
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
-        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( q, ExpressionExperiment.class );
         return ( Long ) q.uniqueResult();
     }
 
@@ -99,7 +99,7 @@ public class BibliographicReferenceDaoImpl
                         + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last"
                 );
-        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> os = q
                 .setFirstResult( offset )
@@ -126,7 +126,7 @@ public class BibliographicReferenceDaoImpl
                         + "and b in (:recs) "
                         + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last" );
-        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
         List<Object[]> os = QueryUtils.listByIdentifiableBatch( query, "recs", records, eeBatchSize );
         LinkedHashMap<BibliographicReference, Collection<ExpressionExperiment>> result = new LinkedHashMap<>();
         for ( Object[] o : os ) {

@@ -228,7 +228,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + "and gp.gene = :gene"
                         + ( includeDummyProducts ? "" : " and gp.dummy = false" ) )
                 .setParameter( "gene", gene );
-        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
         return ( Long ) query.uniqueResult();
     }
 
@@ -247,7 +247,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         + "and gp.gene.id = :id"
                         + ( includeDummyProducts ? "" : " and gp.dummy = false" ) )
                 .setParameter( "id", id );
-        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
         return ( Long ) query.uniqueResult();
     }
 
