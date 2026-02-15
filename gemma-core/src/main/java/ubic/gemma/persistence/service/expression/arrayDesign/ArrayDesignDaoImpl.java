@@ -25,7 +25,6 @@ import org.hibernate.*;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -44,7 +43,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
@@ -494,7 +492,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and ad = :ad" )
                 .setParameter( "ad", arrayDesign );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         return ( Long ) query.uniqueResult();
     }
 
@@ -505,7 +503,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "join ad.primaryTaxon t "
                         + AclQueryUtils.formAclRestrictionClause( "ad.id" ) + " "
                         + "group by t" );
-        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         //noinspection unchecked
         List<Object[]> csList = query.setCacheable( true ).list();
         return csList.stream().collect( Collectors.toMap( row -> ( Taxon ) row[0], row -> ( Long ) row[1] ) );
@@ -538,7 +536,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
                         + "and b.originalPlatform = :arrayDesign" )
                 .setParameter( "arrayDesign", arrayDesign );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         return ( Long ) query
                 .setCacheable( true )
                 .uniqueResult();
@@ -1061,7 +1059,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.setAclParameters( query, ArrayDesign.class );
+        AclQueryUtils.addAclParameters( query, ArrayDesign.class );
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
@@ -1138,12 +1136,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and not ee2ad.IS_ORIGINAL_PLATFORM"
-                        + AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
-                        "IS_AUTHENTICATED_ANONYMOUSLY", "ee2ad." + TableMaintenanceUtil.EE2AD_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN,
-                        BasePermission.READ )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
@@ -1154,7 +1150,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        AclDenormalizedTableQueryUtils.setAclParameters( query, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         Map<Long, Long> countById = QueryUtils.<Long, Object[]>streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048 )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
@@ -1166,14 +1162,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " "
+                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and ee2ad.IS_ORIGINAL_PLATFORM "
                         // ignore noop switches
                         + "and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)"
-                        + AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
-                        "IS_AUTHENTICATED_ANONYMOUSLY", "ee2ad." + TableMaintenanceUtil.EE2AD_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN,
-                        BasePermission.READ )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
@@ -1184,7 +1178,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
-        AclDenormalizedTableQueryUtils.setAclParameters( query, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         Map<Long, Long> switchedCountById = QueryUtils.<Long, Object[]>streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {

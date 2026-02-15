@@ -29,7 +29,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -46,7 +45,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.AclDenormalizedTableQueryUtils;
+import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
@@ -57,7 +56,6 @@ import java.util.stream.Collectors;
 
 import static org.hibernate.criterion.Restrictions.like;
 import static org.hibernate.criterion.Restrictions.not;
-import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -244,13 +242,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     private Map<Class<? extends Identifiable>, Map<String, Set<Long>>> findExperimentsByUrisInternal( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
         String qs = "select T.`LEVEL`, T.VALUE_URI, T.PREDICATE_URI, T.OBJECT_URI, T.SECOND_PREDICATE_URI, T.SECOND_OBJECT_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
                 + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
-                + AclDenormalizedTableQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK", "IS_AUTHENTICATED_ANONYMOUSLY" ) + " "
+                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
                 + "where "
                 + createPredicates( "T", "uris", includeSubjects, includePredicates, includeObjects )
                 + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
-                + AclDenormalizedTableQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(),
-                "IS_AUTHENTICATED_ANONYMOUSLY", "T." + EE2C_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN,
-                BasePermission.READ )
+                + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
         Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
@@ -278,7 +274,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             query.setParameter( "taxonId", taxon.getId() );
         }
 
-        AclDenormalizedTableQueryUtils.setAclParameters( query, "IS_AUTHENTICATED_ANONYMOUSLY", ExpressionExperiment.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
 
         query.setCacheable( true );
 

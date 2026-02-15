@@ -25,7 +25,7 @@ import java.util.Arrays;
  * <li>form where clause and add your constraints</li>
  * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)} in the clause section (only for native queries)</li>
  * <li>bind all your parameters</li>
- * <li>bind ACL-specific parameters with {@link #setAclParameters(Query, Class)} to the query object</li>
+ * <li>bind ACL-specific parameters with {@link #addAclParameters(Query, Class)} to the query object</li>
  * </ol>
  *
  * @author poirigui
@@ -83,8 +83,7 @@ public class AclQueryUtils {
     /**
      * Indicate if the ACL query requires a {@code count(distinct ...)} clause.
      * <p>
-     * This is only applicable to {@link #formAclRestrictionClause(String, Permission)} and {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)},
-     * you do not need to use distinct clause when using a sub-query.
+     * FIXME: remove the need for a distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     public static boolean requiresCountDistinct() {
         return !SecurityUtil.isUserAdmin();
@@ -93,8 +92,7 @@ public class AclQueryUtils {
     /**
      * Indicate if the ACL query requires a {@code group by} clause.
      * <p>
-     * This is only applicable to {@link #formAclRestrictionClause(String, Permission)} and {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)},
-     * you do not need to use a group by clause when using a sub-query.
+     * FIXME: remove the need for a count distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
      */
     public static boolean requiresGroupBy() {
         return !SecurityUtil.isUserAdmin();
@@ -112,7 +110,7 @@ public class AclQueryUtils {
      * Create an HQL join clause for {@link gemma.gsec.acl.domain.AclObjectIdentity}, {@link gemma.gsec.acl.domain.AclGrantedAuthoritySid}
      * and a restriction clause to limit the result only to objects the current user can access.
      * <p>
-     * Ensure that you use {@link #setAclParameters(Query, Class)} afterward to bind the query parameters.
+     * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.
      * <p>
      * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
      * entities with multiple ACL entries will be duplicated in the results. You can use {@link #requiresGroupBy()} to
@@ -122,13 +120,15 @@ public class AclQueryUtils {
      *        would be preferable?
      *
      * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
-     *                    {@link #setAclParameters(Query, Class)} afterward
+     *                    {@link #addAclParameters(Query, Class)} afterward
      * @param permission  requested permission(s)
      * @return clause to add to the query after any jointure
      */
     public static String formAclRestrictionClause( String aoiIdColumn, Permission permission ) {
-        Assert.isTrue( permission.getMask() > 0, "At least one bit must be set in the permission mask." );
-        Assert.isTrue( StringUtils.isNotBlank( aoiIdColumn ), "Object identity column cannot be empty." );
+        if ( StringUtils.isBlank( aoiIdColumn ) ) {
+            throw new IllegalArgumentException( "Object identity column cannot be empty." );
+        }
+        Assert.isTrue( permission.getMask() > 0, "The mask must have at least one bit set." );
         //language=HQL
         String q = ", AclObjectIdentity as " + AOI_ALIAS + " join " + AOI_ALIAS + ".ownerSid " + SID_ALIAS;
         // for non-admin, we have to include aoi.entries
@@ -138,33 +138,22 @@ public class AclQueryUtils {
         }
         q += " where (" + AOI_ALIAS + ".identifier = " + aoiIdColumn + " and " + AOI_ALIAS + ".type = :" + AOI_TYPE_PARAM + ")";
         // add ACL restrictions
-        if ( SecurityUtil.isUserAnonymous() ) {
-            //language=HQL
-            return q + " and (bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
-        } else if ( !SecurityUtil.isUserAdmin() ) {
-            return q + " and ("
-                    // user own the object
-                    + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
-                    // specific rights to the object
-                    + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
-                    // publicly available
-                    + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
-                    + ")";
-        } else {
-            return q;
+        if ( !SecurityUtil.isUserAdmin() ) {
+            if ( SecurityUtil.isUserAnonymous() ) {
+                //language=HQL
+                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
+            } else {
+                q += " and ("
+                        // user own the object
+                        + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
+                        // specific rights to the object
+                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
+                        // publicly available
+                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
+                        + ")";
+            }
         }
-    }
-
-    public static String formAclRestrictionSubqueryClause( String aoiIdColumn, Permission permission ) {
-        Assert.isTrue( StringUtils.isNotBlank( aoiIdColumn ), "ACL object identity column cannot be empty." );
-        Assert.isTrue( permission.getMask() > 0, "At least one bit must be set in the permission mask." );
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return " and ";
-        } else if ( !SecurityUtil.isUserAdmin() ) {
-            return " and ";
-        } else {
-            return "";
-        }
+        return q;
     }
 
     /**
@@ -176,15 +165,18 @@ public class AclQueryUtils {
      * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
      * entities with multiple ACL entries will be duplicated in the results.
      * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
-     *                    {@link #setAclParameters(Query, Class)} afterward
+     *                    {@link #addAclParameters(Query, Class)} afterward
      *
      * @see #formAclRestrictionClause(String)
      */
     public static String formNativeAclJoinClause( String aoiIdColumn ) {
-        Assert.isTrue( StringUtils.isNotBlank( aoiIdColumn ), "ACL object identity ID column cannot be empty." );
+        if ( StringUtils.isBlank( aoiIdColumn ) ) {
+            throw new IllegalArgumentException( "Object identity column cannot be empty." );
+        }
         //language=SQL
         String q = " join ACLOBJECTIDENTITY " + AOI_ALIAS + " on (" + AOI_ALIAS + ".OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + AOI_ALIAS + ".OBJECT_ID = " + aoiIdColumn + ") "
                 + "join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
+
         // for non-admin, we have to include aoi.entries
         // if aoi.entries is empty, the user might still be the owner, so we use a left join
         if ( !SecurityUtil.isUserAdmin() ) {
@@ -209,7 +201,6 @@ public class AclQueryUtils {
      * @see #formAclRestrictionClause(String, Permission)
      */
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
-        Assert.isTrue( permission.getMask() > 0, "At least one bit must be set in the permission mask." );
         SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
         String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", permission.getMask() ), sessionFactoryImplementor );
         //language=SQL
@@ -231,31 +222,6 @@ public class AclQueryUtils {
     }
 
     /**
-     * Native flavour of the ACL restriction subquery clause.
-     *
-     * @see #formAclRestrictionSubqueryClause(String, Permission)
-     */
-    public static String formNativeAclRestrictionSubqueryClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn, Permission permission ) {
-        Assert.isTrue( StringUtils.isNotBlank( aoiIdColumn ), "ACL object identity ID column cannot be empty." );
-        Assert.isTrue( permission.getMask() > 0, "At least one bit must be set in the permission mask." );
-        SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", permission.getMask() ), sessionFactoryImplementor );
-        //language=SQL
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return " and " + aoiIdColumn + " in (select ACLOBJECTIDENTITY.OBJECT_ID from ACLOBJECTIDENTITY aoi "
-                    + "left join ACLENTRY " + ACE_ALIAS + " on aoi.ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK "
-                    + "where aoi.OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + renderedMask + " <> 0))";
-        } else if ( !SecurityUtil.isUserAdmin() ) {
-            return " and " + aoiIdColumn + " in (select ACLOBJECTIDENTITY.OBJECT_ID from ACLOBJECTIDENTITY aoi "
-                    + "left join ACLENTRY " + ACE_ALIAS + " on aoi.ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK "
-                    + "where aoi.OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + renderedMask + " <> 0))";
-        } else {
-            // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
-            return "";
-        }
-    }
-
-    /**
      * Bind {@link Query} parameters to a join clause generated with {@link #formAclRestrictionClause(String)} and add ACL
      * restriction parameters defined in {@link #formAclRestrictionClause(String)}.
      * <p>
@@ -268,9 +234,10 @@ public class AclQueryUtils {
      *                                 {@link #formAclRestrictionClause(String)}.
      */
     @SuppressWarnings("StatementWithEmptyBody")
-    public static Query setAclParameters( Query query, Class<? extends Securable> aoiType ) throws QueryParameterException {
-        Assert.isTrue( !SecuredChild.class.isAssignableFrom( aoiType ),
-                "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
+    public static void addAclParameters( Query query, Class<? extends Securable> aoiType ) throws QueryParameterException {
+        if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
+            throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
+        }
         query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_SQL, so no binding is necessary
@@ -279,6 +246,5 @@ public class AclQueryUtils {
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
         }
-        return query;
     }
 }

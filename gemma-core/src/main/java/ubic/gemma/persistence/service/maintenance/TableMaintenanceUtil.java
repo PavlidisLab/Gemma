@@ -54,11 +54,6 @@ public interface TableMaintenanceUtil {
     String EE2C_QUERY_SPACE = "EXPRESSION_EXPERIMENT2CHARACTERISTIC";
 
     /**
-     * Column in the EE2C table that contains a permission mask for anonymous users.
-     */
-    String EE2C_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN = "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK";
-
-    /**
      * Query space used by the {@code EXPRESSION_EXPERIMENT2ARRAY_DESIGN} table.
      * <p>
      * You may also want to synchronize to {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and
@@ -66,11 +61,6 @@ public interface TableMaintenanceUtil {
      * cascade.
      */
     String EE2AD_QUERY_SPACE = "EXPRESSION_EXPERIMENT2_ARRAY_DESIGN";
-
-    /**
-     * Column in the EE2AD table that contains a permission mask for anonymous users.
-     */
-    String EE2AD_IS_AUTHENTICATED_ANONYMOUSLY_MASK_COLUMN = "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK";
 
     /**
      * If necessary, update the GENE2CS table.

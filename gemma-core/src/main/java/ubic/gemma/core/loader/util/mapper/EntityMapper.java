@@ -10,16 +10,6 @@ import java.util.Set;
 
 /**
  * Map external identifiers to Gemma entities.
- * <p>
- * Mapping works by defining a set of candidates {@link Identifiable} and a set of external identifiers (e.g. gene
- * symbols, accession numbers, etc.) to map against. For efficiency, the mapping process creates a "state" for the
- * candidates that enables fast lookups that one can obtain with {@link #forCandidates(Collection)}.
- * <p>
- * It is then possible to tell if an identifier has a match among the candidates, to obtain a single match, to obtain
- * all matches or to obtain mapping statistics. Mapping statistics are useful for debugging, but also comparing
- * different mapping strategies. For example, one could want to compare whether mapping by official gene symbols or
- * Ensembl identifiers yields better results.
- *
  * @param <T> the type of entity being mapped
  * @author poirigui
  */

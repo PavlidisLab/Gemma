@@ -82,7 +82,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and ee.experimentalDesign = ed "
                         + ( AclQueryUtils.requiresGroupBy() ? " group by fv" : "" ) );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         return new Slice<>( ( List<FactorValue> ) query
                 .setFirstResult( offset )
@@ -97,7 +97,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and ee.experimentalDesign = ed "
                         + ( AclQueryUtils.requiresGroupBy() ? " group by fv" : "" ) );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         return query.list();
     }
@@ -109,7 +109,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and ee.experimentalDesign = ed"
                         + ( AclQueryUtils.requiresGroupBy() ? " group by fv" : "" ) );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         return new Slice<>( ( List<Long> ) query
                 .setFirstResult( offset )
@@ -123,7 +123,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                         + "join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
                         + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
                         + "and ee.experimentalDesign = ed" );
-        AclQueryUtils.setAclParameters( countQuery, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( countQuery, ExpressionExperiment.class );
         return ( Long ) countQuery.uniqueResult();
     }
 
@@ -135,7 +135,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
                         + "and ee.experimentalDesign = ed "
                         + "and fv.value like :q"
                         + ( AclQueryUtils.requiresGroupBy() ? " group by fv" : "" ) );
-        AclQueryUtils.setAclParameters( query, ExpressionExperiment.class );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
         return query
                 .setParameter( "q", escapeLike( valuePrefix ) + "%" )
