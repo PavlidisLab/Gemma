@@ -8,6 +8,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -32,7 +33,7 @@ import java.util.Arrays;
 public class AclQueryUtils {
 
     /**
-     * Alias used by {@link #formAclRestrictionClause(String, int)} and {@link #formNativeAclJoinClause(String)} for the
+     * Alias used by {@link #formAclRestrictionClause(String, Permission)} and {@link #formNativeAclJoinClause(String)} for the
      * object identity {@link gemma.gsec.acl.domain.AclObjectIdentity} and the owner identity {@link gemma.gsec.acl.domain.AclSid}.
      */
     public static final String
@@ -99,10 +100,10 @@ public class AclQueryUtils {
 
     /**
      * Create an HQL restriction clause with the {@link BasePermission#READ} permission.
-     * @see #formAclRestrictionClause(String, int)
+     * @see #formAclRestrictionClause(String, Permission)
      */
     public static String formAclRestrictionClause( String aoiIdColumn ) {
-        return formAclRestrictionClause( aoiIdColumn, BasePermission.READ.getMask() );
+        return formAclRestrictionClause( aoiIdColumn, BasePermission.READ );
     }
 
     /**
@@ -120,14 +121,14 @@ public class AclQueryUtils {
      *
      * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
      *                    {@link #addAclParameters(Query, Class)} afterward
-     * @param mask        a mask with requested permissions
+     * @param permission  requested permission(s)
      * @return clause to add to the query after any jointure
      */
-    public static String formAclRestrictionClause( String aoiIdColumn, int mask ) {
+    public static String formAclRestrictionClause( String aoiIdColumn, Permission permission ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
-        Assert.isTrue( mask > 0, "The mask must have at least one bit set." );
+        Assert.isTrue( permission.getMask() > 0, "The mask must have at least one bit set." );
         //language=HQL
         String q = ", AclObjectIdentity as " + AOI_ALIAS + " join " + AOI_ALIAS + ".ownerSid " + SID_ALIAS;
         // for non-admin, we have to include aoi.entries
@@ -140,15 +141,15 @@ public class AclQueryUtils {
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( SecurityUtil.isUserAnonymous() ) {
                 //language=HQL
-                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
+                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
             } else {
                 q += " and ("
                         // user own the object
                         + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
                         // specific rights to the object
-                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0) "
+                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
                         // publicly available
-                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + mask + ") <> 0)"
+                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
                         + ")";
             }
         }
@@ -186,22 +187,22 @@ public class AclQueryUtils {
 
     /**
      * Native flavour of the ACL restriction clause with a {@link BasePermission#READ} permission.
-     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, int)
+     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)
      */
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor ) {
-        return formNativeAclRestrictionClause( sessionFactoryImplementor, BasePermission.READ.getMask() );
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, BasePermission.READ );
     }
 
     /**
      * Native flavour of the ACL restriction clause.
      * @param sessionFactoryImplementor a session factory implementor that will be used to adjust the SQL generated
      *                                  based on the dialect
-     * @param mask                      a mask with requested permissions
-     * @see #formAclRestrictionClause(String, int)
+     * @param permission                requested permission(s)
+     * @see #formAclRestrictionClause(String, Permission)
      */
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, int mask ) {
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
         SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", mask ), sessionFactoryImplementor );
+        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", permission.getMask() ), sessionFactoryImplementor );
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
             return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
