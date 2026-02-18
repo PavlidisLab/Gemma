@@ -11,14 +11,14 @@ export GEMMA_WEB_PREFIX := "/var/local/tomcat"
 
 default: build
 
-build:
-	{{MAVEN}} {{MAVEN_ARGS}} package
+build maven_extra_args='':
+	{{MAVEN}} {{MAVEN_ARGS}} {{maven_extra_args}} package
 
-build-web:
-	{{MAVEN}} {{MAVEN_ARGS}} package -pl gemma-web
+build-web maven_extra_args='':
+	{{MAVEN}} {{MAVEN_ARGS}} {{maven_extra_args}} package -pl gemma-web
 
-build-cli:
-	{{MAVEN}} {{MAVEN_ARGS}} package -pl gemma-cli
+build-cli maven_extra_args='':
+	{{MAVEN}} {{MAVEN_ARGS}} {{maven_extra_args}} package -pl gemma-cli
 
 update-completion-scripts: build-cli
 	env GEMMA_CLI_ALIAS=gemma-cli ./gemma-cli/update-completion-scripts.sh
