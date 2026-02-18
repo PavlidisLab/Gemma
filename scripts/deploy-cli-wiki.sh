@@ -53,7 +53,7 @@ if [ ! -d "$gemma_cli_dir" ]; then
 fi
 
 echo "Generating Gemma CLI Wiki pages under $gemma_cli_wiki_dir..."
-./gemma-cli/target/appassembler/bin/gemma-cli --completion --completion-wiki --completion-wiki-output-dir "$gemma_cli_wiki_dir" --completion-wiki-page-suffix "$gemma_cli_wiki_page_suffix"
+"$gemma_cli_dir/bin/gemma-cli --completion --completion-wiki --completion-wiki-output-dir "$gemma_cli_wiki_dir" --completion-wiki-page-suffix "$gemma_cli_wiki_page_suffix"
 
 echo "Deploying Gemma CLI Wiki to $wiki_dest..."
 rclone "$rclone_command" "$gemma_cli_wiki_dir/List of Gemma CLI Tools$gemma_cli_wiki_page_suffix/" "$wiki_dest" --exclude '@*/**' --exclude '*.url'
