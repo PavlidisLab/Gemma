@@ -57,6 +57,12 @@
 			<email>poirigui@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
+		<developer>
+			<id>oganm</id>
+			<name>Ogan Mancarcii</name>
+			<email>ogan.mancarci@msl.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
@@ -136,9 +142,6 @@
 		</contributor>
 		<contributor>
 			<name>Rachel Schwartz</name>
-		</contributor>
-		<contributor>
-			<name>Ogan Mancarcii</name>
 		</contributor>
 	</contributors>
 	<dependencies>
