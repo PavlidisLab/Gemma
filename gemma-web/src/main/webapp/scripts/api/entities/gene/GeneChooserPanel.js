@@ -468,7 +468,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.addButton = new Ext.Toolbar.Button({
-            icon: Gemma.CONTEXT_PATH + "images/icons/add.png",
+            icon: Gemma.CONTEXT_PATH + "/images/icons/add.png",
             cls: "x-btn-icon",
             tooltip: "Add a gene to the list",
             disabled: true,
@@ -480,7 +480,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.removeButton = new Ext.Toolbar.Button({
-            icon: Gemma.CONTEXT_PATH + "images/icons/subtract.png",
+            icon: Gemma.CONTEXT_PATH + "/images/icons/subtract.png",
             cls: "x-btn-icon",
             tooltip: "Remove the selected gene from the list",
             disabled: true,
@@ -500,7 +500,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.multiButton = new Ext.Toolbar.Button({
-            icon: Gemma.CONTEXT_PATH + "images/icons/page_white_put.png",
+            icon: Gemma.CONTEXT_PATH + "/images/icons/page_white_put.png",
             cls: "x-btn-icon",
             tooltip: "Import multiple genes",
             disabled: false,

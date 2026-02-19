@@ -22,7 +22,7 @@ public class EntityOptionsUtils {
      * Add an option for supplying an EE set.
      */
     public static void addDatasetGroupOption( Options options, String optionName, String longOpt, String description ) {
-        addOption( options, optionName, longOpt, "ID, name", description, CompletionType.EESET );
+        addOption( options, optionName, longOpt, "ID, name", description, CompletionType.DATASET_GROUP );
     }
 
     /**
@@ -36,7 +36,7 @@ public class EntityOptionsUtils {
      * Add an option for supplying a comma-delimited list of platforms.
      */
     public static void addCommaDelimitedPlatformOption( Options options, String optionName, String longOpt, String description ) {
-        addOption( options, optionName, longOpt, "ID, short name, name, alternate name; or a comma-delimited list of those", description, CompletionType.PLATFORM );
+        addCommaDelimitedOption( options, optionName, longOpt, "ID, short name, name, alternate name; or a comma-delimited list of those", description, CompletionType.PLATFORM );
     }
 
     /**
@@ -60,6 +60,17 @@ public class EntityOptionsUtils {
                 .argName( argName )
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( completionType, completionArgs ) ) )
                 .desc( description )
-                .build() );
+                .get() );
+    }
+
+    private static void addCommaDelimitedOption( Options options, String optionName, String longOpt, String argName, String description, CompletionType completionType, String... completionArgs ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOpt )
+                .hasArg()
+                .argName( argName )
+                .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( completionType, completionArgs ) ) )
+                .valueSeparator( ',' )
+                .desc( description )
+                .get() );
     }
 }

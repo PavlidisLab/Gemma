@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp" %>
 
 <head>
-<title>Widget tests</title>
-<style type="text/css">
+<title>Widget Tests</title>
+<style>
     .widget {
         padding: 10px;
         margin: 5px;
@@ -13,79 +13,78 @@
 
 <div class="padded">
 
-    <h2>EE Page</h2>
+    <h2>Widget Tests</h2>
+
+    <h3>ExpressionExperimentPage</h3>
     <div class="widget" id="eepage"></div>
 
-    <h1>ComboBoxes</h1>
-    <h2>DatasetGroup combo</h2>
-    <div class="widget" id="eesetcombo"></div>
+    <div id="widget-tests-combobox">
+        <h3>Combo Boxes</h3>
+        <h4>DatasetGroup combo</h4>
+        <div class="widget" id="eesetcombo"></div>
 
-    <h2>DatasetGroupComboPanel</h2>
-    <div class="widget" id="eesetpanel"></div>
-    <h2>TaxonCombo</h2>
-    <div class="widget" id="taxoncombo"></div>
+        <h4>DatasetGroupComboPanel</h4>
+        <div class="widget" id="eesetpanel"></div>
+        <h4>TaxonCombo</h4>
+        <div class="widget" id="taxoncombo"></div>
 
+        <h4>FactorValueCombo</h4>
+        <div class="widget" id="factorValueCombo"></div>
 
-    <h2>FactorValueCombo</h2>
-    <div class="widget" id="factorValueCombo"></div>
+        <h4>Dataset search field</h4>
+        <div class="widget" id="datasetsearchfield"></div>
+        <div id="dsresults"></div>
 
+        <h4>CharacteristicCombo</h4>
+        <div class="widget" id="charCombo"></div>
 
-    <h2>Dataset search field</h2>
-    <div class="widget" id="datasetsearchfield"></div>
-    <div id="dsresults"></div>
+        <h4>Gene combo</h4>
+        <div class="widget" id="genecombo"></div>
 
+        <h4>Gene Group Combo</h4>
+        <div class="widget" id="genegroupcombo"></div>
 
-    <h2>CharacteristicCombo</h2>
-    <div class="widget" id="charCombo"></div>
+        <h4>MGEDCombo</h4>
+        <div class="widget" id="mgedcombo"></div>
+        <h4>ArrayDesignCombo</h4>
+        <div class="widget" id="adCombo"></div>
+    </div>
 
-    <h2>Gene combo</h2>
-    <div class="widget" id="genecombo"></div>
+    <div>
+        <h3>Panels</h3>
 
-    <h2>Gene Group Combo</h2>
-    <div class="widget" id="genegroupcombo"></div>
+        <h4>GeneChooserPanel</h4>
+        <div class="widget" id="genepicker"></div>
 
+        <h4>DatasetGroupGridPanel with DatasetGroupEditToolbar</h4>
+        <div class="widget" id="datasetGroupGrid"></div>
 
-    <h2>MGEDCombo</h2>
-    <div class="widget" id="mgedcombo"></div>
-    <h2>ArrayDesignCombo</h2>
-    <div class="widget" id="adCombo"></div>
+        <h4>ExpressionExperiment Grid</h4>
+        <div class="widget" id="eegrid"></div>
 
-    <h1>Panels</h1>
+        <h4>AuditTrailGrid</h4>
+        <div class="widget" id="atGrid"></div>
 
-    <h2>GeneChooserPanel</h2>
-    <div class="widget" id="genepicker"></div>
+        <h4>FilesUpload</h4>
+        <div class="widget" id="fileUpload"></div>
 
+        <h4>Visualization</h4>
+        <div class="widget" id="visualization"></div>
 
-    <h2>DatasetGroupGridPanel with DatasetGroupEditToolbar</h2>
-    <div class="widget" id="datasetGroupGrid"></div>
-    <h2>ExpressionExperiment Grid</h2>
-    <div class="widget" id="eegrid"></div>
+        <h4>AnalysisResultsSearch</h4>
+        <div id="analysis-results-search-form" align="center"></div>
+        <br>
+        <div id="analysis-results-search-form-messages"></div>
+        <div id="analysis-results-search-form-results"></div>
+    </div>
 
-
-    <h2>AuditTrailGrid</h2>
-    <div class="widget" id="atGrid"></div>
-
-    <h2>FilesUpload</h2>
-    <div class="widget" id="fileUpload"></div>
-
-
-    <h2>Visualization</h2>
-    <div class="widget" id="visualization"></div>
-
-    <h2>ProgressWidget</h2>
+    <h3>ProgressWidget</h3>
     <div class="widget" id="progressWidget"></div>
 
-
-    <h2>AnalysisResultsSearch</h2>
-    <div id="analysis-results-search-form" align="center"></div>
-    <br>
-    <div id="analysis-results-search-form-messages"></div>
-    <div id="analysis-results-search-form-results"></div>
-
-    <h2>Widget</h2>
+    <h3>Widget</h3>
     <div class="widget" id=""></div>
 
-    <h2>Font-awesome test</h2>
+    <h3>Font-awesome test</h3>
     <p>
         <i class="fa fa-camera-retro fa-lg"></i>fa-camera-retro
     </p>

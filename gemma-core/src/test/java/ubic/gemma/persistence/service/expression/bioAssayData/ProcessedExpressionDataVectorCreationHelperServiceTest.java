@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.setSeed;
 
 public class ProcessedExpressionDataVectorCreationHelperServiceTest extends BaseIntegrationTest {
 
@@ -51,6 +52,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
     @Test
     public void testCreateProcessedDataVectors() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new LogNormalDistribution( 9, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
@@ -73,6 +75,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
     @Test
     public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
@@ -95,6 +98,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
     @Test
     public void testThaw() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 8, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );

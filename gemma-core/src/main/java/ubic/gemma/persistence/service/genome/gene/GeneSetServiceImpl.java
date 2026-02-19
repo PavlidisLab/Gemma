@@ -36,7 +36,6 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -46,7 +45,6 @@ import java.util.*;
  */
 @Service
 @CommonsLog
-@ParametersAreNonnullByDefault
 public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> implements GeneSetService {
 
     private static final Double DEFAULT_SCORE = 0.0;

@@ -83,7 +83,7 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
      */
-    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value );
 
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)

@@ -16,7 +16,6 @@ public interface LoggingConfigurer {
 
     /**
      * Obtain the list of all logger names.
-     * @return
      */
     List<String> getAllLoggerNames();
 

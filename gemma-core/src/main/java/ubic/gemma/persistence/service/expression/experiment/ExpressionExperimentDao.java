@@ -97,7 +97,20 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
+    @Nullable
+    ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets );
+
+    @Override
+    List<ExpressionExperiment> loadWithCache( @org.jetbrains.annotations.Nullable Filters filters, @org.jetbrains.annotations.Nullable Sort sort );
+
+    @Nullable
+    Long findIdByBioAssay( BioAssay ba, boolean includeSubSets );
+
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
+
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
+
+    Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> bms );
 
@@ -107,10 +120,16 @@ public interface ExpressionExperimentDao
     ExpressionExperiment findByDesign( ExperimentalDesign ed );
 
     @Nullable
+    Long findIdByDesign( ExperimentalDesign design );
+
+    @Nullable
     ExpressionExperiment findByDesignId( Long designId );
 
     @Nullable
     ExpressionExperiment findByFactor( ExperimentalFactor ef );
+
+    @Nullable
+    Long findIdByFactor( ExperimentalFactor factor );
 
     Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
 
@@ -118,7 +137,10 @@ public interface ExpressionExperimentDao
     ExpressionExperiment findByFactorValue( FactorValue fv );
 
     @Nullable
-    ExpressionExperiment findByFactorValue( Long factorValueId );
+    Long findIdByFactorValue( FactorValue factorValue );
+
+    @Nullable
+    ExpressionExperiment findByFactorValueId( Long factorValueId );
 
     Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs );
 
@@ -135,10 +157,18 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
+    @Nullable
+    ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr );
+
+    @Nullable
+    Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr );
+
     /**
      * Find experiments updated on or after a given date.
      */
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
+
+    boolean existsByShortName( String shortName );
 
     Map<Long, Long> getAnnotationCounts( Collection<Long> ids );
 
@@ -233,6 +263,15 @@ public interface ExpressionExperimentDao
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Retrieve the dimension associated to the procesed data vectors.
+     *
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension associated to the processed
+     *                                                data vectors.
+     */
+    @Nullable
+    BioAssayDimension getProcessedBioAssayDimension( ExpressionExperiment ee );
 
     Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
@@ -513,6 +552,7 @@ public interface ExpressionExperimentDao
      * Remove all raw data vectors.
      * <p>
      * All affected QTs are removed.
+     * @return the number of removed raw vectors
      */
     int removeAllRawDataVectors( ExpressionExperiment ee );
 
@@ -828,7 +868,6 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain a stream over the vectors for a given QT.
-     * <p>
      *
      * @param fetchSize        number of vectors to fetch at once
      * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
@@ -848,6 +887,13 @@ public interface ExpressionExperimentDao
     long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
+     * Obtain the number of single-cell vectors for a given single-cell dimension.
+     * <p>
+     * A dimension may be shared by multiple QTs, so this number may be larger than {@link #getNumberOfSingleCellDataVectors(ExpressionExperiment, QuantitationType)}.
+     */
+    long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, SingleCellDimension scd );
+
+    /**
      * Obtain the number of non-zeroes.
      */
     long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
@@ -864,7 +910,6 @@ public interface ExpressionExperimentDao
      *
      * @param quantitationType quantitation to remove
      * @param deleteQt         if true, detach the QT from the experiment and delete it
-     *                                                                                                                                                                                                                                                                                                                         TODO: add a replaceSingleCellDataVectors to avoid needing this
      */
     int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
 

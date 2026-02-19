@@ -4,5 +4,6 @@ public enum GeoFormat {
     SOFT,
     MINIML,
     CSV,
-    TSV
+    TSV,
+    HTML
 }

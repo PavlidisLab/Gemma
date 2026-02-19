@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 /**
  * Utilities for {@link org.hibernate.Query}.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -77,6 +78,7 @@ public class QueryUtils {
 
     /**
      * Optimize a collection of {@link Identifiable} entities.
+     *
      * @see #optimizeParameterList(Collection)
      */
     public static <T extends Identifiable> Collection<T> optimizeIdentifiableParameterList( Collection<T> list ) {
@@ -136,6 +138,7 @@ public class QueryUtils {
 
     /**
      * List the results of a query by a fixed batch size.
+     *
      * @param query      the query
      * @param batchParam a parameter of the query for batching
      * @param list       a collection of values for the batch parameters to retrieve
@@ -191,14 +194,8 @@ public class QueryUtils {
     }
 
     /**
-     * @see #streamByBatch(Query, String, Collection, int)
-     */
-    public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query query, String batchParam, Collection<S> list, int batchSize, Class<T> clazz ) {
-        return streamByBatch( query, batchParam, list, batchSize );
-    }
-
-    /**
      * Stream the results of a query by a fixed batch size.
+     *
      * @see #listByBatch(Query, String, Collection, int)
      */
     public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
@@ -209,9 +206,22 @@ public class QueryUtils {
     }
 
     /**
+     * Stream the results of a query by a fixed batch size.
+     *
+     * @see #listByIdentifiableBatch(Query, String, Collection, int)
+     */
+    public static <S extends Identifiable, T> Stream<T> streamByIdentifiableBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+        //noinspection unchecked
+        return batchIdentifiableParameterList( list, batchSize ).stream()
+                .map( batch -> ( List<T> ) query.setParameterList( batchParam, batch ).list() )
+                .flatMap( List::stream );
+    }
+
+    /**
      * Stream the result of a query with the given fetch size.
      * <p>
      * If it is determined that setFetchSize() will not work, a strategy based on offset/limit will be used.
+     *
      * @param useCursorFetchIfSupported if cursor fetching is supported by the JDBC driver, it will be used. This has
      *                                  implications on performance of the database server because the whole result set
      *                                  will be loaded in memory
@@ -417,6 +427,7 @@ public class QueryUtils {
 
     /**
      * Safely create a {@link Stream} from either the current or a new {@link Session}.
+     *
      * @param streamFactory a function that produces the stream from a given {@link Session}. It may return null, in
      *                      which case the session will be closed immediately
      */
@@ -443,8 +454,9 @@ public class QueryUtils {
 
     /**
      * Execute an update query by a fixed batch size.
-     * @see Query#executeUpdate()
+     *
      * @return the sum of all performed update executions
+     * @see Query#executeUpdate()
      */
     public static <S extends Comparable<S>> int executeUpdateByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
         int updated = 0;

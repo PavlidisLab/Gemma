@@ -143,7 +143,7 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
-            BuildInfo buildInfo = BuildInfo.fromClasspath();
+            BuildInfo buildInfo = BuildInfo.fromManifest();
             System.out.printf( "Gemma %s%n", buildInfo );
             System.exit( 0 );
             return;

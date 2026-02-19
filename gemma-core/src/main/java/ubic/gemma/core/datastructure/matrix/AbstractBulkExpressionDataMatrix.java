@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
  * If you need to handle multiple {@link BioAssay} per {@link BioMaterial}, use {@link AbstractMultiAssayExpressionDataMatrix}
  * instead.
  *
- * @param <T>
  * @author poirigui
  */
 public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<T> implements BulkExpressionDataMatrix<T> {

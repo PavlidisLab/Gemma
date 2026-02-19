@@ -30,13 +30,13 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
     }
 
     @Test
-    public void testRecalculateExperimentBatchInfo() {
+    public void testRecalculateExperimentBatchInfoAsAdmin() {
         ee = getTestPersistentBasicExpressionExperiment();
         assertNotNull( ee.getExperimentalDesign() );
         SecurityContext previousContext = SecurityContextHolder.getContext();
         try {
             runAsAgent();
-            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+            expressionExperimentReportService.recalculateExperimentBatchInfoAsAdmin( ee );
         } finally {
             SecurityContextHolder.setContext( previousContext );
         }
@@ -52,7 +52,7 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
         SecurityContext previousContext = SecurityContextHolder.getContext();
         try {
             runAsAgent();
-            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+            expressionExperimentReportService.recalculateExperimentBatchInfoAsAdmin( ee );
         } finally {
             SecurityContextHolder.setContext( previousContext );
         }

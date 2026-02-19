@@ -3,7 +3,7 @@
 <title>Temporary Gemma Ontology</title>
 
 <div class="padded">
-    <h1>Temporary Gemma Ontology</h1>
+    <h2>Temporary Gemma Ontology</h2>
     <p><a href="${pageContext.request.contextPath}/ont/TGEMO.OWL">Download TGEMO</a></p>
     <p>The Temporary Gemma Ontology (TGEMO) is a manually curated ontology of terms needed by Gemma.</p>
     <div class="mb-3">

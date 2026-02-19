@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-@SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
         SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
@@ -145,22 +144,19 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * @see ArrayDesignDao#getGenes(ArrayDesign)
+     * @see ArrayDesignDao#getGenes(ArrayDesign, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<Gene> getGenes( ArrayDesign arrayDesign );
+    Collection<Gene> getGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
     /**
-     * @see ArrayDesignDao#getGenesByCompositeSequence(ArrayDesign)
+     * @see ArrayDesignDao#getGenesByCompositeSequence(ArrayDesign, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign, boolean useGene2Cs );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Long getCompositeSequenceCount( ArrayDesign arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign, boolean useGene2Cs );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
@@ -168,11 +164,14 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long countCompositeSequences( ArrayDesign arrayDesign );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+    long countExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
@@ -215,7 +214,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long getSwitchedExpressionExperimentCount( ArrayDesign id );
+    long countSwitchedExpressionExperiments( ArrayDesign id );
 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
@@ -230,9 +229,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @return The Set of Taxons for array design.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
-
-    Taxon getTaxon( Long id );
+    Collection<Taxon> getTaxaFromBioSequences( ArrayDesign arrayDesign );
 
     Map<Long, Boolean> isMerged( Collection<Long> ids );
 
@@ -255,60 +252,28 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      *
      * @return count
      */
-    long numAllCompositeSequenceWithBioSequences();
-
-    /**
-     * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
-     *
-     * @param ids ids
-     * @return count
-     */
-    long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
+    long countCompositeSequencesWithBioSequences();
 
     /**
      * Function to return all composite sequences with blat results
      *
      * @return count
      */
-    long numAllCompositeSequenceWithBlatResults();
-
-    /**
-     * Function to return the count of all composite sequences with blat results, given a list of array design Ids
-     *
-     * @param ids ids
-     * @return count
-     */
-    long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
+    long countCompositeSequencesWithBlatResults();
 
     /**
      * Function to return a count of all composite sequences with associated genes.
      *
      * @return count
      */
-    long numAllCompositeSequenceWithGenes();
+    long countCompositeSequencesWithGenes( boolean useGene2Cs );
 
     /**
-     * Function to return the count of all composite sequences with genes, given a list of array design Ids
-     *
-     * @param ids ids
-     * @return count
-     */
-    long numAllCompositeSequenceWithGenes( Collection<Long> ids );
-
-    /**
-     * Returns a count of the number of genes associated with all arrayDesigns
+     * Returns a count of the number of genes associated with an array design.
      *
      * @return count
      */
-    long numAllGenes();
-
-    /**
-     * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
-     *
-     * @param ids ids
-     * @return count
-     */
-    long numAllGenes( Collection<Long> ids );
+    long countGenes( boolean useGene2Cs );
 
     /**
      * returns the number of bioSequences associated with this ArrayDesign id
@@ -317,7 +282,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numBioSequences( ArrayDesign arrayDesign );
+    long countBioSequences( ArrayDesign arrayDesign );
 
     /**
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
@@ -326,23 +291,16 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numBlatResults( ArrayDesign arrayDesign );
+    long countBlatResults( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
+    long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
+    long countCompositeSequencesWithBlatResults( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
-
-    /**
-     * @param arrayDesign AD
-     * @return how many experiments use this platform (not including experiment subsets) security filtered
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numExperiments( ArrayDesign arrayDesign );
+    long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
     /**
      * Returns the number of unique Genes associated with this ArrayDesign id
@@ -351,12 +309,12 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long numGenes( ArrayDesign arrayDesign );
+    long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
     /**
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
-     * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This
+     * oligonucleotide is not given. Instead the submitter provides GenBank accessions, which are misleading. This
      * method can be used to clear those until the "right" sequences can be identified and filled in. Note that this
      * does not remove the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
      *
@@ -420,11 +378,6 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
-
-    /**
-     * @param geoAccession for a GEO series or platform
-     */
-    boolean isBlackListed( String geoAccession );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );

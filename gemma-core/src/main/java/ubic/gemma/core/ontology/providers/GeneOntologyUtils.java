@@ -6,7 +6,13 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 
+import static ubic.gemma.core.util.StringUtils.urlEncode;
+
 public class GeneOntologyUtils {
+
+    public static String getUri( String accession ) {
+        return "https://amigo.geneontology.org/amigo/term/" + urlEncode( accession.replace( "_", ":" ) );
+    }
 
     /**
      * Check if a given string is a GO ID.
@@ -23,7 +29,8 @@ public class GeneOntologyUtils {
 
     /**
      * Convert various GO IDs formats to the usual format, e.g., GO:0039392.
-     * @param  term ontology term
+     *
+     * @param term ontology term
      * @return Usual formatted GO id, e.g., GO:0039392 or null for a free-text term
      */
     @Nullable
@@ -41,6 +48,7 @@ public class GeneOntologyUtils {
 
     /**
      * Convert various GO IDs formats to the usual format, e.g., GO:0039392.
+     *
      * @return a regular GO ID or null if the input is null or not a reckognized GO ID format
      */
     @Nullable

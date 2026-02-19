@@ -3,9 +3,7 @@ package ubic.gemma.core.loader.expression.geo.fetcher2;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
-import ubic.gemma.core.loader.expression.geo.service.GeoSource;
-import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.util.fetcher2.AbstractFetcher;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetry;
@@ -39,13 +37,13 @@ public class GeoFetcher extends AbstractFetcher {
         Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
         return retryTemplate.execute( ( ctx ) -> {
             try {
-                URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
+                URL resource = GeoUtils.getUrl( accession, GeoSource.FTP, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
                 simpleDownloader.download( resource, dest, false );
                 return dest;
             } catch ( IOException e ) {
                 log.warn( "Retrieving SOFT file for " + accession + " via FTP failed, trying HTTPS.", e );
                 try {
-                    URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT );
+                    URL resource = GeoUtils.getUrl( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
                     simpleDownloader.download( resource, dest, false );
                     return dest;
                 } catch ( IOException e1 ) {
@@ -65,7 +63,7 @@ public class GeoFetcher extends AbstractFetcher {
     Path fetchSeriesFamilySoftFileFromGeoQuery( String accession ) throws IOException {
         Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
         // last resort, ask GEO to generate the file
-        URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.DIRECT, GeoFormat.SOFT );
+        URL resource = GeoUtils.getUrl( accession, GeoSource.DIRECT, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
         Path uncompressedDest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft" );
         simpleDownloader.download( resource, uncompressedDest, false );
         try {

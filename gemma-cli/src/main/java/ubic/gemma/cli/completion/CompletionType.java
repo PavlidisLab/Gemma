@@ -4,7 +4,7 @@ public enum CompletionType {
     TAXON,
     PLATFORM,
     PROTOCOL,
-    EESET,
+    DATASET_GROUP,
     EXTERNAL_DATABASE,
     DATASET,
     EXPERIMENTAL_FACTOR,
@@ -15,4 +15,5 @@ public enum CompletionType {
      * {@code :} with {@code _} in factor names and categories.
      */
     EXPERIMENTAL_FACTOR_OR_INTERACTION_FOR_DEA,
+    ONTOLOGY_TERM
 }

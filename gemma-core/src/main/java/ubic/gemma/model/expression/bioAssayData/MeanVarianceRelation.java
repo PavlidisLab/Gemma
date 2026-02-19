@@ -20,22 +20,23 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import ubic.gemma.model.common.AbstractIdentifiable;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Arrays;
 
 /**
  * @author Patrick
  */
-public class MeanVarianceRelation extends AbstractIdentifiable implements SecuredChild {
+public class MeanVarianceRelation extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
     private double[] means;
     private double[] variances;
 
-    private Securable securityOwner;
+    @Nullable
+    private ExpressionExperiment securityOwner;
 
     public double[] getMeans() {
         return this.means;
@@ -53,14 +54,15 @@ public class MeanVarianceRelation extends AbstractIdentifiable implements Secure
         this.variances = variances;
     }
 
+    @Nullable
     @Transient
     @Override
-    public Securable getSecurityOwner() {
+    public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;
     }
 
     @SuppressWarnings("unused") // used via reflection
-    public void setSecurityOwner( ExpressionExperiment ee ) {
+    public void setSecurityOwner( @Nullable ExpressionExperiment ee ) {
         this.securityOwner = ee;
     }
 

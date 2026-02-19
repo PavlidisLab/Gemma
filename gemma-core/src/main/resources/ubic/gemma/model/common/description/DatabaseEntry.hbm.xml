@@ -16,7 +16,7 @@
         <property name="accessionVersion" type="java.lang.String">
             <column name="ACCESSION_VERSION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
-        <property name="Uri" type="java.lang.String">
+        <property name="uri" type="java.lang.String">
             <column name="URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
         <!-- this is assumed readily accessible in DatabaseEntryValueObject, and almost certainly used -->

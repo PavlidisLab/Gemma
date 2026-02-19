@@ -21,6 +21,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
@@ -60,6 +61,8 @@ public interface ExpressionDataFileService {
      * Delete the experimental design file for a given experiment.
      */
     boolean deleteDesignFile( ExpressionExperiment ee );
+
+    boolean deleteProcessedDataDesignFile( ExpressionExperiment ee );
 
     /**
      * Delete all files that contain platform annotations for a given experiment.
@@ -171,7 +174,6 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate any data file in the data directory.
-     * <p>
      *
      * @param exclusive if true, acquire an exclusive lock on the file
      */
@@ -264,7 +266,7 @@ public interface ExpressionDataFileService {
      *                                  the {@code ${gemma.appdata.home}/dateFiles} directory using this method, use
      *                                  {@link #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, int, boolean, boolean, Console)}
      *                                  instead.
-     * @param console
+     * @param console                   console to write progress to, ignored if null
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
     int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Path destDir, boolean autoFlush, @Nullable Console console ) throws IOException;
@@ -295,7 +297,8 @@ public interface ExpressionDataFileService {
      * @param ee                       the expression experiment
      * @param qt                       a quantitation type to use
      * @param scaleType                a scale type to use or null to leave the data untransformed
-     * @param excludeSampleIdentifiers
+     * @param excludeSampleIdentifiers whether to exclude sample identifiers for the output file and only use assay
+     *                                 identifiers
      * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
      * @param writer                   the destination for the raw expression data
@@ -312,7 +315,8 @@ public interface ExpressionDataFileService {
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
      * @param ee                       the expression experiment
-     * @param excludeSampleIdentifiers
+     * @param excludeSampleIdentifiers whether to exclude sample identifiers for the output file and only use assay
+     *                                 identifiers
      * @param useBioAssayIds           whether to use bioassay and biomaterial IDs instead of names or short names
      * @param useRawColumnNames        whether to use raw column names instead of R-friendly ones
      * @param writer                   the destination for the raw expression data
@@ -329,7 +333,12 @@ public interface ExpressionDataFileService {
      *
      * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
-    void writeDesignMatrix( ExpressionExperiment ee, Writer writer, boolean autoFlush ) throws IOException;
+    void writeDesignMatrix( ExpressionExperiment ee, boolean useProcessedData, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
+     * Writes out the experimental design for the given experiment and quantitation type.
+     */
+    void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -372,14 +381,17 @@ public interface ExpressionDataFileService {
      * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was
      * a recent change (more recent than the last modified date of the existing file) to any of the experiments platforms.
      *
-     * @param ee         the experiment
-     * @param forceWrite force re-write even if file already exists and is up to date
+     * @param ee                           the experiment
+     * @param useProcessedQuantitationType if true, produce the design for the assays of the processed data instead of
+     *                                     the assays of the experiment. These two are usually the same, but they will
+     *                                     differ if there is a sub-sample structure (i.e. single-cell data).
+     * @param forceWrite                   force re-write even if file already exists and is up to date
      * @return a file or empty if the experiment does not have a design
-     * @see #writeDesignMatrix(ExpressionExperiment, Writer, boolean)
+     * @see #writeDesignMatrix(ExpressionExperiment, boolean, Writer, boolean)
      */
-    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedQuantitationType, boolean forceWrite ) throws IOException;
 
-    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedQuantitationType, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)

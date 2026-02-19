@@ -22,11 +22,11 @@ package ubic.gemma.model.expression.biomaterial;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
@@ -49,7 +49,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * sub-biomaterials inherit characteristics, factors and treatments from their source biomaterials.
  */
 @Indexed
-public class BioMaterial extends AbstractDescribable implements SecuredChild {
+public class BioMaterial extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static final int MAX_NAME_LENGTH = 255;
 
@@ -66,6 +66,9 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
     private Set<Characteristic> characteristics = new HashSet<>();
     @Nullable
     private DatabaseEntry externalAccession;
+
+    @Nullable
+    private ExpressionExperiment securityOwner;
 
     @Override
     @DocumentId
@@ -178,9 +181,14 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
     }
 
     @Transient
+    @Nullable
     @Override
-    public Securable getSecurityOwner() {
-        return null;
+    public ExpressionExperiment getSecurityOwner() {
+        return this.securityOwner;
+    }
+
+    public void setSecurityOwner( @Nullable ExpressionExperiment securityOwner ) {
+        this.securityOwner = securityOwner;
     }
 
     public Taxon getSourceTaxon() {

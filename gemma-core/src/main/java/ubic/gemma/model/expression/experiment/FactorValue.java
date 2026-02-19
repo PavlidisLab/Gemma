@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
 @Indexed
-public class FactorValue extends AbstractIdentifiable implements SecuredChild {
+public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
     private ExperimentalFactor experimentalFactor;
     @Nullable

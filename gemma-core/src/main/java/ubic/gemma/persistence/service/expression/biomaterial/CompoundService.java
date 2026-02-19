@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 
 /**
  * @author kelsey
@@ -34,5 +33,5 @@ public interface CompoundService extends BaseImmutableService<Compound> {
 
     @Override
     @Secured({ "GROUP_USER" })
-    void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
+    void remove( Compound compound );
 }

@@ -77,8 +77,27 @@ public interface ExpressionExperimentReportService {
 
     /**
      * Recalculates the batch effect and batch confound information for the given dataset.
-     * @param ee the experiment to recalculate the batch properties for.
+     * <p>
+     * This method is designed to be run as a background task by an agent with elevated privileges.
+     *
+     * @see #recalculateExperimentBatchInfo(ExpressionExperiment)
      */
-    @Secured({ "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT", "RUN_AS_ADMIN" })
+    void recalculateExperimentBatchInfoAsAdmin( ExpressionExperiment ee );
+
+    /**
+     * Recalculates the batch effect and batch confound information for the given dataset.
+     * <p>
+     * @param ee the experiment to recalculate the batch properties for.
+     * @see #recalculateExperimentBatchConfound(ExpressionExperiment) (ExpressionExperiment)
+     * @see #recalculateExperimentBatchEffect(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void recalculateExperimentBatchInfo( ExpressionExperiment ee );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void recalculateExperimentBatchConfound( ExpressionExperiment ee );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void recalculateExperimentBatchEffect( ExpressionExperiment ee );
 }

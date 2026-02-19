@@ -131,9 +131,14 @@ public class StatementUtils {
         String suffix;
         if ( StringUtils.equalsAnyIgnoreCase( objectUri,
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00004", // overexpression
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00007", // knockdown
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00005", // single-copy overexpression
+                " http://gemma.msl.ubc.ca/ont/TGEMO_00006", // double-copy overexpression
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00007", // knockdown (removed from TGEMO, but still used)
                 "http://purl.obolibrary.org/obo/PATO_0001997", // decreased amount
-                "http://purl.obolibrary.org/obo/PATO_0000470" // increased amount
+                "http://purl.obolibrary.org/obo/PATO_0000470",// increased amount
+                "http://purl.obolibrary.org/obo/OBI_0001148", // gene knock out
+                "http://purl.obolibrary.org/obo/OBI_0001149", // gene knock in
+                "http://purl.obolibrary.org/obo/OBI_0002625" // gene knockdown
         ) ) {
             suffix = " of ";
         } else {

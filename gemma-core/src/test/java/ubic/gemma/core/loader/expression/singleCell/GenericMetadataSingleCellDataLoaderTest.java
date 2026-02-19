@@ -35,8 +35,8 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
-                Arrays.asList( "treatment X", "genotype Y" ),
-                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ) );
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ), Arrays.asList( "treatment X", "genotype Y" ), null, null
+        );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         assertThat( loader.getCellTypeAssignments( dim ) )
                 .singleElement()
@@ -76,6 +76,58 @@ public class GenericMetadataSingleCellDataLoaderTest {
     }
 
     @Test
+    public void testWithDefaultValue() throws URISyntaxException, IOException {
+        SingleCellDimension dim = new SingleCellDimension();
+        dim.setBioAssays( Arrays.asList( createBioAssay( "A" ), createBioAssay( "B" ) ) );
+        dim.setBioAssaysOffset( new int[] { 0, 10 } );
+        dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
+        dim.setNumberOfCellIds( 20 );
+        SingleCellDataLoader delegate = mock();
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ), Arrays.asList( "treatment X", "genotype Y" ),
+                Arrays.asList( "untreated", null ),
+                null
+        );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .singleElement()
+                .satisfies( cta -> {
+                    assertThat( cta.getCellTypes() ).extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "C", "D" );
+                    assertThat( cta.getNumberOfCellTypes() )
+                            .isEqualTo( 2 );
+                    assertThat( cta.getCellTypeIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1 );
+                    assertThat( cta.isPreferred() ).isFalse();
+                    assertThat( cta.getProtocol() ).isNull();
+                    assertThat( cta.getDescription() ).isEmpty();
+                } );
+        assertThat( loader.getOtherCellLevelCharacteristics( dim ) )
+                .hasSize( 2 )
+                .satisfiesExactlyInAnyOrder( clc -> {
+                    assertThat( clc.getName() ).isEqualTo( "treatment X" );
+                    assertThat( clc.getCharacteristics() )
+                            .allSatisfy( c -> assertThat( c.getCategory() ).isEqualTo( "treatment" ) )
+                            .extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "x", "y", "untreated" );
+                    assertThat( clc.getIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2 );
+                }, clc -> {
+                    assertThat( clc.getName() ).isEqualTo( "genotype Y" );
+                    assertThat( clc.getCharacteristics() )
+                            .allSatisfy( c -> assertThat( c.getCategory() ).isEqualTo( "genotype" ) )
+                            .extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "A/a", "A/b" );
+                    assertThat( clc.getIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1 );
+                } );
+    }
+
+    @Test
     public void testWithUnmatchedSampleId() throws URISyntaxException, IOException {
         SingleCellDimension dim = new SingleCellDimension();
         dim.setBioAssays( Arrays.asList( createBioAssay( "A" ) ) );
@@ -85,8 +137,8 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
-                null,
-                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ) );
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ), null, null, null
+        );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         // the default behavior is aligned with SingleCellDataLoader in general to ignore extraneous samples
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -118,8 +170,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-without-sample-id.tsv" ) ).toURI() ),
-                null,
-                null );
+                null, null, null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -148,8 +199,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids.tsv" ) ).toURI() ),
-                null,
-                null );
+                null, null, null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -178,8 +228,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids-but-different-values.tsv" ) ).toURI() ),
-                null,
-                null );
+                null, null, null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThatThrownBy( () -> loader.getCellTypeAssignments( dim ) )
@@ -197,8 +246,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-barcode-collisions.tsv" ) ).toURI() ),
-                null,
-                null );
+                null, null, null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )

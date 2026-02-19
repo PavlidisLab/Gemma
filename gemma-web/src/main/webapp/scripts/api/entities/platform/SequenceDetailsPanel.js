@@ -1,3 +1,5 @@
+import ncbiLogo from "../../../../images/logo/ncbi-symbol.svg";
+
 Ext.namespace('Gemma');
 
 
@@ -121,7 +123,7 @@ Gemma.SequenceDetailsPanel = Ext
                                                     target: "_blank",
                                                     title: "view at NCBI",
                                                     href: "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" + encodeURIComponent(seq.sequenceDatabaseEntry.accession),
-                                                    html: "View in NCBI <img src=\"" + Gemma.NCBI_ICON + "\" alt=\"NCBI icon\"/>",
+                                                   html : "View in NCBI <img src=\"" + ncbiLogo + "\" height=\"16\" alt=\"NCBI icon\"/>",
                                                     "ext:qtip": "View sequence at NCBI"
                                                 }
                                             });

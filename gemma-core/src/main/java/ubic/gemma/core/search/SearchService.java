@@ -66,8 +66,11 @@ public interface SearchService {
      * <li>BioSequences
      * <li>BibliographicReferences (articles)
      * </ul>
+     * Search results are internally subjected to ACLs, so it is safe to assume that the returned results (or result IDs)
+     * can be viewed by the current user.
      *
-     * @param settings settings
+     * @param settings settings for the search
+     * @param context  a context holding optional highlighter and issue reporter
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     SearchResultMap search( SearchSettings settings, SearchContext context ) throws SearchException;

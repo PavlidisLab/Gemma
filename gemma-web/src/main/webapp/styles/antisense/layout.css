@@ -348,6 +348,7 @@ i[class*=icon] {
     margin: 5px;
     padding: 5px;
     height: 20px;
+    white-space: nowrap;
 }
 
 .ee-status-badge.outline {

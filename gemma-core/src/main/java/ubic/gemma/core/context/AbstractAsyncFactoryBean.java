@@ -109,7 +109,7 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
      * {@inheritDoc}
      * <p>
      * All pending bean creation will be cancelled as per {@link Future#cancel(boolean)}. If this is a singleton bean
-     * factory and a singleton has been created (or is in the process of), {@link #destroyObject(T)} will also be
+     * factory and a singleton has been created (or is in the process of), {@link #destroyObject(Object)} will also be
      * called prior to cancelling it.
      */
     @Override

@@ -414,19 +414,19 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertFalse( geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
 
-        assertNotNull( differentialExpressionResultService.findByGene( g, true ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true, true ) );
         assertNotNull(
-                differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false ) );
+                differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, true, Arrays.asList( ds1, ds2, ds3 ), false ) );
         assertNotNull( differentialExpressionResultService
                 .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ) );
-        assertNotNull( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ) );
+        assertNotNull( differentialExpressionResultService.findByGene( g, true, true, 0.05, 10 ) );
 
-        assertFalse( differentialExpressionResultService.findByGene( g, true ).isEmpty() );
-        assertFalse( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, Arrays.asList( ds1, ds2, ds3 ), false )
+        assertFalse( differentialExpressionResultService.findByGene( g, true, true ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGeneAndExperimentAnalyzed( g, true, true, Arrays.asList( ds1, ds2, ds3 ), false )
                 .isEmpty() );
         assertFalse( differentialExpressionResultService
                 .findByExperimentAnalyzed( Arrays.asList( ds1, ds2, ds3 ), false, 0.05, 10 ).isEmpty() );
-        assertFalse( differentialExpressionResultService.findByGene( g, true, 0.05, 10 ).isEmpty() );
+        assertFalse( differentialExpressionResultService.findByGene( g, true, true, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
                 .findByExperimentIds( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), true, false );
@@ -439,7 +439,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         }
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> ffResultSets = differentialExpressionResultService
-                .findDiffExAnalysisResultIdsInResultSets( resultSets, Collections.singletonList( g.getId() ) );
+                .findGeneResultsByResultSetIdsAndGeneIds( resultSets, Collections.singletonList( g.getId() ) );
         assertNotNull( ffResultSets );
         assertFalse( ffResultSets.isEmpty() );
     }
@@ -455,24 +455,24 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequences( g, true );
         assertFalse( compSequences.isEmpty() );
 
-        Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
+        Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g, false );
         assertEquals( 1, collection.size() );
 
         ArrayDesign ad = experimentService.getArrayDesignsUsed( ds1 ).iterator().next();
-        collection = compositeSequenceService.findByGene( g, ad );
+        collection = compositeSequenceService.findByGene( g, ad, false );
         assertEquals( 1, collection.size() );
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "200974_at" );
         assertFalse( css.isEmpty() );
         CompositeSequence cs = css.iterator().next();
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs, true );
         assertEquals( 1, genes.size() );
         assertEquals( g, genes.iterator().next() );
 
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
 
-        Map<CompositeSequence, Collection<Gene>> gm = compositeSequenceService.getGenes( css );
+        Map<CompositeSequence, Collection<Gene>> gm = compositeSequenceService.getGenes( css, true );
         assertEquals( 1, gm.size() );
         assertEquals( g, gm.values().iterator().next().iterator().next() );
     }

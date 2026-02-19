@@ -22,6 +22,7 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -30,38 +31,29 @@ import java.util.Objects;
 public class Chromosome extends AbstractIdentifiable {
 
     private String name;
+    @Nullable
     private ExternalDatabase assemblyDatabase;
     private BioSequence sequence;
     private Taxon taxon;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public Chromosome() {
-
-    }
-
-    public Chromosome( String name, Taxon taxon ) {
-        this.name = name;
-        this.taxon = taxon;
-    }
-
-    public Chromosome( String name, ExternalDatabase assemblyDatabase, BioSequence sequence, Taxon taxon ) {
-        this.name = name;
-        this.assemblyDatabase = assemblyDatabase;
-        this.sequence = sequence;
-        this.taxon = taxon;
-    }
 
     public String getName() {
         return this.name;
     }
 
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     /**
      * @return The database where we have the assesmbly of the chromosome, such as the GoldenPath.
      */
+    @Nullable
     public ExternalDatabase getAssemblyDatabase() {
         return this.assemblyDatabase;
+    }
+
+    public void setAssemblyDatabase( @Nullable ExternalDatabase assemblyDatabase ) {
+        this.assemblyDatabase = assemblyDatabase;
     }
 
     /**
@@ -72,8 +64,16 @@ public class Chromosome extends AbstractIdentifiable {
         return this.sequence;
     }
 
+    public void setSequence( BioSequence sequence ) {
+        this.sequence = sequence;
+    }
+
     public Taxon getTaxon() {
         return this.taxon;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
     @Override
@@ -100,5 +100,26 @@ public class Chromosome extends AbstractIdentifiable {
     @Override
     public String toString() {
         return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
+    }
+
+    public static class Factory {
+
+        public static Chromosome newInstance() {
+            return new Chromosome();
+        }
+
+        public static Chromosome newInstance( String name, Taxon taxon ) {
+            Chromosome chromosome = newInstance();
+            chromosome.setName( name );
+            chromosome.setTaxon( taxon );
+            return chromosome;
+        }
+
+        public static Chromosome newInstance( String name, @Nullable ExternalDatabase assemblyDatabase, BioSequence sequence, Taxon taxon ) {
+            Chromosome chromosome = newInstance( name, taxon );
+            chromosome.setAssemblyDatabase( assemblyDatabase );
+            chromosome.setSequence( sequence );
+            return chromosome;
+        }
     }
 }

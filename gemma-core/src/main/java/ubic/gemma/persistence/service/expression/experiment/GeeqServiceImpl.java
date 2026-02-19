@@ -298,7 +298,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         // FIXME factor out magic numbers. Rationale: rarely used platforms are less favored
         int i = 0;
         for ( ArrayDesign ad : ads ) {
-            long cnt = arrayDesignService.numExperiments( ad );
+            long cnt = arrayDesignService.countExpressionExperiments( ad );
             scores[i++] = cnt < 10 ? GeeqServiceImpl.N_10
                     : cnt < 20 ? GeeqServiceImpl.N_05 : cnt < 50 ? GeeqServiceImpl.P_00 : cnt < 100 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
         }
@@ -317,8 +317,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         int i = 0;
         for ( ArrayDesign ad : ads ) {
 
-            Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-            long cnt = arrayDesignService.numGenes( ad );
+            Taxon taxon = ad.getPrimaryTaxon();
+            long cnt = arrayDesignService.countGenes( ad, true );
 
             /*
              * FIXME we don't deal with miRNA platforms correctly
@@ -572,11 +572,11 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      * first (up to) MAX_EFS_REPLICATE_CHECK categorical experimental factors it encounters, and always disregards
      * values from batch factors.
      *
-     * @param  ee an expression experiment to get the count for.
+     * @param ee an expression experiment to get the count for.
      * @return the lowest number of replicates (ignoring factor value combinations with only one replicate),
-     *            or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable
-     *            factors
-     *            to begin with.
+     * or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable
+     * factors
+     * to begin with.
      */
     private int leastReplicates( ExpressionExperiment ee ) {
         HashMap<String, Integer> factors = new HashMap<>();

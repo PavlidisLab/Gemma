@@ -36,24 +36,33 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     /**
      * Find differential expression results for a given gene, grouped by experiment.
      *
+     * @param useGene2Cs            use the GENE2CS table, which is faster but may be inaccurate
+     * @param keepNonSpecificProbes keep non-specific probes
      * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
      */
-    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean keepNonSpecificProbes );
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
      *
      * @param gene                  gene
+     * @param useGene2Cs            use the GENE2CS table, which is faster but may be inaccurate
      * @param keepNonSpecificProbes keep non-specific probes (i.e. probes that map to more than one gene)
      * @param threshold             threshold
      * @param limit                 limit
      * @return map to diff exp VOs
      */
-    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean keepNonSpecificProbes, double threshold, int limit );
+    Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit );
 
     /**
-     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
+     * Given a list of experiments and a threshold value finds all the probes that met the cut-off in the given
      * experiments
+     *
+     * @param experimentAnalyzedIds experiment analyzed IDs
+     * @param includeSubSets        if true, include the subsets of the experiments analyzed
+     * @param threshold             threshold
+     * @param limit                 limit
+     * @return map to diff ex VOs
      */
     Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByExperimentAnalyzed( Collection<Long> experimentAnalyzedIds, boolean includeSubSets, double threshold, int limit );
 
@@ -70,6 +79,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param experimentAnalyzedIdMap a mapping of results to experiment analyzed ID
      * @param baselineMap             a mapping of results to baselines
      * @param threshold               a maximum threshold on the corrected P-value, between 0 and 1 inclusively
+     * @param useGene2Cs              use the GENE2CS table, which is faster but may be inaccurate
      * @param keepNonSpecificProbes   whether to keep probes that map to more than one gene
      * @param initializeFactorValues  whether to initialize factor values in contrasts and baselines, note that their
      *                                experimental factors will not be initialized
@@ -83,13 +93,14 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
             @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap,
             @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap,
             double threshold,
-            boolean keepNonSpecificProbes,
+            boolean useGene2Cs, boolean keepNonSpecificProbes,
             boolean initializeFactorValues );
 
     /**
      * Find differential expression results for a given gene and set of experiments, grouped by experiment.
      *
      * @param gene                  gene to retrieve differential expression for
+     * @param useGene2Cs            use the GENE2CS table, which is faster but may be inaccurate
      * @param keepNonSpecificProbes keep non-specific probes (i.e. probes that map to more than one gene)
      * @param experimentAnalyzedIds IDs of experiments or experiment subsets to consider
      * @param includeSubSets        include subsets of the analyzed experiments
@@ -97,23 +108,43 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * {@link BioAssaySet}.
      */
     Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed(
-            Gene gene, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
+            Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
      * corrected pvalue field)
+     *
+     * @param gene                  gene
+     * @param useGene2Cs            use the GENE2CS table, which is faster but may be inaccurate
+     * @param keepNonSpecificProbes keep non-specific probes
+     * @param experimentsAnalyzed   restrict results to analysis of these experiments
+     * @param includeSubSets        if true, include the subsets of the experiments analyzed
+     * @param threshold             threshold
+     * @param limit                 limit
+     * @return map to diff ex VOs
      */
     Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed(
-            Gene gene, boolean keepNonSpecificProbes, Collection<Long> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
+            Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<Long> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
 
     /**
-     * @return map of resultSetId to map of gene to DiffExprGeneSearchResult
+     * Retrieve differential expression results in bulk. This is an important method for the differential expression
+     * interfaces.
+     *
+     * @param geneIds    gene IDs
+     * @param resultSets result sets
+     * @return map of resultset IDs to map of gene id to differential expression results.
      */
-    Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
     List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet, double threshold,
             int maxResultsToReturn, int minNumberOfResults );
 
-    Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
+    /**
+     * Find contrast results by analysis result IDs.
+     *
+     * @param ids analysis result IDs
+     * @return map of result to contrasts value object.
+     */
+    Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids );
 }

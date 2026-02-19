@@ -228,7 +228,6 @@ public class GeneralSearchController {
             mav.addObject( "searchTaxon", t.getScientificName() );
         }
 
-        // check for a quick-redirect
         Set<Scope> parsedScopes;
         if ( StringUtils.isNotBlank( scope ) ) {
             parsedScopes = getScopes( scope );
@@ -237,6 +236,7 @@ public class GeneralSearchController {
             parsedScopes = null;
         }
 
+        // check for a quick-redirect
         if ( ( query != null || termUri != null ) && ( parsedScopes == null || parsedScopes.size() == 1 ) && !noRedirect ) {
             try {
                 List<SearchResult<?>> exactResults = searchService.search( SearchSettings.builder()
@@ -260,18 +260,25 @@ public class GeneralSearchController {
                     try {
                         EntityUrlBuilder.EntityUrl<?> entityUrl = getResultObjectUrl( result );
                         if ( !entityUrl.isExternal() ) {
-                            // link is external, do not redirect
                             return new RedirectView( entityUrl.toUriString() );
+                        } else {
+                            // link is external, do not redirect
+                            log.debug( "Link is external, will not perform a quick redirect to " + entityUrl.toUriString() + "." );
                         }
                     } catch ( UnsupportedEntityUrlException e ) {
                         log.warn( "Cannot generate a URL for " + result.getResultType() + " with ID " + result.getResultId() + ", will not perform a quick redirect.", e );
                     }
+                } else if ( exactResults.size() > 1 ) {
+                    log.debug( "Got more than one exact result (" + exactResults.size() + ") for search query, will not perform a quick redirect." );
+                } else {
+                    log.debug( "Got no exact request for search query, will not perform a quick redirect." );
                 }
             } catch ( SearchException e ) {
                 log.warn( "Failed to perform search, will render the page anyway, but the client might submit the same query again via AJAX.", e );
             }
         }
 
+        // head over to GemBrow if searching only datasets
         if ( query != null && parsedScopes != null && parsedScopes.size() == 1
                 && parsedScopes.iterator().next().getResultType().equals( ExpressionExperiment.class ) && !noRedirect ) {
             // a type of result that GemBrow can handle
@@ -429,7 +436,10 @@ public class GeneralSearchController {
                 }
             }
             if ( !found ) {
-                throw new IllegalArgumentException( String.format( "Unsupported value for scope: %c.", s ) );
+                throw new IllegalArgumentException( String.format( String.format( "Unsupported value for scope: %%c. Possible values are: %s.",
+                        Arrays.stream( GeneralSearchController.SCOPES )
+                                .map( s1 -> s1.getScope() + " for " + messageSource.getMessage( s1.getResultType().getSimpleName(), null, s1.getResultType().getSimpleName(), Locale.getDefault() ) )
+                                .collect( Collectors.joining( ", " ) ) ), s ) );
             }
         }
         return scopes;

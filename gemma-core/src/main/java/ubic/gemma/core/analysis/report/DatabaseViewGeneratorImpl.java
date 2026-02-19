@@ -338,7 +338,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
         CompositeSequence cs = probeAnalysisResult.getProbe();
 
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs, true );
 
         if ( genes.isEmpty() || genes.size() > 1 ) {
             return null;

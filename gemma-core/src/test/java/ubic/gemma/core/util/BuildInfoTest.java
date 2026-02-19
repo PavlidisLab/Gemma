@@ -1,5 +1,6 @@
 package ubic.gemma.core.util;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -55,10 +56,9 @@ public class BuildInfoTest extends BaseTest {
     }
 
     @Test
-    public void testFromClasspath() {
-        assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
-                getClass().getResource( "/ubic/gemma/version.properties" ) != null );
-        BuildInfo buildInfo = BuildInfo.fromClasspath();
+    @Ignore("The manifest is not available during the test phase.")
+    public void testFromManifest() {
+        BuildInfo buildInfo = BuildInfo.fromManifest();
         assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
         assertNotNull( buildInfo.getGitHash() );

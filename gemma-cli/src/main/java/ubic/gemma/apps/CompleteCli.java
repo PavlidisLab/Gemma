@@ -8,12 +8,14 @@ import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
 import ubic.gemma.cli.util.EnumeratedByCommandConverter;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -44,6 +46,9 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private CharacteristicService characteristicService;
 
     /**
      * The type of completion to produce.
@@ -135,7 +140,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                     printCompletion( protocol.getName(), protocol.getName() );
                 }
                 break;
-            case EESET:
+            case DATASET_GROUP:
                 for ( ExpressionExperimentSet eeSet : expressionExperimentSetService.loadAll() ) {
                     printCompletion( String.valueOf( eeSet.getId() ), eeSet.getName() );
                     printCompletion( eeSet.getName(), eeSet.getName() );
@@ -144,6 +149,20 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
             case DATASET:
                 expressionExperimentService.loadAllIdentifiersAndName( false )
                         .forEach( this::printCompletion );
+                break;
+            case ONTOLOGY_TERM:
+                ArrayUtils.contains( completeArgs, "" );
+                characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 )
+                        .forEach( ( uri, label ) -> {
+                            printCompletion( uri, label );
+                            if ( OntologyUtils.isTermUri( uri ) ) {
+                                try {
+                                    printCompletion( OntologyUtils.uriToTermId( uri ), label );
+                                } catch ( IllegalArgumentException e ) {
+                                    log.warn( "Invalid ontology URI: " + uri + ". This should be fixed.", e );
+                                }
+                            }
+                        } );
                 break;
             default:
                 throw new UnsupportedOperationException( "Unsupported completion type " + completionType );

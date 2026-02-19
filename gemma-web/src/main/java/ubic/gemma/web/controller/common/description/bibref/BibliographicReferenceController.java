@@ -40,6 +40,7 @@ import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -90,17 +91,18 @@ public class BibliographicReferenceController implements InitializingBean {
     public ModelAndView showAllForExperiments( @RequestParam(value = "offset", defaultValue = "0") int offset, @RequestParam(value = "limit", defaultValue = "100") int limit ) {
         Assert.isTrue( offset >= 0, "Offset must be postiive." );
         Assert.isTrue( limit > 0 && limit <= 100, "Limit must be between 1 and 100." );
-        Map<BibliographicReference, Set<ExpressionExperiment>> eeToBibRefs = bibliographicReferenceService
-                .getAllExperimentLinkedReferences( offset, limit );
-        long count = bibliographicReferenceService.countExperimentLinkedReferences();
+        Map<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> eeToBibRefs = bibliographicReferenceService
+                .getRelatedExperiments( offset, limit );
+        long count = bibliographicReferenceService.countWithRelatedExperiments();
+        long distinctCount = bibliographicReferenceService.countWithRelatedExperiments();
 
         // map sorted in natural order of the keys
         SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<>();
-        for ( Entry<BibliographicReference, Set<ExpressionExperiment>> entry : eeToBibRefs.entrySet() ) {
+        for ( Entry<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> entry : eeToBibRefs.entrySet() ) {
             CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getKey() );
-            for ( ExpressionExperiment ee : entry.getValue() ) {
+            for ( ExpressionExperimentIdAndShortName ee : entry.getValue() ) {
                 citationToEEs.computeIfAbsent( cvo, k -> new ArrayList<>() )
-                        .add( new ExpressionExperimentValueObject( ee, true, true ) );
+                        .add( new ExpressionExperimentValueObject( ee ) );
             }
         }
 
@@ -114,7 +116,7 @@ public class BibliographicReferenceController implements InitializingBean {
                 .addObject( "previousPageOffset", previousPageOffset )
                 .addObject( "nextPageOffset", nextPageOffset )
                 .addObject( "lastPageOffset", lastPageOffset )
-                .addObject( "totalCitations", count )
+                .addObject( "totalCitations", distinctCount )
                 .addObject( "citationToEEs", citationToEEs );
     }
 

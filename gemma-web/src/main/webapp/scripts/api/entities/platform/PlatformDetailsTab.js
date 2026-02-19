@@ -1,3 +1,5 @@
+import DatabaseEntryTag from '../common/DatabaseEntryTag';
+
 Ext.namespace('Gemma', 'Gemma.PlatformDetails');
 /**
  * Need to set platformId as config.
@@ -226,41 +228,19 @@ Gemma.PlatformDetails = Ext
                     });
             },
 
-            renderExternalAccesions: function (platformDetails) {
-
-                var text = "";
-
-                var er = platformDetails.externalReferences;
-                if (er == null || er.length == 0) {
-                    text = "None";
-                } else {
-
-                    for (var i = 0; i < er.length; i++) {
-
-                        var dbr = er[i];
-                        var ac = dbr.accession;
-
-                        var db = dbr.externalDatabase.name;
-
-                        if (db == "GEO") {
-                            text = text + ac + "&nbsp;<a "
-                                + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ac
-                                + "'><img  ext:qtip='NCBI page for this entry' src='" + Gemma.CONTEXT_PATH
-                                + "/images/logo/geoTiny.png' /></a>";
-                        } else if (db == "ArrayExpress") {
-                            text = text
-                                + ac
-                                + "&nbsp;<a title='ArrayExpress page for this entry'"
-                                + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                                + ac + "'><img  ext:qtip='NCBI page for this entry' src='" + Gemma.CONTEXT_PATH
-                                + "/images/logo/arrayExpressTiny.png' /></a>";
-
-                        } else {
-                            text = text + "&nbsp;" + ac + " (" + databaseEntry.getExternalDatabase().getName() + ")";
-                        }
-
-                    }
-                }
+           renderExternalAccessions : function( platformDetails ) {
+               let text = "";
+               let er = platformDetails.externalReferences;
+               if ( er == null || er.length === 0 ) {
+                  text = "None";
+               } else {
+                  for ( let i = 0; i < er.length; i++ ) {
+                     if ( i > 0 ) {
+                        text += "&nbsp;";
+                     }
+                     text += new DatabaseEntryTag( er[i] ).render();
+                  }
+               }
 
                 return new Ext.Panel({
                     border: false,
@@ -525,7 +505,7 @@ Gemma.PlatformDetails = Ext
                                                             {
                                                                 fieldLabel: 'Sources'
                                                                 + '&nbsp<i id="sourcesHelp" class="qtp fa fa-question-circle fa-fw"></i>',
-                                                                items: this.renderExternalAccesions(platformDetails)
+                                                               items : this.renderExternalAccessions( platformDetails )
                                                             },
                                                             {
                                                                 fieldLabel: 'Relationships'

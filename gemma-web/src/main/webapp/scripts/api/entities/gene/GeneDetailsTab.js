@@ -1,3 +1,5 @@
+import ncbiLogo from '../../../../images/logo/ncbi-symbol.svg'
+
 Ext.namespace('Gemma');
 
 /**
@@ -344,7 +346,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                         + '&nbsp;&nbsp;<a target="_blank" '
                         + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
                         + geneDetails.ncbiId
-                        + '"><img ext:qtip="View NCBI record in a new window" alt="NCBI Gene Link" src="' + Gemma.CONTEXT_PATH + '/images/logo/ncbi.gif"/></a>'
+                           + '"><img ext:qtip="View NCBI record in a new window" alt="NCBI Gene Link" src="' + ncbiLogo + '" height="16"/></a>'
                         + '<br/></div>'
 
                     },

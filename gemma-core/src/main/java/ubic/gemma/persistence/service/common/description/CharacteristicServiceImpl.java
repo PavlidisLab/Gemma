@@ -126,6 +126,12 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
+        return this.characteristicDao.findValueGroupedByValueUri( parentClasses, includeNoParents, includePredicates, includeObjects, maxResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents ) {
         Map<Characteristic, Identifiable> charToParent = characteristicDao.getParents( characteristics, parentClasses, includeNoParents );
         if ( thawParents ) {

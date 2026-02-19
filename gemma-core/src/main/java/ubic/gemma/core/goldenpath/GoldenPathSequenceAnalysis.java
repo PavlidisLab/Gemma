@@ -345,7 +345,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * @param identifier A Genbank accession referring to an EST or mRNA. For other types of queries this will not
+     * @param identifier A GenBank accession referring to an EST or mRNA. For other types of queries this will not
      *        return any results.
      * @return Set containing Lists of PhysicalLocation representing places GoldenPath says the sequence referred to by
      *         the identifier aligns. If no results are found the Set will be empty.
@@ -421,7 +421,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     pl.setStrand( rs.getString( 5 ) );
                     pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                    Chromosome c = new Chromosome( SequenceManipulation.deBlatFormatChromosomeName( chromosome ),
+                    Chromosome c = Chromosome.Factory.newInstance( SequenceManipulation.deBlatFormatChromosomeName( chromosome ),
                             GoldenPathSequenceAnalysis.this.getTaxon() );
                     pl.setChromosome( c );
 
@@ -713,7 +713,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     if ( name.startsWith( "ENST" ) ) {
                         accession.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
                     } else {
-                        accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
+                        accession.setExternalDatabase( NcbiGeneConverter.getGenBank() );
                     }
 
                     product.getAccessions().add( accession );
@@ -734,7 +734,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                     genePl.setStrand( pl.getStrand() );
 
-                    Chromosome c = new Chromosome( SequenceManipulation.deBlatFormatChromosomeName( chromosome ),
+                    Chromosome c = Chromosome.Factory.newInstance( SequenceManipulation.deBlatFormatChromosomeName( chromosome ),
                             taxon );
                     pl.setChromosome( c );
                     genePl.setChromosome( c );
@@ -794,7 +794,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                     BlatResult blatResult = BlatResult.Factory.newInstance();
 
-                    Chromosome c = new Chromosome( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ),
+                    Chromosome c = Chromosome.Factory.newInstance( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ),
                             GoldenPathSequenceAnalysis.this.getTaxon() );
 
                     blatResult.setTargetChromosome( c );

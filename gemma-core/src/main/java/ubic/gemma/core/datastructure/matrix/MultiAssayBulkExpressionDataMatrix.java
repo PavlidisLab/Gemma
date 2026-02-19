@@ -21,8 +21,8 @@ import java.util.Optional;
  * This is usually achieved by stacking data matrices from multiple {@link QuantitationType}. Thus, this interface
  * allows you to keep track of {@link QuantitationType} and {@link BioAssayDimension} at row-level. Data held in the
  * matrix is always reordered to match the sample ordering from {@link #getBioMaterials()}.
- *
- * @param <T>
+ * @author paul
+ * @author poirigui
  */
 public interface MultiAssayBulkExpressionDataMatrix<T> extends BulkExpressionDataMatrix<T> {
 

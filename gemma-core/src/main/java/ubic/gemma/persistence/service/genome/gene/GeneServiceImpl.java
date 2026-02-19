@@ -52,7 +52,6 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociat
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
@@ -63,7 +62,6 @@ import java.util.concurrent.Future;
  * @see GeneService
  */
 @Service
-@ParametersAreNonnullByDefault
 public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, GeneValueObject> implements GeneService {
 
     private final GeneDao geneDao;

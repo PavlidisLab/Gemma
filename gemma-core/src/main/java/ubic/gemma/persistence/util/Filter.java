@@ -144,6 +144,7 @@ public class Filter implements PropertyMapping {
 
     /**
      * Create a new filter without an original property.
+     *
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue ) {
@@ -152,6 +153,7 @@ public class Filter implements PropertyMapping {
 
     /**
      * Create a new filter without an original property and a collection right hand side.
+     *
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues ) {
@@ -271,11 +273,12 @@ public class Filter implements PropertyMapping {
     /**
      * Create a copy of this filter with a new property name and original property.
      * <p>
-     * If the filter's right hand side is a {@link Subquery}, the operation is propagated to the subquery via {@link }
+     * If the filter's right hand side is a {@link Subquery}, the operation is propagated to the subquery.
      * <p>
      * This can be used to apply this filter to a different property. For example, if you have a filter on a
      * {@link ubic.gemma.model.expression.experiment.Statement} over {@code object}, you could create a filter over a
      * {@code secondObject}.
+     *
      * @throws IllegalArgumentException if the type of the resulting property is not compatible with the required value
      * @see Subquery#withFilterPropertyName(String, String)
      */

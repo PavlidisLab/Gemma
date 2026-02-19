@@ -28,6 +28,7 @@ else:
     password = getpass('Supply your password: ')
 
 with requests.Session() as session:
+    print(f'Generating DWR resources from {gemma_host_url}...')
     session.auth = (username, password)
     res = session.get(gemma_host_url + '/dwr/index.html')
     res.raise_for_status()

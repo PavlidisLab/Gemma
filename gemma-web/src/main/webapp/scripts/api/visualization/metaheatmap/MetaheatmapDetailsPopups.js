@@ -1,3 +1,5 @@
+import ncbiLogo from '../../../../images/logo/ncbi-symbol.svg';
+
 Ext.namespace( 'Gemma' );
 
 Gemma.MetaVisualizationPopups = {};
@@ -18,9 +20,9 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function( geneName, geneId ) 
             title : "Details for gene: " + geneName,
             html : '<br><h4><a target="_blank" href="' + Gemma.CONTEXT_PATH + '/gene/showGene.html?id=' + gene.id + '">'
                + gene.officialSymbol + '</a> ' + gene.officialName + '</h4>' + '<b>Taxon:</b> ' + gene.taxonCommonName
-               + '<br>' + '<b>Aliases:</b> ' + gene.aliases + ' <a target="_blank" title="NCBI Gene link"'
-               + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
-               + gene.ncbiId + '">' + '<img alt="NCBI Gene Link" src="' + Gemma.CONTEXT_PATH + '/images/logo/ncbi.gif"/> </a>' + '<br>'
+               + '<br>' + '<b>Aliases:</b> ' + gene.aliases + ' <a target="_blank" rel="noopener noreferrer" title="NCBI Gene link"'
+               + ' href="https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
+               + gene.ncbiId + '">' + '<img alt="NCBI Gene Link" src="' + ncbiLogo + '" height="16"/> </a>' + '<br>'
                + '<b>Description:</b> ' + gene.description + '<br>'
                + '<br><a target="_blank" href="' + Gemma.CONTEXT_PATH + '/gene/showGene.html?id=' + gene.id + '">More about this gene</a>'
          } );

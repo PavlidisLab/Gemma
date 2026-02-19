@@ -196,7 +196,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value ) {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, propertyType, operator, value );
     }

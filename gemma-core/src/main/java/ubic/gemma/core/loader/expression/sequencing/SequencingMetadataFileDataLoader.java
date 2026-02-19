@@ -19,6 +19,7 @@ import java.util.function.Function;
 
 /**
  * Load sequencing metadata from a TSV file.
+ *
  * @author poirigui
  * @see SequencingMetadata
  */

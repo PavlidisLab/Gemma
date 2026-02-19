@@ -2,11 +2,13 @@
 
 insert into AUDIT_TRAIL (ID)
 values (1),
-       (2);
+       (2),
+       (3);
 
 insert into USER_GROUP (ID, AUDIT_TRAIL_FK, NAME, DESCRIPTION)
 values (1, 1, 'Administrators', NULL),
-       (2, 2, 'Users', NULL);
+       (2, 2, 'Users', NULL),
+       (3, 3, 'Agent', NULL);
 
 insert into CONTACT (ID, class, NAME, DESCRIPTION, EMAIL, LAST_NAME, USER_NAME, PASSWORD, PASSWORD_HINT, ENABLED,
                      SIGNUP_TOKEN, SIGNUP_TOKEN_DATESTAMP)

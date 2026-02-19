@@ -24,6 +24,7 @@ import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -56,8 +57,12 @@ public class DatabaseEntry extends AbstractIdentifiable {
 
     private String accession;
     private String accessionVersion;
-    @Deprecated
-    private String Uri;
+    /**
+     * If present, overrides the default URI construction for this database entry which is usually based on
+     * {@link ExternalDatabase#getWebUri()}.
+     */
+    @Nullable
+    private String uri;
     private ExternalDatabase externalDatabase;
 
     @Field(analyze = Analyze.NO)
@@ -91,14 +96,13 @@ public class DatabaseEntry extends AbstractIdentifiable {
         return super.getId();
     }
 
-    @Deprecated
+    @Nullable
     public String getUri() {
-        return this.Uri;
+        return this.uri;
     }
 
-    @Deprecated
-    public void setUri( String Uri ) {
-        this.Uri = Uri;
+    public void setUri( @Nullable String uri ) {
+        this.uri = uri;
     }
 
     @Override

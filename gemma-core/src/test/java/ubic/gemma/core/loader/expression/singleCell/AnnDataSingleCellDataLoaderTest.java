@@ -1,16 +1,20 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.config.Settings;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.config.SettingsConfig;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationPipeline;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataUnraw;
+import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -27,7 +31,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,9 +38,17 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class AnnDataSingleCellDataLoaderTest {
+@ContextConfiguration
+public class AnnDataSingleCellDataLoaderTest extends BaseTest {
 
-    private static final Path pythonExecutable = Paths.get( Settings.getString( "python.exe" ) );
+    @Configuration
+    @TestComponent
+    @Import({ SettingsConfig.class, SingleCellTransformationConfig.class })
+    static class CC {
+    }
+
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     @Test
     public void testGSE225158() throws IOException {
@@ -448,13 +459,12 @@ public class AnnDataSingleCellDataLoaderTest {
      */
     @Test
     public void testGSE216457() throws IOException {
-        SingleCellDataTransformationPipeline transformation = new SingleCellDataTransformationPipeline( Arrays.asList(
-                new SingleCellDataUnraw(),
-                new SingleCellDataTranspose()
+        SingleCellDataTransformationPipeline transformation = singleCellDataTransformationFactory.createPipeline( Arrays.asList(
+                SingleCellDataUnraw.class,
+                SingleCellDataTranspose.class
         ) );
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE216457.h5ad" ).getFile().toPath();
         Path dataPath2 = Files.createTempFile( null, null );
-        transformation.setPythonExecutable( pythonExecutable );
         transformation.setInputFile( dataPath, SingleCellDataType.ANNDATA );
         transformation.setOutputFile( dataPath2, SingleCellDataType.ANNDATA );
         transformation.perform();
@@ -553,9 +563,7 @@ public class AnnDataSingleCellDataLoaderTest {
                 BioAssay.Factory.newInstance( "2", null, BioMaterial.Factory.newInstance( "2" ) ),
                 BioAssay.Factory.newInstance( "3", null, BioMaterial.Factory.newInstance( "3" ) )
         );
-        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper() );
-        configurer.setPythonExecutable( pythonExecutable );
-        configurer.setScratchDir( Files.createTempDirectory( "gemma-scratch-" ) );
+        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper(), singleCellDataTransformationFactory );
         try ( AnnDataSingleCellDataLoader loader = configurer.configureLoader( SingleCellDataLoaderConfig.builder().build() ) ) {
             assertThat( loader.getGenes() )
                     .hasSize( 21978 )

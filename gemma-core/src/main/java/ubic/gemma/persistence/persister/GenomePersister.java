@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -704,7 +703,7 @@ public abstract class GenomePersister extends CommonPersister {
             boolean deleteIt = true;
             for ( GeneProduct ngp : usedGIs.values() ) {
                 if ( !existingGp.getName().equals( ngp.getName() ) ) {
-                    // this is the only way we can tell it is the same. Since Genbank Accessions are good
+                    // this is the only way we can tell it is the same. Since GenBank accessions are good
                     // identifiers when you don't have a GI, this is reasonable.
                     continue;
                 }
@@ -852,18 +851,13 @@ public abstract class GenomePersister extends CommonPersister {
         if ( chromosomes == null || chromosomes.isEmpty() ) {
 
             // no point in doing this if it already exists.
-            try {
-                FieldUtils.writeField( chromosome, "taxon", this.doPersist( ct, caches ), true );
-                if ( chromosome.getSequence() != null ) {
-                    // cascade should do?
-                    FieldUtils.writeField( chromosome, "sequence", this.doPersist( chromosome.getSequence(), caches ), true );
-                }
-                if ( chromosome.getAssemblyDatabase() != null ) {
-                    FieldUtils.writeField( chromosome, "assemblyDatabase",
-                            this.doPersist( chromosome.getAssemblyDatabase(), caches ), true );
-                }
-            } catch ( IllegalAccessException e ) {
-                throw new IllegalArgumentException( e );
+            chromosome.setTaxon( this.doPersist( ct, caches ) );
+            if ( chromosome.getSequence() != null ) {
+                // cascade should do?
+                chromosome.setSequence( this.doPersist( chromosome.getSequence(), caches ) );
+            }
+            if ( chromosome.getAssemblyDatabase() != null ) {
+                chromosome.setAssemblyDatabase( this.doPersist( chromosome.getAssemblyDatabase(), caches ) );
             }
             chromosome = chromosomeDao.create( chromosome );
         } else if ( chromosomes.size() == 1 ) {

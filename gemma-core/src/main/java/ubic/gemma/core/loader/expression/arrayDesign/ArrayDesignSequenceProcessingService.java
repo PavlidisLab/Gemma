@@ -84,7 +84,7 @@ public interface ArrayDesignSequenceProcessingService {
      * <ol>
      * <li>The format line contains an explicit reference to the name of the CompositeSequence (probe id).</li>
      * <li>The BioSequence for the CompositeSequences are already filled in, and there is a matching external database
-     * identifier (e.g., Genbank accession). This will only work if Genbank accessions do not re-occur in the FASTA
+     * identifier (e.g., GenBank accession). This will only work if GenBank accessions do not re-occur in the FASTA
      * file.</li>
      * </ol>
      *
@@ -119,7 +119,7 @@ public interface ArrayDesignSequenceProcessingService {
      * used for the probe; we add something like "___[string]" to the end of probe name in this case. For example, a
      * sequence with name M100000439 will match probes named M100000439 as well as M100000439___Dup1.
      * <li>The BioSequence for the CompositeSequences are already filled in, and there is a matching external database
-     * identifier (e.g., Genbank accession). This will only work if Genbank accessions do not re-occur in the FASTA
+     * identifier (e.g., GenBank accession). This will only work if GenBank accessions do not re-occur in the FASTA
      * file.</li>
      * </ol>
      *
@@ -172,12 +172,12 @@ public interface ArrayDesignSequenceProcessingService {
             String[] databaseNames, Taxon taxon, boolean force, FastaCmd fc ) throws IOException;
 
     /**
-     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
+     * For the case where the sequences are retrieved simply by the GenBank accession. For this to work, the array
      * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
      * they have, the values will be replaced if force=true)
-     * Sequences that appear to be IMAGE clones are given another check and the Genbank accession used to retrieve the
+     * Sequences that appear to be IMAGE clones are given another check and the GenBank accession used to retrieve the
      * sequence is based on that, not the one provided in the Biosequence; if it differs it will be replaced. This
-     * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
+     * happens when the GenBank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
      *
      * @param arrayDesign   platform
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)

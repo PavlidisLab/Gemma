@@ -126,7 +126,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
@@ -180,7 +180,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( geoAccession.startsWith( "GPL" ) || loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );
@@ -515,7 +515,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {
@@ -588,7 +590,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {

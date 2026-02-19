@@ -97,7 +97,7 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         try {
             progressReporter.close();
         } catch ( IOException e ) {

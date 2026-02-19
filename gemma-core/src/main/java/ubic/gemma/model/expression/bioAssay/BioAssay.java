@@ -21,11 +21,11 @@ package ubic.gemma.model.expression.bioAssay;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
@@ -37,7 +37,7 @@ import java.util.Date;
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
 @Indexed
-public class BioAssay extends AbstractDescribable implements SecuredChild {
+public class BioAssay extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static final int MAX_NAME_LENGTH = 255;
 
@@ -154,6 +154,9 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     @Nullable
     private Integer numberOfCellsByDesignElements;
 
+    @Nullable
+    private ExpressionExperiment securityOwner;
+
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -244,10 +247,16 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
         this.sampleUsed = sampleUsed;
     }
 
+    @Nullable
     @Transient
     @Override
-    public Securable getSecurityOwner() {
-        return null;
+    public ExpressionExperiment getSecurityOwner() {
+        return this.securityOwner;
+    }
+
+    @SuppressWarnings("unused")
+    public void setSecurityOwner( @Nullable ExpressionExperiment securable ) {
+        this.securityOwner = securable;
     }
 
     @Nullable

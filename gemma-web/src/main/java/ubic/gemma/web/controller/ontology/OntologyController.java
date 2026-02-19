@@ -186,7 +186,7 @@ public class OntologyController {
             }
             return null;
         }
-        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValueId );
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValueId( factorValueId );
         return new ModelAndView( "tgfvo.factorValue" )
                 .addObject( "factorValueId", factorValueId )
                 .addObject( "oi", oi )
@@ -217,7 +217,7 @@ public class OntologyController {
             return null;
         }
         OntologyIndividual factorValueOi = factorValueOntologyService.getIndividual( TGFVO_URI_PREFIX + factorValueId );
-        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValueId );
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValueId( factorValueId );
         return new ModelAndView( "tgfvo.factorValueAnnotation" )
                 .addObject( "oi", oi )
                 .addObject( "ee", ee )

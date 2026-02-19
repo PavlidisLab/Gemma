@@ -140,7 +140,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( arrayDesign );
+        Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
 
         Taxon taxon = arrayDesign.getPrimaryTaxon();
         if ( taxa.size() > 1 && taxon == null ) {

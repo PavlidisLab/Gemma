@@ -106,7 +106,7 @@ public class User extends Person implements gemma.gsec.model.User {
     /**
      * The username is immutable. See the {@code update="false"} field in the Hibernate mapping.
      */
-    private void setUserName( String userName ) {
+    public void setUserName( String userName ) {
         this.userName = userName;
     }
 

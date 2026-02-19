@@ -1,10 +1,12 @@
 package ubic.gemma.core.search;
 
+import gemma.gsec.acl.domain.AclService;
 import org.hibernate.SessionFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.acls.model.SidRetrievalStrategy;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.core.search.source.HibernateSearchSource;
@@ -134,5 +136,15 @@ class SearchServiceTestContextConfiguration {
     @Bean
     public SessionFactory sessionFactory() {
         return mock( SessionFactory.class );
+    }
+
+    @Bean
+    public AclService aclService() {
+        return mock();
+    }
+
+    @Bean
+    public SidRetrievalStrategy sidRetrievalStrategy() {
+        return mock();
     }
 }

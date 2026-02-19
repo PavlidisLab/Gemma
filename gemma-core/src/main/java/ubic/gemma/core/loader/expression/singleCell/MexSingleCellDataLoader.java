@@ -66,6 +66,11 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
+     * Explicitly ignore data vectors.
+     */
+    private boolean ignoreDataVectors = false;
+
+    /**
      * Allow mapping probe to gene symbols.
      * <p>
      * This is used as fallback if the gene ID cannot be found in the supplied platform. If this is set to true, the
@@ -267,6 +272,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
+        if ( ignoreDataVectors ) {
+            throw new UnsupportedOperationException( "Data vectors are ignored." );
+        }
         Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
 
         // location of a given element in individual matrices

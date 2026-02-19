@@ -106,16 +106,15 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
      *
-     * @param dimToMatch   ensure that the vector missing values to match the locations of any bioassays in dimToMatch
-     *                     that aren't in the dedv's bioAssayDimension.
      * @param dedv         dedv
      * @param eevo         a VO for the experiment
      * @param qtvo         a VO for the quantitation type
      * @param vectorsBadVo BA dimension vo
      * @param genes        a collection of gene IDs that correspond to the design element of this vector, or null to
      *                     ignore
-     * @param dimToMatch   a dimension that the data should be aligned with, this will result in "gaps" where the
-     *                     provided vector is lacking assays
+     * @param dimToMatch   ensure that the vector missing values to match the locations of any bioassays in dimToMatch
+     *                     that aren't in the dedv's bioAssayDimension. This will result in "gaps" where the provided
+     *                     vector is lacking assays.
      */
     public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo,
             QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject vectorsBadVo,
@@ -139,6 +138,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.rank = dvvo.rank;
         this.rankByMax = dvvo.rankByMax;
         this.rankByMean = dvvo.rankByMean;
+        this.numberOfCells = dvvo.numberOfCells;
     }
 
     @Override
@@ -189,7 +189,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubsetValueObject subset,
             BioAssayDimensionValueObject slicedBad, int[] bioAssayIndex ) {
-        Assert.isTrue( getExpressionExperiment() == null || getExpressionExperiment().getId().equals( subset.getSourceExperimentId() ),
+        Assert.isTrue( getExpressionExperiment() == null || Objects.equals( getExpressionExperiment().getId(), subset.getSourceExperimentId() ),
                 "The subset must belong to " + getExpressionExperiment() + "." );
         Assert.isTrue( bioAssayIndex.length == slicedBad.getBioAssays().size(),
                 "The bioassay index length must match the number of bioassays in the sliced dimension." );

@@ -159,7 +159,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         if ( this.taxonName != null ) {
             taxon = entityLocator.locateTaxon( this.taxonName );
         } else {
-            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+            taxon = arrayDesign.getPrimaryTaxon();
             // could still be null
         }
 
@@ -222,6 +222,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     /**
+     *
      */
     private String[] chooseBLASTdbs( @Nullable Taxon taxon ) {
         String[] databases;

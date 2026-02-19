@@ -42,7 +42,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
+import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
@@ -52,6 +55,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -255,7 +259,11 @@ public class AnalysisResultSetsWebService {
         }
         final Map<Long, Set<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
         Baseline baseline = expressionAnalysisResultSetService.getBaseline( ears );
-        return outputStream -> expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, new OutputStreamWriter( outputStream, StandardCharsets.UTF_8 ) );
+        return outputStream -> {
+            try ( Writer writer = new OutputStreamWriter( outputStream, StandardCharsets.UTF_8 ) ) {
+                expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
+            }
+        };
     }
 
     private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {

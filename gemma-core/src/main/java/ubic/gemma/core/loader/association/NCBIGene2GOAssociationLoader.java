@@ -103,7 +103,8 @@ public class NCBIGene2GOAssociationLoader {
             try {
                 Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
-                e.printStackTrace();
+                log.warn( "Thread was interrupted while waiting for the producer/consumer.", e );
+                // TODO: exit this loop
             }
         }
     }

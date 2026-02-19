@@ -148,7 +148,9 @@ Gemma.AnnotationDataView = Ext
                         return acc
                     },{});
                     this.groupIndices = {}
-                    this.refresh()
+                    if (this.el) {
+                        this.refresh();
+                    }
                 });
             },
 

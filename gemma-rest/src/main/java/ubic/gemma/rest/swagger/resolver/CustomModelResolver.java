@@ -105,7 +105,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, DatasetArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as

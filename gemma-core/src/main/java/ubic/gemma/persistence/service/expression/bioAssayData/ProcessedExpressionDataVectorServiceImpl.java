@@ -331,7 +331,7 @@ public class ProcessedExpressionDataVectorServiceImpl
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
         List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService
-                .findInResultSet( ar, threshold, maxNumberOfResults,
+                .findByResultSet( ar, threshold, maxNumberOfResults,
                         ProcessedExpressionDataVectorServiceImpl.DIFFEX_MIN_NUMBER_OF_RESULTS );
 
         Collection<Long> probes = new HashSet<>();

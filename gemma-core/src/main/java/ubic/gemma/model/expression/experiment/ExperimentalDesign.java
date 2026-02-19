@@ -20,21 +20,24 @@ package ubic.gemma.model.expression.experiment;
 
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Set;
 
 @Indexed
-public class ExperimentalDesign extends AbstractDescribable implements SecuredChild {
+public class ExperimentalDesign extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     private String replicateDescription;
     private String qualityControlDescription;
     private String normalizationDescription;
     private Set<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
     private Set<Characteristic> types = new java.util.HashSet<>();
+
+    @Nullable
+    private ExpressionExperiment securityOwner;
 
     @Override
     @DocumentId
@@ -90,10 +93,15 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
         this.replicateDescription = replicateDescription;
     }
 
+    @Nullable
     @Transient
     @Override
-    public Securable getSecurityOwner() {
-        return null;
+    public ExpressionExperiment getSecurityOwner() {
+        return securityOwner;
+    }
+
+    public void setSecurityOwner( @Nullable ExpressionExperiment securityOwner ) {
+        this.securityOwner = securityOwner;
     }
 
     public Set<Characteristic> getTypes() {

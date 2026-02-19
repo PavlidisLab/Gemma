@@ -24,14 +24,15 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import java.util.*;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
@@ -69,41 +70,73 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
-    public long countExperimentLinkedReferences() {
+    public long countDistinctWithRelatedExperiments() {
         Query q = this.getSessionFactory().getCurrentSession()
-                // FIXME: include the authorList in the distinct count
-                .createQuery( "select count(distinct b.title) from ExpressionExperiment e join e.primaryPublication b "
-                        + AclQueryUtils.formAclRestrictionClause( "e.id" )
-                        + " and b.authorList is not null and b.authorList <> '' and b.title is not null and b.title <> '' " );
+                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " b)" + " "
+                        + "from ExpressionExperiment e join e.primaryPublication b "
+                        + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         return ( Long ) q.uniqueResult();
     }
 
     @Override
-    public Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit ) {
+    public long countWithRelatedExperiments() {
+        Query q = this.getSessionFactory().getCurrentSession()
+                // the slight difference here is that we count the number of distinct experiment, which is equivalent to
+                // the number of ref-experiment pairs due to the one-to-many relation
+                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " e)" + " "
+                        + "from ExpressionExperiment e join e.primaryPublication b"
+                        + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
+        AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
+        return ( Long ) q.uniqueResult();
+    }
+
+    @Override
+    public LinkedHashMap<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit ) {
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b, e.id, e.shortName from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
-                        + " and b.authorList is not null and b.authorList <> '' and b.title is not null and b.title <> '' "
-                        + "group by b.authorList, b.title, e "
-                        + "order by b.authorList, b.title" );
+                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
+                        + "order by b.authorList nulls last, b.title nulls last"
+                );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> os = q
                 .setFirstResult( offset )
                 .setMaxResults( limit )
-                .setCacheable( true )
                 .list();
-        Map<BibliographicReference, Set<ExpressionExperiment>> result = new HashMap<>();
+        LinkedHashMap<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> result = new LinkedHashMap<>();
         for ( Object[] o : os ) {
-            ExpressionExperiment ee = new ExpressionExperiment();
-            ee.setId( ( Long ) o[1] );
-            ee.setShortName( ( String ) o[2] );
-            result.computeIfAbsent( ( BibliographicReference ) o[0], k -> new HashSet<>() )
-                    .add( ee );
+            BibliographicReference b = ( BibliographicReference ) o[0];
+            ExpressionExperimentIdAndShortName ee = new ExpressionExperimentIdAndShortName( ( Long ) o[1], ( String ) o[2] );
+            result.computeIfAbsent( b, k -> new HashSet<>() ).add( ee );
         }
         return result;
     }
+
+    @Override
+    public LinkedHashMap<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records ) {
+        if ( records.isEmpty() ) {
+            return new LinkedHashMap<>();
+        }
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select b, e from ExpressionExperiment e join e.primaryPublication b "
+                        + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
+                        + "and b in (:recs) "
+                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
+                        + "order by b.authorList nulls last, b.title nulls last" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        List<Object[]> os = QueryUtils.listByIdentifiableBatch( query, "recs", records, eeBatchSize );
+        LinkedHashMap<BibliographicReference, Collection<ExpressionExperiment>> result = new LinkedHashMap<>();
+        for ( Object[] o : os ) {
+            BibliographicReference b = ( BibliographicReference ) o[0];
+            ExpressionExperiment e = ( ExpressionExperiment ) o[1];
+            result.computeIfAbsent( b, k -> new HashSet<>() ).add( e );
+        }
+        return result;
+    }
+
 
     @Override
     public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
@@ -124,27 +157,6 @@ public class BibliographicReferenceDaoImpl
                         "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
                                 + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) " )
                 .setParameterList( "bs", optimizeIdentifiableParameterList( bibliographicReferences ) ).list();
-    }
-
-    @Override
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records ) {
-        final String query = "select distinct e, b from ExpressionExperiment "
-                + "e join e.primaryPublication b left join fetch b.pubAccession where b in (:recs)";
-
-        Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<>();
-
-        for ( Collection<BibliographicReference> batch : batchIdentifiableParameterList( records, eeBatchSize ) ) {
-            //noinspection unchecked
-            List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query )
-                    .setParameterList( "recs", batch ).list();
-            for ( Object[] o : os ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) o[0];
-                BibliographicReference b = ( BibliographicReference ) o[1];
-                result.computeIfAbsent( b, k -> new HashSet<>() ).add( e );
-            }
-        }
-        return result;
     }
 
     @Override

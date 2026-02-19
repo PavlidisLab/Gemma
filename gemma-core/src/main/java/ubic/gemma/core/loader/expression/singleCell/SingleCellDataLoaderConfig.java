@@ -6,11 +6,13 @@ import lombok.experimental.SuperBuilder;
 import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import javax.annotation.Nullable;
 import java.io.Console;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -89,6 +91,22 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private List<String> otherCellLevelCharacteristicsNames;
 
     /**
+     * Default values to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValues;
+
+    /**
+     * Default value URIs to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValueUris;
+
+    /**
      * If there are already other CLCs with the same names, replace them with the new ones.
      * <p>
      * Note that other CLCs with a {@code null} name cannot be replaced.
@@ -157,9 +175,23 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private boolean preferSinglePrecision;
 
     /**
-     * Skip single-cell data transformations, unless they are absolutely necessary.
+     * Skip single-cell data vectors if possible, or at least skip transformation that would normally be applied to them
+     * to make them usable.
+     * <p>
+     * When this option is set, {@link SingleCellDataLoader#loadVectors(Collection, SingleCellDimension, QuantitationType)}
+     * will throw an {@link UnsupportedOperationException}.
      */
-    private boolean skipTransformations;
+    private boolean ignoreDataVectors;
+
+    /**
+     * Discard (or keep) empty cells.
+     * <p>
+     * The default is to discard if empty cells are found. Setting this to false will disable the detection entirely.
+     *
+     * @see MexSingleCellDataLoader#setDiscardEmptyCells(boolean)
+     */
+    @Nullable
+    private Boolean discardEmptyCells;
 
     /**
      * Executor service to use to transform single-cell data.

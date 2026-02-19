@@ -87,8 +87,7 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
                 }
             }
             String cellTypeName = characteristic.getValue();
-            ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
-            subset.setName( abbreviateWithSuffix( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
+            ExpressionExperimentSubSet subset = ExpressionExperimentSubSet.Factory.newInstance( cellTypeName, ee );
             subset.setSourceExperiment( ee );
             subset.getCharacteristics().add( Characteristic.Factory.newInstance( characteristic ) );
             for ( BioAssay sample : ee.getBioAssays() ) {

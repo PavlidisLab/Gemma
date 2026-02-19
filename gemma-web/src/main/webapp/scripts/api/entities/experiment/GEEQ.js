@@ -115,7 +115,7 @@ Gemma.GEEQ.getBatchInfoBadges = function( ee ) {
    }
 
    if ( !ee.suitableForDEA ) {
-      result = result + Gemma.GEEQ.getStatusBadge( 'exclamation-triangle', 'orange', 'Unsuitable for diff. ex.',
+      result = result + Gemma.GEEQ.getStatusBadge( 'exclamation-triangle', 'orange', 'unsuitable for diff. ex.',
          Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusUnsuitableForDEA );
    }
 

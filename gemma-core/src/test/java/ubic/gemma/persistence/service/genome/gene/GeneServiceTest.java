@@ -22,15 +22,18 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.genome.gene.GeneAlias;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneAlias;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -41,7 +44,7 @@ import static org.junit.Assert.*;
 /**
  * @author jsantos
  */
-public class GeneServiceTest extends BaseSpringContextTest {
+public class GeneServiceTest extends BaseIntegrationTest {
 
     private static final String TEST_GENE_NAME = "test_genedao" + RandomStringUtils.insecure().next( 3 );
 
@@ -49,13 +52,22 @@ public class GeneServiceTest extends BaseSpringContextTest {
     private ExternalDatabaseService edbs;
 
     @Autowired
-    private GeneService geneDao = null;
+    private GeneService geneService;
+
+    @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
+    private Persister persisterHelper;
+
+    @Autowired
+    private PersistentDummyObjectHelper testHelper;
 
     @After
     public void tearDown() {
-        Collection<Gene> testGene = geneDao.findByOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
+        Collection<Gene> testGene = geneService.findByOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
         for ( Gene gene : testGene ) {
-            geneDao.remove( gene );
+            geneService.remove( gene );
         }
     }
 
@@ -70,12 +82,12 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
 
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Gene g = geneDao.findByAccession( id.toString(), null );
+        Gene g = geneService.findByAccession( id.toString(), null );
         assertNotNull( g );
         assertEquals( g, gene );
-        geneDao.remove( gene );
+        geneService.remove( gene );
     }
 
     @Test
@@ -95,12 +107,12 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
 
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Gene g = geneDao.findByAccession( "12345", ncbi );
+        Gene g = geneService.findByAccession( "12345", ncbi );
         assertNotNull( g );
         assertEquals( g, gene );
-        geneDao.remove( gene );
+        geneService.remove( gene );
     }
 
     @Test
@@ -119,12 +131,12 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
 
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Gene g = geneDao.findByAccession( "E129458", ensembl );
+        Gene g = geneService.findByAccession( "E129458", ensembl );
         assertNotNull( g );
         assertEquals( g, gene );
-        geneDao.remove( gene );
+        geneService.remove( gene );
     }
 
     @Test
@@ -139,11 +151,11 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
 
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Gene ga = geneDao.findByNCBIId( id );
+        Gene ga = geneService.findByNCBIId( id );
         assertEquals( gene, ga );
-        geneDao.remove( gene );
+        geneService.remove( gene );
     }
 
     @Test
@@ -159,15 +171,15 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
-        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, testHelper.getTestPersistentBioSequence(), human );
+        chromosome = persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
         pl1.setNucleotideLength( 1001 );
         pl1.setStrand( "-" );
         gene.setPhysicalLocation( pl1 );
 
-        gene = geneDao.create( gene );
+        gene = geneService.create( gene );
         Long idWeWant = gene.getId();
 
         Gene gene2 = Gene.Factory.newInstance();
@@ -179,8 +191,8 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
         gene2.setTaxon( human );
         PhysicalLocation pl2 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome2 = new Chromosome( "Y", null, this.getTestPersistentBioSequence(), human );
-        chromosome2 = ( Chromosome ) persisterHelper.persist( chromosome2 );
+        Chromosome chromosome2 = Chromosome.Factory.newInstance( "Y", null, testHelper.getTestPersistentBioSequence(), human );
+        chromosome2 = persisterHelper.persist( chromosome2 );
         pl2.setChromosome( chromosome2 );
         pl2.setChromosome( chromosome );
         pl2.setNucleotide( 10000010L );
@@ -188,15 +200,15 @@ public class GeneServiceTest extends BaseSpringContextTest {
         pl2.setStrand( "-" );
         gene2.setPhysicalLocation( pl2 );
 
-        gene2 = geneDao.create( gene2 );
+        gene2 = geneService.create( gene2 );
 
         gene.setId( null );
-        Gene g = geneDao.find( gene );
+        Gene g = geneService.find( gene );
         assertNotNull( g );
         assertEquals( idWeWant, g.getId() );
 
-        geneDao.remove( g );
-        geneDao.remove( gene2 );
+        geneService.remove( g );
+        geneService.remove( gene2 );
     }
 
     @Test
@@ -214,7 +226,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         aliases.add( alias );
 
         gene.setAliases( aliases );
-        Collection<Gene> genes = geneDao.findByAlias( "GRIN1" );
+        Collection<Gene> genes = geneService.findByAlias( "GRIN1" );
         assertNotNull( genes );
     }
 
@@ -231,14 +243,15 @@ public class GeneServiceTest extends BaseSpringContextTest {
         // gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );
         gene.setDescription( "miRNA" );
         Taxon human = taxonService.findByCommonName( "human" );
+        assertNotNull( human );
         gene.setTaxon( human );
 
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Collection<Gene> genes = geneDao.loadMicroRNAs( human );
+        Collection<Gene> genes = geneService.loadMicroRNAs( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
-        geneDao.remove( gene );
+        geneService.remove( gene );
 
     }
 
@@ -246,6 +259,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
     public void testLoadGenes() {
 
         Taxon human = taxonService.findByCommonName( "human" );
+        assertNotNull( human );
 
         Gene gene = Gene.Factory.newInstance();
         Integer id = Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 5 ) );
@@ -254,12 +268,12 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene.setName( "Ma_Gene" );
         gene.setDescription( "Lost in space" );
         gene.setTaxon( human );
-        geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Collection<Gene> genes = geneDao.loadAll( human );
+        Collection<Gene> genes = geneService.loadAll( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
-        geneDao.remove( gene );
+        geneService.remove( gene );
 
     }
 

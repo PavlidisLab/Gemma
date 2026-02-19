@@ -18,7 +18,6 @@
  */
 package ubic.gemma.apps;
 
-import lombok.Value;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +26,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.options.*;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -54,9 +55,9 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
@@ -229,139 +230,67 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         singleExperimentOptions.add( option.getOpt() );
     }
 
-    protected static final String OUTPUT_FILE_OPTION = "o",
-            OUTPUT_DIR_OPTION = "d",
-            STANDARD_LOCATION_OPTION = "standardLocation",
-            STANDARD_OUTPUT_OPTION = "stdout";
+    /**
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, BiConsumer)
+     */
+    protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
 
+    /**
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, boolean, boolean, boolean, boolean, BiConsumer)
+     */
+    protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, allowFile, allowDirectory, allowCurrentDirectory, allowStdout, this::addSingleExperimentOption );
+    }
+
+    /**
+     * @see DataFileOptionsUtils#addExpressionDataFileOptions(Options, String, boolean, BiConsumer)
+     */
     protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
-        addExpressionDataFileOptions( options, what, allowStandardLocation, true, true, false, true );
+        DataFileOptionsUtils.addExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
+
+    protected void addSingleCellExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addSingleCellExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
     /**
-     * Add options for writing expression data files, such as raw or processed data files.
-     *
-     * @param allowStandardLocation if true, the standard location option will be added
-     * @param allowFile             if true, the output file option will be added, otherwise only the output directory
-     *                              will be added
-     * @param allowDirectory        if true, the output directory option will be added
-     * @param allowCurrentDirectory if true, writing to the current directory will be allowed
-     * @param allowStdout           if true, the standard output option will be added
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
+     * @see DataFileOptionsUtils#addDesignFileOptions(Options, String, boolean, BiConsumer)
      */
-    protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
-        Assert.isTrue( !allowCurrentDirectory || allowDirectory, "Cannot allow current directory without allowing output directory." );
-        OptionGroup og = new OptionGroup();
-        if ( allowFile ) {
-            addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
-                    .longOpt( "output-file" ).hasArg().type( Path.class )
-                    .desc( "Write " + what + " to the given output file." ).build() );
-        }
-        if ( allowDirectory ) {
-            og.addOption( Option.builder( OUTPUT_DIR_OPTION )
-                    .longOpt( "output-dir" ).hasArg().type( Path.class )
-                    .desc( "Write " + what + " inside the given directory." + ( !allowStandardLocation && allowCurrentDirectory && !allowStdout ? " Defaults to the current directory of no other destination is selected." : "" ) )
-                    .build() );
-        }
-        if ( allowStandardLocation ) {
-            og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
-                    .longOpt( "standard-location" )
-                    .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
-                    .build() );
-        }
-        if ( allowStdout ) {
-            addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
-                    .longOpt( "stdout" )
-                    .desc( "Write " + what + " to standard output." + ( !allowStandardLocation && !allowCurrentDirectory ? " This is the default if no other destination is selected." : "" ) )
-                    .build() );
-        }
-        options.addOptionGroup( og );
-    }
-
-    @Value
-    protected class ExpressionDataFileResult {
-        /**
-         * Write the file to the standard location in the {@code ${gemma.appdata.home}/dataFiles} directory.
-         */
-        boolean standardLocation;
-        /**
-         * Write the file to standard output.
-         */
-        boolean standardOutput;
-        /**
-         * Write the file to the given output file.
-         */
-        @Nullable
-        Path outputFile;
-        /**
-         * Write the file to the given output directory.
-         */
-        @Nullable
-        Path outputDir;
-
-        /**
-         *
-         * @param filenameToUseIfDirectory if the output directory is set, this filename will be used to create the
-         *                                 output file. Use utilities in {@link ubic.gemma.core.analysis.service.ExpressionDataFileUtils}
-         *                                 to generate the filename.
-         */
-        public Path getOutputFile( String filenameToUseIfDirectory ) {
-            if ( getOutputFile() != null ) {
-                return checkIfExists( outputFile );
-            } else if ( getOutputDir() != null ) {
-                return checkIfExists( getOutputDir().resolve( filenameToUseIfDirectory ) );
-            } else {
-                throw new IllegalStateException( "This result does not have an output file or directory set." );
-            }
-        }
-
-        private Path checkIfExists( Path o ) {
-            if ( !isForce() && Files.exists( o ) ) {
-                throw new RuntimeException( o + " already exists, use -" + FORCE_OPTION + " to overwrite it." );
-            }
-            return o;
-        }
-    }
-
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
-        return getExpressionDataFileResult( commandLine, allowStandardLocation, true, true );
+    protected void addDesignFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addDesignFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
     /**
-     * Obtain the result of the expression data file options added by {@link #addExpressionDataFileOptions(Options, String, boolean)}.
-     *
-     * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
-     *                              other destination is selected. Otherwise, standard output will be used as a default.
-     * @param allowStdout           if true, the standard output option will be considered and used as a default if no
-     *                              other destination is selected. Otherwise, the current directory will be used as a
-     *                              default.
-     * @param allowCurrentDirectory if true, the current directory will be used as a default if no other destination is
-     *                              selected. Note that a file can be written to inside that directory via
-     *                              {@link ExpressionDataFileResult#getOutputFile(String)}
-     * @throws MissingOptionException if no destination is selected and no default location is allowed.
+     * @see DataFileOptionsUtils#addCellMetadataFileOptions(Options, String, boolean, BiConsumer)
      */
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine,
-            boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
-        if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
-            if ( allowStandardLocation ) {
-                log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
-                return new ExpressionDataFileResult( true, false, null, null );
-            } else if ( allowStdout ) {
-                log.debug( "No expression data file options provided, defaulting to -standardOutput/--standard-output." );
-                return new ExpressionDataFileResult( false, true, null, null );
-            } else if ( allowCurrentDirectory ) {
-                log.debug( "No expression data file options provided, defaulting to the current directory." );
-                return new ExpressionDataFileResult( false, true, null, Paths.get( "" ) );
-            } else {
-                throw new MissingOptionException( "No destination is selected and no default location is allowed." );
-            }
-        }
-        return new ExpressionDataFileResult(
-                commandLine.hasOption( STANDARD_LOCATION_OPTION ),
-                commandLine.hasOption( STANDARD_OUTPUT_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_FILE_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION ) );
+    protected void addCellMetadataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addCellMetadataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
+
+    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, allowStdout, allowCurrentDirectory, FORCE_OPTION, isForce() );
+    }
+
+    protected ExpressionDataFileOptionValue getExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected SingleCellExpressionDataFileOptionValue getSingleCellExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getSingleCellExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected DesignFileOptionValue getDesignFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getDesignFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected CellMetadataFileOptionValue getCellMetadataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getCellMetadataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
     }
 
     @Override
@@ -385,7 +314,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 .hasArg().type( Path.class ).argName( "file" )
                 .desc( "File containing IDs, short names or names of datasets (one per line)."
                         + warningForLazyAll )
-                .longOpt( "eeListfile" ).build() );
+                .longOpt( "eeListfile" ).get() );
 
         addDatasetGroupOption( options, "eeset", "experiment-set", "Name of dataset group to use."
                 + warningForLazyAll );
@@ -394,13 +323,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 .hasArg().argName( "expressionQuery" )
                 .desc( "Use a query string for defining which expression experiments to use."
                         + warningForLazyAll )
-                .longOpt( "expressionQuery" ).build() );
+                .longOpt( "expressionQuery" ).get() );
 
         addTaxonOption( options, "t", "taxon", "Taxon of the datasets and genes matched by the search query. This option requires " + formatOption( options, "q" ) + " to be set." );
 
         options.addOption( Option.builder( "x" ).hasArg().type( Path.class ).argName( "file" )
                 .desc( "File containing IDs, short names or names of datasets to exclude (one per line)." + warningForLazyAll )
-                .longOpt( "excludeEEFile" ).build() );
+                .longOpt( "excludeEEFile" ).get() );
 
         addBatchOption( options );
 
@@ -466,7 +395,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
-        Collection<ExpressionExperiment> expressionExperiments = new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) );
+        Collection<ExpressionExperiment> expressionExperiments = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         if ( all ) {
             if ( allIsLazy ) {
@@ -753,7 +682,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * A silent version of {@link #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)} that
-     * produces a warning via {@link #addWarningObject(ExpressionExperiment, String, Throwable)} instead of throwing an
+     * produces a warning via {@link #addWarningObject(Serializable, String, Throwable)} instead of throwing an
      * exception.
      *
      * @see #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)
@@ -762,7 +691,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
         } catch ( Exception e ) {
-            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web.", e );
+            addWarningObject( ee, "Failed to refresh dataset from Gemma Web.", e );
         }
     }
 
@@ -862,7 +791,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         if ( Hibernate.isInitialized( bas ) ) {
             return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         } else {
-            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
+            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         }
     }
 

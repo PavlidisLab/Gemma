@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,11 +200,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
 
             result.setSearchedDatabase( searchedDatabase );
-            try {
-                FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
+            result.getTargetChromosome().setTaxon( taxon );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
 
         }
@@ -234,7 +229,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     public Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon ) {
 
         if ( taxon == null ) {
-            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign );
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
             if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
@@ -372,11 +367,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             Taxon taxon = br.getQuerySequence().getTaxon();
             assert taxon != null;
 
-            try {
-                FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
+            br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
 
             PhysicalLocation pl = br.getTargetAlignedRegion();
@@ -411,7 +402,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         if ( sensitive )
             ArrayDesignSequenceAlignmentServiceImpl.log.info( "Running in 'sensitive' mode if possible" );
 
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad );
+        Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
         boolean first = true;
         for ( Taxon taxon : taxa ) {
 

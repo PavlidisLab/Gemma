@@ -103,7 +103,7 @@ public class GoldenPathQuery extends GoldenPath {
             }
         }
 
-        result.setTargetChromosome( new Chromosome( chrom, null, BioSequence.Factory.newInstance(), this.getTaxon() ) );
+        result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(), this.getTaxon() ) );
         result.getTargetChromosome().getSequence().setName( chrom );
         result.getTargetChromosome().getSequence().setLength( rs.getLong( "tSize" ) );
         result.getTargetChromosome().getSequence().setTaxon( this.getTaxon() );

@@ -12,17 +12,18 @@ import java.util.stream.Stream;
 
 /**
  * Interface for read-only services.
+ *
  * @author poirigui
  */
 public interface BaseReadOnlyService<O extends Identifiable> {
 
+    /**
+     * @see BaseDao#getElementClass()
+     */
     Class<? extends O> getElementClass();
 
     /**
-     * Does a search for the entity in the persistent storage
-     *
-     * @param entity the entity to be searched for
-     * @return the version of entity retrieved from the persistent storage, if found, otherwise null.
+     * @see BaseDao#find(Identifiable)
      */
     @Nullable
     @CheckReturnValue
@@ -30,6 +31,7 @@ public interface BaseReadOnlyService<O extends Identifiable> {
 
     /**
      * Does a search for the entity in the persistent storage, raising a {@link NullPointerException} if not found.
+     *
      * @param entity the entity to be searched for
      * @return the version of entity retrieved from persistent storage
      * @throws NullPointerException if the entity is not found
@@ -39,10 +41,7 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     O findOrFail( O entity ) throws NullPointerException;
 
     /**
-     * Loads objects with given ids.
-     *
-     * @param ids the ids of objects to be loaded.
-     * @return collection containing object with given IDs.
+     * @see BaseDao#load(Collection)
      */
     Collection<O> load( Collection<Long> ids );
 
@@ -55,54 +54,68 @@ public interface BaseReadOnlyService<O extends Identifiable> {
     <T extends Exception> Collection<O> loadOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T;
 
     /**
-     * Loads object with given ID.
-     *
-     * @param id the ID of entity to be loaded.
-     * @return the entity with matching ID, or null if the entity does not exist or if the passed ID was null
+     * @see BaseDao#load(Long)
      */
     @Nullable
     O load( Long id );
 
     /**
-     * Convenience for running {@link #load(Long)} and checking if the result is null.
+     * Load an entity of fail with a {@link NullPointerException} if it does not exist in the persistent storage.
+     *
      * @param id the ID used to retrieve the entity
      * @return the entity as per {@link #load(Long)}, never null
      * @throws NullPointerException if the entity does not exist in the persistent storage
+     * @see #load(Long)
      */
     @Nonnull
     O loadOrFail( Long id ) throws NullPointerException;
 
     /**
-     * Load an entity or fail with the supplied exception.
+     * Load an entity or fail with the supplied exception if it does not exist in the persistent storage.
+     *
      * @throws T if the entity does not exist in the persistent storage
+     * @see #load(Long)
      */
     @Nonnull
     <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T;
 
     /**
-     * Load an entity or fail with the supplied exception; the message is generated automatically.
+     * Load an entity or fail with the supplied exception if it does not exist in the persistent storage.
+     * <p>
+     * The message is generated automatically.
+     *
      * @throws T if the entity does not exist in the persistent storage
+     * @see #load(Long)
      */
     @Nonnull
     <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
     /**
      * Load an entity or fail with the supplied exception and message.
+     *
      * @throws T if the entity does not exist in the persistent storage
+     * @see #load(Long)
      */
     @Nonnull
     <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     /**
-     * Loads all the entities of specific type.
-     *
-     * @return collection of all entities currently available in the persistent storage.
+     * @see BaseDao#loadAll()
      */
     Collection<O> loadAll();
 
+    /**
+     * @see BaseDao#countAll()
+     */
     long countAll();
 
+    /**
+     * @see BaseDao#streamAll()
+     */
     Stream<O> streamAll();
 
+    /**
+     * @see BaseDao#streamAll(boolean)
+     */
     Stream<O> streamAll( boolean createNewSession );
 }

@@ -37,6 +37,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
 
     /**
      * {@inheritDoc}
+     *
      * @throws BadRequestException if more than one gene match the supplied gene argument
      */
     @Nonnull
@@ -54,6 +55,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
 
     /**
      * Obtain a gene from a specific taxon.
+     *
      * @throws BadRequestException if more than one gene match the supplied gene argumen in the given taxon
      */
     @Nonnull
@@ -119,7 +121,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
     /**
      * Returns all known locations of the gene that this GeneArg represents.
      *
-     * @param taxon       the taxon to limit the search to. Can be null.
+     * @param taxon the taxon to limit the search to. Can be null.
      * @return collection of physical location objects.
      */
     public List<PhysicalLocationValueObject> getGeneLocationInTaxon( GeneArg<?> arg, Taxon taxon ) {
@@ -144,13 +146,13 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
      * Obtain probes for the gene across all platforms.
      */
     public Slice<CompositeSequenceValueObject> getGeneProbes( GeneArg<?> geneArg, int offset, int limit ) {
-        return compositeSequenceService.loadValueObjectsForGene( getEntity( geneArg ), offset, limit );
+        return compositeSequenceService.loadValueObjectsForGene( getEntity( geneArg ), offset, limit, true );
     }
 
     /**
      * Obtain probes for the gene in the given taxon across all platforms.
      */
     public Slice<CompositeSequenceValueObject> getGeneProbesInTaxon( GeneArg<?> geneArg, Taxon taxon, int offset, int limit ) {
-        return compositeSequenceService.loadValueObjectsForGene( getEntityWithTaxon( geneArg, taxon ), offset, limit );
+        return compositeSequenceService.loadValueObjectsForGene( getEntityWithTaxon( geneArg, taxon ), offset, limit, true );
     }
 }

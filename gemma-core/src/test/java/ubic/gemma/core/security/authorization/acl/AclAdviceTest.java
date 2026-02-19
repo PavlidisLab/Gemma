@@ -174,7 +174,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         // anonymous can only see the public set
         super.runAsAnonymous();
-        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 1, arrayDesignService.countExpressionExperiments( ad ) );
 
         // make the other data set public too...
         this.runAsAdmin();
@@ -182,32 +182,32 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         // anonymous can see both
         super.runAsAnonymous();
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
         // logged-in user can also see both
         String user = RandomStringUtils.insecure().nextAlphabetic( 10 );
         this.makeUser( user );
         this.runAsUser( user );
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
         // make data set private
         this.runAsAdmin();
         securityService.makePrivate( ee );
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
         // user can't see data set that is now private
         this.runAsUser( user );
-        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 1, arrayDesignService.countExpressionExperiments( ad ) );
 
         // make the data set owned by user; now they can see both that one and the public one
         this.runAsAdmin();
         securityService.setOwner( ee, user );
         this.runAsUser( user );
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
         // anonymous can only see the public one.
         super.runAsAnonymous();
-        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 1, arrayDesignService.countExpressionExperiments( ad ) );
 
         // create a new user group, add user to it, make ee2 private to group
         this.runAsAdmin();
@@ -216,15 +216,15 @@ public class AclAdviceTest extends BaseSpringContextTest {
         securityService.addUserToGroup( user, group );
         securityService.makeReadableByGroup( ee2, group );
         securityService.makePrivate( ee2 );
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
         // anonymous can't see private groups
         super.runAsAnonymous();
-        assertEquals( 0, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 0, arrayDesignService.countExpressionExperiments( ad ) );
 
         // user can view experiment he owns as well as one shared with him
         this.runAsUser( user );
-        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+        assertEquals( 2, arrayDesignService.countExpressionExperiments( ad ) );
 
     }
 

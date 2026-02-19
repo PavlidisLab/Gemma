@@ -51,6 +51,8 @@ public class SearchSettings {
         EXACT,
         /**
          * Fast search mode, designed for autocompletion.
+         * <p>
+         * In this mode, we stop searching as soon as we have enough results to satisfy the request.
          */
         FAST,
         /**

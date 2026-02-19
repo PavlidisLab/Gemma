@@ -37,8 +37,6 @@ interface CoexpressionQueryQueue {
 
     /**
      * Remove genes from the queue; for example if we know their data is about to become stale.
-     *
-     * @param geneIds gene IDs
      */
     void removeFromQueue( Collection<Gene> genes );
 

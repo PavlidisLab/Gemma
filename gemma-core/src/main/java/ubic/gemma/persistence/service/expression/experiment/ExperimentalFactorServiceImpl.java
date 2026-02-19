@@ -89,11 +89,6 @@ public class ExperimentalFactorServiceImpl
     }
 
     @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing an experimental factor by ID is not supported" );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
         return this.experimentalFactorDao.thaw( ef );

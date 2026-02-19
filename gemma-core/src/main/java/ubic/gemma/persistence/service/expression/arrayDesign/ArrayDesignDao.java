@@ -66,17 +66,23 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    long countBioSequences( ArrayDesign arrayDesign );
+
     /**
      * Obtain all the genes associated to the platform.
      */
-    Collection<Gene> getGenes( ArrayDesign arrayDesign );
+    Collection<Gene> getGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
+
+    long countGenes( boolean useGene2Cs );
+
+    long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
     /**
      * Obtain all the genes associated to the platform organized by corresponding design elements.
      */
-    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign, boolean useGene2Cs );
 
-    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign, boolean useGene2Cs );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
@@ -84,25 +90,32 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      * Obtain the number of associated expression experiments.
      * <p>
      * This is much faster than looking up the size of {@link #getExpressionExperiments(ArrayDesign)}.
+     *
+     * @see #getExpressionExperiments(ArrayDesign)
      */
-    long getExpressionExperimentsCount( ArrayDesign arrayDesign );
+    long countExpressionExperiments( ArrayDesign arrayDesign );
 
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Obtain a collection of {@link ExpressionExperiment} identifiers that have been switched from a given platform.
      * <p>
-     * If you only need to count them, consider using the more performant {@link #getSwitchedExpressionExperimentsCount(ArrayDesign)}
+     * If you only need to count them, consider using the more performant {@link #countSwitchedExpressionExperiments(ArrayDesign)}
      * instead.
      */
     Collection<ExpressionExperiment> getSwitchedExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * Count the number of switched {@link ExpressionExperiment} from a given platform.
+     *
+     * @see #getSwitchedExpressionExperiments(ArrayDesign)
      */
-    Long getSwitchedExpressionExperimentsCount( ArrayDesign arrayDesign );
+    long countSwitchedExpressionExperiments( ArrayDesign arrayDesign );
 
-    Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
+    /**
+     * Obtain all the taxa associated to the {@link BioSequence} of the given platform.
+     */
+    Collection<Taxon> getTaxaFromBioSequences( ArrayDesign arrayDesign );
 
     Map<Long, Boolean> isMerged( Collection<Long> ids );
 
@@ -118,37 +131,23 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
-    long numAllCompositeSequenceWithBioSequences();
+    long countCompositeSequencesWithBioSequences();
 
-    long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
+    long countCompositeSequencesWithBlatResults();
 
-    long numAllCompositeSequenceWithBlatResults();
+    long countCompositeSequencesWithGenes( boolean useGene2Cs );
 
-    long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
+    long countBlatResults( ArrayDesign arrayDesign );
 
-    long numAllCompositeSequenceWithGenes();
+    long countCompositeSequences( ArrayDesign id );
 
-    long numAllCompositeSequenceWithGenes( Collection<Long> ids );
+    long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign );
 
-    long numAllGenes();
+    long countCompositeSequencesWithBlatResults( ArrayDesign arrayDesign );
 
-    long numAllGenes( Collection<Long> ids );
+    long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
-    long numBioSequences( ArrayDesign arrayDesign );
-
-    long numBlatResults( ArrayDesign arrayDesign );
-
-    long numCompositeSequences( ArrayDesign id );
-
-    long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
-
-    long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
-
-    long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
-
-    long numExperiments( ArrayDesign arrayDesign );
-
-    long numGenes( ArrayDesign arrayDesign );
+    long countCompositeSequencesWithGenes( Collection<ArrayDesign> arrayDesign, boolean useGene2Cs );
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 

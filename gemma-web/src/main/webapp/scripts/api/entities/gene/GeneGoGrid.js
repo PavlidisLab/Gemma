@@ -23,7 +23,7 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
     golink: function (d) {
         var g = d.replace("_", ":");
-        return "<a target='_blank' href='http://amigo.geneontology.org/amigo/term/" + g + "'>" + g + "</a>";
+        return "<a target='_blank' href='https://amigo.geneontology.org/amigo/term/" + g + "'>" + g + "</a>";
     },
 
     /**

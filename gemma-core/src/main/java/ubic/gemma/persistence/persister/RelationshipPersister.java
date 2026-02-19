@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
@@ -78,11 +77,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches ) {
-        try {
-            FieldUtils.writeField( association, "gene", this.persistGene( association.getGene(), caches ), true );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        }
+        association.setGene( this.persistGene( association.getGene(), caches ) );
         return gene2GoAssociationDao.create( association );
     }
 

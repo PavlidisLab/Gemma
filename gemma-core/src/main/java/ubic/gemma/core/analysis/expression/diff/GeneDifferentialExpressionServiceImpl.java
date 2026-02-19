@@ -111,7 +111,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             return devos;
 
         Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzed( gene, true, experimentsAnalyzed,
+                .findByGeneAndExperimentAnalyzed( gene, true, true, experimentsAnalyzed,
                         // only EEs can have subsets, so we save a query
                         experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets );
         timer.stop();
@@ -132,7 +132,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             return devos;
 
         Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzed( gene, true, Collections.singleton( experimentAnalyzed ),
+                .findByGeneAndExperimentAnalyzed( gene, true, true, Collections.singleton( experimentAnalyzed ),
                         includeSubSets, threshold, limit );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
@@ -152,7 +152,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             return result;
 
         Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
-                .findByGene( gene, true, threshold, -1 );
+                .findByGene( gene, true, true, threshold, -1 );
 
         // Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
         // rawDiffEx );
@@ -202,7 +202,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         timer.start();
 
         Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
-                .findByGene( gene, true, threshold, limit );
+                .findByGene( gene, true, true, threshold, limit );
 
         if ( timer.getTime() > 1000 ) {
             GeneDifferentialExpressionServiceImpl.log.info( "Diff raw ex results: " + timer.getTime() + " ms" );
@@ -223,7 +223,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
          * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
          */
         Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
-                .findByGeneAndExperimentAnalyzed( g, true, experimentsAnalyzed,
+                .findByGeneAndExperimentAnalyzed( g, true, true, experimentsAnalyzed,
                         // only EEs can have subsets, so we save a query
                         experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets );
 

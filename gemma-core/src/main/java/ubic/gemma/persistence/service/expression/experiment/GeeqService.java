@@ -19,6 +19,7 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
@@ -41,10 +42,9 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
     /**
      * Calculates the GEEQ score in the given mode for the experiment with the given id.
      *
-     * @param ee the id of the experiment to calculate the scores for.
+     * @param ee   the id of the experiment to calculate the scores for.
      * @param mode either run all scores, or only re-score batch effect, batch confound or replicates.
      */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Geeq calculateScore( ExpressionExperiment ee, ScoreMode mode );
-
-
 }

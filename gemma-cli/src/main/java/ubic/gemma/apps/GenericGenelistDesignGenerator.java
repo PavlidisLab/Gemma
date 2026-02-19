@@ -18,11 +18,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.report.ArrayDesignReportService;
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -313,7 +313,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                         + " genes had no transcript." );
         }
 
-        log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( platform )
+        log.info( "Platform has " + arrayDesignService.countCompositeSequencesWithGenes( platform, true )
                 + " 'elements' associated with genes." );
 
         if ( !noDB ) arrayDesignReportService.generateArrayDesignReport( platform.getId() );

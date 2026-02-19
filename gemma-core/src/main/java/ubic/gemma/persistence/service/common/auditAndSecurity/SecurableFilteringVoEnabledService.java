@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * A base service for securable entities with filtering and VO capabilities.
- * <p>
+ *
  * @author poirigui
  * @see FilteringVoEnabledService
  */

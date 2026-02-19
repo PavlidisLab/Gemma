@@ -21,15 +21,6 @@ public interface SecurableBaseImmutableService<C extends Securable> extends Base
     @Secured({ "GROUP_USER" })
     C create( C entity );
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Only administrator are allowed to remove entity by ID.
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( C entity );

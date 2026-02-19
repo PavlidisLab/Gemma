@@ -181,11 +181,11 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Override
     public Map<FactorValue, Characteristic> getExperimentalFactorCategories( Collection<FactorValue> factorValues ) {
         Map<Long, FactorValue> fvById = IdentifiableUtils.getIdMap( factorValues );
-        return QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
+        return QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
                                 .createQuery( "select fv.id, ef.category from FactorValue fv "
                                         + "join fv.experimentalFactor ef "
                                         + "where fv.id in :fvIds" ),
-                        "fvIds", fvById.keySet(), 2048, Object[].class )
+                        "fvIds", fvById.keySet(), 2048 )
                 .collect( Collectors.toMap( row -> fvById.get( ( Long ) row[0] ), row -> ( Characteristic ) row[1] ) );
     }
 
@@ -193,12 +193,12 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     public Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues ) {
         Map<Long, FactorValue> fvById = IdentifiableUtils.getIdMap( factorValues );
         Map<Long, ExpressionExperiment> eeCache = new HashMap<>();
-        return QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
+        return QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
                                 .createQuery( "select fv.id, ee.id, ee.shortName, ee.name from FactorValue fv "
                                         + "join fv.experimentalFactor ef "
                                         + "join ef.experimentalDesign ed, ExpressionExperiment ee "
                                         + "where ee.experimentalDesign = ed and fv.id in :fvIds" ),
-                        "fvIds", fvById.keySet(), 2048, Object[].class )
+                        "fvIds", fvById.keySet(), 2048 )
                 .collect( Collectors.toMap( row -> fvById.get( ( Long ) row[0] ), row -> createEE( row, eeCache ) ) );
     }
 

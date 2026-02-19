@@ -22,8 +22,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -56,8 +56,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
         t.setIsGenesUsable( true );
         bs.setTaxon( t );
 
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( "Genbank" );
+        ExternalDatabase ed = GenBankUtils.getGenBank();
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setExternalDatabase( ed );

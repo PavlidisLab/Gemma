@@ -30,7 +30,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -50,8 +49,6 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     private final ArrayDesignDao arrayDesignDao;
     private final AuditEventDao auditEventDao;
-    @Autowired
-    private BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
@@ -184,26 +181,26 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getGenes( arrayDesign );
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.arrayDesignDao.getGenes( arrayDesign, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign );
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign ) {
-        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign );
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign, boolean useGene2Cs ) {
+        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequences( arrayDesign );
+    public long countCompositeSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.countCompositeSequences( arrayDesign );
     }
 
     @Override
@@ -226,8 +223,8 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public long getExpressionExperimentsCount( ArrayDesign arrayDesign ) {
-        return arrayDesignDao.getExpressionExperimentsCount( arrayDesign );
+    public long countExpressionExperiments( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.countExpressionExperiments( arrayDesign );
     }
 
     @Override
@@ -291,32 +288,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public long getSwitchedExpressionExperimentCount( ArrayDesign id ) {
-        return this.arrayDesignDao.getSwitchedExpressionExperimentsCount( id );
+    public long countSwitchedExpressionExperiments( ArrayDesign id ) {
+        return this.arrayDesignDao.countSwitchedExpressionExperiments( id );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Taxon> getTaxa( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getTaxa( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Taxon getTaxon( java.lang.Long id ) {
-        ArrayDesign ad = this.arrayDesignDao.load( id );
-        return ad == null ? null : ad.getPrimaryTaxon();
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityService.isBlacklisted( geoAccession );
+    public Collection<Taxon> getTaxaFromBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getTaxaFromBioSequences( arrayDesign );
     }
 
     @Override
@@ -328,7 +307,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Override
     @Transactional
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.deleteGeneProductAnnotationAssociations( arrayDesign );
+        this.arrayDesignDao.deleteGeneProductAlignmentAssociations( arrayDesign );
     }
 
     @Override
@@ -381,92 +360,62 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithBioSequences() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
+    public long countCompositeSequencesWithBioSequences() {
+        return this.arrayDesignDao.countCompositeSequencesWithBioSequences();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences( ids );
+    public long countCompositeSequencesWithBlatResults() {
+        return this.arrayDesignDao.countCompositeSequencesWithBlatResults();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithBlatResults() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults();
+    public long countCompositeSequencesWithGenes( boolean useGene2Cs ) {
+        return this.arrayDesignDao.countCompositeSequencesWithGenes( useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults( ids );
+    public long countGenes( boolean useGene2Cs ) {
+        return this.arrayDesignDao.countGenes( useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithGenes() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithGenes();
+    public long countBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.countBioSequences( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithGenes( ids );
+    public long countBlatResults( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.countBlatResults( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllGenes() {
-        return this.arrayDesignDao.numAllGenes();
+    public long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.countCompositeSequencesWithBioSequences( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numAllGenes( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllGenes( ids );
+    public long countCompositeSequencesWithBlatResults( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.countCompositeSequencesWithBlatResults( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numBioSequences( arrayDesign );
+    public long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.arrayDesignDao.countCompositeSequencesWithGenes( arrayDesign, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long numBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numBlatResults( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithBioSequences( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithBlatResults( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long numExperiments( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numExperiments( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long numGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numGenes( arrayDesign );
+    public long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.arrayDesignDao.countGenes( arrayDesign, useGene2Cs );
     }
 
     @Override

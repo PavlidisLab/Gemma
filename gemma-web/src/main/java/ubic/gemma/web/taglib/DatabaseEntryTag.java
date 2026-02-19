@@ -18,78 +18,110 @@
  */
 package ubic.gemma.web.taglib;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.servlet.tags.form.TagWriter;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.web.assets.StaticAssetResolver;
+import ubic.gemma.web.util.ExternalDatabaseWebUtils;
 
 import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
-import javax.servlet.jsp.tagext.TagSupport;
 
 /**
  * @author keshav
  */
-@CommonsLog
-@SuppressWarnings("unused") // Frontend use
-public class DatabaseEntryTag extends TagSupport {
+public class DatabaseEntryTag extends AbstractHtmlElementTag {
+
+    private transient StaticAssetResolver staticAssetResolver;
 
     @Nullable
     private DatabaseEntryValueObject databaseEntry;
 
     @Override
-    public int doStartTag() throws JspException {
+    public int doStartTagInternal() throws JspException {
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
+        }
 
-        DatabaseEntryTag.log.debug( "start tag" );
+        TagWriter tagWriter = new TagWriter( pageContext );
 
-        String contextPath = pageContext.getServletContext().getContextPath();
-
-        StringBuilder buf = new StringBuilder();
         if ( this.databaseEntry == null ) {
-            buf.append( "<i>No accession available</i>" );
-        } else {
-            String accession = databaseEntry.getAccession();
+            tagWriter.startTag( "i" );
+            tagWriter.appendValue( "No accession available" );
+            tagWriter.endTag();
+            return SKIP_BODY;
+        }
 
-            if ( databaseEntry.getExternalDatabase() != null ) {
+        tagWriter.startTag( "span" );
+        writeOptionalAttributes( tagWriter );
 
-                if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( ExternalDatabases.GEO ) ) {
+        boolean hasLabel = StringUtils.isNotBlank( databaseEntry.getLabel() );
 
-                    accession = accession.replaceAll( "\\.[1-9]$", "" );
-                    buf.append( accession ).append( "&nbsp;<a title='NCBI page for this entry'" )
-                            .append( " target='_blank' href='https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" )
-                            .append( accession ).append( "'><img src='" ).append( contextPath )
-                            .append( "/images/logo/geoTiny.png' /></a>" );
-                } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
-                    buf.append( accession ).append( "&nbsp;<a title='ArrayExpress page for this entry'" ).append(
-                                    " target='_blank' href='https://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
-                            .append( accession ).append( "'><img src='" ).append( contextPath )
-                            .append( "/images/logo/arrayExpressTiny.png' /></a>" );
+        if ( hasLabel ) {
+            tagWriter.appendValue( htmlEscape( databaseEntry.getLabel() ) );
+            tagWriter.appendValue( " " );
+        }
+
+        if ( databaseEntry.getExternalDatabase() != null ) {
+            String externalUri = ExternalDatabaseUtils.getUri( databaseEntry );
+            String databaseLogo = ExternalDatabaseWebUtils.getLogo( databaseEntry.getExternalDatabase() );
+            if ( externalUri != null && isHttpUrl( externalUri ) ) {
+                if ( databaseLogo != null ) {
+                    tagWriter.startTag( "a" );
+                    tagWriter.writeAttribute( "href", externalUri );
+                    tagWriter.writeAttribute( "target", "_blank" );
+                    tagWriter.writeAttribute( "rel", "noopener noreferrer" );
+                    writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
+                    tagWriter.endTag(); // </a>
                 } else {
-                    buf.append( accession ).append( "(" ).append( databaseEntry.getExternalDatabase().getName() )
-                            .append( ":" ).append( ")" );
+                    if ( hasLabel ) {
+                        tagWriter.appendValue( "(" );
+                    }
+                    tagWriter.startTag( "a" );
+                    tagWriter.writeAttribute( "href", externalUri );
+                    tagWriter.writeAttribute( "target", "_blank" );
+                    tagWriter.writeAttribute( "rel", "noopener noreferrer" );
+                    tagWriter.appendValue( htmlEscape( databaseEntry.getExternalDatabase().getName() ) );
+                    tagWriter.appendValue( " " );
+                    tagWriter.startTag( "i" );
+                    tagWriter.writeAttribute( "class", "fa fa-external-link" );
+                    tagWriter.endTag( true );
+                    tagWriter.endTag(); // </a>
+                    if ( hasLabel ) {
+                        tagWriter.appendValue( ")" );
+                    }
                 }
+            } else if ( databaseLogo != null ) {
+                writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
             } else {
-                buf.append( accession );
+                if ( hasLabel ) {
+                    tagWriter.appendValue( "(" );
+                }
+                tagWriter.appendValue( "(" + htmlEscape( databaseEntry.getExternalDatabase().getName() ) + ")" );
+                if ( hasLabel ) {
+                    tagWriter.appendValue( ")" );
+                }
             }
         }
 
-        try {
-            pageContext.getOut().print( buf.toString() );
-        } catch ( Exception ex ) {
-            throw new JspException( this.getClass().getName() + ex.getMessage() );
-        }
+        tagWriter.endTag();
+
         return Tag.SKIP_BODY;
     }
 
-    @Override
-    public int doEndTag() {
+    private boolean isHttpUrl( String uri ) {
+        return uri.startsWith( "http://" ) || uri.startsWith( "https://" );
+    }
 
-        DatabaseEntryTag.log.debug( "end tag" );
-
-        return Tag.EVAL_PAGE;
+    private void writeDatabaseLogo( String databaseName, String databaseLogo, TagWriter tagWriter ) throws JspException {
+        tagWriter.startTag( "img" );
+        tagWriter.writeAttribute( "src", staticAssetResolver.resolveUrl( databaseLogo ) );
+        tagWriter.writeAttribute( "height", "16" );
+        tagWriter.writeAttribute( "alt", htmlEscape( databaseName ) + " logo" );
+        tagWriter.endTag(); // </img>
     }
 
     public void setDatabaseEntry( @Nullable DatabaseEntry databaseEntry ) {
@@ -104,5 +136,4 @@ public class DatabaseEntryTag extends TagSupport {
     public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntry ) {
         this.databaseEntry = databaseEntry;
     }
-
 }

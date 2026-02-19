@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Filter;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -164,13 +165,13 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
-    public void testNumExperiments() {
+    public void testCountExpressionExperiments() {
         Taxon taxon = Taxon.Factory.newInstance( "test" );
         sessionFactory.getCurrentSession().persist( taxon );
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
         ad = arrayDesignDao.create( ad );
-        assertThat( arrayDesignDao.numExperiments( ad ) ).isEqualTo( 0 );
+        assertThat( arrayDesignDao.countExpressionExperiments( ad ) ).isEqualTo( 0 );
     }
 
     @Test
@@ -180,6 +181,26 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest {
         ArrayDesign ad = new ArrayDesign();
         ad.setPrimaryTaxon( taxon );
         ad = arrayDesignDao.create( ad );
-        assertThat( arrayDesignDao.getGenes( ad ) ).isEmpty();
+        assertThat( arrayDesignDao.getGenes( ad, true ) ).isEmpty();
+        assertThat( arrayDesignDao.getGenes( ad, false ) ).isEmpty();
+        assertThat( arrayDesignDao.countGenes( ad, true ) ).isZero();
+        assertThat( arrayDesignDao.countGenes( ad, false ) ).isZero();
+    }
+
+    @Test
+    public void testGenesByCompositeSequence() {
+        Taxon taxon = Taxon.Factory.newInstance( "test" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad = arrayDesignDao.create( ad );
+        arrayDesignDao.getGenesByCompositeSequence( ad, true );
+        arrayDesignDao.getGenesByCompositeSequence( ad, false );
+        arrayDesignDao.getGenesByCompositeSequence( Collections.singleton( ad ), true );
+        arrayDesignDao.getGenesByCompositeSequence( Collections.singleton( ad ), false );
+        assertEquals( 0, arrayDesignDao.countCompositeSequencesWithGenes( ad, true ) );
+        assertEquals( 0, arrayDesignDao.countCompositeSequencesWithGenes( ad, false ) );
+        assertEquals( 0, arrayDesignDao.countCompositeSequencesWithGenes( Collections.singleton( ad ), true ) );
+        assertEquals( 0, arrayDesignDao.countCompositeSequencesWithGenes( Collections.singleton( ad ), false ) );
     }
 }

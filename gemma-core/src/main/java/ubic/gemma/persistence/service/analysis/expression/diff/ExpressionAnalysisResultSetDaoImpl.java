@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
-import static ubic.gemma.persistence.util.QueryUtils.streamByBatch;
 
 /**
  * @author Paul
@@ -330,13 +329,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // NOTE: I tried to do this in a single query, but it's just too slow
 
         // result ID -> result set ID
-        Map<Long, Long> representativeResults = streamByBatch( getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
-                        "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
-                        "where dear.RESULT_SET_FK in :rsIds " +
-                        "group by dear.RESULT_SET_FK" )
-                .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
-                .addScalar( "RESULT_SET_ID", StandardBasicTypes.LONG ), "rsIds", ids, 2048, Object[].class )
+        Map<Long, Long> representativeResults = QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
+                        .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                                "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
+                                "where dear.RESULT_SET_FK in :rsIds " +
+                                "group by dear.RESULT_SET_FK" )
+                        .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
+                        .addScalar( "RESULT_SET_ID", StandardBasicTypes.LONG ), "rsIds", ids, 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
 
         // result ID -> [ef1 ID, ef2 ID]

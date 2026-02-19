@@ -1,11 +1,10 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.nio.file.Path;
 
@@ -20,6 +19,14 @@ public class SingleCellTransformationConfig {
 
     @Value("${cellranger.dir}")
     private Path cellRangerPrefix;
+
+    @Value("${gemma.scratch.dir}")
+    private Path scratchDir;
+
+    @Bean
+    public SingleCellDataTransformationFactory singleCellDataTransformationFactory( BeanFactory beanFactory ) {
+        return new SingleCellDataTransformationFactoryImpl( beanFactory, scratchDir );
+    }
 
     @Bean
     @Scope("prototype")

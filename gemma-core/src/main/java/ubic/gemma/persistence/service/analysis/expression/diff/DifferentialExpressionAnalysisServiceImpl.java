@@ -276,11 +276,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing an analysis by ID is not supported, use remove() with an entity instead." );
-    }
-
-    @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee, boolean includeSubSets ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao

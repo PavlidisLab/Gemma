@@ -56,8 +56,8 @@ call add_external_database ('PubMed', 'PubMed database from NCBI', 'https://www.
 -- call add_external_database('GO', 'Gene Ontology database', 'https://www.godatabase.org/dev/database/', 'https://archive.godatabase.org', 'ONTOLOGY');
 call add_external_database('GEO', 'Gene Expression Omnibus', 'https://www.ncbi.nlm.nih.gov/geo/', 'ftp://ftp.ncbi.nih.gov/pub/geo/DATA', 'EXPRESSION');
 call add_external_database('ArrayExpress', 'EBI ArrayExpress', 'https://www.ebi.ac.uk/arrayexpress/', 'ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/', 'EXPRESSION');
-call add_external_database('Genbank', 'NCBI Genbank', 'https://www.ncbi.nlm.nih.gov/Genbank/index.html', 'ftp://ftp.ncbi.nih.gov/genbank/', 'SEQUENCE');
-call add_external_database('Entrez Gene', 'NCBI Gene database', 'https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene', 'ftp://ftp.ncbi.nih.gov/gene/', 'SEQUENCE');
+call add_external_database('GenBank', 'NCBI GenBank', 'https://www.ncbi.nlm.nih.gov/genbank/', 'ftp://ftp.ncbi.nih.gov/genbank/', 'SEQUENCE');
+call add_external_database('Entrez Gene', 'NCBI Gene database', 'https://www.ncbi.nlm.nih.gov/gene/', 'ftp://ftp.ncbi.nih.gov/gene/', 'SEQUENCE');
 call add_external_database('Ensembl', 'EMBL - EBI/Sanger Institute genome annotations', 'https://www.ensembl.org/', 'ftp://ftp.ensembl.org/pub/', 'GENOME');
 call add_external_database('OBO_REL', 'Open Biomedical Ontologies Relationships', 'https://www.obofoundry.org/ro/', NULL, 'ONTOLOGY');
 call add_external_database('STRING', 'STRING - Known and Predicted Protein-Protein Interactions', 'https://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=', NULL, 'PROTEIN');
@@ -89,6 +89,7 @@ call add_external_database('gene', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DA
 call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz', 'ONTOLOGY');
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
+call add_external_database('CELLxGENE', NULL, NULL, NULL, 'EXPRESSION');
 
 drop procedure add_external_database;
 

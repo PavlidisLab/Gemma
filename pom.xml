@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.32.5</version>
+	<version>1.32.6</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.28</version>
+		<version>1.2.29</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -55,6 +55,12 @@
 			<id>poirigui</id>
 			<name>Guillaume Poirier-Morency</name>
 			<email>poirigui@msl.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
+		<developer>
+			<id>oganm</id>
+			<name>Ogan Mancarcii</name>
+			<email>ogan.mancarci@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>
@@ -137,15 +143,12 @@
 		<contributor>
 			<name>Rachel Schwartz</name>
 		</contributor>
-		<contributor>
-			<name>Ogan Mancarcii</name>
-		</contributor>
 	</contributors>
 	<dependencies>
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.33</version>
+			<version>1.1.34</version>
 		</dependency>
 
 		<dependency>
@@ -340,10 +343,6 @@
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-lang3</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
 					<artifactId>commons-text</artifactId>
 				</exclusion>
 			</exclusions>
@@ -403,12 +402,18 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
-			<version>${jackson.version}</version>
+			<version>${jackson-annotations.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>${jackson.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- JSON -->
@@ -544,6 +549,17 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
 				<configuration>
@@ -628,7 +644,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -642,7 +658,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>12.1.9</version>
+				<version>12.2.0</version>
 				<configuration>
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 					<yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
@@ -651,7 +667,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.20.1</version>
+				<version>2.21.0</version>
 				<configuration>
 					<allowMajorUpdates>false</allowMajorUpdates>
 					<processDependencyManagement>false</processDependencyManagement>
@@ -684,7 +700,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.14.1</version>
+					<version>3.15.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -736,6 +752,11 @@
 					<artifactId>maven-site-plugin</artifactId>
 					<version>3.21.0</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>3.10.0</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -784,7 +805,6 @@
 		<profile>
 			<id>fast</id>
 			<properties>
-				<skipVersionFile>true</skipVersionFile>
 				<skipJavadoc>true</skipJavadoc>
 				<skipTests>true</skipTests>
 				<skipWebpack>true</skipWebpack>
@@ -810,7 +830,7 @@
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
-					<doclint>all,-reference</doclint>
+					<doclint>all,-missing</doclint>
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
@@ -868,10 +888,11 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.18.2</jackson.version>
-		<swagger.version>2.2.34</swagger.version>
+		<jackson.version>2.21.0</jackson.version>
+		<jackson-annotations.version>2.21</jackson-annotations.version>
+		<swagger.version>2.2.42</swagger.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.46.0</slack.version>
+		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>
 		<!-- HDF5 -->
@@ -880,15 +901,14 @@
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.113</tomcat.version>
+		<tomcat.version>9.0.115</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<mockito.version>5.21.0</mockito.version>
-		<assertj.version>3.27.6</assertj.version>
+		<assertj.version>3.27.7</assertj.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
-		<skipVersionFile>false</skipVersionFile>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
@@ -910,6 +930,7 @@
 			${jvmOptions}
 			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
 			-Djava.library.path=${hdf5.libDir}
+			-javaagent:${org.mockito:mockito-core:jar}
 		</testJvmOptions>
 		<delombok.output>${project.build.directory}/delombok</delombok.output>
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>

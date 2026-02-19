@@ -1,12 +1,13 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Query;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Permission;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 import java.util.Arrays;
 
@@ -26,18 +27,18 @@ public class EE2CAclQueryUtils {
     }
 
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn ) {
-        return formNativeAclRestrictionClause( sessionFactoryImplementor, anonymousMaskColumn, BasePermission.READ.getMask() );
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, anonymousMaskColumn, BasePermission.READ );
     }
 
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, int mask ) {
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, Permission permission ) {
         if ( SecurityUtil.isUserAnonymous() ) {
             SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, mask ), sessionFactoryImplementor );
+            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, permission.getMask() ), sessionFactoryImplementor );
             return " and " + renderedMask + " <> 0";
         } else if ( SecurityUtil.isUserAdmin() ) {
             return "";
         } else {
-            return AclQueryUtils.formNativeAclRestrictionClause( sessionFactoryImplementor, mask );
+            return AclQueryUtils.formNativeAclRestrictionClause( sessionFactoryImplementor, permission );
         }
     }
 

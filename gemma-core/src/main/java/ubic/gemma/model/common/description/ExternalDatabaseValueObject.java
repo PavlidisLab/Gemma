@@ -17,6 +17,7 @@ package ubic.gemma.model.common.description;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import java.net.URL;
@@ -59,7 +60,7 @@ public class ExternalDatabaseValueObject extends IdentifiableValueObject<Externa
         super( ed );
         this.name = ed.getName();
         this.description = ed.getDescription();
-        this.uri = ed.getWebUri();
+        this.uri = ExternalDatabaseUtils.getUri( ed );
         this.releaseUrl = ed.getReleaseUrl();
         this.releaseVersion = ed.getReleaseVersion();
         this.lastUpdated = ed.getLastUpdated();

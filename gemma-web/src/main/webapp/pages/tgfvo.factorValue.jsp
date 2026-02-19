@@ -3,9 +3,9 @@
 <title>FactorValue #${factorValueId}: ${fn:escapeXml(oi.label)}</title>
 
 <div class="padded">
-    <h1>The Gemma Factor Value Ontology</h1>
+    <h2>The Gemma Factor Value Ontology</h2>
     <p><a href="${pageContext.request.contextPath}/ont/TGFVO">All Terms</a></p>
-    <h2>FactorValue #${factorValueId}: <Gemma:ontologyResource resource="${oi}" /></h2>
+    <h3>FactorValue #${factorValueId}: <Gemma:ontologyResource resource="${oi}" /></h3>
     <p><b>IRI:</b> ${oi.uri}</p>
     <ul class="mb-3">
         <c:if test="${ee != null}">

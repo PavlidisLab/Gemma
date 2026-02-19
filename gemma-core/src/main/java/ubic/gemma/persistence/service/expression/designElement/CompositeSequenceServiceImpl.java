@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.designElement;
 
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.util.SecurityUtils;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
@@ -90,8 +92,8 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CompositeSequence> findByGene( Gene gene ) {
-        return this.compositeSequenceDao.findByGene( gene );
+    public Collection<CompositeSequence> findByGene( Gene gene, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.findByGene( gene, useGene2Cs );
     }
 
     @Override
@@ -108,8 +110,8 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
-        Slice<CompositeSequence> probes = this.compositeSequenceDao.findByGene( gene, start, limit );
+    public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit, boolean useGene2Cs ) {
+        Slice<CompositeSequence> probes = this.compositeSequenceDao.findByGene( gene, start, limit, useGene2Cs );
         Set<ArrayDesign> platforms = probes.stream().map( CompositeSequence::getArrayDesign ).collect( Collectors.toSet() );
         Map<Long, ArrayDesignValueObject> platformVos = arrayDesignService.loadValueObjects( platforms ).stream()
                 .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
@@ -125,8 +127,20 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        return this.compositeSequenceDao.findByGene( gene, arrayDesign );
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.findByGene( gene, arrayDesign, useGene2Cs );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.findByGenes( genes, useGene2Cs );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.findByGenes( genes, arrayDesign, useGene2Cs );
     }
 
     @Override
@@ -173,20 +187,20 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences ) {
-        return this.compositeSequenceDao.getGenes( sequences );
+    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.getGenes( sequences, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence ) {
-        return this.getGenes( compositeSequence, 0, -1 );
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence, boolean useGene2Cs ) {
+        return compositeSequenceDao.getGenes( compositeSequence, 0, -1, useGene2Cs );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
-        return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit );
+    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit, useGene2Cs );
     }
 
     @Override

@@ -111,11 +111,6 @@ public class CoexpressionAnalysisServiceImpl extends AbstractService<Coexpressio
     }
 
     @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing a coexpression analysis by ID is not supported." );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment investigation ) {
         return this.coexpressionAnalysisDao.findByExperimentAnalyzed( investigation );

@@ -30,7 +30,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -78,10 +77,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
-        long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences();
-        long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults();
-        long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes();
-        long numGenes = arrayDesignService.numAllGenes();
+        long numCsBioSequences = arrayDesignService.countCompositeSequencesWithBioSequences();
+        long numCsBlatResults = arrayDesignService.countCompositeSequencesWithBlatResults();
+        long numCsGenes = arrayDesignService.countCompositeSequencesWithGenes( true );
+        long numGenes = arrayDesignService.countGenes( true );
 
         // create a surrogate ArrayDesignValue object to represent the total of all platforms
         ArrayDesignValueObject adVo = new ArrayDesignValueObject( -1L );
@@ -139,11 +138,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
-        long numProbes = arrayDesignService.getCompositeSequenceCount( ad );
-        long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
-        long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
-        long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
-        long numGenes = arrayDesignService.numGenes( ad );
+        long numProbes = arrayDesignService.countCompositeSequences( ad );
+        long numCsBioSequences = arrayDesignService.countCompositeSequencesWithBioSequences( ad );
+        long numCsBlatResults = arrayDesignService.countCompositeSequencesWithBlatResults( ad );
+        long numCsGenes = arrayDesignService.countCompositeSequencesWithGenes( ad, true );
+        long numGenes = arrayDesignService.countGenes( ad, true );
 
         adVo.setDesignElementCount( ( int ) numProbes );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );

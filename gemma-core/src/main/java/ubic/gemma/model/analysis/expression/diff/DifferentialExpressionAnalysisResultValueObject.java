@@ -17,10 +17,10 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.util.ModelUtils;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = { "probeId" }, callSuper = true)
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
+    private Long resultSetId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long probeId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,6 +57,7 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValues ) {
         super( result );
+        this.resultSetId = result.getResultSet().getId();
         // getId() does not initialize proxies
         this.probeId = result.getProbe().getId();
         if ( ModelUtils.isInitialized( result.getProbe() ) ) {

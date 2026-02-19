@@ -1,3 +1,6 @@
+import gemmaLogo from '../../../images/logo/gemma-logo-text.png';
+import ubcLogo from '../../../images/logo/ubc-logo.png';
+
 /**
  * @author thea
  *
@@ -38,10 +41,13 @@ Gemma.GemmaNavigationHeader = Ext
           * @memberOf Gemma.GemmaNavigationHeader
           */
          showAbout : function() {
+
+            const width = Math.min( 800, window.innerWidth*0.8)
             var w = new Ext.Window(
                {
-                  width : 800,
-                  height : 600,
+                  width : width,
+                  height : 650,
+                  autoScroll : true,
                   title : "About Gemma",
                   items : [ {
                      xtype : 'panel',
@@ -69,8 +75,13 @@ Gemma.GemmaNavigationHeader = Ext
                      afterrender : function( win ) {
                         var summary = 'Gemma\'s expression platform and gene annotations are powered by:';
                         externalDatabasesStore.data.each( function( ed ) {
+                           name = ed.data.name;
+                           const re = new RegExp("[0-9]$")
+                           if (!re.test(name)) {
+                              name = Ext.util.Format.capitalize( name )
+                           }
                            summary += '<dt>';
-                           summary += Ext.util.Format.capitalize( ed.data.name );
+                           summary += name;
                            summary += '</dt>';
                            summary += '<dd>';
                            summary += ed.data.description;
@@ -93,7 +104,7 @@ Gemma.GemmaNavigationHeader = Ext
                            // extra information from related databases
                            ed.data.externalDatabases.forEach( function( relatedEd ) {
                               summary += '<br>'
-                              summary += Ext.util.Format.capitalize( relatedEd.name );
+                              summary += relatedEd.name;
                               if ( relatedEd.lastUpdated != null ) {
                                  if ( relatedEd.releaseUrl != null ) {
                                     summary += ' <a href="' + relatedEd.releaseUrl + '" target="_blank">' + relatedEd.releaseVersion + '&nbsp;<img src="' + Gemma.CONTEXT_PATH + '/images/icons/link_external_icon_tight.gif"/></a>';
@@ -519,7 +530,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : Gemma.CONTEXT_PATH + '/home.html',
-                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/gemma-headerlogo.png" height="60" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
+                            cn : '<img src="' + gemmaLogo + '" height="60" style="padding-left:10px;padding-bottom:3px" alt="Gemma Logo"/>'
                          }
                       }, '->', {
                          ref : 'navToolbar',
@@ -555,7 +566,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : 'https://www.ubc.ca/',
-                            cn : '<img src="' + Gemma.CONTEXT_PATH + '/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo"/>',
+                            cn : '<img src="' + ubcLogo + '" height="40" alt="UBC Logo"/>',
                             style : 'padding-left:15px; padding-right:10px'
                          }
                       } ] );

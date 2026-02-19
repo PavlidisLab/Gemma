@@ -24,10 +24,10 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.BufferedReader;
@@ -43,10 +43,9 @@ import java.util.concurrent.TimeUnit;
  * mapping off.
  * <p>
  * You almost certainly want to call {@link #refresh()} before using this service. This is done automatically if you use
- * the {@link HomologeneServiceFactory} to lazy-load this service.
+ * the {@link HomologeneConfig#homologeneService(GeneService, TaxonService)} factory to lazy-load this service.
  *
  * @author kelsey
- * @see HomologeneServiceFactory
  */
 public class HomologeneServiceImpl implements HomologeneService {
 

@@ -10,13 +10,15 @@ import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.util.ModelUtils;
+import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
-import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
@@ -34,7 +36,34 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     protected String description;
     protected String name;
 
+    // TODO: migrate this to a DatabaseEntryValueObject and remove the individual external fields below. See
+    //       <a href="https://github.com/PavlidisLab/Gemma/issues/450">#450</a> for details.
+    /**
+     * @see DatabaseEntryValueObject#getAccession()
+     */
+    @Nullable
     private String accession;
+    /**
+     * @see DatabaseEntryValueObject#getUri()
+     */
+    @Nullable
+    private String externalUri;
+    /**
+     * @see DatabaseEntryValueObject#getLabel()
+     */
+    @Nullable
+    private String externalLabel;
+    /**
+     * @see ExternalDatabaseValueObject#getName()
+     */
+    @Nullable
+    private String externalDatabase;
+    /**
+     * @see ExternalDatabaseValueObject#getUri()
+     */
+    @Nullable
+    private String externalDatabaseUri;
+
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
     private String batchConfound;
@@ -52,9 +81,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Integer bioMaterialCount;
     @JsonIgnore
     private Long experimentalDesign;
-    private String externalDatabase;
-    private String externalDatabaseUri;
-    private String externalUri;
     private GeeqValueObject geeq;
     private String metadata;
     @JsonProperty("numberOfProcessedExpressionVectors")
@@ -105,8 +131,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     /**
      * Creates a new value object out of given Expression Experiment.
      *
-     * @param ee the experiment to convert into a value object.
-     * @param ignoreDesign exclude the experimental design from serialization
+     * @param ee              the experiment to convert into a value object.
+     * @param ignoreDesign    exclude the experimental design from serialization
      * @param ignoreAccession exclude accession from serialization
      */
     public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession ) {
@@ -119,11 +145,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // accession
         if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
+            this.externalUri = ExternalDatabaseUtils.getUri( ee.getAccession() );
+            this.externalLabel = ExternalDatabaseUtils.getLabel( ee.getAccession() );
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
-            this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
-            if ( ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-                this.externalUri = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ee.getAccession().getAccession();
-            }
+            this.externalDatabaseUri = ExternalDatabaseUtils.getUri( ee.getAccession().getExternalDatabase() );
         }
 
         // EE
@@ -193,6 +218,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
     }
 
+    public ExpressionExperimentValueObject( ExpressionExperimentIdAndShortName ee ) {
+        this( ee.getId() );
+        this.shortName = ee.getShortName();
+    }
+
     protected ExpressionExperimentValueObject( ExpressionExperimentValueObject vo ) {
         super( vo );
         this.name = vo.name;
@@ -205,6 +235,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.externalDatabase = vo.getExternalDatabase();
         this.externalDatabaseUri = vo.getExternalDatabaseUri();
         this.externalUri = vo.getExternalUri();
+        this.externalLabel = vo.getExternalLabel();
         this.metadata = vo.getMetadata();
         this.shortName = vo.getShortName();
         this.source = vo.getSource();

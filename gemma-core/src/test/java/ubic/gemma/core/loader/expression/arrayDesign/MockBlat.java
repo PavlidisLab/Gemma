@@ -26,7 +26,7 @@ class MockBlat implements Blat {
         chromseq.setLength( ( long ) 1e7 );
         BlatResult br = BlatResult.Factory.newInstance();
 
-        Chromosome chromosome = new Chromosome( "XXX", null, chromseq, taxon );
+        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, chromseq, taxon );
         br.setTargetChromosome( chromosome );
         assert br.getTargetChromosome().getSequence() != null;
         long targetStart = MockBlat.RANDOM.nextInt( chromseq.getLength().intValue() );

@@ -10,10 +10,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -134,6 +132,11 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
+        BioAssayDimension processedDimension = expressionExperimentService.getProcessedBioAssayDimension( ee );
+        if ( processedDimension == null ) {
+            return Collections.emptyMap();
+        }
+
         ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
@@ -143,7 +146,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> significantSubsetConfounds = new HashMap<>();
 
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee, processedDimension );
         for ( ExpressionExperimentSubSet subset : subSets ) {
             try {
                 List<BatchConfound> subsetConfounds = new ArrayList<>( BatchConfoundUtils.test( subset ) );
@@ -186,8 +189,8 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             for ( BatchConfound c : subsetConfounds.getValue() ) {
                 result.append( "<br/><br/>Confound still exists for " )
                         .append( escapeHtml4( c.getFactor().getName() ) )
-                        .append( " in " )
-                        .append( escapeHtml4( subset.toString() ) );
+                        .append( " in subset " )
+                        .append( escapeHtml4( ExpressionExperimentSubSetUtils.getUnprefixedName( subset ) ) );
             }
         }
 

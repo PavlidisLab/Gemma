@@ -535,7 +535,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
         clone.setAccession( de.getAccession() );
         clone.setAccessionVersion( de.getAccessionVersion() );
-        //noinspection deprecation
         clone.setUri( de.getUri() );
         clone.setExternalDatabase( de.getExternalDatabase() );
         return clone;

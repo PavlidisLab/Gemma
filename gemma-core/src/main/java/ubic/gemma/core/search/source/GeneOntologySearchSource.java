@@ -156,7 +156,7 @@ public class GeneOntologySearchSource implements SearchSource {
     private Collection<Gene> filterGenesByExperimentAndPlatformConstraints( Collection<Gene> genes, SearchSettings settings ) {
         if ( settings.getPlatformConstraint() != null ) {
             // query all genes for the given platform?
-            genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint() ) );
+            genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint(), true ) );
         }
         if ( settings.getDatasetConstraint() != null ) {
             // query all the genes used by the *preferred* set of vectors, or any vector?

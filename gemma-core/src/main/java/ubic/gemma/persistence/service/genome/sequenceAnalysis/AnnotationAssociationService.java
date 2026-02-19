@@ -8,13 +8,11 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseImmutableService;
 
 import java.util.Collection;
 
@@ -22,19 +20,7 @@ import java.util.Collection;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public interface AnnotationAssociationService extends BaseImmutableService<AnnotationAssociation> {
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    AnnotationAssociation create( AnnotationAssociation annotationAssociation );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( Collection<AnnotationAssociation> anCollection );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( AnnotationAssociation annotationAssociation );
+public interface AnnotationAssociationService extends AdminEditableBaseImmutableService<AnnotationAssociation> {
 
     Collection<AnnotationAssociation> find( BioSequence bioSequence );
 

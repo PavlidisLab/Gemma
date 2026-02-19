@@ -3,6 +3,6 @@
  * <p>
  * JARs providing additional CLIs should be placed in the {@code contrib} directory where Gemma CLI is deployed.
  * <p>
- * Standard applications reside in {@link ubic.gemma.core.apps}.
+ * Standard applications reside in {@link ubic.gemma.apps}.
  */
 package ubic.gemma.contrib.apps;

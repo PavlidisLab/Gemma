@@ -5,10 +5,15 @@ import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.Link;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
+import ubic.gemma.core.ontology.OntologyUtils;
+import ubic.gemma.model.common.description.DatabaseEntry;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * @author poirigui
@@ -67,6 +72,19 @@ public class CellXGeneUtils {
 
     private static final Set<OntologyTerm> GENE_EXPRESSION_ASSAYS_SET = new HashSet<>( Arrays.asList( GENE_EXPRESSION_ASSAYS ) );
 
+    public static String getCollectionUri( String collectionId ) {
+        return "https://cellxgene.cziscience.com/collections/" + urlEncode( collectionId );
+    }
+
+    /**
+     * FIXME: CELLxGENE does not have a landing page for datasets. The workaround is to fill in the
+     *        {@link DatabaseEntry#getUri()} with a link to the collection obtained by {@link #getCollectionUri(String)}.
+     */
+    @Nullable
+    public static String getDatasetUri( String datasetId ) {
+        return null;
+    }
+
     /**
      * Extract GEO accessions from the given collection metadata.
      */
@@ -98,5 +116,19 @@ public class CellXGeneUtils {
      */
     public static boolean isAnnData( DatasetAsset a ) {
         return a.getFiletype() == FileType.H5AD;
+    }
+
+    /**
+     * Convert a CELLxGENE ontology term into a URI.
+     */
+    public static String getTermUri( OntologyTerm term ) {
+        return getTermUri( term.getOntologyTermId() );
+    }
+
+    /**
+     * Convert a CELLxGENE ontology term ID into a URI.
+     */
+    public static String getTermUri( String termId ) {
+        return OntologyUtils.termIdToUri( termId );
     }
 }

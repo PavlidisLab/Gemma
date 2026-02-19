@@ -19,12 +19,12 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.loader.util.converter.Converter;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -59,8 +59,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     private static final ExternalDatabase ensembl;
 
     static {
-        genBank = ExternalDatabase.Factory.newInstance();
-        NcbiGeneConverter.genBank.setName( "Genbank" );
+        genBank = GenBankUtils.getGenBank();
         ensembl = ExternalDatabase.Factory.newInstance();
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
@@ -71,7 +70,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     /**
      * @return the genBank
      */
-    public static ExternalDatabase getGenbank() {
+    public static ExternalDatabase getGenBank() {
         return NcbiGeneConverter.genBank;
     }
 
@@ -144,7 +143,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
          * We are going to stop maintaining this information
          */
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = new Chromosome( info.getChromosome(), t );
+        Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
         gene.setPhysicalLocation( pl );
@@ -313,12 +312,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         dbe.setAccession( acc.getGenomicNucleotideAccession() );
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
-        try {
-            FieldUtils.writeField( chrom, "sequence", chromSeq, true );
-        } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
-        }
-
+        chrom.setSequence( chromSeq );
     }
-
 }

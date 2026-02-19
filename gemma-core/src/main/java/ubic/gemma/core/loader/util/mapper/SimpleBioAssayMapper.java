@@ -1,13 +1,14 @@
 package ubic.gemma.core.loader.util.mapper;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.*;
 
 /**
  * A simple strategy for matching BioAssay to sample name.
+ *
  * @author poirigui
  */
 @CommonsLog
@@ -24,43 +25,43 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
 
         // BioAssay ID
         if ( matchWithFunction( bas, BioAssay::getId, this::matchId, n, results ) ) {
-            log.info( "Matched '" + n + "' by assay ID" );
+            log.debug( "Matched '" + n + "' by assay ID" );
             return results;
         }
 
         // BioAssay short name
-        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equals, n, results ) ) {
-            log.info( "Matched '" + n + "' by assay short name" );
+        if ( matchWithFunction( bas, BioAssay::getShortName, Strings.CS::equals, n, results ) ) {
+            log.debug( "Matched '" + n + "' by assay short name" );
             return results;
         }
 
         // BioAssay short name (case insensitive)
-        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equalsIgnoreCase, n, results ) ) {
-            log.info( "Matched '" + n + "' by assay short name (case-insensitive)" );
+        if ( matchWithFunction( bas, BioAssay::getShortName, Strings.CI::equals, n, results ) ) {
+            log.debug( "Matched '" + n + "' by assay short name (case-insensitive)" );
             return results;
         }
 
         // BioAssay name
         if ( matchWithFunction( bas, BioAssay::getName, this::matchName, n, results ) ) {
-            log.info( "Matched '" + n + "' by assay name" );
+            log.debug( "Matched '" + n + "' by assay name" );
             return results;
         }
 
         // BioAssay name (case-insensitive)
         if ( matchWithFunction( bas, BioAssay::getName, this::matchNameIgnoreCase, n, results ) ) {
-            log.info( "Matched '" + n + "' by assay name (case-insensitive)" );
+            log.debug( "Matched '" + n + "' by assay name (case-insensitive)" );
             return results;
         }
 
         // BioMaterial name
         if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchName, n, results ) ) {
-            log.info( "Matched '" + n + "' by sample name" );
+            log.debug( "Matched '" + n + "' by sample name" );
             return results;
         }
 
         // BioMaterial name (case-insensitive)
         if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchNameIgnoreCase, n, results ) ) {
-            log.info( "Matched '" + n + "' by sample name (case-insensitive)" );
+            log.debug( "Matched '" + n + "' by sample name (case-insensitive)" );
             return results;
         }
 
@@ -78,7 +79,7 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
             return results;
         }
 
-        log.debug( "No match found for '" + n + "'" );
+        log.warn( "No match found for '" + n + "'" );
 
         return results;
     }

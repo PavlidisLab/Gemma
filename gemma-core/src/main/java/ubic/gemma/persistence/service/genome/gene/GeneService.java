@@ -30,11 +30,10 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseService;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -43,16 +42,10 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-@ParametersAreNonnullByDefault
-public interface GeneService extends BaseService<Gene>, FilteringVoEnabledService<Gene, GeneValueObject> {
+public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVoEnabledService<Gene, GeneValueObject> {
 
-    @Override
     @Secured({ "GROUP_ADMIN" })
-    Gene create( Gene gene );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Gene gene );
+    int removeAll();
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -63,6 +56,7 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
+    @Nullable
     Gene findByAccession( String accession, @Nullable ExternalDatabase source );
 
     Collection<Gene> findByAlias( String search );
@@ -75,10 +69,13 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
      * @param exactString the ensembl ID that the gene will be looked up by.
      * @return a Gene with the given Ensembl ID.
      */
+    @Nullable
     Gene findByEnsemblId( String exactString );
 
+    @Nullable
     Gene findByNCBIId( Integer accession );
 
+    @Nullable
     GeneValueObject findByNCBIIdValueObject( Integer accession );
 
     /**
@@ -97,6 +94,7 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
 
     Collection<Gene> findByOfficialSymbol( String officialSymbol );
 
+    @Nullable
     Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
@@ -161,6 +159,7 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
      * @param id The gene id
      * @return GeneDetailsValueObject a representation of that gene
      */
+    @Nullable
     GeneValueObject loadFullyPopulatedValueObject( Long id );
 
     /**
@@ -197,7 +196,4 @@ public interface GeneService extends BaseService<Gene>, FilteringVoEnabledServic
     Gene thawLiter( Gene gene );
 
     Collection<GeneValueObject> searchGenes( String query, @Nullable Long taxonId ) throws SearchException;
-
-    @Secured({ "GROUP_ADMIN" })
-    int removeAll();
 }
