@@ -66,16 +66,10 @@ public class CellBrowserMetadataWriter {
                 .flatMap( Collection::stream )
                 .map( FactorValue::getExperimentalFactor )
                 .collect( Collectors.toSet() );
-        List<ExperimentalFactor> factors;
-        if ( ee.getExperimentalDesign() != null ) {
-            factors = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                    .filter( usedFactors::contains )
-                    .sorted( ExperimentalFactor.COMPARATOR )
-                    .collect( Collectors.toList() );
-        } else {
-            log.warn( ee + " does not have an experimental design, no factors will be written." );
-            factors = Collections.emptyList();
-        }
+        List<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( usedFactors::contains )
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .collect( Collectors.toList() );
         Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> factorValueMap = ExperimentalDesignUtils.getFactorValueMap( factors, samples );
         SortedMap<Category, Map<BioAssay, Characteristic>> bioAssayCharacteristics = selectCharacteristics( BioAssayUtils.createCharacteristicMap( assays ), assays.size() );
         SortedMap<Category, Map<BioMaterial, Characteristic>> sampleCharacteristics = selectCharacteristics( createCharacteristicMap( samples ), samples.size() );

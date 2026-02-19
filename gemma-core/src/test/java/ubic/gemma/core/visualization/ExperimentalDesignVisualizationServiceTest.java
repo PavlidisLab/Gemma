@@ -174,6 +174,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         List<SingleCellExpressionDataVector> vectors = RandomSingleCellDataUtils.randomSingleCellVectors();
         ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
         ee.setId( 1L );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         List<Characteristic> cts = new ArrayList<>( 4 );
         for ( int i = 0; i < 4; i++ ) {

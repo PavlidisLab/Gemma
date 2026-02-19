@@ -471,7 +471,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private void scoreReplicates( ExpressionExperiment ee, Geeq gq ) {
         double score;
         int replicates = -1;
-        if ( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             replicates = this.leastReplicates( ee );
 
             if ( replicates < GEEQ_WORST_REPLICATION_THRESHOLD ) {

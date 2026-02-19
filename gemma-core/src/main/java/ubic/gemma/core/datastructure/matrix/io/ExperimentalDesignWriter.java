@@ -117,8 +117,8 @@ public class ExperimentalDesignWriter {
      *                         for details
      */
     public void write( ExpressionExperiment ee, @Nullable QuantitationType quantitationType, @Nullable Class<? extends DataVector> vectorType, Collection<BioAssay> bioAssays, boolean writeBaseHeader, Writer writer ) throws IOException {
-        Assert.isTrue( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
-                ee + " does not have an experimental design." );
+        Assert.isTrue( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
+                ee + " has an empty experimental design." );
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 

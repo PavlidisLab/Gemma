@@ -129,6 +129,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
 
         // no batch factor, no batch info attempt
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         assertFalse( eeBatchService.checkHasBatchInfo( ee ) );
         assertFalse( eeBatchService.checkHasUsableBatchInfo( ee ) );
         assertFalse( eeBatchService.getBatchEffectDetails( ee ).hasBatchInformation() );
@@ -136,6 +137,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
         assertEquals( BatchEffectType.NO_BATCH_INFO, getBatchEffectType( eeBatchService.getBatchEffectDetails( ee ) ) );
 
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new BatchInformationFetchingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
@@ -145,6 +147,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
         assertEquals( BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE, getBatchEffectType( eeBatchService.getBatchEffectDetails( ee ) ) );
 
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new SingleBatchDeterminationEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
@@ -154,6 +157,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
         assertEquals( BatchEffectType.BATCH_EFFECT_UNDETERMINED_FAILURE, getBatchEffectType( eeBatchService.getBatchEffectDetails( ee ) ) );
 
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new BatchInformationMissingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
@@ -165,6 +169,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
 
         // batch info missing (after 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new BatchInformationMissingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
@@ -176,6 +181,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
 
         // batch info failed (prior to 23f7dcdbcbbf7b137c74abf2b6df96134bddc88b)
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new FailedBatchInformationFetchingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Error while processing FASTQ headers for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576: No header file for ExpressionExperiment Id=35322 Name=Medial prefrontal cortex transcriptome of mice susceptible or resilient to chronic stress Short Name=GSE226576", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );
@@ -187,6 +193,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
 
         // has batch information, but it's got some issues
         ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         aet = new FailedBatchInformationFetchingEvent();
         ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, "Invalid lane for sample GSM...", null, null, aet );
         when( auditEventService.getLastEvent( ee, BatchInformationEvent.class ) ).thenReturn( ae );

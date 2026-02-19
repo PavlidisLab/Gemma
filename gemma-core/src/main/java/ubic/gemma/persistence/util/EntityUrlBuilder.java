@@ -270,7 +270,6 @@ public class EntityUrlBuilder {
         }
 
         public ExperimentalDesignWebUrl design() {
-            Assert.notNull( entity.getExperimentalDesign(), entity + " does not have an experimental design." );
             return new ExperimentalDesignWebUrl( baseUrl, entity, entity.getExperimentalDesign() );
         }
 

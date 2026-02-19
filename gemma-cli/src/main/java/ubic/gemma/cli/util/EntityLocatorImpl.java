@@ -261,7 +261,7 @@ public class EntityLocatorImpl implements EntityLocator {
 
         expressionExperiment = eeService.thawLiter( expressionExperiment );
 
-        if ( expressionExperiment.getExperimentalDesign() == null || expressionExperiment.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( expressionExperiment.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( "Experimental design is not populated for " + expressionExperiment + "." );
         }
 
@@ -307,9 +307,6 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Nullable
     private ExperimentalFactor matchOneFactor( ExpressionExperiment ee, Predicate<ExperimentalFactor> predicate ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            return null;
-        }
         Set<ExperimentalFactor> matches = ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( predicate )
                 .collect( Collectors.toSet() );

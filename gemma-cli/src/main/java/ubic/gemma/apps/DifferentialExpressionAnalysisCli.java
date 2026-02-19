@@ -386,7 +386,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             return;
         }
 
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( ee + " does not have an experimental design populated." );
         }
 

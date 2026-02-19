@@ -66,10 +66,6 @@ public class DifferentialExpressionAnalysisController {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalArgumentException( ee.getShortName() + " does not have an experimental design." );
-        }
-
         Collection<ExperimentalFactor> factorsWithoutBatch = ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( f -> !ExperimentFactorUtils.isBatchFactor( f ) )
                 .collect( Collectors.toSet() );
@@ -151,10 +147,6 @@ public class DifferentialExpressionAnalysisController {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalArgumentException( ee.getShortName() + " does not have an experimental design." );
-        }
-
         this.experimentReportService.evictFromCache( ee.getId() );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
@@ -186,10 +178,6 @@ public class DifferentialExpressionAnalysisController {
 
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "Cannot access experiment with id=" + id );
-
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalArgumentException( ee.getShortName() + " does not have an experimental design." );
-        }
 
         /*
          * Get the factors matching the factorids

@@ -374,10 +374,6 @@ public class ExpressionExperimentController {
                     ExpressionExperimentController.TRIM_SIZE ) );
         }
 
-        if ( ee.getExperimentalDesign() == null ) {
-            return descriptive.append( "</br><b>(No Experimental Design)</b>" ).toString();
-        }
-
         // Is there any factor info to add?
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
         if ( efs.isEmpty() ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
@@ -420,10 +416,6 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
         ExpressionExperiment ee = getExperimentById( e.getId(), true );
-
-        if ( ee.getExperimentalDesign() == null ) {
-            return Collections.emptyList();
-        }
 
         // filter which factors we want to display
         // ignore "batch", continuous and cell type factors
@@ -469,8 +461,6 @@ public class ExpressionExperimentController {
         ExpressionExperiment ee = getExperimentById( e.getId(), false );
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
-
-        if ( ee.getExperimentalDesign() == null ) return null;
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 

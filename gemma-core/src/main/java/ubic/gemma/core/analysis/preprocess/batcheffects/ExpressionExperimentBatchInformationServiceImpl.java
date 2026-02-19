@@ -214,11 +214,6 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        if ( ee.getExperimentalDesign() == null ) {
-            log.warn( ee + " have batch information, but it does not have an experimental design to determine the batch effect." );
-            return details;
-        }
-
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
                 .stream()
                 .filter( ExperimentFactorUtils::isBatchFactor )
@@ -307,15 +302,11 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     }
 
     private boolean hasBatchFactor( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLiter( ee );
-        if ( ee.getExperimentalDesign() != null ) {
-            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return expressionExperimentService.thawLiter( ee )
+                .getExperimentalDesign()
+                .getExperimentalFactors()
+                .stream()
+                .anyMatch( ExperimentFactorUtils::isBatchFactor );
     }
 
     private boolean hasBeenBatchCorrected( ExpressionExperiment ee ) {

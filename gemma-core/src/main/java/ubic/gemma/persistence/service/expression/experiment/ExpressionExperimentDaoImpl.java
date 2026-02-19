@@ -2361,13 +2361,11 @@ public class ExpressionExperimentDaoImpl
 
         Hibernate.initialize( expressionExperiment.getOtherParts() );
 
-        if ( expressionExperiment.getExperimentalDesign() != null ) {
-            for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-                Hibernate.initialize( ef );
-                ef.getFactorValues().forEach( Hibernate::initialize );
-            }
-            Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
+        for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            Hibernate.initialize( ef );
+            ef.getFactorValues().forEach( Hibernate::initialize );
         }
+        Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
 
         if ( expressionExperiment.getPrimaryPublication() != null ) {
             thawBibliographicReference( expressionExperiment.getPrimaryPublication() );

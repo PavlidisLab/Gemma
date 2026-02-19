@@ -19,6 +19,7 @@ import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -58,6 +59,7 @@ public class ServiceBasedValueObjectConverterTest extends BaseTest {
     public void setUp() {
         ee = new ExpressionExperiment();
         ee.setId( 1L );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         conversionService = new GenericConversionService();
         conversionService.addConverter( new ServiceBasedValueObjectConverter<>( expressionExperimentService, ExpressionExperiment.class, ExpressionExperimentValueObject.class ) );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
@@ -131,6 +133,7 @@ public class ServiceBasedValueObjectConverterTest extends BaseTest {
     @WithMockUser
     public void testConvertSingleEntityFromSubType() {
         SpecificExpressionExperiment see = new SpecificExpressionExperiment();
+        see.setExperimentalDesign( new ExperimentalDesign() );
         Object converted = conversionService.convert( see, IdentifiableValueObject.class );
         assertThat( converted )
                 .isNotNull()

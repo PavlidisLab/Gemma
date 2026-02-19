@@ -293,11 +293,8 @@ public class DiffExAnalyzerUtils {
     }
 
     private static Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,
-            Collection<ExperimentalFactor> experimentalFactors ) {
-        Collection<ExperimentalFactor> efsToUse;
-
+            @Nullable Collection<ExperimentalFactor> experimentalFactors ) {
         ExperimentalDesign design;
-
         if ( bioAssaySet instanceof ExpressionExperiment ) {
             design = ( ( ExpressionExperiment ) bioAssaySet ).getExperimentalDesign();
         } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
@@ -306,10 +303,7 @@ public class DiffExAnalyzerUtils {
             throw new UnsupportedOperationException( "Cannot deal with a " + bioAssaySet.getClass() );
         }
 
-        if ( design == null ) {
-            throw new IllegalStateException( bioAssaySet + " does not have an experimental design." );
-        }
-
+        Collection<ExperimentalFactor> efsToUse;
         if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
             efsToUse = new HashSet<>( design.getExperimentalFactors() );
             if ( efsToUse.isEmpty() ) {
@@ -318,11 +312,6 @@ public class DiffExAnalyzerUtils {
             }
         } else {
             efsToUse = experimentalFactors;
-            if ( efsToUse.isEmpty() ) {
-                throw new IllegalArgumentException(
-                        "No experimental factors.  Cannot execute differential expression analysis." );
-            }
-
             // sanity check...
             for ( ExperimentalFactor experimentalFactor : efsToUse ) {
                 if ( !experimentalFactor.getExperimentalDesign().getId().equals( design.getId() ) ) {
@@ -330,6 +319,7 @@ public class DiffExAnalyzerUtils {
                 }
             }
         }
+
         return efsToUse;
     }
 

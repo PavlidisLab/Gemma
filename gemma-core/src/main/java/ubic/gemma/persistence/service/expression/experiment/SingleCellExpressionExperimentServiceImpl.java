@@ -1369,10 +1369,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     public Optional<ExperimentalFactor> getCellTypeFactor( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            log.warn( ee + " does not have an experimental design, returning null for the cell type factor." );
-            return Optional.empty();
-        }
         Set<ExperimentalFactor> candidates = ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( ef -> ef.getCategory() != null )
                 .filter( ef -> CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
@@ -1401,7 +1397,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Nullable
     private ExperimentalFactor createCellTypeFactor( ExpressionExperiment ee, CellTypeAssignment ctl, boolean removeExistingIfNecessary, boolean ignoreCompatibleFactor ) {
-        Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design, cannot re-create the cell type factor." );
         // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
         Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
         ExperimentalFactor currentCellTypeFactor = getCellTypeFactor( ee ).orElse( null );

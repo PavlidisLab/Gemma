@@ -117,7 +117,7 @@ public class ExperimentalDesignController {
     public void createDesignFromFile( Long eeid, String filename ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid, EntityNotFoundException::new );
 
-        if ( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot import an experimental design for an experiment that already has design data populated." );
         }
 
@@ -606,10 +606,6 @@ public class ExperimentalDesignController {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
 
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
-        }
-
         return ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toSet() );
@@ -673,9 +669,6 @@ public class ExperimentalDesignController {
 
     private ModelAndView show( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
-        }
         return new ModelAndView( "experimentalDesign.detail" )
                 .addObject( "taxon", expressionExperimentService.getTaxon( ee ) )
                 .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
@@ -732,9 +725,6 @@ public class ExperimentalDesignController {
 
     private void updateBioMaterials( ExpressionExperiment ee, Collection<BioMaterial> bms ) {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
-        }
 
         /*
          * Check for unused factorValues

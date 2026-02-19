@@ -270,10 +270,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      */
     @Nullable
     private ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            log.warn( ee + " does not have an experimental design, cannot get the batch factor." );
-            return null;
-        }
         return ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( ExperimentFactorUtils::isBatchFactor )
                 .findFirst()
@@ -382,8 +378,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      */
     private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee,
             ExpressionDataDoubleMatrix mat ) {
-        Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design." );
-
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         /* remove experimental factors that are for DE_Exclude */

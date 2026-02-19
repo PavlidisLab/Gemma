@@ -376,11 +376,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private void removeExistingBatchFactor( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
-        if ( ed == null ) {
-            log.warn( ee + " does not have an experimental design, cannot remove batch factor." );
-            return;
-        }
-
         ExperimentalFactor toRemove = null;
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {

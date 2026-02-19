@@ -110,12 +110,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
         // This has to come first and be persisted, so our FactorValues get persisted before we process the
         // BioAssays.
-        if ( ee.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-            this.processExperimentalDesign( experimentalDesign, caches );
-            assert experimentalDesign.getId() != null;
-            ee.setExperimentalDesign( experimentalDesign );
-        }
+        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
+        this.processExperimentalDesign( experimentalDesign, caches );
+        assert experimentalDesign.getId() != null;
+        ee.setExperimentalDesign( experimentalDesign );
 
         this.checkExperimentalDesign( ee );
 
@@ -161,11 +159,6 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
      * If there are factorValues, check if they are setup right and if they are used by biomaterials.
      */
     private void checkExperimentalDesign( ExpressionExperiment expExp ) {
-        if ( expExp.getExperimentalDesign() == null ) {
-            AbstractPersister.log.warn( "No experimental design!" );
-            return;
-        }
-
         Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
 
         if ( efs.isEmpty() )
