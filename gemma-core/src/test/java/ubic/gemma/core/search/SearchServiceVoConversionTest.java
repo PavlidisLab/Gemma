@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -100,6 +101,7 @@ public class SearchServiceVoConversionTest extends BaseTest {
         cs.setArrayDesign( ad );
         ee = new ExpressionExperiment();
         ee.setId( 12L );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         eevo = new ExpressionExperimentValueObject();
         eevo.setId( 12L );
         gs = new GeneSet();
@@ -222,6 +224,7 @@ public class SearchServiceVoConversionTest extends BaseTest {
         be.setShortName( "GSE102930" );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         when( expressionExperimentService.loadValueObjects( any() ) ).thenReturn( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) );
         when( blacklistedEntityService.loadValueObjects( any() ) ).thenReturn( Arrays.asList( BlacklistedValueObject.fromEntity( bp ), BlacklistedValueObject.fromEntity( be ) ) );
         List<SearchResult<? extends IdentifiableValueObject<?>>> vos = searchService.loadValueObjects( Arrays.asList(

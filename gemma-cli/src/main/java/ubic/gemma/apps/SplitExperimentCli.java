@@ -101,10 +101,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
      * Adapted from code in DifferentialExpressionAnalysisCli
      */
     private ExperimentalFactor guessFactor( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalStateException( ee + " does not have an experimental design, it cannot be split on a factor." );
-        }
-
         if ( this.factorName != null ) {
 
             Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

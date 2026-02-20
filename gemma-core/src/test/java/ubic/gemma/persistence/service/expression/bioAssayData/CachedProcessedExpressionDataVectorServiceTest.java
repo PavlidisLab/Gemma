@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SlicedDoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
@@ -188,6 +189,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         }
         expressionExperiment.getBioAssays().addAll( Arrays.asList( bas ) );
         expressionExperiment.getBioAssays().forEach( ba -> sessionFactory.getCurrentSession().persist( ba.getSampleUsed() ) );
+        expressionExperiment.setExperimentalDesign( new ExperimentalDesign() );
         sessionFactory.getCurrentSession().persist( expressionExperiment );
 
         // create vectors for the subsets
@@ -224,6 +226,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         }
         expressionExperiment.getBioAssays().addAll( Arrays.asList( bas ) );
         expressionExperiment.getBioAssays().forEach( ba -> sessionFactory.getCurrentSession().persist( ba.getSampleUsed() ) );
+        expressionExperiment.setExperimentalDesign( new ExperimentalDesign() );
         sessionFactory.getCurrentSession().persist( expressionExperiment );
 
         // we're going to create two subsets of BAs with 2 sub-assay per assay
@@ -277,6 +280,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         }
         expressionExperiment.getBioAssays().addAll( Arrays.asList( sourceBas ) );
         expressionExperiment.getBioAssays().forEach( ba -> sessionFactory.getCurrentSession().persist( ba.getSampleUsed() ) );
+        expressionExperiment.setExperimentalDesign( new ExperimentalDesign() );
         sessionFactory.getCurrentSession().persist( expressionExperiment );
 
         // we're going to create two subsets of BAs with 2 sub-assay per assay

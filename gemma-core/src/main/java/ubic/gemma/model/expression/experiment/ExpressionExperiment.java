@@ -72,7 +72,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Nullable
     private String batchConfound;
     private CurationDetails curationDetails = new CurationDetails();
-    @Nullable
     private ExperimentalDesign experimentalDesign;
     @Nullable
     private Geeq geeq;
@@ -190,7 +189,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.curationDetails;
     }
 
-    @Nullable
     @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
@@ -291,7 +289,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
-    public void setExperimentalDesign( @Nullable ExperimentalDesign experimentalDesign ) {
+    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
     }
 

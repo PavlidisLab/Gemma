@@ -179,15 +179,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * modified to have just one factor with two levels. (The data sets have nothing to do with each other, it's
          * just a test)
          */
-        for ( ExperimentalFactor ef : requireNonNull( ds1.getExperimentalDesign() ).getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : ds1.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
 
         }
-        for ( ExperimentalFactor ef : requireNonNull( ds2.getExperimentalDesign() ).getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : ds2.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
 
         }
-        for ( ExperimentalFactor ef : requireNonNull( ds3.getExperimentalDesign() ).getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : ds3.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.remove( ef );
         }
         ds1.getExperimentalDesign().getExperimentalFactors().clear();

@@ -105,7 +105,8 @@
 					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign"
-							 cascade="all" lazy="proxy" fetch="select">
+							 cascade="all" lazy="proxy" fetch="select" not-null="true">
+					<!-- the column cannot be made non-null because other subclasses lack a design -->
 					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="bioAssays" lazy="true" fetch="select" cascade="all">

@@ -714,8 +714,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public void writeDesignMatrix( ExpressionExperiment ee, boolean useProcessedData, Writer writer, boolean autoFlush ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
-            throw new IllegalStateException( "No experimental design for " + ee );
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "Empty experimental design for " + ee );
         }
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush );
         if ( useProcessedData ) {
@@ -742,8 +742,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
-            throw new IllegalStateException( "No experimental design for " + ee );
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "Empty experimental design for " + ee );
         }
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, autoFlush );
         Collection<BioAssayDimension> processedDimension = expressionExperimentService.getBioAssayDimensionsWithAssays( ee, qt );
@@ -907,7 +907,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedData, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
         try ( LockedPath f = this.getOutputFile( getDesignFileName( ee, useProcessedData ), false ) ) {
@@ -929,7 +929,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean useProcessedData, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
         ee = expressionExperimentService.thawLite( ee );
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
         try ( LockedPath f = this.getOutputFile( getDesignFileName( ee, useProcessedData ), false, timeout, timeUnit ) ) {

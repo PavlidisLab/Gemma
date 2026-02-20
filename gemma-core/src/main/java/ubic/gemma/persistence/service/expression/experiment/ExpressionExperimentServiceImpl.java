@@ -230,10 +230,6 @@ public class ExpressionExperimentServiceImpl
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
         factor = experimentalFactorService.create( factor ); // to make sure we get acls.
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -245,10 +241,6 @@ public class ExpressionExperimentServiceImpl
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         fv = this.factorValueService.create( fv );
         for ( ExperimentalFactor ef : efs ) {
@@ -266,10 +258,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         int count = 0;
         for ( BioMaterial bm : fvs.keySet() ) {

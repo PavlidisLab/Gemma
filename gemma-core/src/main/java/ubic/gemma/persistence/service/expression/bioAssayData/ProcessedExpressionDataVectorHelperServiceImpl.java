@@ -78,7 +78,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
     @Override
     @Transactional
     public void reorderByDesign( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             log.info( ee + " does not have a populated experimental design, skipping" );
             return;
         }

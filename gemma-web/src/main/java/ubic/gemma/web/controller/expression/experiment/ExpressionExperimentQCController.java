@@ -879,9 +879,6 @@ public class ExpressionExperimentQCController {
     }
 
     private Map<ExperimentalFactor, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment does not have an experimental design." );
-        }
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         Map<ExperimentalFactor, String> efs = new HashMap<>();
         for ( ExperimentalFactor ef : factors ) {
@@ -985,12 +982,8 @@ public class ExpressionExperimentQCController {
         int maxWidth = 30;
         Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
         Collection<ExperimentalFactor> continuousFactors = new HashSet<>();
-        if ( ee.getExperimentalDesign() == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment does not have an experimental design." );
-        }
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            boolean isContinous = ef.getType().equals( FactorType.CONTINUOUS );
-            if ( isContinous ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
                 continuousFactors.add( ef );
             }
         }

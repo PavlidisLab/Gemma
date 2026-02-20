@@ -356,7 +356,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         Map<FactorValue, Double> fvV = new HashMap<>();
 
-        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             // Case of no experimental design; just put in a dummy factor.
             ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance( "No factors", FactorType.CATEGORICAL );
             for ( BioMaterial bm : bms ) {

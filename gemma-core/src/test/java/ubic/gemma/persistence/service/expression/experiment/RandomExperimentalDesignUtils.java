@@ -38,7 +38,6 @@ public class RandomExperimentalDesignUtils {
      * Create and assign a random experimental design to the given experiment.
      */
     public ExperimentalDesign randomExperimentalDesign( ExpressionExperiment ee, int numCategoricalFactors, int numContinuousFactors ) {
-        Assert.notNull( ee.getExperimentalDesign(), "Experimental design must be initialized" );
         ExperimentalDesign design = randomExperimentalDesign( getSampleUsed( ee ), numCategoricalFactors, numContinuousFactors );
         ee.setExperimentalDesign( design );
         return design;
@@ -63,7 +62,6 @@ public class RandomExperimentalDesignUtils {
      * @see #randomCategoricalFactor(ExperimentalDesign, Collection, String, int)
      */
     public static ExperimentalFactor randomCategoricalFactor( ExpressionExperiment ee, String name, int numValues ) {
-        Assert.notNull( ee.getExperimentalDesign() );
         return randomCategoricalFactor( ee.getExperimentalDesign(), getSampleUsed( ee ),
                 name, numValues );
     }
@@ -94,7 +92,6 @@ public class RandomExperimentalDesignUtils {
      * Create and assign a continuous factor to all the samples of an experiment.
      */
     public static ExperimentalFactor randomContinuousFactor( ExpressionExperiment ee, String name ) {
-        Assert.notNull( ee.getExperimentalDesign() );
         return randomContinuousFactor( ee.getExperimentalDesign(), getSampleUsed( ee ), name );
     }
 

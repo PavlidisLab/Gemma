@@ -583,6 +583,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         bm.setSourceTaxon( taxon );
         sessionFactory.getCurrentSession().persist( bm );
         ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( new ExperimentalDesign() );
         BioAssay ba = new BioAssay();
         ba.setArrayDesignUsed( ad );
         ba.setSampleUsed( bm );

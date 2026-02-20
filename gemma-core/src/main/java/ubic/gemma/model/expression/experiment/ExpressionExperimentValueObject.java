@@ -168,7 +168,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // ED
-        if ( !ignoreDesign && ee.getExperimentalDesign() != null && ModelUtils.isInitialized( ee.getExperimentalDesign() ) ) {
+        if ( !ignoreDesign && ModelUtils.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
