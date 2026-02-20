@@ -558,7 +558,7 @@
 						       the initialize phase, we move it to the test phase because we only need it to substitute
 						       Mockito version when loading the JVM agent.
 						-->
-						<phase>test</phase>
+						<phase>process-test-classes</phase>
 						<goals>
 							<goal>properties</goal>
 						</goals>
