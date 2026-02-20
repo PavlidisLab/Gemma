@@ -92,7 +92,7 @@ pipeline {
         stage('Build') {
             steps {
                 setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B compile test-compile'
+                sh 'mvn -B compile'
             }
             post {
                 success {
