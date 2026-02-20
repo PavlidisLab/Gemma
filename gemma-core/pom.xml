@@ -52,8 +52,6 @@
                     </execution>
                     <execution>
                         <id>package-test-jar</id>
-                        <!-- For some reason, the test JAR needs to be visible during the compile phase for dependent projects -->
-                        <phase>compile</phase>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
