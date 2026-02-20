@@ -1199,7 +1199,7 @@ Gemma.VisualizationStore = function( config ) {
    }, this.record );
 
    Gemma.VisualizationStore.superclass.constructor.call( this, config );
-
+   
    this.relayEvents( this.proxy, [ 'loadexception' ] );
 
 };
@@ -1210,7 +1210,14 @@ Gemma.VisualizationStore = function( config ) {
  * @extends Ext.data.Store
  */
 
-Ext.extend( Gemma.VisualizationStore, Ext.data.Store, {} );
+Ext.extend( Gemma.VisualizationStore, Ext.data.Store, {
+   loadRecords: function(o, options,success){
+      if (!o.records){
+         o.records = []
+      }
+      return Gemma.VisualizationStore.superclass.loadRecords.call(this,o, options, success)
+   }
+} );
 
 // //////////////////////////////////////////////////////////////////////////////////
 

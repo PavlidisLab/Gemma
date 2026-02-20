@@ -48,6 +48,25 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
       }
    },
 
+   checkData: function( eeId, geneList, callback ){
+      // checks to see if a dataset has expression data to prevent the relevant tabs from
+      // being shown
+      var store = new Gemma.VisualizationStore()
+      store.on( 'exception', function( e,type, action, options, response, arg  ){
+         Ext.callback(callback,this,[false])
+      })
+
+      store.load({
+         params: [ [ eeId ], geneList || [] ],
+         callback: function (records, options, success) {
+            var hasData = !!(success && records && records.length > 0);
+            callback(hasData);
+         },
+         scope: this
+      });
+
+   },
+
    /**
     * @memberOf Gemma.ExpressionExperimentPage
     */
@@ -148,12 +167,18 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
 
       // EXPERIMENT DESIGN TAB
       this.add( this.makeDesignTab( experimentDetails ) );
+      this.checkData(experimentDetails.id,[],function(hasData){
+         if(hasData){
+            // VISUALISATION TAB
+            this.add( this.makeVisualisationTab( experimentDetails, isAdmin ) );
 
-      // VISUALISATION TAB
-      this.add( this.makeVisualisationTab( experimentDetails, isAdmin ) );
+            // DIAGNOSTICS TAB
+            this.add( this.makeDiagnosticsTab( experimentDetails, isAdmin ) );
+         }
+      }.createDelegate(this))
 
-      // DIAGNOSTICS TAB
-      this.add( this.makeDiagnosticsTab( experimentDetails, isAdmin ) );
+
+
 
       this.adjustForIsAdmin( isAdmin, this.editable );
 
@@ -207,6 +232,8 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
          }
       };
    },
+
+
 
    makeVisualisationTab : function( experimentDetails, isAdmin ) {
       var eeId = this.eeId;
