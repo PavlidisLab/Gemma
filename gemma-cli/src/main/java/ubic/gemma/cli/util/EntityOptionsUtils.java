@@ -2,6 +2,7 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.Strings;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
 
@@ -10,6 +11,19 @@ import ubic.gemma.cli.completion.CompletionUtils;
  * @author poirigui
  */
 public class EntityOptionsUtils {
+
+
+    /**
+     * @see EntityLocator#locateEntity(Class, String, boolean)
+     */
+    public static void addEntityOption( Options options, String optionName, String longOpt, String description ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOpt )
+                .hasArg()
+                .argName( "ID, short name, name, NCBI ID, common name, scientific name, alternate name" )
+                .desc( Strings.CS.appendIfMissing( description, "." ) + " Entity ID, short name, name, NCBI ID, common name, scientific name, alternate name" )
+                .get() );
+    }
 
     /**
      * Add an option for supplying a dataset.

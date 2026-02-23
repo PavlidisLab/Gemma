@@ -3,6 +3,7 @@ package ubic.gemma.cli.util;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -52,6 +53,38 @@ public class EntityLocatorImpl implements EntityLocator {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends Identifiable> T locateEntity( Class<T> clazz, String identifier, boolean useReferencesIfPossible ) {
+        // if a match by ID is possible, prefer it so we can apply useReferencesIfPossible for anything
+        try {
+            Long id = Long.parseLong( identifier );
+            if ( useReferencesIfPossible ) {
+                return ( T ) sessionFactory.getCurrentSession().load( clazz, id );
+            } else {
+                return ( T ) requireNonNull( sessionFactory.getCurrentSession().get( clazz, id ),
+                        "No " + clazz.getSimpleName() + " found with ID " + id + "." );
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        // this is a non-ID lookup, so delegate to the appropriate locator
+        if ( Taxon.class.isAssignableFrom( clazz ) ) {
+            return ( T ) locateTaxon( identifier );
+        } else if ( Protocol.class.isAssignableFrom( clazz ) ) {
+            return ( T ) locateProtocol( identifier );
+        } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
+            return ( T ) locateArrayDesign( identifier );
+        } else if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
+            return ( T ) locateExpressionExperiment( identifier, useReferencesIfPossible );
+        } else {
+            // all the other locator in this class require an experiment context, so we cannot support them here.
+            throw new UnsupportedOperationException( "Cannot locate an entity of type " + clazz.getSimpleName() + "." );
+        }
+    }
 
     @Override
     public Taxon locateTaxon( String identifier ) {
