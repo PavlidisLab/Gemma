@@ -39,6 +39,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
@@ -81,20 +82,39 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     /**
+     * Mode for selecting which factors to include in the analysis.
+     */
+    private enum FactorSelectionMode {
+        /**
+         * Select factors based on a previous analysis.
+         */
+        REDO,
+        /**
+         * Select factors automatically.
+         */
+        AUTOMATIC,
+        /**
+         * Select factors manually. The values that are in {@link #factorIdentifiers} will be considered.
+         */
+        MANUAL
+    }
+
+    /**
      * Specific analyses to redo.
      */
     @Nullable
-    private Collection<Long> analysisIds = null;
+    private Collection<Long> analysisIds;
 
     @Nullable
-    private Collection<Long> subsetIds = null;
+    private Collection<Long> subsetIds;
 
     /**
      * Indicate the type of analysis to perform.
      * <p>
      * The default is to detect it based on the dataset and the requested factors.
      */
-    private AnalysisType type = null;
+    @Nullable
+    private AnalysisType type;
 
     /**
      * Mode for selecting factors.
@@ -114,24 +134,33 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private String subsetFactorIdentifier;
 
     /**
-     * Whether batch factors should be included (if they exist)
+     * Whether batch factors should be included (if they exist).
+     * <p>
+     * Defaults to true.
      */
-    private boolean ignoreBatch = true;
+    private boolean ignoreBatch;
 
     /**
      * Use moderated statistics.
      */
-    private boolean moderateStatistics = DifferentialExpressionAnalysisConfig.DEFAULT_MODERATE_STATISTICS;
+    private boolean moderateStatistics;
 
     /**
-     * Persist results to the database.
+     * Ignore failure of subset analyses.
+     * <p>
+     * The analysis will still fail if all subset analyses fail.
      */
-    private boolean persist = true;
+    private boolean ignoreFailingSubsets;
 
-    private boolean makeArchiveFiles = true;
+    /**
+     * List of sample identifiers to include in the analysis.
+     * <p>
+     * Defaults to all samples.
+     */
+    @Nullable
+    private String[] sampleIdentifiers;
 
-    private boolean ignoreFailingSubsets = false;
-
+    // data filtering options
     @Nullable
     private Integer filterMinNumberOfCellsPerSample;
     @Nullable
@@ -144,13 +173,22 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     @Nullable
     private Double filterMinVariance;
 
-    private DataFileOptionValue destination;
+    /**
+     * Persist results to the database.
+     */
+    private boolean persist ;
 
-    enum FactorSelectionMode {
-        REDO,
-        AUTOMATIC,
-        MANUAL
-    }
+    /**
+     * Create archive files.
+     */
+    private boolean makeArchiveFiles ;
+
+    /**
+     * Destination to use for archive files.
+     * <p>
+     * This is only applicable if {@link #makeArchiveFiles} is true.
+     */
+    private DataFileOptionValue destination;
 
     @Override
     public String getCommandName() {
@@ -197,6 +235,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "If the experiment already has subsets for the factor, those will be reused. "
                         + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." ).get() );
 
+        addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).argName( "ID, name, accession" )
+                .desc( "ID, name or accession of samples to be included in the analysis. Defaults to all samples in the dataset being analyzed. Requires the " + formatOption( "nodb", "no-db" ) + " option to be set." ).get() );
+
         options.addOption( "usebatch", "use-batch-factor", false, "If a batch factor is available, use it. Otherwise, batch information can/will be ignored in the analysis. This is incompatible with " + formatOption( options, "factors" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
         options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
         options.addOption( "ignoreFailingSubsets", "ignore-failing-subsets", false, "Ignore failing subsets and continue processing other subsets. Requires the " + formatOption( options, "subset" ) + " option to be set or -redo,--redo option with existing subset analyses." );
@@ -205,7 +246,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         // destination (db, standard location or custom directory)
         options.addOption( "nodb", "no-db", false, "Do not persist diff. ex. results to the database and instead save them to the current directory (or the location defined by " + formatOption( options, DataFileOptionsUtils.OUTPUT_DIR_OPTION ) + ")." );
-        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with " + formatOption( options, "nodb" ) + "." );
+        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with " + formatOption( options, "nodb" ) + " option to be set." );
 
         // redo mode
         options.addOption( "redo", "redo", false,
@@ -346,6 +387,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         // subset analysis can only be done in manual mode
         // note we add the given factor to the list of factors overall to make sure it is considered
         this.subsetFactorIdentifier = getOptionValue( commandLine, "subset", requires( allOf( toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
+        this.sampleIdentifiers = getOptionValues( commandLine, "samples", requires( toBeSet( "nodb" ) ) );
         // we can only force the use of a batch factor during automatic selection
         this.ignoreBatch = !hasOption( commandLine, "usebatch", requires( allOf( toBeUnset( "factors" ), toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
         this.moderateStatistics = !commandLine.hasOption( "nobayes" );
@@ -433,7 +475,18 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setPersist( this.persist );
         config.setMakeArchiveFile( this.persist && this.makeArchiveFiles );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
-        config.setUseWeights( super.eeService.isRNASeq( ee ) );
+        config.setUseWeights( eeService.isRNASeq( ee ) );
+
+        // sample selection
+        if ( this.sampleIdentifiers != null ) {
+            Set<BioMaterial> samplesToUse = new HashSet<>();
+            for ( String sampleId : sampleIdentifiers ) {
+                // allow searching in subsets, those are used in single-cell diff ex. analysis that use sub-samples for
+                // representing pseudo-bulks
+                samplesToUse.add( entityLocator.locateSample( ee, sampleId, true ) );
+            }
+            config.setSamplesToInclude( samplesToUse );
+        }
 
         // filtering
         config.setRepetitiveValuesFilterMode( this.filterMode );

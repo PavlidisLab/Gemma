@@ -1338,6 +1338,18 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<BioAssay> getBioAssays( ExpressionExperiment ee, boolean includeSubSets ) {
+        return expressionExperimentDao.getBioAssays( ee, includeSubSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioMaterial> getSamplesUsed( ExpressionExperiment ee, boolean includeSubSets ) {
+        return expressionExperimentDao.getSamplesUsed( ee, includeSubSets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getBioAssayDimensionsWithAssays( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );

@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -46,7 +47,10 @@ public class DifferentialExpressionAnalysisConfig {
 
     /**
      * Type of analysis to perform.
+     * <p>
+     * The type is automatically detected if left null.
      */
+    @Nullable
     private AnalysisType analysisType;
 
     /**
@@ -78,6 +82,14 @@ public class DifferentialExpressionAnalysisConfig {
      */
     @Nullable
     private FactorValue subsetFactorValue;
+
+    /**
+     * Set of samples to include in the analysis.
+     * <p>
+     * All samples are included if this is null.
+     */
+    @Nullable
+    private Set<BioMaterial> samplesToInclude;
 
     /**
      * Keep processing other subsets when encountering an {@link AnalysisException} on a subset.
@@ -165,6 +177,9 @@ public class DifferentialExpressionAnalysisConfig {
     public DifferentialExpressionAnalysisConfig( DifferentialExpressionAnalysisConfig baseConfig ) {
         this.analysisType = baseConfig.getAnalysisType();
         this.moderateStatistics = baseConfig.isModerateStatistics();
+        if ( baseConfig.samplesToInclude != null ) {
+            this.samplesToInclude = new HashSet<>( baseConfig.samplesToInclude );
+        }
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
         this.persist = baseConfig.isPersist();

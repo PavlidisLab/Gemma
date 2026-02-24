@@ -665,6 +665,23 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
 
     /**
+     * Obtain the assays used by the experiment.
+     *
+     * @param includeSubSets include assays that belong to subsets of the experiment.
+     * @see ExpressionExperiment#getBioAssays()
+     * @see ExpressionExperimentSubSet#getBioAssays()
+     */
+    Collection<BioAssay> getBioAssays( ExpressionExperiment ee, boolean includeSubSets );
+
+    /**
+     * Obtain the samples used by the assay of the experiment.
+     *
+     * @param includeSubSets include samples that are associated to assays that belong to subsets of the experiment.
+     * @see BioAssay#getSampleUsed()
+     */
+    Collection<BioMaterial> getSamplesUsed( ExpressionExperiment ee, boolean includeSubSets );
+
+    /**
      * Obtain all the dimensions associated to the given experiment.
      * <p>
      * Assays are initialized as per {@link Thaws#thawBioAssay(BioAssay)}.

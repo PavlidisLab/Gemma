@@ -2,6 +2,7 @@ package ubic.gemma.cli.util;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -268,7 +270,7 @@ public class EntityLocatorImpl implements EntityLocator {
         ExperimentalFactor factor;
         try {
             Long efId = Long.parseLong( identifier );
-            if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getId().equals( efId ) ) ) != null ) {
+            if ( ( factor = matchOneFactor( expressionExperiment, ef -> Objects.equals( ef.getId(), efId ) ) ) != null ) {
                 return factor;
             }
         } catch ( NumberFormatException e ) {
@@ -287,16 +289,16 @@ public class EntityLocatorImpl implements EntityLocator {
         }
 
         // match by category
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getCategory(), finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && Strings.CI.equals( ef.getCategory().getCategory(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getCategoryUri(), finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && Strings.CI.equals( ef.getCategory().getCategoryUri(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getValue(), finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && Strings.CI.equals( ef.getCategory().getValue(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getValueUri(), finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && Strings.CI.equals( ef.getCategory().getValueUri(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
 
@@ -321,10 +323,9 @@ public class EntityLocatorImpl implements EntityLocator {
     }
 
     @Override
-    public BioAssay locateBioAssay( ExpressionExperiment ee, String sampleId ) {
-        ee = eeService.thawLite( ee );
-        return requireNonNull( locateBioAssay( ee.getBioAssays(), sampleId ),
-                "Could not locate any assay matching '" + sampleId + "' in " + ee.getShortName() + "." + formatPossibleValues( ee.getBioAssays(), true ) );
+    public BioAssay locateBioAssay( ExpressionExperiment ee, String assayId, boolean includeSubSets ) {
+        return requireNonNull( locateBioAssay( eeService.getBioAssays( ee, includeSubSets ), assayId ),
+                "Could not locate any assay matching '" + assayId + "' in " + ee.getShortName() + "." + formatPossibleValues( ee.getBioAssays(), true ) );
     }
 
     @Override
@@ -342,6 +343,71 @@ public class EntityLocatorImpl implements EntityLocator {
         throw new NullPointerException();
     }
 
+    @Nullable
+    private BioAssay locateBioAssay( Collection<BioAssay> candidates, String sampleId ) {
+        BioAssay ba;
+        try {
+            Long id = Long.parseLong( sampleId );
+            if ( ( ba = matchOneAssay( candidates, ba2 -> Objects.equals( ba2.getId(), id ) ) ) != null ) {
+                return ba;
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        if ( ( ba = matchOneAssay( candidates, ba2 -> ba2.getShortName() != null && ba2.getShortName().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        if ( ( ba = matchOneAssay( candidates, ba2 -> ba2.getName().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        if ( ( ba = matchOneAssay( candidates, ba2 -> ba2.getAccession() != null && ba2.getAccession().getAccession().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        return null;
+    }
+
+    private BioAssay matchOneAssay( Collection<BioAssay> candidates, Predicate<BioAssay> ba ) {
+        Set<BioAssay> bas = candidates.stream().filter( ba ).collect( Collectors.toSet() );
+        if ( bas.size() == 1 ) {
+            return bas.iterator().next();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public BioMaterial locateSample( ExpressionExperiment ee, String sampleId, boolean includeSubSets ) {
+        return locateSample( eeService.getSamplesUsed( ee, includeSubSets ), sampleId );
+    }
+
+    private BioMaterial locateSample( Collection<BioMaterial> candidates, String sampleId ) {
+        BioMaterial ba;
+        try {
+            Long id = Long.parseLong( sampleId );
+            if ( ( ba = matchOneSample( candidates, ba2 -> Objects.equals( ba2.getId(), id ) ) ) != null ) {
+                return ba;
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        if ( ( ba = matchOneSample( candidates, ba2 -> ba2.getName().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        if ( ( ba = matchOneSample( candidates, ba2 -> ba2.getExternalAccession() != null && ba2.getExternalAccession().getAccession().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        return null;
+    }
+
+    private BioMaterial matchOneSample( Collection<BioMaterial> candidates, Predicate<BioMaterial> ba ) {
+        Set<BioMaterial> bas = candidates.stream().filter( ba ).collect( Collectors.toSet() );
+        if ( bas.size() == 1 ) {
+            return bas.iterator().next();
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public DifferentialExpressionAnalysis locateDiffExAnalysis( ExpressionExperiment ee, String analysisIdentifier ) {
         return requireNonNull( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, Long.parseLong( analysisIdentifier ) ),
@@ -349,38 +415,6 @@ public class EntityLocatorImpl implements EntityLocator {
                         analysisIdentifier,
                         ee.getShortName(),
                         formatPossibleValues( differentialExpressionAnalysisService.findByExperiment( ee, true ), false ) ) );
-    }
-
-    @Nullable
-    private BioAssay locateBioAssay( Collection<BioAssay> ee, String sampleId ) {
-        BioAssay ba;
-        try {
-            Long id = Long.parseLong( sampleId );
-            if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getId().equals( id ) ) ) != null ) {
-                return ba;
-            }
-        } catch ( NumberFormatException e ) {
-            // ignore
-        }
-        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getShortName() != null && ba2.getShortName().equalsIgnoreCase( sampleId ) ) ) != null ) {
-            return ba;
-        }
-        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getName().equalsIgnoreCase( sampleId ) ) ) != null ) {
-            return ba;
-        }
-        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getAccession() != null && ba2.getAccession().getAccession().equalsIgnoreCase( sampleId ) ) ) != null ) {
-            return ba;
-        }
-        return null;
-    }
-
-    private BioAssay matchOneAssay( Collection<BioAssay> bioAssays, Predicate<BioAssay> ba ) {
-        Set<BioAssay> bas = bioAssays.stream().filter( ba ).collect( Collectors.toSet() );
-        if ( bas.size() == 1 ) {
-            return bas.iterator().next();
-        } else {
-            return null;
-        }
     }
 
     private String formatPossibleValues( Collection<? extends Identifiable> possibleValues, boolean allowAmbiguousIds ) {
