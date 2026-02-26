@@ -96,7 +96,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             ANNDATA_NO_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "NoTranspose",
             ANNDATA_USE_X_OPTION = ANNDATA_OPTION_PREFIX + "UseX",
             ANNDATA_USE_RAW_X_OPTION = ANNDATA_OPTION_PREFIX + "UseRawX",
-            ANNDATA_CELLXGENE_PRESET = "CellXGenePreset";
+            ANNDATA_CELLXGENE_PRESET = ANNDATA_OPTION_PREFIX + "CellXGenePreset";
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
