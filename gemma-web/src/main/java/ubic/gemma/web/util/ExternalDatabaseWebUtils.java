@@ -40,7 +40,7 @@ public class ExternalDatabaseWebUtils {
         } else if ( ExternalDatabases.SRA.equalsIgnoreCase( databaseName ) ) {
             return "/images/logo/sra-logo.png";
         } else if ( ExternalDatabases.CELLXGENE.equalsIgnoreCase( databaseName ) ) {
-            return "/images/logo/cellxgene-logo.png";
+            return "/images/logo/cellxgene-logo-inverted.png";
         } else if ( ExternalDatabases.PUBMED.equalsIgnoreCase( databaseName ) ) {
             return "/images/logo/pubmed-logo-blue.png";
         } else if ( ExternalDatabases.ARXIV.equalsIgnoreCase( databaseName ) ) {

@@ -81,7 +81,11 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             }
             metadata = cm.getDatasets().iterator().next();
         } else {
-            metadata = cellXGeneFetcher.fetchDatasetMetadata( datasetId );
+            assert cm.getDatasets() != null;
+            metadata = cm.getDatasets().stream()
+                    .filter( dm -> dm.getId().equals( datasetId ) )
+                    .findFirst()
+                    .orElseThrow( () -> new IllegalStateException( "Dataset " + datasetId + " does not exist." ) );
         }
         DatasetAsset asset;
         if ( assetId != null ) {
