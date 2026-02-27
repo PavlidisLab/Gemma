@@ -1,11 +1,3 @@
-/**
- * 
- * 
- * @param {}
- *           data
- * 
- */
-
 function reset( data ) {
 
 }
@@ -17,7 +9,7 @@ function handleSuccess( data ) {
    } );
 }
 
-function handleFailure( data, e ) {
+function handleFailure( data ) {
    Ext.DomHelper.overwrite( "taskId", "" );
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
@@ -32,7 +24,7 @@ function handleFailure( data, e ) {
 function handleIndexSuccess( taskId ) {
    try {
       Ext.DomHelper.overwrite( "messages", "" );
-      var task = new Gemma.ObservableSubmittedTask( {
+      const task = new Gemma.ObservableSubmittedTask( {
          'taskId' : taskId
       } );
       task.on( 'task-failed', handleFailure );
@@ -40,31 +32,19 @@ function handleIndexSuccess( taskId ) {
       task.showTaskProgressWindow( {
          showLogButton : true
       } );
-   } catch (e) {
-      handleFailure( taskId, e );
+   } catch ( e ) {
+      handleFailure( e );
    }
 }
 
-function index( event ) {
+function index( commandObj ) {
 
-   var callParams = [];
-
-   var commandObj = {
-      indexAD : adCheckBox.getValue(),
-      indexEE : eeCheckBox.getValue(),
-      indexProbe : probeCheckBox.getValue(),
-      indexBibRef : bibRefCheckBox.getValue(),
-      indexGene : geneCheckBox.getValue(),
-      indexBioSequence : bsCheckBox.getValue(),
-      indexExperimentSet : eeSetCheckBox.getValue(),
-      indexGeneSet : geneSetCheckBox.getValue(),
-      indexOntologies : ontologyCheckBox.getValue()
-   };
+   const callParams = [];
 
    callParams.push( commandObj );
 
-   var delegate = handleIndexSuccess.createDelegate( this, [], true );
-   var errorHandler = handleFailure.createDelegate( this, [], true );
+   const delegate = handleIndexSuccess.createDelegate( this, [], true );
+   const errorHandler = handleFailure.createDelegate( this, [], true );
 
    callParams.push( {
       callback : delegate,
@@ -78,89 +58,89 @@ function index( event ) {
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Submitting job..." );
    IndexService.index.apply( this, callParams );
-
 }
 
-var indexForm = function() {
-
+Ext.onReady( function() {
    Ext.form.Field.prototype.msgTarget = 'side';
-   var simple = new Ext.FormPanel( {
+   const simple = new Ext.FormPanel( {
       border : false
    } );
 
-   geneCheckBox = new Ext.form.Checkbox( {
-      boxLabel : 'Index genes',
+   const geneCheckBox = new Ext.form.Checkbox( {
+      boxLabel : 'Index Genes',
       labelSeparator : '',
       name : 'gene'
    } );
    simple.add( geneCheckBox );
 
-   probeCheckBox = new Ext.form.Checkbox( {
+   const probeCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
-      boxLabel : 'Index probes',
+      boxLabel : 'Index Design Elements',
       name : 'probe'
    } );
    simple.add( probeCheckBox );
 
-   adCheckBox = new Ext.form.Checkbox( {
+   const adCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
       boxLabel : 'Index Platforms',
       name : 'ad'
    } );
    simple.add( adCheckBox );
 
-   bsCheckBox = new Ext.form.Checkbox( {
+   const bsCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
-      boxLabel : 'Index Biosequences',
+      boxLabel : 'Index Biological Sequences',
       name : 'bs'
    } );
    simple.add( bsCheckBox );
 
-   eeCheckBox = new Ext.form.Checkbox( {
+   const eeCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
-      boxLabel : 'Index Expression Experiments',
+      boxLabel : 'Index Datasets',
       name : 'ee'
    } );
    simple.add( eeCheckBox );
 
-   bibRefCheckBox = new Ext.form.Checkbox( {
+   const bibRefCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
-      boxLabel : 'Index Bibliographic References',
+      boxLabel : 'Index Publications',
       name : 'bibRef'
    } );
    simple.add( bibRefCheckBox );
 
-   eeSetCheckBox = new Ext.form.Checkbox( {
+   const eeSetCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
-      boxLabel : 'Index Experiment Groups',
+      boxLabel : 'Index Dataset Groups',
       name : 'eeSet'
    } );
    simple.add( eeSetCheckBox );
 
-   geneSetCheckBox = new Ext.form.Checkbox( {
+   const geneSetCheckBox = new Ext.form.Checkbox( {
       labelSeparator : '',
       boxLabel : 'Index Gene Groups',
       name : 'geneSet'
    } );
    simple.add( geneSetCheckBox );
 
-   ontologyCheckBox = new Ext.form.Checkbox( {
-      labelSeparator : '',
-      boxLabel : 'Index ontologies',
-      name : 'ontologies'
-   } );
-   simple.add( ontologyCheckBox );
-
    simple.add( new Ext.Button( {
-      text : "index",
+      text : "Index",
       handler : function( event ) {
          Ext.Msg.show( {
             title : Gemma.HelpText.CommonWarnings.ReIndexing.title,
             msg : String.format( Gemma.HelpText.CommonWarnings.ReIndexing.text, 'database' ),
             buttons : Ext.Msg.YESNO,
-            fn : function( btn, text ) {
-               if ( btn == 'yes' ) {
-                  index( event );
+            fn : function( btn ) {
+               if ( btn === 'yes' ) {
+                  index( {
+                     indexPlatforms : adCheckBox.getValue(),
+                     indexDatasets : eeCheckBox.getValue(),
+                     indexDesignElements : probeCheckBox.getValue(),
+                     indexPublications : bibRefCheckBox.getValue(),
+                     indexGenes : geneCheckBox.getValue(),
+                     indexBioSequences : bsCheckBox.getValue(),
+                     indexDatasetGroups : eeSetCheckBox.getValue(),
+                     indexGeneGroups : geneSetCheckBox.getValue()
+                  } );
                }
             },
             scope : this,
@@ -170,8 +150,4 @@ var indexForm = function() {
       scope : this
    } ) );
    simple.render( 'index-form' );
-};
-
-Ext.onReady( function() {
-   indexForm();
 } );

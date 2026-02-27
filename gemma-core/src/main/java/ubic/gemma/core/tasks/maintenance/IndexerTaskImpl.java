@@ -3,9 +3,9 @@ package ubic.gemma.core.tasks.maintenance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.search.IndexerService;
-import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -29,28 +29,28 @@ public class IndexerTaskImpl extends AbstractTask<IndexerTaskCommand> implements
     @Override
     public TaskResult call() throws Exception {
         Set<Class<? extends Identifiable>> classesToIndex = new HashSet<>();
-        if ( getTaskCommand().isIndexGene() ) {
+        if ( getTaskCommand().isIndexGenes() ) {
             classesToIndex.add( Gene.class );
         }
-        if ( getTaskCommand().isIndexEE() ) {
+        if ( getTaskCommand().isIndexDatasets() ) {
             classesToIndex.add( ExpressionExperiment.class );
         }
-        if ( getTaskCommand().isIndexAD() ) {
+        if ( getTaskCommand().isIndexPlatforms() ) {
             classesToIndex.add( ArrayDesign.class );
         }
-        if ( getTaskCommand().isIndexBibRef() ) {
+        if ( getTaskCommand().isIndexPublications() ) {
             classesToIndex.add( BibliographicReference.class );
         }
-        if ( getTaskCommand().isIndexProbe() ) {
+        if ( getTaskCommand().isIndexDesignElements() ) {
             classesToIndex.add( CompositeSequence.class );
         }
-        if ( getTaskCommand().isIndexBioSequence() ) {
+        if ( getTaskCommand().isIndexBioSequences() ) {
             classesToIndex.add( BioSequence.class );
         }
-        if ( getTaskCommand().isIndexExperimentSet() ) {
+        if ( getTaskCommand().isIndexDatasetGroups() ) {
             classesToIndex.add( ExpressionExperimentSet.class );
         }
-        if ( getTaskCommand().isIndexGeneSet() ) {
+        if ( getTaskCommand().isIndexGeneGroups() ) {
             classesToIndex.add( GeneSet.class );
         }
         for ( Class<? extends Identifiable> clazz : classesToIndex ) {

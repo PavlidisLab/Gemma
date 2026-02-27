@@ -226,7 +226,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 "ase proved to be a de novo mutation. In the third kindred, affected brothers both have a" ) );
 
         IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBibRef( true );
+        c.setIndexPublications( true );
 
         indexerTask.setTaskCommand( c );
         try {
@@ -263,7 +263,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 "d to chromosome 22q12. Our results confirm chromosome 22q12 as the solitary locus for FFEVF" ) );
 
         IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBibRef( true );
+        c.setIndexPublications( true );
 
         indexerTask.setTaskCommand( c );
         try {
