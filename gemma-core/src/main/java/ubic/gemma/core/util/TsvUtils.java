@@ -149,7 +149,7 @@ public class TsvUtils {
             return NA;
         }
         return format( Arrays.stream( values )
-                .map( s -> s.replace( SUB_DELIMITER, '_' ) )
+                .map( s -> s!= null ? s.replace( SUB_DELIMITER, '_' ) : NA)
                 .collect( Collectors.joining( SUB_DELIMITER_STR ) ) );
     }
 
