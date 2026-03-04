@@ -468,7 +468,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             if (this.getTopToolbar().deleteButton) {
                 this.getSelectionModel().on("selectionchange", function (model) {
                     var selected = model.getSelections();
-                    if (selected.length > 0) {
+                    if (selected.length > 0 && selected.every(x => x.data.objectClass === "ExperimentTag")) {
                         this.getTopToolbar().deleteButton.enable();
                     } else {
                         this.getTopToolbar().deleteButton.disable();
