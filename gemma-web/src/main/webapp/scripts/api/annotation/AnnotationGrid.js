@@ -331,10 +331,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             }, {
                 header: "Evidence",
                 dataIndex: "evidenceCode",
-                sortable: true
+                sortable: true,
+                hidden: this.editable ? false: true
             }, {
                 header: "From",
-                dataIndex: "objectClass",
+                id: "objectClassLabel",
+                dataIndex: "objectClassLabel",
                 sortable: true,
                 hidden: this.showParent? true : false,
                 tooltip: Gemma.HelpText.WidgetDefaults.AnnotationGrid.objectClassDescription
