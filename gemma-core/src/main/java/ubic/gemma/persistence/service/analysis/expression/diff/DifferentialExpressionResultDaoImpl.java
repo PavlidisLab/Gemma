@@ -157,6 +157,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         if ( initializeFactorValues ) {
             for ( Object[] row : result ) {
                 DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
+                Hibernate.initialize( r.getResultSet().getExperimentalFactors() );
                 for ( ContrastResult c : r.getContrasts() ) {
                     if ( c.getFactorValue() != null ) {
                         Hibernate.initialize( c.getFactorValue() );
