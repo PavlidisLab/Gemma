@@ -239,10 +239,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             /*
              * make a EESubSet
              */
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrixBySubset.get( subsetFactorValue ), factors, null );
+
             String subsetName = FactorValueUtils.getSummaryString( subsetFactorValue );
             ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance( subsetName, expressionExperiment );
             Collection<BioAssay> bioAssays = new HashSet<>();
-            for ( BioMaterial bm : samplesUsed ) {
+            for ( BioMaterial bm : bioMaterials ) {
                 bioAssays.addAll( bm.getBioAssaysUsedIn() );
             }
             eeSubSet.getBioAssays().addAll( bioAssays );
