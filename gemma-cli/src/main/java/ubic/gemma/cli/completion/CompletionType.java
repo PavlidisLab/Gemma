@@ -7,7 +7,6 @@ public enum CompletionType {
     DATASET_GROUP,
     EXTERNAL_DATABASE,
     DATASET,
-    SAMPLE,
     EXPERIMENTAL_FACTOR,
     /**
      * Complete experimental factors and interactions suitable for DEA.

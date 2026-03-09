@@ -246,7 +246,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         // destination (db, standard location or custom directory)
         options.addOption( "nodb", "no-db", false, "Do not persist diff. ex. results to the database and instead save them to the current directory (or the location defined by " + formatOption( options, DataFileOptionsUtils.OUTPUT_DIR_OPTION ) + ")." );
-        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with " + formatOption( options, "nodb" ) + " option to be set." );
+        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them. This is incompatible with " + formatOption( options, "nodb" ) + "." );
 
         // redo mode
         options.addOption( "redo", "redo", false,
