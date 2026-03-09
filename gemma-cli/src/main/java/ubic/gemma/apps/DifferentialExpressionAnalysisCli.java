@@ -172,6 +172,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private Double filterMinUniqueValues;
     @Nullable
     private Double filterMinVariance;
+    private boolean useWeights;
 
     /**
      * Persist results to the database.
@@ -300,6 +301,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .type( Double.class )
                 .desc( "Minimum variance required for a design element to be included in the analysis. Defaults to " + DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_VARIANCE + "." )
                 .get() );
+        options.addOption( Option.builder( "useWeights" )
+                .hasArg( false )
+                .desc( "Use weights" )
+                .get() );
 
         // delete mode
         options.addOption( "delete", "delete", false, "Remove all the existing analyses for the specified experiment(s). Use with care!" );
@@ -403,6 +408,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         // TODO: check if the analysis being redone is a subset analysis
         this.ignoreFailingSubsets = hasOption( commandLine, "ignoreFailingSubsets",
                 requires( anyOf( toBeSet( "subset" ), toBeSet( "redo" ) ) ) );
+        this.useWeights = commandLine.hasOption("useWeights");
     }
 
     @Override
@@ -475,7 +481,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setPersist( this.persist );
         config.setMakeArchiveFile( this.persist && this.makeArchiveFiles );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
-        config.setUseWeights( eeService.isRNASeq( ee ) );
+        // if useWeights flag is provided, force to true, otherwise check if RNAseq
+        config.setUseWeights( this.useWeights ? this.useWeights :  eeService.isRNASeq( ee ) );
 
         // sample selection
         if ( this.sampleIdentifiers != null ) {
