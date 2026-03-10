@@ -236,7 +236,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "If the experiment already has subsets for the factor, those will be reused. "
                         + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." ).get() );
 
-        addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).argName( "ID, name, accession" )
+        addSingleExperimentOption( options, Option.builder( "samples" )
+                .longOpt( "samples" )
+                .hasArgs()
+                .argName( "ID, name, accession" )
                 .desc( "ID, name or accession of samples to be included in the analysis. Defaults to all samples in the dataset being analyzed. Requires the " + formatOption( "nodb", "no-db" ) + " option to be set." ).get() );
 
         options.addOption( "usebatch", "use-batch-factor", false, "If a batch factor is available, use it. Otherwise, batch information can/will be ignored in the analysis. This is incompatible with " + formatOption( options, "factors" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
