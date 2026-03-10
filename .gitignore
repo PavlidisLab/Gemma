@@ -103,6 +103,7 @@ gemma-core/src/main/uml/*.bak
 # R
 .RData
 .Rhistory
+.Rproj.user
 
 # Environment files
 .env
@@ -147,3 +148,6 @@ atlassian-ide-plugin.xml
 /Gemma.properties
 /gemma-data
 /gemma-logs
+
+# a custom copy of Gemma_CLI.xml for testing purposes
+.idea/runConfigurations/Gemma_CLI_custom.xml
