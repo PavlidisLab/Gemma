@@ -493,7 +493,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             for ( String sampleId : sampleIdentifiers ) {
                 // allow searching in subsets, those are used in single-cell diff ex. analysis that use sub-samples for
                 // representing pseudo-bulks
-                samplesToUse.add( entityLocator.locateSample( ee, sampleId, true ) );
+                BioMaterial sample = entityLocator.locateSample( ee, sampleId, true );
+                if (sample == null){
+                    sample = entityLocator.locateBioAssay( ee, sampleId, true ).getSampleUsed();
+                }
+                samplesToUse.add( sample );
             }
             config.setSamplesToInclude( samplesToUse );
         }
