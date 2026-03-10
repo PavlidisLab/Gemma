@@ -64,7 +64,12 @@ Gemma.AnnotationDataView = Ext
                 name: "evidenceCode"
             }, {
                 name: "objectClass"
-            }]),
+            },
+                {name: "objectClassLabel",
+                mapping: "objectClass",
+                convert: function (v) {
+                    return Gemma.AnnotationCommon.objectClassMapping(v)
+                }}]),
 
             /**
              * @memberOf Gemma.AnnotationDataView
@@ -104,7 +109,7 @@ Gemma.AnnotationDataView = Ext
                'objectClass == \'ExperimentTag\')" >',
                '<span class="fromOther">',
                '</tpl>',
-                '<a ext:qtip="{className} : {termUri} via {objectClass}" href="' + Gemma.GEMBROW_URL + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
+                '<a ext:qtip="{className} : {termUri} via {objectClassLabel}" href="' + Gemma.GEMBROW_URL + '/#/q/{termUriEsc}" style="text-decoration:underline;">',
                 '{termName}',
                 '</a>',
                 '</span>',
@@ -215,6 +220,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
     name: 'AnnotationGrid',
 
     viewConfig: {
+        forceFit: true,
         enableRowBody: true,
         emptyText: 'No annotations',
         showDetails: false,
@@ -265,6 +271,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
         name: "parentOfParentDescription"
     }, {
         name: "evidenceCode"
+    }, {
+        name: "objectClassLabel",
+        mapping: "objectClass",
+        convert: function (v) { return Gemma.AnnotationCommon.objectClassMapping(v)}
     }]),
 
     parentStyler: function (value, metadata, record, row, col, ds) {
@@ -331,10 +341,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             }, {
                 header: "Evidence",
                 dataIndex: "evidenceCode",
-                sortable: true
+                sortable: true,
+                hidden: this.editable ? false: true
             }, {
                 header: "From",
-                dataIndex: "objectClass",
+                id: "objectClassLabel",
+                dataIndex: "objectClassLabel",
                 sortable: true,
                 hidden: this.showParent? true : false,
                 tooltip: Gemma.HelpText.WidgetDefaults.AnnotationGrid.objectClassDescription
@@ -456,7 +468,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             if (this.getTopToolbar().deleteButton) {
                 this.getSelectionModel().on("selectionchange", function (model) {
                     var selected = model.getSelections();
-                    if (selected.length > 0) {
+                    if (selected.length > 0 && selected.every(x => x.data.objectClass === "ExperimentTag")) {
                         this.getTopToolbar().deleteButton.enable();
                     } else {
                         this.getTopToolbar().deleteButton.disable();
@@ -511,3 +523,14 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
     }
 
 });
+
+Gemma.AnnotationCommon = {
+    objectClassMapping: function(objectClass){
+        const map = {
+            BioMaterial: "Samples",
+            FactorValue: "Experimental Factors",
+            ExperimentTag: "Dataset Annotations"
+        }
+        return (objectClass in map) ? map[objectClass] : objectClass;
+    }
+}
