@@ -127,10 +127,14 @@ Gemma.AnnotationDataView = Ext
                         reader: new Ext.data.ListRangeReader({
                             id: "id"
                         }, this.record) ,
-                        // to keep grouped by type
-                        sortInfo: {
-                            field: 'objectClass',
-                            direction: 'ASC'
+                        listeners: {
+                            load: function(store){
+                                debugger
+                                store.multiSort([
+                                    {field:'objectClass',direction:'ASC'},
+                                    {field:'className',direction:'ASC'},
+                                ])
+                            }
                         }
                     })
                 });
