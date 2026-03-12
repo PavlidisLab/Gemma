@@ -205,7 +205,9 @@ public class OntologyUtils {
     public static String termIdToUri( String termId ) {
         String[] parts = termId.split( ":", 2 );
         if ( parts.length != 2 ) {
-            throw new IllegalArgumentException( "Term ID is not in the expected '{IDSPACE}:{LOCALID}' format." );
+            log.warn( "Term ID is not in the expected '{IDSPACE}:{LOCALID}' format." );
+            return null;
+            // throw new IllegalArgumentException( "Term ID is not in the expected '{IDSPACE}:{LOCALID}' format." );
         }
         return OBO_ID_SPACES.getOrDefault( parts[0], BASE_PURL_URI ) + toUriIdSpace( parts[0] ) + "_" + parts[1];
     }
