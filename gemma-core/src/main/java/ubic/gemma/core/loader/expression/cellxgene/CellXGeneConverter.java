@@ -20,10 +20,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -38,6 +35,15 @@ public class CellXGeneConverter {
     private final ExternalDatabaseService externalDatabaseService;
     private final TaxonService taxonService;
     private final PubMedSearch pubMedSearch;
+
+    private static final Map<String, Category> CATEGORY_MAP = new HashMap<>();
+    static {
+        CATEGORY_MAP.put( "developmental_stage", Categories.DEVELOPMENT_STAGE );
+        CATEGORY_MAP.put( "sex", Categories.BIOLOGICAL_SEX );
+        CATEGORY_MAP.put( "cell_type", Categories.CELL_TYPE );
+        CATEGORY_MAP.put( "tissue", Categories.ORGANISM_PART );
+        CATEGORY_MAP.put( "disease", Categories.DISEASE );
+    }
 
     public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonService taxonService, PubMedSearch pubMedSearch ) {
         this.externalDatabaseService = externalDatabaseService;
@@ -84,7 +90,15 @@ public class CellXGeneConverter {
 
         // TODO: filter which sample characteristics we want in Gemma
         dataLoader.getSamplesCharacteristics( ee.getBioAssays() )
-                .forEach( ( ba, cs ) -> ba.getCharacteristics().addAll( cs ) );
+                .forEach( ( bm, cs ) -> bm.getCharacteristics().addAll( cs ) );
+
+        ee.getBioAssays().forEach( ( ba ) -> {
+            ba.getSampleUsed().getCharacteristics().forEach( ( c ) -> {
+                processCharacteristics( c );
+            } );
+        } );
+
+        ee.getBioAssays().forEach( ( ba ) -> ba.getSampleUsed().getCharacteristics() );
 
         // TODO: prefill the experimental design
         ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
@@ -101,6 +115,17 @@ public class CellXGeneConverter {
         }
 
         return ee;
+    }
+
+
+
+    private void processCharacteristics( Characteristic c ) {
+        Category matchingCategory = CATEGORY_MAP.get( c.getCategory() );
+
+        if ( matchingCategory != null ) {
+            c.setCategory( matchingCategory.getCategory() );
+            c.setCategoryUri( matchingCategory.getCategoryUri() );
+        }
     }
 
     private DatabaseEntry convertAccession( DatasetMetadata datasetMetadata ) {
