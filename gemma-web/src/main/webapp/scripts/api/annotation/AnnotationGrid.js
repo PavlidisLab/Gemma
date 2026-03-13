@@ -129,7 +129,6 @@ Gemma.AnnotationDataView = Ext
                         }, this.record) ,
                         listeners: {
                             load: function(store){
-                                debugger
                                 store.multiSort([
                                     {field:'objectClass',direction:'ASC'},
                                     {field:'className',direction:'ASC'},
