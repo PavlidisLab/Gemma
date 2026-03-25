@@ -2283,13 +2283,13 @@ public class ExpressionExperimentDaoImpl
         // Find and delete any BioAssayDimension that contains subset BioAssays
         if ( !samplesToRemove.isEmpty() ) {
             //noinspection unchecked
-            List<BioAssayDimension> subsetBads = getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct dim from BioAssayDimension dim "
-                            + "join dim.bioAssays ba "
-                            + "join ba.sampleUsed bm "
-                            + "where bm.sourceBioMaterial in (:bms)" )
-                    .setParameterList( "bms", samplesToRemove )
-                    .list();
+            List<BioAssayDimension> subsetBads = QueryUtils.listByIdentifiableBatch(
+                    getSessionFactory().getCurrentSession()
+                            .createQuery( "select distinct dim from BioAssayDimension dim "
+                                    + "join dim.bioAssays ba "
+                                    + "join ba.sampleUsed bm "
+                                    + "where bm.sourceBioMaterial in (:bms)" ),
+                    "bms", samplesToRemove, MAX_PARAMETER_LIST_SIZE );
             if ( !subsetBads.isEmpty() ) {
                 log.info( String.format( "Removing %d BioAssayDimension containing subset BioAssays from %s", subsetBads.size(), ee ) );
                 removeUnusedDimensions( ee, subsetBads );
