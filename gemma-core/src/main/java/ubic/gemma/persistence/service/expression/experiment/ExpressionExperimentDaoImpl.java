@@ -2305,13 +2305,25 @@ public class ExpressionExperimentDaoImpl
         }
 
         super.remove( ee );
-
+        getSessionFactory().getCurrentSession().flush();
         if ( !samplesToRemove.isEmpty() ) {
             // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
             // cascading and that is not allowed in the data model
             log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
             for ( BioMaterial bm : samplesToRemove ) {
                 log.debug( "Removing " + bm + "..." );
+                //noinspection unchecked
+                List<BioMaterial> subBioMaterials = getSessionFactory().getCurrentSession()
+                        .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial = :bm" )
+                        .setParameter( "bm", bm )
+                        .list();
+                for ( BioMaterial subBm : subBioMaterials ) {
+                    // delete subset bioassays
+                    getSessionFactory().getCurrentSession().flush();
+                    subBm.setSourceBioMaterial( bm.getSourceBioMaterial() );
+                    getSessionFactory().getCurrentSession().delete( subBm );
+                }
+                getSessionFactory().getCurrentSession().flush();
                 getSessionFactory().getCurrentSession().delete( bm );
             }
         }
