@@ -17,13 +17,13 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +34,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    BioAssayService bioAssayService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
@@ -129,9 +131,25 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                     assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
                 } );
 
+        List<BioAssay> subassays = subsets.stream()
+                .flatMap(subset -> subset.getBioAssays().stream())
+                .collect(Collectors.toList());
+
+        Set<BioAssay> assays = ee.getBioAssays();
+
         assertNotNull( expressionExperimentService.load( ee.getId() ) );
         expressionExperimentService.remove( ee );
         assertNull( expressionExperimentService.load( ee.getId() ) );
+
+        for ( Long id : assays.stream().map( BioAssay::getId ).collect(Collectors.toList()) ) {
+            BioAssay ba = bioAssayService.load( id );
+            assertNull( ba );
+        }
+
+        for ( Long id : subassays.stream().map( BioAssay::getId ).collect(Collectors.toList()) ) {
+            BioAssay ba = bioAssayService.load( id );
+            assertNull( ba );
+        }
 
     }
 }
