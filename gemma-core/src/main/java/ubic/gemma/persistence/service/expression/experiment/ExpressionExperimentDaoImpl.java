@@ -2202,6 +2202,7 @@ public class ExpressionExperimentDaoImpl
     public void remove( ExpressionExperiment ee ) {
         log.info( "Deleting " + ee + "..." );
 
+        Session session = getSessionFactory().getCurrentSession();
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
         // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
@@ -2214,7 +2215,7 @@ public class ExpressionExperimentDaoImpl
         // it's not reliable to check the otherParts collection because the relation is bi-directional and some dataset
         // might refer to this EE and not the other way around
         //noinspection unchecked
-        List<ExpressionExperiment> otherParts = getSessionFactory().getCurrentSession()
+        List<ExpressionExperiment> otherParts = session
                 .createQuery( "select ee from ExpressionExperiment ee join ee.otherParts op where op = :ee group by ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -2240,7 +2241,7 @@ public class ExpressionExperimentDaoImpl
         // find BMs attached to BAs
         Set<BioMaterial> bms = new HashSet<>();
         if ( !ee.getBioAssays().isEmpty() ) {
-            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+            bms.addAll( listByIdentifiableBatch( session
                             .createQuery( "select bm from BioMaterial bm join bm.bioAssaysUsedIn ba where ba in :bas group by bm" ),
                     "bas", ee.getBioAssays(), MAX_PARAMETER_LIST_SIZE ) );
         }
@@ -2248,7 +2249,7 @@ public class ExpressionExperimentDaoImpl
         // find BMs attached to FVs
         Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
         if ( !fvs.isEmpty() ) {
-            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+            bms.addAll( listByIdentifiableBatch( session
                             .createQuery( "select bm from BioMaterial bm join bm.factorValues fv where fv in :fvs group by bm" ),
                     "fvs", fvs, MAX_PARAMETER_LIST_SIZE ) );
         }
@@ -2284,7 +2285,7 @@ public class ExpressionExperimentDaoImpl
         if ( !samplesToRemove.isEmpty() ) {
             //noinspection unchecked
             List<BioAssayDimension> subsetBads = QueryUtils.listByIdentifiableBatch(
-                    getSessionFactory().getCurrentSession()
+                    session
                             .createQuery( "select distinct dim from BioAssayDimension dim "
                                     + "join dim.bioAssays ba "
                                     + "join ba.sampleUsed bm "
@@ -2328,20 +2329,20 @@ public class ExpressionExperimentDaoImpl
             for ( BioMaterial bm : samplesToRemove ) {
                 log.debug( "Removing " + bm + "..." );
                 //noinspection unchecked
-                List<BioMaterial> subBioMaterials = getSessionFactory().getCurrentSession()
+                List<BioMaterial> subBioMaterials = session
                         .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial = :bm" )
                         .setParameter( "bm", bm )
                         .list();
                 for ( BioMaterial subBm : subBioMaterials ) {
                     // delete subset BioAssays referring to the BioMaterial
                     //noinspection unchecked
-                    List<BioAssay> subBioAssays = getSessionFactory().getCurrentSession()
+                    List<BioAssay> subBioAssays = session
                             .createQuery( "select ba from BioAssay ba where ba.sampleUsed = :bm" )
                             .setParameter( "bm", subBm )
                             .list();
                     for ( BioAssay subBa : subBioAssays ) {
                         //noinspection unchecked
-                        List<BioAssayDimension> dims = getSessionFactory().getCurrentSession()
+                        List<BioAssayDimension> dims = session
                                 .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                                 .setParameter( "ba", subBa )
                                 .list();
