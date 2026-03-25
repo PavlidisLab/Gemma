@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
 public class SingleCellIntegrationTest extends BaseIntegrationTest {
@@ -126,5 +128,10 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                     assertThat( vec.getBioAssayDimension().getBioAssays() ).isEqualTo( cellBAs );
                     assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
                 } );
+
+        assertNotNull( expressionExperimentService.load( ee.getId() ) );
+        expressionExperimentService.remove( ee );
+        assertNull( expressionExperimentService.load( ee.getId() ) );
+
     }
 }
