@@ -2280,6 +2280,22 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
+        // Find and delete any BioAssayDimension that contains subset BioAssays
+        if ( !samplesToRemove.isEmpty() ) {
+            //noinspection unchecked
+            List<BioAssayDimension> subsetBads = getSessionFactory().getCurrentSession()
+                    .createQuery( "select distinct dim from BioAssayDimension dim "
+                            + "join dim.bioAssays ba "
+                            + "join ba.sampleUsed bm "
+                            + "where bm.sourceBioMaterial in (:bms)" )
+                    .setParameterList( "bms", samplesToRemove )
+                    .list();
+            if ( !subsetBads.isEmpty() ) {
+                log.info( String.format( "Removing %d BioAssayDimension containing subset BioAssays from %s", subsetBads.size(), ee ) );
+                removeUnusedDimensions( ee, subsetBads );
+            }
+        }
+
         // unlike BioAssayDimension, SingleCellDimension are immutable and can never hold BAs from other experiments, so
         // we don't need to detach anything
         List<SingleCellDimension> singleCellDimensionsToRemove = getSingleCellDimensions( ee );
@@ -2305,7 +2321,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         super.remove( ee );
-        getSessionFactory().getCurrentSession().flush();
         if ( !samplesToRemove.isEmpty() ) {
             // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
             // cascading and that is not allowed in the data model
@@ -2318,12 +2333,30 @@ public class ExpressionExperimentDaoImpl
                         .setParameter( "bm", bm )
                         .list();
                 for ( BioMaterial subBm : subBioMaterials ) {
-                    // delete subset bioassays
-                    getSessionFactory().getCurrentSession().flush();
-                    subBm.setSourceBioMaterial( bm.getSourceBioMaterial() );
+                    // delete subset BioAssays referring to the BioMaterial
+                    //noinspection unchecked
+                    List<BioAssay> subBioAssays = getSessionFactory().getCurrentSession()
+                            .createQuery( "select ba from BioAssay ba where ba.sampleUsed = :bm" )
+                            .setParameter( "bm", subBm )
+                            .list();
+                    for ( BioAssay subBa : subBioAssays ) {
+                        //noinspection unchecked
+                        List<BioAssayDimension> dims = getSessionFactory().getCurrentSession()
+                                .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
+                                .setParameter( "ba", subBa )
+                                .list();
+                        for ( BioAssayDimension dim : dims ) {
+                            dim.getBioAssays().remove( subBa );
+                            if ( dim.getBioAssays().isEmpty() ) {
+                                getSessionFactory().getCurrentSession().delete( dim );
+                            }
+                        }
+                        // the BIO_ASSAY_DIMENSIONS2BIO_ASSAYS row removal
+                        getSessionFactory().getCurrentSession().delete( subBa );
+                    }
+                    subBm.setSourceBioMaterial( null );
                     getSessionFactory().getCurrentSession().delete( subBm );
                 }
-                getSessionFactory().getCurrentSession().flush();
                 getSessionFactory().getCurrentSession().delete( bm );
             }
         }
