@@ -147,7 +147,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                 .map( BioAssayDimension::getId )
                 .collect( Collectors.toList() );
 
-        List<Long> assayIds = ee.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
+        List<Long> assayIds = ee.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.<Long>toList() );
 
 
 
