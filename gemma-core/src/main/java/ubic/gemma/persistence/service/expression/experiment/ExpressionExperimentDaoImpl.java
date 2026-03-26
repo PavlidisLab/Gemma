@@ -2341,13 +2341,8 @@ public class ExpressionExperimentDaoImpl
                 List<BioAssayDimension> dims = QueryUtils.listByIdentifiableBatch(
                         session.createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba in (:bas)" ),
                         "bas", subBioAssays, MAX_PARAMETER_LIST_SIZE );
-                for ( BioAssayDimension dim : dims ) {
-                    dim.getBioAssays().removeAll( subBioAssays );
-                    if ( dim.getBioAssays().isEmpty() ) {
-                        log.debug( "Removing " + dim + "..." );
-                        session.delete( dim );
-                    }
-                }
+                removeUnusedDimensions( ee, dims );
+
                 for ( BioAssay ba : subBioAssays ) {
                     log.debug( "Removing " + ba + "..." );
                     session.delete( ba );
