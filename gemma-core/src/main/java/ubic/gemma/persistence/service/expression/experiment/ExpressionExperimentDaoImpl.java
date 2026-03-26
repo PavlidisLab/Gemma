@@ -2325,40 +2325,42 @@ public class ExpressionExperimentDaoImpl
         if ( !samplesToRemove.isEmpty() ) {
             // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
             // cascading and that is not allowed in the data model
+            // TODO: accurate log.info. we are still deleting BioAssays here.
             log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
-            for ( BioMaterial bm : samplesToRemove ) {
-                log.debug( "Removing " + bm + "..." );
-                //noinspection unchecked
-                List<BioMaterial> subBioMaterials = session
-                        .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial = :bm" )
-                        .setParameter( "bm", bm )
-                        .list();
-                for ( BioMaterial subBm : subBioMaterials ) {
-                    // delete subset BioAssays referring to the BioMaterial
-                    //noinspection unchecked
-                    List<BioAssay> subBioAssays = session
-                            .createQuery( "select ba from BioAssay ba where ba.sampleUsed = :bm" )
-                            .setParameter( "bm", subBm )
-                            .list();
-                    for ( BioAssay subBa : subBioAssays ) {
-                        //noinspection unchecked
-                        List<BioAssayDimension> dims = session
-                                .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
-                                .setParameter( "ba", subBa )
-                                .list();
-                        for ( BioAssayDimension dim : dims ) {
-                            dim.getBioAssays().remove( subBa );
-                            if ( dim.getBioAssays().isEmpty() ) {
-                                getSessionFactory().getCurrentSession().delete( dim );
-                            }
-                        }
-                        // the BIO_ASSAY_DIMENSIONS2BIO_ASSAYS row removal
-                        getSessionFactory().getCurrentSession().delete( subBa );
+            List<BioMaterial> subBioMaterials = QueryUtils.listByIdentifiableBatch(
+                    session.createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial in (:bms)" ),
+                    "bms", samplesToRemove, MAX_PARAMETER_LIST_SIZE);
+
+            List<BioAssay> subBioAssays = Collections.emptyList();
+            if ( !subBioMaterials.isEmpty() ) {
+                subBioAssays = QueryUtils.listByIdentifiableBatch(
+                        session.createQuery( "select ba from BioAssay ba where ba.sampleUsed in (:bms)" ),
+                        "bms", subBioMaterials, MAX_PARAMETER_LIST_SIZE );
+            }
+            if ( !subBioAssays.isEmpty() ) {
+                List<BioAssayDimension> dims = QueryUtils.listByIdentifiableBatch(
+                        session.createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba in (:bas)" ),
+                        "bas", subBioAssays, MAX_PARAMETER_LIST_SIZE );
+                for ( BioAssayDimension dim : dims ) {
+                    dim.getBioAssays().removeAll( subBioAssays );
+                    if ( dim.getBioAssays().isEmpty() ) {
+                        log.debug( "Removing " + dim + "..." );
+                        session.delete( dim );
                     }
-                    subBm.setSourceBioMaterial( null );
-                    getSessionFactory().getCurrentSession().delete( subBm );
                 }
-                getSessionFactory().getCurrentSession().delete( bm );
+                for ( BioAssay ba : subBioAssays ) {
+                    log.debug( "Removing " + ba + "..." );
+                    session.delete( ba );
+                }
+                for ( BioMaterial subBm : subBioMaterials ) {
+                    log.debug( "Removing " + subBm + "..." );
+                    subBm.setSourceBioMaterial( null );
+                    session.delete( subBm );
+                }
+                for ( BioMaterial bm : samplesToRemove ) {
+                    log.debug( "Removing " + bm + "..." );
+                    session.delete( bm );
+                }
             }
         }
     }
