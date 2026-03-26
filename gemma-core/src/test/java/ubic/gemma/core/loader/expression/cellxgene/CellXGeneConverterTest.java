@@ -145,7 +145,7 @@ public class CellXGeneConverterTest extends BaseTest {
                             .hasSize( 7 )
                             .extracting( Characteristic::getCategory )
                             .containsExactlyInAnyOrder(
-                                    "sex",
+                                    "biological sex",
                                     "assay",
                                     "suspension_type",
                                     "development_stage",
