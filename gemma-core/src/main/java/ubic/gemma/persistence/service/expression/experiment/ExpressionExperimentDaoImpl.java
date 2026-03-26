@@ -2202,6 +2202,7 @@ public class ExpressionExperimentDaoImpl
     public void remove( ExpressionExperiment ee ) {
         log.info( "Deleting " + ee + "..." );
 
+        Session session = getSessionFactory().getCurrentSession();
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
         // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
@@ -2214,7 +2215,7 @@ public class ExpressionExperimentDaoImpl
         // it's not reliable to check the otherParts collection because the relation is bi-directional and some dataset
         // might refer to this EE and not the other way around
         //noinspection unchecked
-        List<ExpressionExperiment> otherParts = getSessionFactory().getCurrentSession()
+        List<ExpressionExperiment> otherParts = session
                 .createQuery( "select ee from ExpressionExperiment ee join ee.otherParts op where op = :ee group by ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -2240,7 +2241,7 @@ public class ExpressionExperimentDaoImpl
         // find BMs attached to BAs
         Set<BioMaterial> bms = new HashSet<>();
         if ( !ee.getBioAssays().isEmpty() ) {
-            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+            bms.addAll( listByIdentifiableBatch( session
                             .createQuery( "select bm from BioMaterial bm join bm.bioAssaysUsedIn ba where ba in :bas group by bm" ),
                     "bas", ee.getBioAssays(), MAX_PARAMETER_LIST_SIZE ) );
         }
@@ -2248,7 +2249,7 @@ public class ExpressionExperimentDaoImpl
         // find BMs attached to FVs
         Set<FactorValue> fvs = new HashSet<>( getFactorValues( ee ) );
         if ( !fvs.isEmpty() ) {
-            bms.addAll( listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+            bms.addAll( listByIdentifiableBatch( session
                             .createQuery( "select bm from BioMaterial bm join bm.factorValues fv where fv in :fvs group by bm" ),
                     "fvs", fvs, MAX_PARAMETER_LIST_SIZE ) );
         }
@@ -2280,6 +2281,22 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
+        // Find and delete any BioAssayDimension that contains subset BioAssays
+        if ( !samplesToRemove.isEmpty() ) {
+            //noinspection unchecked
+            List<BioAssayDimension> subsetBads = QueryUtils.listByIdentifiableBatch(
+                    session
+                            .createQuery( "select distinct dim from BioAssayDimension dim "
+                                    + "join dim.bioAssays ba "
+                                    + "join ba.sampleUsed bm "
+                                    + "where bm.sourceBioMaterial in (:bms)" ),
+                    "bms", samplesToRemove, MAX_PARAMETER_LIST_SIZE );
+            if ( !subsetBads.isEmpty() ) {
+                log.info( String.format( "Removing %d BioAssayDimension containing subset BioAssays from %s", subsetBads.size(), ee ) );
+                removeUnusedDimensions( ee, subsetBads );
+            }
+        }
+
         // unlike BioAssayDimension, SingleCellDimension are immutable and can never hold BAs from other experiments, so
         // we don't need to detach anything
         List<SingleCellDimension> singleCellDimensionsToRemove = getSingleCellDimensions( ee );
@@ -2305,14 +2322,40 @@ public class ExpressionExperimentDaoImpl
         }
 
         super.remove( ee );
-
         if ( !samplesToRemove.isEmpty() ) {
             // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
             // cascading and that is not allowed in the data model
+            // TODO: accurate log.info. we are still deleting BioAssays here.
             log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
-            for ( BioMaterial bm : samplesToRemove ) {
-                log.debug( "Removing " + bm + "..." );
-                getSessionFactory().getCurrentSession().delete( bm );
+            List<BioMaterial> subBioMaterials = QueryUtils.listByIdentifiableBatch(
+                    session.createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial in (:bms)" ),
+                    "bms", samplesToRemove, MAX_PARAMETER_LIST_SIZE);
+
+            List<BioAssay> subBioAssays = Collections.emptyList();
+            if ( !subBioMaterials.isEmpty() ) {
+                subBioAssays = QueryUtils.listByIdentifiableBatch(
+                        session.createQuery( "select ba from BioAssay ba where ba.sampleUsed in (:bms)" ),
+                        "bms", subBioMaterials, MAX_PARAMETER_LIST_SIZE );
+            }
+            if ( !subBioAssays.isEmpty() ) {
+                List<BioAssayDimension> dims = QueryUtils.listByIdentifiableBatch(
+                        session.createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba in (:bas)" ),
+                        "bas", subBioAssays, MAX_PARAMETER_LIST_SIZE );
+                removeUnusedDimensions( ee, dims );
+
+                for ( BioAssay ba : subBioAssays ) {
+                    log.debug( "Removing " + ba + "..." );
+                    session.delete( ba );
+                }
+                for ( BioMaterial subBm : subBioMaterials ) {
+                    log.debug( "Removing " + subBm + "..." );
+                    subBm.setSourceBioMaterial( null );
+                    session.delete( subBm );
+                }
+                for ( BioMaterial bm : samplesToRemove ) {
+                    log.debug( "Removing " + bm + "..." );
+                    session.delete( bm );
+                }
             }
         }
     }

@@ -14,24 +14,31 @@ import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
 public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private BioAssayService bioAssayService;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
@@ -53,7 +60,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @After
     public void tearDown() {
-        // FIXME:
+        // redundant for the current test
         // if ( ee != null ) {
         //     expressionExperimentService.remove( ee );
         // }
@@ -64,6 +71,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void test() {
+        // possibly replace it with getTestPersistentSingleCellExpressionExperiment. creation of qt and cell type assignments
+        // are repeated here
         Random random = new Random( 123L );
         QuantitationType qt = new QuantitationType();
         qt.setName( "counts" );
@@ -126,5 +135,40 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                     assertThat( vec.getBioAssayDimension().getBioAssays() ).isEqualTo( cellBAs );
                     assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
                 } );
+
+        List<BioAssay> subAssays = subsets.stream()
+                .flatMap(subset -> subset.getBioAssays().stream())
+                .collect(Collectors.toList());
+
+        List<Long> subAssayIds = subAssays.stream().map( BioAssay::getId ).collect(Collectors.toList());
+
+        List<Long> dimIds = subAssays.stream()
+                .flatMap( ba -> bioAssayService.findBioAssayDimensions( ba ).stream() )
+                .map( BioAssayDimension::getId )
+                .collect( Collectors.toList() );
+
+        List<Long> assayIds = ee.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
+
+
+
+        assertNotNull( expressionExperimentService.load( ee.getId() ) );
+        expressionExperimentService.remove( ee );
+        assertNull( expressionExperimentService.load( ee.getId() ) );
+
+        for ( Long id : assayIds ) {
+            BioAssay ba = bioAssayService.load( id );
+            assertNull( ba );
+        }
+
+        for ( Long id : subAssayIds ) {
+            BioAssay ba = bioAssayService.load( id );
+            assertNull( ba );
+        }
+
+        for ( Long id: dimIds ) {
+            BioAssayDimension ba = bioAssayDimensionService.load( id );
+            assertNull( ba );
+        }
+
     }
 }
