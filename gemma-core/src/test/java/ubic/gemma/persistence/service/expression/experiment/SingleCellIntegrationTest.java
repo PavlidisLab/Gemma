@@ -136,15 +136,18 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                     assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
                 } );
 
-        List<BioAssay> subassays = subsets.stream()
+        List<BioAssay> subAssays = subsets.stream()
                 .flatMap(subset -> subset.getBioAssays().stream())
                 .collect(Collectors.toList());
 
-        List<BioAssayDimension> dims = subassays.stream().
-                flatMap( ba -> bioAssayService.findBioAssayDimensions( ba ).stream() ).
-                collect( Collectors.toList() );
+        List<Long> subAssayIds = subAssays.stream().map( BioAssay::getId ).collect(Collectors.toList());
 
-        Set<BioAssay> assays = ee.getBioAssays();
+        List<Long> dimIds = subAssays.stream()
+                .flatMap( ba -> bioAssayService.findBioAssayDimensions( ba ).stream() )
+                .map( BioAssayDimension::getId )
+                .collect( Collectors.toList() );
+
+        List<Long> assayIds = ee.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
 
 
 
@@ -152,17 +155,17 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         expressionExperimentService.remove( ee );
         assertNull( expressionExperimentService.load( ee.getId() ) );
 
-        for ( Long id : assays.stream().map( BioAssay::getId ).collect(Collectors.toList()) ) {
+        for ( Long id : assayIds ) {
             BioAssay ba = bioAssayService.load( id );
             assertNull( ba );
         }
 
-        for ( Long id : subassays.stream().map( BioAssay::getId ).collect(Collectors.toList()) ) {
+        for ( Long id : subAssayIds ) {
             BioAssay ba = bioAssayService.load( id );
             assertNull( ba );
         }
 
-        for ( Long id: dims.stream().map( BioAssayDimension::getId ).collect(Collectors.toList()) ) {
+        for ( Long id: dimIds ) {
             BioAssayDimension ba = bioAssayDimensionService.load( id );
             assertNull( ba );
         }
