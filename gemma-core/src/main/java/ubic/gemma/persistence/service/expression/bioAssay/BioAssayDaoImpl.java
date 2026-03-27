@@ -62,7 +62,7 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                        "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba group by bad" )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
 

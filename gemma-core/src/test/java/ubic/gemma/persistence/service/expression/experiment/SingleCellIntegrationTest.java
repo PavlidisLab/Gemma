@@ -44,6 +44,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private SingleCellExpressionExperimentSubSetService singleCellExpressionExperimentSubSetService;
     @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
     private SingleCellExpressionExperimentAggregateService singleCellExpressionExperimentAggregateService;
 
     @Autowired
@@ -148,6 +150,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                 .collect( Collectors.toList() );
 
         List<Long> assayIds = ee.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.<Long>toList() );
+        List<Long> subsetIds = subsets.stream().map( ExpressionExperimentSubSet::getId ).collect( Collectors.<Long>toList() );
 
 
 
@@ -168,6 +171,10 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( Long id: dimIds ) {
             BioAssayDimension ba = bioAssayDimensionService.load( id );
             assertNull( ba );
+        }
+
+        for (Long id: subsetIds) {
+            assertNull ( expressionExperimentSubSetService.load( id ) );
         }
 
     }
