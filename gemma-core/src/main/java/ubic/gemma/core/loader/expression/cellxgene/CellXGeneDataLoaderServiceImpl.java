@@ -64,7 +64,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
 
     @Override
     public ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId,
-            ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample ) throws IOException {
+            ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun) throws IOException {
         if ( expressionExperimentService.existsByShortName( datasetShortName ) ) {
             throw new IllegalArgumentException( "An ExpressionExperiment with short name " + datasetShortName + " already exists in the database." );
         }
@@ -120,7 +120,11 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             ee = cellXGeneConverter.convert( cm, metadata, platform, datasetShortName, dataLoader, loadSingleCellData );
         }
 
-        return persister.persist( ee );
+        if (dryRun){
+            return ee;
+        } else{
+            return persister.persist( ee );
+        }
     }
 
     @Override
