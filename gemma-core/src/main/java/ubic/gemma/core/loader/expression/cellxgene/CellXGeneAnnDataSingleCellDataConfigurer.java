@@ -76,6 +76,8 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
                 || !Boolean.FALSE.equals( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose() );
 
         if (cellXGeneTransposedPath != null && Files.exists( cellXGeneTransposedPath.resolve( annDataFile.getFileName() ) )) {
+            log.info( "Using pre-transposed file: " + cellXGeneTransposedPath.resolve( annDataFile.getFileName() ) );
+            wasTransposedOnDisk.set( true );
             return cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
         }
 
@@ -113,6 +115,7 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
             sbs.setOutputFile( fileToUse, SingleCellDataType.ANNDATA );
         } finally {
             if (cellXGeneTransposedPath == null){
+                // preserve fileToUse if a specific path is provided
                 tempFiles.add( fileToUse );
             }
         }
