@@ -64,11 +64,7 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         return applyConfig( new CellXGeneAnnDataSingleCellDataLoader( finalSortedFile, keepPooledSample, keepUnknownSample ) {
             @Override
             public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    removeTemporaryFilesSilently( Collections.singleton( finalSortedFile ) );
-                }
+                super.close();
             }
         }, config, wasTransposedOnDisk.get() );
     }
@@ -79,7 +75,7 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         boolean transposeOnDisk = !( config instanceof AnnDataSingleCellDataLoaderConfig )
                 || !Boolean.FALSE.equals( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose() );
 
-        if (cellXGeneTransposedPath != null && Files.exists( cellXGeneTransposedPath.resolve( annDataFile.getFileName()) )) {
+        if (cellXGeneTransposedPath != null && Files.exists( cellXGeneTransposedPath.resolve( annDataFile.getFileName() ) )) {
             return cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
         }
 
