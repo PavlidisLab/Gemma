@@ -42,7 +42,7 @@ public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest {
 
         ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( "f406a653-c079-4bf9-aab6-85846c27571d",
                 "412352dd-a919-4d8e-9f74-e210627328b5", null, platform, "Clarence-2024",
-                false, false, false );
+                false, false, false,false );
 
         assertThat( ee.getAccession() ).isNotNull()
                 .satisfies( accession -> {
