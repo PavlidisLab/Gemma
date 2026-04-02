@@ -2286,10 +2286,10 @@ public class ExpressionExperimentDaoImpl
             //noinspection unchecked
             List<BioAssayDimension> subsetBads = QueryUtils.listByIdentifiableBatch(
                     session
-                            .createQuery( "select distinct dim from BioAssayDimension dim "
+                            .createQuery( "select dim from BioAssayDimension dim "
                                     + "join dim.bioAssays ba "
                                     + "join ba.sampleUsed bm "
-                                    + "where bm.sourceBioMaterial in (:bms)" ),
+                                    + "where bm.sourceBioMaterial in (:bms) group by dim" ),
                     "bms", samplesToRemove, MAX_PARAMETER_LIST_SIZE );
             if ( !subsetBads.isEmpty() ) {
                 log.info( String.format( "Removing %d BioAssayDimension containing subset BioAssays from %s", subsetBads.size(), ee ) );
@@ -2339,7 +2339,7 @@ public class ExpressionExperimentDaoImpl
             }
             if ( !subBioAssays.isEmpty() ) {
                 List<BioAssayDimension> dims = QueryUtils.listByIdentifiableBatch(
-                        session.createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba in (:bas)" ),
+                        session.createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba in (:bas) group by dim" ),
                         "bas", subBioAssays, MAX_PARAMETER_LIST_SIZE );
                 removeUnusedDimensions( ee, dims );
 
