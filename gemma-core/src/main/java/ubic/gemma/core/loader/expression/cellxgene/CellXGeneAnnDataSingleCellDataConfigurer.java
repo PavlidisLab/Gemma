@@ -25,10 +25,18 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
     private final Path annDataFile;
 
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+    private final Path cellXGeneTransposedPath;
+
+    public CellXGeneAnnDataSingleCellDataConfigurer( Path annDataFile, SingleCellDataTransformationFactory singleCellDataTransformationFactory, Path cellXGeneTransposedPath ) {
+        this.annDataFile = annDataFile;
+        this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
+        this.cellXGeneTransposedPath = cellXGeneTransposedPath;
+    }
 
     public CellXGeneAnnDataSingleCellDataConfigurer( Path annDataFile, SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
         this.annDataFile = annDataFile;
         this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
+        this.cellXGeneTransposedPath = null;
     }
 
     @Override
@@ -71,6 +79,10 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         boolean transposeOnDisk = !( config instanceof AnnDataSingleCellDataLoaderConfig )
                 || !Boolean.FALSE.equals( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose() );
 
+        if (cellXGeneTransposedPath != null && Files.exists( cellXGeneTransposedPath.resolve( annDataFile.getFileName()) )) {
+            return cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+        }
+
         if ( transposeOnDisk ) {
             log.info( "Transposing " + fileToUse + "..." );
             SingleCellDataTranspose sbs = singleCellDataTransformationFactory
@@ -93,11 +105,20 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
                 .getTransformation( SingleCellDataSortBySample.class );
         sbs.setSampleColumnName( "donor_id" );
         sbs.setInputFile( fileToUse, SingleCellDataType.ANNDATA );
-        fileToUse = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
+
+        if( cellXGeneTransposedPath == null) {
+            fileToUse = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
+        } else{
+            Files.createDirectories( cellXGeneTransposedPath );
+            fileToUse = cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+        }
+
         try {
             sbs.setOutputFile( fileToUse, SingleCellDataType.ANNDATA );
         } finally {
-            tempFiles.add( fileToUse );
+            if (cellXGeneTransposedPath == null){
+                tempFiles.add( fileToUse );
+            }
         }
         sbs.perform();
 

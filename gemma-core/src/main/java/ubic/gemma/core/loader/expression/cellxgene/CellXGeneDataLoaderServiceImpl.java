@@ -44,6 +44,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     private final ExpressionExperimentService expressionExperimentService;
     private final ArrayDesignService arrayDesignService;
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+    private final Path cellXGeneTransposedPath;
 
     @Autowired
     public CellXGeneDataLoaderServiceImpl(
@@ -52,6 +53,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             ExternalDatabaseService externalDatabaseService, TaxonService taxonService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
             @Value("${cellxgene.local.singleCellData.basepath}") Path cellXGeneDownloadPath,
+            @Value("${gemma.download.path}/singleCellData/CELLxGENE_Transposed") Path cellXGeneTransposedPath,
             @Value("${entrez.efetch.apikey}") String ncbiApiKey
     ) {
         this.cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 3 ), cellXGeneDownloadPath );
@@ -60,13 +62,14 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.persister = persister;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
+        this.cellXGeneTransposedPath = cellXGeneTransposedPath;
     }
 
     @Override
     public ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId,
             ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun) throws IOException {
         if ( expressionExperimentService.existsByShortName( datasetShortName ) ) {
-            throw new IllegalArgumentException( "An ExpressionExperiment with short name " + datasetShortName + " already exists in the database." );
+            //throw new IllegalArgumentException( "An ExpressionExperiment with short name " + datasetShortName + " already exists in the database." );
         }
 
         CollectionMetadata cm = cellXGeneFetcher.fetchCollectionMetadata( collectionId );
@@ -110,7 +113,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         Path dataPath = cellXGeneFetcher.downloadDatasetAsset( metadata.getId(), asset.getId(), asset.getFiletype() );
 
         ExpressionExperiment ee;
-        try ( SingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
+        try ( SingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory,cellXGeneTransposedPath )
                 .configureLoader( CellXGeneAnnDataSingleCellDataLoaderConfig.builder()
                         .ignoreDataVectors( !loadSingleCellData )
                         .keepPooledSample( keepPooledSample )
