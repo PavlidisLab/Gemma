@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -93,7 +94,7 @@ public class CellXGeneConverterTest extends BaseTest {
                         // this will skip the transpose and sort by sample steps
                         .ignoreDataVectors( true )
                         .build() );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, "Clarence-2025", dataLoader, false );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {
             assertThat( accession.getAccession() ).isEqualTo( "412352dd-a919-4d8e-9f74-e210627328b5" );
             assertThat( accession.getUri() ).isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
@@ -170,7 +171,7 @@ public class CellXGeneConverterTest extends BaseTest {
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, "Clarence-2025", dataLoader, true );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, designElements, "Clarence-2025", dataLoader, true );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 );
         assertThat( ee.getSingleCellExpressionDataVectors() ).hasSize( 2 );
     }
