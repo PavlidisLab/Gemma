@@ -120,7 +120,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                         .keepUnknownSample( keepUnknownSample )
                         .build() ) ) {
             dataLoader.setDesignElementToGeneMapper( new EnsemblIdDesignElementMapper( designElementMapping ) );
-            ee = cellXGeneConverter.convert( cm, metadata, platform, datasetShortName, dataLoader, loadSingleCellData );
+            ee = cellXGeneConverter.convert( cm, metadata, platform, designElementMapping.keySet(), datasetShortName, dataLoader, loadSingleCellData );
         }
 
         if (dryRun){

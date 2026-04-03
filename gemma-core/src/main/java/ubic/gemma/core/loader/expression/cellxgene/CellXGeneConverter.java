@@ -9,6 +9,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -59,7 +60,7 @@ public class CellXGeneConverter {
      * @param loadSingleCellData whether to load the single-cell data vectors, this can be done later if needed
      * @return a transient {@link ExpressionExperiment} pre-populated with CELLxGENE metadata
      */
-    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, ArrayDesign platform, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
+    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, ArrayDesign platform, Collection<CompositeSequence> compositeSequences, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( datasetShortName );
         ee.setName( datasetMetadata.getName() );
@@ -107,7 +108,7 @@ public class CellXGeneConverter {
             SingleCellDimension dimension = dataLoader.getSingleCellDimension( ee.getBioAssays() );
             // load the data?
             for ( QuantitationType qt : dataLoader.getQuantitationTypes() ) {
-                List<SingleCellExpressionDataVector> vectors = dataLoader.loadVectors( platform.getCompositeSequences(), dimension, qt )
+                List<SingleCellExpressionDataVector> vectors = dataLoader.loadVectors( compositeSequences, dimension, qt )
                         .collect( Collectors.toList() );
                 ee.getQuantitationTypes().add( qt );
                 ee.getSingleCellExpressionDataVectors().addAll( vectors );
