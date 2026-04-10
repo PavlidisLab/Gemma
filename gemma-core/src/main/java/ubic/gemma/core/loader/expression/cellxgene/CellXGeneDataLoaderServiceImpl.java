@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
@@ -45,6 +47,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     private final ArrayDesignService arrayDesignService;
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
     private final Path cellXGeneTransposedPath;
+    private final TransactionTemplate transactionTemplate;
 
     @Autowired
     public CellXGeneDataLoaderServiceImpl(
@@ -52,6 +55,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             ExpressionExperimentService expressionExperimentService,
             ExternalDatabaseService externalDatabaseService, TaxonService taxonService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
+            PlatformTransactionManager transactionManager,
             @Value("${cellxgene.local.singleCellData.basepath}") Path cellXGeneDownloadPath,
             @Value("${gemma.download.path}/singleCellData/CELLxGENE_Transposed") Path cellXGeneTransposedPath,
             @Value("${entrez.efetch.apikey}") String ncbiApiKey
@@ -63,6 +67,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
         this.cellXGeneTransposedPath = cellXGeneTransposedPath;
+        this.transactionTemplate = new TransactionTemplate( transactionManager );
     }
 
     @Override
@@ -124,6 +129,11 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         }
 
         if (dryRun){
+            transactionTemplate.execute( status -> {
+                persister.persist( ee );
+                status.setRollbackOnly();
+                return null;
+            } );
             return ee;
         } else{
             return persister.persist( ee );
