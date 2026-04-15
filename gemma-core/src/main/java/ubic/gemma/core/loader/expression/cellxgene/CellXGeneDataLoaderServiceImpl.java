@@ -17,7 +17,9 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTran
 import ubic.gemma.core.loader.util.mapper.EnsemblIdDesignElementMapper;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -25,6 +27,7 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
@@ -32,6 +35,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author poirigui
@@ -44,6 +49,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     private final CellXGeneConverter cellXGeneConverter;
     private final Persister persister;
     private final ExpressionExperimentService expressionExperimentService;
+    private final SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     private final ArrayDesignService arrayDesignService;
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
     private final Path cellXGeneTransposedPath;
@@ -66,6 +72,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.persister = persister;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
+        this.singleCellExpressionExperimentService = singleCellExpressionExperimentService;
         this.cellXGeneTransposedPath = cellXGeneTransposedPath;
         this.transactionTemplate = new TransactionTemplate( transactionManager );
     }
@@ -128,15 +135,32 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             ee = cellXGeneConverter.convert( cm, metadata, platform, designElementMapping.keySet(), datasetShortName, dataLoader, loadSingleCellData );
         }
 
+        // remove vectors from ee and persist them separately via addSingleCellDataVectors
+        Map<QuantitationType, List<SingleCellExpressionDataVector>> vectorsByQt = ee.getSingleCellExpressionDataVectors()
+                .stream()
+                .collect( Collectors.groupingBy( SingleCellExpressionDataVector::getQuantitationType ) );
+        ee.getSingleCellExpressionDataVectors().clear();
+        ee.getQuantitationTypes().removeAll( vectorsByQt.keySet() );
+
         if (dryRun){
             transactionTemplate.execute( status -> {
-                persister.persist( ee );
+                ExpressionExperiment persistedEe = persister.persist( ee );
+                for ( Map.Entry<QuantitationType, List<SingleCellExpressionDataVector>> entry : vectorsByQt.entrySet() ) {
+                    singleCellExpressionExperimentService.addSingleCellDataVectors(
+                            persistedEe, entry.getKey(), entry.getValue(), null, false, false );
+                }
                 status.setRollbackOnly();
                 return null;
             } );
             return ee;
         } else{
-            return persister.persist( ee );
+            ExpressionExperiment persistedEe = persister.persist( ee );
+            for ( Map.Entry<QuantitationType, List<SingleCellExpressionDataVector>> entry : vectorsByQt.entrySet() ) {
+                singleCellExpressionExperimentService.addSingleCellDataVectors(
+                        persistedEe, entry.getKey(), entry.getValue(), null, false, false );
+            }
+
+            return persistedEe;
         }
     }
 
