@@ -2799,6 +2799,36 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public void createSingleCellDataVectors( ExpressionExperiment ee, Collection<SingleCellExpressionDataVector> vectors ) {
+        //
+        Session session = getSessionFactory().getCurrentSession();
+        // using batch size from settings.
+        // int batchSize = ( ( SessionFactoryImplementor ) getSessionFactory() ).getSettings().getJdbcBatchSize()
+        // TODO: test batch sizes
+        int batchSize = 500;
+        int count = 0;
+        List<SingleCellExpressionDataVector> batch = new ArrayList<>();
+        for ( SingleCellExpressionDataVector vector : vectors ) {
+            session.persist( vector );
+            batch.add( vector );
+            if ( ++count % batchSize == 0 ) {
+                session.flush();
+                for ( SingleCellExpressionDataVector v : batch ) {
+                    session.evict( v );
+                }
+                batch.clear();
+            }
+        }
+        if ( !batch.isEmpty() ) {
+            session.flush();
+            for ( SingleCellExpressionDataVector v : batch ) {
+                session.evict( v );
+            }
+        }
+        log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
+    }
+
+    @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );

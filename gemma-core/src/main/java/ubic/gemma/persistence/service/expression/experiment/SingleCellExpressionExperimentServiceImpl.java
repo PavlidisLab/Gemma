@@ -361,17 +361,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         for ( SingleCellExpressionDataVector v : vectors ) {
             v.setExpressionExperiment( ee );
         }
-        int previousSize = ee.getSingleCellExpressionDataVectors().size();
-        log.info( String.format( "Adding %d single-cell vectors to %s for %s", vectors.size(), ee, quantitationType ) );
-        ee.getSingleCellExpressionDataVectors().addAll( vectors );
-        int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - previousSize;
+        // a previous version counted the difference between ee.getSingleCellExpressionDataVectors() before and after addition of vectors
+        // this should not be needed and removed for batched processing but noting just in case..
+        int numVectorsAdded = vectors.size();
+        log.info( String.format( "Adding %d single-cell vectors to %s for %s", numVectorsAdded, ee, quantitationType ) );
+        expressionExperimentDao.createSingleCellDataVectors( ee, vectors );
         ee.getQuantitationTypes().add( quantitationType );
         applyPreferredSingleCellVectors( ee, quantitationType );
         if ( quantitationType.getIsSingleCellPreferred() ) {
             log.info( "Recomputing single-cell sparsity metrics for " + quantitationType + "..." );
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
-        expressionExperimentDao.update( ee ); // will take care of creating vectors
+        expressionExperimentDao.update( ee );
         if ( quantitationType.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
