@@ -2825,6 +2825,7 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
+        session.refresh( ee );
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
 
