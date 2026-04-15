@@ -59,6 +59,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     public CellXGeneDataLoaderServiceImpl(
             Persister persister, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
+            SingleCellExpressionExperimentService singleCellExpressionExperimentService,
             ExternalDatabaseService externalDatabaseService, TaxonService taxonService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
             PlatformTransactionManager transactionManager,
