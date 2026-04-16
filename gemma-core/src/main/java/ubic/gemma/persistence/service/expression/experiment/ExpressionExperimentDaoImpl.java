@@ -3760,9 +3760,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     private int removeAllSingleCellDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
-        Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
-                .map( SingleCellExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
+        //get qts to remove without loading the vectors
+        //noinspection unchecked
+        Set<QuantitationType> qtsToRemove = new HashSet<>( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct v.quantitationType from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list() );
         if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
             ee.getSingleCellExpressionDataVectors().clear();
         }
