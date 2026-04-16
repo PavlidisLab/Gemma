@@ -218,9 +218,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Set<QuantitationType> qts = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             if ( getX( h5File ) != null ) {
-                QuantitationType qt = createQt( h5File, getX( h5File ), null );
-                qt.setIsSingleCellPreferred(true);
-                qts.add( qt );
+                qts.add(  createQt( h5File, getX( h5File ), null ) );
             }
             for ( String layer : h5File.getLayers() ) {
                 qts.add( createQt( h5File, h5File.getLayer( layer ), layer ) );
