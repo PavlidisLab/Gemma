@@ -2825,6 +2825,10 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
+        vectors.stream()
+                .map( SingleCellExpressionDataVector::getSingleCellDimension )
+                .distinct()
+                .forEach( session::evict );
         session.refresh( ee );
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
