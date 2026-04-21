@@ -2825,11 +2825,14 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
-        vectors.stream()
-                .map( SingleCellExpressionDataVector::getSingleCellDimension )
-                .distinct()
-                .forEach( session::evict );
-        session.refresh( ee );
+        // CacheMode.IGNORE to prevent hibernate from calling update() on read only cache entries
+        CacheMode previousCacheMode = session.getCacheMode();
+        session.setCacheMode( CacheMode.IGNORE );
+        try {
+            session.refresh( ee );
+        } finally {
+            session.setCacheMode( previousCacheMode );
+        }
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
 
