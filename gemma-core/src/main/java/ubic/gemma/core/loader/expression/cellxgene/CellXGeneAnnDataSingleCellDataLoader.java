@@ -8,6 +8,8 @@ import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import java.io.IOException;
@@ -50,6 +52,15 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
     public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
         return super.getSamplesCharacteristics( samples ).entrySet().stream()
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> mergeOntologyTerms( e.getValue() ) ) );
+    }
+
+    @Override
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
+        Set<CellTypeAssignment> assignments = super.getCellTypeAssignments( dimension );
+        for ( CellTypeAssignment cta : assignments ) {
+            cta.setPreferred( true );
+        }
+        return assignments;
     }
 
     @Override

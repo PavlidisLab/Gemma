@@ -106,6 +106,7 @@ public class CellXGeneConverter {
 
         if ( loadSingleCellData ) {
             SingleCellDimension dimension = dataLoader.getSingleCellDimension( ee.getBioAssays() );
+            dimension.getCellTypeAssignments().addAll( dataLoader.getCellTypeAssignments( dimension ) );
             // load the data?
             for ( QuantitationType qt : dataLoader.getQuantitationTypes() ) {
                 List<SingleCellExpressionDataVector> vectors = dataLoader.loadVectors( compositeSequences, dimension, qt )
