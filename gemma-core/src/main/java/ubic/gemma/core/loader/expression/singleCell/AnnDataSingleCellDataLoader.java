@@ -385,7 +385,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
-                throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
+                // TODO: raise back to exception
+                log.warn( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
                         unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
             }
             // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
