@@ -129,6 +129,10 @@ public class CellXGeneUtils {
      * Convert a CELLxGENE ontology term ID into a URI.
      */
     public static String getTermUri( String termId ) {
-        return OntologyUtils.termIdToUri( termId );
+        if ( OntologyUtils.isTermId( termId ) ){
+            return OntologyUtils.termIdToUri( termId );
+        } else{
+            return null;
+        }
     }
 }
