@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import org.junit.Test;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -80,5 +81,10 @@ public class EntityUrlBuilderTest {
         c.setId( 4L );
         c.setValueUri( "http://purl.obolibrary.org/ont/NCBITaxon_9606" );
         assertThrows( UnsupportedEntityUrlException.class, () -> entityUrlBuilder.fromHostUrl().entity( c ).ont().toUriString() );
+    }
+
+    @Test
+    public void testAbstractEntityType() {
+        assertThrows( UnsupportedEntityUrlException.class, () -> entityUrlBuilder.fromHostUrl().entity( BlacklistedEntity.class, 1L ) );
     }
 }
