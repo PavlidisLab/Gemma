@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -105,6 +106,9 @@ public class EntityUrlBuilder {
         }
 
         public <T extends Identifiable> EntityUrl<T> entity( Class<T> entityType, Long id ) {
+            if ( Modifier.isAbstract( entityType.getModifiers() ) ) {
+                throw new UnsupportedEntityUrlException( "Cannot generate a URL for abstract entity type " + entityType.getSimpleName() + ".", entityType );
+            }
             T entity = BeanUtils.instantiate( entityType );
             if ( entity instanceof AbstractIdentifiable ) {
                 ( ( AbstractIdentifiable ) entity ).setId( id );
