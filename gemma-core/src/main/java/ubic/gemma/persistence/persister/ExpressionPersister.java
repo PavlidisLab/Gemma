@@ -41,6 +41,7 @@ import ubic.gemma.persistence.service.expression.experiment.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -441,6 +442,12 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     private void processBioAssays( ExpressionExperiment expressionExperiment, Caches caches ) {
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             AbstractPersister.log.debug( "Filling in bioassays" );
+            Set<String> existingNames = findExistingBioMaterialNames( expressionExperiment.getBioAssays() );
+            if ( !existingNames.isEmpty() ) {
+                AbstractPersister.log.warn( "Skipping " + existingNames.size() + " BioAssay(s) whose BioMaterials already exist in the database: " + existingNames );
+                expressionExperiment.getBioAssays().removeIf( ba -> existingNames.contains( ba.getSampleUsed().getName() ) );
+                expressionExperiment.setNumberOfSamples( expressionExperiment.getBioAssays().size() );
+            }
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 this.fillInBioAssayAssociations( bioAssay, caches );
             }
@@ -451,6 +458,22 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             expressionExperiment.setBioAssays( alreadyFilled );
             expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> findExistingBioMaterialNames( Collection<BioAssay> bioAssays ) {
+        List<String> names = bioAssays.stream()
+                .map( ba -> ba.getSampleUsed().getName() )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+        if ( names.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        List<String> found = getSessionFactory().getCurrentSession()
+                .createQuery( "select bm.name from BioMaterial bm where bm.name in :names" )
+                .setParameterList( "names", names )
+                .list();
+        return new HashSet<>( found );
     }
 
     private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Caches caches ) {
