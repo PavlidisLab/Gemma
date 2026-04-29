@@ -3,6 +3,14 @@
 #
 
 import sys
+import resource
+
+def memory_limit(ratio):
+    available_memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    limit = int(available_memory * ratio)
+    resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
+
+memory_limit(.9)
 
 try:
     import anndata
