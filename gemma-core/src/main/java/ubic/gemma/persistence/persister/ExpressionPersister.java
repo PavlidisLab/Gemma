@@ -448,6 +448,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
                 expressionExperiment.getBioAssays().removeIf( ba -> existingNames.contains( ba.getSampleUsed().getName() ) );
                 expressionExperiment.setNumberOfSamples( expressionExperiment.getBioAssays().size() );
             }
+
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 this.fillInBioAssayAssociations( bioAssay, caches );
             }
@@ -470,7 +471,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             return Collections.emptySet();
         }
         List<String> found = getSessionFactory().getCurrentSession()
-                .createQuery( "select bm.name from BioMaterial bm where bm.name in :names" )
+                .createQuery( "select bm.name from BioMaterial bm where bm.name in :names and exists (select ba from BioAssay ba where ba.sampleUsed = bm)" )
                 .setParameterList( "names", names )
                 .list();
         return new HashSet<>( found );
