@@ -19,6 +19,7 @@ import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,11 +33,12 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author poirigui
@@ -82,7 +84,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     public ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId,
             ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun) throws IOException {
         if ( expressionExperimentService.existsByShortName( datasetShortName ) ) {
-            //throw new IllegalArgumentException( "An ExpressionExperiment with short name " + datasetShortName + " already exists in the database." );
+            throw new IllegalArgumentException( "An ExpressionExperiment with short name " + datasetShortName + " already exists in the database." );
         }
 
         CollectionMetadata cm = cellXGeneFetcher.fetchCollectionMetadata( collectionId );
@@ -126,42 +128,69 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         Path dataPath = cellXGeneFetcher.downloadDatasetAsset( metadata.getId(), asset.getId(), asset.getFiletype() );
 
         ExpressionExperiment ee;
-        try ( SingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory,cellXGeneTransposedPath )
+        // Keep the dataLoader open for the full duration so that vectors can be streamed lazily
+        // to the database without materialising them all in memory at once.
+        try ( SingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory, cellXGeneTransposedPath )
                 .configureLoader( CellXGeneAnnDataSingleCellDataLoaderConfig.builder()
                         .ignoreDataVectors( !loadSingleCellData )
                         .keepPooledSample( keepPooledSample )
                         .keepUnknownSample( keepUnknownSample )
                         .build() ) ) {
             dataLoader.setDesignElementToGeneMapper( new EnsemblIdDesignElementMapper( designElementMapping ) );
-            ee = cellXGeneConverter.convert( cm, metadata, platform, designElementMapping.keySet(), datasetShortName, dataLoader, loadSingleCellData );
-        }
+            // Never ask the converter to collect vectors — that would load the entire dataset into heap.
+            // Vectors are streamed directly to the DB below.
+            ee = cellXGeneConverter.convert( cm, metadata, platform, designElementMapping.keySet(), datasetShortName, dataLoader, false );
 
-        // remove vectors from ee and persist them separately via addSingleCellDataVectors
-        Map<QuantitationType, List<SingleCellExpressionDataVector>> vectorsByQt = ee.getSingleCellExpressionDataVectors()
-                .stream()
-                .collect( Collectors.groupingBy( SingleCellExpressionDataVector::getQuantitationType ) );
-        ee.getSingleCellExpressionDataVectors().clear();
-        ee.getQuantitationTypes().removeAll( vectorsByQt.keySet() );
+            Collection<CompositeSequence> compositeSequences = designElementMapping.keySet();
 
-        if (dryRun){
-            transactionTemplate.execute( status -> {
-                ExpressionExperiment persistedEe = persister.persist( ee );
-                for ( Map.Entry<QuantitationType, List<SingleCellExpressionDataVector>> entry : vectorsByQt.entrySet() ) {
-                    singleCellExpressionExperimentService.addSingleCellDataVectors(
-                            persistedEe, entry.getKey(), entry.getValue(), null, false, false );
+            if ( dryRun ) {
+                // Persist everything inside a single rolled-back transaction.
+                // addSingleCellDataVectors is @Transactional(REQUIRED) so it joins the outer transaction.
+                Set<QuantitationType> qts = loadSingleCellData ? dataLoader.getQuantitationTypes() : null;
+                final ExpressionExperiment finalEe = ee;
+                try {
+                    transactionTemplate.execute( status -> {
+                        ExpressionExperiment persistedEe = persister.persist( finalEe );
+                        if ( loadSingleCellData ) {
+                            try {
+                                SingleCellDimension scd = dataLoader.getSingleCellDimension( persistedEe.getBioAssays() );
+                                scd.getCellTypeAssignments().addAll( dataLoader.getCellTypeAssignments( scd ) );
+                                for ( QuantitationType qt : qts ) {
+                                    try ( Stream<SingleCellExpressionDataVector> stream = dataLoader.loadVectors( compositeSequences, scd, qt ) ) {
+                                        singleCellExpressionExperimentService.addSingleCellDataVectors(
+                                                persistedEe, qt, scd, stream, null, false, false );
+                                    }
+                                }
+                            } catch ( IOException e ) {
+                                throw new UncheckedIOException( e );
+                            }
+                        }
+                        status.setRollbackOnly();
+                        return null;
+                    } );
+                } catch ( UncheckedIOException e ) {
+                    throw e.getCause();
                 }
-                status.setRollbackOnly();
-                return null;
-            } );
-            return ee;
-        } else{
-            ExpressionExperiment persistedEe = persister.persist( ee );
-            for ( Map.Entry<QuantitationType, List<SingleCellExpressionDataVector>> entry : vectorsByQt.entrySet() ) {
-                singleCellExpressionExperimentService.addSingleCellDataVectors(
-                        persistedEe, entry.getKey(), entry.getValue(), null, false, false );
+                return ee;
+            } else {
+                ExpressionExperiment persistedEe = persister.persist( ee );
+                try {
+                    if ( loadSingleCellData ) {
+                        SingleCellDimension scd = dataLoader.getSingleCellDimension( persistedEe.getBioAssays() );
+                        scd.getCellTypeAssignments().addAll( dataLoader.getCellTypeAssignments( scd ) );
+                        for ( QuantitationType qt : dataLoader.getQuantitationTypes() ) {
+                            try ( Stream<SingleCellExpressionDataVector> stream = dataLoader.loadVectors( compositeSequences, scd, qt ) ) {
+                                singleCellExpressionExperimentService.addSingleCellDataVectors(
+                                        persistedEe, qt, scd, stream, null, false, false );
+                            }
+                        }
+                    }
+                    return persistedEe;
+                } catch ( Exception e ) {
+                    expressionExperimentService.remove( persistedEe );
+                    throw e;
+                }
             }
-
-            return persistedEe;
         }
     }
 

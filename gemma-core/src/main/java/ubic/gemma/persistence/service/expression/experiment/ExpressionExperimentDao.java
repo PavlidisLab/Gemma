@@ -687,9 +687,10 @@ public interface ExpressionExperimentDao
     SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
-     * Create single-cell data vectors in batches to avoid OutOfMemoryError
+     * Create single-cell data vectors in batches to avoid OutOfMemoryError.
+     * Accepts any {@link Iterable} to support lazy/streaming sources.
      */
-    void createSingleCellDataVectors( ExpressionExperiment ee, Collection<SingleCellExpressionDataVector> vectors );
+    void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors );
 
     /**
      * Create a single-cell dimension for a given experiment.

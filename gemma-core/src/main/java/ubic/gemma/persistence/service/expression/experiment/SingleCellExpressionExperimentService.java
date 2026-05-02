@@ -143,6 +143,23 @@ public interface SingleCellExpressionExperimentService {
             Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     /**
+     * Add single-cell data vectors, use streaming to load SingleCellExpressionDataVectors ( {@link #addSingleCellDataVectors} )
+     * Streaming variant of {@link #addSingleCellDataVectors} that avoids materializing all vectors in memory.
+     *
+     * The {@code scd} must be supplied explicitly because we cannot peek at the stream to retrieve it.
+     *
+     * @param scd the single-cell dimension shared by all vectors in the stream
+     * @param vectors Streamed SingleCellExpressionDataVectors. Each vector must have its QT and design element set
+     * @param recrateCellTypeFactorIfNecessary re-create the cell type factor if necessary (i.e. a new set of preferred single-cell vectors are added)
+     * @param ignoreCompatibleFactor ignore an existing compatible cell type factor and re-create it anyway
+     * @return the number of vectors that were added
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+            SingleCellDimension scd, Stream<SingleCellExpressionDataVector> vectors,
+            @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
+
+    /**
      * Replace existing single-cell data vectors for the given quantitation type.
      *
      * @param details                           additional details to include in the audit event

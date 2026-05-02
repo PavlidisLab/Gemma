@@ -2799,7 +2799,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public void createSingleCellDataVectors( ExpressionExperiment ee, Collection<SingleCellExpressionDataVector> vectors ) {
+    public void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors ) {
         //
         Session session = getSessionFactory().getCurrentSession();
         // using batch size from settings.
