@@ -173,6 +173,8 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                 }
                 return ee;
             } else {
+                // currently has an issue where ee is persisted before data vectors are loaded. if
+                // a downstream failure occurs ee will be in gemma and will have to be deleted
                 ExpressionExperiment persistedEe = persister.persist( ee );
                 try {
                     if ( loadSingleCellData ) {
