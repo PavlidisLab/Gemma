@@ -557,7 +557,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 SingleCellSparsityMetrics.addExpressedCells( vec, sampleIndex, null, -1, null, isExpressed );
                 numberOfDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfDesignElements( vec, sampleIndex, null, -1, null );
                 numberOfCellByDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1, null );
-                sampleIndex++;
             }
         }
         for ( BioAssay ba : ee.getBioAssays() ) {
