@@ -98,6 +98,7 @@ public abstract class AbstractPersister implements Persister {
     @Override
     @Transactional
     public <T extends Identifiable> T persist( T entity ) {
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
@@ -105,13 +106,14 @@ public abstract class AbstractPersister implements Persister {
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
         }
     }
 
     @Override
     @Transactional
     public <T extends Identifiable> T persistOrUpdate( T entity ) {
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
@@ -119,13 +121,14 @@ public abstract class AbstractPersister implements Persister {
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
         }
     }
 
     @Override
     @Transactional
     public <T extends Identifiable> List<T> persist( Collection<T> col ) {
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
@@ -133,7 +136,7 @@ public abstract class AbstractPersister implements Persister {
             sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
         }
     }
 
