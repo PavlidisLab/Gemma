@@ -61,6 +61,14 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -81,6 +89,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -190,6 +200,10 @@ public class DatasetsWebService {
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private AuditEventService auditEventService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Context
     private UriInfo uriInfo;
@@ -840,6 +854,130 @@ public class DatasetsWebService {
         List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
         return respond( out );
 
+    }
+
+    @GET
+    @Path("/{dataset}/auditEvents")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the audit events of a dataset", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<AuditEventValueObject>> getDatasetAuditEvents(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        List<AuditEventValueObject> out = auditEventService.getEvents( ee ).stream()
+                .map( AuditEventValueObject::new )
+                .collect( Collectors.toList() );
+        return respond( out );
+    }
+
+    @GET
+    @Path("/{dataset}/curationDetails")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the curation details of a dataset",
+            description = "The `curationNote` and `lastNoteUpdateEvent` fields are only populated for administrators.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationDetailsValueObject> getDatasetCurationDetails(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( new CurationDetailsValueObject( ee.getCurationDetails() ) );
+    }
+
+    /**
+     * Request body for {@link #updateDatasetCurationDetails}. Each field is optional; only provided fields are updated.
+     */
+    public static class CurationDetailsUpdateRequest {
+        @Nullable
+        private Boolean troubled;
+        @Nullable
+        private Boolean needsAttention;
+        @Nullable
+        private String curationNote;
+        @Nullable
+        private String note;
+
+        @Nullable
+        public Boolean getTroubled() {
+            return troubled;
+        }
+
+        public void setTroubled( @Nullable Boolean troubled ) {
+            this.troubled = troubled;
+        }
+
+        @Nullable
+        public Boolean getNeedsAttention() {
+            return needsAttention;
+        }
+
+        public void setNeedsAttention( @Nullable Boolean needsAttention ) {
+            this.needsAttention = needsAttention;
+        }
+
+        @Nullable
+        public String getCurationNote() {
+            return curationNote;
+        }
+
+        public void setCurationNote( @Nullable String curationNote ) {
+            this.curationNote = curationNote;
+        }
+
+        @Nullable
+        public String getNote() {
+            return note;
+        }
+
+        public void setNote( @Nullable String note ) {
+            this.note = note;
+        }
+    }
+
+    @PUT
+    @Path("/{dataset}/curationDetails")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Update the curation details of a dataset",
+            description = "Each field in the request body is optional. Provided fields are applied via the corresponding "
+                    + "audit event types (`TroubledStatusFlagEvent`/`NotTroubledStatusFlagEvent`, "
+                    + "`NeedsAttentionEvent`/`DoesNotNeedAttentionEvent`, `CurationNoteUpdateEvent`). "
+                    + "An optional `note` is attached to the trouble/needs-attention events; `curationNote` is the new note text.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationDetailsValueObject> updateDatasetCurationDetails(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationDetailsUpdateRequest body
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A request body is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        CurationDetails cd = ee.getCurationDetails();
+        if ( body.getTroubled() != null && body.getTroubled() != cd.getTroubled() ) {
+            auditTrailService.addUpdateEvent( ee,
+                    body.getTroubled() ? TroubledStatusFlagEvent.class : NotTroubledStatusFlagEvent.class,
+                    body.getNote() );
+        }
+        if ( body.getNeedsAttention() != null && body.getNeedsAttention() != cd.getNeedsAttention() ) {
+            auditTrailService.addUpdateEvent( ee,
+                    body.getNeedsAttention() ? NeedsAttentionEvent.class : DoesNotNeedAttentionEvent.class,
+                    body.getNote() );
+        }
+        if ( body.getCurationNote() != null ) {
+            auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, body.getCurationNote() );
+        }
+        return respond( new CurationDetailsValueObject( ee.getCurationDetails() ) );
     }
 
     /**
