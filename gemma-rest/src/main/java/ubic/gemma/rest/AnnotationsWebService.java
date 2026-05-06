@@ -186,6 +186,22 @@ public class AnnotationsWebService {
         }
     }
 
+    /**
+     * List the ontology categories allowed for use in characteristics.
+     */
+    @GET
+    @Path("/categories")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all ontology categories used in Gemma", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+    })
+    public ResponseDataObject<List<OntologyCategoryValueObject>> getAnnotationCategories() {
+        List<OntologyCategoryValueObject> vos = ontologyService.getCategoryTerms().stream()
+                .map( t -> new OntologyCategoryValueObject( t.getUri(), t.getLabel() ) )
+                .collect( Collectors.toList() );
+        return respond( vos );
+    }
+
     private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {
         if ( StringUtils.isBlank( termUri ) ) {
             throw new BadRequestException( "The 'uri' parameter must not be blank." );
@@ -543,4 +559,9 @@ public class AnnotationsWebService {
         boolean obsolete;
         Integer usageCount;
     }
+
+    @Value
+    public static class OntologyCategoryValueObject {
+        String uri;
+        String label;}
 }
