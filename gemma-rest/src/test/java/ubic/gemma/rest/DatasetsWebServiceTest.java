@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -143,6 +144,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock( AuditTrailService.class );
         }
 
         @Bean
