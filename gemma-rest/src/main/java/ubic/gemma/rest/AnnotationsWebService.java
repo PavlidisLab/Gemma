@@ -177,7 +177,10 @@ public class AnnotationsWebService {
                 throw new NotFoundException( "No ontology term with URI " + termUri );
             }
             String definition = ontologyService.getDefinition( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete() ) );
+            Integer usageCount = term.getUri() != null
+                    ? getDistinctEeCountsByUri( Collections.singleton( term.getUri() ) ).getOrDefault( term.getUri(), 0 )
+                    : null;
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -538,5 +541,6 @@ public class AnnotationsWebService {
         String label;
         String definition;
         boolean obsolete;
+        Integer usageCount;
     }
 }
