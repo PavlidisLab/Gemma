@@ -35,6 +35,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -162,9 +163,17 @@ public class AnnotationsWebService {
             if ( term == null ) {
                 throw new NotFoundException( "No ontology term with URI " + termUri );
             }
-            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
-                    ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) ).stream()
-                    .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null ) )
+            Collection<OntologyTerm> terms = parents ?
+                    ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
+                    ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            Set<String> uris = terms.stream()
+                    .map( OntologyTerm::getUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+            return terms.stream()
+                    .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
+                            t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -436,26 +445,52 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
-        LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
+        List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
             URI uri = LuceneQueryUtils.prepareTermUriQuery( query );
             if ( uri != null ) {
-                this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
+                rawHits.addAll( characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringUtils.strip( query ), null, null, true, -1 ) ) );
             } else {
-                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
+                rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
+        }
+        Set<String> uris = rawHits.stream()
+                .map( CharacteristicValueObject::getValueUri )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+        LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
+        for ( CharacteristicValueObject vo : rawHits ) {
+            Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
+            vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
+                    vo.getCategoryUri(), count ) );
         }
         return vos;
     }
 
-    private void addAsSearchResults( Collection<AnnotationSearchResultValueObject> to,
-            Collection<CharacteristicValueObject> vos ) {
-        for ( CharacteristicValueObject vo : vos ) {
-            to.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri() ) );
+    /**
+     * Count the number of distinct expression experiments that reference each of the given annotation URIs.
+     */
+    private Map<String, Integer> getDistinctEeCountsByUri( Set<String> uris ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
         }
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
+                characteristicService.findExperimentsByUris( uris, true, true, true, null, -1, false, false );
+        Map<String, Set<Long>> distinctIdsByUri = new HashMap<>();
+        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
+            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
+                Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
+                for ( ExpressionExperiment ee : entry.getValue() ) {
+                    bucket.add( ee.getId() );
+                }
+            }
+        }
+        Map<String, Integer> counts = new HashMap<>( distinctIdsByUri.size() );
+        distinctIdsByUri.forEach( ( k, v ) -> counts.put( k, v.size() ) );
+        return counts;
     }
 
     @Value
@@ -464,5 +499,6 @@ public class AnnotationsWebService {
         String valueUri;
         String category;
         String categoryUri;
+        Integer usageCount;
     }
 }
