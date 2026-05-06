@@ -195,9 +195,25 @@ public class AnnotationsWebService {
     @Operation(summary = "Retrieve all ontology categories used in Gemma", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
     })
-    public ResponseDataObject<List<OntologyCategoryValueObject>> getAnnotationCategories() {
-        List<OntologyCategoryValueObject> vos = ontologyService.getCategoryTerms().stream()
-                .map( t -> new OntologyCategoryValueObject( t.getUri(), t.getLabel() ) )
+    public ResponseDataObject<List<OntologyTermSimpleValueObject>> getAnnotationCategories() {
+        List<OntologyTermSimpleValueObject> vos = ontologyService.getCategoryTerms().stream()
+                .map( t -> new OntologyTermSimpleValueObject( t.getUri(), t.getLabel() ) )
+                .collect( Collectors.toList() );
+        return respond( vos );
+    }
+
+    /**
+     * List the ontology predicates allowed for use in statements.
+     */
+    @GET
+    @Path("/predicates")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all ontology predicates used in Gemma", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+    })
+    public ResponseDataObject<List<OntologyTermSimpleValueObject>> getAnnotationPredicates() {
+        List<OntologyTermSimpleValueObject> vos = ontologyService.getRelationTerms().stream()
+                .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
                 .collect( Collectors.toList() );
         return respond( vos );
     }
@@ -561,7 +577,8 @@ public class AnnotationsWebService {
     }
 
     @Value
-    public static class OntologyCategoryValueObject {
+    public static class OntologyTermSimpleValueObject {
         String uri;
-        String label;}
+        String label;
+    }
 }
