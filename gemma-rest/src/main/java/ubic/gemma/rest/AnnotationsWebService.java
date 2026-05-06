@@ -153,6 +153,36 @@ public class AnnotationsWebService {
         return respond(getAnnotationsParentsOrChildren( termUri, direct, false ) );
     }
 
+    /**
+     * Look up an ontology term by its URI.
+     */
+    @GET
+    @Path("/term")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve an ontology term by its URI", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+    })
+    public ResponseDataObject<OntologyTermValueObject> getAnnotationTerm(
+            @Parameter(description = "Term URI") @QueryParam("uri") String termUri ) {
+        if ( StringUtils.isBlank( termUri ) ) {
+            throw new BadRequestException( "The 'uri' parameter must not be blank." );
+        }
+        try {
+            StopWatch timer = StopWatch.createStarted();
+            // get term returns the first match
+            OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            if ( term == null ) {
+                throw new NotFoundException( "No ontology term with URI " + termUri );
+            }
+            String definition = ontologyService.getDefinition( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete() ) );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+        }
+    }
+
     private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {
         if ( StringUtils.isBlank( termUri ) ) {
             throw new BadRequestException( "The 'uri' parameter must not be blank." );
@@ -500,5 +530,13 @@ public class AnnotationsWebService {
         String category;
         String categoryUri;
         Integer usageCount;
+    }
+
+    @Value
+    public static class OntologyTermValueObject {
+        String uri;
+        String label;
+        String definition;
+        boolean obsolete;
     }
 }
