@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import gemma.gsec.SecurityService;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -204,6 +205,8 @@ public class DatasetsWebService {
     private AuditEventService auditEventService;
     @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
+    private SecurityService securityService;
 
     @Context
     private UriInfo uriInfo;
@@ -978,6 +981,76 @@ public class DatasetsWebService {
             auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, body.getCurationNote() );
         }
         return respond( new CurationDetailsValueObject( ee.getCurationDetails() ) );
+    }
+
+    /**
+     * Request body for {@link #updateDatasetPermissions}. Each field is optional; only provided fields are updated.
+     */
+    public static class PermissionsUpdateRequest {
+        @Nullable
+        private Boolean isPublic;
+
+        @Nullable
+        public Boolean getIsPublic() {
+            return isPublic;
+        }
+
+        public void setIsPublic( @Nullable Boolean isPublic ) {
+            this.isPublic = isPublic;
+        }
+    }
+
+    /**
+     * Lightweight view of a dataset's sharing state, returned by the permissions endpoint.
+     */
+    public static class DatasetPermissionsValueObject {
+        private final boolean isPublic;
+        private final boolean isShared;
+
+        public DatasetPermissionsValueObject( boolean isPublic, boolean isShared ) {
+            this.isPublic = isPublic;
+            this.isShared = isShared;
+        }
+
+        public boolean getIsPublic() {
+            return isPublic;
+        }
+
+        public boolean getIsShared() {
+            return isShared;
+        }
+    }
+
+    @PUT
+    @Path("/{dataset}/permissions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Update the sharing permissions of a dataset",
+            description = "Toggle whether a dataset is publicly readable. The `isPublic` field is optional; if omitted, "
+                    + "no change is made and the current state is returned.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> updateDatasetPermissions(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable PermissionsUpdateRequest body
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A request body is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( body.getIsPublic() != null ) {
+            if ( body.getIsPublic() ) {
+                securityService.makePublic( ee );
+            } else {
+                securityService.makePrivate( ee );
+            }
+        }
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
 
     /**

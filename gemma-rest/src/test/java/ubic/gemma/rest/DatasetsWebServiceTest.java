@@ -1,5 +1,6 @@
 package ubic.gemma.rest;
 
+import gemma.gsec.SecurityService;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -149,6 +150,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public AuditTrailService auditTrailService() {
             return mock( AuditTrailService.class );
+        }
+
+        @Bean
+        public SecurityService securityService() {
+            return mock( SecurityService.class );
         }
 
         @Bean
