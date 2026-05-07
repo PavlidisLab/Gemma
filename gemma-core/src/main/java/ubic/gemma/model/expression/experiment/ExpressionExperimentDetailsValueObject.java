@@ -94,6 +94,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
     private String missingValueAnalysisEventType;
+    private String differentialAnalysisEventType;
     /**
      * Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
      * of data set, so this is a collection of AuditEvents.

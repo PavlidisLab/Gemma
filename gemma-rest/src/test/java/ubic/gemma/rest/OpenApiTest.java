@@ -3,6 +3,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -170,37 +171,41 @@ public class OpenApiTest extends BaseTest implements InitializingBean {
                 // FIXME: this is broken, see https://github.com/swagger-api/swagger-core/issues/4693
                 continue;
             }
-            PathItem operations = spec.getPaths().get( path );
-            assertions.assertThat( operations.getGet().getResponses() )
-                    .describedAs( "GET %s (%s)", path, operations.getGet().getOperationId() )
-                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )
-                            || entry.equals( "201" )
-                            || entry.equals( "204" )
-                            || entry.startsWith( "3" ),
-                            "has at least a default GET response or is a redirection" ) )
-                    .allSatisfy( ( responseCode, content ) -> {
-                        if ( responseCode.startsWith( "3" ) ) {
-                            // a redirection, no need for a default responses
-                            assertThat( content.getContent() )
-                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
-                                    .isNull();
-                        } else if ( responseCode.equals( "201" ) ) {
-                            // created
-                            assertThat( content.getContent() )
-                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
-                                    .doesNotContainKey( "*/*" );
-                        } else if ( responseCode.equals( "204" ) ) {
-                            // no content
-                            assertThat( content.getContent() )
-                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
-                                    .isNull();
-                        } else {
-                            assertThat( content.getContent() )
-                                    .describedAs( "GET %s -> %s (%s)", path, responseCode, operations.getGet().getOperationId() )
-                                    .isNotEmpty()
-                                    .doesNotContainKey( "*/*" );
-                        }
-                    } );
+            PathItem pathItem = spec.getPaths().get( path );
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathItem.readOperationsMap().entrySet() ) {
+                PathItem.HttpMethod method = opEntry.getKey();
+                Operation operation = opEntry.getValue();
+                assertions.assertThat( operation.getResponses() )
+                        .describedAs( "%s %s (%s)", method, path, operation.getOperationId() )
+                        .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )
+                                || entry.equals( "201" )
+                                || entry.equals( "204" )
+                                || entry.startsWith( "3" ),
+                                "has at least a default response or is a redirection" ) )
+                        .allSatisfy( ( responseCode, content ) -> {
+                            if ( responseCode.startsWith( "3" ) ) {
+                                // a redirection, no need for a default responses
+                                assertThat( content.getContent() )
+                                        .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
+                                        .isNull();
+                            } else if ( responseCode.equals( "201" ) ) {
+                                // created
+                                assertThat( content.getContent() )
+                                        .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
+                                        .doesNotContainKey( "*/*" );
+                            } else if ( responseCode.equals( "204" ) ) {
+                                // no content
+                                assertThat( content.getContent() )
+                                        .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
+                                        .isNull();
+                            } else {
+                                assertThat( content.getContent() )
+                                        .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
+                                        .isNotEmpty()
+                                        .doesNotContainKey( "*/*" );
+                            }
+                        } );
+            }
         }
         assertions.assertAll();
     }
@@ -210,16 +215,20 @@ public class OpenApiTest extends BaseTest implements InitializingBean {
         SoftAssertions assertions = new SoftAssertions();
         for ( Map.Entry<String, PathItem> entry : spec.getPaths().entrySet() ) {
             String path = entry.getKey();
-            PathItem operations = entry.getValue();
-            for ( Map.Entry<String, ApiResponse> e : operations.getGet().getResponses().entrySet() ) {
-                String code = e.getKey();
-                ApiResponse response = e.getValue();
-                if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
-                    assertions.assertThat( response.getContent() )
-                            .describedAs( "GET %s -> %s", path, code )
-                            .hasEntrySatisfying( "application/json", content -> {
-                                assertThat( content.getSchema().get$ref() ).isEqualTo( "#/components/schemas/ResponseErrorObject" );
-                            } );
+            PathItem pathItem = entry.getValue();
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathItem.readOperationsMap().entrySet() ) {
+                PathItem.HttpMethod method = opEntry.getKey();
+                Operation operation = opEntry.getValue();
+                for ( Map.Entry<String, ApiResponse> e : operation.getResponses().entrySet() ) {
+                    String code = e.getKey();
+                    ApiResponse response = e.getValue();
+                    if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
+                        assertions.assertThat( response.getContent() )
+                                .describedAs( "%s %s -> %s", method, path, code )
+                                .hasEntrySatisfying( "application/json", content -> {
+                                    assertThat( content.getSchema().get$ref() ).isEqualTo( "#/components/schemas/ResponseErrorObject" );
+                                } );
+                    }
                 }
             }
         }
