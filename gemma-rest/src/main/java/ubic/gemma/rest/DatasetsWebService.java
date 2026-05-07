@@ -1091,6 +1091,8 @@ public class DatasetsWebService {
             new PipelineStepDescriptor( "batchInfo", BatchInformationEvent.class, null ),
             new PipelineStepDescriptor( "preprocess", ProcessedVectorComputationEvent.class, FailedProcessedVectorComputationEvent.class ),
             new PipelineStepDescriptor( "pca", PCAAnalysisEvent.class, FailedPCAAnalysisEvent.class ),
+            new PipelineStepDescriptor( "sampleCorrelation", SampleCorrelationAnalysisEvent.class, FailedSampleCorrelationAnalysisEvent.class ),
+            new PipelineStepDescriptor( "meanVariance", MeanVarianceUpdateEvent.class, FailedMeanVarianceUpdateEvent.class ),
             new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class ),
             new PipelineStepDescriptor( "coexpression", LinkAnalysisEvent.class, FailedLinkAnalysisEvent.class ),
             new PipelineStepDescriptor( "missingValue", MissingValueAnalysisEvent.class, FailedMissingValueAnalysisEvent.class )
@@ -1134,7 +1136,14 @@ public class DatasetsWebService {
             result.setCurationNote( cd.getCurationNote() );
         }
         result.setIsPublic( securityService.isPublic( ee ) );
-        result.setGeeq( details != null ? details.getGeeq() : null );
+        GeeqValueObject geeq = details != null ? details.getGeeq() : null;
+        if ( geeq != null ) {
+            AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+            if ( geeqEvent != null ) {
+                geeq.setLastComputed( geeqEvent.getDate() );
+            }
+        }
+        result.setGeeq( geeq );
 
         return respond( result );
     }
