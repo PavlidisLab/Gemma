@@ -17,6 +17,7 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import gemma.gsec.SecurityService;
+import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -62,13 +63,26 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -1051,6 +1065,121 @@ public class DatasetsWebService {
             }
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Step descriptor backing {@link #getDatasetPipelineStatus}: the JSON {@code step} key plus the success-event
+     * and (optional) failed-event classes whose latest occurrences determine the step's state.
+     */
+    private static final class PipelineStepDescriptor {
+        final String stepKey;
+        final Class<? extends AuditEventType> successType;
+        @Nullable
+        final Class<? extends AuditEventType> failedType;
+
+        PipelineStepDescriptor( String stepKey, Class<? extends AuditEventType> successType,
+                @Nullable Class<? extends AuditEventType> failedType ) {
+            this.stepKey = stepKey;
+            this.successType = successType;
+            this.failedType = failedType;
+        }
+    }
+
+    // BatchInformationEvent (the abstract parent) covers Fetching/FailedFetching/Missing in one query, so no
+    // separate failed class is needed for batchInfo.
+    private static final List<PipelineStepDescriptor> PIPELINE_STEPS = Arrays.asList(
+            new PipelineStepDescriptor( "batchInfo", BatchInformationEvent.class, null ),
+            new PipelineStepDescriptor( "preprocess", ProcessedVectorComputationEvent.class, FailedProcessedVectorComputationEvent.class ),
+            new PipelineStepDescriptor( "pca", PCAAnalysisEvent.class, FailedPCAAnalysisEvent.class ),
+            new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class ),
+            new PipelineStepDescriptor( "coexpression", LinkAnalysisEvent.class, FailedLinkAnalysisEvent.class ),
+            new PipelineStepDescriptor( "missingValue", MissingValueAnalysisEvent.class, FailedMissingValueAnalysisEvent.class )
+    );
+
+    @GET
+    @Path("/{dataset}/pipelineStatus")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
+            description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
+                    + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
+                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). Convenience fields (`troubled`, "
+                    + "`needsAttention`, `curationNote`, `isPublic`, `geeq`) are duplicated from "
+                    + "`/curationDetails` and `/permissions` so a UI can render a complete pre-public checklist "
+                    + "from a single round trip. The `curationNote` field is admin-only.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<PipelineStatusValueObject> getDatasetPipelineStatus(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ExpressionExperimentDetailsValueObject details = expressionExperimentReportService.generateSummary( ee.getId() );
+
+        boolean missingValueApplicable = hasTwoColorOrDualModePlatform( ee );
+        List<PipelineStatusValueObject.PipelineStepValueObject> steps = new ArrayList<>( PIPELINE_STEPS.size() );
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            boolean applicable = !"missingValue".equals( desc.stepKey ) || missingValueApplicable;
+            steps.add( buildPipelineStep( ee, desc, applicable ) );
+        }
+
+        PipelineStatusValueObject result = new PipelineStatusValueObject();
+        result.setExperimentId( ee.getId() );
+        result.setSteps( steps );
+        result.setHasBatchInformation( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+        result.setHasDifferentialExpressionAnalysis( details != null && details.getHasDifferentialExpressionAnalysis() );
+        result.setHasCoexpressionAnalysis( details != null && details.getHasCoexpressionAnalysis() );
+        result.setTroubled( details != null && details.getTroubled() );
+        result.setTroubleDetails( details != null ? details.getTroubleDetails( false ) : "" );
+        CurationDetails cd = ee.getCurationDetails();
+        result.setNeedsAttention( cd.getNeedsAttention() );
+        if ( SecurityUtil.isUserAdmin() ) {
+            result.setCurationNote( cd.getCurationNote() );
+        }
+        result.setIsPublic( securityService.isPublic( ee ) );
+        result.setGeeq( details != null ? details.getGeeq() : null );
+
+        return respond( result );
+    }
+
+    private PipelineStatusValueObject.PipelineStepValueObject buildPipelineStep( ExpressionExperiment ee,
+            PipelineStepDescriptor desc, boolean applicable ) {
+        AuditEvent successEvent = auditEventService.getLastEvent( ee, desc.successType );
+        AuditEvent failedEvent = desc.failedType != null ? auditEventService.getLastEvent( ee, desc.failedType ) : null;
+        AuditEvent winner = pickLatestEvent( successEvent, failedEvent );
+        if ( winner == null ) {
+            return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey,
+                    applicable ? "notRun" : "notApplicable", null, null, null );
+        }
+        String eventTypeName = winner.getEventType() != null
+                ? winner.getEventType().getClass().getSimpleName() : null;
+        String state = eventTypeName != null && eventTypeName.startsWith( "Failed" ) ? "failed" : "ok";
+        return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
+                winner.getDate(), eventTypeName, winner.getNote() );
+    }
+
+    @Nullable
+    private static AuditEvent pickLatestEvent( @Nullable AuditEvent a, @Nullable AuditEvent b ) {
+        if ( a == null ) {
+            return b;
+        }
+        if ( b == null || b.getDate() == null ) {
+            return a;
+        }
+        if ( a.getDate() == null ) {
+            return b;
+        }
+        return a.getDate().compareTo( b.getDate() ) >= 0 ? a : b;
+    }
+
+    private boolean hasTwoColorOrDualModePlatform( ExpressionExperiment ee ) {
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            TechnologyType t = ad.getTechnologyType();
+            if ( t == TechnologyType.TWOCOLOR || t == TechnologyType.DUALMODE ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
