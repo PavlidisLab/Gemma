@@ -1102,10 +1102,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
             description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
                     + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
-                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). Convenience fields (`troubled`, "
-                    + "`needsAttention`, `curationNote`, `isPublic`, `geeq`) are duplicated from "
-                    + "`/curationDetails` and `/permissions` so a UI can render a complete pre-public checklist "
-                    + "from a single round trip. The `curationNote` field is admin-only.",
+                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). The `curationNote` field is admin-only.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
