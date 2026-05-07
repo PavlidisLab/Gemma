@@ -124,6 +124,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
@@ -235,6 +236,8 @@ public class DatasetsWebService {
     private SecurityService securityService;
     @Autowired
     private TaskRunningService taskRunningService;
+    @Autowired
+    private GeeqService geeqService;
 
     @Context
     private UriInfo uriInfo;
@@ -1201,6 +1204,69 @@ public class DatasetsWebService {
             }
         }
         return false;
+    }
+
+    @GET
+    @Path("/{dataset}/geeq")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Retrieve the GEEQ scores of a dataset",
+            description = "Returns the administrative GEEQ view exposing the underlying suitability and quality "
+                    + "score factors, plus a `lastComputed` timestamp from the most recent `GeeqEvent`. Returns "
+                    + "404 when GEEQ has never been computed for this dataset (use `PUT /geeq` to compute it).",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<GeeqValueObject> getDatasetGeeq(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawLiter( ee );
+        Geeq geeq = ee.getGeeq();
+        if ( geeq == null ) {
+            throw new NotFoundException( "GEEQ has not been computed for dataset " + ee.getShortName()
+                    + "; use PUT /geeq to compute it." );
+        }
+        GeeqValueObject vo = new GeeqAdminValueObject( geeq );
+        AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+        if ( geeqEvent != null ) {
+            vo.setLastComputed( geeqEvent.getDate() );
+        }
+        return respond( vo );
+    }
+
+    @PUT
+    @Path("/{dataset}/geeq")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Recompute GEEQ scores for a dataset",
+            description = "Synchronously recomputes the GEEQ quality and suitability scores for the dataset and "
+                    + "writes a `GeeqEvent` to the audit log. The optional `mode` query parameter selects which "
+                    + "subset of scores to recompute (`all`, `batch`, `reps`, `pub`); defaults to `all`. The "
+                    + "returned object includes the updated scores and the `lastComputed` timestamp. Because the "
+                    + "endpoint is admin-only, the response is the administrative GEEQ view exposing the "
+                    + "underlying score variables.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeq(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        Geeq updated = geeqService.calculateScore( ee, mode );
+        GeeqValueObject vo = new GeeqAdminValueObject( updated );
+        AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+        if ( geeqEvent != null ) {
+            vo.setLastComputed( geeqEvent.getDate() );
+        }
+        return respond( vo );
     }
 
     @POST
