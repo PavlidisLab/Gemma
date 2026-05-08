@@ -24,6 +24,8 @@
             url: '${pageContext.request.contextPath}/rest/v2/openapi.json',
             dom_id: '#swagger-ui',
             deepLinking: true,
+            tagsSorter: 'alpha',
+            operationsSorter: 'alpha',
             presets: [
                 SwaggerUIBundle.presets.apis
             ]

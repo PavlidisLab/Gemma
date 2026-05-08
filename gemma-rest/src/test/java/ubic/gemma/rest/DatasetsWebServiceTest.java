@@ -29,6 +29,7 @@ import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -54,6 +55,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
@@ -234,6 +236,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
+            return mock();
+        }
+
+        @Bean
+        public TaskRunningService taskRunningService() {
+            return mock();
+        }
+
+        @Bean
+        public GeeqService geeqService() {
             return mock();
         }
 

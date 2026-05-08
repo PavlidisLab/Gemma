@@ -52,6 +52,12 @@ import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
@@ -68,21 +74,27 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -112,6 +124,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
@@ -221,6 +234,10 @@ public class DatasetsWebService {
     private AuditTrailService auditTrailService;
     @Autowired
     private SecurityService securityService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private GeeqService geeqService;
 
     @Context
     private UriInfo uriInfo;
@@ -1090,7 +1107,10 @@ public class DatasetsWebService {
     private static final List<PipelineStepDescriptor> PIPELINE_STEPS = Arrays.asList(
             new PipelineStepDescriptor( "batchInfo", BatchInformationEvent.class, null ),
             new PipelineStepDescriptor( "preprocess", ProcessedVectorComputationEvent.class, FailedProcessedVectorComputationEvent.class ),
+            new PipelineStepDescriptor( "batchCorrection", BatchCorrectionEvent.class, null ),
             new PipelineStepDescriptor( "pca", PCAAnalysisEvent.class, FailedPCAAnalysisEvent.class ),
+            new PipelineStepDescriptor( "sampleCorrelation", SampleCorrelationAnalysisEvent.class, FailedSampleCorrelationAnalysisEvent.class ),
+            new PipelineStepDescriptor( "meanVariance", MeanVarianceUpdateEvent.class, FailedMeanVarianceUpdateEvent.class ),
             new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class ),
             new PipelineStepDescriptor( "coexpression", LinkAnalysisEvent.class, FailedLinkAnalysisEvent.class ),
             new PipelineStepDescriptor( "missingValue", MissingValueAnalysisEvent.class, FailedMissingValueAnalysisEvent.class )
@@ -1102,10 +1122,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
             description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
                     + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
-                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). Convenience fields (`troubled`, "
-                    + "`needsAttention`, `curationNote`, `isPublic`, `geeq`) are duplicated from "
-                    + "`/curationDetails` and `/permissions` so a UI can render a complete pre-public checklist "
-                    + "from a single round trip. The `curationNote` field is admin-only.",
+                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). The `curationNote` field is admin-only.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -1137,7 +1154,14 @@ public class DatasetsWebService {
             result.setCurationNote( cd.getCurationNote() );
         }
         result.setIsPublic( securityService.isPublic( ee ) );
-        result.setGeeq( details != null ? details.getGeeq() : null );
+        GeeqValueObject geeq = details != null ? details.getGeeq() : null;
+        if ( geeq != null ) {
+            AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+            if ( geeqEvent != null ) {
+                geeq.setLastComputed( geeqEvent.getDate() );
+            }
+        }
+        result.setGeeq( geeq );
 
         return respond( result );
     }
@@ -1180,6 +1204,343 @@ public class DatasetsWebService {
             }
         }
         return false;
+    }
+
+    @GET
+    @Path("/{dataset}/geeq")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Retrieve the GEEQ scores of a dataset",
+            description = "Returns the administrative GEEQ view exposing the underlying suitability and quality "
+                    + "score factors, plus a `lastComputed` timestamp from the most recent `GeeqEvent`. Returns "
+                    + "404 when GEEQ has never been computed for this dataset (use `PUT /geeq` to compute it).",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<GeeqValueObject> getDatasetGeeq(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawLiter( ee );
+        Geeq geeq = ee.getGeeq();
+        if ( geeq == null ) {
+            throw new NotFoundException( "GEEQ has not been computed for dataset " + ee.getShortName()
+                    + "; use PUT /geeq to compute it." );
+        }
+        GeeqValueObject vo = new GeeqAdminValueObject( geeq );
+        AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+        if ( geeqEvent != null ) {
+            vo.setLastComputed( geeqEvent.getDate() );
+        }
+        return respond( vo );
+    }
+
+    @PUT
+    @Path("/{dataset}/geeq")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Recompute GEEQ scores for a dataset",
+            description = "Synchronously recomputes the GEEQ quality and suitability scores for the dataset and "
+                    + "writes a `GeeqEvent` to the audit log. The optional `mode` query parameter selects which "
+                    + "subset of scores to recompute (`all`, `batch`, `reps`, `pub`); defaults to `all`. The "
+                    + "returned object includes the updated scores and the `lastComputed` timestamp. Because the "
+                    + "endpoint is admin-only, the response is the administrative GEEQ view exposing the "
+                    + "underlying score variables.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeq(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        Geeq updated = geeqService.calculateScore( ee, mode );
+        GeeqValueObject vo = new GeeqAdminValueObject( updated );
+        AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+        if ( geeqEvent != null ) {
+            vo.setLastComputed( geeqEvent.getDate() );
+        }
+        return respond( vo );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/preprocess")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Run preprocessing run for a dataset",
+            description = "Recomputes processed data vectors and refreshes downstream diagnostics. Returns 202 with "
+                    + "a `Location` header pointing at the polling endpoint `/tasks/{taskId}`. Tasks are kept "
+                    + "in memory only and evicted ~10 minutes after completion.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetPreprocess(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/diagnostics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset",
+            description = "Refreshes mean-variance, PCA and sample-correlation diagnostics without recomputing "
+                    + "processed vectors. Returns 202 with a `Location` header pointing at `/tasks/{taskId}`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetDiagnostics(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
+        cmd.setDiagnosticsOnly( true );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/batchInfo")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Run a batch-information fetch for a dataset",
+            description = "Re-fetches batch information from the source data. Returns 202 with a `Location` "
+                    + "header pointing at `/tasks/{taskId}`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetBatchInformationFetch(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    /**
+     * Optional request body for {@link #runDatasetDifferentialAnalysis}. When omitted, all non-batch experimental
+     * factors are used and interactions are included.
+     */
+    public static class DifferentialAnalysisRunRequest {
+        @Nullable
+        private List<Long> factorIds;
+        @Nullable
+        private Boolean includeInteractions;
+        @Nullable
+        private Long subsetFactorId;
+
+        @Nullable
+        public List<Long> getFactorIds() {
+            return factorIds;
+        }
+
+        public void setFactorIds( @Nullable List<Long> factorIds ) {
+            this.factorIds = factorIds;
+        }
+
+        @Nullable
+        public Boolean getIncludeInteractions() {
+            return includeInteractions;
+        }
+
+        public void setIncludeInteractions( @Nullable Boolean includeInteractions ) {
+            this.includeInteractions = includeInteractions;
+        }
+
+        @Nullable
+        public Long getSubsetFactorId() {
+            return subsetFactorId;
+        }
+
+        public void setSubsetFactorId( @Nullable Long subsetFactorId ) {
+            this.subsetFactorId = subsetFactorId;
+        }
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/differential")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Run differential expression analysis for a dataset",
+            description = "If the request body is omitted (or all fields are null), every non-batch experimental "
+                    + "factor is included with `includeInteractions=true`. Returns 202 with a `Location` header "
+                    + "pointing at `/tasks/{taskId}`. Note: when any selected factor is a batch factor the "
+                    + "interaction term is silently dropped, mirroring the legacy controller's behaviour.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetDifferentialAnalysis(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable DifferentialAnalysisRunRequest body
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        // experimental design / factors are lazy-loaded; thaw them before iterating outside a transaction.
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new BadRequestException( ee.getShortName() + " does not have an experimental design." );
+        }
+        Collection<ExperimentalFactor> allFactors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
+        cmd.setUseWeights( expressionExperimentService.isRNASeq( ee ) );
+
+        Collection<ExperimentalFactor> factors;
+        boolean includeInteractions;
+        ExperimentalFactor subsetFactor = null;
+
+        boolean hasCustomFactors = body != null && body.getFactorIds() != null && !body.getFactorIds().isEmpty();
+        if ( hasCustomFactors ) {
+            factors = new HashSet<>();
+            for ( ExperimentalFactor ef : allFactors ) {
+                if ( body.getFactorIds().contains( ef.getId() ) ) {
+                    factors.add( ef );
+                }
+            }
+            if ( factors.size() != body.getFactorIds().size() ) {
+                throw new BadRequestException( "One or more factor ids do not belong to dataset " + ee.getShortName() + "." );
+            }
+            includeInteractions = body.getIncludeInteractions() != null ? body.getIncludeInteractions() : false;
+            if ( body.getSubsetFactorId() != null ) {
+                for ( ExperimentalFactor ef : allFactors ) {
+                    if ( body.getSubsetFactorId().equals( ef.getId() ) ) {
+                        subsetFactor = ef;
+                        break;
+                    }
+                }
+                if ( subsetFactor == null ) {
+                    throw new BadRequestException( "Subset factor id " + body.getSubsetFactorId() + " does not belong to dataset " + ee.getShortName() + "." );
+                }
+                if ( factors.contains( subsetFactor ) ) {
+                    throw new BadRequestException( "Subset factor must not appear in factorIds." );
+                }
+            }
+        } else {
+            factors = allFactors.stream()
+                    .filter( f -> !ExperimentFactorUtils.isBatchFactor( f ) )
+                    .collect( Collectors.toSet() );
+            includeInteractions = true;
+        }
+
+        // Mirror legacy behaviour: if any selected factor is a batch factor, drop the interaction term.
+        for ( ExperimentalFactor ef : factors ) {
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
+                log.warn( "Removing interaction term because it includes a batch factor for "
+                        + ee.getShortName() );
+                includeInteractions = false;
+                break;
+            }
+        }
+
+        cmd.setFactors( factors );
+        cmd.setSubsetFactor( subsetFactor );
+        cmd.setIncludeInteractions( includeInteractions );
+
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/redo/{analysisId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Redo an existing differential expression analysis",
+            description = "Re-runs the named differential analysis using its original configuration. Returns 202 "
+                    + "with a `Location` header pointing at `/tasks/{taskId}`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response redoDatasetDifferentialAnalysis(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("analysisId") Long analysisId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService
+                .findByExperimentAndAnalysisId( ee, true, analysisId );
+        if ( toRedo == null ) {
+            throw new NotFoundException( "No differential expression analysis with id " + analysisId
+                    + " was found on dataset " + ee.getShortName() + "." );
+        }
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @DELETE
+    @Path("/{dataset}/tasks/differential/{analysisId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Remove of a differential expression analysis",
+            description = "Asynchronously deletes the named differential analysis from the dataset. Returns 202 "
+                    + "with a `Location` header pointing at `/tasks/{taskId}`; the actual delete completes "
+                    + "in the background.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response removeDatasetDifferentialAnalysis(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("analysisId") Long analysisId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService
+                .findByExperimentAndAnalysisId( ee, true, analysisId );
+        if ( toRemove == null ) {
+            throw new NotFoundException( "No differential expression analysis with id " + analysisId
+                    + " was found on dataset " + ee.getShortName() + "." );
+        }
+        DifferentialExpressionAnalysisRemoveTaskCommand cmd =
+                new DifferentialExpressionAnalysisRemoveTaskCommand( ee, toRemove );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    private Response acceptedTaskResponse( String taskId ) {
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
+        TaskStatusValueObject vo;
+        if ( task != null ) {
+            vo = new TaskStatusValueObject( task );
+        } else {
+            // Submitted task should always be queryable immediately after submission, but guard anyway.
+            vo = new TaskStatusValueObject();
+            vo.setTaskId( taskId );
+            vo.setStatus( "queued" );
+            vo.setMessage( "" );
+        }
+        return Response.status( Response.Status.ACCEPTED )
+                .location( URI.create( "/tasks/" + taskId ) )
+                .entity( new ResponseDataObject<>( vo ) )
+                .build();
     }
 
     /**
