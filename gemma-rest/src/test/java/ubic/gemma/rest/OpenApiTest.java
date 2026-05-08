@@ -179,6 +179,7 @@ public class OpenApiTest extends BaseTest implements InitializingBean {
                         .describedAs( "%s %s (%s)", method, path, operation.getOperationId() )
                         .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )
                                 || entry.equals( "201" )
+                                || entry.equals( "202" )
                                 || entry.equals( "204" )
                                 || entry.startsWith( "3" ),
                                 "has at least a default response or is a redirection" ) )
