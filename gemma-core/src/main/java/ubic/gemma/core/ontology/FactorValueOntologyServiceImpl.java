@@ -18,6 +18,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
@@ -180,7 +181,7 @@ public class FactorValueOntologyServiceImpl implements FactorValueOntologyServic
         ontModel.setNsPrefix( "efo", "http://www.ebi.ac.uk/efo/" );
         // FIXME: there are a bunch of ncbi_gene namespaces in the output that shouldn't be there, not sure this is
         //        doing anything
-        ontModel.setNsPrefix( "ncbi_gene", "http://purl.org/commons/record/ncbi_gene/" );
+        ontModel.setNsPrefix( "ncbi_gene", Gene.NCBI_URI_PREFIX );
         ontModel.setNsPrefix( "obo", "http://purl.obolibrary.org/obo/" );
         ontModel.setNsPrefix( "tgemo", "http://gemma.msl.ubc.ca/ont/" );
         ontModel.setNsPrefix( "tgfvo", TGFVO.NS );
