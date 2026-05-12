@@ -337,7 +337,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         if ( gvo.getNcbiId() != null ) {
             SearchSettings s = SearchSettings.builder()
-                    .query( Gene.NCBI_URI_PREFIX + gvo.getNcbiId() )
+                    .query( gvo.getNcbiUri() )
                     .resultType( ExpressionExperiment.class )
                     .build();
             SearchService.SearchResultMap r;
