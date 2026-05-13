@@ -34,6 +34,12 @@ import java.util.Set;
 @Indexed
 public class Gene extends ChromosomeFeature {
 
+    /**
+     * URI prefix for fake ontology terms used in Gemma
+     * (e.g. {@code http://purl.org/commons/record/ncbi_gene/<ncbiGeneId>}).
+     */
+    public static final String NCBI_URI_PREFIX = "http://purl.org/commons/record/ncbi_gene/";
+
     private String officialSymbol;
     private String officialName;
     private Integer ncbiGeneId;

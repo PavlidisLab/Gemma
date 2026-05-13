@@ -58,7 +58,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     /**
      * How many experiments "involve" (manipulate, etc.) this gene
      */
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private Integer associatedExperimentCount = 0;
     @JsonIgnore
     private Integer compositeSequenceCount = 0; // number of probes
@@ -275,6 +275,19 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     @GemmaWebOnly
     public String getTaxonScientificName() {
         return taxon == null ? null : taxon.getScientificName();
+    }
+
+    /**
+     * Synthetic ontology-style URI for this gene, derived from its NCBI gene ID
+     * (e.g. {@code http://purl.org/commons/record/ncbi_gene/12345}). Returns {@code null}
+     * when no NCBI ID is available. Gemma uses this URI to reference genes from
+     * characteristics and search queries as if they were ontology terms.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Synthetic ontology-style URI for this gene, derived from its NCBI gene ID. Null when no NCBI ID is available.")
+    public String getNcbiUri() {
+        return ncbiId != null ? Gene.NCBI_URI_PREFIX + ncbiId : null;
     }
 
     @Override
