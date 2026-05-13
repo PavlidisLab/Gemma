@@ -58,7 +58,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     /**
      * How many experiments "involve" (manipulate, etc.) this gene
      */
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private Integer associatedExperimentCount = 0;
     @JsonIgnore
     private Integer compositeSequenceCount = 0; // number of probes

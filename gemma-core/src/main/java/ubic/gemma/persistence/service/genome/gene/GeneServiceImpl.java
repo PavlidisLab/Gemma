@@ -31,6 +31,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchResult;
@@ -47,9 +48,13 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -68,6 +73,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
+    @Autowired
+    private CharacteristicService characteristicService;
     @Autowired
     private CoexpressionService coexpressionService;
     @Autowired
@@ -126,7 +133,12 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Transactional(readOnly = true)
     public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
         Gene gene = this.findByNCBIId( accession );
-        return gene != null ? new GeneValueObject( gene ) : null;
+        if ( gene == null ) {
+            return null;
+        }
+        GeneValueObject vo = new GeneValueObject( gene );
+        populateAssociatedExperimentCount( vo );
+        return vo;
     }
 
     @Override
@@ -137,6 +149,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
         }
+        populateAssociatedExperimentCount( result.values() );
         return result;
     }
 
@@ -178,6 +191,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         for ( String q : genes.keySet() ) {
             result.put( q, new GeneValueObject( genes.get( q ) ) );
         }
+        populateAssociatedExperimentCount( result.values() );
         return result;
     }
 
@@ -335,21 +349,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setHomologues( homologues );
 
-        if ( gvo.getNcbiId() != null ) {
-            SearchSettings s = SearchSettings.builder()
-                    .query( gvo.getNcbiUri() )
-                    .resultType( ExpressionExperiment.class )
-                    .build();
-            SearchService.SearchResultMap r;
-            try {
-                r = searchService.search( s );
-                List<SearchResult<ExpressionExperiment>> hits = r.getByResultObjectType( ExpressionExperiment.class );
-                gvo.setAssociatedExperimentCount( hits.size() );
-            } catch ( SearchException e ) {
-                log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
-                gvo.setAssociatedExperimentCount( null );
-            }
-        }
+        populateAssociatedExperimentCount( gvo );
 
         GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( gene );
 
@@ -391,7 +391,9 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         if ( g == null )
             return null;
         g = this.geneDao.thaw( g );
-        return GeneValueObject.convert2ValueObject( g );
+        GeneValueObject vo = GeneValueObject.convert2ValueObject( g );
+        populateAssociatedExperimentCount( vo );
+        return vo;
     }
 
     @Override
@@ -475,6 +477,85 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GeneValueObject loadValueObject( Gene entity ) {
+        GeneValueObject vo = super.loadValueObject( entity );
+        populateAssociatedExperimentCount( vo );
+        return vo;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
+        List<GeneValueObject> vos = super.loadValueObjects( entities );
+        populateAssociatedExperimentCount( vos );
+        return vos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<GeneValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        Slice<GeneValueObject> slice = super.loadValueObjects( filters, sort, offset, limit );
+        populateAssociatedExperimentCount( slice );
+        return slice;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GeneValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
+        List<GeneValueObject> vos = super.loadValueObjects( filters, sort );
+        populateAssociatedExperimentCount( vos );
+        return vos;
+    }
+
+
+    private void populateAssociatedExperimentCount( @Nullable GeneValueObject vo ) {
+        if ( vo == null ) {
+            return;
+        }
+        populateAssociatedExperimentCount( Collections.singletonList( vo ) );
+    }
+
+    /**
+     * looks up all gene URIs in a single {@link CharacteristicService#findExperimentsByUris}
+     * call, then assigns the distinct-EE counts back to each VO. VOs without an NCBI ID are left at their
+     * current value (the default initializer of 0).
+     */
+    private void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos ) {
+        if ( vos == null || vos.isEmpty() ) {
+            return;
+        }
+        Map<String, List<GeneValueObject>> byUri = new HashMap<>();
+        for ( GeneValueObject vo : vos ) {
+            if ( vo != null && vo.getNcbiId() != null ) {
+                byUri.computeIfAbsent( Gene.NCBI_URI_PREFIX + vo.getNcbiId(), k -> new ArrayList<>() ).add( vo );
+            }
+        }
+        if ( byUri.isEmpty() ) {
+            return;
+        }
+        // we are duplicating code from AnnotationsWebService.getDistinctEeCountsByUri here. consider refactoring
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
+                characteristicService.findExperimentsByUris( byUri.keySet(), true, true, true, null, -1, false, false );
+        Map<String, Set<Long>> distinctEeIdsByUri = new HashMap<>();
+        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
+            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
+                Set<Long> bucket = distinctEeIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
+                for ( ExpressionExperiment ee : entry.getValue() ) {
+                    bucket.add( ee.getId() );
+                }
+            }
+        }
+        for ( Map.Entry<String, List<GeneValueObject>> entry : byUri.entrySet() ) {
+            Set<Long> bucket = distinctEeIdsByUri.get( entry.getKey() );
+            int count = bucket != null ? bucket.size() : 0;
+            for ( GeneValueObject vo : entry.getValue() ) {
+                vo.setAssociatedExperimentCount( count );
+            }
+        }
     }
 
     @Override
