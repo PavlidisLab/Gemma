@@ -52,9 +52,6 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -133,12 +130,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Transactional(readOnly = true)
     public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
         Gene gene = this.findByNCBIId( accession );
-        if ( gene == null ) {
-            return null;
-        }
-        GeneValueObject vo = new GeneValueObject( gene );
-        populateAssociatedExperimentCount( vo );
-        return vo;
+        return gene != null ? new GeneValueObject( gene ) : null;
     }
 
     @Override
@@ -149,7 +141,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
         }
-        populateAssociatedExperimentCount( result.values() );
         return result;
     }
 
@@ -191,7 +182,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         for ( String q : genes.keySet() ) {
             result.put( q, new GeneValueObject( genes.get( q ) ) );
         }
-        populateAssociatedExperimentCount( result.values() );
         return result;
     }
 
@@ -349,7 +339,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setHomologues( homologues );
 
-        populateAssociatedExperimentCount( gvo );
+        populateAssociatedExperimentCount( Collections.singletonList( gvo ) );
 
         GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( gene );
 
@@ -391,9 +381,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         if ( g == null )
             return null;
         g = this.geneDao.thaw( g );
-        GeneValueObject vo = GeneValueObject.convert2ValueObject( g );
-        populateAssociatedExperimentCount( vo );
-        return vo;
+        return GeneValueObject.convert2ValueObject( g );
     }
 
     @Override
@@ -479,52 +467,14 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         return geneValueObjects;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public GeneValueObject loadValueObject( Gene entity ) {
-        GeneValueObject vo = super.loadValueObject( entity );
-        populateAssociatedExperimentCount( vo );
-        return vo;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
-        List<GeneValueObject> vos = super.loadValueObjects( entities );
-        populateAssociatedExperimentCount( vos );
-        return vos;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Slice<GeneValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        Slice<GeneValueObject> slice = super.loadValueObjects( filters, sort, offset, limit );
-        populateAssociatedExperimentCount( slice );
-        return slice;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<GeneValueObject> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
-        List<GeneValueObject> vos = super.loadValueObjects( filters, sort );
-        populateAssociatedExperimentCount( vos );
-        return vos;
-    }
-
-
-    private void populateAssociatedExperimentCount( @Nullable GeneValueObject vo ) {
-        if ( vo == null ) {
-            return;
-        }
-        populateAssociatedExperimentCount( Collections.singletonList( vo ) );
-    }
-
     /**
-     * looks up all gene URIs in a single {@link CharacteristicService#findExperimentsByUris}
+     * Looks up all gene URIs in a single {@link CharacteristicService#findExperimentsByUris}
      * call, then assigns the distinct-EE counts back to each VO. VOs without an NCBI ID are left at their
      * current value (the default initializer of 0).
      */
-    private void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos ) {
+    @Override
+    @Transactional(readOnly = true)
+    public void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos ) {
         if ( vos == null || vos.isEmpty() ) {
             return;
         }

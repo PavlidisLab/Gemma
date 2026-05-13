@@ -153,6 +153,16 @@ public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVo
     Collection<Gene> loadAll( Taxon taxon );
 
     /**
+     * Populate {@link GeneValueObject#getAssociatedExperimentCount()} for each VO in the given collection
+     * by counting distinct experiments that reference the gene's synthetic NCBI URI in a characteristic.
+     * <p>
+     * VOs without an NCBI ID are left at their existing value (typically the initializer of {@code 0}).
+     * The lookup is batched into a single query, so callers should prefer assembling a full page or list
+     * of VOs and calling this once rather than per-VO.
+     */
+    void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos );
+
+    /**
      * Returns a detailVO for a geneDd This method may be unnecessary now that we have put all the logic into the
      * GeneService
      *
