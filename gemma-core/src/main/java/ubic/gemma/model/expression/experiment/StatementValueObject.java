@@ -1,6 +1,5 @@
 package ubic.gemma.model.expression.experiment;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaRestOnly;
@@ -24,7 +23,6 @@ import static ubic.gemma.model.common.description.CharacteristicUtils.compareTer
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@JsonIgnoreProperties({ "id" })
 public class StatementValueObject extends IdentifiableValueObject<Statement> implements Comparable<StatementValueObject> {
 
     /**
