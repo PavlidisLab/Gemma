@@ -809,6 +809,34 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee ) {
+        ee = expressionExperimentDao.reload( ee );
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null ) {
+            return null;
+        }
+        // initialize the bits the VO ctor will touch
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            Hibernate.initialize( ef.getFactorValues() );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                Hibernate.initialize( fv.getCharacteristics() );
+                if ( fv.getMeasurement() != null ) {
+                    Hibernate.initialize( fv.getMeasurement() );
+                }
+            }
+        }
+        Hibernate.initialize( ee.getBioAssays() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null ) {
+                Thaws.thawBioMaterial( bm );
+            }
+        }
+        return new ExperimentalDesignValueObject( ed, ee.getBioAssays() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
         Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
         Set<String> seenTerms = new HashSet<>();

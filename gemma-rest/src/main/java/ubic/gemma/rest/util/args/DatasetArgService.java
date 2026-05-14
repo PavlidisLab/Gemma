@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -216,6 +217,19 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotations( ee );
+    }
+
+    /**
+     * @return the full structured experimental design (factors, factor values with statements, and biomaterial
+     *         to factor-value assignments).
+     */
+    public ExperimentalDesignValueObject getExperimentalDesign( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        ExperimentalDesignValueObject vo = service.getExperimentalDesignValueObject( ee );
+        if ( vo == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an experimental design." );
+        }
+        return vo;
     }
 
     public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {

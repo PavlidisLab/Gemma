@@ -523,6 +523,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
 
     /**
+     * Build a full structured representation of an experiment's {@link ExperimentalDesign}: factors,
+     * factor values (with statements carrying stable database IDs), and per-biomaterial factor-value
+     * assignments. Returns {@code null} if the experiment has no design attached.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee );
+
+    /**
      * Perform various transformation to the provided filters to enhance it.
      * <ul>
      *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>
