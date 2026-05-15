@@ -2309,14 +2309,49 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/design")
     @Produces(MediaType.APPLICATION_JSON)
-    // Hidden from OpenAPI to prevent collision with the TSV method on the same (path, verb). The JSON variant
-    // is documented as an additional @Content on getDatasetDesign() below, and the
-    // ResponseDataObject<ExperimentalDesignValueObject> schema is registered explicitly in OpenApiFactory.
-    @io.swagger.v3.oas.annotations.Hidden
+    // The @Operation annotation is intentionally identical to the one on getDatasetDesign() below. The two
+    // JAX-RS methods collapse to a single OpenAPI operation under (GET, /{dataset}/design); duplicating the
+    // annotation makes the merge result deterministic regardless of reflection order, and keeps the JSON
+    // return type visible so swagger auto-registers the ResponseDataObjectExperimentalDesignValueObject schema.
+    @Operation(summary = "Retrieve the design of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
+                            examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
+            }),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExperimentalDesignValueObject> getDatasetDesignJson(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return respond( datasetArgService.getExperimentalDesign( datasetArg ) );
+    }
+
+    /**
+     * Dry-run preflight for a proposed design replacement.
+     * <p>
+     * Accepts the same JSON shape that {@code GET /datasets/{id}/design} returns ({@link ExperimentalDesignValueObject}),
+     * with {@code id} fields treated as identity claims (existing entity) or {@code null} (new entity), and returns
+     * a {@link DesignPreflightReport} describing validation errors and the impact a real PUT would have.
+     * <p>
+     * The preflight never mutates state. POST is used (not GET) because the response depends on a non-trivial
+     * request body.
+     */
+    @POST
+    @Path("/{dataset}/designPreflight")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Dry-run preflight for a proposed experimental design replacement", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "400", description = "Request body is missing or malformed.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DesignPreflightReport> previewDatasetDesignChange(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            ExperimentalDesignValueObject proposed
+    ) {
+        return respond( datasetArgService.previewDesignChange( datasetArg, proposed ) );
     }
 
     /**

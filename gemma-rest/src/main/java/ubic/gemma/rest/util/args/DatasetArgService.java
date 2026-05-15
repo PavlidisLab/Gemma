@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.DesignPreflightReport;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -230,6 +231,17 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             throw new NotFoundException( ee.getShortName() + " does not have an experimental design." );
         }
         return vo;
+    }
+
+    /**
+     * Run a dry-run preflight for the proposed design replacement.
+     */
+    public DesignPreflightReport previewDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed ) {
+        if ( proposed == null ) {
+            throw new BadRequestException( "A proposed design must be supplied in the request body." );
+        }
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.previewDesignChange( ee, proposed );
     }
 
     public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {

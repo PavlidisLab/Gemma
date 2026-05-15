@@ -532,6 +532,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee );
 
     /**
+     * Predict what would happen if {@code proposed} were applied as the experiment's new design via PUT.
+     * Performs both validation (blockers) and impact analysis (deletions, dependent analyses, affected
+     * subsets). Never mutates state.
+     *
+     * @param ee       the target experiment
+     * @param proposed the candidate design as it would be sent to {@code PUT /datasets/{id}/design}
+     * @return a {@link DesignPreflightReport} describing the diff and its consequences
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
+
+    /**
      * Perform various transformation to the provided filters to enhance it.
      * <ul>
      *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>

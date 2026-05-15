@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -805,6 +806,302 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ee = expressionExperimentDao.reload( ee );
+        DesignPreflightReport report = new DesignPreflightReport();
+        DesignPreflightReport.Summary summary = report.getSummary();
+
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null ) {
+            report.getBlockers().add( new DesignPreflightReport.Blocker( "NO_EXISTING_DESIGN",
+                    "Experiment has no experimental design; preflight cannot diff against current state." ) );
+            return report;
+        }
+
+        // ---- thaw what we need to walk ----
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            Hibernate.initialize( ef.getFactorValues() );
+        }
+        Hibernate.initialize( ee.getBioAssays() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null ) {
+                Thaws.thawBioMaterial( bm );
+            }
+        }
+
+        // ---- index current state ----
+        Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        Map<Long, ExperimentalFactor> currentFvParentByFvId = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            currentFactorsById.put( ef.getId(), ef );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+                currentFvParentByFvId.put( fv.getId(), ef );
+            }
+        }
+        Map<Long, BioMaterial> currentBmsById = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null && bm.getId() != null ) {
+                currentBmsById.put( bm.getId(), bm );
+            }
+        }
+
+        // ---- index proposed state and validate ----
+        Set<Long> proposedFactorIds = new HashSet<>();
+        Set<Long> proposedFvIds = new HashSet<>();
+        Map<Long, Long> proposedFvIdToProposedFactorId = new HashMap<>();
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                if ( pf.getId() != null ) {
+                    proposedFactorIds.add( pf.getId() );
+                    ExperimentalFactor existing = currentFactorsById.get( pf.getId() );
+                    if ( existing == null ) {
+                        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                "UNKNOWN_FACTOR_ID",
+                                "Proposed factor id " + pf.getId() + " is not part of this experiment's design." );
+                        b.setFactorId( pf.getId() );
+                        report.getBlockers().add( b );
+                    } else if ( pf.getType() != null ) {
+                        String existingType = existing.getType() != null && existing.getType().equals( FactorType.CONTINUOUS ) ? "continuous" : "categorical";
+                        if ( !pf.getType().equalsIgnoreCase( existingType ) && !existing.getFactorValues().isEmpty() ) {
+                            DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                    "FACTOR_TYPE_CHANGE_WITH_VALUES",
+                                    "Cannot change the type of factor " + pf.getId() + " from " + existingType + " to " + pf.getType()
+                                            + " while it has " + existing.getFactorValues().size() + " factor value(s)." );
+                            b.setFactorId( pf.getId() );
+                            report.getBlockers().add( b );
+                        }
+                    }
+                } else {
+                    summary.setFactorsToCreate( summary.getFactorsToCreate() + 1 );
+                }
+                if ( pf.getValues() != null ) {
+                    for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                        if ( pv.getId() != null ) {
+                            proposedFvIds.add( pv.getId() );
+                            if ( pf.getId() != null ) {
+                                proposedFvIdToProposedFactorId.put( pv.getId(), pf.getId() );
+                            }
+                            FactorValue existingFv = currentFvsById.get( pv.getId() );
+                            if ( existingFv == null ) {
+                                DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                        "UNKNOWN_FACTOR_VALUE_ID",
+                                        "Proposed factor value id " + pv.getId() + " is not part of this experiment's design." );
+                                b.setFactorValueId( pv.getId() );
+                                report.getBlockers().add( b );
+                            } else if ( pf.getId() != null && existingFv.getExperimentalFactor() != null
+                                    && !pf.getId().equals( existingFv.getExperimentalFactor().getId() ) ) {
+                                DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                        "FACTOR_VALUE_PARENT_MISMATCH",
+                                        "Factor value " + pv.getId() + " currently belongs to factor "
+                                                + existingFv.getExperimentalFactor().getId()
+                                                + " but is being moved under factor " + pf.getId() + "." );
+                                b.setFactorValueId( pv.getId() );
+                                b.setFactorId( pf.getId() );
+                                report.getBlockers().add( b );
+                            } else if ( existingFv != null && pv.getStatements() != null ) {
+                                Set<Long> existingStmtIds = existingFv.getCharacteristics().stream()
+                                        .map( Statement::getId ).collect( Collectors.toSet() );
+                                for ( StatementValueObject ps : pv.getStatements() ) {
+                                    if ( ps.getId() != null && !existingStmtIds.contains( ps.getId() ) ) {
+                                        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                                "UNKNOWN_STATEMENT_ID",
+                                                "Statement id " + ps.getId() + " does not belong to factor value " + pv.getId() + "." );
+                                        b.setFactorValueId( pv.getId() );
+                                        b.setStatementId( ps.getId() );
+                                        report.getBlockers().add( b );
+                                    }
+                                }
+                            }
+                        } else {
+                            summary.setFactorValuesToCreate( summary.getFactorValuesToCreate() + 1 );
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- validate biomaterial assignments ----
+        if ( proposed.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
+                if ( a.getBioMaterialId() == null || !currentBmsById.containsKey( a.getBioMaterialId() ) ) {
+                    DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                            "UNKNOWN_BIOMATERIAL_ID",
+                            "Biomaterial " + a.getBioMaterialId() + " is not part of this experiment." );
+                    b.setBioMaterialId( a.getBioMaterialId() );
+                    report.getBlockers().add( b );
+                    continue;
+                }
+                if ( a.getFactorValueIds() != null ) {
+                    for ( Long fvId : a.getFactorValueIds() ) {
+                        if ( !proposedFvIds.contains( fvId ) ) {
+                            DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                    "ASSIGNMENT_REFERENCES_UNKNOWN_FV",
+                                    "Biomaterial " + a.getBioMaterialId() + " is assigned to factor value " + fvId
+                                            + " which is not present in the proposed design." );
+                            b.setBioMaterialId( a.getBioMaterialId() );
+                            b.setFactorValueId( fvId );
+                            report.getBlockers().add( b );
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- impact: deletions ----
+        List<ExperimentalFactor> factorsBeingDeleted = new ArrayList<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            if ( !proposedFactorIds.contains( ef.getId() ) ) {
+                factorsBeingDeleted.add( ef );
+                report.getFactorsToDelete().add( new DesignPreflightReport.EntityRef( ef.getId(), ef.getName() ) );
+            }
+        }
+        summary.setFactorsToDelete( factorsBeingDeleted.size() );
+
+        Set<Long> fvIdsBeingDeleted = new HashSet<>();
+        List<FactorValue> fvsBeingDeleted = new ArrayList<>();
+        for ( FactorValue fv : currentFvsById.values() ) {
+            // a FV is deleted if its id is not in the proposed set, OR its parent factor is being deleted
+            boolean parentBeingDeleted = factorsBeingDeleted.stream()
+                    .anyMatch( ef -> ef.getId().equals( currentFvParentByFvId.get( fv.getId() ).getId() ) );
+            if ( !proposedFvIds.contains( fv.getId() ) || parentBeingDeleted ) {
+                fvsBeingDeleted.add( fv );
+                fvIdsBeingDeleted.add( fv.getId() );
+                report.getFactorValuesToDelete().add(
+                        new DesignPreflightReport.EntityRef( fv.getId(), FactorValueUtils.getSummaryString( fv ) ) );
+            }
+        }
+        summary.setFactorValuesToDelete( fvsBeingDeleted.size() );
+
+        // ---- precompute the proposed BM->FV map (used by both DE-analysis and BM-change detection) ----
+        Map<Long, Set<Long>> proposedAssignByBmId = new HashMap<>();
+        if ( proposed.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
+                if ( a.getBioMaterialId() != null && a.getFactorValueIds() != null ) {
+                    proposedAssignByBmId.put( a.getBioMaterialId(), new HashSet<>( a.getFactorValueIds() ) );
+                }
+            }
+        }
+
+        // ---- impact: differential expression analyses ----
+        // A factor is "affected" (and therefore its DE analyses must be deleted) when:
+        //   (a) the factor itself is being deleted;
+        //   (b) any of its FactorValues is being deleted (Gemma's existing cascade rule, see FactorValueDeletionImpl);
+        //   (c) a new FactorValue is being added under it (changes the design space);
+        //   (d) any biomaterial assignment to one of its FactorValues changes (different sample groupings -> different
+        //       analysis result, even if every row still exists).
+        // Statement edits on a kept FV do NOT count: the analysis math is unchanged, only labels would be stale.
+        Set<Long> factorIdsAffected = new HashSet<>();
+        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
+            factorIdsAffected.add( ef.getId() );
+        }
+        for ( FactorValue fv : fvsBeingDeleted ) {
+            ExperimentalFactor parent = currentFvParentByFvId.get( fv.getId() );
+            if ( parent != null ) {
+                factorIdsAffected.add( parent.getId() );
+            }
+        }
+        // (c) new FV being added under an existing factor
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                if ( pf.getId() == null || pf.getValues() == null ) continue;
+                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                    if ( pv.getId() == null ) {
+                        factorIdsAffected.add( pf.getId() );
+                        break;
+                    }
+                }
+            }
+        }
+        // (d) biomaterial assignment changes — for each FV whose membership set changed, mark its parent factor
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
+            // factor membership changed for this biomaterial — flag every involved factor
+            Set<Long> changedFvIds = new HashSet<>( currentFvIds );
+            changedFvIds.addAll( proposedFvIdsForBm );
+            Set<Long> commonFvIds = new HashSet<>( currentFvIds );
+            commonFvIds.retainAll( proposedFvIdsForBm );
+            changedFvIds.removeAll( commonFvIds );
+            for ( Long fvId : changedFvIds ) {
+                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
+                if ( parent != null ) {
+                    factorIdsAffected.add( parent.getId() );
+                }
+                // Proposed-new FVs (id != null but not in currentFvParentByFvId) are unreachable here because
+                // they have id == null in the proposal; their parent factor is already flagged by rule (c).
+            }
+        }
+
+        Set<Long> seenAnalysisIds = new HashSet<>();
+        for ( Long efId : factorIdsAffected ) {
+            ExperimentalFactor ef = currentFactorsById.get( efId );
+            if ( ef == null ) continue;
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
+                if ( seenAnalysisIds.add( a.getId() ) ) {
+                    Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
+                    report.getDifferentialExpressionAnalysesToDelete().add(
+                            new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
+                }
+            }
+        }
+        // Also: subset-level analyses anchored on a deleted FV (subsetFactorValue FK becomes dangling)
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            FactorValue subsetFv = a.getSubsetFactorValue();
+            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() ) && seenAnalysisIds.add( a.getId() ) ) {
+                report.getDifferentialExpressionAnalysesToDelete().add(
+                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFv.getId() ) );
+            }
+        }
+        summary.setDifferentialExpressionAnalysesToDelete( report.getDifferentialExpressionAnalysesToDelete().size() );
+
+        // ---- impact: subsets with stale anchor (informational) ----
+        // Heuristic: a subset is "anchored" on a factor value when every biomaterial in the subset carries
+        // that FV. If any anchor FV is being deleted, flag the subset.
+        Collection<ExpressionExperimentSubSet> subsets = this.getSubSetsWithBioAssays( ee );
+        for ( ExpressionExperimentSubSet ss : subsets ) {
+            Set<Long> sharedFvIds = null;
+            for ( BioAssay ba : ss.getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                if ( bm == null ) continue;
+                Set<Long> bmFvIds = bm.getAllFactorValues().stream().map( FactorValue::getId ).collect( Collectors.toSet() );
+                if ( sharedFvIds == null ) {
+                    sharedFvIds = new HashSet<>( bmFvIds );
+                } else {
+                    sharedFvIds.retainAll( bmFvIds );
+                }
+            }
+            if ( sharedFvIds == null ) continue;
+            List<Long> lost = sharedFvIds.stream().filter( fvIdsBeingDeleted::contains ).collect( Collectors.toList() );
+            if ( !lost.isEmpty() ) {
+                report.getSubsetsWithStaleAnchor().add(
+                        new DesignPreflightReport.SubsetRef( ss.getId(), ss.getName(), lost ) );
+            }
+        }
+        summary.setSubsetsWithStaleAnchor( report.getSubsetsWithStaleAnchor().size() );
+
+        // ---- impact: biomaterials with changed assignments ----
+        int changedBmCount = 0;
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
+                changedBmCount++;
+            }
+        }
+        summary.setBiomaterialsWithChangedAssignments( changedBmCount );
+
+        return report;
     }
 
     @Override
