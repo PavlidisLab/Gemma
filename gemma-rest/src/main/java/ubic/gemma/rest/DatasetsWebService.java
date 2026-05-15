@@ -2308,20 +2308,11 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}/design")
-    // qs=0.9 keeps TSV (qs=1.0 implicit) as the default when the client sends Accept: */* or no Accept header
-    @Produces(MediaType.APPLICATION_JSON + ";qs=0.9")
-    // The @Operation block is duplicated verbatim on getDatasetDesign() below. swagger-jaxrs2 merges
-    // operations sharing path+verb and the merge order is reflection-dependent, so both methods carry the
-    // same comprehensive annotation to make the resulting OpenAPI deterministic and to keep the JSON
-    // return type scanned (so ResponseDataObjectExperimentalDesignValueObject schema is registered).
-    @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
-                            examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
-                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
-            }),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    @Produces(MediaType.APPLICATION_JSON)
+    // Hidden from OpenAPI to prevent collision with the TSV method on the same (path, verb). The JSON variant
+    // is documented as an additional @Content on getDatasetDesign() below, and the
+    // ResponseDataObject<ExperimentalDesignValueObject> schema is registered explicitly in OpenApiFactory.
+    @io.swagger.v3.oas.annotations.Hidden
     public ResponseDataObject<ExperimentalDesignValueObject> getDatasetDesignJson(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
@@ -2333,10 +2324,12 @@ public class DatasetsWebService {
      * <p>
      * Two response media types are supported on this path, selected via the {@code Accept} header:
      * <ul>
-     *     <li>{@code text/tab-separated-values; charset=UTF-8} (default) — the design matrix as TSV.</li>
-     *     <li>{@code application/json} — a structured {@link ExperimentalDesignValueObject} with factors,
-     *         factor values (statements with stable IDs), and biomaterial-to-factor-value assignments. The JSON
-     *         variant ignores the {@code quantitationType}/{@code useProcessedQuantitationType} parameters.</li>
+     *     <li>{@code application/json} (default) — a structured {@link ExperimentalDesignValueObject} with
+     *         factors, factor values (statements with stable IDs), and biomaterial-to-factor-value
+     *         assignments. The JSON variant ignores the {@code quantitationType}/
+     *         {@code useProcessedQuantitationType} parameters.</li>
+     *     <li>{@code text/tab-separated-values; charset=UTF-8} — the design matrix as TSV, served only when
+     *         requested explicitly via {@code Accept}.</li>
      * </ul>
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
@@ -2345,7 +2338,8 @@ public class DatasetsWebService {
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
-    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
+    // lowering qs sets json to default
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")
     @Operation(summary = "Retrieve the design of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
