@@ -1,3 +1,5 @@
+.venv/
+
 # CVS/git global ignores
 RCS
 SCCS
