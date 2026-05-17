@@ -315,7 +315,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     }
 
     private int slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
-        Assert.notNull( samples );
+        Assert.notNull( samples , "must not be null");
         List<BioAssay> assays = Arrays.stream( samples )
                 .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                 .collect( Collectors.toList() );

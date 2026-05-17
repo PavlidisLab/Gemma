@@ -53,11 +53,9 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -122,13 +120,9 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private SecurityService securityService;
     @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
-    @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
-    @Autowired
-    private CoexpressionService coexpressionService;
     @Autowired
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
     @Autowired
@@ -965,12 +959,12 @@ public class ExpressionExperimentServiceImpl
      */
     private boolean filterStatementObject( Statement statement, boolean first ) {
         if ( first ) {
-            Assert.notNull( statement.getPredicate() );
-            Assert.notNull( statement.getObject() );
+            Assert.notNull( statement.getPredicate() , "must not be null");
+            Assert.notNull( statement.getObject() , "must not be null");
             return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getPredicateUri(), statement.getPredicate(), statement.getObjectUri(), statement.getObject() );
         } else {
-            Assert.notNull( statement.getSecondPredicate() );
-            Assert.notNull( statement.getSecondObject() );
+            Assert.notNull( statement.getSecondPredicate() , "must not be null");
+            Assert.notNull( statement.getSecondObject() , "must not be null");
             return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getSecondPredicateUri(), statement.getSecondPredicate(), statement.getSecondObjectUri(), statement.getSecondObject() );
         }
     }
@@ -1866,7 +1860,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
         Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
-        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) );
+        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) , "expected true");
         ee.getCharacteristics().removeAll( characteristicsToRemove );
         update( ee );
         characteristicService.remove( characteristicsToRemove );
@@ -1912,11 +1906,6 @@ public class ExpressionExperimentServiceImpl
                             + " You do not have permission to edit this experiment." );
         }
 
-        // check if a dataset has coexpression links
-        if ( this.coexpressionService.hasLinks( ee ) ) {
-            throw new IllegalStateException( ee + " has coexpression links, those must be removed first with 'gemma-cli coexpAnalyze -delete'." );
-        }
-
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = this.getSubSetsWithBioAssays( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {
@@ -1931,9 +1920,6 @@ public class ExpressionExperimentServiceImpl
 
         // Remove PCA
         this.principalComponentAnalysisService.removeForExperiment( ee );
-
-        // Remove coexpression analyses
-        this.coexpressionAnalysisService.removeForExperimentAnalyzed( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

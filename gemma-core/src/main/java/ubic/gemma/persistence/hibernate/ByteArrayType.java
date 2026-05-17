@@ -33,7 +33,7 @@ import java.util.Properties;
  * @author poirigui
  * @see ByteArrayUtils
  */
-public class ByteArrayType implements UserType, ParameterizedType {
+public class ByteArrayType implements UserType<Object>, ParameterizedType {
 
     private enum ByteArrayTypes {
         BOOLEAN( boolean[].class ),
@@ -67,13 +67,14 @@ public class ByteArrayType implements UserType, ParameterizedType {
     private Charset charset;
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.BLOB };
+    public int getSqlType() {
+        return Types.BLOB;
     }
 
     @Override
-    public Class<?> returnedClass() {
-        return arrayType.arrayClass;
+    public Class<Object> returnedClass() {
+        //noinspection unchecked
+        return ( Class<Object> ) arrayType.arrayClass;
     }
 
     @Override
@@ -123,8 +124,8 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Object nullSafeGet( ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
-        Blob blob = rs.getBlob( names[0] );
+    public Object nullSafeGet( ResultSet rs, int position, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
+        Blob blob = rs.getBlob( position );
         if ( blob != null ) {
             byte[] data = blob.getBytes( 1, ( int ) blob.length() );
             switch ( arrayType ) {

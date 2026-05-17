@@ -129,7 +129,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
         Query q = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C "
+                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C "
                         + "where " + createOwningEntityConstraint( parentClasses, includeNoParents )
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" ) )
                 .addEntity( "C", Characteristic.class )
@@ -154,7 +154,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         //noinspection unchecked
         return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY like :search"
+                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY like :search"
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "search", query )
@@ -166,7 +166,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public Collection<Characteristic> findByCategoryUri( String uri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY_URI = :uri"
+                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY_URI = :uri"
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "uri", uri )
@@ -246,7 +246,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                 + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
 
-        Query query = getSessionFactory().getCurrentSession().createSQLQuery( qs )
+        Query query = getSessionFactory().getCurrentSession().createNativeQuery( qs )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
                 .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
                 .addScalar( "PREDICATE_URI", StandardBasicTypes.STRING )
@@ -351,7 +351,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
         Query q = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.VALUE_URI = :uri"
+                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.VALUE_URI = :uri"
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
@@ -383,7 +383,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC C "
+                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC C "
                         + "where VALUE_URI = :valueUri "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
@@ -402,7 +402,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
+                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
                         + "where `VALUE` like :valueLike "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
@@ -423,7 +423,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             return Collections.emptyMap();
         }
         Query q = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, count(*) as COUNT from CHARACTERISTIC C "
+                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, count(*) as COUNT from CHARACTERISTIC C "
                         + "where VALUE_URI in :uris "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
@@ -438,7 +438,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         Map<String, String> result = new HashMap<>();
         //noinspection unchecked
         List<Object[]> result1 = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select VALUE_URI, `VALUE` from CHARACTERISTIC C "
+                .createNativeQuery( "select VALUE_URI, `VALUE` from CHARACTERISTIC C "
                         + "where VALUE_URI is not null "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                         + "group by VALUE_URI" )
@@ -450,7 +450,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( includePredicates ) {
             //noinspection unchecked
             List<Object[]> result2 = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select PREDICATE_URI, PREDICATE, SECOND_PREDICATE_URI, SECOND_PREDICATE from CHARACTERISTIC C "
+                    .createNativeQuery( "select PREDICATE_URI, PREDICATE, SECOND_PREDICATE_URI, SECOND_PREDICATE from CHARACTERISTIC C "
                             + "where PREDICATE_URI is not null or SECOND_PREDICATE_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by PREDICATE_URI, SECOND_PREDICATE_URI" )
@@ -468,7 +468,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( includeObjects ) {
             //noinspection unchecked
             List<Object[]> result3 = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select OBJECT_URI, OBJECT, SECOND_OBJECT_URI, SECOND_OBJECT from CHARACTERISTIC C "
+                    .createNativeQuery( "select OBJECT_URI, OBJECT, SECOND_OBJECT_URI, SECOND_OBJECT from CHARACTERISTIC C "
                             + "where OBJECT_URI is not null or SECOND_OBJECT_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by OBJECT_URI, SECOND_OBJECT_URI" )
@@ -498,7 +498,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         Query q = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {C.*} from CHARACTERISTIC as C where C.`VALUE` like :search"
+                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.`VALUE` like :search"
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
@@ -531,7 +531,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .collect( Collectors.toList() );
 
         NativeQuery<?> query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select C.ID" + createOwningEntitySelect( oe, includeNoParents ) + " from CHARACTERISTIC C "
+                .createNativeQuery( "select C.ID" + createOwningEntitySelect( oe, includeNoParents ) + " from CHARACTERISTIC C "
                         + "where C.ID in :ids"
                         + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) );
 

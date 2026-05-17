@@ -18,17 +18,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
 /**
  * Utility methods for dealing with analyses.
+ * <p>
+ * Phase-2 note: the gene-gene coexpression subsystem was removed. References to
+ * {@code CoexpressionAnalysisService} / {@code CoexpressionAnalysis} are gone.
  *
  * @author paul
  */
@@ -39,9 +39,6 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -78,14 +75,6 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
                 differentialExpressionAnalysisService.remove( diff );
             } catch ( Exception e ) {
                 AnalysisUtilServiceImpl.log.warn( "Could not remove analysis: " + diff + ": " + e.getMessage() );
-                removedAll = false;
-            }
-        }
-        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByExperimentAnalyzed( expExp ) ) {
-            try {
-                coexpressionAnalysisService.remove( coex );
-            } catch ( Exception e ) {
-                AnalysisUtilServiceImpl.log.warn( "Could not remove analysis: " + coex + ": " + e.getMessage() );
                 removedAll = false;
             }
         }

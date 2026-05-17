@@ -237,11 +237,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 .executeUpdate();
         // FIXME: use HQL delete from Characteristic
         int removedCharacteristics = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
+                .createNativeQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
                 .executeUpdate();
         //noinspection SqlWithoutWhere
         int removedLiteratureSourcesAssociations = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
+                .createNativeQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
                 .executeUpdate();
         int removedGeneSet = getSessionFactory().getCurrentSession().createQuery( "delete from GeneSet" )
                 .executeUpdate();

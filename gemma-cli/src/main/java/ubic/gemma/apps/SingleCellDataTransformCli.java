@@ -204,7 +204,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private void transform() throws IOException {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         transformation.perform();
     }
 
@@ -258,7 +258,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private SingleCellDataType detectInputDataType( Path inputFile ) {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         if ( transformation instanceof SingleCell10xMexFilter ) {
             return SingleCellDataType.MEX;
         } else if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
@@ -269,7 +269,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private SingleCellDataType detectOutputDataType( Path outputFile ) {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         if ( transformation instanceof SingleCell10xMexFilter ) {
             return SingleCellDataType.MEX;
         } else if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {

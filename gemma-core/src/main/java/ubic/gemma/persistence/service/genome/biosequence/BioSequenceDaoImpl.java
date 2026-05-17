@@ -144,7 +144,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                         + "join gene.products gp, BioSequence2GeneProduct as bs2gp "
                         + "where gp=bs2gp.geneProduct and bs2gp.bioSequence.name like :search "
                         + "group by gene" )
-                .setString( "search", search ).list();
+                .setParameter( "search", search ).list();
     }
 
     @Override

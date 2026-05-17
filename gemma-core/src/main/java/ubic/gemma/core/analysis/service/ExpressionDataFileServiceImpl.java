@@ -45,7 +45,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -781,23 +780,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-        try ( LockedPath f = this.getOutputFile( getCoexpressionDataFilename( ee ), false ) ) {
-            if ( !forceWrite && Files.exists( f.getPath() ) ) {
-                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-                return f.steal();
-            }
-
-            // Write coexpression data to file (zipped of course)
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                Collection<CoexpressionValueObject> geneLinks = helperService.getGeneLinks( ee );
-                ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + lockedPath.getPath() );
-                new CoexpressionWriter( buildInfo ).write( ee, geneLinks, writer );
-                return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
-            }
-        }
+        // Phase 2: the gene-gene coexpression subsystem was removed; this no longer produces a file.
+        throw new UnsupportedOperationException( "Coexpression data export is unavailable: the coexpression subsystem was removed in Phase 2." );
     }
 
     @Override

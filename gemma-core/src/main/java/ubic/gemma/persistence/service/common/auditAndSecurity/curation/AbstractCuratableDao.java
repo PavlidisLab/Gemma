@@ -2,8 +2,8 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -129,7 +129,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * Form a non-troubled clause.
      */
     protected String formNonTroubledClause( String objectAlias, Class<? extends Curatable> clazz ) {
-        String entityName = getSessionFactory().getClassMetadata( clazz ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), clazz );
         if ( !SecurityUtil.isUserAdmin() ) {
             //language=HQL
             return " and " + objectAlias + " not in (select c from " + entityName + " c join c.curationDetails cd where cd.troubled = true)";
@@ -140,19 +140,28 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
 
     /**
      * Form a native non-troubled clause.
+     * <p>
+     * Hibernate 6 removed {@code SessionFactory.getClassMetadata}; the table and column names
+     * used to be looked up via {@code SingleTableEntityPersister}. The curatable entities are
+     * a small fixed set, so we hard-code their physical mapping here.
      */
     protected String formNativeNonTroubledClause( String idColumn, Class<? extends Curatable> clazz ) {
-        ClassMetadata classMetadata = getSessionFactory().getClassMetadata( clazz );
-        String table = ( ( SingleTableEntityPersister ) classMetadata )
-                .getTableName();
-        String columnName = ( ( SingleTableEntityPersister ) classMetadata )
-                .getPropertyColumnNames( "curationDetails" )[0];
-        if ( !SecurityUtil.isUserAdmin() ) {
-            //language=SQL
-            return " and " + idColumn + " not in (select c.ID from " + table + " c join CURATION_DETAILS cd on c." + columnName + " = cd.ID where cd.TROUBLED)";
-        } else {
+        if ( SecurityUtil.isUserAdmin() ) {
             return "";
         }
+        String table;
+        if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
+            table = "INVESTIGATION";
+        } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
+            table = "ARRAY_DESIGN";
+        } else {
+            throw new IllegalArgumentException( "No physical-table mapping known for " + clazz );
+        }
+        // both curatable tables use the same FK column name for curation details
+        String columnName = "CURATION_DETAILS_FK";
+        //language=SQL
+        return " and " + idColumn + " not in (select c.ID from " + table
+                + " c join CURATION_DETAILS cd on c." + columnName + " = cd.ID where cd.TROUBLED)";
     }
 
     @Override

@@ -65,7 +65,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select gene from Gene as gene join gene.products gp where gp.name = :search group by gene" )
-                .setString( "search", search ).list();
+                .setParameter( "search", search ).list();
     }
 
     @Override
@@ -73,7 +73,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select gene from Gene as gene join gene.products gp where gp.ncbiGi = :search group by gene" )
-                .setString( "search", search ).list();
+                .setParameter( "search", search ).list();
     }
 
     @Override

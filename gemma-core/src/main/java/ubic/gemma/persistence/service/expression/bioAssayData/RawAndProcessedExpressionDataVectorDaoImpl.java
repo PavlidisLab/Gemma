@@ -21,7 +21,7 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
 
     @Autowired
     public RawAndProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
-        super( BulkExpressionDataVector.class, sessionFactory, sessionFactory.getClassMetadata( RawExpressionDataVector.class ) );
+        super( BulkExpressionDataVector.class, sessionFactory );
     }
 
     @Override

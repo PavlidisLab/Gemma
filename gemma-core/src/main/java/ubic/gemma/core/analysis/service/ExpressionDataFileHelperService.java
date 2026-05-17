@@ -23,8 +23,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -63,8 +61,6 @@ class ExpressionDataFileHelperService {
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired
-    private CoexpressionService gene2geneCoexpressionService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
@@ -204,17 +200,6 @@ class ExpressionDataFileHelperService {
             }
         }
         return annotations;
-    }
-
-    public Collection<CoexpressionValueObject> getGeneLinks( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLite( ee );
-        Taxon tax = expressionExperimentService.getTaxon( ee );
-        assert tax != null;
-        Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
-        if ( geneLinks.isEmpty() ) {
-            throw new IllegalStateException( "No coexpression links for this experiment, file will not be created: " + ee );
-        }
-        return geneLinks;
     }
 
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment ee ) {

@@ -390,7 +390,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             //noinspection unchecked
             return getSessionFactory().getCurrentSession()
                     // using distinct for multi-mapping probes
-                    .createSQLQuery( "select {G.*} from GENE2CS "
+                    .createNativeQuery( "select {G.*} from GENE2CS "
                             + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
                             + "where GENE2CS.AD = :ad "
                             + "group by G.ID" )
@@ -433,7 +433,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
             //noinspection unchecked
             List<Object[]> results = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
+                    .createNativeQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
                     .addScalar( "CS", StandardBasicTypes.LONG )
                     .addEntity( "G", Gene.class )
                     .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
@@ -705,7 +705,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long countCompositeSequencesWithGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS" )
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS" )
                     .uniqueResult() ).longValue();
 
         } else {
@@ -721,7 +721,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long countGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct GENE) from GENE2CS" )
+                    .createNativeQuery( "select count(distinct GENE) from GENE2CS" )
                     .uniqueResult() ).longValue();
         } else {
             return ( Long ) this.getSessionFactory().getCurrentSession()
@@ -777,7 +777,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             return ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS where AD = :adId" )
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS where AD = :adId" )
                     .setParameter( "adId", arrayDesign.getId() )
                     .uniqueResult() ).longValue();
         } else {
@@ -794,7 +794,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long countCompositeSequencesWithGenes( Collection<ArrayDesign> arrayDesigns, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             return ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS where AD in :adIds" )
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS where AD in :adIds" )
                     .setParameterList( "adIds", IdentifiableUtils.getIds( arrayDesigns ) )
                     .uniqueResult() ).longValue();
         } else {
@@ -810,7 +810,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
+            return ( ( BigInteger ) getSessionFactory().getCurrentSession().createNativeQuery(
                             "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                     + "where g2cs.AD = :arrayDesignId" )
                     .setParameter( "arrayDesignId", arrayDesign.getId() )
@@ -1139,7 +1139,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and not ee2ad.IS_ORIGINAL_PLATFORM"
@@ -1165,7 +1165,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
+                .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and ee2ad.IS_ORIGINAL_PLATFORM "

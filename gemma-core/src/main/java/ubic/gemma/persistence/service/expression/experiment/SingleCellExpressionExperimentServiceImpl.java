@@ -633,16 +633,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         int sizeInBytes = quantitationType.getRepresentation().getSizeInBytes();
         for ( SingleCellExpressionDataVector vector : vectors ) {
             if ( sizeInBytes != -1 ) {
-                Assert.isTrue( vector.getData().length == sizeInBytes * vector.getDataIndices().length );
+                Assert.isTrue( vector.getData().length == sizeInBytes * vector.getDataIndices().length , "expected true");
             } else {
                 // all our variable-length representations used at least 1 byte per element
-                Assert.isTrue( vector.getData().length >= vector.getDataIndices().length );
+                Assert.isTrue( vector.getData().length >= vector.getDataIndices().length , "expected true");
             }
             // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
             int lastI = -1;
             for ( int i : vector.getDataIndices() ) {
-                Assert.isTrue( i > lastI );
-                Assert.isTrue( i < numCells );
+                Assert.isTrue( i > lastI , "expected true");
+                Assert.isTrue( i < numCells , "expected true");
             }
         }
     }
@@ -966,7 +966,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         // if the dimension is detached or was loaded without cell IDs,
         dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );
 
-        Assert.isTrue( dimension.getCellTypeAssignments().contains( newPreferredCta ) );
+        Assert.isTrue( dimension.getCellTypeAssignments().contains( newPreferredCta ) , "expected true");
 
         SingleCellDimension preferredDimension = getPreferredSingleCellDimension( ee )
                 .orElse( null );
@@ -1021,8 +1021,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension ) {
-        Assert.notNull( ee.getId() );
-        Assert.notNull( dimension.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
+        Assert.notNull( dimension.getId() , "must not be null");
         // if the dimension is detached or was loaded without cell IDs
         ee = expressionExperimentDao.reload( ee );
         dimension = expressionExperimentDao.reloadSingleCellDimension( ee, dimension );

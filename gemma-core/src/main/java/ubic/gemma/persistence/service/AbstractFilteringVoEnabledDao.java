@@ -6,8 +6,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.*;
 import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
@@ -18,6 +16,7 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -218,8 +217,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s %s must be strictly positive.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
             }
-            ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
-            if ( classMetadata == null ) {
+            // Hibernate 6: SessionFactory.getClassMetadata is gone — walk the JPA Metamodel instead.
+            jakarta.persistence.metamodel.EntityType<?> entityType;
+            try {
+                entityType = getSessionFactory().getMetamodel().entity( entityClass );
+            } catch ( IllegalArgumentException e ) {
                 throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s %s.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
             }
@@ -228,37 +230,29 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "An entity of type %s is already registered %s.",
                         prevValue.getName(), summarizePrefix( prefix ) ) );
             }
-            String[] propertyNames = classMetadata.getPropertyNames();
-            Type[] propertyTypes = classMetadata.getPropertyTypes();
-            if ( classMetadata.getIdentifierPropertyName() != null ) {
-                registerProperty( prefix + classMetadata.getIdentifierPropertyName(), useSubquery );
+            if ( entityType.hasSingleIdAttribute() ) {
+                jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttr = entityType.getId( entityType.getIdType().getJavaType() );
+                registerProperty( prefix + idAttr.getName(), useSubquery );
             }
-            for ( int i = 0; i < propertyNames.length; i++ ) {
-                String propertyName = propertyNames[i];
-                Type propertyType = propertyTypes[i];
-                if ( propertyType.isEntityType() ) {
+            for ( jakarta.persistence.metamodel.Attribute<?, ?> attr : entityType.getAttributes() ) {
+                String propertyName = attr.getName();
+                Class<?> javaType = attr.getJavaType();
+                if ( attr.isAssociation() && attr instanceof jakarta.persistence.metamodel.SingularAttribute ) {
                     if ( maxDepth > 1 ) {
                         //noinspection unchecked
-                        registerEntity( prefix + propertyName + ".", ( Class<? extends Identifiable> ) propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
+                        registerEntity( prefix + propertyName + ".", ( Class<? extends Identifiable> ) javaType, maxDepth - 1, useSubquery );
                     } else {
                         log.trace( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
-                } else if ( propertyType.isCollectionType() ) {
+                } else if ( attr.isCollection() ) {
                     // special case for collection size, regardless of its type
                     registerProperty( prefix + propertyName + ".size", useSubquery );
-                } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
-                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
-                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
-                } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
-                    // enum types
+                } else if ( Filter.getConversionService().canConvert( String.class, javaType ) ) {
+                    // basic / enum types
                     registerProperty( prefix + propertyName, useSubquery );
-                } else if ( propertyType instanceof CustomType ) {
-                    // TODO: handle custom types
-                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: custom types are not exposed by default.",
-                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else {
-                    log.warn( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
-                            prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );
+                    log.trace( String.format( "Property %s%s of type %s in %s is not directly filterable and will be skipped.",
+                            prefix, propertyName, javaType.getName(), entityClass.getName() ) );
                 }
             }
             log.trace( String.format( "Registered entity %s %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
@@ -572,47 +566,53 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @return the class of the property last in the line of nesting.
      */
     private static PartialFilterablePropertyMeta resolvePartialFilterablePropertyMeta( Class<? extends Identifiable> cls, String property, SessionFactory sessionFactory ) {
-        ClassMetadata classMetadata = sessionFactory.getClassMetadata( cls );
-        if ( classMetadata == null ) {
+        // Hibernate 6: ClassMetadata is gone — walk the JPA Metamodel instead.
+        jakarta.persistence.metamodel.EntityType<?> entityType;
+        try {
+            entityType = sessionFactory.getMetamodel().entity( cls );
+        } catch ( IllegalArgumentException e ) {
             throw new IllegalArgumentException( "Unknown mapped class " + cls.getName() + "." );
         }
 
         String[] parts = property.split( "\\.", 2 );
 
         // ID is kept separately from properties
-        if ( parts[0].equals( classMetadata.getIdentifierPropertyName() ) ) {
-            return new PartialFilterablePropertyMeta( classMetadata.getIdentifierType().getReturnedClass(), null );
+        if ( entityType.hasSingleIdAttribute() ) {
+            jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttr = entityType.getId( entityType.getIdType().getJavaType() );
+            if ( parts[0].equals( idAttr.getName() ) ) {
+                return new PartialFilterablePropertyMeta( idAttr.getJavaType(), null );
+            }
         }
 
-        String[] propertyNames = classMetadata.getPropertyNames();
-        Type[] propertyTypes = classMetadata.getPropertyTypes();
-        int i = ArrayUtils.indexOf( propertyNames, parts[0] );
-        if ( i == -1 ) {
-            throw new IllegalArgumentException( String.format( "No such field %s in %s. Possible values are: %s.", parts[0], cls.getName(), String.join( ", ", propertyNames ) ) );
+        jakarta.persistence.metamodel.Attribute<?, ?> attr;
+        try {
+            attr = entityType.getAttribute( parts[0] );
+        } catch ( IllegalArgumentException e ) {
+            String available = entityType.getAttributes().stream()
+                    .map( jakarta.persistence.metamodel.Attribute::getName )
+                    .collect( Collectors.joining( ", " ) );
+            throw new IllegalArgumentException( String.format( "No such field %s in %s. Possible values are: %s.", parts[0], cls.getName(), available ) );
         }
-
-        Type propertyType = propertyTypes[i];
 
         // recurse only on entity type
         if ( parts.length > 1 ) {
-            if ( propertyType.isEntityType() ) {
+            if ( attr.isAssociation() && attr instanceof jakarta.persistence.metamodel.SingularAttribute ) {
                 //noinspection unchecked
-                return resolvePartialFilterablePropertyMeta( ( Class<? extends Identifiable> ) propertyType.getReturnedClass(), parts[1], sessionFactory );
-            } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
+                return resolvePartialFilterablePropertyMeta( ( Class<? extends Identifiable> ) attr.getJavaType(), parts[1], sessionFactory );
+            } else if ( attr.isCollection() && "size".equals( parts[1] ) ) {
                 return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
             } else {
                 throw new IllegalArgumentException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
             }
         }
 
-        Class<?> actualType = ( Class<?> ) propertyType.getReturnedClass();
+        Class<?> actualType = attr.getJavaType();
 
-        // available values, only for enumerated types
+        // available values, only for enumerated types (Java enums)
         List<Object> allowedValues;
-        if ( isEnumType( propertyType ) ) {
-            EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
+        if ( actualType.isEnum() ) {
             //noinspection unchecked,rawtypes
-            allowedValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
+            allowedValues = new ArrayList<>( EnumSet.allOf( ( Class ) actualType ) );
         } else {
             allowedValues = null;
         }
@@ -622,9 +622,5 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         } else {
             throw new IllegalArgumentException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
-    }
-
-    private static boolean isEnumType( Type type ) {
-        return type instanceof CustomType && ( ( CustomType ) type ).getUserType() instanceof EnumType;
     }
 }

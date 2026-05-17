@@ -77,19 +77,19 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         getSessionFactory().getCurrentSession().evict( entity );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setEigenValues( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setEigenVectors( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setProbeLoadings( new HashSet<>() );

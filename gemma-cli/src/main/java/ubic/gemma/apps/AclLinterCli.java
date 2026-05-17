@@ -12,7 +12,6 @@ import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.security.authorization.acl.AclLinterConfig;
 import ubic.gemma.core.security.authorization.acl.AclLinterService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -51,7 +50,6 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
         FACTOR_VALUE( FactorValue.class ),
         ASSAY( BioAssay.class ),
         SAMPLE( BioMaterial.class ),
-        COEXPRESSION_ANALYSIS( CoexpressionAnalysis.class ),
         SAMPLE_COEXPRESSION_ANALYSIS( SampleCoexpressionAnalysis.class ),
         DIFFERENTIAL_EXPRESSION_ANALYSIS( DifferentialExpressionAnalysis.class ),
         DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_SET( ExpressionAnalysisResultSet.class ),

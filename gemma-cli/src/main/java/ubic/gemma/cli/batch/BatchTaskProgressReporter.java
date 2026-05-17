@@ -186,7 +186,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     private void reportProgress( int completedTasks ) {
-        Assert.state( completedTasks >= lastCompletedTasks );
+        Assert.state( completedTasks >= lastCompletedTasks , "illegal state");
         if ( completedTasks > lastCompletedTasks ) {
             if ( timer.getTime() > reportFrequencyMillis ) {
                 reportProgressToLogger( completedTasks );

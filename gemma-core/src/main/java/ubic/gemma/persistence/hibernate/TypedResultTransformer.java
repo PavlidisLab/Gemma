@@ -34,4 +34,24 @@ public interface TypedResultTransformer<T> {
         }
         return transformListTyped( transformed );
     }
+
+    /** Execute the query, then apply this transformer to its list result. */
+    default List<T> list( org.hibernate.query.Query<?> query ) {
+        return applyTo( query.list() );
+    }
+
+    /** Execute the query as uniqueResult, then transform that single row. */
+    default T uniqueResult( org.hibernate.query.Query<?> query ) {
+        Object r = query.uniqueResult();
+        if ( r == null ) {
+            return null;
+        }
+        Object[] tuple = r instanceof Object[] ? ( Object[] ) r : new Object[] { r };
+        T t = transformTuple( tuple, null );
+        if ( t == null ) {
+            return null;
+        }
+        List<T> transformed = transformListTyped( java.util.Collections.singletonList( t ) );
+        return transformed.isEmpty() ? null : transformed.iterator().next();
+    }
 }

@@ -2,10 +2,8 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -100,9 +98,6 @@ public class AclClassMetadata {
         addSecuredChildToParent( SampleCoexpressionAnalysis.class, ExpressionExperiment.class,
                 //language=HQL
                 "select coalesce(ea.sourceExperiment.id, ea.id) from SampleCoexpressionAnalysis sca join sca.experimentAnalyzed ea where sca.id = :identifier" );
-        addSecuredChildToParent( CoexpressionAnalysis.class, ExpressionExperiment.class,
-                //language=HQL
-                "select coalesce(ea.sourceExperiment.id, ea.id) from CoexpressionAnalysis ca join ca.experimentAnalyzed ea where ca.id = :identifier" );
         addSecuredChildToParent( PrincipalComponentAnalysis.class, ExpressionExperiment.class,
                 //language=HQL
                 "select coalesce(ea.sourceExperiment.id, ea.id) from PrincipalComponentAnalysis pca join pca.experimentAnalyzed ea where pca.id = :identifier" );

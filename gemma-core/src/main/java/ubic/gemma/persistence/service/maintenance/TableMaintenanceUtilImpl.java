@@ -357,13 +357,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( truncate ) {
             log.info( "Truncating EXPRESSION_EXPERIMENT2CHARACTERISTIC" + what + "..." );
             sessionFactory.getCurrentSession()
-                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC where LEVEL = :level" )
+                    .createNativeQuery( "delete from EXPRESSION_EXPERIMENT2CHARACTERISTIC where LEVEL = :level" )
                     .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .setParameter( "level", level )
                     .executeUpdate();
         }
         int updated = sessionFactory.getCurrentSession()
-                .createSQLQuery(
+                .createNativeQuery(
                         "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, NAME, DESCRIPTION, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, PREDICATE, PREDICATE_URI, OBJECT, OBJECT_URI, SECOND_PREDICATE, SECOND_PREDICATE_URI, SECOND_OBJECT, SECOND_OBJECT_URI, ORIGINAL_VALUE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, LEVEL) "
                                 + query + " "
                                 + "on duplicate key update NAME = VALUES(NAME), DESCRIPTION = VALUES(DESCRIPTION), "
@@ -394,12 +394,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         if ( truncate ) {
             log.info( "Truncating EXPRESSION_EXPERIMENT2ARRAY_DESIGN..." );
             sessionFactory.getCurrentSession()
-                    .createSQLQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
+                    .createNativeQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
                     .addScalar( EE2AD_QUERY_SPACE )
                     .executeUpdate();
         }
         int updated = sessionFactory.getCurrentSession()
-                .createSQLQuery( EE2AD_QUERY )
+                .createNativeQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "eeId", null )
                 .setParameter( "since", sinceLastUpdate )
@@ -415,7 +415,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     public int updateExpressionExperiment2ArrayDesignEntries( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
         int updated = sessionFactory.getCurrentSession()
-                .createSQLQuery( EE2AD_QUERY )
+                .createNativeQuery( EE2AD_QUERY )
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .setParameter( "eeId", ee.getId() )
                 .setParameter( "since", null )
@@ -504,14 +504,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             if ( arrayDesign != null ) {
                 TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS for " + arrayDesign + "..." );
                 sessionFactory.getCurrentSession()
-                        .createSQLQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
+                        .createNativeQuery( "delete from GENE2CS g2s where g2s.AD = :adId" )
                         .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                         .setParameter( "adId", arrayDesign.getId() )
                         .executeUpdate();
             } else {
                 TableMaintenanceUtilImpl.log.info( "Truncating GENE2CS..." );
                 sessionFactory.getCurrentSession()
-                        .createSQLQuery( "delete from GENE2CS" )
+                        .createNativeQuery( "delete from GENE2CS" )
                         .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                         .executeUpdate();
             }
@@ -526,7 +526,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             query = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY;
         }
         Query queryObject = this.sessionFactory.getCurrentSession()
-                .createSQLQuery( "insert into GENE2CS (GENE, CS, AD) "
+                .createNativeQuery( "insert into GENE2CS (GENE, CS, AD) "
                         + query + " "
                         // duplicate keys should never happen, so this is a no-op
                         + "on duplicate key update GENE = GENE, CS = CS, AD = AD" )

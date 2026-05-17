@@ -72,12 +72,12 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     @Transactional
     public ExpressionExperiment persist( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cachedArrays ) {
         try {
-            getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, Caches.empty( cachedArrays ) );
             getSessionFactory().getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 

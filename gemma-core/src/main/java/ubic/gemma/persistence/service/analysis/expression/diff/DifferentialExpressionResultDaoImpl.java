@@ -20,7 +20,11 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -417,7 +421,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         if ( useGene2Cs ) {
             //noinspection unchecked
             return getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select CS from GENE2CS where GENE = :geneId"
+                    .createNativeQuery( "select CS from GENE2CS where GENE = :geneId"
                             // only retain probes that map to a single gene in the platform
                             + ( keepNonSpecificProbes ? "" : " and (select count(distinct gene2cs2.GENE) from GENE2CS gene2cs2 where gene2cs2.AD = GENE2CS.AD and gene2cs2.CS = GENE2CS.CS) = 1" ) )
                     .addScalar( "CS", StandardBasicTypes.LONG )
@@ -487,7 +491,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         assert !resultSetsNeeded.isEmpty();
 
-        SQLQuery queryObject = session.createSQLQuery(
+        NativeQuery<?> queryObject = session.createNativeQuery(
                 "SELECT dear.PROBE_FK, dear.ID,"
                         + " dear.RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
                         + " FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear FORCE INDEX (probeResultSets) WHERE dear.RESULT_SET_FK IN (:rs_ids) AND "
@@ -513,7 +517,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         final int numResultSetBatches = ( int ) Math.ceil( ( double ) resultSetsNeeded.size() / ( double ) resultSetBatchSize );
 
-        queryObject.setFlushMode( FlushMode.MANUAL );
+        queryObject.setHibernateFlushMode( org.hibernate.FlushMode.MANUAL );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -705,7 +709,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             return probeResults;
         }
         List<Object[]> results = QueryUtils.listByBatch( this.getSessionFactory().getCurrentSession()
-                        .createSQLQuery( "SELECT c.ID, c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.FACTOR_VALUE_FK, "
+                        .createNativeQuery( "SELECT c.ID, c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.FACTOR_VALUE_FK, "
                                 + "c.SECOND_FACTOR_VALUE_FK, c.LOG_FOLD_CHANGE,  c.PVALUE FROM CONTRAST_RESULT c "
                                 + "WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)" ), "ids", ids,
                 QueryUtils.MAX_PARAMETER_LIST_SIZE );

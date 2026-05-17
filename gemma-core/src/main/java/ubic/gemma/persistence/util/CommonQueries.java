@@ -171,7 +171,7 @@ public class CommonQueries {
             return Collections.emptyMap();
         }
         return populateCsId2GeneIdMap( listByBatch( session
-                .createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)" )
+                .createNativeQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)" )
                 .addScalar( "csid", StandardBasicTypes.LONG )
                 .addScalar( "geneId", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
@@ -192,7 +192,7 @@ public class CommonQueries {
             return Collections.emptyMap();
         }
         return populateCsId2GeneIdMap( listByBatch( session
-                .createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) " )
+                .createNativeQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) " )
                 .addScalar( "csid", StandardBasicTypes.LONG )
                 .addScalar( "geneId", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
@@ -216,7 +216,7 @@ public class CommonQueries {
         if ( probes.isEmpty() || arrayDesignIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        Query queryObject = session.createSQLQuery( "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)" )
+        Query queryObject = session.createNativeQuery( "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)" )
                 .addScalar( "csid", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )

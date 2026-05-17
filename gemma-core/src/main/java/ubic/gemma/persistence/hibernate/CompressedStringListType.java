@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * Type that transparently stores a {@link List} of {@link String} as gzip-compressed blob.
  * @author poirigui
  */
-public class CompressedStringListType implements UserType, ParameterizedType {
+public class CompressedStringListType implements UserType<List<String>>, ParameterizedType {
 
     /**
      * Delimiter to use for separating strings in the list.
@@ -47,29 +47,30 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     private Charset charset;
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.BLOB };
+    public int getSqlType() {
+        return Types.BLOB;
     }
 
     @Override
-    public Class<?> returnedClass() {
-        return List.class;
+    @SuppressWarnings("unchecked")
+    public Class<List<String>> returnedClass() {
+        return ( Class<List<String>> ) ( Class<?> ) List.class;
     }
 
     @Override
-    public boolean equals( Object x, Object y ) throws HibernateException {
+    public boolean equals( List<String> x, List<String> y ) throws HibernateException {
         return Objects.equals( x, y );
     }
 
     @Override
-    public int hashCode( Object x ) throws HibernateException {
+    public int hashCode( List<String> x ) throws HibernateException {
         return Objects.hashCode( x );
     }
 
     @Override
-    public List<String> nullSafeGet( ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
+    public List<String> nullSafeGet( ResultSet rs, int position, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
-        InputStream gzippedStream = rs.getBinaryStream( names[0] );
+        InputStream gzippedStream = rs.getBinaryStream( position );
         if ( gzippedStream != null ) {
             return decompress( gzippedStream );
         } else {
@@ -78,20 +79,18 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SharedSessionContractImplementor session ) throws HibernateException, SQLException {
+    public void nullSafeSet( PreparedStatement st, @Nullable List<String> value, int index, SharedSessionContractImplementor session ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         if ( value != null ) {
-            //noinspection unchecked
-            st.setBlob( index, compress( ( List<String> ) value ) );
+            st.setBlob( index, compress( value ) );
         } else {
             st.setBlob( index, ( InputStream ) null );
         }
     }
 
     @Override
-    public Object deepCopy( @Nullable Object value ) throws HibernateException {
-        //noinspection unchecked
-        return value != null ? new ArrayList<>( ( List<String> ) value ) : null;
+    public List<String> deepCopy( @Nullable List<String> value ) throws HibernateException {
+        return value != null ? new ArrayList<>( value ) : null;
     }
 
     @Override
@@ -100,17 +99,18 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Serializable disassemble( @Nullable Object value ) throws HibernateException {
+    public Serializable disassemble( @Nullable List<String> value ) throws HibernateException {
         return ( Serializable ) deepCopy( value );
     }
 
     @Override
-    public Object assemble( @Nullable Serializable cached, Object owner ) throws HibernateException {
-        return deepCopy( cached );
+    @SuppressWarnings("unchecked")
+    public List<String> assemble( @Nullable Serializable cached, Object owner ) throws HibernateException {
+        return deepCopy( ( List<String> ) cached );
     }
 
     @Override
-    public Object replace( Object original, Object target, Object owner ) throws HibernateException {
+    public List<String> replace( List<String> original, List<String> target, Object owner ) throws HibernateException {
         return deepCopy( original );
     }
 

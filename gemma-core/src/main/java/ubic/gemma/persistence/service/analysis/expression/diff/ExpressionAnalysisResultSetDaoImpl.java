@@ -293,7 +293,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // result ID -> result set ID
         Map<Long, Long> representativeResults = QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
-                        .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                        .createNativeQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
                                 "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
                                 "where dear.RESULT_SET_FK in :rsIds " +
                                 "group by dear.RESULT_SET_FK" )
@@ -302,7 +302,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
 
         // result ID -> [ef1 ID, ef2 ID]
-        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createSQLQuery(
+        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createNativeQuery(
                         "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, fv1.EXPERIMENTAL_FACTOR_FK as EF1_ID, fv2.EXPERIMENTAL_FACTOR_FK as EF2_ID " +
                                 "from CONTRAST_RESULT cr " +
                                 // A left join is critical for performance, because otherwise the database will scan every
@@ -453,7 +453,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 + "where " + ( queryByResult ? "result.ID in :rids" : "result.RESULT_SET_FK = :rsid" );
 
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( q )
+                .createNativeQuery( q )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
@@ -461,7 +461,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 // analysis results are immutable and the GENE2CS is generated, so flushing is pointless
-                .setFlushMode( FlushMode.MANUAL )
+                .setHibernateFlushMode( org.hibernate.FlushMode.MANUAL )
                 .setCacheable( true );
 
         if ( queryByResult ) {

@@ -278,7 +278,8 @@ public class AuditAdvice {
             if ( visited.contains( object ) )
                 continue;
             visited.add( object );
-            EntityPersister persister = ( EntityPersister ) sessionFactory.getClassMetadata( Hibernate.getClass( object ) );
+            EntityPersister persister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                    .getMappingMetamodel().getEntityDescriptor( Hibernate.getClass( object ) );
             CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
             String[] propertyNames = persister.getPropertyNames();
             Object[] propertyValues = persister.getPropertyValues( object );

@@ -85,10 +85,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( DifferentialExpressionAnalysis.class, sessionFactory );
-        resultPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
-        contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( ContrastResult.class.getName() );
+        resultPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( DifferentialExpressionAnalysisResult.class.getName() );
+        contrastPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( ContrastResult.class.getName() );
         bioAssaySetBatchSize = HibernateUtils.getBatchSize( BioAssaySet.class, sessionFactory );
     }
 
@@ -224,7 +224,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         // Hibernate 5: getGeneratedIdentity gained a Dialect parameter.
         org.hibernate.dialect.Dialect dialect = session.getJdbcServices().getDialect();
         for ( Object object : objects ) {
-            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType, dialect );
+            Serializable id = ( Serializable ) IdentifierGeneratorHelper.getGeneratedIdentity( idProp, rs, ( org.hibernate.id.PostInsertIdentityPersister ) persister, ( org.hibernate.type.descriptor.WrapperOptions ) session );
             persister.setIdentifier( object, id, session );
         }
     }
@@ -361,7 +361,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( probes ), 1024 ) ) {
             //noinspection unchecked
             ids.addAll( this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
+                    .createNativeQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
                             + "join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK = a.EXPERIMENT_ANALYZED_FK "
                             + "join BIO_MATERIAL bm ON bm.ID = ba.SAMPLE_USED_FK "
                             + "join TAXON t ON bm.SOURCE_TAXON_FK = t.ID "
@@ -416,11 +416,11 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
         if ( !resultSetIds.isEmpty() ) {
             int removedContrasts = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
+                    .createNativeQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
             int removedResults = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
+                    .createNativeQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
             log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );

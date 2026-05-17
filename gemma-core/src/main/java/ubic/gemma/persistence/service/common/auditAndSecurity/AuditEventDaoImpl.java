@@ -21,8 +21,8 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -101,7 +101,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
     @Override
     public <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date ) {
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select adb from " + entityName + " adb "
@@ -115,7 +115,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
     @Override
     public <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date ) {
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select adb from " + entityName + " adb "
@@ -221,7 +221,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             throw new IllegalArgumentException( "No classes found" );
         }
 
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
         //language=HQL
         final String queryString = "select a.id, ae from " + entityName + " a  "
                 + "join a.auditTrail trail "
@@ -266,13 +266,17 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
      * @return A List of class names, including the given type.
      */
     private Set<Class<? extends AuditEventType>> getClassHierarchy( Class<? extends AuditEventType> type, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
-        // how to determine subclasses? There is no way to do this but the hibernate way.
-        ClassMetadata classMetadata = this.getSessionFactory().getClassMetadata( type );
-        if ( classMetadata instanceof SingleTableEntityPersister ) {
+        // Hibernate 6 path: walk MappingMetamodel for the subclass entity names.
+        EntityPersister persister;
+        try {
+            persister = ( ( SessionFactoryImplementor ) getSessionFactory() ).getMappingMetamodel()
+                    .getEntityDescriptor( type.getName() );
+        } catch ( IllegalArgumentException e ) {
+            persister = null;
+        }
+        if ( persister != null ) {
             Set<Class<? extends AuditEventType>> classes = new HashSet<>();
-            // this includes the superclass, fully qualified
-            String[] subclasses = ( ( SingleTableEntityPersister ) classMetadata ).getSubclassClosure();
-            for ( String className : subclasses ) {
+            for ( String className : persister.getEntityMetamodel().getSubclassEntityNames() ) {
                 try {
                     //noinspection unchecked
                     classes.add( ( Class<? extends AuditEventType> ) Class.forName( className ) );

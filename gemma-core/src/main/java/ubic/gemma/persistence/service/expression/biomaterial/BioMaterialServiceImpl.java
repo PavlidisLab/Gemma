@@ -225,7 +225,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional
     public void removeCharacteristics( BioMaterial bm, Collection<Characteristic> characteristicsToRemove ) {
         Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
-        Assert.isTrue( bm.getCharacteristics().containsAll( characteristicsToRemove ) );
+        Assert.isTrue( bm.getCharacteristics().containsAll( characteristicsToRemove ) , "expected true");
         bm.getCharacteristics().removeAll( characteristicsToRemove );
         update( bm );
         characteristicService.remove( characteristicsToRemove );

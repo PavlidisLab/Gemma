@@ -46,4 +46,18 @@ public class HibernateUtils {
     public static boolean isStateless( Query<?> query, SessionFactory sessionFactory ) {
         return true;
     }
+
+    /**
+     * Hibernate 6 dropped {@code SessionFactory.getClassMetadata(Class)}. Most callers were just
+     * after the JPA entity name — for our mappings that is the simple class name. This shim
+     * preserves behavior for those callers.
+     */
+    public static String getEntityName( SessionFactory sessionFactory, Class<?> entityClass ) {
+        try {
+            return sessionFactory.getMetamodel().entity( entityClass ).getName();
+        } catch ( IllegalArgumentException e ) {
+            // not a managed entity; fall back to the simple name
+            return entityClass.getSimpleName();
+        }
+    }
 }

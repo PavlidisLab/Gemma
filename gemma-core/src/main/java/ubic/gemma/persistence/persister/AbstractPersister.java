@@ -25,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
@@ -38,7 +36,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -99,13 +96,13 @@ public abstract class AbstractPersister implements Persister {
     @Transactional
     public <T extends Identifiable> T persist( T entity ) {
         try {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
             T persistedEntity = doPersist( entity, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -113,13 +110,13 @@ public abstract class AbstractPersister implements Persister {
     @Transactional
     public <T extends Identifiable> T persistOrUpdate( T entity ) {
         try {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
             T persistedEntity = doPersistOrUpdate( entity, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -127,13 +124,13 @@ public abstract class AbstractPersister implements Persister {
     @Transactional
     public <T extends Identifiable> List<T> persist( Collection<T> col ) {
         try {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
             List<T> result = doPersist( col, Caches.empty( null ) );
             sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -177,17 +174,14 @@ public abstract class AbstractPersister implements Persister {
 
     private String formatEntity( Object entity ) {
         Class<?> elementClass = Hibernate.getClass( entity );
-        ClassMetadata classMetadata = sessionFactory.getClassMetadata( elementClass );
-        if ( classMetadata == null ) {
-            throw new IllegalArgumentException( String.format( "Entity %s is not managed by Hibernate.", elementClass.getName() ) );
-        }
-        Serializable id = classMetadata.getIdentifier( entity, ( SessionImplementor ) getSessionFactory().getCurrentSession() );
+        // Hibernate 6: ClassMetadata is gone; use the Session/PersistenceContext to get the id.
+        Object id = sessionFactory.getCurrentSession().getIdentifier( entity );
         if ( id == null ) {
-            return String.format( String.format( "transient %s entity", entity.getClass().getSimpleName() ) );
+            return String.format( "transient %s entity", elementClass.getSimpleName() );
         } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
-            return String.format( String.format( "persistent %s entity with ID %s", entity.getClass().getSimpleName(), id ) );
+            return String.format( "persistent %s entity with ID %s", elementClass.getSimpleName(), id );
         } else {
-            return String.format( String.format( "detached %s entity with ID %s", entity.getClass().getSimpleName(), id ) );
+            return String.format( "detached %s entity with ID %s", elementClass.getSimpleName(), id );
         }
     }
 }

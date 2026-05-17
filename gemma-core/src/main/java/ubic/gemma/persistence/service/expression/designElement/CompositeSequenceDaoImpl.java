@@ -161,7 +161,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( useGene2Cs ) {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene group by cs.ID" )
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene group by cs.ID" )
                     .addEntity( "cs", CompositeSequence.class )
                     .setParameter( "gene", gene.getId() )
                     .list();
@@ -182,7 +182,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( useGene2Cs ) {
             //noinspection unchecked
             List<CompositeSequence> list = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {cs.*} "
+                    .createNativeQuery( "select {cs.*} "
                             + CS_BY_GENE_GENE2CS_QUERY + " "
                             + "and gene = :gene "
                             + "group by cs.ID" )
@@ -192,7 +192,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     .setParameter( "gene", gene.getId() )
                     .list();
             Long totalElements = ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct cs.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene" )
+                    .createNativeQuery( "select count(distinct cs.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene" )
                     .setParameter( "gene", gene.getId() )
                     .uniqueResult() ).longValue();
             return new Slice<>( list, null, start, limit, totalElements );
@@ -220,7 +220,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( useGene2Cs ) {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY
                             + " where gene.ID = :gene and ad.ID = :ad group by cs.ID" )
                     .addEntity( "cs", CompositeSequence.class )
                     .setParameter( "gene", gene.getId() )
@@ -248,7 +248,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         Query query;
         if ( useGene2Cs ) {
             query = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {gene.*}, {cs.*} "
+                    .createNativeQuery( "select {gene.*}, {cs.*} "
                             + CS_BY_GENE_GENE2CS_QUERY + " "
                             + "and gene.ID in (:genes) "
                             + "group by cs.ID" )
@@ -276,7 +276,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( useGene2Cs ) {
             //noinspection unchecked
             List<Object[]> result = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {gene.*}, {cs.*} "
+                    .createNativeQuery( "select {gene.*}, {cs.*} "
                             + CS_BY_GENE_GENE2CS_QUERY + " "
                             + "and gene.ID in (:genes) "
                             + "and ad.ID = :arrayDesign "
@@ -324,7 +324,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             Query query = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {cs.*}, {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID in (:cs) group by cs, gene" )
+                    .createNativeQuery( "select {cs.*}, {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID in (:cs) group by cs, gene" )
                     .addEntity( "cs", CompositeSequence.class )
                     .addEntity( "gene", Gene.class );
             return QueryUtils.<Long, Object[]>streamByBatch( query, "cs", IdentifiableUtils.getIds( compositeSequences ), 2048 )
@@ -343,14 +343,14 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             // gets all kinds of associations, not just blat.
             //noinspection unchecked
             List<Gene> list = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs group by gene.ID" )
+                    .createNativeQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs group by gene.ID" )
                     .addEntity( "gene", Gene.class )
                     .setParameter( "cs", compositeSequence )
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
             Long totalElements = ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs" )
+                    .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs" )
                     .setParameter( "cs", compositeSequence )
                     .uniqueResult() ).longValue();
             return new Slice<>( list, null, offset, limit, totalElements );
@@ -425,8 +425,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
                 + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
                 + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) " + " WHERE cs.ID IN (" + buf.toString() + ")";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( nativeQueryString );
+        org.hibernate.query.NativeQuery<?> queryObject = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "gId" ).addScalar( "gSymbol" )
@@ -439,7 +439,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         queryObject.addScalar( "adName" );
         queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
         //noinspection unchecked
-        return queryObject.list();
+        return ( Collection<Object[]> ) ( Collection ) queryObject.list();
     }
 
     @SuppressWarnings("unchecked")
@@ -461,12 +461,13 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
                     + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) " + " where ad.id = " + arrayDesign
                     .getId();
-            org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( queryString );
+            org.hibernate.query.NativeQuery<?> queryObject = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( queryString );
             queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                     .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
             queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
-            return queryObject.list();
+            //noinspection unchecked
+            return ( Collection<Object[]> ) ( Collection ) queryObject.list();
 
         }
         // just a chunk but get the full set of results.

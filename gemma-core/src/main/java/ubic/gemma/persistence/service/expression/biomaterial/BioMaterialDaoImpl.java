@@ -195,7 +195,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         Set<Long> seenExperimentalFactorIds = new HashSet<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
             // already assumed since
-            Assert.notNull( fv.getExperimentalFactor().getId() );
+            Assert.notNull( fv.getExperimentalFactor().getId() , "must not be null");
             if ( !seenExperimentalFactorIds.add( fv.getExperimentalFactor().getId() ) ) {
                 String affectedFvs = bm.getFactorValues().stream().
                         filter( fv2 -> fv2.getExperimentalFactor().getId().equals( fv.getExperimentalFactor().getId() ) )

@@ -458,7 +458,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene is not null" )
                 .executeUpdate();
         int removedAccessions = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
+                .createNativeQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
                 .executeUpdate();
         // we have to do some manual deletion because no cascading is performed when deleting in batch
         //noinspection unchecked
@@ -468,7 +468,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         int removedGeneProductsAccessions;
         if ( !gpIds.isEmpty() ) {
             removedGeneProductsAccessions = executeUpdateByBatch( getSessionFactory().getCurrentSession()
-                            .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
+                            .createNativeQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
                     "gpIds", gpIds, 2048 );
         } else {
             removedGeneProductsAccessions = 0;

@@ -20,12 +20,10 @@ package ubic.gemma.persistence.persister;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
 
 import java.util.Collection;
@@ -33,6 +31,9 @@ import java.util.HashSet;
 
 /**
  * Persist objects like Gene2GOAssociation.
+ * <p>
+ * Phase-2 note: the gene-gene coexpression subsystem was removed, so {@code CoexpressionAnalysis}
+ * handling is gone too.
  *
  * @author pavlidis
  */
@@ -42,9 +43,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociationDao gene2GoAssociationDao;
 
     @Autowired
-    private CoexpressionAnalysisDao coexpressionAnalysisDao;
-
-    @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Override
@@ -52,8 +50,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof Gene2GOAssociation ) {
             return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches );
-        } else if ( entity instanceof CoexpressionAnalysis ) {
-            return ( T ) this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches );
         } else {
@@ -79,16 +75,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches ) {
         association.setGene( this.persistGene( association.getGene(), caches ) );
         return gene2GoAssociationDao.create( association );
-    }
-
-    private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
-        if ( entity.getProtocol() != null ) {
-            entity.setProtocol( this.persistProtocol( entity.getProtocol() ) );
-        }
-        if ( entity.getExperimentAnalyzed().getId() == null ) {
-            throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
-        }
-        return coexpressionAnalysisDao.create( entity );
     }
 
 }

@@ -205,7 +205,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
-        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), dataVectorType );
         return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v.quantitationType from " + entityName + " v "
                         + "where v.expressionExperiment = :ee and v.quantitationType.id = :id "
@@ -243,10 +243,11 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> vectorType ) {
         //noinspection unchecked
         return load( ( List<Long> ) getSessionFactory().getCurrentSession()
-                .createCriteria( vectorType )
-                .add( Restrictions.eq( "expressionExperiment", ee ) )
-                .createCriteria( "quantitationType" )
-                .setProjection( Projections.groupProperty( "id" ) )
+                .createQuery( "select qt.id from " + vectorType.getSimpleName() + " v "
+                        + "join v.quantitationType qt "
+                        + "where v.expressionExperiment = :ee "
+                        + "group by qt.id" )
+                .setParameter( "ee", ee )
                 .list() );
     }
 
@@ -265,11 +266,12 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         for ( Class<? extends DataVector> vectorType : vectorTypes ) {
             //noinspection unchecked
             qts.addAll( load( ( List<Long> ) getSessionFactory().getCurrentSession()
-                    .createCriteria( vectorType )
-                    .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
-                    .add( Restrictions.eq( "bioAssayDimension", dimension ) )
-                    .createCriteria( "quantitationType" )
-                    .setProjection( Projections.groupProperty( "id" ) )
+                    .createQuery( "select qt.id from " + vectorType.getSimpleName() + " v "
+                            + "join v.quantitationType qt "
+                            + "where v.expressionExperiment = :ee and v.bioAssayDimension = :dim "
+                            + "group by qt.id" )
+                    .setParameter( "ee", expressionExperiment )
+                    .setParameter( "dim", dimension )
                     .list() ) );
         }
         return qts;
@@ -291,9 +293,8 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
             if ( ( ( Long ) getSessionFactory().getCurrentSession()
-                    .createCriteria( vectorType )
-                    .add( Restrictions.eq( "quantitationType", qt ) )
-                    .setProjection( Projections.rowCount() )
+                    .createQuery( "select count(v) from " + vectorType.getSimpleName() + " v where v.quantitationType = :qt" )
+                    .setParameter( "qt", qt )
                     .uniqueResult() ) > 0 ) {
                 return vectorType;
             }

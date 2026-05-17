@@ -30,7 +30,6 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -47,7 +46,6 @@ import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
@@ -72,8 +70,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     private AnnotationAssociationService annotationAssociationService;
     @Autowired
     private CharacteristicService characteristicService;
-    @Autowired
-    private CoexpressionService coexpressionService;
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
     @Autowired
@@ -341,17 +337,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         populateAssociatedExperimentCount( Collections.singletonList( gvo ) );
 
-        GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( gene );
-
-        if ( nodeDegree != null ) {
-            gvo.setNodeDegreesPos( nodeDegree.asIntArrayPos() );
-
-            gvo.setNodeDegreesNeg( nodeDegree.asIntArrayNeg() );
-
-            gvo.setNodeDegreePosRanks( nodeDegree.asDoubleArrayPosRanks() );
-
-            gvo.setNodeDegreeNegRanks( nodeDegree.asDoubleArrayNegRanks() );
-        }
+        // Phase 2: gene-gene coexpression / node-degree information is no longer populated;
+        // the coexpression subsystem was removed.
 
         return gvo;
     }
